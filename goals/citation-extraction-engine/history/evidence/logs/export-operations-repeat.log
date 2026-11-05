@@ -1,0 +1,30 @@
+....................................................
+----------------------------------------------------------------------
+Ran 52 tests in 46.278s
+
+OK
+Testing case_citation comparison... ✓
+Testing journal_citation comparison... ✓
+Testing law_citation comparison... ✓
+Testing citation comparison with corrected reporter... ✓
+Testing citation comparison with different reporters... ✓
+Testing citation comparison with different source text... ✓
+Testing citation comparison with missing pages... ✓
+Testing citation comparison with nominative reporter... ✓
+Testing hash function identity... ✓
+Testing id citation comparison... ✓
+Testing missing page conversion... ✓
+Testing persistent citation hash... ✓
+✓
+✓
+✓
+Testing resource comparison... ✓
+Testing resource comparison with missing pages... ✓
+Testing tax court citation comparison... ✓
+Testing unknown citation comparison... ✓
+Testing clean_text for   word 	    word   ✓
+Testing clean_text for   word 	    word   ✓
+Testing clean_text for __word__word_ ✓
+Testing clean_text for  <style>ignore</style> <i> word </i>  ✓
+Testing clean_text for  <style>ignore</style> __ <i> word  word </i> ✓
+public operation sites=31; observations=826; artifacts=4965; methods=52

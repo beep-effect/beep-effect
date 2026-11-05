@@ -1,0 +1,750 @@
+{
+  "schemaVersion": "citation-authority-identity-cases/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "producerSha256": "0c5d2276b0b18d1162e35a64eafa8b37725224f025d85cda3b8147f3d35678ee",
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "reportersVersion": "3.2.53",
+  "courtsVersion": "0.10.22",
+  "clock": "2026-10-28",
+  "scope": "Focused authority equality only; no target extraction or full resolution proof.",
+  "cases": [
+    {
+      "name": "case",
+      "text": "1 U.S. 1",
+      "expectedId": "ca1:4d3093e957c19af6e5f18c989e49ad3202be7546bbc175706a272769b6ff90d4",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "mentionId": "cm1:89948279c906135a2cfbba97b0967fd1501529aa2fdb30b95892961251297b9b",
+        "selectedEdition": {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      }
+    },
+    {
+      "name": "case-repeat",
+      "text": "1 U.S. 1",
+      "expectedId": "ca1:4d3093e957c19af6e5f18c989e49ad3202be7546bbc175706a272769b6ff90d4",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "mentionId": "cm1:f23018c425df5b7790950d2457f07bf8941b5e66cdd5ebe1ea86fe5e950a1bdf",
+        "selectedEdition": {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      }
+    },
+    {
+      "name": "case-metadata",
+      "text": "1 U.S. 1, 2 (1900)",
+      "expectedId": "ca1:4d3093e957c19af6e5f18c989e49ad3202be7546bbc175706a272769b6ff90d4",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": "2",
+            "parenthetical": null,
+            "year": "1900",
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "mentionId": "cm1:2dec48be2acb919741eec203e79c3c5746f6d082591dbabeff73ace81978dfb5",
+        "selectedEdition": {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      }
+    },
+    {
+      "name": "case-volume",
+      "text": "2 U.S. 1",
+      "expectedId": "ca1:79d139cc73275904f1c4a321296f17f3eac41472044b9648f5ae705cb317b5b2",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "2",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "mentionId": "cm1:7349d70bc93751fdb83ad0307794a85401739c6ba7ed2e7f8ab9a485343e860d",
+        "selectedEdition": {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      }
+    },
+    {
+      "name": "missing-page",
+      "text": "1 U.S. ___",
+      "expectedId": "ca1:de783ce3ded113694c3d894a90c10e2b1681ce22ca0c7f892addfeb73c9ba014",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": null
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "mentionId": "cm1:f1942f7d8f7cd79c68be291ffc190e2fb45cfe71f7ac474726c9f737666248fe",
+        "selectedEdition": {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      }
+    },
+    {
+      "name": "missing-page-repeat",
+      "text": "1 U.S. ___",
+      "expectedId": "ca1:d353e803e249f1ae468762b85c8139fba679b7a9a55a18510a17a786ffe47059",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": null
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "mentionId": "cm1:b5ea24f23ffe065f832f4529a3b14fb95c2345adb90e5ecd2b46d2f7fce77610",
+        "selectedEdition": {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        }
+      }
+    },
+    {
+      "name": "cit-primary",
+      "text": "1 C.I.T. 1",
+      "expectedId": "ca1:657a174f4300acd8246c723980482ec5ddaeeb7e2c21fe99da4720541f06fd9f",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "C.I.T.",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": "994078229124e40665adee77d89b061f2b7b4b3c42fa88caa168a35c679ac123",
+            "editions": [
+              {
+                "edition": "994078229124e40665adee77d89b061f2b7b4b3c42fa88caa168a35c679ac123",
+                "reporterId": "reporter:ec9ba165d777489bf3ceb824"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": null,
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "mentionId": "cm1:c3549216c584019f80e1eb9b2bdc5da1e5b7b9c16aba833671e71730395e6896",
+        "selectedEdition": {
+          "edition": "994078229124e40665adee77d89b061f2b7b4b3c42fa88caa168a35c679ac123",
+          "shortName": "C.I.T."
+        }
+      }
+    },
+    {
+      "name": "cit-alias",
+      "text": "1 Ct. Int'l Trade 1",
+      "expectedId": "ca1:7c8209a398c724a0a4621e90014d73e897f951c044f2c1de5fd6db63f4c5240e",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "Ct. Int'l Trade",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": "cf888f2a4fabbed7d2682f537276ae4ff90d09b9eb0e58a792b912e06ede85ce",
+            "editions": [
+              {
+                "edition": "cf888f2a4fabbed7d2682f537276ae4ff90d09b9eb0e58a792b912e06ede85ce",
+                "reporterId": "reporter:ec9ba165d777489bf3ceb824"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": null,
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "mentionId": "cm1:7713f3188486f7a669c49a02f4382d1b298cb08ffd992e03d26df9c3b5b4b055",
+        "selectedEdition": {
+          "edition": "cf888f2a4fabbed7d2682f537276ae4ff90d09b9eb0e58a792b912e06ede85ce",
+          "shortName": "Ct. Int'l Trade"
+        }
+      }
+    },
+    {
+      "name": "law",
+      "text": "35 U.S.C. § 101",
+      "expectedId": "ca1:73c2f9b7235ee54b8b61b70520a1d6d84b01564e778838fa6592e1f95c2df2f9",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101"
+          },
+          "publication": {
+            "editions": [
+              "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            ],
+            "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "mentionId": "cm1:d85d489c9211958cf89b4f7ea09826a7fe8bc07dbfd03248d423a5bb20158f4f",
+        "selectedEdition": {
+          "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+          "shortName": "U.S.C."
+        }
+      }
+    },
+    {
+      "name": "law-repeat",
+      "text": "35 U.S.C. § 101 (2018)",
+      "expectedId": "ca1:73c2f9b7235ee54b8b61b70520a1d6d84b01564e778838fa6592e1f95c2df2f9",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101"
+          },
+          "publication": {
+            "editions": [
+              "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            ],
+            "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": "2018",
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "mentionId": "cm1:6890b359d568eeccc4eed34418c3bbf9e1ad394274010617faba99238256efcf",
+        "selectedEdition": {
+          "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+          "shortName": "U.S.C."
+        }
+      }
+    },
+    {
+      "name": "law-section",
+      "text": "35 U.S.C. § 102",
+      "expectedId": "ca1:f09e347a7a87c46600438a9a05b5acb2601835d318d30e5e5b20be1f4def17f9",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "102"
+          },
+          "publication": {
+            "editions": [
+              "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            ],
+            "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "mentionId": "cm1:2c9302eff1cd7653cbc4361e47c98752767162bf27678357301e565b71a8ac42",
+        "selectedEdition": {
+          "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+          "shortName": "U.S.C."
+        }
+      }
+    },
+    {
+      "name": "journal",
+      "text": "93 Harv. L. Rev. 518",
+      "expectedId": "ca1:3d7c52eeb95bdbea777077eec1259c605c2bbca8b26fc6545c697650fe1f88ed",
+      "input": {
+        "citation": {
+          "type": "journal",
+          "components": {
+            "volume": "93",
+            "reporter": "Harv. L. Rev.",
+            "page": "518"
+          },
+          "publication": {
+            "editions": [
+              "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            ],
+            "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null
+          }
+        },
+        "mentionId": "cm1:f8859230c0145a46d66e197a727bbbc36ad2b940bdd95656a5146cd192d5ea00",
+        "selectedEdition": {
+          "edition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636",
+          "shortName": "Harv. L. Rev."
+        }
+      }
+    },
+    {
+      "name": "journal-repeat",
+      "text": "93 Harv. L. Rev. 518, 520 (1980)",
+      "expectedId": "ca1:3d7c52eeb95bdbea777077eec1259c605c2bbca8b26fc6545c697650fe1f88ed",
+      "input": {
+        "citation": {
+          "type": "journal",
+          "components": {
+            "volume": "93",
+            "reporter": "Harv. L. Rev.",
+            "page": "518"
+          },
+          "publication": {
+            "editions": [
+              "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            ],
+            "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+          },
+          "metadata": {
+            "pinCite": "520",
+            "parenthetical": null,
+            "year": "1980",
+            "month": null,
+            "day": null
+          }
+        },
+        "mentionId": "cm1:9a79101d013415ef038c1813be7d2d5ab04aded4a909beb65c4e5b3b3bdffc0f",
+        "selectedEdition": {
+          "edition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636",
+          "shortName": "Harv. L. Rev."
+        }
+      }
+    }
+  ],
+  "equality": [
+    [
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    [
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    [
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ],
+    [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ],
+    [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ],
+    [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ],
+    [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  ]
+}

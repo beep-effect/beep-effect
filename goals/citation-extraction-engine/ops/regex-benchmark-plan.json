@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "citation-regex-benchmark-plan/v1",
+  "scope": "Synthetic adversarial corpus and benchmark protocol; no family approval.",
+  "sizes": [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096],
+  "recipes": [
+    {
+      "id": "letters-near-miss",
+      "seed": "a",
+      "suffix": "!"
+    },
+    {
+      "id": "nested-parentheses",
+      "seed": "(",
+      "suffix": ")"
+    },
+    {
+      "id": "reporter-near-miss",
+      "seed": "1 U.S. ",
+      "suffix": "?"
+    },
+    {
+      "id": "numeric-near-miss",
+      "seed": "1234.",
+      "suffix": "X"
+    },
+    {
+      "id": "word-boundary",
+      "seed": "A",
+      "suffix": "_"
+    },
+    {
+      "id": "bracket-density",
+      "seed": "[(",
+      "suffix": ")]"
+    },
+    {
+      "id": "html-near-miss",
+      "seed": "<span>",
+      "suffix": "<"
+    },
+    {
+      "id": "unicode-boundary",
+      "seed": "😀é",
+      "suffix": "!"
+    },
+    {
+      "id": "whitespace",
+      "seed": " \t​",
+      "suffix": "X"
+    },
+    {
+      "id": "underscores",
+      "seed": "__",
+      "suffix": "a"
+    },
+    {
+      "id": "statute-prefix",
+      "seed": "U.S.C. § ",
+      "suffix": "."
+    },
+    {
+      "id": "pincite-punctuation",
+      "seed": " at 123,",
+      "suffix": "?"
+    }
+  ],
+  "warmups": 2,
+  "repetitions": 5,
+  "evaluationsPerSample": 256,
+  "ratioThreshold": 3.5,
+  "consecutiveBreaches": 2,
+  "controlSizes": [8, 16, 32, 64, 128, 256, 512],
+  "controlWatchdogMillis": 1000,
+  "cleanupMillis": 2000,
+  "requiredRuntimes": ["node", "bun"]
+}
