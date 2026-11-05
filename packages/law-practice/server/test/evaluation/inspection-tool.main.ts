@@ -139,7 +139,7 @@ const sameInspectionRows = S.toEquivalence(inspectionRows);
 const encodePublishedData = S.encodeEffect(PublishedClaimInspectionReport);
 const textEncoder = new TextEncoder();
 const ToolDelivery = S.Struct({
-  complete: S.Literal(true),
+  complete: S.tag(true),
   sourceKey: S.String,
   totalRecords: S.Int,
   deliveredRecords: S.Int,
