@@ -55,7 +55,7 @@
         ".claude/skills/effect-first-development",
         ".agents/skills/effect-first-development"
       ],
-      "installedTreeHash": "df37424db6538e30aa5d2d4cbc1956b82cabc5940eff603b15c0010adc47282a"
+      "installedTreeHash": "a5b17c4c08ceb60731515130400d5ec60192d5a21452ea59aee453df20d1188d"
     },
     "explore": {
       "_tag": "local",
@@ -423,7 +423,7 @@
         ".claude/skills/schema-first-development",
         ".agents/skills/schema-first-development"
       ],
-      "installedTreeHash": "764f7288e66e323e0fa719b9eea8701cd3d6eb446ca68865b050cca3d8926289"
+      "installedTreeHash": "f612f0dfca9f6152275c0c908175e345c55e909bc433e92dc156b1df494237bf"
     },
     "shadcn": {
       "_tag": "vendored",
