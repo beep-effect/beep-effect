@@ -113,11 +113,13 @@ describe("vault sync command atoms", () => {
       yield* waitForPanelState(registry, workspaceA, VaultSyncPanelState.guards.syncing);
       registry.set(action, VaultSyncCommand.cases.review.make({ conflictId }));
       yield* Effect.sleep(25);
-      expect(yield* Ref.get(calls)).toStrictEqual(["TriggerVaultSync"]);
+      const got = yield* Ref.get(calls);
+      expect(got).toStrictEqual(["TriggerVaultSync"]);
 
       yield* Deferred.succeed(releaseTrigger, undefined);
       yield* waitForPanelState(registry, workspaceA, VaultSyncPanelState.guards.reviewing);
-      expect(yield* Ref.get(calls)).toStrictEqual(["TriggerVaultSync", "MarkVaultSyncConflictReviewed"]);
+      const got1 = yield* Ref.get(calls);
+      expect(got1).toStrictEqual(["TriggerVaultSync", "MarkVaultSyncConflictReviewed"]);
 
       yield* Deferred.fail(releaseReview, VaultSyncActionError.new("Review failed safely."));
       yield* waitForPanelState(registry, workspaceA, VaultSyncPanelState.guards.failed);

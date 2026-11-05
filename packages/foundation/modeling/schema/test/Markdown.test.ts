@@ -53,9 +53,12 @@ describe("Markdown", { concurrent: false }, () => {
   it.effect(
     "brands Markdown text accepted by the active parser",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownMarkdown("# Hello")).toBe("# Hello");
-      expect(yield* decodeUnknownMarkdown("plain text")).toBe("plain text");
-      expect(yield* decodeUnknownMarkdown("")).toBe("");
+      const decodedUnknownMarkdown = yield* decodeUnknownMarkdown("# Hello");
+      expect(decodedUnknownMarkdown).toBe("# Hello");
+      const decodedUnknownMarkdown1 = yield* decodeUnknownMarkdown("plain text");
+      expect(decodedUnknownMarkdown1).toBe("plain text");
+      const decodedUnknownMarkdown2 = yield* decodeUnknownMarkdown("");
+      expect(decodedUnknownMarkdown2).toBe("");
     })
   );
 
@@ -63,7 +66,8 @@ describe("Markdown", { concurrent: false }, () => {
     "derives accepted Markdown examples from the source schema",
     [markdownArbitrary],
     Effect.fnUntraced(function* ([document]) {
-      expect(yield* decodeUnknownMarkdownEffect(document)).toBe(document);
+      const decodedUnknownMarkdownEffect = yield* decodeUnknownMarkdownEffect(document);
+      expect(decodedUnknownMarkdownEffect).toBe(document);
 
       return true;
     }),

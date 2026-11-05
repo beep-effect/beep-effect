@@ -52,7 +52,8 @@ describe("replaceGaugeSeries", () => {
       const gauge = Metric.gauge("beep.test.cleared", { attributes: { "beep.window": "weekly" } });
       yield* replaceGaugeSeries(gauge, [[{ "beep.provider": "anthropic" }, 60]]);
       yield* replaceGaugeSeries(gauge, []);
-      expect(yield* seriesOf(gauge.id)).toEqual([]);
+      const seriesOf1 = yield* seriesOf(gauge.id);
+      expect(seriesOf1).toEqual([]);
     }).pipe(
       Effect.provideService(Metric.CurrentMetricAttributes, { "service.name": "beep-palantiri-mcp" }),
       Effect.provideService(Metric.MetricRegistry, new Map())

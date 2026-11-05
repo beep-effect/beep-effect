@@ -199,6 +199,11 @@ export class CommitInfo extends S.Opaque<CommitInfo, { readonly brand: unique sy
  * alone sees what `--name-only` would have printed. Absent `changes` means
  * the status mode was not requested, not that the commit changed nothing.
  *
+ * `body` is present only when the listing was read with `Git.log`'s
+ * `includeBody: true`: git's raw `%b`, the message after its subject
+ * paragraph, untrimmed (it usually ends with a newline) and `""` for a
+ * subject-only commit. Absent `body` means the body was not requested.
+ *
  * **Example** (Decode a commit timestamp)
  *
  * ```ts import.meta.vitest name="Decode a commit timestamp"
@@ -274,6 +279,14 @@ export class CommitLogEntry extends S.Opaque<CommitLogEntry, { readonly brand: u
       $I.annoteKey("CommitLogEntry.changes", {
         description:
           "The `--name-status` record of every touched path; present only when the listing was read with `nameStatus: true`.",
+      })
+    ),
+    /** The raw message body (`%b`), untrimmed; present only when the listing was read with `includeBody: true`. */
+    body: S.String.pipe(
+      S.optionalKey,
+      $I.annoteKey("CommitLogEntry.body", {
+        description:
+          "The raw message body (`%b`), untrimmed; present only when the listing was read with `includeBody: true`.",
       })
     ),
   }).pipe(
@@ -869,6 +882,76 @@ export class LsFilesEntry extends S.Opaque<LsFilesEntry, { readonly brand: uniqu
     $I.annoteSchema("LsFilesEntry", { description: "One index (staging area) entry, from `git ls-files --stage`." })
   )
 ) {}
+
+/**
+ * What `git merge-tree --write-tree` answered about merging two commits,
+ * without touching the index, the working tree or any ref.
+ *
+ * **Details**
+ *
+ * Both cases carry `tree`, the object id of the merged top-level tree git
+ * wrote into the object store. `clean` means the merge has no conflicts, so
+ * `tree` is the merge result. `conflicted` means git wrote a tree with
+ * conflict markers: `paths` lists each conflicted path once, root-relative and
+ * raw, and `messages` carries git's informational messages in order
+ * (`Auto-merging <path>`, `CONFLICT (content): Merge conflict in <path>`),
+ * each without its trailing newline. A conflict is data, not a failure: the
+ * caller decides whether a conflicted preview is a refusal.
+ *
+ * **Example** (Branch on a merge preview)
+ *
+ * ```ts import.meta.vitest name="Branch on a merge preview"
+ * import { MergeTreeResult } from "@beep/git/Git";
+ *
+ * const result = MergeTreeResult.cases.conflicted.make({
+ *   tree: "f".repeat(40),
+ *   paths: ["goals/INDEX.md"],
+ *   messages: ["CONFLICT (content): Merge conflict in goals/INDEX.md"],
+ * });
+ * MergeTreeResult.match(result, { clean: () => "merged", conflicted: (c) => c.paths.join(",") }) // => "goals/INDEX.md"
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export const MergeTreeResult = S.TaggedUnion({
+  clean: {
+    tree: S.String.pipe(
+      $I.annoteKey("MergeTreeResult.clean.tree", { description: "The object id of the merged top-level tree." })
+    ),
+  },
+  conflicted: {
+    tree: S.String.pipe(
+      $I.annoteKey("MergeTreeResult.conflicted.tree", {
+        description: "The object id of the top-level tree git wrote, conflict markers included.",
+      })
+    ),
+    paths: S.Array(S.String).pipe(
+      $I.annoteKey("MergeTreeResult.conflicted.paths", {
+        description: "Each conflicted path once, root-relative and raw.",
+      })
+    ),
+    messages: S.Array(S.String).pipe(
+      $I.annoteKey("MergeTreeResult.conflicted.messages", {
+        description: "git's informational messages in order, each without its trailing newline.",
+      })
+    ),
+  },
+}).pipe(
+  $I.annoteSchema("MergeTreeResult", {
+    description: "The clean or conflicted answer of `git merge-tree --write-tree` for two commits.",
+  })
+);
+
+/**
+ * The clean or conflicted answer of `git merge-tree --write-tree`.
+ *
+ * @see {@link MergeTreeResult} for the runtime schema and its case constructors.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MergeTreeResult = typeof MergeTreeResult.Type;
 
 /** 16 MiB, the same per-stream ceiling `@beep/commands` applies to a collected run. */
 const DEFAULT_MAX_OUTPUT_BYTES = 16 * 1024 * 1024;

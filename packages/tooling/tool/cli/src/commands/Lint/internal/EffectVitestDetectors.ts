@@ -3255,11 +3255,10 @@ const statementTokenDigest = Effect.fnUntraced(function* (
     return cached.value;
   }
   const crypto = yield* Digest.Digest;
-  const tokens = Hex.encode(
-    yield* crypto
-      .digest(Digest.sha256, new TextEncoder().encode(A.join(statementTokenParts(statement), "")))
-      .pipe(EffectVitestLintError.mapError("Failed to hash Effect Vitest statement tokens."))
-  );
+  const pipe1 = yield* crypto
+    .digest(Digest.sha256, new TextEncoder().encode(A.join(statementTokenParts(statement), "")))
+    .pipe(EffectVitestLintError.mapError("Failed to hash Effect Vitest statement tokens."));
+  const tokens = Hex.encode(pipe1);
   MutableHashMap.set(statements, statement.getStart(), tokens);
   return tokens;
 });
@@ -4878,7 +4877,7 @@ export const detectEffectVitestFindings: {
         }
         return EffectVitestFinding.make({
           ...finding,
-          occurrence: O.some(yield* occurrenceAnchor(node.value, imports, statementDigests)),
+          occurrence: yield* Effect.asSome(occurrenceAnchor(node.value, imports, statementDigests)),
         });
       }),
       { concurrency: 1 }

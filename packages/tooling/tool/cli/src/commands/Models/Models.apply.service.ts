@@ -143,22 +143,20 @@ const assertNativeFields = Effect.fnUntraced(function* (
     const afterNative = yield* encodeValue(maskOwned(right, owned)).pipe(
       Effect.mapError(() => failure("Cannot compare native fields."))
     );
-    if (beforeNative !== afterNative) return yield* failure("Non-owned native keys changed.");
+    if (beforeNative !== afterNative) {
+      return yield* failure("Non-owned native keys changed.");
+    }
   });
   if (A.isReadonlyArrayNonEmpty(tomlPaths)) {
     const decode = modelsParseToml;
-    yield* compare(
-      yield* decode(before).pipe(Effect.mapError(() => failure("Invalid native TOML."))),
-      yield* decode(after).pipe(Effect.mapError(() => failure("Invalid native TOML."))),
-      tomlPaths
-    );
+    const pipe1 = yield* decode(before).pipe(Effect.mapError(() => failure("Invalid native TOML.")));
+    const pipe22 = yield* decode(after).pipe(Effect.mapError(() => failure("Invalid native TOML.")));
+    yield* compare(pipe1, pipe22, tomlPaths);
   }
   if (A.isReadonlyArrayNonEmpty(jsonPaths)) {
-    yield* compare(
-      yield* decodeJsonText(before).pipe(Effect.mapError(() => failure("Invalid native JSON."))),
-      yield* decodeJsonText(after).pipe(Effect.mapError(() => failure("Invalid native JSON."))),
-      jsonPaths
-    );
+    const pipe2 = yield* decodeJsonText(before).pipe(Effect.mapError(() => failure("Invalid native JSON.")));
+    const pipe23 = yield* decodeJsonText(after).pipe(Effect.mapError(() => failure("Invalid native JSON.")));
+    yield* compare(pipe2, pipe23, jsonPaths);
   }
 });
 
@@ -169,8 +167,9 @@ const assertParsedProjection = Effect.fnUntraced(function* (after: string, write
         ModelsTargetFile.make({ root: "home", absolutePath: "projected", content: after }),
         write.locator
       );
-      if (!O.contains(projected, write.expected))
+      if (!O.contains(projected, write.expected)) {
         return yield* failure("Owned projection does not match its parsed expected value.");
+      }
     }
   }
 });
@@ -200,12 +199,16 @@ const assertOwnedBytes = Effect.fnUntraced(function* (
   // Re-resolve all owned locators, including absent-key removal assertions.
   for (const write of writes) {
     const resolved = yield* modelsWriteSpans(after, write);
-    if (write.remove === true && A.isReadonlyArrayNonEmpty(resolved))
+    if (write.remove === true && A.isReadonlyArrayNonEmpty(resolved)) {
       return yield* failure("Removed native key returned during projection.");
-    if ((yield* modelsApplySpans(after, resolved)) !== after)
+    }
+    if ((yield* modelsApplySpans(after, resolved)) !== after) {
       return yield* failure("Owned projection is not stable after re-resolving its addresses.");
+    }
   }
-  if ((yield* modelsApplySpans(after, reversed)) !== before) return yield* failure("Non-owned native bytes changed.");
+  if ((yield* modelsApplySpans(after, reversed)) !== before) {
+    return yield* failure("Non-owned native bytes changed.");
+  }
 });
 
 /**
@@ -312,14 +315,16 @@ const checkReadOnlyDrift = Effect.fnUntraced(function* (text: string, writes: Re
       ModelsTargetFile.make({ root: "home", absolutePath: "check-only", content: text }),
       locator
     );
-    if (O.exists(current, (value) => /^Unsupported (?:shell|YAML|XML|JSON) form/.test(value)))
+    if (O.exists(current, (value) => /^Unsupported (?:shell|YAML|XML|JSON) form/.test(value))) {
       return yield* failure(
         `${O.getOrThrow(current)}: owned configuration drift detected (${Str.toLowerCase(format.value)} target is check-only; edit by hand).`
       );
-    if (!O.contains(current, expected))
+    }
+    if (!O.contains(current, expected)) {
       return yield* failure(
         `Owned configuration drift detected (${Str.toLowerCase(format.value)} target is check-only; edit by hand).`
       );
+    }
   }
 });
 
@@ -596,11 +601,12 @@ export const makeModelsAtomicExchange = Effect.fn("ModelsAtomicExchange.make")(f
     const root = yield* fs
       .makeTempDirectoryScoped({ directory, prefix: ".beep-models-exchange-probe-" })
       .pipe(probeError);
-    if ((yield* fs.stat(root).pipe(probeError)).dev !== device || (yield* system.mount(root)).id !== mount)
+    if ((yield* fs.stat(root).pipe(probeError)).dev !== device || (yield* system.mount(root)).id !== mount) {
       return yield* ModelsExchangeProbeError.make({
         message: "Atomic exchange probe directory is not on the target filesystem.",
         path: directory,
       });
+    }
     const left = path.join(root, "left");
     const right = path.join(root, "right");
     yield* fs.writeFileString(left, "left", { flag: "wx", mode: 0o600 }).pipe(probeError);
@@ -646,17 +652,16 @@ export const makeModelsAtomicExchange = Effect.fn("ModelsAtomicExchange.make")(f
         )
       );
     const key = modelsExchangeIdentityKey(identity);
-    return qualification(
-      yield* lock.withPermits(1)(
-        Effect.gen(function* () {
-          const cached = MutableHashMap.get(cache, key);
-          if (O.isSome(cached)) return cached.value;
-          const probed = yield* probe(directory, parent.dev, identity.mount);
-          MutableHashMap.set(cache, key, probed);
-          return probed;
-        })
-      )
+    const value3 = yield* lock.withPermits(1)(
+      Effect.gen(function* () {
+        const cached = MutableHashMap.get(cache, key);
+        if (O.isSome(cached)) return cached.value;
+        const probed = yield* probe(directory, parent.dev, identity.mount);
+        MutableHashMap.set(cache, key, probed);
+        return probed;
+      })
     );
+    return qualification(value3);
   });
   return ModelsAtomicExchange.of({ exchange, qualify });
 });
@@ -836,11 +841,10 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
       Effect.provideService(Path.Path, path)
     );
   const hashBytes = Effect.fnUntraced(function* (bytes: Uint8Array) {
-    return Hex.encode(
-      yield* crypto
-        .digest(Digest.sha256, asArrayBufferView(bytes))
-        .pipe(ModelsLocatorError.mapError("Cannot fingerprint configuration."))
-    );
+    const pipe4 = yield* crypto
+      .digest(Digest.sha256, asArrayBufferView(bytes))
+      .pipe(ModelsLocatorError.mapError("Cannot fingerprint configuration."));
+    return Hex.encode(pipe4);
   });
   const hash = (text: string) => hashBytes(textBytes(text));
   const io = ModelsLocatorError.mapError("Native configuration I/O failed.");
@@ -868,12 +872,13 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
       )
     );
     const { capability } = qualification;
-    if (capability._tag === "unsupported")
+    if (capability._tag === "unsupported") {
       return yield* ModelsLocatorError.make({
         reason: "exchange-unsupported",
         path: target,
         message: `Atomic exchange unsupported on the target filesystem (${capability.reason}: ${capability.detail}); refusing native write before backup or publication.`,
       });
+    }
     return qualification;
   });
   const sameInode = (left: FileSystem.File.Info, right: FileSystem.File.Info) =>
@@ -882,8 +887,10 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
   const matches = Effect.fnUntraced(function* (file: string, info: FileSystem.File.Info, expectedHash: string) {
     // stat follows a link, while exchange moves the link itself. Never accept a
     // displaced symlink merely because its target has the planned inode/hash.
-    if (O.isSome(yield* fs.readLink(file).pipe(Effect.option))) return false;
-    return sameInode(info, yield* fs.stat(file).pipe(io)) && (yield* hash(yield* readNative(file))) === expectedHash;
+    const pipe5 = yield* fs.readLink(file).pipe(Effect.option);
+    if (O.isSome(pipe5)) return false;
+    const pipe6 = yield* fs.stat(file).pipe(io);
+    return sameInode(info, pipe6) && (yield* yield* Effect.map(readNative(file), hash)) === expectedHash;
   });
 
   const recoverSymlink = Effect.fnUntraced(function* (
@@ -893,8 +900,9 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
     expectedHash: string
   ) {
     yield* exchange(temporary, file);
-    if (!(yield* matches(temporary, info, expectedHash)))
+    if (!(yield* matches(temporary, info, expectedHash))) {
       return yield* failure("Concurrent recovery changed during symlink exchange.");
+    }
   });
 
   // Recovery returns each actual displaced pathname occupant through another
@@ -909,12 +917,14 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
     let expectedHash = initialHash;
     for (let attempt = 0; attempt < 8; attempt += 1) {
       if (!(yield* matches(file, expectedInfo, expectedHash))) break;
-      if (O.isSome(yield* fs.readLink(temporary).pipe(Effect.option))) {
+      const pipe7 = yield* fs.readLink(temporary).pipe(Effect.option);
+      if (O.isSome(pipe7)) {
         yield* recoverSymlink(file, temporary, expectedInfo, expectedHash);
         break;
       }
       const returningInfo = yield* fs.stat(temporary).pipe(io);
-      const returningHash = yield* hash(yield* readNative(temporary));
+      const readNative8 = yield* readNative(temporary);
+      const returningHash = yield* hash(readNative8);
       yield* exchange(temporary, file);
       if (yield* matches(temporary, expectedInfo, expectedHash)) break;
       expectedInfo = returningInfo;
@@ -926,17 +936,20 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
     const actual = yield* fs.realPath(journal.file).pipe(io);
     const link = yield* fs.readLink(journal.file).pipe(Effect.option);
     const info = yield* fs.stat(journal.file).pipe(io);
-    if (actual !== journal.file || O.isSome(link) || info.type !== "File")
+    if (actual !== journal.file || O.isSome(link) || info.type !== "File") {
       return yield* failure("Canonical native destination changed; refusing replacement.");
-    if (O.isNone(journal.requestedFile))
+    }
+    if (O.isNone(journal.requestedFile)) {
       return yield* failure("Recovery journal lacks destination identity; refusing replacement.");
+    }
     const requested = yield* fs.realPath(journal.requestedFile.value).pipe(io);
     const requestedLink = yield* fs.readLink(journal.requestedFile.value).pipe(Effect.option);
     if (
       requested !== journal.file ||
       !O.makeEquivalence<string>((left, right) => left === right)(requestedLink, journal.requestedLink)
-    )
+    ) {
       return yield* failure("Requested native entry or link target changed; refusing replacement.");
+    }
   });
 
   // Journal publication: an fsynced sibling file, then an exclusive link for the
@@ -989,11 +1002,13 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
   const { currentOwner, ownerAlive } = ledger;
 
   const observe = Effect.fnUntraced(function* (file: string) {
-    if (O.isSome(yield* fs.readLink(file).pipe(Effect.option))) return Observation.cases.foreign.make({});
+    const pipe9 = yield* fs.readLink(file).pipe(Effect.option);
+    if (O.isSome(pipe9)) return Observation.cases.foreign.make({});
     const info = yield* fs.stat(file).pipe(Effect.option);
     if (O.isNone(info)) return Observation.cases.absent.make({});
     if (info.value.type !== "File") return Observation.cases.foreign.make({});
-    return Observation.cases.file.make({ hash: yield* hashBytes(yield* fs.readFile(file).pipe(io)) });
+    const pipe10 = yield* fs.readFile(file).pipe(io);
+    return Observation.cases.file.make({ hash: yield* hashBytes(pipe10) });
   });
   // Removal tolerates an artifact another recoverer or a cleanup already removed.
   const discard = (file: string) => ledger.discard(file).pipe(io);
@@ -1082,7 +1097,9 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
   const finish = Effect.fnUntraced(function* (publication: ModelsTrackedPublication, outcome: ModelsRecoveryOutcome) {
     yield* discard(publication.staging);
     yield* discard(publication.retained);
-    if (outcome === "preimage") yield* Effect.forEach(O.toArray(publication.backup), discard, { discard: true });
+    if (outcome === "preimage") {
+      yield* Effect.forEach(O.toArray(publication.backup), discard, { discard: true });
+    }
     return ModelsRecoveryResult.cases.recovered.make({ outcome });
   });
 
@@ -1099,13 +1116,15 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
     const known = (observation: Observation) =>
       observation._tag === "absent" ||
       (observation._tag === "file" && A.contains([publication.preimageHash, publication.stagedHash], observation.hash));
-    const live = liveOutcome(publication, yield* observe(publication.target));
+    const observe11 = yield* observe(publication.target);
+    const live = liveOutcome(publication, observe11);
     if (Result.isFailure(live)) return live.failure;
-    if (!known(yield* observe(publication.retained)))
-      return refuse("foreign-artifact", "The retained preimage link holds foreign bytes.");
+    const observe12 = yield* observe(publication.retained);
+    if (!known(observe12)) return refuse("foreign-artifact", "The retained preimage link holds foreign bytes.");
     const staging = yield* observe(publication.staging);
-    if (live.success === "intended" && staging._tag === "file" && !known(staging))
+    if (live.success === "intended" && staging._tag === "file" && !known(staging)) {
       return yield* returnDisplaced(publication, staging.hash);
+    }
     if (!known(staging)) return refuse("foreign-artifact", "The stage holds foreign bytes.");
     return yield* finish(publication, live.success);
   });
@@ -1140,8 +1159,9 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
         ? ModelsPublicationState.cases.recovered.make({ from, outcome: result.outcome })
         : ModelsPublicationState.cases.refused.make({ from, reason: result.reason, detail: result.detail })
     );
+    const pipe13 = yield* fs.readDirectory(backupDirectory).pipe(io);
     const stale = A.filter(
-      yield* fs.readDirectory(backupDirectory).pipe(io),
+      pipe13,
       (entry) => Str.startsWith(`${journal.id}.json.`)(entry) && Str.endsWith(".partial")(entry)
     );
     yield* Effect.forEach(stale, (entry) => discard(path.join(backupDirectory, entry)), { discard: true });
@@ -1162,7 +1182,8 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
       Effect.gen(function* () {
         if (!(yield* recoveryLock(backupDirectory, journal.id)))
           return { journal, result: ModelsRecoveryResult.cases.skipped.make({ reason: "lock-held" }) };
-        const fresh = O.getOrElse(yield* readJournalEntry(backupDirectory, `${journal.id}.json`), () => journal);
+        const readJournalEntry14 = yield* readJournalEntry(backupDirectory, `${journal.id}.json`);
+        const fresh = O.getOrElse(readJournalEntry14, () => journal);
         const publication = O.filter(publicationOf(fresh, role), (entry) => eligible(entry.state));
         if (O.isNone(publication))
           return { journal: fresh, result: ModelsRecoveryResult.cases.skipped.make({ reason: "settled" }) };
@@ -1220,15 +1241,12 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
 
   const sweep = Effect.fnUntraced(function* (backupDirectory: string, target: O.Option<string>) {
     if (!(yield* fs.exists(backupDirectory).pipe(io))) return A.empty<ModelsRecoveryReport>();
-    const entries = A.sort(
-      A.filter(yield* fs.readDirectory(backupDirectory).pipe(io), Str.endsWith(".json")),
-      Order.String
-    );
-    const journals = A.filter(
-      A.getSomes(yield* Effect.forEach(entries, (entry) => readJournalEntry(backupDirectory, entry))),
-      (journal) => O.isNone(target) || journal.file === target.value
-    );
-    return A.flatten(yield* Effect.forEach(journals, (journal) => reconcileJournal(backupDirectory, journal)));
+    const pipe15 = yield* fs.readDirectory(backupDirectory).pipe(io);
+    const entries = A.sort(A.filter(pipe15, Str.endsWith(".json")), Order.String);
+    const forEach16 = yield* Effect.forEach(entries, (entry) => readJournalEntry(backupDirectory, entry));
+    const journals = A.filter(A.getSomes(forEach16), (journal) => O.isNone(target) || journal.file === target.value);
+    const forEach17 = yield* Effect.forEach(journals, (journal) => reconcileJournal(backupDirectory, journal));
+    return A.flatten(forEach17);
   });
 
   const atomic = Effect.fnUntraced(function* (
@@ -1254,16 +1272,20 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
           writeDurable(temporary, textBytes(after)),
           Effect.fnUntraced(function* () {
             const staged = yield* readNative(temporary);
-            if (staged !== after) return yield* failure("Staged configuration differs from the validated candidate.");
+            if (staged !== after) {
+              return yield* failure("Staged configuration differs from the validated candidate.");
+            }
             yield* validate(staged, writes);
             yield* assertDestination(journal);
             yield* fs.chmod(temporary, mode).pipe(io);
             const stagedInfo = yield* fs.stat(temporary).pipe(io);
+            const readNative18 = yield* readNative(file);
             if (
-              (yield* hash(yield* readNative(file))) !== beforeHash ||
-              (yield* hash(yield* readNative(retained))) !== beforeHash
-            )
+              (yield* hash(readNative18)) !== beforeHash ||
+              (yield* yield* Effect.map(readNative(retained), hash)) !== beforeHash
+            ) {
               return yield* failure("Native file drifted after planning; refusing replacement.");
+            }
             yield* advance(ModelsPublicationState.cases.staged.make({}));
             yield* Effect.uninterruptible(
               Effect.gen(function* () {
@@ -1281,11 +1303,14 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
                       { flag: "wx", mode: 0o600 }
                     )
                     .pipe(io);
-                  yield* recover(file, temporary, stagedInfo, yield* hash(after));
+                  const hash19 = yield* hash(after);
+                  yield* recover(file, temporary, stagedInfo, hash19);
                   return yield* failure("Concurrent native write detected; recovery event retained.");
                 }
-                if (!(yield* matches(file, stagedInfo, yield* hash(after))))
+                const hash20 = yield* hash(after);
+                if (!(yield* matches(file, stagedInfo, hash20))) {
                   return yield* failure("Native file changed after replacement; preserve journal for recovery.");
+                }
                 yield* advance(ModelsPublicationState.cases.verified.make({}));
                 completed = true;
               })
@@ -1347,16 +1372,21 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
     const backup = path.join(backupDirectory, `${id}.backup`);
     const names = artifactNames(actual, `${id}-${yield* suffix}`);
     const beforeHash = yield* hash(before);
+    const argument1 = ModelsPublicationState.cases.intent.make({});
+    const argument2 = yield* currentOwner;
+    const argument3 = O.some(backup);
+    const argument4 = yield* hash(after);
+    const pipe3 = yield* fs.readFile(actual).pipe(io);
     const publication = ModelsTrackedPublication.make({
-      state: ModelsPublicationState.cases.intent.make({}),
-      owner: yield* currentOwner,
+      state: argument1,
+      owner: argument2,
       target: actual,
       staging: names.staging,
       retained: names.retained,
-      backup: O.some(backup),
+      backup: argument3,
       preimageHash: beforeHash,
-      stagedHash: yield* hash(after),
-      targetAtIntentHash: yield* hashBytes(yield* fs.readFile(actual).pipe(io)),
+      stagedHash: argument4,
+      targetAtIntentHash: yield* hashBytes(pipe3),
       filesystem: modelsExchangeIdentityKey(qualification.identity),
     });
     const journal = ModelsApplyJournal.make({
@@ -1388,11 +1418,12 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
 
   const apply: ModelsApplyShape["apply"] = Effect.fn("ModelsApply.apply")(
     function* (file, writes, mode, backupDirectory) {
-      if (mode === "write")
+      if (mode === "write") {
         yield* modelsWritePreflight(
           file,
           A.map(writes, (write) => write.locator)
         ).pipe(Effect.provideService(Path.Path, path), Effect.andThen(recoverTarget(file, backupDirectory)));
+      }
       const nativeWrites = A.filter(writes, ({ locator }) => O.isNone(modelsCheckOnlyFormat(locator)));
       const eligible = A.isReadonlyArrayNonEmpty(nativeWrites)
         ? yield* eligibility(file, nativeWrites)
@@ -1400,7 +1431,9 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
       const { actual, content: before } = eligible;
       if (mode === "check") {
         yield* checkReadOnlyDrift(before, writes);
-        if (eligible.removalsPresent) return yield* failure("Owned configuration drift detected.");
+        if (eligible.removalsPresent) {
+          return yield* failure("Owned configuration drift detected.");
+        }
         yield* assertParsedProjection(before, nativeWrites).pipe(
           Effect.mapError(() => failure("Owned configuration drift detected."))
         );
@@ -1417,24 +1450,31 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
       yield* assertOwnedBytes(before, after, nativeWrites, spans);
       if (after === before) return O.none();
       if (mode === "dry-run") return O.none();
-      if (!A.isReadonlyArrayNonEmpty(writes)) return yield* failure("Locator ownership must be non-empty.");
-      return O.some(yield* publishApply(file, actual, before, after, writes, backupDirectory));
+      if (!A.isReadonlyArrayNonEmpty(writes)) {
+        return yield* failure("Locator ownership must be non-empty.");
+      }
+      const publishApply21 = yield* publishApply(file, actual, before, after, writes, backupDirectory);
+      return O.some(publishApply21);
     }
   );
 
   const recoveryWrites = Effect.fnUntraced(function* (journal: ModelsApplyJournal) {
-    if (O.isNone(journal.writes))
+    if (O.isNone(journal.writes)) {
       return yield* failure("Legacy journal lacks locator ownership; shell targets are check-only; edit by hand.");
-    if (A.isReadonlyArrayEmpty(journal.writes.value)) return yield* failure("Locator ownership must be non-empty.");
+    }
+    if (A.isReadonlyArrayEmpty(journal.writes.value)) {
+      return yield* failure("Locator ownership must be non-empty.");
+    }
     yield* modelsWritePreflight(
       journal.file,
       A.map(journal.writes.value, (write) => write.locator)
     ).pipe(Effect.provideService(Path.Path, path));
-    if (O.isSome(journal.requestedFile))
+    if (O.isSome(journal.requestedFile)) {
       yield* modelsWritePreflight(
         journal.requestedFile.value,
         A.map(journal.writes.value, (write) => write.locator)
       ).pipe(Effect.provideService(Path.Path, path));
+    }
     return journal.writes.value;
   });
 
@@ -1487,14 +1527,18 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
     const writes = yield* recoveryWrites(journal);
     yield* assertDestination(journal);
     const backup = yield* fs.realPath(journal.backup).pipe(io);
-    if (path.dirname(backup) !== root || path.basename(backup) !== `${journal.id}.backup`)
+    if (path.dirname(backup) !== root || path.basename(backup) !== `${journal.id}.backup`) {
       return yield* failure("Recovery backup is outside its journal directory.");
+    }
     const { content: current } = yield* eligibility(journal.file, writes, journal.file, "restore");
     const currentHash = yield* hash(current);
-    if (currentHash !== journal.afterHash)
+    if (currentHash !== journal.afterHash) {
       return yield* failure("Native file changed since apply; restore would overwrite new state.");
+    }
     const { content: original } = yield* eligibility(journal.file, writes, backup, "restore");
-    if ((yield* hash(original)) !== journal.beforeHash) return yield* failure("Recovery backup hash does not match.");
+    if ((yield* hash(original)) !== journal.beforeHash) {
+      return yield* failure("Recovery backup hash does not match.");
+    }
     const qualification = yield* requireExchange(journal.file);
     const names = artifactNames(journal.file, `${journal.id}-${yield* suffix}`);
     const restoration = ModelsTrackedPublication.make({
@@ -1523,7 +1567,9 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
     function* (journalFile, backupDirectory) {
       const root = yield* fs.realPath(backupDirectory).pipe(io);
       const actualJournal = yield* fs.realPath(journalFile).pipe(io);
-      if (path.dirname(actualJournal) !== root) return yield* failure("Journal must belong to the backup directory.");
+      if (path.dirname(actualJournal) !== root) {
+        return yield* failure("Journal must belong to the backup directory.");
+      }
       const decoded = yield* fs.readFileString(actualJournal).pipe(
         io,
         Effect.flatMap(decodeJournal),
@@ -1531,7 +1577,9 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
       );
       yield* Effect.gen(function* () {
         const { journal, restored } = yield* reconcileForRestore(root, decoded);
-        if (!restored && !neverLanded(journal)) yield* undo(root, journal);
+        if (!restored && !neverLanded(journal)) {
+          yield* undo(root, journal);
+        }
       }).pipe(
         Effect.mapError((error) =>
           ModelsLocatorError.make({

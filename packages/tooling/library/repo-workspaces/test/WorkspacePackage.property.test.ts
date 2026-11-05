@@ -18,7 +18,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -56,7 +57,8 @@ it.layer(MemoryFileSystem.layerWith({}), { timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         yield* fs.makeDirectory("/repo", { recursive: true });
-        yield* fs.writeFileString(located.packageJsonPath, yield* S.encodeEffect(ManifestText)(document));
+        const value2 = yield* S.encodeEffect(ManifestText)(document);
+        yield* fs.writeFileString(located.packageJsonPath, value2);
         const first = yield* located.manifest();
         const original = yield* S.encodeEffect(Package.schema)(first);
         const text = first.toJsonString();

@@ -110,19 +110,24 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const receipt = yield* f.native.acceptBatch(batch);
       const eventIds = A.map(batch.spans, (s) => s.eventId);
       const attempt = yield* f.visible(receipt.page.receiptId, eventIds);
-      assertNone(yield* f.reclaimer.reclaim(receipt.page.receiptId));
+      const reclaim1 = yield* f.reclaimer.reclaim(receipt.page.receiptId);
+      assertNone(reclaim1);
       yield* TestClock.adjust("60 seconds");
       const disposition = yield* f.reclaimer.reclaim(receipt.page.receiptId);
       expect(disposition).toMatchObject({
         _tag: "Some",
         value: { reason: "backend-verified", verifiedEvents: 1, page: receipt.page },
       });
-      expect(yield* f.native.stats).toEqual({ pages: 0, payloadBytes: 0, frames: 0 });
+      const stats2 = yield* f.native.stats;
+      expect(stats2).toEqual({ pages: 0, payloadBytes: 0, frames: 0 });
       const reopened = yield* makeNativeIntakeJournal(f.intakeConfig);
-      expect(yield* reopened.acceptBatch(batch)).toEqual(receipt);
+      const acceptBatch3 = yield* reopened.acceptBatch(batch);
+      expect(acceptBatch3).toEqual(receipt);
       expect((yield* reopened.readNewEvents(receipt.page.receiptId).pipe(Effect.flip)).reason).toBe("reclaimed");
-      expect(yield* f.reclaimer.reclaim(receipt.page.receiptId)).toEqual(disposition);
-      expect(yield* f.ledger.prepareAttempt(attempt)).toEqual(attempt);
+      const reclaim4 = yield* f.reclaimer.reclaim(receipt.page.receiptId);
+      expect(reclaim4).toEqual(disposition);
+      const prepareAttempt5 = yield* f.ledger.prepareAttempt(attempt);
+      expect(prepareAttempt5).toEqual(attempt);
       expect(
         (yield* f.ledger.prepareAttempt(DeliveryAttempt.make({ ...attempt, attemptId: id("f") })).pipe(Effect.flip))
           .reason
@@ -140,7 +145,9 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
           ),
         { discard: true }
       );
-      expect(yield* reopened.acceptBatch(yield* f.batch("2"))).toMatchObject({ newEvents: 1, page: { sequence: 2 } });
+      const batch61 = yield* f.batch("2");
+      const acceptBatch6 = yield* reopened.acceptBatch(batch61);
+      expect(acceptBatch6).toMatchObject({ newEvents: 1, page: { sequence: 2 } });
     })
   )
 );
@@ -153,7 +160,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const receipt = yield* f.native.acceptBatch(batch);
       yield* f.ledger.registerPage(receipt.page.receiptId);
       yield* TestClock.adjust("60 seconds");
-      assertNone(yield* f.reclaimer.reclaim(receipt.page.receiptId));
+      const reclaim7 = yield* f.reclaimer.reclaim(receipt.page.receiptId);
+      assertNone(reclaim7);
       const input = DeliveryAttempt.make({
         attemptId: id("d"),
         eventIds: A.map(batch.spans, (s) => s.eventId),
@@ -161,14 +169,17 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       });
       yield* f.ledger.prepareAttempt(input);
       yield* TestClock.adjust("60 seconds");
-      assertNone(yield* f.reclaimer.reclaim(receipt.page.receiptId));
+      const reclaim8 = yield* f.reclaimer.reclaim(receipt.page.receiptId);
+      assertNone(reclaim8);
       yield* f.ledger.recordOutcome(input.attemptId, DeliveryOutcome.cases.Rejected.make({ status: 400 }));
-      assertNone(yield* f.reclaimer.reclaim(receipt.page.receiptId));
+      const reclaim9 = yield* f.reclaimer.reclaim(receipt.page.receiptId);
+      assertNone(reclaim9);
       const second = DeliveryAttempt.make({ ...input, attemptId: id("f") });
       yield* f.ledger.prepareAttempt(second);
       yield* f.ledger.recordOutcome(second.attemptId, DeliveryOutcome.cases.Accepted.make({}));
       yield* TestClock.adjust("60 seconds");
-      assertNone(yield* f.reclaimer.reclaim(receipt.page.receiptId));
+      const reclaim10 = yield* f.reclaimer.reclaim(receipt.page.receiptId);
+      assertNone(reclaim10);
       expect((yield* f.native.stats).pages).toBe(1);
     })
   )
@@ -184,13 +195,15 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         NativeTraceBatch.make({ ...batch, spans: [...batch.spans, ...batch.spans] })
       );
       yield* TestClock.adjust("60 seconds");
-      assertNone(yield* f.reclaimer.reclaim(duplicate.page.receiptId));
+      const reclaim11 = yield* f.reclaimer.reclaim(duplicate.page.receiptId);
+      assertNone(reclaim11);
       yield* f.visible(
         first.page.receiptId,
         A.map(batch.spans, (s) => s.eventId)
       );
       yield* TestClock.adjust("60 seconds");
-      expect(yield* f.reclaimer.reclaim(duplicate.page.receiptId)).toMatchObject({
+      const reclaim12 = yield* f.reclaimer.reclaim(duplicate.page.receiptId);
+      expect(reclaim12).toMatchObject({
         _tag: "Some",
         value: { verifiedEvents: 1 },
       });
@@ -199,7 +212,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         NativeTraceBatch.make({ ...batch, spans: [...batch.spans, ...batch.spans, ...batch.spans] })
       );
       expect(replay).toMatchObject({ newEvents: 0, duplicates: 3, accepted: 3 });
-      assertSome(yield* f.native.readNewEvents(replay.page.receiptId), []);
+      const readNewEvents13 = yield* f.native.readNewEvents(replay.page.receiptId);
+      assertSome(readNewEvents13, []);
     })
   )
 );
@@ -220,8 +234,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         const sql = yield* SqlClient.SqlClient;
         yield* sql`CREATE TRIGGER disposition_failure BEFORE INSERT ON observation_page_dispositions BEGIN SELECT RAISE(ABORT,'synthetic failure'); END`;
         expect((yield* f.reclaimer.reclaim(receipt.page.receiptId).pipe(Effect.flip)).reason).toBe("storage");
-        assertSome(yield* f.native.readBatch(receipt.page.receiptId), batch);
-        assertNone(yield* f.reclaimer.readDisposition(receipt.page.receiptId));
+        const readBatch14 = yield* f.native.readBatch(receipt.page.receiptId);
+        assertSome(readBatch14, batch);
+        const readDisposition15 = yield* f.reclaimer.readDisposition(receipt.page.receiptId);
+        assertNone(readDisposition15);
         yield* sql`DROP TRIGGER disposition_failure`;
         yield* f.reclaimer.reclaim(receipt.page.receiptId);
         expect(
@@ -232,10 +248,12 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
           ).pipe(Effect.flip)).reason
         ).toBe("configuration");
         const secondBatch = yield* f.batch("2");
-        expect(yield* f.native.acceptBatch(secondBatch).pipe(Effect.flip)).toMatchObject({ reason: "capacity" });
+        const pipe16 = yield* f.native.acceptBatch(secondBatch).pipe(Effect.flip);
+        expect(pipe16).toMatchObject({ reason: "capacity" });
         expect((yield* f.native.stats).pages).toBe(0);
         // Exact acknowledged retries remain available at the reservation ceiling.
-        expect(yield* f.native.acceptBatch(batch)).toEqual(receipt);
+        const acceptBatch17 = yield* f.native.acceptBatch(batch);
+        expect(acceptBatch17).toEqual(receipt);
         yield* sql`UPDATE observation_page_dispositions SET payload=payload || ' ' WHERE receipt_id=${receipt.page.receiptId}`;
         expect((yield* f.native.acceptBatch(batch).pipe(Effect.flip)).reason).toBe("storage");
       })
@@ -269,12 +287,15 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       expect(ids.length).toBe(1);
       yield* f.visible(receipt.receiptId, ids);
       yield* TestClock.adjust("60 seconds");
-      expect(yield* f.reclaimer.reclaim(receipt.receiptId)).toMatchObject({
+      const reclaim18 = yield* f.reclaimer.reclaim(receipt.receiptId);
+      expect(reclaim18).toMatchObject({
         _tag: "Some",
         value: { verifiedEvents: 1 },
       });
-      assertSome(yield* intake.readCursor("codex", page.cursor.pathHash), page.cursor);
-      expect(yield* intake.acceptPage(page, O.none())).toEqual(receipt);
+      const readCursor19 = yield* intake.readCursor("codex", page.cursor.pathHash);
+      assertSome(readCursor19, page.cursor);
+      const acceptPage20 = yield* intake.acceptPage(page, O.none());
+      expect(acceptPage20).toEqual(receipt);
       expect((yield* intake.stats).pages).toBe(0);
     })
   )
@@ -292,9 +313,11 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       );
       yield* TestClock.adjust("60 seconds");
       yield* f.ledger.prepareAttempt(DeliveryAttempt.make({ ...attempt, attemptId: id("f") }));
-      assertNone(yield* f.reclaimer.reclaim(receipt.page.receiptId));
+      const reclaim21 = yield* f.reclaimer.reclaim(receipt.page.receiptId);
+      assertNone(reclaim21);
       yield* TestClock.adjust("60 seconds");
-      expect(yield* f.reclaimer.reclaim(receipt.page.receiptId)).toMatchObject({
+      const reclaim22 = yield* f.reclaimer.reclaim(receipt.page.receiptId);
+      expect(reclaim22).toMatchObject({
         _tag: "Some",
         value: { verifiedEvents: 1 },
       });
@@ -363,7 +386,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         yield* f.ledger.recordOutcome(rejected.attemptId, DeliveryOutcome.cases.Rejected.make({ status: 400 }));
         yield* prepare(4); // Unresolved: prepared without a terminal outcome.
         const states = yield* Effect.forEach(batch.spans, (s) => f.ledger.state(s.eventId));
-        assertNone(yield* f.reclaimer.expire(receipt.page.receiptId));
+        const expire23 = yield* f.reclaimer.expire(receipt.page.receiptId);
+        assertNone(expire23);
         yield* TestClock.adjust("24 hours");
         const disposition = yield* f.reclaimer.expire(receipt.page.receiptId);
         expect(disposition).toMatchObject({
@@ -374,11 +398,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
             states: { pending: 1, acceptedUnverified: 1, visible: 1, rejected: 1, unresolved: 1 },
           },
         });
-        expect(yield* Effect.forEach(batch.spans, (s) => f.ledger.state(s.eventId))).toEqual(states);
-        assertSome(yield* f.native.receipt(receipt.page.receiptId), receipt);
+        const forEach24 = yield* Effect.forEach(batch.spans, (s) => f.ledger.state(s.eventId));
+        expect(forEach24).toEqual(states);
+        const receipt25 = yield* f.native.receipt(receipt.page.receiptId);
+        assertSome(receipt25, receipt);
         expect((yield* f.native.acceptBatch(batch).pipe(Effect.flip)).reason).toBe("expired");
         expect((yield* f.native.readNewEvents(receipt.page.receiptId).pipe(Effect.flip)).reason).toBe("expired");
-        expect(yield* f.reclaimer.expire(receipt.page.receiptId)).toEqual(disposition);
+        const expire26 = yield* f.reclaimer.expire(receipt.page.receiptId);
+        expect(expire26).toEqual(disposition);
         const fresh = yield* f.batch("6");
         const mixed = NativeTraceBatch.make({ ...fresh, spans: [...first.spans, ...fresh.spans] });
         const accepted = yield* f.native.acceptBatch(mixed);
@@ -390,8 +417,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
           conflictIndices: [],
           expiredIndices: [0],
         });
-        assertSome(yield* f.native.readNewEvents(accepted.page.receiptId), fresh.spans);
-        expect(yield* f.native.acceptBatch(mixed)).toEqual(accepted);
+        const readNewEvents27 = yield* f.native.readNewEvents(accepted.page.receiptId);
+        assertSome(readNewEvents27, fresh.spans);
+        const acceptBatch28 = yield* f.native.acceptBatch(mixed);
+        expect(acceptBatch28).toEqual(accepted);
       })
   )
 );
@@ -407,8 +436,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       yield* TestClock.adjust("24 hours");
       yield* f.reclaimer.expire(first.page.receiptId);
       expect((yield* f.native.acceptBatch(doubled).pipe(Effect.flip)).reason).toBe("expired");
-      assertSome(yield* f.native.receipt(duplicate.page.receiptId), duplicate);
-      expect(yield* f.reclaimer.expire(duplicate.page.receiptId)).toMatchObject({
+      const receipt29 = yield* f.native.receipt(duplicate.page.receiptId);
+      assertSome(receipt29, duplicate);
+      const expire30 = yield* f.reclaimer.expire(duplicate.page.receiptId);
+      expect(expire30).toMatchObject({
         _tag: "Some",
         value: { eventCount: 1, states: { pending: 1 } },
       });
@@ -426,12 +457,15 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const sql = yield* SqlClient.SqlClient;
       yield* sql`CREATE TRIGGER expiry_failure BEFORE INSERT ON observation_page_dispositions BEGIN SELECT RAISE(ABORT,'synthetic expiry failure'); END`;
       expect((yield* f.reclaimer.expire(receipt.page.receiptId).pipe(Effect.flip)).reason).toBe("storage");
-      expect(yield* f.native.acceptBatch(batch)).toEqual(receipt);
-      assertSome(yield* f.native.readBatch(receipt.page.receiptId), batch);
+      const acceptBatch31 = yield* f.native.acceptBatch(batch);
+      expect(acceptBatch31).toEqual(receipt);
+      const readBatch32 = yield* f.native.readBatch(receipt.page.receiptId);
+      assertSome(readBatch32, batch);
       yield* sql`DROP TRIGGER expiry_failure`;
       yield* f.reclaimer.expire(receipt.page.receiptId);
       const reopened = yield* makePayloadReclaimer(f.intakeConfig, f.ledgerConfig, f.policy);
-      expect(yield* reopened.readDisposition(receipt.page.receiptId)).toMatchObject({
+      const readDisposition33 = yield* reopened.readDisposition(receipt.page.receiptId);
+      expect(readDisposition33).toMatchObject({
         _tag: "Some",
         value: { reason: "retention-expired" },
       });
@@ -450,7 +484,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("keeps expiry disabled by default", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      const receipt = yield* f.native.acceptBatch(yield* f.batch());
+      const batch34 = yield* f.batch();
+      const receipt = yield* f.native.acceptBatch(batch34);
       yield* TestClock.adjust("48 hours");
       expect((yield* f.reclaimer.expire(receipt.page.receiptId).pipe(Effect.flip)).reason).toBe("configuration");
       expect((yield* f.native.stats).pages).toBe(1);
@@ -479,11 +514,13 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const intake = yield* makeTranscriptIntakeJournal(f.intakeConfig);
       const receipt = yield* intake.acceptPage(page, O.none());
       yield* TestClock.adjust("24 hours");
-      expect(yield* f.reclaimer.expire(receipt.receiptId)).toMatchObject({
+      const expire35 = yield* f.reclaimer.expire(receipt.receiptId);
+      expect(expire35).toMatchObject({
         _tag: "Some",
         value: { eventCount: 1, states: { pending: 1 } },
       });
-      assertSome(yield* intake.readCursor("codex", page.cursor.pathHash), page.cursor);
+      const readCursor36 = yield* intake.readCursor("codex", page.cursor.pathHash);
+      assertSome(readCursor36, page.cursor);
       expect((yield* intake.acceptPage(page, O.none()).pipe(Effect.flip)).reason).toBe("expired");
     })
   )
@@ -501,7 +538,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       if (span === undefined) return yield* Effect.die("Missing fixture span");
       const attempt = DeliveryAttempt.make({ attemptId: id("f"), eventIds: [span.eventId], payloadDigest: id("e") });
       yield* f.ledger.prepareAttempt(attempt);
-      assertNone(yield* f.reclaimer.expire(receipt.page.receiptId));
+      const expire37 = yield* f.reclaimer.expire(receipt.page.receiptId);
+      assertNone(expire37);
       yield* TestClock.adjust("60 seconds");
       const snapshot = yield* f.reclaimer.expire(receipt.page.receiptId);
       expect(snapshot).toMatchObject({ _tag: "Some", value: { states: { unresolved: 1, visible: 0 } } });
@@ -513,8 +551,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
           observedAt: 86_460_001,
         })
       );
-      expect(yield* f.ledger.state(span.eventId)).toMatchObject({ _tag: "Some", value: { state: "visible" } });
-      expect(yield* f.reclaimer.readDisposition(receipt.page.receiptId)).toEqual(snapshot);
+      const state38 = yield* f.ledger.state(span.eventId);
+      expect(state38).toMatchObject({ _tag: "Some", value: { state: "visible" } });
+      const readDisposition39 = yield* f.reclaimer.readDisposition(receipt.page.receiptId);
+      expect(readDisposition39).toEqual(snapshot);
       expect((yield* f.native.acceptBatch(batch).pipe(Effect.flip)).reason).toBe("expired");
     })
   )
@@ -524,15 +564,21 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("expires a retained page without fabricating enrollment after delivery-event capacity is exhausted", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2, 4, true, 1);
-      const first = yield* f.native.acceptBatch(yield* f.batch("1"));
-      const second = yield* f.native.acceptBatch(yield* f.batch("2"));
-      expect(yield* f.ledger.registerPage(first.page.receiptId)).toBe(1);
-      expect(yield* f.ledger.registerPage(second.page.receiptId).pipe(Effect.flip)).toMatchObject({
+      const batch40 = yield* f.batch("1");
+      const first = yield* f.native.acceptBatch(batch40);
+      const batch41 = yield* f.batch("2");
+      const second = yield* f.native.acceptBatch(batch41);
+      const registerPage42 = yield* f.ledger.registerPage(first.page.receiptId);
+      expect(registerPage42).toBe(1);
+      const pipe43 = yield* f.ledger.registerPage(second.page.receiptId).pipe(Effect.flip);
+      expect(pipe43).toMatchObject({
         reason: "capacity",
       });
       yield* TestClock.adjust("24 hours");
-      expect(yield* f.reclaimer.expire(first.page.receiptId)).toMatchObject({ _tag: "Some" });
-      expect(yield* f.reclaimer.expire(second.page.receiptId)).toMatchObject({
+      const expire44 = yield* f.reclaimer.expire(first.page.receiptId);
+      expect(expire44).toMatchObject({ _tag: "Some" });
+      const expire45 = yield* f.reclaimer.expire(second.page.receiptId);
+      expect(expire45).toMatchObject({
         _tag: "Some",
         value: {
           eventCount: 1,
@@ -543,8 +589,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       });
       const base = yield* makeTranscriptIntakeJournal(f.intakeConfig);
       expect((yield* base.stats).pages).toBe(0);
-      expect(yield* base.readDisposition(second.page.receiptId)).toMatchObject({ _tag: "Some" });
-      expect(yield* f.native.readBatch(second.page.receiptId).pipe(Effect.flip)).toMatchObject({ reason: "expired" });
+      const readDisposition46 = yield* base.readDisposition(second.page.receiptId);
+      expect(readDisposition46).toMatchObject({ _tag: "Some" });
+      const pipe47 = yield* f.native.readBatch(second.page.receiptId).pipe(Effect.flip);
+      expect(pipe47).toMatchObject({ reason: "expired" });
     })
   )
 );
@@ -574,10 +622,13 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
           Effect.flatMap(decodeArguments)
         );
       yield* sql`DELETE FROM observation_delivery_events WHERE event_id=${eventId}`;
-      expect(yield* f.reclaimer.expire(mixed.page.receiptId).pipe(Effect.flip)).toMatchObject({ reason: "storage" });
-      expect(yield* f.native.readBatch(mixed.page.receiptId)).toMatchObject({ _tag: "Some" });
+      const pipe48 = yield* f.reclaimer.expire(mixed.page.receiptId).pipe(Effect.flip);
+      expect(pipe48).toMatchObject({ reason: "storage" });
+      const readBatch49 = yield* f.native.readBatch(mixed.page.receiptId);
+      expect(readBatch49).toMatchObject({ _tag: "Some" });
       yield* sql`INSERT INTO observation_delivery_events(event_id,receipt_id,payload_hash) VALUES(${membership[0].event_id},${membership[0].receipt_id},${membership[0].payload_hash})`;
-      expect(yield* f.reclaimer.expire(mixed.page.receiptId)).toMatchObject({
+      const expire50 = yield* f.reclaimer.expire(mixed.page.receiptId);
+      expect(expire50).toMatchObject({
         _tag: "Some",
         value: {
           eventCount: 2,
@@ -603,11 +654,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       yield* TestClock.adjust("24 hours");
       const sql = yield* SqlClient.SqlClient;
       yield* sql`DELETE FROM observation_delivery_events`;
-      expect(yield* f.reclaimer.expire(duplicate.page.receiptId).pipe(Effect.flip)).toMatchObject({
+      const pipe51 = yield* f.reclaimer.expire(duplicate.page.receiptId).pipe(Effect.flip);
+      expect(pipe51).toMatchObject({
         reason: "storage",
       });
-      expect(yield* f.native.readBatch(duplicate.page.receiptId)).toMatchObject({ _tag: "Some" });
-      assertNone(yield* f.reclaimer.readDisposition(duplicate.page.receiptId));
+      const readBatch52 = yield* f.native.readBatch(duplicate.page.receiptId);
+      expect(readBatch52).toMatchObject({ _tag: "Some" });
+      const readDisposition53 = yield* f.reclaimer.readDisposition(duplicate.page.receiptId);
+      assertNone(readDisposition53);
     })
   )
 );
@@ -642,11 +696,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       });
       const intake = yield* makeTranscriptIntakeJournal(f.intakeConfig);
       const receipt = yield* intake.acceptPage(page, O.none());
-      expect(yield* f.ledger.registerPage(receipt.receiptId).pipe(Effect.flip)).toMatchObject({ reason: "capacity" });
+      const pipe54 = yield* f.ledger.registerPage(receipt.receiptId).pipe(Effect.flip);
+      expect(pipe54).toMatchObject({ reason: "capacity" });
       yield* TestClock.adjust("24 hours");
-      expect(yield* f.reclaimer.expire(receipt.receiptId).pipe(Effect.flip)).toMatchObject({ reason: "storage" });
+      const pipe55 = yield* f.reclaimer.expire(receipt.receiptId).pipe(Effect.flip);
+      expect(pipe55).toMatchObject({ reason: "storage" });
       expect((yield* intake.stats).pages).toBe(1);
-      assertNone(yield* intake.readDisposition(receipt.receiptId));
+      const readDisposition56 = yield* intake.readDisposition(receipt.receiptId);
+      assertNone(readDisposition56);
     })
   )
 );
@@ -655,20 +712,22 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("refuses installation over an already overcommitted standalone journal without discarding receipts", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2, 2, true);
-      yield* f.native.acceptBatch(yield* f.batch("1"));
-      yield* f.native.acceptBatch(yield* f.batch("2"));
+      const batch57 = yield* f.batch("1");
+      yield* f.native.acceptBatch(batch57);
+      const batch58 = yield* f.batch("2");
+      yield* f.native.acceptBatch(batch58);
       const sql = yield* SqlClient.SqlClient;
       // Simulate a standalone journal that never installed a retention policy.
       yield* sql`DROP TABLE observation_reclamation_config`;
-      expect(
-        yield* makePayloadReclaimer(
-          f.intakeConfig,
-          f.ledgerConfig,
-          PayloadRetentionPolicy.make({ ...f.policy, maxDispositions: 1 })
-        ).pipe(Effect.flip)
-      ).toMatchObject({ reason: "capacity" });
+      const pipe59 = yield* makePayloadReclaimer(
+        f.intakeConfig,
+        f.ledgerConfig,
+        PayloadRetentionPolicy.make({ ...f.policy, maxDispositions: 1 })
+      ).pipe(Effect.flip);
+      expect(pipe59).toMatchObject({ reason: "capacity" });
       expect((yield* f.native.stats).pages).toBe(2);
-      expect(yield* sql`SELECT name FROM sqlite_master WHERE name='observation_reclamation_config'`).toHaveLength(0);
+      const value60 = yield* sql`SELECT name FROM sqlite_master WHERE name='observation_reclamation_config'`;
+      expect(value60).toHaveLength(0);
     })
   )
 );

@@ -44,7 +44,8 @@ import type { ServerMode } from "./cache-conformance-server.ts";
 const RunJson = S.fromJsonString(CacheConformanceRun, { space: 2 });
 const runAgainst = Effect.fn("test.runAgainst")(function* (mode: ServerMode, split = true) {
   const server = yield* makeConformanceServer(mode);
-  const corpus = yield* buildCacheConformanceCorpus(yield* repoRoot);
+  const repoRoot1 = yield* repoRoot;
+  const corpus = yield* buildCacheConformanceCorpus(repoRoot1);
   const report = yield* runCacheConformance(corpus, targetFor({ url: server.url, readerWriterSplit: split }), bearers);
   return { report, tags: yield* server.tags };
 });
@@ -69,7 +70,8 @@ const recoverAfterBindCollisions = Effect.fn("test.recoverAfterBindCollisions")(
     );
     expect(response.status).toBe(200);
     assertSome(Headers.get(response.headers, "x-beep-cache-result"), "allowed");
-    expect(yield* response.text).toBe('{"status":"enabled"}');
+    const text2 = yield* response.text;
+    expect(text2).toBe('{"status":"enabled"}');
   }).pipe(Effect.ensuring(Effect.sync(() => serve.mockRestore())));
 });
 
@@ -79,8 +81,10 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
   it.effect("regenerates byte-identically and matches the committed corpus", () =>
     Effect.gen(function* () {
       const root = yield* repoRoot;
-      const first = yield* renderCacheConformanceCorpus(yield* buildCacheConformanceCorpus(root));
-      const second = yield* renderCacheConformanceCorpus(yield* buildCacheConformanceCorpus(root));
+      const buildCacheConformanceCorpus3 = yield* buildCacheConformanceCorpus(root);
+      const first = yield* renderCacheConformanceCorpus(buildCacheConformanceCorpus3);
+      const buildCacheConformanceCorpus4 = yield* buildCacheConformanceCorpus(root);
+      const second = yield* renderCacheConformanceCorpus(buildCacheConformanceCorpus4);
       expect(first).toBe(second);
       assertTrue(Str.endsWith("}\n")(first));
       yield* syncCacheConformanceCorpus(root, true);
@@ -144,7 +148,10 @@ it.layer(Services, { timeout: "120 seconds", excludeTestServices: true })("cache
       for (const read of reads) assertSome(read.backendResult, "backend-unavailable");
       const encoded = yield* S.encodeEffect(RunJson)(report);
       expect(encoded).toContain("backend-unavailable");
-      expect(yield* S.encodeEffect(RunJson)(yield* S.decodeEffect(RunJson)(encoded))).toBe(encoded);
+      const argument = S.encodeEffect(RunJson);
+      const value1 = yield* S.decodeEffect(RunJson)(encoded);
+      const value = yield* argument(value1);
+      expect(value).toBe(encoded);
     })
   );
 
@@ -254,7 +261,8 @@ it.layer(Services, { timeout: "120 seconds", excludeTestServices: true })("cache
       for (const secret of [...R.values(secrets), ...tags]) expect(encoded).not.toContain(secret);
       expect(encoded).not.toContain("127.0.0.1");
       const decoded = yield* S.decodeEffect(RunJson)(encoded);
-      expect(yield* S.encodeEffect(RunJson)(decoded)).toBe(encoded);
+      const value5 = yield* S.encodeEffect(RunJson)(decoded);
+      expect(value5).toBe(encoded);
     })
   );
 
@@ -275,7 +283,8 @@ it.layer(Services, { timeout: "120 seconds", excludeTestServices: true })("cache
 
   it.effect("refuses a non-loopback base URL for the local-container profile", () =>
     Effect.gen(function* () {
-      const corpus = yield* buildCacheConformanceCorpus(yield* repoRoot);
+      const repoRoot6 = yield* repoRoot;
+      const corpus = yield* buildCacheConformanceCorpus(repoRoot6);
       const refused = yield* runCacheConformance(corpus, targetFor({ url: "http://cache.example.com" }), bearers).pipe(
         Effect.result
       );
@@ -297,7 +306,9 @@ it.effect.prop(
   ({ exchange }) =>
     Effect.gen(function* () {
       const encoded = yield* encodeExchange(CacheConformanceExchange.make(exchange));
-      expect(yield* encodeExchange(yield* decodeExchange(encoded))).toBe(encoded);
+      const decodedExchange = yield* decodeExchange(encoded);
+      const encodedExchange = yield* encodeExchange(decodedExchange);
+      expect(encodedExchange).toBe(encoded);
     }),
   { arbitrary: { runs: 50 } }
 );

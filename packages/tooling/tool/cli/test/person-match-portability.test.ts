@@ -255,8 +255,10 @@ describe("person-match backend portability", () => {
     Effect.gen(function* () {
       yield* PersonMatchWorkerPolicyForTest.writeAdaFaceSetupFallbackDiagnostic("simulated setup failure");
 
-      expect(A.map(yield* TestConsole.logLines, String)).toEqual([]);
-      expect(A.map(yield* TestConsole.errorLines, String)).toEqual([
+      const logLines1 = yield* TestConsole.logLines;
+      expect(A.map(logLines1, String)).toEqual([]);
+      const errorLines2 = yield* TestConsole.errorLines;
+      expect(A.map(errorLines2, String)).toEqual([
         "Person-match primary environment setup failed; retrying the pinned CPU environment: simulated setup failure",
       ]);
     }).pipe(provideScopedLayer(Layer.fresh(TestConsole.layer)))

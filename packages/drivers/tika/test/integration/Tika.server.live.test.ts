@@ -41,9 +41,8 @@ const liveTikaUrl = Config.String(BEEP_TEST_TIKA_URL_ENV).pipe(Config.option, Ef
 const skipNotice = `Live Tika Server requires ${BEEP_TEST_TIKA_URL_ENV}.`;
 
 const liveEngine = Effect.fn("TikaLive.engine")(function* (baseUrl: string) {
-  return yield* makeTikaServerFileProcessingEngine(
-    yield* decodeTikaServerEngineConfig({ baseUrl, timeoutMillis: 30_000 })
-  );
+  const decodedTikaServerEngineConfig = yield* decodeTikaServerEngineConfig({ baseUrl, timeoutMillis: 30_000 });
+  return yield* makeTikaServerFileProcessingEngine(decodedTikaServerEngineConfig);
 });
 
 const liveOperation = Effect.fn("TikaLive.operation")(function* (
@@ -124,7 +123,8 @@ it.layer(Layer.merge(FetchHttpClient.layer, NodeServices.layer), { excludeTestSe
           }
 
           const engine = yield* liveEngine(baseUrl.value);
-          const result = yield* engine.extract(yield* liveOperation(format, extension, bytes));
+          const liveOperation1 = yield* liveOperation(format, extension, bytes);
+          const result = yield* engine.extract(liveOperation1);
 
           expect(result.engine).toBe("apache-tika");
           expect(result.text).toContain(liveMarker);
@@ -142,7 +142,8 @@ it.layer(Layer.merge(FetchHttpClient.layer, NodeServices.layer), { excludeTestSe
         }
 
         const engine = yield* liveEngine(baseUrl.value);
-        const result = yield* engine.extract(yield* liveOperation("pdf-text-layer", "pdf", makeLivePdf()));
+        const liveOperation2 = yield* liveOperation("pdf-text-layer", "pdf", makeLivePdf());
+        const result = yield* engine.extract(liveOperation2);
 
         expect(result.metadata["Content-Type"]).toContain("pdf");
         expect(Str.isNonEmpty(result.text ?? "")).toBe(true);
@@ -159,7 +160,8 @@ it.layer(Layer.merge(FetchHttpClient.layer, NodeServices.layer), { excludeTestSe
         }
 
         const engine = yield* liveEngine(baseUrl.value);
-        const result = yield* engine.extract(yield* liveOperation("image-metadata", "png", makeLivePng()));
+        const liveOperation3 = yield* liveOperation("image-metadata", "png", makeLivePng());
+        const result = yield* engine.extract(liveOperation3);
 
         expect(result.text).toBeUndefined();
         expect(result.metadata["Content-Type"]).toContain("png");

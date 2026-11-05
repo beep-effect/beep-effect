@@ -20,7 +20,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -45,7 +46,8 @@ describe("YamlToken property floor", () => {
           assert.strictEqual(token.text, Str.slice(token.offset, token.offset + token.length)(text));
         }
         assert.deepStrictEqual(YamlTokens.tokenize(reconstructed), result);
-        assert.deepStrictEqual(yield* Stream.runCollect(YamlTokens.stream(text)), tokens);
+        const resultCollect = yield* Stream.runCollect(YamlTokens.stream(text));
+        assert.deepStrictEqual(resultCollect, tokens);
       }),
     runs
   );

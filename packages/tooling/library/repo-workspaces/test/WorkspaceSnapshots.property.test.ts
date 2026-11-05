@@ -66,7 +66,8 @@ it.layer(platform, { timeout: "30 seconds" })((it) => {
         text = yield* S.encodeEffect(PackageText)(first);
         const second = O.getOrThrow((yield* service.at("serialized")).package(value.name));
         assert.isTrue(S.toEquivalence(PackageStateSnapshot)(first, second));
-        assert.strictEqual(yield* S.encodeEffect(PackageText)(second), text);
+        const value1 = yield* S.encodeEffect(PackageText)(second);
+        assert.strictEqual(value1, text);
       }),
     runs
   );
@@ -80,14 +81,16 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(WorkspaceSnapshotsOptions)(value);
       const decoded = yield* S.decodeEffect(WorkspaceSnapshotsOptions)(encoded);
       assert.isTrue(S.toEquivalence(WorkspaceSnapshotsOptions)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(WorkspaceSnapshotsOptions)(decoded), encoded);
+      const value2 = yield* S.encodeEffect(WorkspaceSnapshotsOptions)(decoded);
+      assert.deepStrictEqual(value2, encoded);
     }),
   runs
 );
 
 it.effect("snapshot options accept an absent stopAt and reject an explicit undefined", () =>
   Effect.gen(function* () {
-    assert.deepStrictEqual(yield* S.decodeEffect(WorkspaceSnapshotsOptions)({}), WorkspaceSnapshotsOptions.make({}));
+    const value3 = yield* S.decodeEffect(WorkspaceSnapshotsOptions)({});
+    assert.deepStrictEqual(value3, WorkspaceSnapshotsOptions.make({}));
     assertFalse(S.is(WorkspaceSnapshotsOptions)({ stopAt: undefined }));
   })
 );

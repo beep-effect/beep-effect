@@ -41,7 +41,8 @@ describe("setextHeading parser properties", () => {
         const serialized = yield* Markdown.stringify(parsed);
         const reparsed = yield* Markdown.parse(serialized);
         assert.deepStrictEqual(semantic(reparsed), semantic(parsed));
-        assert.strictEqual(yield* Markdown.stringify(reparsed), serialized);
+        const stringify1 = yield* Markdown.stringify(reparsed);
+        assert.strictEqual(stringify1, serialized);
       }),
     runs
   );
@@ -53,10 +54,10 @@ describe("setextHeading parser properties", () => {
         const source = sourceOf(text, style);
         const once = MarkdownFormat.formatToString(source, undefined, options);
         assert.strictEqual(MarkdownFormat.formatToString(once, undefined, options), once);
-        assert.deepStrictEqual(
-          semantic(Mdast.toMdast(yield* Markdown.parse(once))),
-          semantic(Mdast.toMdast(yield* Markdown.parse(source)))
-        );
+        const parsed2 = yield* Markdown.parse(once);
+        const argument = semantic(Mdast.toMdast(parsed2));
+        const parsed1 = yield* Markdown.parse(source);
+        assert.deepStrictEqual(argument, semantic(Mdast.toMdast(parsed1)));
       }),
     runs
   );
@@ -79,10 +80,8 @@ describe("setextHeading parser properties", () => {
         const formatted = MarkdownFormat.formatToString(source, undefined, options);
         assert.ok(Str.startsWith(prefix)(formatted));
         assert.ok(Str.endsWith(suffix)(formatted));
-        assert.deepStrictEqual(
-          semantic(Mdast.toMdast(yield* Markdown.parse(formatted))),
-          semantic(Mdast.toMdast(parsed))
-        );
+        const parsed3 = yield* Markdown.parse(formatted);
+        assert.deepStrictEqual(semantic(Mdast.toMdast(parsed3)), semantic(Mdast.toMdast(parsed)));
       }),
     runs
   );

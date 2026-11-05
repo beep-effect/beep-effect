@@ -22,7 +22,8 @@ describe("MemoryFileSystem.makeHandle", () => {
       assert.deepStrictEqual(handle.volume.paths(), ["/a.txt", "/b.txt"]);
       assert.strictEqual(handle.sync.readFile("/b.txt"), "b");
       handle.write("/c/d.txt", "d");
-      assert.strictEqual(yield* handle.fileSystem.readFileString("/c/d.txt"), "d");
+      const readFileString1 = yield* handle.fileSystem.readFileString("/c/d.txt");
+      assert.strictEqual(readFileString1, "d");
     })
   );
 
@@ -335,10 +336,12 @@ describe("MemoryFileSystem.makeSync", () => {
         });
       });
       const read = Effect.fnUntraced(function* () {
-        return yield* Context.get(yield* Layer.build(vol.layer), FileSystem.FileSystem).exists("/data/repo");
+        const build2 = yield* Layer.build(vol.layer);
+        return yield* Context.get(build2, FileSystem.FileSystem).exists("/data/repo");
       });
       yield* write();
-      assert.isTrue(yield* read());
+      const read3 = yield* read();
+      assert.isTrue(read3);
       assert.isTrue(vol.volume.isDirectory("/data/repo"));
     })
   );

@@ -19,7 +19,8 @@ it.effect("wire values normalize negative zero exactly as script JSON does", () 
       "@graph": [{ "@id": "_:work", "@type": "CreativeWork", nested: { values: [0, 0, -1] } }],
     };
     assert.deepStrictEqual(graph.toJsonLd(), expected);
-    assert.deepStrictEqual(yield* S.decodeEffect(JsonValue)(graph.toScriptBody()), expected);
+    const value = yield* S.decodeEffect(JsonValue)(graph.toScriptBody());
+    assert.deepStrictEqual(value, expected);
   })
 );
 
@@ -40,6 +41,7 @@ it.effect("script text escapes all hazards without changing parsed string conten
     ]);
     assert.match(graph.toScriptBody(), /\\u003c\/script\\u003e/);
     assert.strictEqual(/[<>&]/.test(graph.toScriptBody()), false);
-    assert.deepStrictEqual(yield* S.decodeEffect(JsonValue)(graph.toScriptBody()), graph.toJsonLd());
+    const value1 = yield* S.decodeEffect(JsonValue)(graph.toScriptBody());
+    assert.deepStrictEqual(value1, graph.toJsonLd());
   })
 );

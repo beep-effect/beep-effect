@@ -215,15 +215,13 @@ layer(testLayer, { timeout: "30 seconds" })("schema catalog command", (it) => {
 
             const exit = yield* Effect.exit(runLintCommand(["schema-catalog"]));
             expectReportedExit(exit);
-            expect(yield* TestConsole.errorLines).toContain(
-              "[schema-catalog] orphaned standards/schema-catalog.generated.jsonc"
-            );
+            const errorLines1 = yield* TestConsole.errorLines;
+            expect(errorLines1).toContain("[schema-catalog] orphaned standards/schema-catalog.generated.jsonc");
 
             yield* runLintCommand(["schema-catalog", "--write"]);
             yield* runLintCommand(["schema-catalog"]);
-            expect(yield* TestConsole.logLines).toContain(
-              "[schema-catalog] removed standards/schema-catalog.generated.jsonc"
-            );
+            const logLines2 = yield* TestConsole.logLines;
+            expect(logLines2).toContain("[schema-catalog] removed standards/schema-catalog.generated.jsonc");
           })
         );
       })

@@ -32,13 +32,19 @@ it.layer(layer, { timeout: "30 seconds" })((it) => {
       const handle = yield* Harness;
       yield* handle.type("x");
       const terminal = yield* Terminal.Terminal;
-      assert.strictEqual(yield* terminal.columns, 91);
-      assert.strictEqual(yield* terminal.rows, 33);
+      const columns1 = yield* terminal.columns;
+      assert.strictEqual(columns1, 91);
+      const rows2 = yield* terminal.rows;
+      assert.strictEqual(rows2, 33);
       yield* terminal.display("ready");
-      assertFailure(yield* terminal.readLine.pipe(Effect.result), Terminal.QuitError.make({}));
-      assert.strictEqual(yield* handle.output, "ready");
-      assert.strictEqual(yield* handle.pending, 1);
-      assert.deepStrictEqual(yield* handle.reads, { keys: 0, lines: 1, subscriptions: 0 });
+      const pipe3 = yield* terminal.readLine.pipe(Effect.result);
+      assertFailure(pipe3, Terminal.QuitError.make({}));
+      const output4 = yield* handle.output;
+      assert.strictEqual(output4, "ready");
+      const pending5 = yield* handle.pending;
+      assert.strictEqual(pending5, 1);
+      const reads6 = yield* handle.reads;
+      assert.deepStrictEqual(reads6, { keys: 0, lines: 1, subscriptions: 0 });
     })
   );
 });
@@ -52,7 +58,8 @@ it.layer(sizedLayer, { timeout: "30 seconds" })((it) => {
       const subscription = yield* Effect.scoped(
         Effect.gen(function* () {
           const sizes = yield* terminal.size;
-          assert.deepStrictEqual(yield* Queue.take(sizes), { columns: 72, rows: 18 });
+          const take7 = yield* Queue.take(sizes);
+          assert.deepStrictEqual(take7, { columns: 72, rows: 18 });
           return sizes;
         })
       );

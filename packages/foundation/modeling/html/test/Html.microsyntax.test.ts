@@ -98,8 +98,10 @@ describe("@beep/html attribute microsyntaxes", () => {
       expect(isHeadingOffset(8)).toBe(true);
       expect(isHeadingOffset(-1)).toBe(false);
       expect(isHeadingOffset(9)).toBe(false);
-      expect(yield* decodePopover("")).toBe("auto");
-      expect(yield* decodePopover("auto")).toBe("auto");
+      const decodedPopover = yield* decodePopover("");
+      expect(decodedPopover).toBe("auto");
+      const decodedPopover1 = yield* decodePopover("auto");
+      expect(decodedPopover1).toBe("auto");
       expect(isPopover("")).toBe(false);
     })
   );
@@ -167,8 +169,10 @@ describe("@beep/html attribute microsyntaxes", () => {
 
   it.effect("normalizes token lists to lowercase registry order and one space", () =>
     Effect.gen(function* () {
-      expect(yield* decodeRel("  NOREFERRER   noopener ")).toBe("noopener noreferrer");
-      expect(yield* encodeRel("noopener noreferrer")).toBe("noopener noreferrer");
+      const decodedRel = yield* decodeRel("  NOREFERRER   noopener ");
+      expect(decodedRel).toBe("noopener noreferrer");
+      const encodedRel = yield* encodeRel("noopener noreferrer");
+      expect(encodedRel).toBe("noopener noreferrer");
       expect(() => Rel.make("noreferrer noopener")).toThrow();
 
       const decoded = yield* decodeAnchor({
@@ -176,7 +180,8 @@ describe("@beep/html attribute microsyntaxes", () => {
         rel: "NOREFERRER  noopener",
         children: [],
       });
-      expect(yield* encodeAnchor(decoded)).toStrictEqual({
+      const encodedAnchor = yield* encodeAnchor(decoded);
+      expect(encodedAnchor).toStrictEqual({
         _tag: "a",
         rel: "noopener noreferrer",
         children: [],
@@ -349,7 +354,9 @@ describe("@beep/html attribute microsyntaxes", () => {
     ([input]) =>
       Effect.gen(function* () {
         const canonical = yield* decodeRel(input);
-        expect(yield* decodeRel(yield* encodeRel(canonical))).toBe(canonical);
+        const encodedRel3 = yield* encodeRel(canonical);
+        const decodedRel2 = yield* decodeRel(encodedRel3);
+        expect(decodedRel2).toBe(canonical);
 
         return true;
       }),
@@ -361,12 +368,10 @@ describe("@beep/html attribute microsyntaxes", () => {
       expect(isAutocompleteAttribute("section-checkout shipping email")).toBe(true);
       expect(isAutocompleteAttribute("shipping unknown-field")).toBe(false);
       expect(isAutocompleteAttribute("shipping\u00a0email")).toBe(false);
-      expect(yield* decodeAutocompleteAttribute(" SECTION-Checkout   SHIPPING Email ")).toBe(
-        "section-checkout shipping email"
-      );
-      expect(yield* encodeAutocompleteAttribute("section-checkout shipping email")).toBe(
-        "section-checkout shipping email"
-      );
+      const decodedAutocompleteAttribute = yield* decodeAutocompleteAttribute(" SECTION-Checkout   SHIPPING Email ");
+      expect(decodedAutocompleteAttribute).toBe("section-checkout shipping email");
+      const encodedAutocompleteAttribute = yield* encodeAutocompleteAttribute("section-checkout shipping email");
+      expect(encodedAutocompleteAttribute).toBe("section-checkout shipping email");
       expect(() => AutocompleteAttribute.make("SHIPPING email")).toThrow();
       expect(isDatasetKey("testid")).toBe(true);
       expect(isDatasetKey("1")).toBe(true);

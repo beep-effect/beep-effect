@@ -107,7 +107,9 @@ describe("@beep/law-practice-use-cases docket questions", () => {
           expect(question.options.length).toBeGreaterThanOrEqual(2);
           expect(question.options.length).toBeLessThanOrEqual(5);
           assertTrue(A.some(question.options, ({ write }) => O.isNone(write)));
-          expect(yield* decodeQuestion(yield* encodeQuestion(question))).toStrictEqual(question);
+          const encodedQuestion = yield* encodeQuestion(question);
+          const decodedQuestion = yield* decodeQuestion(encodedQuestion);
+          expect(decodedQuestion).toStrictEqual(question);
         }
       })
     );
@@ -143,21 +145,20 @@ describe("@beep/law-practice-use-cases docket questions", () => {
     it.effect(
       "offers one calendar option per distinct candidate date, earliest first",
       Effect.fnUntraced(function* () {
-        const question = yield* Effect.fromOption(
-          yield* raise(
-            DocketQuestionInput.make({
-              outcome: needsReview("agents-disagree"),
-              candidateDates: [
-                candidate(day(11, 4), "reviewer"),
-                candidate(day(11, 2), "extractor"),
-                candidate(day(11, 2), "stated"),
-              ],
-              conversationId: O.some("AAQkADsynthetic-thread"),
-              docket: O.some("90001US01"),
-              title: O.some("Response to office action"),
-            })
-          )
+        const raise1 = yield* raise(
+          DocketQuestionInput.make({
+            outcome: needsReview("agents-disagree"),
+            candidateDates: [
+              candidate(day(11, 4), "reviewer"),
+              candidate(day(11, 2), "extractor"),
+              candidate(day(11, 2), "stated"),
+            ],
+            conversationId: O.some("AAQkADsynthetic-thread"),
+            docket: O.some("90001US01"),
+            title: O.some("Response to office action"),
+          })
         );
+        const question = yield* Effect.fromOption(raise1);
 
         expect(A.map(question.options, ({ optionId }) => optionId)).toStrictEqual([
           "use-2026-11-02",
@@ -190,14 +191,13 @@ describe("@beep/law-practice-use-cases docket questions", () => {
     it.effect(
       "keeps at most five options, dropping the latest dates",
       Effect.fnUntraced(function* () {
-        const question = yield* Effect.fromOption(
-          yield* raise(
-            DocketQuestionInput.make({
-              outcome: needsReview("flagged-low-confidence"),
-              candidateDates: A.map([20, 4, 12, 2, 9], (dayOfMonth) => candidate(day(11, dayOfMonth), "tracked")),
-            })
-          )
+        const raise2 = yield* raise(
+          DocketQuestionInput.make({
+            outcome: needsReview("flagged-low-confidence"),
+            candidateDates: A.map([20, 4, 12, 2, 9], (dayOfMonth) => candidate(day(11, dayOfMonth), "tracked")),
+          })
         );
+        const question = yield* Effect.fromOption(raise2);
 
         expect(A.map(question.options, ({ optionId }) => optionId)).toStrictEqual([
           "use-2026-11-02",
@@ -214,8 +214,10 @@ describe("@beep/law-practice-use-cases docket questions", () => {
       "names the email it is about and links it, without changing the item id or the options",
       Effect.fnUntraced(function* () {
         const outcome = needsReview("agents-disagree");
-        const plain = yield* Effect.fromOption(yield* raise(DocketQuestionInput.make({ outcome })));
-        const named = yield* Effect.fromOption(yield* raise(identified(outcome)));
+        const raise3 = yield* raise(DocketQuestionInput.make({ outcome }));
+        const plain = yield* Effect.fromOption(raise3);
+        const raise4 = yield* raise(identified(outcome));
+        const named = yield* Effect.fromOption(raise4);
 
         expect(named.itemId).toBe(plain.itemId);
         expect(optionIds(named)).toStrictEqual(optionIds(plain));
@@ -233,7 +235,9 @@ describe("@beep/law-practice-use-cases docket questions", () => {
         expect(named.sourceRefs).toStrictEqual([]);
         assertTrue(docketQuestionNamesEmail(named));
         assertTrue(!docketQuestionNamesEmail(plain));
-        expect(yield* decodeQuestion(yield* encodeQuestion(named))).toStrictEqual(named);
+        const encodedQuestion16 = yield* encodeQuestion(named);
+        const decodedQuestion5 = yield* decodeQuestion(encodedQuestion16);
+        expect(decodedQuestion5).toStrictEqual(named);
       })
     );
 
@@ -241,15 +245,14 @@ describe("@beep/law-practice-use-cases docket questions", () => {
       "leaves out the parts of the email it does not know",
       Effect.fnUntraced(function* () {
         const outcome = needsReview("no-usable-date");
-        const dated = yield* Effect.fromOption(
-          yield* raise(DocketQuestionInput.make({ outcome, receivedDate: O.some(day(10, 20)) }))
+        const raise6 = yield* raise(DocketQuestionInput.make({ outcome, receivedDate: O.some(day(10, 20)) }));
+        const dated = yield* Effect.fromOption(raise6);
+        const raise7 = yield* raise(DocketQuestionInput.make({ outcome, sender: O.some(SENDER) }));
+        const fromOnly = yield* Effect.fromOption(raise7);
+        const raise8 = yield* raise(
+          DocketQuestionInput.make({ outcome, subject: O.some(`  ${SUBJECT}\n  (second notice) `) })
         );
-        const fromOnly = yield* Effect.fromOption(
-          yield* raise(DocketQuestionInput.make({ outcome, sender: O.some(SENDER) }))
-        );
-        const subjectOnly = yield* Effect.fromOption(
-          yield* raise(DocketQuestionInput.make({ outcome, subject: O.some(`  ${SUBJECT}\n  (second notice) `) }))
-        );
+        const subjectOnly = yield* Effect.fromOption(raise8);
 
         expect(A.take(factTexts(dated), 2)).toStrictEqual([
           "The email was received October 20, 2026.",
@@ -268,17 +271,17 @@ describe("@beep/law-practice-use-cases docket questions", () => {
       "treats a subject or sender of only whitespace as unknown",
       Effect.fnUntraced(function* () {
         const outcome = needsReview("no-usable-date");
-        const plain = yield* Effect.fromOption(yield* raise(DocketQuestionInput.make({ outcome })));
-        const blank = yield* Effect.fromOption(
-          yield* raise(
-            DocketQuestionInput.make({
-              outcome,
-              receivedDate: O.some(day(10, 20)),
-              sender: O.some(" \n "),
-              subject: O.some("   "),
-            })
-          )
+        const raise9 = yield* raise(DocketQuestionInput.make({ outcome }));
+        const plain = yield* Effect.fromOption(raise9);
+        const raise10 = yield* raise(
+          DocketQuestionInput.make({
+            outcome,
+            receivedDate: O.some(day(10, 20)),
+            sender: O.some(" \n "),
+            subject: O.some("   "),
+          })
         );
+        const blank = yield* Effect.fromOption(raise10);
         const backfilled = withDocketQuestionEmail(
           plain,
           DocketQuestionEmail.make({ messageLink: O.some("  "), sender: O.some("\t"), subject: O.some("  ") })
@@ -294,14 +297,13 @@ describe("@beep/law-practice-use-cases docket questions", () => {
     it.effect(
       "names the email of a stored question once, keeping its id, options and other facts",
       Effect.fnUntraced(function* () {
-        const stored = yield* Effect.fromOption(
-          yield* raise(
-            DocketQuestionInput.make({
-              outcome: needsReview("flagged-low-confidence"),
-              candidateDates: [candidate(day(11, 2), "extractor")],
-            })
-          )
+        const raise11 = yield* raise(
+          DocketQuestionInput.make({
+            outcome: needsReview("flagged-low-confidence"),
+            candidateDates: [candidate(day(11, 2), "extractor")],
+          })
         );
+        const stored = yield* Effect.fromOption(raise11);
         const email = DocketQuestionEmail.make({
           messageLink: O.some(MESSAGE_LINK),
           receivedDate: O.some(day(10, 20)),
@@ -330,12 +332,12 @@ describe("@beep/law-practice-use-cases docket questions", () => {
         // `printf '%s' 'AAMkAGsynthetic-message-1=' | sha256sum`, cut to 32 digits. Changing the hash, its
         // encoding or its length would re-key every stored docket question.
         const golden = "eb740d95d0e01389172d8c72ac30e815";
-        const question = yield* Effect.fromOption(
-          yield* raise(DocketQuestionInput.make({ outcome: needsReview("no-usable-date") }))
-        );
+        const raise12 = yield* raise(DocketQuestionInput.make({ outcome: needsReview("no-usable-date") }));
+        const question = yield* Effect.fromOption(raise12);
 
         expect(question.itemId).toBe(`docket-intake:no-usable-date:${golden}`);
-        expect(yield* docketQuestionDigest("AAMkAGsynthetic-message-1=")).toBe(golden);
+        const docketQuestionDigest13 = yield* docketQuestionDigest("AAMkAGsynthetic-message-1=");
+        expect(docketQuestionDigest13).toBe(golden);
       })
     );
 
@@ -343,9 +345,8 @@ describe("@beep/law-practice-use-cases docket questions", () => {
       "parses the reason and the message digest out of a question id",
       Effect.fnUntraced(function* () {
         const messageId = "AAMkAGsynthetic-message-9=";
-        const question = yield* Effect.fromOption(
-          yield* raise(DocketQuestionInput.make({ outcome: needsReview("due-date-past", messageId) }))
-        );
+        const raise14 = yield* raise(DocketQuestionInput.make({ outcome: needsReview("due-date-past", messageId) }));
+        const question = yield* Effect.fromOption(raise14);
         const digest = yield* docketQuestionDigest(messageId);
 
         assertSome(decodeItemId(question.itemId), ["docket-intake:", "due-date-past", ":", digest]);
@@ -370,7 +371,8 @@ describe("@beep/law-practice-use-cases docket questions", () => {
           NotDocketItem.make({ messageId: "AAMkAGsynthetic-message-2=" }),
           IntakeFailed.make({ messageId: "AAMkAGsynthetic-message-3=", stage: "review" }),
         ]) {
-          assertNone(yield* raise(DocketQuestionInput.make({ outcome })));
+          const raise15 = yield* raise(DocketQuestionInput.make({ outcome }));
+          assertNone(raise15);
         }
 
         const ids = yield* Effect.forEach(
@@ -397,7 +399,9 @@ describe("@beep/law-practice-use-cases docket question email properties", () => 
     { email: Arbitrary.schema(DocketQuestionEmail) },
     ({ email }) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(DocketQuestionEmail)(yield* S.encodeEffect(DocketQuestionEmail)(email));
+        const argument = S.decodeEffect(DocketQuestionEmail);
+        const value = yield* S.encodeEffect(DocketQuestionEmail)(email);
+        const decoded = yield* argument(value);
         expect(S.toEquivalence(DocketQuestionEmail)(decoded, email)).toBe(true);
       }),
     { arbitrary: fcRuns(25) }

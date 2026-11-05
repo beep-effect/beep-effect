@@ -68,7 +68,9 @@ it.effect.prop(
   [JsonArbitrary],
   Effect.fnUntraced(function* ([value]) {
     const text = yield* encodeJsonText(value);
-    assert.equal(yield* encodeJsonText(yield* decodeJson(read(text))), text);
+    const decodedJson = yield* decodeJson(read(text));
+    const encodedJsonText = yield* encodeJsonText(decodedJson);
+    assert.equal(encodedJsonText, text);
   }),
   { arbitrary: fcRuns(200) }
 );
@@ -77,7 +79,10 @@ it.effect.prop(
   "reports an escaped property key exactly when a key needs escaping",
   [JsonArbitrary],
   Effect.fnUntraced(function* ([value]) {
-    assert.equal(AcpJson.hasEscapedPropertyKey(yield* encodeJsonText(value)), yield* hasKeyNeedingEscape(value));
+    const encodedJsonText1 = yield* encodeJsonText(value);
+    const argument = AcpJson.hasEscapedPropertyKey(encodedJsonText1);
+    const hasKeyNeedingEscape1 = yield* hasKeyNeedingEscape(value);
+    assert.equal(argument, hasKeyNeedingEscape1);
   }),
   { arbitrary: fcRuns(200) }
 );
@@ -87,7 +92,8 @@ it.effect(
   Effect.fnUntraced(function* () {
     // V8 12.8 through 13.7 resolves `{"beep-acp-json":0,"\n":1}` to a "\\" key once this shape exists
     // (see the readJsonText Gotchas); the reader must not depend on the host parser for such keys.
-    assert.deepEqual(yield* decodeWithHostParser('{"beep-acp-json":0,"\\\\":0}'), { "beep-acp-json": 0, "\\": 0 });
+    const decodedWithHostParser = yield* decodeWithHostParser('{"beep-acp-json":0,"\\\\":0}');
+    assert.deepEqual(decodedWithHostParser, { "beep-acp-json": 0, "\\": 0 });
     const cases: ReadonlyArray<readonly [escaped: string, decoded: string]> = [
       ["\\n", "\n"],
       ["\\u0000", "\u0000"],
@@ -159,7 +165,9 @@ it.effect(
   "bounds nesting depth on the strict path",
   Effect.fnUntraced(function* () {
     const deepest = nestedArraysInsideEscapedKey(1023);
-    assert.equal(yield* encodeJsonText(yield* decodeJson(read(deepest))), deepest);
+    const decodedJson4 = yield* decodeJson(read(deepest));
+    const encodedJsonText2 = yield* encodeJsonText(decodedJson4);
+    assert.equal(encodedJsonText2, deepest);
     assert.equal(readFailure(nestedArraysInsideEscapedKey(1024)).reason, "Nesting depth exceeds 1024");
   })
 );
@@ -171,7 +179,8 @@ it.effect(
     const value = { meta: { "\n": true, plain: 1 } };
     const encoded = yield* Schema.encodeEffect(codec)(value);
     assert.equal(encoded, '{"meta":{"\\n":true,"plain":1}}');
-    assert.deepEqual(yield* Schema.decodeEffect(codec)(encoded), value);
+    const value3 = yield* Schema.decodeEffect(codec)(encoded);
+    assert.deepEqual(value3, value);
     Result.match(Schema.decodeResult(codec)("{"), {
       onFailure: (error) => assert.include(error.message, "Invalid JSON text at position 1"),
       onSuccess: () => assert.fail("expected an invalid JSON text to be rejected"),

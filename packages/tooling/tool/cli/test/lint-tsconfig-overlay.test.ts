@@ -162,7 +162,8 @@ describe("tsconfig-overlay lint command", { concurrent: false }, () => {
           const exit = yield* Effect.exit(runLintCommand(["tsconfig-overlay"]));
 
           expectReportedExit(exit);
-          const errorText = A.join(A.filter(yield* TestConsole.errorLines, P.isString), "\n");
+          const errorLines1 = yield* TestConsole.errorLines;
+          const errorText = A.join(A.filter(errorLines1, P.isString), "\n");
           expect(errorText).toContain("[tsconfig-overlay] violation: 5 finding(s) across 1 overlay(s)");
           expect(errorText).toContain("  - packages/drivers/widened/tsconfig.check.json files");
           expect(errorText).toContain("  - packages/drivers/widened/tsconfig.check.json compilerOptions.module");
@@ -195,7 +196,8 @@ describe("tsconfig-overlay lint command", { concurrent: false }, () => {
           const exit = yield* Effect.exit(runLintCommand(["tsconfig-overlay"]));
 
           expectReportedExit(exit);
-          const errorText = A.join(A.filter(yield* TestConsole.errorLines, P.isString), "\n");
+          const errorLines2 = yield* TestConsole.errorLines;
+          const errorText = A.join(A.filter(errorLines2, P.isString), "\n");
           expect(errorText).toContain("[tsconfig-overlay] violation: 3 finding(s) across 3 overlay(s)");
           expect(errorText).toContain(
             "  - packages/drivers/lagging/tsconfig.check.json references: expected the 1 reference(s) of tsconfig.json, found 0 (missing 1, extra 0)"

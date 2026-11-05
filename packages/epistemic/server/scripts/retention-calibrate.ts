@@ -82,13 +82,16 @@ const InputsJson = S.fromJsonString(Inputs);
 const agesEqual = S.toEquivalence(S.Array(S.Finite));
 const hash = Effect.fn("Calibration.hash")(function* (text: string) {
   const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text)));
+  const digest1 = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text));
+  return Hex.encode(digest1);
 });
 const requireEvidence = Effect.fn("Calibration.requireEvidence")(function* (
   checks: ReadonlyArray<boolean>,
   message: string
 ) {
-  if (!A.every(checks, identity)) return yield* RetentionUnavailable.make({ operation: "calibration", message });
+  if (!A.every(checks, identity)) {
+    return yield* RetentionUnavailable.make({ operation: "calibration", message });
+  }
 });
 const validateInputs = Effect.fn("Calibration.validateInputs")(function* (
   input: typeof Inputs.Type,
@@ -205,16 +208,17 @@ const main = Effect.gen(function* () {
   });
   const inputText = yield* fs.readFileString(path.join(args.packet, "ops/fixture-v1.json"));
   const protocolText = yield* fs.readFileString(path.join(args.packet, "ops/protocol-v1.json"));
-  const manifest = yield* S.decodeEffect(ManifestJson)(
-    yield* fs.readFileString(path.join(args.packet, "ops/dataset-v1.json"))
-  );
+  const argument = S.decodeEffect(ManifestJson);
+  const readFileString1 = yield* fs.readFileString(path.join(args.packet, "ops/dataset-v1.json"));
+  const manifest = yield* argument(readFileString1);
   yield* requireEvidence(
     [(yield* hash(inputText)) === manifest.sha256 && (yield* hash(protocolText)) === manifest.protocolSha256],
     "Frozen input or protocol digest mismatch"
   );
   const protocol = yield* S.decodeEffect(ProtocolJson)(protocolText);
   const input = yield* S.decodeEffect(InputsJson, { onExcessProperty: "error" })(inputText);
-  const authorityBefore = canonicalDetectionJson(yield* S.encodeEffect(RetentionSnapshot)(input.snapshot));
+  const value2 = yield* S.encodeEffect(RetentionSnapshot)(input.snapshot);
+  const authorityBefore = canonicalDetectionJson(value2);
   const candidates = yield* validateInputs(input, manifest, protocol);
   const strata = yield* Effect.forEach(
     input.queries,
@@ -254,10 +258,8 @@ const main = Effect.gen(function* () {
     }),
     { concurrency: 1 }
   );
-  yield* requireEvidence(
-    [authorityBefore === canonicalDetectionJson(yield* S.encodeEffect(RetentionSnapshot)(input.snapshot))],
-    "Authority changed during evaluation"
-  );
+  const value3 = yield* S.encodeEffect(RetentionSnapshot)(input.snapshot);
+  yield* requireEvidence([authorityBefore === canonicalDetectionJson(value3)], "Authority changed during evaluation");
   const selectedIdentities = A.flatMap(strata, (stratum) => stratum.selectedIdentities);
   yield* requireEvidence(
     [

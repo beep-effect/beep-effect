@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "claim-performance-baseline/v1",
+  "implementationDigest": "9a811e64f4fb47b1003a0607b3d4bd5da1cc56ed6b305162754041a319f7971c",
+  "selectedFamilies": 60,
+  "selectedClaims": 538,
+  "stages": {
+    "structural-mismatch": 443,
+    "strict-match": 37,
+    "input-failed": 58
+  },
+  "retainedPassingClaims": 37,
+  "lost": [],
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "performanceGatesPassed": false
+}

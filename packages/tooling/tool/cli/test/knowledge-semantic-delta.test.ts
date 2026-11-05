@@ -35,6 +35,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -43,6 +44,7 @@ import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type {
@@ -62,22 +64,28 @@ const unsafeProbeStderr =
 const textEncoder = new TextEncoder();
 const encodeJsonString = S.encodeUnknownEffect(S.fromJsonString(S.String));
 const DEFAULT_INDEX = "# Goals Index\n";
-const DEFAULT_COMMAND_TREE = JSON.stringify({
-  name: "beep-cli",
-  alias: null,
-  children: [
-    {
-      name: "goals",
-      alias: null,
-      children: [{ name: "doctor", alias: null, children: [] }],
-    },
-  ],
-});
-const COMMAND_TREE_WITHOUT_DOCTOR = JSON.stringify({
-  name: "beep-cli",
-  alias: null,
-  children: [{ name: "goals", alias: null, children: [] }],
-});
+const DEFAULT_COMMAND_TREE = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    name: "beep-cli",
+    alias: null,
+    children: [
+      {
+        name: "goals",
+        alias: null,
+        children: [{ name: "doctor", alias: null, children: [] }],
+      },
+    ],
+  }),
+  identity
+);
+const COMMAND_TREE_WITHOUT_DOCTOR = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    name: "beep-cli",
+    alias: null,
+    children: [{ name: "goals", alias: null, children: [] }],
+  }),
+  identity
+);
 const NO_GIT_REFS = HashSet.empty<string>();
 const policyLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer);
 
@@ -864,10 +872,12 @@ describe("knowledge semantic-delta negative controls", () => {
         introduced.pipe(O.isSome, assertTrue);
         if (O.isSome(introduced)) {
           const finding = introduced.value;
-          assert.strictEqual(
-            finding.findingId,
-            yield* expectedId("unknown-beep-command", `base:${hostilePath}`, `beep-command:${hostileCommand}`)
+          const expectedId1 = yield* expectedId(
+            "unknown-beep-command",
+            `base:${hostilePath}`,
+            `beep-command:${hostileCommand}`
           );
+          assert.strictEqual(finding.findingId, expectedId1);
           assert.strictEqual(finding.documentId, "base:docs/guide.md");
           assert.strictEqual(finding.subject, "beep-command:evil");
           assert.strictEqual(finding.location.path, "docs/guide.md");
@@ -970,7 +980,8 @@ describe("knowledge semantic-delta probe policy", () => {
   it.layer(policyLayer, { timeout: "10 seconds" })((it) => {
     it.effect("a push build probes, because the revision is already ours", () =>
       Effect.gen(function* () {
-        expect(yield* policyFor({ GITHUB_EVENT_NAME: "push", GITHUB_REPOSITORY: SAME_REPO })).toBe("enabled");
+        const policyFor2 = yield* policyFor({ GITHUB_EVENT_NAME: "push", GITHUB_REPOSITORY: SAME_REPO });
+        expect(policyFor2).toBe("enabled");
       })
     );
   });
@@ -978,7 +989,8 @@ describe("knowledge semantic-delta probe policy", () => {
   it.layer(policyLayer, { timeout: "10 seconds" })((it) => {
     it.effect("a local run with no GitHub context probes", () =>
       Effect.gen(function* () {
-        expect(yield* policyFor({})).toBe("enabled");
+        const policyFor3 = yield* policyFor({});
+        expect(policyFor3).toBe("enabled");
       })
     );
   });
@@ -1040,15 +1052,16 @@ describe("knowledge semantic-delta probe policy", () => {
       Effect.gen(function* () {
         const env = { GITHUB_EVENT_NAME: "pull_request", GITHUB_REPOSITORY: SAME_REPO };
 
-        expect(yield* policyFor(env)).toBe("skipped-untrusted-context");
-        expect(yield* policyFor({ ...env, GITHUB_EVENT_PATH: "/nonexistent/event.json" })).toBe(
-          "skipped-untrusted-context"
-        );
-        expect(yield* policyFor(env, "{not json")).toBe("skipped-untrusted-context");
-        expect(yield* policyFor(env, NULL_HEAD_REPO_PAYLOAD)).toBe("skipped-untrusted-context");
-        expect(yield* policyFor({ GITHUB_EVENT_NAME: "pull_request" }, forkPayload(SAME_REPO))).toBe(
-          "skipped-untrusted-context"
-        );
+        const policyFor4 = yield* policyFor(env);
+        expect(policyFor4).toBe("skipped-untrusted-context");
+        const policyFor5 = yield* policyFor({ ...env, GITHUB_EVENT_PATH: "/nonexistent/event.json" });
+        expect(policyFor5).toBe("skipped-untrusted-context");
+        const policyFor6 = yield* policyFor(env, "{not json");
+        expect(policyFor6).toBe("skipped-untrusted-context");
+        const policyFor7 = yield* policyFor(env, NULL_HEAD_REPO_PAYLOAD);
+        expect(policyFor7).toBe("skipped-untrusted-context");
+        const policyFor8 = yield* policyFor({ GITHUB_EVENT_NAME: "pull_request" }, forkPayload(SAME_REPO));
+        expect(policyFor8).toBe("skipped-untrusted-context");
       })
     );
   });
@@ -1244,7 +1257,8 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         assert.notInclude(error.message, tempRoot);
         assert.notInclude(error.message, "\u001B");
         assert.notInclude(error.message, "\u202E");
-        assert.isFalse(yield* fs.exists(markerPath));
+        const exists9 = yield* fs.exists(markerPath);
+        assert.isFalse(exists9);
       })
     );
   });
@@ -1467,10 +1481,14 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           "resolved",
           ["goals", "doctor"],
         ]);
-        assert.strictEqual(yield* fs.readFileString(path.join(scratchRoot, "empty.env")), "");
-        assert.isFalse(yield* fs.exists(markerPath));
-        assert.isFalse(yield* fs.exists(path.join(archiveRoot, "command-tree-probe.ts")));
-        assert.isFalse(yield* fs.exists(path.join(archiveRoot, "empty.env")));
+        const readFileString10 = yield* fs.readFileString(path.join(scratchRoot, "empty.env"));
+        assert.strictEqual(readFileString10, "");
+        const exists11 = yield* fs.exists(markerPath);
+        assert.isFalse(exists11);
+        const exists12 = yield* fs.exists(path.join(archiveRoot, "command-tree-probe.ts"));
+        assert.isFalse(exists12);
+        const exists13 = yield* fs.exists(path.join(archiveRoot, "empty.env"));
+        assert.isFalse(exists13);
       })
     );
   });
@@ -1542,9 +1560,12 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         ]);
         assert.include(expectedIndex, "# Goals Index");
         assert.strictEqual(archivedIndex, DEFAULT_INDEX);
-        assert.isFalse(yield* fs.exists(path.join(archiveRoot, ROOT_MARKER)));
-        assert.isFalse(yield* fs.exists(path.join(archiveRoot, PORTFOLIO_MARKER)));
-        assert.isFalse(yield* fs.exists(path.join(archiveRoot, "node_modules")));
+        const exists14 = yield* fs.exists(path.join(archiveRoot, ROOT_MARKER));
+        assert.isFalse(exists14);
+        const exists15 = yield* fs.exists(path.join(archiveRoot, PORTFOLIO_MARKER));
+        assert.isFalse(exists15);
+        const exists16 = yield* fs.exists(path.join(archiveRoot, "node_modules"));
+        assert.isFalse(exists16);
       })
     );
   });
@@ -1879,7 +1900,8 @@ describe("knowledge semantic-delta base probe boot failure", () => {
         const degradedReport = yield* scan(withUnbootableBase(CLEAN_BASE, CLEAN_BASE));
         const degraded = yield* encodeKnowledgeSemanticDeltaReportJson(degradedReport);
         const human = renderKnowledgeSemanticDeltaHumanReport(degradedReport);
-        const clean = yield* encodeKnowledgeSemanticDeltaReportJson(yield* scan(fixture(CLEAN_BASE, CLEAN_BASE)));
+        const scan17 = yield* scan(fixture(CLEAN_BASE, CLEAN_BASE));
+        const clean = yield* encodeKnowledgeSemanticDeltaReportJson(scan17);
 
         assert.include(degraded, `"probePolicy":"skipped-base-boot-failure"`);
         assert.include(degraded, "DEFAULT_AI_METRICS_DATA_ROOT");

@@ -72,7 +72,8 @@ describe("withFallback", () => {
       const primary = stub("primary", baseCapabilities, () => Effect.succeed(["primary"]));
       const secondary = stub("secondary", baseCapabilities, () => Effect.succeed(["secondary"]));
       const composed = Composition.withFallback(primary, secondary);
-      expect(yield* composed.tokenize("x")).toEqual(["primary"]);
+      const tokenize1 = yield* composed.tokenize("x");
+      expect(tokenize1).toEqual(["primary"]);
     })
   );
 });

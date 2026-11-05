@@ -8,9 +8,14 @@
  */
 
 import * as A from "effect/Array";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 /** Glob-key prefix shared by every suite fixture. */
 const SUITE_PREFIX = "../../fixtures/yaml-test-suite/";
@@ -150,7 +155,7 @@ function parseMultiJson(text: string): ParsedJson {
   while (i < src.length) {
     const end = valueEnd(src, i);
     if (end === -1) break;
-    values.push(JSON.parse(Str.slice(i, end)(src)));
+    values.push(Result.getOrThrowWith(S.decodeResult(UnknownJson)(Str.slice(i, end)(src)), identity));
     i = skipWhitespace(src, end);
   }
 

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "claim-performance-repair/v1",
+  "repair": "Bound parent dependency expressions to exclude subsequent component identifiers",
+  "implementationDigest": "89b1118b8d0dac497cf0e7e2279abc04131af028656c8047558ca32ea8adacc0",
+  "strictMatches": 37,
+  "selectedClaims": 538,
+  "retained37": true,
+  "lost": [],
+  "stages": {
+    "structural-mismatch": 458,
+    "strict-match": 37,
+    "input-failed": 43
+  },
+  "recoveredInputFamilies": [
+    {
+      "familyId": "18643465-root-1",
+      "claims": 15
+    }
+  ],
+  "originalFilesExact": 1213,
+  "accuracyGainClaimed": false,
+  "allUsefulnessGatesPassed": false
+}

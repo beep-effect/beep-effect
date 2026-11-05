@@ -124,7 +124,8 @@ describe("RetryPolicy.schedule under Effect.retry", () => {
       yield* TestClock.adjust(Duration.seconds(10));
       const error = yield* Fiber.join(fiber);
       assert.strictEqual(error.kind, "rateLimited");
-      assert.strictEqual(yield* Ref.get(attempts), 4);
+      const got = yield* Ref.get(attempts);
+      assert.strictEqual(got, 4);
     })
   );
 
@@ -138,7 +139,8 @@ describe("RetryPolicy.schedule under Effect.retry", () => {
         )
       );
       assert.strictEqual(error.kind, "notFound");
-      assert.strictEqual(yield* Ref.get(attempts), 1);
+      const got1 = yield* Ref.get(attempts);
+      assert.strictEqual(got1, 1);
     })
   );
 
@@ -158,7 +160,8 @@ describe("RetryPolicy.schedule under Effect.retry", () => {
         )
       );
       assert.strictEqual(error.retryAfterMillis, 45 * 60 * 1000);
-      assert.strictEqual(yield* Ref.get(attempts), 1);
+      const got2 = yield* Ref.get(attempts);
+      assert.strictEqual(got2, 1);
     })
   );
 
@@ -172,9 +175,11 @@ describe("RetryPolicy.schedule under Effect.retry", () => {
         Effect.forkChild
       );
       yield* TestClock.adjust(Duration.millis(999));
-      assert.strictEqual(yield* Ref.get(attempts), 1, "must not retry before the advised delay elapses");
+      const got3 = yield* Ref.get(attempts);
+      assert.strictEqual(got3, 1, "must not retry before the advised delay elapses");
       yield* TestClock.adjust(Duration.millis(1));
-      assert.strictEqual(yield* Ref.get(attempts), 2, "must retry as soon as it does");
+      const got4 = yield* Ref.get(attempts);
+      assert.strictEqual(got4, 2, "must retry as soon as it does");
       yield* TestClock.adjust(Duration.seconds(10));
       yield* Fiber.join(fiber);
     })
@@ -188,7 +193,8 @@ describe("RetryPolicy.schedule under Effect.retry", () => {
         Effect.retry(policy.schedule<GitHubError>())
       );
       assert.strictEqual(value, "ok");
-      assert.strictEqual(yield* Ref.get(attempts), 1);
+      const got5 = yield* Ref.get(attempts);
+      assert.strictEqual(got5, 1);
     })
   );
 });

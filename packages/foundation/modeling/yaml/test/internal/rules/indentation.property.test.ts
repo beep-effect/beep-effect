@@ -16,7 +16,8 @@ describe("indentation schema properties", () => {
         const encoded = yield* S.encodeEffect(indentationOptions)(value);
         const decoded = yield* S.decodeEffect(indentationOptions)(encoded);
         assert.isTrue(S.toEquivalence(indentationOptions)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(indentationOptions)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(indentationOptions)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

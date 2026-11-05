@@ -68,7 +68,9 @@ export const ProviderProbeLive = Layer.effect(ProviderProbe, makeProviderProbe()
 export const ProviderInstanceUseCasesLive = Layer.effect(
   ProviderInstanceUseCases,
   Effect.gen(function* () {
-    return makeProviderInstanceUseCases(yield* ProviderInstanceRepository, yield* ProviderProbe);
+    const ProviderInstanceRepository1 = yield* ProviderInstanceRepository;
+    const ProviderProbe2 = yield* ProviderProbe;
+    return makeProviderInstanceUseCases(ProviderInstanceRepository1, ProviderProbe2);
   })
 );
 

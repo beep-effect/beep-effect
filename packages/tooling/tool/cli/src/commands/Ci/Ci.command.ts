@@ -158,10 +158,8 @@ const turboSummaryTasks = (tasks: TurboSummary["tasks"]): ReadonlyArray<TurboSum
 const appendToSummary = Effect.fn("Ci.appendToSummary")(function* (
   renderedSummary: string
 ): Effect.fn.Return<void, CiCommandError, ActionOutputs> {
-  const summaryPath = pipe(
-    yield* Config.option(Config.String("GITHUB_STEP_SUMMARY")).pipe(Effect.orElseSucceed(O.none<string>)),
-    O.getOrUndefined
-  );
+  const pipe1 = yield* Config.option(Config.String("GITHUB_STEP_SUMMARY")).pipe(Effect.orElseSucceed(O.none<string>));
+  const summaryPath = pipe(pipe1, O.getOrUndefined);
 
   if (summaryPath === undefined || Str.isEmpty(summaryPath)) {
     yield* Console.log(renderedSummary);

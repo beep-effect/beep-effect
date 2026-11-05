@@ -27,8 +27,10 @@ describe("HostProcess", () => {
   it.effect(
     "defaults the Effect references to the module constants",
     Effect.fnUntraced(function* () {
-      expect(yield* HostProcessPlatform).toBe(currentHostPlatform);
-      expect(yield* HostProcessArchitecture).toBe(currentHostArchitecture);
+      const HostProcessPlatform1 = yield* HostProcessPlatform;
+      expect(HostProcessPlatform1).toBe(currentHostPlatform);
+      const HostProcessArchitecture2 = yield* HostProcessArchitecture;
+      expect(HostProcessArchitecture2).toBe(currentHostArchitecture);
     })
   );
 
@@ -66,7 +68,8 @@ it.layer(NodeServices.layer, { timeout: "5 seconds" })("HostProcess browser-eval
         stderr: "inherit",
       });
       const output = yield* spawner.string(command);
-      expect(yield* decodeGuardOutput(Str.trim(output))).toEqual({ platform: "browser", arch: "unknown" });
+      const decodedGuardOutput = yield* decodeGuardOutput(Str.trim(output));
+      expect(decodedGuardOutput).toEqual({ platform: "browser", arch: "unknown" });
     }),
     30_000
   );

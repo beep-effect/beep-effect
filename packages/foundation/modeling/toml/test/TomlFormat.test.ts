@@ -146,34 +146,36 @@ describe("TomlFormat", () => {
   describe("modify — replace", () => {
     it.effect("replaces a value and preserves the trailing comment byte-exact", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("a = 1 # keep\n", ["a"], 2), "a = 2 # keep\n");
+        const modified1 = yield* modified("a = 1 # keep\n", ["a"], 2);
+        assert.strictEqual(modified1, "a = 2 # keep\n");
       })
     );
 
     it.effect("replaces inside a [t] section", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified('[t]\nx = "old"\n', ["t", "x"], "new"), '[t]\nx = "new"\n');
+        const modified2 = yield* modified('[t]\nx = "old"\n', ["t", "x"], "new");
+        assert.strictEqual(modified2, '[t]\nx = "new"\n');
       })
     );
 
     it.effect("replaces an array element by index", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("a = [1, 2, 3]\n", ["a", 1], 42), "a = [1, 42, 3]\n");
+        const modified3 = yield* modified("a = [1, 2, 3]\n", ["a", 1], 42);
+        assert.strictEqual(modified3, "a = [1, 42, 3]\n");
       })
     );
 
     it.effect("replaces a [[t]] element field", () =>
       Effect.gen(function* () {
-        assert.strictEqual(
-          yield* modified("[[t]]\nn = 1\n\n[[t]]\nn = 2\n", ["t", 1, "n"], 9),
-          "[[t]]\nn = 1\n\n[[t]]\nn = 9\n"
-        );
+        const modified4 = yield* modified("[[t]]\nn = 1\n\n[[t]]\nn = 2\n", ["t", 1, "n"], 9);
+        assert.strictEqual(modified4, "[[t]]\nn = 1\n\n[[t]]\nn = 9\n");
       })
     );
 
     it.effect("replaces a scalar with an inline array rendering", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("a = 1\n", ["a"], [1, 2]), "a = [1, 2]\n");
+        const modified5 = yield* modified("a = 1\n", ["a"], [1, 2]);
+        assert.strictEqual(modified5, "a = [1, 2]\n");
       })
     );
   });
@@ -181,24 +183,32 @@ describe("TomlFormat", () => {
   describe("modify — delete", () => {
     it.effect("deletes a key-value line including its newline", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("a = 1\nb = 2\n", ["a"], undefined), "b = 2\n");
-        assert.strictEqual(yield* modified("a = 1\nb = 2\n", ["b"], undefined), "a = 1\n");
-        assert.strictEqual(yield* modified("a = 1\nb = 2", ["b"], undefined), "a = 1\n");
+        const modified6 = yield* modified("a = 1\nb = 2\n", ["a"], undefined);
+        assert.strictEqual(modified6, "b = 2\n");
+        const modified7 = yield* modified("a = 1\nb = 2\n", ["b"], undefined);
+        assert.strictEqual(modified7, "a = 1\n");
+        const modified8 = yield* modified("a = 1\nb = 2", ["b"], undefined);
+        assert.strictEqual(modified8, "a = 1\n");
       })
     );
 
     it.effect("a trailing comment inside the deleted expression's span goes with it", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("a = 1 # c\nb = 2\n", ["a"], undefined), "b = 2\n");
+        const modified9 = yield* modified("a = 1 # c\nb = 2\n", ["a"], undefined);
+        assert.strictEqual(modified9, "b = 2\n");
       })
     );
 
     it.effect("splices inline-table separators", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("t = {a = 1, b = 2}\n", ["t", "a"], undefined), "t = {b = 2}\n");
-        assert.strictEqual(yield* modified("t = {a = 1, b = 2}\n", ["t", "b"], undefined), "t = {a = 1}\n");
-        assert.strictEqual(yield* modified("t = {a = 1}\n", ["t", "a"], undefined), "t = {}\n");
-        assert.strictEqual(yield* modified("t = {a.b = 1, c = 2}\n", ["t", "a", "b"], undefined), "t = {c = 2}\n");
+        const modified10 = yield* modified("t = {a = 1, b = 2}\n", ["t", "a"], undefined);
+        assert.strictEqual(modified10, "t = {b = 2}\n");
+        const modified11 = yield* modified("t = {a = 1, b = 2}\n", ["t", "b"], undefined);
+        assert.strictEqual(modified11, "t = {a = 1}\n");
+        const modified12 = yield* modified("t = {a = 1}\n", ["t", "a"], undefined);
+        assert.strictEqual(modified12, "t = {}\n");
+        const modified13 = yield* modified("t = {a.b = 1, c = 2}\n", ["t", "a", "b"], undefined);
+        assert.strictEqual(modified13, "t = {c = 2}\n");
       })
     );
 
@@ -206,28 +216,37 @@ describe("TomlFormat", () => {
       Effect.gen(function* () {
         const doc = "t = {\n\ta = 1, # one\n\tb = 2,\n}\n";
         // replacing an entry value touches only the value span
-        assert.strictEqual(yield* modified(doc, ["t", "b"], 3), "t = {\n\ta = 1, # one\n\tb = 3,\n}\n");
+        const modified14 = yield* modified(doc, ["t", "b"], 3);
+        assert.strictEqual(modified14, "t = {\n\ta = 1, # one\n\tb = 3,\n}\n");
         // deleting a non-last entry takes its trailing gap (comment included)
-        assert.strictEqual(yield* modified(doc, ["t", "a"], undefined), "t = {\n\tb = 2,\n}\n");
+        const modified15 = yield* modified(doc, ["t", "a"], undefined);
+        assert.strictEqual(modified15, "t = {\n\tb = 2,\n}\n");
         // deleting the last entry leaves the (1.1-legal) trailing comma behind
-        assert.strictEqual(yield* modified(doc, ["t", "b"], undefined), "t = {\n\ta = 1,\n}\n");
+        const modified16 = yield* modified(doc, ["t", "b"], undefined);
+        assert.strictEqual(modified16, "t = {\n\ta = 1,\n}\n");
         // deleting the only entry collapses the whole interior
-        assert.strictEqual(yield* modified("t = {\n\ta = 1,\n}\n", ["t", "a"], undefined), "t = {}\n");
+        const modified17 = yield* modified("t = {\n\ta = 1,\n}\n", ["t", "a"], undefined);
+        assert.strictEqual(modified17, "t = {}\n");
       })
     );
 
     it.effect("splices array separators for first, middle, last and only items", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("a = [1, 2, 3]\n", ["a", 0], undefined), "a = [2, 3]\n");
-        assert.strictEqual(yield* modified("a = [1, 2, 3]\n", ["a", 1], undefined), "a = [1, 3]\n");
-        assert.strictEqual(yield* modified("a = [1, 2, 3]\n", ["a", 2], undefined), "a = [1, 2]\n");
-        assert.strictEqual(yield* modified("a = [7]\n", ["a", 0], undefined), "a = []\n");
+        const modified18 = yield* modified("a = [1, 2, 3]\n", ["a", 0], undefined);
+        assert.strictEqual(modified18, "a = [2, 3]\n");
+        const modified19 = yield* modified("a = [1, 2, 3]\n", ["a", 1], undefined);
+        assert.strictEqual(modified19, "a = [1, 3]\n");
+        const modified20 = yield* modified("a = [1, 2, 3]\n", ["a", 2], undefined);
+        assert.strictEqual(modified20, "a = [1, 2]\n");
+        const modified21 = yield* modified("a = [7]\n", ["a", 0], undefined);
+        assert.strictEqual(modified21, "a = []\n");
       })
     );
 
     it.effect("deleting a missing key is a no-op", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("a = 1\n", ["b"], undefined), "a = 1\n");
+        const modified22 = yield* modified("a = 1\n", ["b"], undefined);
+        assert.strictEqual(modified22, "a = 1\n");
       })
     );
   });
@@ -235,86 +254,94 @@ describe("TomlFormat", () => {
   describe("modify — insert (the pinned placement rules)", () => {
     it.effect("root: before the first header, after the last root expression", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("a = 1\n\n[t]\nx = 1\n", ["b"], 2), "a = 1\nb = 2\n\n[t]\nx = 1\n");
+        const modified23 = yield* modified("a = 1\n\n[t]\nx = 1\n", ["b"], 2);
+        assert.strictEqual(modified23, "a = 1\nb = 2\n\n[t]\nx = 1\n");
       })
     );
 
     it.effect("root: appends when there are no headers", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("a = 1\n", ["b"], 2), "a = 1\nb = 2\n");
+        const modified24 = yield* modified("a = 1\n", ["b"], 2);
+        assert.strictEqual(modified24, "a = 1\nb = 2\n");
       })
     );
 
     it.effect("root: before the first header when only headers exist", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("[t]\nx = 1\n", ["b"], 2), "b = 2\n[t]\nx = 1\n");
+        const modified25 = yield* modified("[t]\nx = 1\n", ["b"], 2);
+        assert.strictEqual(modified25, "b = 2\n[t]\nx = 1\n");
       })
     );
 
     it.effect("root: at document start when the document is empty or trivia-only", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("", ["b"], 2), "b = 2\n");
-        assert.strictEqual(yield* modified("# note\n", ["b"], 2), "b = 2\n# note\n");
+        const modified26 = yield* modified("", ["b"], 2);
+        assert.strictEqual(modified26, "b = 2\n");
+        const modified27 = yield* modified("# note\n", ["b"], 2);
+        assert.strictEqual(modified27, "b = 2\n# note\n");
       })
     );
 
     it.effect("into a [t] section: after its last expression, before the separating trivia", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("[t]\na = 1\n\n[u]\n", ["t", "b"], 2), "[t]\na = 1\nb = 2\n\n[u]\n");
+        const modified28 = yield* modified("[t]\na = 1\n\n[u]\n", ["t", "b"], 2);
+        assert.strictEqual(modified28, "[t]\na = 1\nb = 2\n\n[u]\n");
       })
     );
 
     it.effect("into [t] when it is the last section", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("[u]\n\n[t]\na = 1\n", ["t", "b"], 2), "[u]\n\n[t]\na = 1\nb = 2\n");
+        const modified29 = yield* modified("[u]\n\n[t]\na = 1\n", ["t", "b"], 2);
+        assert.strictEqual(modified29, "[u]\n\n[t]\na = 1\nb = 2\n");
       })
     );
 
     it.effect("into [t] when the document lacks a final newline", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("[t]\na = 1", ["t", "b"], 2), "[t]\na = 1\nb = 2\n");
+        const modified30 = yield* modified("[t]\na = 1", ["t", "b"], 2);
+        assert.strictEqual(modified30, "[t]\na = 1\nb = 2\n");
       })
     );
 
     it.effect("into an empty [t] section: right after the header", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("[t]\n[u]\n", ["t", "a"], 1), "[t]\na = 1\n[u]\n");
+        const modified31 = yield* modified("[t]\n[u]\n", ["t", "a"], 1);
+        assert.strictEqual(modified31, "[t]\na = 1\n[u]\n");
       })
     );
 
     it.effect("into a dotted-defined table: a dotted key appended to its defining section", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("[t]\nx.y = 1\n", ["t", "x", "z"], 2), "[t]\nx.y = 1\nx.z = 2\n");
+        const modified32 = yield* modified("[t]\nx.y = 1\n", ["t", "x", "z"], 2);
+        assert.strictEqual(modified32, "[t]\nx.y = 1\nx.z = 2\n");
       })
     );
 
     it.effect("into the last [[srv]] element", () =>
       Effect.gen(function* () {
-        assert.strictEqual(
-          yield* modified("[[srv]]\na = 1\n\n[[srv]]\na = 2\n", ["srv", 1, "b"], 3),
-          "[[srv]]\na = 1\n\n[[srv]]\na = 2\nb = 3\n"
-        );
+        const modified33 = yield* modified("[[srv]]\na = 1\n\n[[srv]]\na = 2\n", ["srv", 1, "b"], 3);
+        assert.strictEqual(modified33, "[[srv]]\na = 1\n\n[[srv]]\na = 2\nb = 3\n");
       })
     );
 
     it.effect("into an earlier [[srv]] element by index", () =>
       Effect.gen(function* () {
-        assert.strictEqual(
-          yield* modified("[[srv]]\na = 1\n\n[[srv]]\na = 2\n", ["srv", 0, "b"], 3),
-          "[[srv]]\na = 1\nb = 3\n\n[[srv]]\na = 2\n"
-        );
+        const modified34 = yield* modified("[[srv]]\na = 1\n\n[[srv]]\na = 2\n", ["srv", 0, "b"], 3);
+        assert.strictEqual(modified34, "[[srv]]\na = 1\nb = 3\n\n[[srv]]\na = 2\n");
       })
     );
 
     it.effect("quotes keys that are not bare", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("", ["my key"], "v"), '"my key" = "v"\n');
+        const modified35 = yield* modified("", ["my key"], "v");
+        assert.strictEqual(modified35, '"my key" = "v"\n');
       })
     );
 
     it.effect("inherits the document's dominant CRLF newline", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* modified("a = 1\r\nb = 2\r\n", ["c"], 3), "a = 1\r\nb = 2\r\nc = 3\r\n");
+        const modified36 = yield* modified("a = 1\r\nb = 2\r\n", ["c"], 3);
+        assert.strictEqual(modified36, "a = 1\r\nb = 2\r\nc = 3\r\n");
       })
     );
   });

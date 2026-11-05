@@ -37,8 +37,9 @@ describe("DetachedProcess coverage", () => {
         ["reap", ops.reap(42)],
       ] as const;
       for (const [name, operation] of operations) {
+        const exit1 = yield* Effect.exit(operation);
         assertExitFailure(
-          yield* Effect.exit(operation),
+          exit1,
           Cause.die(
             UnstubbedMemberError.make({
               message: `DetachedProcess.makeTestOps: ${name}() was called but not stubbed — pass a \`${name}\` override.`,
@@ -73,7 +74,8 @@ for (const status of [199, 200, 299, 300, 503]) {
   )((it) => {
     it.effect(`http readiness classifies ${status}`, () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* DetachedProcess.httpProbe("https://probe.test"), status >= 200 && status < 300);
+        const httpProbe2 = yield* DetachedProcess.httpProbe("https://probe.test");
+        assert.strictEqual(httpProbe2, status >= 200 && status < 300);
       })
     );
   });
@@ -86,7 +88,8 @@ it.layer(
 )((it) => {
   it.effect("http readiness collapses client errors to false", () =>
     Effect.gen(function* () {
-      assert.isFalse(yield* DetachedProcess.httpProbe("not a valid URL"));
+      const httpProbe3 = yield* DetachedProcess.httpProbe("not a valid URL");
+      assert.isFalse(httpProbe3);
     })
   );
 });

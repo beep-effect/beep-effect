@@ -39,7 +39,8 @@ describe("strict source-anchored structural measurement", () => {
     Effect.gen(function* () {
       const gold = yield* decode([fixture()]);
       const predicted = yield* decode([fixture("1.b", "rule")]);
-      const score = yield* Effect.fromOption(A.head(yield* compareStructuralFamily(gold, predicted)));
+      const compareStructuralFamily1 = yield* compareStructuralFamily(gold, predicted);
+      const score = yield* Effect.fromOption(A.head(compareStructuralFamily1));
       assert.isTrue(score.strict);
     })
   );
@@ -47,7 +48,8 @@ describe("strict source-anchored structural measurement", () => {
     Effect.gen(function* () {
       const gold = yield* decode([fixture()]);
       for (const changed of [fixture("1.a", "rule", "camera"), fixture("1.a", "rule", "sensor", 14)]) {
-        const scores = yield* compareStructuralFamily(gold, yield* decode([changed]));
+        const decoded = yield* decode([changed]);
+        const scores = yield* compareStructuralFamily(gold, decoded);
         assert.isTrue(A.every(scores, (score) => !score.strict));
       }
     })
@@ -66,7 +68,8 @@ describe("strict source-anchored structural measurement", () => {
   );
   it.effect("retains a missing prediction as a failed selected claim", () =>
     Effect.gen(function* () {
-      const scores = yield* compareStructuralFamily(yield* decode([fixture()]), []);
+      const decoded2 = yield* decode([fixture()]);
+      const scores = yield* compareStructuralFamily(decoded2, []);
       assert.deepStrictEqual(
         A.map(scores, (score) => [score.strict, score.predictionMissing, score.goldEdges]),
         [[false, true, 2]]
@@ -93,9 +96,11 @@ describe("strict source-anchored structural measurement", () => {
         };
       };
       const gold = yield* decode([fixture(), dependent("1")]);
-      const correct = yield* compareStructuralFamily(gold, yield* decode([fixture("1.b", "rule"), dependent("1")]));
+      const decoded3 = yield* decode([fixture("1.b", "rule"), dependent("1")]);
+      const correct = yield* compareStructuralFamily(gold, decoded3);
       assert.isTrue(A.every(correct, (score) => score.strict));
-      const wrong = yield* compareStructuralFamily(gold, yield* decode([fixture("1.b", "rule"), dependent("2")]));
+      const decoded4 = yield* decode([fixture("1.b", "rule"), dependent("2")]);
+      const wrong = yield* compareStructuralFamily(gold, decoded4);
       assert.deepStrictEqual(
         A.map(wrong, (score) => score.strict),
         [true, false]
@@ -119,7 +124,8 @@ describe("strict source-anchored structural measurement", () => {
         edges: A.append(raw.edges, { kind: "functional", element: "1.a", parts: reverse ? A.reverse(parts) : parts }),
       });
       const gold = yield* decode([make(false)]);
-      const score = yield* compareStructuralFamily(gold, yield* decode([make(true)]));
+      const decoded5 = yield* decode([make(true)]);
+      const score = yield* compareStructuralFamily(gold, decoded5);
       assert.deepStrictEqual(
         A.map(score, (value) => [value.strict, value.matchedEdges, value.goldEdges]),
         [[false, 2, 3]]
@@ -147,7 +153,9 @@ describe("frozen corpus scorer control", () => {
         const freezePath = yield* path.fromFileUrl(
           new URL("../../../../goals/claim-element-antecedent-check/research/reference-freeze.json", import.meta.url)
         );
-        const freeze = yield* S.decodeEffect(referenceFamiliesJson)(yield* fs.readFileString(freezePath));
+        const argument = S.decodeEffect(referenceFamiliesJson);
+        const readFileString1 = yield* fs.readFileString(freezePath);
+        const freeze = yield* argument(readFileString1);
         let passed = 0;
         for (const family of freeze.families) {
           const filename = yield* path.fromFileUrl(
@@ -156,11 +164,9 @@ describe("frozen corpus scorer control", () => {
               import.meta.url
             )
           );
-          const trees = yield* ClaimElementTree.pipe(
-            S.Array,
-            S.fromJsonString,
-            S.decodeEffect
-          )(yield* fs.readFileString(filename));
+          const argument1 = ClaimElementTree.pipe(S.Array, S.fromJsonString, S.decodeEffect);
+          const readFileString2 = yield* fs.readFileString(filename);
+          const trees = yield* argument1(readFileString2);
           const scores = yield* compareStructuralFamily(trees, trees);
           assert.isTrue(A.every(scores, (score) => score.strict));
           passed += scores.length;

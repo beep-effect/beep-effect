@@ -33,8 +33,10 @@ describe("ProcessArgs", () => {
     Effect.fnUntraced(function* () {
       const rejected = yield* guardLiteralArg("--privileged").pipe(Effect.flip);
 
-      expect(yield* guardLiteralArg("graph")).toBe("graph");
-      expect(yield* guardLiteralArgs(["src/index.ts"])).toStrictEqual(["src/index.ts"]);
+      const guardLiteralArg1 = yield* guardLiteralArg("graph");
+      expect(guardLiteralArg1).toBe("graph");
+      const guardLiteralArgs2 = yield* guardLiteralArgs(["src/index.ts"]);
+      expect(guardLiteralArgs2).toStrictEqual(["src/index.ts"]);
       expect(rejected._tag).toBe("OptionInjectionError");
     })
   );
@@ -52,7 +54,8 @@ describe("JsonUtils", () => {
 
       expect(pretty).toContain("\n");
       expect(compact).toBe('{"ok":true}');
-      expect(yield* jsonParse(compact)).toStrictEqual({ ok: true });
+      const jsonParse3 = yield* jsonParse(compact);
+      expect(jsonParse3).toStrictEqual({ ok: true });
       expect(malformed).toBe("DomainError");
     })
   );

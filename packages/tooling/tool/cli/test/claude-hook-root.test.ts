@@ -22,7 +22,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook launch project con
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const settings = yield* S.decodeEffect(HookSettingsJson)(yield* fs.readFileString(settingsPath));
+      const argument = S.decodeEffect(HookSettingsJson);
+      const readFileString1 = yield* fs.readFileString(settingsPath);
+      const settings = yield* argument(readFileString1);
       const commands = A.flatMap(R.values(settings.hooks), (groups) =>
         A.flatMap(groups, (group) => A.map(group.hooks, (hook) => hook.command))
       );

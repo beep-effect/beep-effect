@@ -66,8 +66,10 @@ describe("frontmatter scanner property floor", () => {
           );
           const decodedRaw = yield* S.decodeEffect(RawFrontmatterCapture)(raw);
           const decodedProcessed = yield* S.decodeUnknownEffect(FrontmatterCapture)(processed);
-          assert.deepStrictEqual(yield* S.encodeEffect(RawFrontmatterCapture)(decodedRaw), raw);
-          assert.deepStrictEqual(yield* S.encodeEffect(FrontmatterCapture)(decodedProcessed), processed);
+          const value1 = yield* S.encodeEffect(RawFrontmatterCapture)(decodedRaw);
+          assert.deepStrictEqual(value1, raw);
+          const value2 = yield* S.encodeEffect(FrontmatterCapture)(decodedProcessed);
+          assert.deepStrictEqual(value2, processed);
           assert.strictEqual(rawValue(`${opening}${newline}${close}`), "");
           assert.strictEqual(rawValue(`${opening}${newline}${newline}${close}`), newline);
         }
@@ -89,7 +91,8 @@ describe("frontmatter scanner property floor", () => {
         const encoded = yield* S.encodeEffect(RawNewline)(value);
         const decoded = yield* S.decodeEffect(RawNewline)(encoded);
         assert.strictEqual(decoded, value);
-        assert.strictEqual(yield* S.encodeEffect(RawNewline)(decoded), encoded);
+        const value3 = yield* S.encodeEffect(RawNewline)(decoded);
+        assert.strictEqual(value3, encoded);
       }),
     runs
   );

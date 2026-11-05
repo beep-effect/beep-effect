@@ -662,8 +662,10 @@ describe("executeSweep", () => {
             );
 
             const fs = yield* FileSystem.FileSystem;
-            const written = yield* fs.readFileString(yield* sweepReportPath(context));
-            expect(yield* SweepReportJson.decode(written)).toEqual(report);
+            const sweepReportPath1 = yield* sweepReportPath(context);
+            const written = yield* fs.readFileString(sweepReportPath1);
+            const decoded = yield* SweepReportJson.decode(written);
+            expect(decoded).toEqual(report);
           }),
         removeTempDirectory
       )

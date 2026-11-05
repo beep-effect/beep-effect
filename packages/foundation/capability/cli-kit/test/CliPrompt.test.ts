@@ -133,7 +133,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const context = yield* Layer.build(terminal.layer);
         const fallback = CliPrompt.fallback(select, { argument: "project", flag: undefined, otherwise: "guest" });
         const answered = yield* Prompt.isPrompt(fallback) ? Effect.die("expected a fallback effect") : fallback;
-        assert.strictEqual(yield* answered.pipe(Effect.provideContext(context)), "guest");
+        const pipe1 = yield* answered.pipe(Effect.provideContext(context));
+        assert.strictEqual(pipe1, "guest");
       })
     );
 
@@ -147,7 +148,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         });
         assert.strictEqual(code, 0);
         assert.deepStrictEqual(out, ["profile=library"]);
-        assert.include(yield* terminal.output, "Profile");
+        const output2 = yield* terminal.output;
+        assert.include(output2, "Profile");
       })
     );
 
@@ -156,7 +158,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const terminal = yield* TestTerminal.make();
         const { out } = yield* run(app(withPrompt()), ["run", "--profile", "library"], { interactive: true, terminal });
         assert.deepStrictEqual(out, ["profile=library"]);
-        assert.strictEqual(yield* terminal.output, "");
+        const output3 = yield* terminal.output;
+        assert.strictEqual(output3, "");
       })
     );
 
@@ -171,9 +174,12 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         });
         assert.strictEqual(code, 0);
         assert.deepStrictEqual(out, ["profile=software-project"]);
-        assert.deepStrictEqual(yield* terminal.reads, { keys: 0, lines: 0, subscriptions: 0 });
-        assert.strictEqual(yield* terminal.pending, 2);
-        assert.strictEqual(yield* terminal.output, "");
+        const reads4 = yield* terminal.reads;
+        assert.deepStrictEqual(reads4, { keys: 0, lines: 0, subscriptions: 0 });
+        const pending5 = yield* terminal.pending;
+        assert.strictEqual(pending5, 2);
+        const output6 = yield* terminal.output;
+        assert.strictEqual(output6, "");
       })
     );
 
@@ -189,8 +195,10 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
           A.some(err, (line) => Str.includes("Missing required flag: --profile")(line)),
           A.join(err, "\n")
         );
-        assert.deepStrictEqual(yield* terminal.reads, { keys: 0, lines: 0, subscriptions: 0 });
-        assert.strictEqual(yield* terminal.pending, 1);
+        const reads7 = yield* terminal.reads;
+        assert.deepStrictEqual(reads7, { keys: 0, lines: 0, subscriptions: 0 });
+        const pending8 = yield* terminal.pending;
+        assert.strictEqual(pending8, 1);
       })
     );
 
@@ -243,8 +251,10 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         });
         assert.strictEqual(code, 0);
         assert.deepStrictEqual(out, ["profile=software-project"]);
-        assert.deepStrictEqual(yield* terminal.reads, { keys: 0, lines: 0, subscriptions: 0 });
-        assert.strictEqual(yield* terminal.output, "");
+        const reads9 = yield* terminal.reads;
+        assert.deepStrictEqual(reads9, { keys: 0, lines: 0, subscriptions: 0 });
+        const output10 = yield* terminal.output;
+        assert.strictEqual(output10, "");
       })
     );
   });
@@ -281,17 +291,22 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const real = yield* TestTerminal.make({ columns: 120, rows: 40 });
         yield* real.input([{ name: "enter" }]);
         const terminal = yield* gated(false, real);
-        assert.strictEqual(yield* terminal.columns, 120);
-        assert.strictEqual(yield* terminal.rows, 40);
+        const columns11 = yield* terminal.columns;
+        assert.strictEqual(columns11, 120);
+        const rows12 = yield* terminal.rows;
+        assert.strictEqual(rows12, 40);
         // The input is an already-ended queue: a prompt reading it is quit, and no key of the real one is taken.
         const exit = yield* Effect.flatMap(terminal.readInput, (queue) => Queue.take(queue)).pipe(Effect.exit);
         assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
         const line = yield* Effect.exit(terminal.readLine);
         assertExitFailure(line, Exit.isFailure(line) ? line.cause : Cause.empty);
         yield* terminal.display("never shown");
-        assert.strictEqual(yield* real.output, "");
-        assert.deepStrictEqual(yield* real.reads, { keys: 0, lines: 0, subscriptions: 0 });
-        assert.strictEqual(yield* real.pending, 1);
+        const output13 = yield* real.output;
+        assert.strictEqual(output13, "");
+        const reads14 = yield* real.reads;
+        assert.deepStrictEqual(reads14, { keys: 0, lines: 0, subscriptions: 0 });
+        const pending15 = yield* real.pending;
+        assert.strictEqual(pending15, 1);
       })
     );
 
@@ -304,10 +319,12 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const take = Effect.flatMap(terminal.readInput, (queue) => Queue.take(queue));
         const quiet = yield* Effect.exit(take.pipe(Effect.provideService(CliInteractive, false)));
         assertExitFailure(quiet, Exit.isFailure(quiet) ? quiet.cause : Cause.empty);
-        assert.deepStrictEqual(yield* real.reads, { keys: 0, lines: 0, subscriptions: 0 });
+        const reads16 = yield* real.reads;
+        assert.deepStrictEqual(reads16, { keys: 0, lines: 0, subscriptions: 0 });
         const key = yield* take.pipe(Effect.provideService(CliInteractive, true));
         assert.strictEqual(key.key.name, "enter");
-        assert.deepStrictEqual(yield* real.reads, { keys: 1, lines: 0, subscriptions: 1 });
+        const reads17 = yield* real.reads;
+        assert.deepStrictEqual(reads17, { keys: 1, lines: 0, subscriptions: 1 });
       })
     );
 
@@ -320,8 +337,10 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const key = yield* Effect.flatMap(terminal.readInput, (queue) => Queue.take(queue)).pipe(interactive);
         assert.strictEqual(key.key.name, "enter");
         yield* terminal.display("shown").pipe(interactive);
-        assert.strictEqual(yield* real.output, "shown");
-        assert.deepStrictEqual(yield* real.reads, { keys: 1, lines: 0, subscriptions: 1 });
+        const output18 = yield* real.output;
+        assert.strictEqual(output18, "shown");
+        const reads19 = yield* real.reads;
+        assert.deepStrictEqual(reads19, { keys: 1, lines: 0, subscriptions: 1 });
       })
     );
   });

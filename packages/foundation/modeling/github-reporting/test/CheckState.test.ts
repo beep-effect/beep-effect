@@ -98,7 +98,8 @@ describe("check-run schema contracts", () => {
   it.effect("decodes every conclusion and excludes cancelled", () =>
     Effect.gen(function* () {
       for (const conclusion of CheckRunConclusion.literals) {
-        assert.strictEqual(yield* S.decodeEffect(CheckRunConclusion)(conclusion), conclusion);
+        const value = yield* S.decodeEffect(CheckRunConclusion)(conclusion);
+        assert.strictEqual(value, conclusion);
         assert.isTrue(S.is(CheckConclusion)(conclusion));
       }
       assert.strictEqual(CheckRunConclusion.literals.length, 6);
@@ -112,8 +113,10 @@ describe("check-run schema contracts", () => {
       const completed = CheckRunCompleted.make({ conclusion: "neutral" });
       assert.deepStrictEqual<WireProjection>(running, { status: "in_progress" });
       assert.deepStrictEqual<WireProjection>(completed, { status: "completed", conclusion: "neutral" });
-      assert.deepStrictEqual(yield* S.decodeEffect(CheckRunProjection)(running), running);
-      assert.deepStrictEqual(yield* S.decodeEffect(CheckRunProjection)(completed), completed);
+      const value1 = yield* S.decodeEffect(CheckRunProjection)(running);
+      assert.deepStrictEqual(value1, running);
+      const value2 = yield* S.decodeEffect(CheckRunProjection)(completed);
+      assert.deepStrictEqual(value2, completed);
       assert.isFalse("conclusion" in (yield* S.decodeEffect(CheckRunProjection)(running)));
       assert.isFalse(S.is(CheckRunProjection)({ status: "completed" }));
       assert.isFalse(S.is(CheckRunProjection)({ status: "completed", conclusion: undefined }));
@@ -144,7 +147,8 @@ describe("check-run schema properties", () => {
       Effect.gen(function* () {
         const encoded = yield* S.encodeEffect(CheckRunProjection)(projection);
         assert.strictEqual("conclusion" in encoded, projection.status === "completed");
-        assert.deepStrictEqual(yield* S.decodeEffect(CheckRunProjection)(encoded), projection);
+        const value3 = yield* S.decodeEffect(CheckRunProjection)(encoded);
+        assert.deepStrictEqual(value3, projection);
       }),
     { arbitrary: fcRuns(50) }
   );

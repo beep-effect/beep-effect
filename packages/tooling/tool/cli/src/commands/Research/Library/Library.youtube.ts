@@ -150,25 +150,25 @@ export const acquireLibraryYoutube = Effect.fn("Library.acquireYoutube")(functio
   const metadata = yield* decodeLibraryJson(VideoMetadata)(raw);
   if (source.identity !== `youtube:${metadata.id}`)
     return yield* LibraryError.make({ message: "YouTube metadata identity mismatch.", cause: "identity" });
-  const artifacts = [
-    yield* saveLibraryText(root, `${prefix}/metadata.json`, raw, "application/json", "target-metadata"),
-  ];
+  let artifacts = [yield* saveLibraryText(root, `${prefix}/metadata.json`, raw, "application/json", "target-metadata")];
   const captions = A.filter(names, Str.endsWith(".vtt"));
   const provenance = libraryCaptionProvenance(metadata, captions);
-  artifacts.push(
-    yield* saveLibraryText(
-      root,
-      `${prefix}/caption-provenance.json`,
-      yield* encodeLibraryJson(provenance),
-      "application/json",
-      "transcript-provenance"
-    )
-  );
+  const encodedLibraryJson = yield* encodeLibraryJson(provenance);
+  artifacts = yield* saveLibraryText(
+    root,
+    `${prefix}/caption-provenance.json`,
+    encodedLibraryJson,
+    "application/json",
+    "transcript-provenance"
+  ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
   let usable = 0;
   const retainCaptionTrack = Effect.fn("Library.youtube.retainCaptionTrack")(function* (name: string) {
     const text = yield* fs.readFileString(path.join(stage, name));
     if (!Str.includes("WEBVTT")(text) || !Str.includes("-->")(text)) return;
-    artifacts.push(yield* saveLibraryText(root, `${prefix}/${name}`, text, "text/vtt", "transcript-full-text"));
+    artifacts = yield* saveLibraryText(root, `${prefix}/${name}`, text, "text/vtt", "transcript-full-text").pipe(
+      Effect.map(A.of),
+      Effect.map(A.prependAll(artifacts))
+    );
     const transcript = A.join(
       A.filter(
         Str.split(text, "\n"),
@@ -183,9 +183,13 @@ export const acquireLibraryYoutube = Effect.fn("Library.acquireYoutube")(functio
       (line) => !Str.includes("-->")(line) && Str.isNonEmpty(Str.trim(Str.replaceAll(/<[^>]+>/g, "")(line)))
     );
     if (!spoken) return;
-    artifacts.push(
-      yield* saveLibraryText(root, `${prefix}/${name}.txt`, transcript, "text/plain", "transcript-full-text")
-    );
+    artifacts = yield* saveLibraryText(
+      root,
+      `${prefix}/${name}.txt`,
+      transcript,
+      "text/plain",
+      "transcript-full-text"
+    ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
     usable++;
   });
   for (const name of captions) yield* retainCaptionTrack(name);

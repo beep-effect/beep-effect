@@ -1,5 +1,5 @@
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 // In-memory filesystem fixtures.
 //
 // The volume is `@effected/memfs`, a real virtual POSIX filesystem, so the
@@ -17,7 +17,11 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type * as FileSystem from "effect/FileSystem";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 /** A virtual tree: absolute path → file contents. Directories are implied by their files. */
 export type Tree = Readonly<Record<string, string>>;
@@ -99,7 +103,16 @@ export const rootManifest: {
 } = dual(
   (args) => A.isArray(args[0]),
   (patterns: ReadonlyArray<string>, extra: Record<string, unknown> = {}): string =>
-    JSON.stringify({ name: "root", version: "0.0.0", private: true, workspaces: patterns, ...extra })
+    Result.getOrThrowWith(
+      S.encodeUnknownResult(UnknownJson)({
+        name: "root",
+        version: "0.0.0",
+        private: true,
+        workspaces: patterns,
+        ...extra,
+      }),
+      identity
+    )
 );
 
 /** A member `package.json`. */
@@ -108,5 +121,6 @@ export const manifest: {
   (name: string, fields?: Record<string, unknown>): string;
 } = dual(
   (args) => typeof args[0] === "string",
-  (name: string, fields: Record<string, unknown> = {}): string => JSON.stringify({ name, version: "1.0.0", ...fields })
+  (name: string, fields: Record<string, unknown> = {}): string =>
+    Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ name, version: "1.0.0", ...fields }), identity)
 );

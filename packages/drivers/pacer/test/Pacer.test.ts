@@ -1,4 +1,3 @@
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 /**
  * Tests for the PACER driver.
  *
@@ -14,6 +13,7 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 
 import * as Pacer from "@beep/pacer";
 import { it } from "@beep/test-runner";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -49,7 +49,8 @@ const roundTrips = Effect.fn("PacerTest.roundTrips")(function* <Schema extends S
 ) {
   const encoded = yield* S.encodeEffect(schema)(value);
   const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-  expect(yield* S.encodeEffect(schema)(decoded)).toEqual(encoded);
+  const value1 = yield* S.encodeEffect(schema)(decoded);
+  expect(value1).toEqual(encoded);
 });
 
 const sampleSchemaValues = <Schema extends S.Constraint>(schema: Schema, seed: number) =>
@@ -73,28 +74,32 @@ describe("PACER schema round-trips (generated)", () => {
   it.effect(
     "CourtCaseSearchDto round-trips",
     Effect.fnUntraced(function* () {
-      yield* assertRoundTrips(Pacer.CourtCaseSearchDto, yield* sampleSchemaValues(Pacer.CourtCaseSearchDto, 1001));
+      const sampleSchemaValues2 = yield* sampleSchemaValues(Pacer.CourtCaseSearchDto, 1001);
+      yield* assertRoundTrips(Pacer.CourtCaseSearchDto, sampleSchemaValues2);
     })
   );
 
   it.effect(
     "PartySearchDto round-trips",
     Effect.fnUntraced(function* () {
-      yield* assertRoundTrips(Pacer.PartySearchDto, yield* sampleSchemaValues(Pacer.PartySearchDto, 1002));
+      const sampleSchemaValues3 = yield* sampleSchemaValues(Pacer.PartySearchDto, 1002);
+      yield* assertRoundTrips(Pacer.PartySearchDto, sampleSchemaValues3);
     })
   );
 
   it.effect(
     "CaseReportList round-trips",
     Effect.fnUntraced(function* () {
-      yield* assertRoundTrips(Pacer.CaseReportList, yield* sampleSchemaValues(Pacer.CaseReportList, 1003));
+      const sampleSchemaValues4 = yield* sampleSchemaValues(Pacer.CaseReportList, 1003);
+      yield* assertRoundTrips(Pacer.CaseReportList, sampleSchemaValues4);
     })
   );
 
   it.effect(
     "ReportInfoType round-trips",
     Effect.fnUntraced(function* () {
-      yield* assertRoundTrips(Pacer.ReportInfoType, yield* sampleSchemaValues(Pacer.ReportInfoType, 1004));
+      const sampleSchemaValues5 = yield* sampleSchemaValues(Pacer.ReportInfoType, 1004);
+      yield* assertRoundTrips(Pacer.ReportInfoType, sampleSchemaValues5);
     })
   );
 
@@ -235,7 +240,8 @@ describe("PACER end-to-end (mock transport)", () => {
           Pacer.CourtCaseSearchDto.make({ caseNumberFull: O.some("1:2002bk20340") })
         );
         expect(downloaded.length).toBe(Pacer.PACER_MOCK_DOWNLOAD_CASES);
-        expect(yield* Ref.get(deletedReportIds)).toEqual([Pacer.DEFAULT_REPORT_ID]);
+        const got = yield* Ref.get(deletedReportIds);
+        expect(got).toEqual([Pacer.DEFAULT_REPORT_ID]);
       })
     )
   );
@@ -272,12 +278,15 @@ describe("PACER end-to-end (mock transport)", () => {
           // Reaching status proves acquisition completed. No timing-based race or real endpoint.
           yield* Deferred.await(polling).pipe(Effect.withSpan("PacerTest.batch.pollingStarted"));
           yield* Fiber.interrupt(fiber).pipe(Effect.withSpan("PacerTest.batch.interruptAndCleanup"));
-          expect(Exit.hasInterrupts(yield* Fiber.await(fiber))).toBe(true);
-          expect(yield* Ref.get(deleted)).toEqual([Pacer.DEFAULT_REPORT_ID]);
+          const await6 = yield* Fiber.await(fiber);
+          expect(Exit.hasInterrupts(await6)).toBe(true);
+          const got7 = yield* Ref.get(deleted);
+          expect(got7).toEqual([Pacer.DEFAULT_REPORT_ID]);
         })
       );
       // The scoped session finalizer still logs out after interrupt-driven report deletion.
-      expect(yield* Ref.get(logoutCount)).toBe(1);
+      const got8 = yield* Ref.get(logoutCount);
+      expect(got8).toBe(1);
     })
   );
 
@@ -298,11 +307,10 @@ describe("PACER end-to-end (mock transport)", () => {
       yield* provideScopedLayer(Pacer.makePacerLayer(cfg, transport).full)(
         Effect.gen(function* () {
           const pcl = yield* Pacer.PclClient;
-          assertExitFailure(
-            yield* Effect.exit(pcl.downloadCases(Pacer.CourtCaseSearchDto.make({}))),
-            Cause.die(defect)
-          );
-          expect(yield* Ref.get(deleted)).toEqual([Pacer.DEFAULT_REPORT_ID]);
+          const exit9 = yield* Effect.exit(pcl.downloadCases(Pacer.CourtCaseSearchDto.make({})));
+          assertExitFailure(exit9, Cause.die(defect));
+          const got10 = yield* Ref.get(deleted);
+          expect(got10).toEqual([Pacer.DEFAULT_REPORT_ID]);
         })
       );
     })
@@ -316,8 +324,10 @@ describe("PACER end-to-end (mock transport)", () => {
       yield* provideScopedLayer(mockLayer({ logoutCount, logoutTokens, rotateNextGenCso: rotatedToken }))(
         findFirstCasesPage()
       );
-      expect(yield* Ref.get(logoutCount)).toBe(1);
-      expect(yield* Ref.get(logoutTokens)).toEqual([rotatedToken]);
+      const got11 = yield* Ref.get(logoutCount);
+      expect(got11).toBe(1);
+      const got12 = yield* Ref.get(logoutTokens);
+      expect(got12).toEqual([rotatedToken]);
     })
   );
 
@@ -387,7 +397,8 @@ describe("PACER end-to-end (mock transport)", () => {
           const error = yield* Effect.flip(pcl.downloadCases(Pacer.CourtCaseSearchDto.make({})));
           expect(error._tag).toBe("PacerPclError");
           expect(error.reason).toBe("server-error");
-          expect(yield* Ref.get(failedBatchDeletedReportIds)).toEqual([Pacer.DEFAULT_REPORT_ID]);
+          const got13 = yield* Ref.get(failedBatchDeletedReportIds);
+          expect(got13).toEqual([Pacer.DEFAULT_REPORT_ID]);
         })
       )
   );
@@ -402,7 +413,8 @@ describe("PACER end-to-end (mock transport)", () => {
         const pcl = yield* Pacer.PclClient;
         const downloaded = yield* pcl.downloadCases(Pacer.CourtCaseSearchDto.make({}));
         expect(downloaded.length).toBe(Pacer.PACER_MOCK_DOWNLOAD_CASES);
-        expect(yield* Ref.get(cleanupFailureDeletedReportIds)).toEqual([Pacer.DEFAULT_REPORT_ID]);
+        const got14 = yield* Ref.get(cleanupFailureDeletedReportIds);
+        expect(got14).toEqual([Pacer.DEFAULT_REPORT_ID]);
       })
     )
   );
@@ -419,7 +431,8 @@ describe("PACER end-to-end (mock transport)", () => {
         expect(error._tag).toBe("PacerPclError");
         expect(error.reason).toBe("server-error");
         expect(error.cause).toBe("invalid reportId from server");
-        expect(yield* Ref.get(invalidReportDeletedSegments)).toEqual(["abc"]);
+        const got15 = yield* Ref.get(invalidReportDeletedSegments);
+        expect(got15).toEqual(["abc"]);
       })
     )
   );
@@ -436,7 +449,8 @@ describe("PACER end-to-end (mock transport)", () => {
         expect(error._tag).toBe("PacerPclError");
         expect(error.reason).toBe("server-error");
         expect(error.cause).toBe("invalid reportId from server");
-        expect(yield* Ref.get(pathReportDeletedSegments)).toEqual(["..%2Fabc%3Ftoken%3Dvalue"]);
+        const got16 = yield* Ref.get(pathReportDeletedSegments);
+        expect(got16).toEqual(["..%2Fabc%3Ftoken%3Dvalue"]);
       })
     )
   );
@@ -453,7 +467,8 @@ describe("PACER end-to-end (mock transport)", () => {
         expect(error._tag).toBe("PacerPclError");
         expect(error.reason).toBe("server-error");
         expect(error.cause).toBe("invalid reportId from server");
-        expect(yield* Ref.get(invalidNumberReportDeletedSegments)).toEqual(["3.14"]);
+        const got17 = yield* Ref.get(invalidNumberReportDeletedSegments);
+        expect(got17).toEqual(["3.14"]);
       })
     )
   );

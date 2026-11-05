@@ -201,51 +201,52 @@ describe("codex findings payload rejection", () => {
     Effect.gen(function* () {
       const duplicate = captureFinding({ codexId: hex("aa", 32) });
 
-      expect(yield* rejects(payloadOf([duplicate, duplicate]))).toBe("rejected");
+      const rejects1 = yield* rejects(payloadOf([duplicate, duplicate]));
+      expect(rejects1).toBe("rejected");
     })
   );
 
   it.effect("rejects a traversal-shaped Codex identity", () =>
     Effect.gen(function* () {
-      expect(yield* rejects(payloadOf([captureFinding({ codexId: "../../etc/passwd" })]))).toBe("rejected");
+      const rejects2 = yield* rejects(payloadOf([captureFinding({ codexId: "../../etc/passwd" })]));
+      expect(rejects2).toBe("rejected");
     })
   );
 
   it.effect("rejects an abbreviated source commit", () =>
     Effect.gen(function* () {
-      expect(yield* rejects(payloadOf([captureFinding({ codexId: hex("aa", 32), commit: "244529a" })]))).toBe(
-        "rejected"
-      );
+      const rejects3 = yield* rejects(payloadOf([captureFinding({ codexId: hex("aa", 32), commit: "244529a" })]));
+      expect(rejects3).toBe("rejected");
     })
   );
 
   it.effect("rejects a title carrying a bidirectional override", () =>
     Effect.gen(function* () {
-      expect(yield* rejects(payloadOf([captureFinding({ codexId: hex("aa", 32), title: "safe‮evil" })]))).toBe(
-        "rejected"
-      );
+      const rejects4 = yield* rejects(payloadOf([captureFinding({ codexId: hex("aa", 32), title: "safe‮evil" })]));
+      expect(rejects4).toBe("rejected");
     })
   );
 
   it.effect("rejects an over-length title rather than truncating it", () =>
     Effect.gen(function* () {
-      expect(yield* rejects(payloadOf([captureFinding({ codexId: hex("aa", 32), title: Str.repeat(301)("x") })]))).toBe(
-        "rejected"
+      const rejects5 = yield* rejects(
+        payloadOf([captureFinding({ codexId: hex("aa", 32), title: Str.repeat(301)("x") })])
       );
+      expect(rejects5).toBe("rejected");
     })
   );
 
   it.effect("rejects an unknown severity", () =>
     Effect.gen(function* () {
-      expect(yield* rejects(payloadOf([captureFinding({ codexId: hex("aa", 32), severity: "Blocker" })]))).toBe(
-        "rejected"
-      );
+      const rejects6 = yield* rejects(payloadOf([captureFinding({ codexId: hex("aa", 32), severity: "Blocker" })]));
+      expect(rejects6).toBe("rejected");
     })
   );
 
   it.effect("rejects an unknown payload contract version", () =>
     Effect.gen(function* () {
-      expect(yield* rejects({ ...payloadOf([]), schemaVersion: "codex-findings-capture/v99" })).toBe("rejected");
+      const rejects7 = yield* rejects({ ...payloadOf([]), schemaVersion: "codex-findings-capture/v99" });
+      expect(rejects7).toBe("rejected");
     })
   );
 });
@@ -332,15 +333,15 @@ describe("codex findings source identity consistency", () => {
 
   it.effect("refuses a local identity declared as a cloud capture", () =>
     Effect.gen(function* () {
-      expect(yield* reasonOf(payloadOf([captureFinding({ codexId: "local:csf_aaaaaaaaaaaaaaaaaaaaaaaa" })]))).toBe(
-        "payload-invalid"
-      );
+      const reasonOf8 = yield* reasonOf(payloadOf([captureFinding({ codexId: "local:csf_aaaaaaaaaaaaaaaaaaaaaaaa" })]));
+      expect(reasonOf8).toBe("payload-invalid");
     })
   );
 
   it.effect("refuses a cloud identity declared as a sealed bundle capture", () =>
     Effect.gen(function* () {
-      expect(yield* reasonOf(sealedPayloadOf([captureFinding({ codexId: hex("aa", 32) })]))).toBe("payload-invalid");
+      const reasonOf9 = yield* reasonOf(sealedPayloadOf([captureFinding({ codexId: hex("aa", 32) })]));
+      expect(reasonOf9).toBe("payload-invalid");
     })
   );
 
@@ -362,11 +363,12 @@ describe("codex findings source identity consistency", () => {
       const cloud = { ...payload, capture: { ...payload.capture, source: "security-cloud-csv" } };
       const plan = yield* planFrom(cloud);
       expect(plan.records[0]?.codexId).toBe(finding.codexId);
-      expect(yield* reasonOf(payload)).toBe("payload-invalid");
-      expect(yield* reasonOf(sealedPayloadOf([finding]))).toBe("payload-invalid");
-      expect(yield* reasonOf({ ...cloud, findings: [captureFinding({ codexId: hex("aa", 32) })] })).toBe(
-        "payload-invalid"
-      );
+      const reasonOf10 = yield* reasonOf(payload);
+      expect(reasonOf10).toBe("payload-invalid");
+      const reasonOf11 = yield* reasonOf(sealedPayloadOf([finding]));
+      expect(reasonOf11).toBe("payload-invalid");
+      const reasonOf12 = yield* reasonOf({ ...cloud, findings: [captureFinding({ codexId: hex("aa", 32) })] });
+      expect(reasonOf12).toBe("payload-invalid");
     })
   );
 

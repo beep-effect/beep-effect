@@ -198,8 +198,9 @@ describe("@beep/html generated attribute provenance", () => {
         popovertarget: O.some("menu"),
       } as unknown as Div;
       expect(inspectConformance(forged)).toContainEqual(expect.objectContaining({ rule: "misplacedAttribute" }));
+      const exit1 = yield* Effect.exit(conform(forged));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(conform(forged)), {
+        Exit.match(exit1, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -221,8 +222,9 @@ describe("@beep/html numeric and id conformance", () => {
     Effect.gen(function* () {
       for (const root of [Base.make({}), MapElement.make({ children: [] }), Track.make({})]) {
         expect(hasRule(root, "attributeRelationship")).toBe(true);
+        const exit2 = yield* Effect.exit(conform(root));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(conform(root)), {
+          Exit.match(exit2, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -253,8 +255,9 @@ describe("@beep/html numeric and id conformance", () => {
       expect(issuesAtPath(subtitlesWithoutLanguage, ["children.0", "attributes.srclang"])).toContainEqual(
         expect.objectContaining({ rule: "attributeRelationship" })
       );
+      const exit3 = yield* Effect.exit(conform(subtitlesWithoutLanguage));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(conform(subtitlesWithoutLanguage)), {
+        Exit.match(exit3, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -271,8 +274,9 @@ describe("@beep/html numeric and id conformance", () => {
       expect(issuesAtPath(omittedKindWithoutLanguage, ["attributes.srclang"])).toContainEqual(
         expect.objectContaining({ rule: "attributeRelationship" })
       );
+      const exit4 = yield* Effect.exit(conform(omittedKindWithoutLanguage));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(conform(omittedKindWithoutLanguage)), {
+        Exit.match(exit4, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -305,8 +309,9 @@ describe("@beep/html numeric and id conformance", () => {
           expect.objectContaining({ path: ["children.1", "attributes.name"] }),
         ]
       );
+      const exit5 = yield* Effect.exit(conform(duplicateMaps));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(conform(duplicateMaps)), {
+        Exit.match(exit5, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -328,8 +333,9 @@ describe("@beep/html numeric and id conformance", () => {
       expect(inspectConformance(mismatchedMapIdentity)).toContainEqual(
         expect.objectContaining({ path: ["attributes.id"], rule: "attributeRelationship" })
       );
+      const exit6 = yield* Effect.exit(conform(mismatchedMapIdentity));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(conform(mismatchedMapIdentity)), {
+        Exit.match(exit6, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -377,8 +383,9 @@ describe("@beep/html numeric and id conformance", () => {
       ];
       for (const root of invalid) {
         expect(hasRule(root, "attributeRelationship")).toBe(true);
+        const exit7 = yield* Effect.exit(conform(root));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(conform(root)), {
+          Exit.match(exit7, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -720,8 +727,9 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of invalid) {
         expect(hasRule(root, "elementOrder")).toBe(true);
+        const exit8 = yield* Effect.exit(conform(root));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(conform(root)), {
+          Exit.match(exit8, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -819,8 +827,9 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of invalid) {
         expect(hasRule(root, "elementOrder")).toBe(true);
+        const exit9 = yield* Effect.exit(conform(root));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(conform(root)), {
+          Exit.match(exit9, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -935,8 +944,9 @@ describe("@beep/html generated special-child grammars", () => {
         expect(inspectConformance(root)).toContainEqual(
           expect.objectContaining({ path, rule: "attributeRelationship" })
         );
+        const exit10 = yield* Effect.exit(conform(root));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(conform(root)), {
+          Exit.match(exit10, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -1033,8 +1043,9 @@ describe("@beep/html generated special-child grammars", () => {
         expect(inspectConformance(root)).toContainEqual(
           expect.objectContaining({ path: ["children.0"], rule: "contentModel" })
         );
+        const exit11 = yield* Effect.exit(conform(root));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(conform(root)), {
+          Exit.match(exit11, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -1077,8 +1088,9 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of invalid) {
         expect(inspectConformance(root).length).toBeGreaterThan(0);
+        const exit12 = yield* Effect.exit(conform(root));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(conform(root)), {
+          Exit.match(exit12, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -1162,8 +1174,9 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of invalid) {
         expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ rule: "attributeRelationship" }));
+        const exit13 = yield* Effect.exit(conform(root));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(conform(root)), {
+          Exit.match(exit13, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -1285,8 +1298,9 @@ describe("@beep/html generated special-child grammars", () => {
 
       for (const [root, path] of cases) {
         expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ path, rule: "forbiddenDescendant" }));
+        const exit14 = yield* Effect.exit(conform(root));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(conform(root)), {
+          Exit.match(exit14, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -1329,8 +1343,9 @@ describe("@beep/html generated special-child grammars", () => {
         expect.objectContaining({ path: ["children.0", "children.1", "children.0"] }),
         expect.objectContaining({ path: ["children.0", "children.1", "children.1"] }),
       ]);
+      const exit15 = yield* Effect.exit(conform(twoVisible));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(conform(twoVisible)), {
+        Exit.match(exit15, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -1377,8 +1392,9 @@ describe("@beep/html generated special-child grammars", () => {
 
       for (const [root, path] of cases) {
         expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ path, rule: "forbiddenDescendant" }));
+        const exit16 = yield* Effect.exit(conform(root));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(conform(root)), {
+          Exit.match(exit16, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -1406,8 +1422,9 @@ describe("@beep/html generated special-child grammars", () => {
       expect(inspectConformance(invalidStandalone)).toContainEqual(
         expect.objectContaining({ path: ["children.0"], rule: "contentModel" })
       );
+      const exit17 = yield* Effect.exit(conform(invalidStandalone));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(conform(invalidStandalone)), {
+        Exit.match(exit17, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -1518,8 +1535,9 @@ describe("@beep/html generated special-child grammars", () => {
       expect(inspectConformance(valid)).toStrictEqual([]);
       expect(inspectConformance(validWithHiddenInput)).toStrictEqual([]);
       expect(hasRule(invalid, "forbiddenDescendant")).toBe(true);
+      const exit18 = yield* Effect.exit(conform(invalid));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(conform(invalid)), {
+        Exit.match(exit18, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -1560,8 +1578,10 @@ describe("@beep/html exact attribute domains", () => {
     [LinkRelationListArbitrary],
     ([relation]) =>
       Effect.gen(function* () {
-        expect(yield* encodeLinkRelationList(relation)).toBe(relation);
-        expect(yield* decodeLinkRelationList(relation)).toBe(relation);
+        const encodedLinkRelationList = yield* encodeLinkRelationList(relation);
+        expect(encodedLinkRelationList).toBe(relation);
+        const decodedLinkRelationList = yield* decodeLinkRelationList(relation);
+        expect(decodedLinkRelationList).toBe(relation);
 
         return true;
       }),
@@ -1634,7 +1654,8 @@ describe("@beep/html exact attribute domains", () => {
           children: [Anchor.make({ children: [], href: O.some("/profile"), rel: O.some(relation) })],
         });
         expect(inspectConformance(root)).toStrictEqual([]);
-        const issues = inspectSafeHtml(yield* conform(root));
+        const conform19 = yield* conform(root);
+        const issues = inspectSafeHtml(conform19);
         expect(issues).toContainEqual(
           expect.objectContaining({ path: ["children.0", "attributes.rel"], rule: "deniedAttribute" })
         );
@@ -1644,7 +1665,8 @@ describe("@beep/html exact attribute domains", () => {
         const root = Fragment.make({
           children: [Anchor.make({ children: [], href: O.some("/docs"), rel: O.some(relation) })],
         });
-        expect(inspectSafeHtml(yield* conform(root))).toStrictEqual([]);
+        const conform20 = yield* conform(root);
+        expect(inspectSafeHtml(conform20)).toStrictEqual([]);
       }
       const protectedBlank = Fragment.make({
         children: [
@@ -1656,7 +1678,8 @@ describe("@beep/html exact attribute domains", () => {
           }),
         ],
       });
-      expect(inspectSafeHtml(yield* conform(protectedBlank))).toStrictEqual([]);
+      const conform21 = yield* conform(protectedBlank);
+      expect(inspectSafeHtml(conform21)).toStrictEqual([]);
     })
   );
 
@@ -2086,8 +2109,9 @@ describe("@beep/html foreign browser fixed points", () => {
       expect(hasRule(svgRoot("customÉ"), "foreignIntegration")).toBe(false);
       expect(hasRule(svgRoot("customElement"), "foreignIntegration")).toBe(true);
       expect(hasRule(svgRoot("path", { customAttr: "value" }), "foreignIntegration")).toBe(true);
+      const exit22 = yield* Effect.exit(serialize(svgRoot("lineargradient")));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(serialize(svgRoot("lineargradient"))), {
+        Exit.match(exit22, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -2107,8 +2131,9 @@ describe("@beep/html foreign browser fixed points", () => {
         children: [ForeignElement.make({ namespace: "mathml", name: "svg:path", children: [] })],
       });
       expect(hasRule(mismatchedPrefix, "foreignIntegration")).toBe(true);
+      const exit23 = yield* Effect.exit(serialize(mismatchedPrefix));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(serialize(mismatchedPrefix)), {
+        Exit.match(exit23, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(

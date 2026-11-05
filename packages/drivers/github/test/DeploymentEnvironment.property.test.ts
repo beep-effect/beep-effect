@@ -15,7 +15,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(DeploymentEnvironmentInfo)(value);
       const decoded = yield* S.decodeEffect(DeploymentEnvironmentInfo)(encoded);
       assert.isTrue(S.toEquivalence(DeploymentEnvironmentInfo)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(DeploymentEnvironmentInfo)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(DeploymentEnvironmentInfo)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );

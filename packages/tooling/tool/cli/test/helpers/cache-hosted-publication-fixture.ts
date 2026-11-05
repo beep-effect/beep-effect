@@ -67,7 +67,9 @@ export const zipProducerReport = Effect.fn("HostedProducerTest.zip")(function* (
   } else {
     yield* fs.writeFileString(reportPath, contents);
   }
-  if (extra === true) yield* fs.writeFileString(path.join(directory, "extra.txt"), "synthetic private payload");
+  if (extra === true) {
+    yield* fs.writeFileString(path.join(directory, "extra.txt"), "synthetic private payload");
+  }
   const zipped = yield* CacheRuntimeProcess.runCaptured({
     command: "/usr/bin/zip",
     args: ["-q", "-y", "report.zip", member, ...(extra === true ? ["extra.txt"] : [])],
@@ -103,8 +105,11 @@ export const preparePublishedProducerObservation = Effect.fn("PublishedAcceptanc
     observation,
     CacheHostedProducerRunReference.make(reference)
   );
-  const archive = yield* zipProducerReport(yield* encodeComplete(report));
-  yield* fs.writeFileString(path.join(directory, "publication.json"), yield* encodeApproval(approval), {
+  const encodedComplete = yield* encodeComplete(report);
+  const archive = yield* zipProducerReport(encodedComplete);
+  const argument = path.join(directory, "publication.json");
+  const encodedApproval = yield* encodeApproval(approval);
+  yield* fs.writeFileString(argument, encodedApproval, {
     flag: "wx",
     mode: 0o600,
   });

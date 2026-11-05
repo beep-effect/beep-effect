@@ -5,7 +5,7 @@ import { YamlFormat, YamlFormattingOptions, YamlModificationError } from "@beep/
 import { assert, describe, it } from "@effect/vitest";
 import { assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
-import { constant } from "effect/Function";
+import { constant, identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -13,6 +13,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 import { fixtureText } from "./fixture-text.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const apply = (text: string, edits: ReadonlyArray<YamlEdit>) => YamlEdit.applyAll(text, edits);
 
@@ -183,11 +185,15 @@ describe("YamlFormat", () => {
       ];
       for (const text of streams) {
         const { documents } = composeAllDocuments(text, ParseOptionsInput.make({}));
-        assert.isAtLeast(documents.length, 2, `expected a multi-document stream: ${JSON.stringify(text)}`);
+        assert.isAtLeast(
+          documents.length,
+          2,
+          `expected a multi-document stream: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)}`
+        );
         for (let i = 1; i < documents.length; i++) {
           assert.isTrue(
             documents[i]?.hasDocumentStart === true || documents[i - 1]?.hasDocumentEnd === true,
-            `document ${i} of ${JSON.stringify(text)} has neither its own --- nor a predecessor ...`
+            `document ${i} of ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)} has neither its own --- nor a predecessor ...`
           );
         }
       }
@@ -277,23 +283,20 @@ describe("YamlFormat", () => {
       Effect.gen(function* () {
         const text = "%TAG !e! tag:example.com,2000:\n---\na: !e!foo bar\nb: 1\n";
         // The splice touches only the target span.
-        assert.strictEqual(
-          yield* YamlFormat.modifyToString(text, ["b"], 2),
-          "%TAG !e! tag:example.com,2000:\n---\na: !e!foo bar\nb: 2\n"
-        );
+        const modifyToString1 = yield* YamlFormat.modifyToString(text, ["b"], 2);
+        assert.strictEqual(modifyToString1, "%TAG !e! tag:example.com,2000:\n---\na: !e!foo bar\nb: 2\n");
         // The whole-document pipeline renders the body after the verbatim prologue.
-        assert.strictEqual(
-          yield* YamlFormat.modifyToString(text, ["b"], [2]),
-          "%TAG !e! tag:example.com,2000:\n---\na: !e!foo bar\nb:\n- 2\n"
-        );
+        const modifyToString2 = yield* YamlFormat.modifyToString(text, ["b"], [2]);
+        assert.strictEqual(modifyToString2, "%TAG !e! tag:example.com,2000:\n---\na: !e!foo bar\nb:\n- 2\n");
       })
     );
 
     it.effect("modify keeps a %YAML 1.2 compose prologue on the splice and the whole-document path", () =>
       Effect.gen(function* () {
         const text = "# compose\n%YAML 1.2\n---\nservices:\n  redis:\n    image: redis:8.10.3 # pinned\n";
+        const modifyToString3 = yield* YamlFormat.modifyToString(text, ["services", "redis", "image"], "redis:8.12.0");
         assert.strictEqual(
-          yield* YamlFormat.modifyToString(text, ["services", "redis", "image"], "redis:8.12.0"),
+          modifyToString3,
           "# compose\n%YAML 1.2\n---\nservices:\n  redis:\n    image: redis:8.12.0 # pinned\n"
         );
         const inserted = yield* YamlFormat.modifyToString(text, ["services", "redis", "restart"], "always");
@@ -301,19 +304,16 @@ describe("YamlFormat", () => {
           inserted,
           "# compose\n%YAML 1.2\n---\nservices:\n  redis:\n    image: redis:8.10.3 # pinned\n    restart: always\n"
         );
-        assert.deepStrictEqual(yield* Yaml.parse(inserted), {
+        const parsed4 = yield* Yaml.parse(inserted);
+        assert.deepStrictEqual(parsed4, {
           services: { redis: { image: "redis:8.10.3", restart: "always" } },
         });
         // A CRLF prologue keeps its bytes; the re-rendered body is LF, as on every whole-document edit.
-        assert.strictEqual(
-          yield* YamlFormat.modifyToString("%YAML 1.2\r\n---\r\na: 1\r\n", ["b"], 2),
-          "%YAML 1.2\r\n---\r\na: 1\nb: 2\n"
-        );
+        const modifyToString5 = yield* YamlFormat.modifyToString("%YAML 1.2\r\n---\r\na: 1\r\n", ["b"], 2);
+        assert.strictEqual(modifyToString5, "%YAML 1.2\r\n---\r\na: 1\nb: 2\n");
         // A marker-line comment belongs to the body and renders on its own line, as without directives.
-        assert.strictEqual(
-          yield* YamlFormat.modifyToString("%YAML 1.2\n--- # body\na: 1\n", ["b"], 2),
-          "%YAML 1.2\n---\n# body\na: 1\nb: 2\n"
-        );
+        const modifyToString6 = yield* YamlFormat.modifyToString("%YAML 1.2\n--- # body\na: 1\n", ["b"], 2);
+        assert.strictEqual(modifyToString6, "%YAML 1.2\n---\n# body\na: 1\nb: 2\n");
       })
     );
 
@@ -333,10 +333,8 @@ describe("YamlFormat", () => {
         const prologue = `%YAML 1.2\r\n${Str.repeat(40)("# note\r\n\r\n  \r\n")}`;
         const error = yield* Effect.flip(YamlFormat.modify(`${prologue}--- !!map\r\na: 1\r\n`, ["b"], 2));
         assert.strictEqual(error.diagnostics[0]?.code, "DirectiveCarryingDocument");
-        assert.strictEqual(
-          yield* YamlFormat.modifyToString(`${prologue}---\r\na: 1\r\n`, ["b"], [2]),
-          `${prologue}---\r\na: 1\nb:\n- 2\n`
-        );
+        const modifyToString7 = yield* YamlFormat.modifyToString(`${prologue}---\r\na: 1\r\n`, ["b"], [2]);
+        assert.strictEqual(modifyToString7, `${prologue}---\r\na: 1\nb:\n- 2\n`);
       })
     );
 
@@ -379,31 +377,28 @@ describe("YamlFormat", () => {
     it.effect("a modify-inserted value requiring quoting follows the option", () =>
       Effect.gen(function* () {
         const text = "deps:\n  a: 1\n";
-        assert.strictEqual(yield* YamlFormat.modifyToString(text, ["deps", "a"], "*"), "deps:\n  a: '*'\n");
-        assert.strictEqual(
-          yield* YamlFormat.modifyToString(
-            text,
-            ["deps", "a"],
-            "*",
-            YamlStringifyOptions.make({ quoteStyle: "double" })
-          ),
-          'deps:\n  a: "*"\n'
+        const modifyToString8 = yield* YamlFormat.modifyToString(text, ["deps", "a"], "*");
+        assert.strictEqual(modifyToString8, "deps:\n  a: '*'\n");
+        const modifyToString9 = yield* YamlFormat.modifyToString(
+          text,
+          ["deps", "a"],
+          "*",
+          YamlStringifyOptions.make({ quoteStyle: "double" })
         );
+        assert.strictEqual(modifyToString9, 'deps:\n  a: "*"\n');
       })
     );
 
     it.effect("a modify-inserted value needing no quoting stays plain under either setting", () =>
       Effect.gen(function* () {
         const text = "deps:\n  a: 1\n";
-        assert.strictEqual(
-          yield* YamlFormat.modifyToString(
-            text,
-            ["deps", "a"],
-            "beta",
-            YamlStringifyOptions.make({ quoteStyle: "double" })
-          ),
-          "deps:\n  a: beta\n"
+        const modifyToString10 = yield* YamlFormat.modifyToString(
+          text,
+          ["deps", "a"],
+          "beta",
+          YamlStringifyOptions.make({ quoteStyle: "double" })
         );
+        assert.strictEqual(modifyToString10, "deps:\n  a: beta\n");
       })
     );
 
@@ -560,8 +555,10 @@ describe("YamlFormat", () => {
         const doubled = YamlFormat.formatToString(text, undefined, requoteDouble);
         const singled = YamlFormat.formatToString(text, undefined, requoteSingle);
         const original = yield* Yaml.parse(text);
-        assert.deepStrictEqual(yield* Yaml.parse(doubled), original);
-        assert.deepStrictEqual(yield* Yaml.parse(singled), original);
+        const parsed11 = yield* Yaml.parse(doubled);
+        assert.deepStrictEqual(parsed11, original);
+        const parsed12 = yield* Yaml.parse(singled);
+        assert.deepStrictEqual(parsed12, original);
       })
     );
 
@@ -577,7 +574,8 @@ describe("YamlFormat", () => {
       Effect.gen(function* () {
         const text = "name: John\nage: 30\n";
         const edits = yield* YamlFormat.modify(text, ["name"], "Jane");
-        assert.deepStrictEqual(yield* Yaml.parse(apply(text, edits)), { name: "Jane", age: 30 });
+        const parsed13 = yield* Yaml.parse(apply(text, edits));
+        assert.deepStrictEqual(parsed13, { name: "Jane", age: 30 });
       })
     );
 
@@ -585,7 +583,8 @@ describe("YamlFormat", () => {
       Effect.gen(function* () {
         const text = "xs:\n  - 1\n  - 2\n  - 3\n";
         const edits = yield* YamlFormat.modify(text, ["xs", 1], 99);
-        assert.deepStrictEqual(yield* Yaml.parse(apply(text, edits)), { xs: [1, 99, 3] });
+        const parsed14 = yield* Yaml.parse(apply(text, edits));
+        assert.deepStrictEqual(parsed14, { xs: [1, 99, 3] });
       })
     );
 
@@ -597,7 +596,8 @@ describe("YamlFormat", () => {
         for (const edit of edits) {
           assert.isAtLeast(edit.offset, O.getOrElse(constant(-1))(Str.indexOf("second")(text)));
         }
-        assert.deepStrictEqual(yield* Yaml.parse(apply(text, edits)), { first: "unchanged", second: 5 });
+        const parsed15 = yield* Yaml.parse(apply(text, edits));
+        assert.deepStrictEqual(parsed15, { first: "unchanged", second: 5 });
       })
     );
   });
@@ -606,12 +606,12 @@ describe("YamlFormat", () => {
     it.effect("modify edits a BOM-prefixed directive or --- document instead of refusing it as a stream", () =>
       Effect.gen(function* () {
         const directive = "\uFEFF%YAML 1.2\n---\na: 1\n";
-        assert.strictEqual(yield* YamlFormat.modifyToString(directive, ["a"], 2), "\uFEFF%YAML 1.2\n---\na: 2\n");
-        assert.strictEqual(
-          yield* YamlFormat.modifyToString(directive, ["b"], [2]),
-          "\uFEFF%YAML 1.2\n---\na: 1\nb:\n- 2\n"
-        );
-        assert.strictEqual(yield* YamlFormat.modifyToString("\uFEFF---\na: 1\n", ["b"], 2), "\uFEFF---\na: 1\nb: 2\n");
+        const modifyToString16 = yield* YamlFormat.modifyToString(directive, ["a"], 2);
+        assert.strictEqual(modifyToString16, "\uFEFF%YAML 1.2\n---\na: 2\n");
+        const modifyToString17 = yield* YamlFormat.modifyToString(directive, ["b"], [2]);
+        assert.strictEqual(modifyToString17, "\uFEFF%YAML 1.2\n---\na: 1\nb:\n- 2\n");
+        const modifyToString18 = yield* YamlFormat.modifyToString("\uFEFF---\na: 1\n", ["b"], 2);
+        assert.strictEqual(modifyToString18, "\uFEFF---\na: 1\nb: 2\n");
         assert.strictEqual(YamlFormat.formatToString(directive), directive);
       })
     );
@@ -629,18 +629,19 @@ describe("YamlFormat", () => {
     it.effect("modify keeps the BOM when it falls back to the whole-document pipeline", () =>
       Effect.gen(function* () {
         // Insertion, removal and an object value all leave the fast path.
-        assert.strictEqual(yield* YamlFormat.modifyToString("\uFEFFa: 1\n", ["b"], 2), "\uFEFFa: 1\nb: 2\n");
-        assert.strictEqual(yield* YamlFormat.modifyToString("\uFEFFa: 1\nb: 2\n", ["b"], undefined), "\uFEFFa: 1\n");
-        assert.strictEqual(yield* YamlFormat.modifyToString("\uFEFFa: 1\n", ["a"], { c: 3 }), "\uFEFFa:\n  c: 3\n");
-        assert.strictEqual(
-          yield* YamlFormat.modifyToString(
-            "\uFEFFb: 1\na: 2\n",
-            ["a"],
-            3,
-            YamlStringifyOptions.make({ sortKeys: true })
-          ),
-          "\uFEFFa: 3\nb: 1\n"
+        const modifyToString19 = yield* YamlFormat.modifyToString("\uFEFFa: 1\n", ["b"], 2);
+        assert.strictEqual(modifyToString19, "\uFEFFa: 1\nb: 2\n");
+        const modifyToString20 = yield* YamlFormat.modifyToString("\uFEFFa: 1\nb: 2\n", ["b"], undefined);
+        assert.strictEqual(modifyToString20, "\uFEFFa: 1\n");
+        const modifyToString21 = yield* YamlFormat.modifyToString("\uFEFFa: 1\n", ["a"], { c: 3 });
+        assert.strictEqual(modifyToString21, "\uFEFFa:\n  c: 3\n");
+        const modifyToString22 = yield* YamlFormat.modifyToString(
+          "\uFEFFb: 1\na: 2\n",
+          ["a"],
+          3,
+          YamlStringifyOptions.make({ sortKeys: true })
         );
+        assert.strictEqual(modifyToString22, "\uFEFFa: 3\nb: 1\n");
       })
     );
   });
@@ -650,7 +651,8 @@ describe("YamlFormat", () => {
       Effect.gen(function* () {
         const text = "a: 1\n";
         const edits = yield* YamlFormat.modify(text, ["b"], 2);
-        assert.deepStrictEqual(yield* Yaml.parse(apply(text, edits)), { a: 1, b: 2 });
+        const parsed23 = yield* Yaml.parse(apply(text, edits));
+        assert.deepStrictEqual(parsed23, { a: 1, b: 2 });
       })
     );
 
@@ -658,7 +660,8 @@ describe("YamlFormat", () => {
       Effect.gen(function* () {
         const text = "server:\n  host: localhost\n";
         const edits = yield* YamlFormat.modify(text, ["server", "port"], 8080);
-        assert.deepStrictEqual(yield* Yaml.parse(apply(text, edits)), {
+        const parsed24 = yield* Yaml.parse(apply(text, edits));
+        assert.deepStrictEqual(parsed24, {
           server: { host: "localhost", port: 8080 },
         });
       })
@@ -680,7 +683,8 @@ describe("YamlFormat", () => {
       Effect.gen(function* () {
         const text = "xs:\n  - 1\n";
         const edits = yield* YamlFormat.modify(text, ["xs", 5], 2);
-        assert.deepStrictEqual(yield* Yaml.parse(apply(text, edits)), { xs: [1, 2] });
+        const parsed25 = yield* Yaml.parse(apply(text, edits));
+        assert.deepStrictEqual(parsed25, { xs: [1, 2] });
       })
     );
   });
@@ -703,7 +707,8 @@ describe("YamlFormat", () => {
           out,
           "verified:\n  - by: human:spencer\n    at: 2026-09-01T00:00:00Z\n  - by: human:other\n    at: 2026-09-02T00:00:00Z\nstatus: stable\n"
         );
-        assert.deepStrictEqual(yield* Yaml.parse(out), {
+        const parsed26 = yield* Yaml.parse(out);
+        assert.deepStrictEqual(parsed26, {
           verified: [
             { by: "human:spencer", at: "2026-09-01T00:00:00Z" },
             { by: "human:other", at: "2026-09-02T00:00:00Z" },
@@ -738,7 +743,8 @@ describe("YamlFormat", () => {
         const out = yield* YamlFormat.modifyToString(text, ["xs"], [1, "two", true]);
         assert.notInclude(out, "[object Object]");
         assert.strictEqual(out, "a: 1\nxs:\n- 1\n- two\n- true\n");
-        assert.deepStrictEqual(yield* Yaml.parse(out), { a: 1, xs: [1, "two", true] });
+        const parsed27 = yield* Yaml.parse(out);
+        assert.deepStrictEqual(parsed27, { a: 1, xs: [1, "two", true] });
       })
     );
 
@@ -747,7 +753,8 @@ describe("YamlFormat", () => {
         const value = { a: { b: [1, { c: [2, 3] }] }, e: {}, xs: [] };
         const out = yield* YamlFormat.modifyToString("root: keep\n", ["meta"], value);
         assert.notInclude(out, "[object Object]");
-        assert.deepStrictEqual(yield* Yaml.parse(out), {
+        const parsed28 = yield* Yaml.parse(out);
+        assert.deepStrictEqual(parsed28, {
           root: "keep",
           meta: value,
         });
@@ -758,7 +765,8 @@ describe("YamlFormat", () => {
       Effect.gen(function* () {
         const out = yield* YamlFormat.modifyToString("old: 1\n", [], { fresh: [1, 2] });
         assert.notInclude(out, "[object Object]");
-        assert.deepStrictEqual(yield* Yaml.parse(out), { fresh: [1, 2] });
+        const parsed29 = yield* Yaml.parse(out);
+        assert.deepStrictEqual(parsed29, { fresh: [1, 2] });
       })
     );
 
@@ -766,7 +774,8 @@ describe("YamlFormat", () => {
       Effect.gen(function* () {
         const shared = { s: 1 };
         const out = yield* YamlFormat.modifyToString("a: 1\n", ["m"], { x: shared, y: shared });
-        assert.deepStrictEqual(yield* Yaml.parse(out), { a: 1, m: { x: { s: 1 }, y: { s: 1 } } });
+        const parsed30 = yield* Yaml.parse(out);
+        assert.deepStrictEqual(parsed30, { a: 1, m: { x: { s: 1 }, y: { s: 1 } } });
       })
     );
 
@@ -779,7 +788,8 @@ describe("YamlFormat", () => {
             [1, 2],
           ],
         });
-        assert.deepStrictEqual(yield* Yaml.parse(out), {
+        const parsed31 = yield* Yaml.parse(out);
+        assert.deepStrictEqual(parsed31, {
           objects: [{ value: 1 }, { value: 1 }],
           arrays: [
             [1, 2],
@@ -793,7 +803,8 @@ describe("YamlFormat", () => {
       Effect.gen(function* () {
         const shared = [1, 2];
         const out = yield* YamlFormat.modifyToString("old: 1\n", [], [shared, { nested: shared }, shared]);
-        assert.deepStrictEqual(yield* Yaml.parse(out), [[1, 2], { nested: [1, 2] }, [1, 2]]);
+        const parsed32 = yield* Yaml.parse(out);
+        assert.deepStrictEqual(parsed32, [[1, 2], { nested: [1, 2] }, [1, 2]]);
       })
     );
 
@@ -854,7 +865,8 @@ describe("YamlFormat", () => {
       Effect.gen(function* () {
         const text = "a: 1\nb: 2\n";
         const edits = yield* YamlFormat.modify(text, ["a"], undefined);
-        assert.deepStrictEqual(yield* Yaml.parse(apply(text, edits)), { b: 2 });
+        const parsed33 = yield* Yaml.parse(apply(text, edits));
+        assert.deepStrictEqual(parsed33, { b: 2 });
       })
     );
 
@@ -862,7 +874,8 @@ describe("YamlFormat", () => {
       Effect.gen(function* () {
         const text = "xs:\n  - 1\n  - 2\n  - 3\n";
         const edits = yield* YamlFormat.modify(text, ["xs", 1], undefined);
-        assert.deepStrictEqual(yield* Yaml.parse(apply(text, edits)), { xs: [1, 3] });
+        const parsed34 = yield* Yaml.parse(apply(text, edits));
+        assert.deepStrictEqual(parsed34, { xs: [1, 3] });
       })
     );
 
@@ -956,7 +969,8 @@ describe("YamlFormat", () => {
     it.effect("preserves positive infinity's existing final-index append behavior", () =>
       Effect.gen(function* () {
         const out = yield* YamlFormat.modifyToString("xs: [1]\n", ["xs", Number.POSITIVE_INFINITY], 2);
-        assert.deepStrictEqual(yield* Yaml.parse(out), { xs: [1, 2] });
+        const parsed35 = yield* Yaml.parse(out);
+        assert.deepStrictEqual(parsed35, { xs: [1, 2] });
       })
     );
 
@@ -974,7 +988,8 @@ describe("YamlFormat", () => {
       Effect.gen(function* () {
         const text = "a: 1\n";
         const out = yield* YamlFormat.modifyToString(text, ["b"], 2);
-        assert.deepStrictEqual(yield* Yaml.parse(out), { a: 1, b: 2 });
+        const parsed36 = yield* Yaml.parse(out);
+        assert.deepStrictEqual(parsed36, { a: 1, b: 2 });
       })
     );
 
@@ -982,7 +997,8 @@ describe("YamlFormat", () => {
       Effect.gen(function* () {
         const text = "a: 1\n";
         const out = yield* YamlFormat.modifyToString(text, [], undefined);
-        assert.deepStrictEqual(yield* Yaml.parse(out), null);
+        const parsed37 = yield* Yaml.parse(out);
+        assert.deepStrictEqual(parsed37, null);
       })
     );
 
@@ -990,7 +1006,8 @@ describe("YamlFormat", () => {
       Effect.gen(function* () {
         const text = "a: 1\n";
         const out = yield* YamlFormat.modifyToString(text, [], "just a scalar");
-        assert.deepStrictEqual(yield* Yaml.parse(out), "just a scalar");
+        const parsed38 = yield* Yaml.parse(out);
+        assert.deepStrictEqual(parsed38, "just a scalar");
       })
     );
   });

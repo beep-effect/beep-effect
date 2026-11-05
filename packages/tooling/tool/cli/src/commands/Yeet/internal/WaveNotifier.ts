@@ -790,7 +790,8 @@ export const escalateYeetPrWave = Effect.fn("YeetWaveNotifier.escalate")(functio
     );
     return result("spawn-failed");
   }
-  const createdAt = DateTime.formatIso(yield* options.now ?? DateTime.now);
+  const value1 = yield* options.now ?? DateTime.now;
+  const createdAt = DateTime.formatIso(value1);
   const claimed = yield* claimDescriptor(
     descriptorPath,
     makeYeetPrWaveDescriptor(YeetPrWaveDescriptorInput.make({ wave, headSha, checkout, waveKey, owner, createdAt }))

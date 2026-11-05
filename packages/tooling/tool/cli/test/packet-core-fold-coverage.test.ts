@@ -147,7 +147,8 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "20 seconds" })((it) =>
             body: stage("align", 2),
           });
           const events = [genesis, left, right, leftChild, leftGrandchild, rightChild, rightGrandchild];
-          const plan = O.getOrUndefined(yield* planForkRepair({ packet: "demo", root: "goals", events }));
+          const planForkRepair1 = yield* planForkRepair({ packet: "demo", root: "goals", events });
+          const plan = O.getOrUndefined(planForkRepair1);
           expect(plan).toBeDefined();
           if (plan === undefined) {
             return;

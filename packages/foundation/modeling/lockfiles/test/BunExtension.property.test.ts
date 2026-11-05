@@ -16,7 +16,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(BunExtension)(value);
       const decoded = yield* S.decodeEffect(BunExtension)(encoded);
       assertTrue(S.toEquivalence(BunExtension)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(BunExtension)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(BunExtension)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );

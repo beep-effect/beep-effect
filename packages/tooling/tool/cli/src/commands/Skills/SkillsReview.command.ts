@@ -73,7 +73,7 @@ const readScript = Effect.fn("Skills.reviewCommand.readScript")(function* (file:
 // Listing needs no decider; `--decisions` answers from the file; `--interactive` asks the terminal.
 const deciderFor = Effect.fn("Skills.reviewCommand.deciderFor")(function* (flags: ReviewFlags) {
   if (O.isSome(flags.decisions)) {
-    return skillReviewDeciderFromScript(yield* readScript(flags.decisions.value));
+    return yield* readScript(flags.decisions.value).pipe(Effect.map(skillReviewDeciderFromScript));
   }
   return flags.interactive ? yield* makeSkillReviewDeciderPrompt : skillReviewDeciderFromScript(A.empty());
 });

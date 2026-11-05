@@ -107,7 +107,8 @@ const runGit = Effect.fn("GoalsDoctorTest.runGit")(function* (
     stdout: "ignore",
     stderr: "inherit",
   });
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode1 = yield* handle.exitCode;
+  expect(exitCode1).toBe(0);
 });
 
 const captureOutput = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
@@ -298,7 +299,8 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           lifecycle: "completed-retained",
           completionGate: { ...COMPLETION_GATE, pullRequests: [{ number: 7, role: "final" }] },
         });
-        yield* writeProjectFile("goals/typed/ops/manifest.json", yield* encodeGoalManifestJson(manifest));
+        const encodedGoalManifestJson = yield* encodeGoalManifestJson(manifest);
+        yield* writeProjectFile("goals/typed/ops/manifest.json", encodedGoalManifestJson);
         yield* writeProjectFile("goals/typed/README.md", "# Typed\n\nLifecycle: `completed-retained`\n");
         yield* writeBaseline([]);
         const digest = yield* goalCompletionDeclarationDigest(manifest);
@@ -432,7 +434,8 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           lifecycle: "completed-retained",
           completionGate: { ...COMPLETION_GATE, pullRequests: [{ number: 7, role: "final" }] },
         });
-        yield* writeProjectFile("goals/typed/ops/manifest.json", yield* encodeGoalManifestJson(manifest));
+        const encodedGoalManifestJson2 = yield* encodeGoalManifestJson(manifest);
+        yield* writeProjectFile("goals/typed/ops/manifest.json", encodedGoalManifestJson2);
         yield* writeProjectFile("goals/typed/README.md", "# Typed\n\nLifecycle: `completed-retained`\n");
         yield* writeBaseline([]);
         const digest = yield* goalCompletionDeclarationDigest(manifest);
@@ -502,7 +505,8 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         lifecycle: "completed-retained",
         completionGate: { ...COMPLETION_GATE, pullRequests: [{ number: 7, role: "final" }] },
       });
-      yield* writeProjectFile("goals/typed/ops/manifest.json", yield* encodeGoalManifestJson(manifest));
+      const encodedGoalManifestJson3 = yield* encodeGoalManifestJson(manifest);
+      yield* writeProjectFile("goals/typed/ops/manifest.json", encodedGoalManifestJson3);
       yield* writeProjectFile("goals/typed/README.md", "# Typed\n\nLifecycle: `completed-retained`\n");
       yield* writeBaseline([]);
       const digest = yield* goalCompletionDeclarationDigest(manifest);

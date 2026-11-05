@@ -33,14 +33,17 @@ it.layer(
       const exec = yield* LocalExec;
       const process = globalThis.process;
       const cwd = process.cwd();
-      assertNone(yield* exec.context);
+      const context1 = yield* exec.context;
+      assertNone(context1);
       const noAmbientCwd = Cause.die("repo-workspaces: no ambient current directory; pass an explicit cwd");
       // The ambient process boundary has no injected service seam.
       yield* Effect.gen(function* () {
         vi.stubGlobal("process", {});
-        assertExitFailure(yield* Effect.exit(exec.context), noAmbientCwd);
+        const exit2 = yield* Effect.exit(exec.context);
+        assertExitFailure(exit2, noAmbientCwd);
         vi.stubGlobal("process", undefined);
-        assertExitFailure(yield* Effect.exit(exec.context), noAmbientCwd);
+        const exit3 = yield* Effect.exit(exec.context);
+        assertExitFailure(exit3, noAmbientCwd);
       }).pipe(Effect.ensuring(Effect.sync(() => vi.stubGlobal("process", process))));
       assert.deepStrictEqual(calls, [cwd]);
     })

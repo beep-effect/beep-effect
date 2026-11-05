@@ -62,10 +62,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           ? path.join(canonicalTempDir, "home", "YeeBois", "references", "effect")
           : path.join(canonicalTempDir, "working", "effect reference");
         yield* fs.makeDirectory(path.join(repoRoot, "scripts"));
-        yield* fs.writeFileString(
-          path.join(repoRoot, "scripts", "references.json"),
-          yield* fs.readFileString(setupScriptPath)
-        );
+        const argument1 = path.join(repoRoot, "scripts", "references.json");
+        const readFileString1 = yield* fs.readFileString(setupScriptPath);
+        yield* fs.writeFileString(argument1, readFileString1);
         const run = Effect.fn("SetupEffectRefTest.run")(function* () {
           const operation = ReferenceWorkspace.use(
             Effect.fnUntraced(function* (workspace) {
@@ -108,9 +107,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         ];
         const assertLinks = Effect.fn("SetupEffectRefTest.assertLinks")(function* () {
           for (const name of links) {
-            expect(yield* fs.readLink(path.join(repoRoot, ".repos", name))).toBe(
-              name === "effect-workspace" ? expectedRoot : path.join(expectedRoot, name)
-            );
+            const readLink1 = yield* fs.readLink(path.join(repoRoot, ".repos", name));
+            expect(readLink1).toBe(name === "effect-workspace" ? expectedRoot : path.join(expectedRoot, name));
           }
         });
         expect((yield* run()).stderr).toBe("");
@@ -141,8 +139,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         expect(second.stdout).not.toContain("cloning");
         expect(second.stdout).not.toContain("relinking");
         yield* assertLinks();
-        expect(yield* fs.readFileString(gitLog)).toBe(clones);
-        expect(yield* Effect.forEach(links, (name) => fs.stat(path.join(repoRoot, ".repos", name)))).toEqual(before);
+        const readFileString2 = yield* fs.readFileString(gitLog);
+        expect(readFileString2).toBe(clones);
+        const forEach3 = yield* Effect.forEach(links, (name) => fs.stat(path.join(repoRoot, ".repos", name)));
+        expect(forEach3).toEqual(before);
 
         // A linked worktree has a .git file; even dirty content must survive.
         const gitEntry = path.join(expectedRoot, "effect", ".git");
@@ -157,9 +157,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         }
         expect((yield* run()).stderr).toBe("");
         yield* assertLinks();
-        expect(yield* fs.readFileString(gitLog)).toBe(clones);
-        expect(yield* fs.readFileString(dirtyFile)).toBe("preserve me\n");
-        expect(yield* fs.readFileString(gitEntry)).toBe("gitdir: elsewhere\n");
+        const readFileString4 = yield* fs.readFileString(gitLog);
+        expect(readFileString4).toBe(clones);
+        const readFileString5 = yield* fs.readFileString(dirtyFile);
+        expect(readFileString5).toBe("preserve me\n");
+        const readFileString6 = yield* fs.readFileString(gitEntry);
+        expect(readFileString6).toBe("gitdir: elsewhere\n");
 
         for (const name of links) {
           const link = path.join(repoRoot, ".repos", name);
@@ -170,10 +173,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const collisions = yield* run();
         for (const name of links) {
           expect(collisions.stderr).toContain(`.repos/${name} exists and is not a symlink`);
-          expect(yield* fs.readFileString(path.join(repoRoot, ".repos", name, "keep"))).toBe(name);
+          const readFileString7 = yield* fs.readFileString(path.join(repoRoot, ".repos", name, "keep"));
+          expect(readFileString7).toBe(name);
         }
-        expect(yield* fs.readFileString(gitLog)).toBe(clones);
-        expect(yield* fs.exists(realpathLog)).toBe(false);
+        const readFileString8 = yield* fs.readFileString(gitLog);
+        expect(readFileString8).toBe(clones);
+        const exists9 = yield* fs.exists(realpathLog);
+        expect(exists9).toBe(false);
       })
     );
   }

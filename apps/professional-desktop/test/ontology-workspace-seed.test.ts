@@ -57,7 +57,8 @@ describe("ontology workspace seed", () => {
         Effect.provideService(TurtleCodec, codec)
       );
 
-      expect(yield* Ref.get(writes)).toBe(0);
+      const got = yield* Ref.get(writes);
+      expect(got).toBe(0);
     })
   );
 
@@ -66,7 +67,8 @@ describe("ontology workspace seed", () => {
     Effect.fnUntraced(function* () {
       const writes = yield* Ref.make(0);
       yield* seedPizzaTutorial().pipe(provideStore("notFound", writes), Effect.provideService(TurtleCodec, codec));
-      expect(yield* Ref.get(writes)).toBe(1);
+      const got1 = yield* Ref.get(writes);
+      expect(got1).toBe(1);
     })
   );
 
@@ -80,7 +82,8 @@ describe("ontology workspace seed", () => {
         Effect.exit
       );
       expect(exit._tag).toBe("Failure");
-      expect(yield* Ref.get(writes)).toBe(0);
+      const got2 = yield* Ref.get(writes);
+      expect(got2).toBe(0);
     })
   );
 });

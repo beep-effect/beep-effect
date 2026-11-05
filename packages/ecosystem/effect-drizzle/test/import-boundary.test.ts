@@ -18,10 +18,20 @@ import { fn, fnUntraced, forEach, map, tryPromise, withSpan } from "effect/Effec
 import * as HashSet from "effect/HashSet";
 import * as EffectLayer from "effect/Layer";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { decodeUnknownEffect, Record as RecordSchema, String, Unknown } from "effect/Schema";
 import * as Str from "effect/String";
 import { buildBundleConsumer } from "./bundle-build.ts";
 import type { Node } from "@typescript/native/unstable/ast";
+
+class ImportBoundaryTestOperationError extends S.TaggedError<
+  ImportBoundaryTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "ImportBoundaryTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in import-boundary.test.ts." }
+) {}
 
 interface ModuleEdge {
   readonly file: string;
@@ -87,7 +97,10 @@ const sourceEdges = fn("sourceEdges")(function* (directoryUrl: URL, requiredFile
   return yield* forEach(
     files,
     (file) =>
-      tryPromise(() => Bun.file(new URL(file, directoryUrl)).text()).pipe(
+      tryPromise({
+        try: () => Bun.file(new URL(file, directoryUrl)).text(),
+        catch: (cause) => ImportBoundaryTestOperationError.make({ cause }),
+      }).pipe(
         withSpan("EffectDrizzle.boundary.read", { attributes: { file } }),
         Effect.flatMap((source) => moduleSpecifiers(file, source))
       ),
@@ -96,8 +109,9 @@ const sourceEdges = fn("sourceEdges")(function* (directoryUrl: URL, requiredFile
 }, Effect.scoped);
 
 const localModuleUrls = fn("localModuleUrls")(function* (current: URL, source: string) {
+  const moduleSpecifiers1 = yield* moduleSpecifiers(current.pathname, source);
   return A.map(
-    A.filter(yield* moduleSpecifiers(current.pathname, source), ({ specifier }) => Str.startsWith(".")(specifier)),
+    A.filter(moduleSpecifiers1, ({ specifier }) => Str.startsWith(".")(specifier)),
     ({ specifier }) => new URL(specifier, current)
   );
 });
@@ -109,7 +123,10 @@ const localImportClosure = fn("localImportClosure")(function* (entrypoint: URL) 
     const current = pending.pop();
     if (current === undefined || HashSet.has(visited, current.pathname)) continue;
     visited = HashSet.add(visited, current.pathname);
-    const source = yield* tryPromise(() => Bun.file(current).text());
+    const source = yield* tryPromise({
+      try: () => Bun.file(current).text(),
+      catch: (cause) => ImportBoundaryTestOperationError.make({ cause }),
+    });
     pending.push(...(yield* localModuleUrls(current, source)));
   }
   return A.fromIterable(visited);
@@ -179,11 +196,11 @@ layer(nativeLayer, { timeout: "30 seconds" })("native import boundaries", (it) =
     it.effect(
       "keeps runtime manifest edges free of @beep/* and forbids bundled fields",
       fnUntraced(function* () {
-        const manifest = yield* decodeRecord(
-          yield* tryPromise(() => Bun.file(new URL("../package.json", import.meta.url)).json()).pipe(
-            withSpan("EffectDrizzle.boundary.manifest")
-          )
-        );
+        const pipe2 = yield* tryPromise({
+          try: () => Bun.file(new URL("../package.json", import.meta.url)).json(),
+          catch: (cause) => ImportBoundaryTestOperationError.make({ cause }),
+        }).pipe(withSpan("EffectDrizzle.boundary.manifest"));
+        const manifest = yield* decodeRecord(pipe2);
         const runtimeSections = ["dependencies", "peerDependencies", "optionalDependencies"];
         const runtimeKeys: Array<string> = [];
         const runtimeValues: Array<unknown> = [];
@@ -211,7 +228,8 @@ layer(nativeLayer, { timeout: "30 seconds" })("native import boundaries", (it) =
     it.effect(
       "keeps core independent of both dialects",
       fnUntraced(function* () {
-        expect(yield* forbiddenDialectEdges("core", ["../pg", "../sqlite"])).toEqual([]);
+        const forbiddenDialectEdges3 = yield* forbiddenDialectEdges("core", ["../pg", "../sqlite"]);
+        expect(forbiddenDialectEdges3).toEqual([]);
       })
     );
 
@@ -241,7 +259,10 @@ layer(nativeLayer, { timeout: "30 seconds" })("native import boundaries", (it) =
     it.effect(
       "drops unrelated PostgreSQL column families and SQLite from an integer import",
       fnUntraced(function* () {
-        const artifact = yield* tryPromise(buildBundleConsumer).pipe(withSpan("EffectDrizzle.boundary.build"));
+        const artifact = yield* tryPromise({
+          try: buildBundleConsumer,
+          catch: (cause) => ImportBoundaryTestOperationError.make({ cause }),
+        }).pipe(withSpan("EffectDrizzle.boundary.build"));
         // A vacuous stub (the Bun.build shaker failure mode) cannot pass:
         // the bundle must carry the real integer implementation.
         expect(artifact.rawBytes).toBeGreaterThan(1000);

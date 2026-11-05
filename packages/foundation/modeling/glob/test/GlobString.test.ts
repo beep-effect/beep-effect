@@ -36,32 +36,35 @@ describe("GlobString", () => {
         "../a",
         "/abs/**",
       ]) {
-        assert.strictEqual(yield* decodeGlobString(pattern), pattern);
+        const decodedGlobString = yield* decodeGlobString(pattern);
+        assert.strictEqual(decodedGlobString, pattern);
       }
     })
   );
 
   it.effect("rejects empty input", () =>
     Effect.gen(function* () {
-      assert.include(yield* failureMessage(""), "Glob pattern must not be empty");
+      const failureMessage1 = yield* failureMessage("");
+      assert.include(failureMessage1, "Glob pattern must not be empty");
     })
   );
 
   it.effect("rejects backslash-separated patterns", () =>
     Effect.gen(function* () {
-      assert.include(
-        yield* failureMessage("src\\**\\*.ts"),
-        "Glob pattern must use forward slashes instead of backslashes"
-      );
-      assert.include(yield* failureMessage("a\\"), "Glob pattern must use forward slashes instead of backslashes");
+      const failureMessage2 = yield* failureMessage("src\\**\\*.ts");
+      assert.include(failureMessage2, "Glob pattern must use forward slashes instead of backslashes");
+      const failureMessage3 = yield* failureMessage("a\\");
+      assert.include(failureMessage3, "Glob pattern must use forward slashes instead of backslashes");
     })
   );
 
   it.effect("rejects patterns longer than 64 KiB and accepts exactly 64 KiB", () =>
     Effect.gen(function* () {
       const atCap = Str.repeat(65_536)("a");
-      assert.strictEqual(yield* decodeGlobString(atCap), atCap);
-      assert.include(yield* failureMessage(Str.repeat(65_537)("a")), "Glob pattern must not exceed 65536 characters");
+      const decodedGlobString4 = yield* decodeGlobString(atCap);
+      assert.strictEqual(decodedGlobString4, atCap);
+      const failureMessage5 = yield* failureMessage(Str.repeat(65_537)("a"));
+      assert.include(failureMessage5, "Glob pattern must not exceed 65536 characters");
     })
   );
 
@@ -69,12 +72,16 @@ describe("GlobString", () => {
     Effect.gen(function* () {
       const message = "Glob pattern must compile within the expansion and nesting caps";
       // 2^17 = 131072 alternatives exceeds the 100000 expansion budget; 2^16 does not.
-      assert.include(yield* failureMessage(Str.repeat(17)("{a,b}")), message);
+      const failureMessage6 = yield* failureMessage(Str.repeat(17)("{a,b}"));
+      assert.include(failureMessage6, message);
       assert.isTrue(isGlobString(Str.repeat(16)("{a,b}")));
-      assert.include(yield* failureMessage("{1..100001}"), message);
+      const failureMessage7 = yield* failureMessage("{1..100001}");
+      assert.include(failureMessage7, message);
       assert.isTrue(isGlobString("{1..10}"));
-      assert.include(yield* failureMessage(`${Str.repeat(300)("{")}a${Str.repeat(300)(",b}")}`), message);
-      assert.include(yield* failureMessage(`${Str.repeat(300)("+(")}a${Str.repeat(300)(")")}`), message);
+      const failureMessage8 = yield* failureMessage(`${Str.repeat(300)("{")}a${Str.repeat(300)(",b}")}`);
+      assert.include(failureMessage8, message);
+      const failureMessage9 = yield* failureMessage(`${Str.repeat(300)("+(")}a${Str.repeat(300)(")")}`);
+      assert.include(failureMessage9, message);
     })
   );
 
@@ -114,7 +121,8 @@ describe("GlobString", () => {
     ([pattern]) =>
       Effect.gen(function* () {
         assert.isTrue(isGlobString(pattern));
-        assert.strictEqual(yield* decodeGlobString(pattern), pattern);
+        const decodedGlobString10 = yield* decodeGlobString(pattern);
+        assert.strictEqual(decodedGlobString10, pattern);
       }),
     { arbitrary: fcRuns(25) }
   );

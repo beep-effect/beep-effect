@@ -417,7 +417,8 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
       bundleDuckDbExists
         ? resolveSourceDocumentDigest(bundleDuckDbPath, filename)
         : Effect.succeed(O.none<ContentDigest>());
-    const entries = A.sort(yield* fs.readDirectory(canonicalInputs), Order.String);
+    const readDirectory1 = yield* fs.readDirectory(canonicalInputs);
+    const entries = A.sort(readDirectory1, Order.String);
     const [docketedFiles, skippedFiles] = A.partition(entries, (filename) =>
       O.match(docketFromFilename(filename), {
         onNone: () => Result.fail(filename),
@@ -555,7 +556,7 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
       );
       const claimsHeading = O.getOrThrow(A.get(input.document.sections, claimsSectionIndex));
       const sourceDocumentDigest =
-        input.sourceDocumentDigest ?? O.getOrUndefined(yield* sourceDocumentDigestFor(input.sourceFile));
+        input.sourceDocumentDigest ?? (yield* Effect.map(sourceDocumentDigestFor(input.sourceFile), O.getOrUndefined));
       yield* Effect.forEach(
         input.document.claims,
         (claim, index) =>

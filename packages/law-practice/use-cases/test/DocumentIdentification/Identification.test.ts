@@ -448,7 +448,8 @@ describe("evaluation and codecs", () => {
     Effect.gen(function* () {
       const codec = S.fromJsonString(I.IdentificationDocument);
       const encoded = yield* S.encodeEffect(codec)(document());
-      expect(yield* S.decodeEffect(codec)(encoded)).toEqual(document());
+      const value1 = yield* S.decodeEffect(codec)(encoded);
+      expect(value1).toEqual(document());
       expect(S.is(I.ClientNumber)("short")).toBe(false);
       expect(S.is(I.DocketId)("10001XX01")).toBe(false);
     })

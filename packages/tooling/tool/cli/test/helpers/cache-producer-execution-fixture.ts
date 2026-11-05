@@ -96,7 +96,8 @@ export const makeProducerExecutionFixture = Effect.fn("ProducerUploadRuntimeTest
   const adapter = O.getOrThrow(runtime.adapter);
   const profile = CacheProducerExecutionProfile.make({ target: runtime.target, adapterExecutable: adapter.executable });
   const file = path.join(directory, "runtime.json");
-  yield* fs.writeFileString(file, yield* encodeExecutionProfile(profile), { mode: 0o600 });
+  const encodedExecutionProfile = yield* encodeExecutionProfile(profile);
+  yield* fs.writeFileString(file, encodedExecutionProfile, { mode: 0o600 });
   const names = profile.target.credentials;
   const environment = {
     TURBO_REMOTE_CACHE_SIGNATURE_KEY: Redacted.value(runtime.signing),

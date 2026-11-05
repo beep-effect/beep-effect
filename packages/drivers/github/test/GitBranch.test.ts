@@ -27,7 +27,8 @@ describe("GitBranch.create", () => {
           yield* Effect.flatMap(GitBranch, (branch) => branch.create("release/1.2", "abc"));
           assert.strictEqual(script.calls[0]?.method, "POST");
           assert.include(script.calls[0]?.path ?? "", "/repos/acme/widget/git/refs");
-          assert.deepStrictEqual(yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}"), {
+          const value1 = yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}");
+          assert.deepStrictEqual(value1, {
             ref: "refs/heads/release/1.2",
             sha: "abc",
           });
@@ -103,7 +104,8 @@ describe("GitBranch.upsert", () => {
           assert.include(script.calls[1]?.path ?? "", "/git/refs/heads/main");
           // Reset, not "proceed": a creator that rooted the branch somewhere else
           // is corrected rather than inherited.
-          assert.deepStrictEqual(yield* S.decodeEffect(JsonObject)(script.calls[1]?.body ?? "{}"), {
+          const value2 = yield* S.decodeEffect(JsonObject)(script.calls[1]?.body ?? "{}");
+          assert.deepStrictEqual(value2, {
             sha: "abc",
             force: true,
           });

@@ -41,7 +41,6 @@ import {
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
   collectUntrackedPaths,
-  patientGit,
   yeetGitKitError,
 } from "../../../packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts";
 import {
@@ -51,6 +50,7 @@ import {
 import { sweepProbeFromGit } from "../../../packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts";
 import { YeetCommandError } from "../../../packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts";
 import { adaptGitKitError, runGitOutput } from "../../../packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts";
+import { patientGit } from "../../../packages/tooling/tool/cli/src/internal/repo-run/PatientGit.ts";
 import {
   runRepoCommandCapture,
   runRepoCommandCaptureRaw,

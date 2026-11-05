@@ -17,7 +17,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -55,8 +56,11 @@ describe("formatting property floor", () => {
       Effect.gen(function* () {
         const text = yield* S.encodeEffect(Json)(value);
         const formatted = yield* Effect.fromResult(PackageJsonFormat.formatToString(text));
-        assert.strictEqual(yield* Effect.fromResult(PackageJsonFormat.formatToString(formatted)), formatted);
-        assert.deepStrictEqual(yield* S.decodeEffect(Json)(formatted), yield* S.decodeEffect(Json)(text));
+        const fromResult2 = yield* Effect.fromResult(PackageJsonFormat.formatToString(formatted));
+        assert.strictEqual(fromResult2, formatted);
+        const value3 = yield* S.decodeEffect(Json)(formatted);
+        const value6 = yield* S.decodeEffect(Json)(text);
+        assert.deepStrictEqual(value3, value6);
       }),
     runs
   );
@@ -74,7 +78,8 @@ describe("formatting property floor", () => {
         const text = yield* PackageJsonFormat.modifyToString(source, ["custom"], value);
         assert.strictEqual(text, JsoncEdit.applyAll(source, edits));
         assert.strictEqual(text, expected);
-        assert.strictEqual(yield* PackageJsonFormat.modifyToString(text, ["custom"], value), text);
+        const modifyToString4 = yield* PackageJsonFormat.modifyToString(text, ["custom"], value);
+        assert.strictEqual(modifyToString4, text);
         const parsed = yield* S.decodeEffect(CustomJson)(text);
         assert.deepStrictEqual(parsed, {
           private: true,
@@ -94,12 +99,15 @@ describe("formatting property floor", () => {
         assertTrue(Str.startsWith(prefix)(text));
         assertTrue(Str.endsWith(suffix)(text));
         const parsed = yield* S.decodeEffect(CustomTailJson)(text);
+        const argument = S.decodeEffect(Json);
+        const value2 = yield* S.encodeEffect(Json)(value);
         assert.deepStrictEqual(parsed, {
           private: true,
-          custom: yield* S.decodeEffect(Json)(yield* S.encodeEffect(Json)(value)),
+          custom: yield* argument(value2),
           tail: "kept",
         });
-        assert.strictEqual(yield* PackageJsonFormat.modifyToString(text, ["custom"], value), text);
+        const modifyToString5 = yield* PackageJsonFormat.modifyToString(text, ["custom"], value);
+        assert.strictEqual(modifyToString5, text);
       }),
     runs
   );

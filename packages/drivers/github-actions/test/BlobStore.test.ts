@@ -195,7 +195,8 @@ describe("BlobStore", () => {
             yield* TestClock.setTime(1704067200000);
             const store = yield* BlobStore;
             const key = "a%2Fb//?#";
-            assertNone(yield* store.get(key, Meta));
+            const got = yield* store.get(key, Meta);
+            assertNone(got);
             yield* store.put(
               key,
               {
@@ -204,7 +205,8 @@ describe("BlobStore", () => {
               },
               Meta
             );
-            assert.isTrue(yield* store.has(key));
+            const has1 = yield* store.has(key);
+            assert.isTrue(has1);
             assert.deepStrictEqual(
               A.map(seen, (entry) => entry.method),
               ["GET", "PUT", "HEAD"]
@@ -332,21 +334,21 @@ describe("BlobStore", () => {
                 key,
                 detail: "The object path must not contain complete . or .. segments",
               });
-              assert.deepStrictEqual(yield* Effect.flip(store.get(key, Meta)), error);
-              assert.deepStrictEqual(
-                yield* Effect.flip(
-                  store.put(
-                    key,
-                    {
-                      metadata: Meta.make({ tag: "dot-segment", durationMs: 1 }),
-                      body: new Uint8Array([1]),
-                    },
-                    Meta
-                  )
-                ),
-                error
+              const flip2 = yield* Effect.flip(store.get(key, Meta));
+              assert.deepStrictEqual(flip2, error);
+              const flip3 = yield* Effect.flip(
+                store.put(
+                  key,
+                  {
+                    metadata: Meta.make({ tag: "dot-segment", durationMs: 1 }),
+                    body: new Uint8Array([1]),
+                  },
+                  Meta
+                )
               );
-              assert.deepStrictEqual(yield* Effect.flip(store.has(key)), error);
+              assert.deepStrictEqual(flip3, error);
+              const flip4 = yield* Effect.flip(store.has(key));
+              assert.deepStrictEqual(flip4, error);
               assert.strictEqual(executions, 0);
             }
           })
@@ -406,7 +408,8 @@ describe("BlobStore", () => {
           Effect.gen(function* () {
             const store = yield* BlobStore;
             for (const key of ["...", "a/.hidden/b", "a/b..", "%2e", "%2E%2E", "a//b", "a/"]) {
-              assert.isTrue(yield* store.has(key));
+              const has5 = yield* store.has(key);
+              assert.isTrue(has5);
             }
             assert.deepStrictEqual(seen, [
               `${CONFIG.endpoint}/cache/...`,
@@ -643,8 +646,10 @@ describe("BlobStore", () => {
       )((it) => {
         it.effect("has() is false for 404 and true for 200", () =>
           Effect.gen(function* () {
-            assert.isTrue(yield* (yield* BlobStore).has("k"));
-            assert.isFalse(yield* (yield* AlternateBlobStore).has("k"));
+            const has6 = yield* (yield* BlobStore).has("k");
+            assert.isTrue(has6);
+            const has7 = yield* (yield* AlternateBlobStore).has("k");
+            assert.isFalse(has7);
           })
         );
       });
@@ -751,9 +756,11 @@ describe("BlobStore", () => {
       it.effect("runs the real framing, so a round trip proves the metadata survives", () =>
         Effect.gen(function* () {
           const store = yield* BlobStore;
-          assert.isFalse(yield* store.has("k"));
+          const has8 = yield* store.has("k");
+          assert.isFalse(has8);
           yield* store.put("k", { metadata: Meta.make({ tag: "t", durationMs: 1 }), body: new Uint8Array([7]) }, Meta);
-          assert.isTrue(yield* store.has("k"));
+          const has9 = yield* store.has("k");
+          assert.isTrue(has9);
           const found = yield* store.get("k", Meta);
           assertSome(found, { metadata: Meta.make({ tag: "t", durationMs: 1 }), body: new Uint8Array([7]) });
           assert.strictEqual(found.value.metadata.tag, "t");
@@ -764,7 +771,8 @@ describe("BlobStore", () => {
     it.layer(BlobStore.layerMemory, { timeout: "30 seconds" })((it) => {
       it.effect("reports an absent key as nothing", () =>
         Effect.gen(function* () {
-          assertNone(yield* (yield* BlobStore).get("absent", Meta));
+          const got10 = yield* (yield* BlobStore).get("absent", Meta);
+          assertNone(got10);
         })
       );
     });

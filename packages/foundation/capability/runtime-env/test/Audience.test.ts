@@ -297,9 +297,12 @@ describe("Audience schema property floor", () => {
     [Arbitrary.schema(AudienceShape)],
     ([shape]) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(AudienceShape)(yield* S.encodeEffect(AudienceShape)(shape));
+        const argument1 = S.decodeEffect(AudienceShape);
+        const value = yield* S.encodeEffect(AudienceShape)(shape);
+        const decoded = yield* argument1(value);
         assert.isTrue(S.toEquivalence(AudienceShape)(decoded, shape));
-        const provided = Context.get(yield* Layer.build(Audience.layerTest(shape.kind, shape.source)), Audience);
+        const build1 = yield* Layer.build(Audience.layerTest(shape.kind, shape.source));
+        const provided = Context.get(build1, Audience);
         assert.deepStrictEqual(provided, shape);
       }),
     { arbitrary: fcRuns(50) }
@@ -309,7 +312,9 @@ describe("Audience schema property floor", () => {
     [Arbitrary.schema(AudienceOptions)],
     ([options]) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(AudienceOptions)(yield* S.encodeEffect(AudienceOptions)(options));
+        const argument2 = S.decodeEffect(AudienceOptions);
+        const value1 = yield* S.encodeEffect(AudienceOptions)(options);
+        const decoded = yield* argument2(value1);
         assert.isTrue(S.toEquivalence(AudienceOptions)(decoded, options));
       }),
     { arbitrary: fcRuns(50) }

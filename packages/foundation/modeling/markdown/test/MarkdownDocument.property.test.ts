@@ -23,7 +23,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -78,11 +79,11 @@ describe("MarkdownDocument parser laws", () => {
         assert.strictEqual(second.find("list")?.bulletChar, sample.bullet);
         assert.strictEqual(second.find("emphasis")?.markerChar, sample.emphasis);
         assert.strictEqual(second.find("code")?.fenceChar, sample.fence);
-        assert.strictEqual(yield* Markdown.stringify(second.root), rendered);
-        assert.deepStrictEqual(
-          Subject.MarkdownDocument.parseResult(source),
-          yield* Effect.result(Subject.MarkdownDocument.parse(source))
-        );
+        const stringify2 = yield* Markdown.stringify(second.root);
+        assert.strictEqual(stringify2, rendered);
+        const argument = Subject.MarkdownDocument.parseResult(source);
+        const result1 = yield* Effect.result(Subject.MarkdownDocument.parse(source));
+        assert.deepStrictEqual(argument, result1);
       }),
     runs
   );

@@ -157,7 +157,8 @@ if (!shouldRunPgliteIntegration) {
           });
           yield* ledger.appendOutcome(thirdOutcome);
 
-          expect(yield* ledger.readUnsettledAllowed(runKey)).toHaveLength(0);
+          const readUnsettledAllowed1 = yield* ledger.readUnsettledAllowed(runKey);
+          expect(readUnsettledAllowed1).toHaveLength(0);
         }),
         pgliteIntegrationTimeoutMillis
       );

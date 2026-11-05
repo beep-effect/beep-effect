@@ -32,11 +32,14 @@ describe("DependencyGraph traversal coverage", () => {
       const graph = DependencyGraph.make({
         packages: [pkg("a", { b: "*", c: "*" }), pkg("b", { d: "*" }), pkg("c", { d: "*" }), pkg("d")],
       });
-      assert.deepStrictEqual(yield* graph.affectedBy(["d", "d", "b"]), ["a", "b", "c", "d"]);
-      assert.deepStrictEqual(yield* graph.sortSubset(["a", "a", "b"]), ["d", "b", "c", "a"]);
+      const affectedBy1 = yield* graph.affectedBy(["d", "d", "b"]);
+      assert.deepStrictEqual(affectedBy1, ["a", "b", "c", "d"]);
+      const sortSubset2 = yield* graph.sortSubset(["a", "a", "b"]);
+      assert.deepStrictEqual(sortSubset2, ["d", "b", "c", "a"]);
       assert.isFalse(graph.hasCycle);
       assert.include(graph.toMermaid(), "flowchart TD");
-      assert.deepStrictEqual(yield* graph.sortSubset([]), []);
+      const sortSubset3 = yield* graph.sortSubset([]);
+      assert.deepStrictEqual(sortSubset3, []);
     })
   );
 });

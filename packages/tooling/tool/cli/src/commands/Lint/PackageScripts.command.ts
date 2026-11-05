@@ -31,7 +31,7 @@ const printScriptsReport = Effect.fnUntraced(function* (
   json: boolean,
   implDrift: boolean
 ) {
-  if (json) return yield* Console.log(yield* jsonStringifyPretty(wire));
+  if (json) return yield* jsonStringifyPretty(wire).pipe(Effect.flatMap(Console.log));
   yield* Console.log(
     `package-scripts: ${report.manifests} manifests, ${HashMap.size(report.drift)} drifting, ${HashSet.size(report.written)} written, ${HashMap.size(report.implDrift)} with advisory impl drift`
   );

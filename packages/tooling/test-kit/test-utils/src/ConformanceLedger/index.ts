@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+export { ConformanceLedgerEvidenceOperationError } from "./ConformanceLedger.evidence.ts";
 /**
  * Conformance ledger validation helper exports.
  *

@@ -277,7 +277,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       const exposedWire = document.wire;
       (exposedWire.blocks as Array<S.Json>).push({ c: "forged", t: "Para" });
       expect(document.blocks).toEqual([{ c: [], t: "Para" }]);
-      expect(yield* encodePandocJsonLossless(document)).toEqual(input);
+      const encodedPandocJsonLossless = yield* encodePandocJsonLossless(document);
+      expect(encodedPandocJsonLossless).toEqual(input);
     })
   );
 
@@ -302,7 +303,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       expect(Object.getPrototypeOf(encoded.meta)).toBe(Object.prototype);
 
       const lossless = yield* decodePandocJsonLossless(wire);
-      expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+      const encodedPandocJsonLossless1 = yield* encodePandocJsonLossless(lossless);
+      expect(encodedPandocJsonLossless1).toEqual(wire);
     })
   );
 
@@ -325,7 +327,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
 
       const lossless = yield* decodePandocJsonLossless(wire);
       expect(lossless.issues).not.toHaveLength(0);
-      expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+      const encodedPandocJsonLossless2 = yield* encodePandocJsonLossless(lossless);
+      expect(encodedPandocJsonLossless2).toEqual(wire);
     })
   );
 
@@ -368,7 +371,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
           [constructor, "block", pointer],
         ]);
-        expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+        const encodedPandocJsonLossless3 = yield* encodePandocJsonLossless(lossless);
+        expect(encodedPandocJsonLossless3).toEqual(wire);
       }
     })
   );
@@ -393,7 +397,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       const document = yield* decodePandocJsonStrict(wire);
 
       expect(document.blocks[0]?._tag).toBe("table");
-      expect(yield* encodePandocJson(document)).toEqual(wire);
+      const encodedPandocJson = yield* encodePandocJson(document);
+      expect(encodedPandocJson).toEqual(wire);
     })
   );
 
@@ -417,7 +422,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       });
       const encoded = yield* encodePandocJson(document);
 
-      expect(yield* decodePandocJsonStrict(encoded)).toEqual(document);
+      const decodedPandocJsonStrict = yield* decodePandocJsonStrict(encoded);
+      expect(decodedPandocJsonStrict).toEqual(document);
     })
   );
 
@@ -447,7 +453,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       const encoded = yield* encodePandocJson(document);
 
       expect(encoded.blocks).toEqual([{ c: { exact: true }, extension: "retained", t: "FutureBlock" }]);
-      expect(yield* decodePandocJsonStrict(encoded)).toEqual(document);
+      const decodedPandocJsonStrict4 = yield* decodePandocJsonStrict(encoded);
+      expect(decodedPandocJsonStrict4).toEqual(document);
     })
   );
 
@@ -479,7 +486,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
           expected,
         ]);
-        expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+        const encodedPandocJsonLossless5 = yield* encodePandocJsonLossless(lossless);
+        expect(encodedPandocJsonLossless5).toEqual(wire);
       }
 
       const futureWire = {
@@ -499,7 +507,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       }
       const lossless = yield* decodePandocJsonLossless(futureWire);
       expect(lossless.issues).toEqual([]);
-      expect(yield* encodePandocJsonLossless(lossless)).toEqual(futureWire);
+      const encodedPandocJsonLossless6 = yield* encodePandocJsonLossless(lossless);
+      expect(encodedPandocJsonLossless6).toEqual(futureWire);
     })
   );
 
@@ -555,7 +564,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         expect((yield* Effect.exit(decodePandocJsonStrict(wire)))._tag).toBe("Failure");
         const lossless = yield* decodePandocJsonLossless(wire);
         expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.pointer])).toEqual(expected);
-        expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+        const encodedPandocJsonLossless7 = yield* encodePandocJsonLossless(lossless);
+        expect(encodedPandocJsonLossless7).toEqual(wire);
       }
     })
   );
@@ -602,7 +612,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         expect((yield* Effect.exit(decodePandocJsonStrict(wire)))._tag).toBe("Failure");
         const lossless = yield* decodePandocJsonLossless(wire);
         expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual(expected);
-        expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+        const encodedPandocJsonLossless8 = yield* encodePandocJsonLossless(lossless);
+        expect(encodedPandocJsonLossless8).toEqual(wire);
       }
     })
   );
@@ -679,7 +690,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
           ["Str", "inline", expected],
         ]);
-        expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+        const encodedPandocJsonLossless9 = yield* encodePandocJsonLossless(lossless);
+        expect(encodedPandocJsonLossless9).toEqual(wire);
       }
     })
   );
@@ -712,7 +724,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
           [expected[0], "block", expected[1]],
         ]);
-        expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+        const encodedPandocJsonLossless10 = yield* encodePandocJsonLossless(lossless);
+        expect(encodedPandocJsonLossless10).toEqual(wire);
       }
     })
   );
@@ -743,7 +756,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
           [expected[0], "block", expected[1]],
         ]);
-        expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+        const encodedPandocJsonLossless11 = yield* encodePandocJsonLossless(lossless);
+        expect(encodedPandocJsonLossless11).toEqual(wire);
       }
 
       const futureWire = tableWire({
@@ -754,10 +768,12 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         ],
       });
       const semantic = yield* decodePandocJsonStrict(futureWire);
-      expect(yield* encodePandocJson(semantic)).toEqual(futureWire);
+      const encodedPandocJson12 = yield* encodePandocJson(semantic);
+      expect(encodedPandocJson12).toEqual(futureWire);
       const lossless = yield* decodePandocJsonLossless(futureWire);
       expect(lossless.issues).toEqual([]);
-      expect(yield* encodePandocJsonLossless(lossless)).toEqual(futureWire);
+      const encodedPandocJsonLossless13 = yield* encodePandocJsonLossless(lossless);
+      expect(encodedPandocJsonLossless13).toEqual(futureWire);
     })
   );
 
@@ -781,7 +797,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
           [expected[0], "block", expected[1]],
         ]);
-        expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+        const encodedPandocJsonLossless14 = yield* encodePandocJsonLossless(lossless);
+        expect(encodedPandocJsonLossless14).toEqual(wire);
       }
     })
   );
@@ -810,7 +827,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
           ["Table", "block", expected],
         ]);
-        expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+        const encodedPandocJsonLossless15 = yield* encodePandocJsonLossless(lossless);
+        expect(encodedPandocJsonLossless15).toEqual(wire);
       }
     })
   );
@@ -834,10 +852,12 @@ describe("Pandoc.codec", { concurrent: false }, () => {
 
       for (const wire of accepted) {
         const semantic = yield* decodePandocJsonStrict(wire);
-        expect(yield* encodePandocJson(semantic)).toEqual(wire);
+        const encodedPandocJson16 = yield* encodePandocJson(semantic);
+        expect(encodedPandocJson16).toEqual(wire);
         const lossless = yield* decodePandocJsonLossless(wire);
         expect(lossless.issues).toEqual([]);
-        expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+        const encodedPandocJsonLossless17 = yield* encodePandocJsonLossless(lossless);
+        expect(encodedPandocJsonLossless17).toEqual(wire);
       }
     })
   );
@@ -897,11 +917,13 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       if (table?._tag === "table") {
         expect(table.payload).toEqual(wire.blocks[0]?.c);
       }
-      expect(yield* encodePandocJson(semantic)).toEqual(wire);
+      const encodedPandocJson18 = yield* encodePandocJson(semantic);
+      expect(encodedPandocJson18).toEqual(wire);
 
       const lossless = yield* decodePandocJsonLossless(wire);
       expect(lossless.issues).toEqual([]);
-      expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+      const encodedPandocJsonLossless19 = yield* encodePandocJsonLossless(lossless);
+      expect(encodedPandocJsonLossless19).toEqual(wire);
     })
   );
 
@@ -944,7 +966,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         payload: undefined,
         wire: wire.meta.future,
       });
-      expect(yield* encodePandocJson(semantic)).toEqual(wire);
+      const encodedPandocJson20 = yield* encodePandocJson(semantic);
+      expect(encodedPandocJson20).toEqual(wire);
     })
   );
 
@@ -1027,7 +1050,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         meta: {},
       });
 
-      expect(yield* decodePandocJson(wire)).toEqual(document);
+      const decodedPandocJson = yield* decodePandocJson(wire);
+      expect(decodedPandocJson).toEqual(document);
     })
   );
 
@@ -1058,11 +1082,15 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       expect(semantic.blocks[0]?._tag).toBe("unknownBlock");
       expect(semantic.meta.future?._tag).toBe("unknownMeta");
       const lossless = yield* decodePandocJsonLossless(wire);
-      expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+      const encodedPandocJsonLossless21 = yield* encodePandocJsonLossless(lossless);
+      expect(encodedPandocJsonLossless21).toEqual(wire);
       const source = yield* encodeUnknownJsonEffect(wire);
       const fromString = yield* decodePandocJsonStringLossless(source);
       const output = yield* encodePandocJsonStringLossless(fromString);
-      expect(yield* decodeUnknownJsonString(output)).toEqual(yield* decodeUnknownJsonString(source));
+      const decodedUnknownJsonString = yield* decodeUnknownJsonString(output);
+      const expectation = expect(decodedUnknownJsonString);
+      const decodedUnknownJsonString1 = yield* decodeUnknownJsonString(source);
+      expectation.toEqual(decodedUnknownJsonString1);
     }),
     { arbitrary: fcRuns(50) }
   );
@@ -1109,7 +1137,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         id: "table-id",
         keyValues: [["custom-style", "EvidenceTable"]],
       });
-      expect(yield* encodeTable(table)).toEqual({
+      const encodedTable = yield* encodeTable(table);
+      expect(encodedTable).toEqual({
         _tag: "table",
         payload: table.payload,
       });
@@ -1141,12 +1170,15 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       });
 
       const semantic = yield* decodePandocJsonStrict(wire);
-      expect(yield* encodePandocJson(semantic)).toEqual(wire);
-      expect(yield* captionPlainTextFromWire(wire.blocks[0]?.c[1])).toBe("Doe");
+      const encodedPandocJson22 = yield* encodePandocJson(semantic);
+      expect(encodedPandocJson22).toEqual(wire);
+      const captionPlainTextFromWire23 = yield* captionPlainTextFromWire(wire.blocks[0]?.c[1]);
+      expect(captionPlainTextFromWire23).toBe("Doe");
 
       const lossless = yield* decodePandocJsonLossless(wire);
       expect(lossless.issues).toEqual([]);
-      expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+      const encodedPandocJsonLossless24 = yield* encodePandocJsonLossless(lossless);
+      expect(encodedPandocJsonLossless24).toEqual(wire);
     })
   );
 
@@ -1165,7 +1197,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       };
 
       const semantic = yield* decodePandocJsonStrict(wire);
-      expect(yield* encodePandocJson(semantic)).toEqual(wire);
+      const encodedPandocJson25 = yield* encodePandocJson(semantic);
+      expect(encodedPandocJson25).toEqual(wire);
     })
   );
 
@@ -1235,7 +1268,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       ];
 
       for (const [inline, expected] of inlineCases) {
-        expect(yield* captionPlainTextFromWire([[inline], []])).toBe(expected);
+        const captionPlainTextFromWire26 = yield* captionPlainTextFromWire([[inline], []]);
+        expect(captionPlainTextFromWire26).toBe(expected);
       }
     })
   );
@@ -1254,7 +1288,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       ];
 
       for (const [block, expected] of blockCases) {
-        expect(yield* captionPlainTextFromWire([null, [block]])).toBe(expected);
+        const captionPlainTextFromWire27 = yield* captionPlainTextFromWire([null, [block]]);
+        expect(captionPlainTextFromWire27).toBe(expected);
       }
     })
   );
@@ -1276,7 +1311,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
           path: ["blocks", 0, "c", 0, "c", 0],
         }),
       ]);
-      expect(yield* encodePandocJsonLossless(lossless)).toEqual(unsupportedMath);
+      const encodedPandocJsonLossless28 = yield* encodePandocJsonLossless(lossless);
+      expect(encodedPandocJsonLossless28).toEqual(unsupportedMath);
 
       const document = yield* decodePandocJsonStrict({
         "pandoc-api-version": [1, 23, 1],
@@ -1317,7 +1353,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
           [expected, "inline", "/blocks/0/c/0/c/0"],
         ]);
-        expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+        const encodedPandocJsonLossless29 = yield* encodePandocJsonLossless(lossless);
+        expect(encodedPandocJsonLossless29).toEqual(wire);
       }
     })
   );
@@ -1378,8 +1415,11 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       expect(A.map(document.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
         ["Plain", "block", "/blocks/1/c/0/0"],
       ]);
-      expect(yield* encodePandocJsonLossless(document)).toEqual(wire);
-      expect(yield* decodeUnknownJsonString(yield* encodePandocJsonStringLossless(document))).toEqual(wire);
+      const encodedPandocJsonLossless30 = yield* encodePandocJsonLossless(document);
+      expect(encodedPandocJsonLossless30).toEqual(wire);
+      const encodedPandocJsonStringLossless = yield* encodePandocJsonStringLossless(document);
+      const decodedUnknownJsonString31 = yield* decodeUnknownJsonString(encodedPandocJsonStringLossless);
+      expect(decodedUnknownJsonString31).toEqual(wire);
     })
   );
 
@@ -1410,7 +1450,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
         ["Str", "inline", "/blocks/0/c/1/c/1/0"],
       ]);
-      expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+      const encodedPandocJsonLossless32 = yield* encodePandocJsonLossless(lossless);
+      expect(encodedPandocJsonLossless32).toEqual(wire);
     })
   );
 
@@ -1441,7 +1482,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         );
         expect(document.meta.nested.entries.future?._tag).toBe("unknownMeta");
       }
-      expect(yield* encodePandocJson(document)).toEqual(wire);
+      const encodedPandocJson33 = yield* encodePandocJson(document);
+      expect(encodedPandocJson33).toEqual(wire);
     })
   );
 
@@ -1459,7 +1501,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
         ["MetaString", "meta", "/meta/title"],
       ]);
-      expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
+      const encodedPandocJsonLossless34 = yield* encodePandocJsonLossless(lossless);
+      expect(encodedPandocJsonLossless34).toEqual(wire);
     })
   );
 

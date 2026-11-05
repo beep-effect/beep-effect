@@ -82,7 +82,8 @@ describe("@beep/libpff live pffexport", () => {
     Effect.fnUntraced(function* ([record]) {
       const json = yield* encodePffexportMessageRecordJson(record);
       const decoded = yield* decodeMessageRecord(json);
-      expect(yield* encodePffexportMessageRecordJson(decoded)).toBe(json);
+      const encodedPffexportMessageRecordJson = yield* encodePffexportMessageRecordJson(decoded);
+      expect(encodedPffexportMessageRecordJson).toBe(json);
     }),
     { arbitrary: fcRuns(25) }
   );

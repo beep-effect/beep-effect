@@ -15,7 +15,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(Cancelled)(value);
       const decoded = yield* S.decodeEffect(Cancelled)(encoded);
       assert.isTrue(S.toEquivalence(Cancelled)(value, decoded));
-      assert.deepStrictEqual(yield* S.encodeEffect(Cancelled)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(Cancelled)(decoded);
+      assert.deepStrictEqual(value1, encoded);
       assert.strictEqual(decoded.message, "cancelled; nothing written");
       assert.strictEqual(decoded[Runtime.errorExitCode], 130);
       decoded.message = "changed";

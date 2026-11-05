@@ -16,7 +16,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(ConfigDependencyLock)(value);
       const decoded = yield* S.decodeEffect(ConfigDependencyLock)(encoded);
       assertTrue(S.toEquivalence(ConfigDependencyLock)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(ConfigDependencyLock)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(ConfigDependencyLock)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );

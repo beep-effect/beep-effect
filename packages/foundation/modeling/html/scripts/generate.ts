@@ -4154,16 +4154,15 @@ const program = Effect.gen(function* () {
     path.join(dataDir, "iana/language-subtag-registry.txt")
   );
   const crypto = yield* Digest.Digest;
-  const registryHash = Hex.encode(
-    yield* crypto.digest(Digest.sha256, new TextEncoder().encode(languageSubtagRegistrySource)).pipe(
-      Effect.mapError((cause) =>
-        HtmlGenerationError.make({
-          cause,
-          message: "HTML generator could not hash the IANA language-subtag registry",
-        })
-      )
+  const pipe1 = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(languageSubtagRegistrySource)).pipe(
+    Effect.mapError((cause) =>
+      HtmlGenerationError.make({
+        cause,
+        message: "HTML generator could not hash the IANA language-subtag registry",
+      })
     )
   );
+  const registryHash = Hex.encode(pipe1);
   if (registryHash !== IANA_LANGUAGE_SUBTAG_REGISTRY_SHA256) {
     return yield* HtmlGenerationError.make({
       message: `IANA registry requires SHA-256 ${IANA_LANGUAGE_SUBTAG_REGISTRY_SHA256}; received ${registryHash}`,

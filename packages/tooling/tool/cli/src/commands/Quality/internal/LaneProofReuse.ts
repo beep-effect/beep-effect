@@ -171,7 +171,8 @@ export class LaneProofSession extends S.Opaque<LaneProofSession, { readonly bran
 
 const hashText = Effect.fnUntraced(function* (value: string) {
   const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(value)));
+  const digest1 = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(value));
+  return Hex.encode(digest1);
 });
 
 const stableRecordText = (value: Readonly<Record<string, string | undefined>>): string =>
@@ -240,10 +241,12 @@ const virtualTreeSha = Effect.fn("LaneProofReuse.virtualTreeSha")(function* (rep
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const crypto = yield* SecureRandom.SecureRandom;
-  const indexPath = path.resolve(
-    repoRoot,
-    yield* runGit(repoRoot, ["rev-parse", "--git-path", `yeet-lane-proof-index-${yield* crypto.uuidV4()}`])
-  );
+  const resultGit = yield* runGit(repoRoot, [
+    "rev-parse",
+    "--git-path",
+    `yeet-lane-proof-index-${yield* crypto.uuidV4()}`,
+  ]);
+  const indexPath = path.resolve(repoRoot, resultGit);
   const indexEnv = { GIT_INDEX_FILE: indexPath };
   return yield* Effect.acquireUseRelease(
     Effect.succeed(indexPath),
@@ -279,7 +282,8 @@ const shortSha = Str.takeLeft(12);
 const resolveProofBase = Effect.fnUntraced(function* (repoRoot: string) {
   const pinned = pinnedLaneProofBaseSha();
   if (O.isNone(pinned)) {
-    return O.some(yield* runGit(repoRoot, ["rev-parse", Bun.env[LANE_PROOF_BASE_ENV] ?? LANE_BASE_REF]));
+    const resultGit2 = yield* runGit(repoRoot, ["rev-parse", Bun.env[LANE_PROOF_BASE_ENV] ?? LANE_BASE_REF]);
+    return O.some(resultGit2);
   }
   const laneBase = yield* runGit(repoRoot, ["rev-parse", LANE_BASE_REF]);
   if (laneBase === pinned.value) {

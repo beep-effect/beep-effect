@@ -163,7 +163,8 @@ describe("GitTag.upsert normalization", () => {
       assert.strictEqual(script.count(), 2);
       assert.strictEqual(callAt(1).method, "PATCH");
       assert.strictEqual(callAt(1).path, "/repos/acme/widget/git/refs/tags/tags/foo");
-      assert.deepStrictEqual(yield* bodyAt(1), { sha: "abc", force: true });
+      const bodyAt1 = yield* bodyAt(1);
+      assert.deepStrictEqual(bodyAt1, { sha: "abc", force: true });
     });
     const assertCreated = Effect.sync(() => assert.strictEqual(script.count(), 1));
     const label = exists ? "resetting an existing tag" : "creating a tag";
@@ -173,7 +174,8 @@ describe("GitTag.upsert normalization", () => {
           const tags = yield* GitTag;
           yield* tags.upsert("tags/tags/foo", "abc");
           assert.strictEqual(callAt(0).method, "POST");
-          assert.deepStrictEqual(yield* bodyAt(0), { ref: "refs/tags/tags/foo", sha: "abc" });
+          const bodyAt2 = yield* bodyAt(0);
+          assert.deepStrictEqual(bodyAt2, { ref: "refs/tags/tags/foo", sha: "abc" });
           yield* exists ? assertReset() : assertCreated;
         })
       );

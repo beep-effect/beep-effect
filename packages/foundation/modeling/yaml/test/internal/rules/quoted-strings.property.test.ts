@@ -16,7 +16,8 @@ describe("quoted-strings schema properties", () => {
         const encoded = yield* S.encodeEffect(quotedStringsOptions)(value);
         const decoded = yield* S.decodeEffect(quotedStringsOptions)(encoded);
         assert.isTrue(S.toEquivalence(quotedStringsOptions)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(quotedStringsOptions)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(quotedStringsOptions)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

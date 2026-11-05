@@ -68,8 +68,10 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const file = yield* writeFixture("docker-compose.yml", compose);
-      assertTrue(yield* updateYamlValue(file, ["services", "redis", "image"], { value: "redis:8.12.0" }));
-      strictEqual(yield* fs.readFileString(file), Str.replace("redis:8.10.3", "redis:8.12.0")(compose));
+      const updateYamlValue1 = yield* updateYamlValue(file, ["services", "redis", "image"], { value: "redis:8.12.0" });
+      assertTrue(updateYamlValue1);
+      const readFileString2 = yield* fs.readFileString(file);
+      strictEqual(readFileString2, Str.replace("redis:8.10.3", "redis:8.12.0")(compose));
     })
   );
 
@@ -77,8 +79,12 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const file = yield* writeFixture("docker-compose.yml", compose);
-      assertFalse(yield* updateYamlValue(file, ["services", "postgres", "image"], { value: "pgvector/pgvector:pg17" }));
-      strictEqual(yield* fs.readFileString(file), compose);
+      const updateYamlValue3 = yield* updateYamlValue(file, ["services", "postgres", "image"], {
+        value: "pgvector/pgvector:pg17",
+      });
+      assertFalse(updateYamlValue3);
+      const readFileString4 = yield* fs.readFileString(file);
+      strictEqual(readFileString4, compose);
     })
   );
 
@@ -87,9 +93,11 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
       const fs = yield* FileSystem.FileSystem;
       const source = A.join(["services:", "  redis:", "    ports:", '      - "6379:6379" # keep', ""], "\n");
       const file = yield* writeFixture("docker-compose.yml", source);
-      assertTrue(yield* updateYamlValue(file, ["services", "redis", "image"], { value: "redis:8.12.0" }));
+      const updateYamlValue5 = yield* updateYamlValue(file, ["services", "redis", "image"], { value: "redis:8.12.0" });
+      assertTrue(updateYamlValue5);
+      const readFileString6 = yield* fs.readFileString(file);
       strictEqual(
-        yield* fs.readFileString(file),
+        readFileString6,
         A.join(
           ["services:", "  redis:", "    ports:", '      - "6379:6379" # keep', "    image: redis:8.12.0", ""],
           "\n"
@@ -102,8 +110,10 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const file = yield* writeFixture("docker-compose.yml", compose);
-      assertTrue(yield* updateYamlValue(file, ["services", "redis", "image"], { value: 'say "8": now' }));
-      strictEqual(yield* fs.readFileString(file), Str.replace("redis:8.10.3", `'say "8": now'`)(compose));
+      const updateYamlValue7 = yield* updateYamlValue(file, ["services", "redis", "image"], { value: 'say "8": now' });
+      assertTrue(updateYamlValue7);
+      const readFileString8 = yield* fs.readFileString(file);
+      strictEqual(readFileString8, Str.replace("redis:8.10.3", `'say "8": now'`)(compose));
     })
   );
 
@@ -115,10 +125,12 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
         "\n"
       );
       const file = yield* writeFixture("docker-compose.yml", source);
-      assertTrue(yield* updateYamlValue(file, ["services", "redis", "image"], { value: "redis:8.12.0" }));
+      const updateYamlValue9 = yield* updateYamlValue(file, ["services", "redis", "image"], { value: "redis:8.12.0" });
+      assertTrue(updateYamlValue9);
       const updated = yield* fs.readFileString(file);
       strictEqual(updated, Str.replace("redis:8.10.3", "redis:8.12.0")(source));
-      deepStrictEqual(yield* Yaml.parse(updated), {
+      const parsed = yield* Yaml.parse(updated);
+      deepStrictEqual(parsed, {
         services: { redis: { image: "redis:8.12.0" }, replica: { image: "redis:8.12.0" } },
       });
     })
@@ -129,14 +141,18 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
       const fs = yield* FileSystem.FileSystem;
       const source = A.join(["%YAML 1.2", "---", compose], "\n");
       const file = yield* writeFixture("docker-compose.yml", source);
-      assertTrue(yield* updateYamlValue(file, ["services", "redis", "image"], { value: "redis:8.12.0" }));
-      strictEqual(yield* fs.readFileString(file), Str.replace("redis:8.10.3", "redis:8.12.0")(source));
+      const updateYamlValue10 = yield* updateYamlValue(file, ["services", "redis", "image"], { value: "redis:8.12.0" });
+      assertTrue(updateYamlValue10);
+      const readFileString11 = yield* fs.readFileString(file);
+      strictEqual(readFileString11, Str.replace("redis:8.10.3", "redis:8.12.0")(source));
 
       // A missing key is an insertion: the whole document re-renders after the verbatim prologue.
-      assertTrue(yield* updateYamlValue(file, ["services", "redis", "restart"], { value: "always" }));
+      const updateYamlValue12 = yield* updateYamlValue(file, ["services", "redis", "restart"], { value: "always" });
+      assertTrue(updateYamlValue12);
       const inserted = yield* fs.readFileString(file);
       assertTrue(Str.startsWith("%YAML 1.2\n---\nservices:\n")(inserted));
-      expect(yield* Yaml.parse(inserted)).toMatchObject({
+      const parsed13 = yield* Yaml.parse(inserted);
+      expect(parsed13).toMatchObject({
         services: { redis: { image: "redis:8.12.0", ports: ["6379:6379"], restart: "always" } },
       });
     })
@@ -150,8 +166,12 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
         "\n"
       );
       const file = yield* writeFixture("docker-compose.yml", source);
-      assertFalse(yield* updateYamlValue(file, ["services", "replica", "image"], { value: "redis:8.10.3" }));
-      strictEqual(yield* fs.readFileString(file), source);
+      const updateYamlValue14 = yield* updateYamlValue(file, ["services", "replica", "image"], {
+        value: "redis:8.10.3",
+      });
+      assertFalse(updateYamlValue14);
+      const readFileString15 = yield* fs.readFileString(file);
+      strictEqual(readFileString15, source);
     })
   );
 
@@ -167,11 +187,13 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const file = yield* writeFixture("check.yml", workflow);
-      assertTrue(
-        yield* replaceNodeVersionWithFile(file, [{ yamlPath: ["jobs", "test", "steps", 0, "with", "node-version"] }])
-      );
+      const replaceNodeVersionWithFile16 = yield* replaceNodeVersionWithFile(file, [
+        { yamlPath: ["jobs", "test", "steps", 0, "with", "node-version"] },
+      ]);
+      assertTrue(replaceNodeVersionWithFile16);
+      const readFileString17 = yield* fs.readFileString(file);
       strictEqual(
-        yield* fs.readFileString(file),
+        readFileString17,
         A.join(
           [
             "name: Check # the workflow",
@@ -212,11 +234,13 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
           "\n"
         )
       );
-      assertTrue(
-        yield* replaceNodeVersionWithFile(file, [{ yamlPath: ["jobs", "test", "steps", 0, "with", "node-version"] }])
-      );
+      const replaceNodeVersionWithFile18 = yield* replaceNodeVersionWithFile(file, [
+        { yamlPath: ["jobs", "test", "steps", 0, "with", "node-version"] },
+      ]);
+      assertTrue(replaceNodeVersionWithFile18);
+      const readFileString19 = yield* fs.readFileString(file);
       strictEqual(
-        yield* fs.readFileString(file),
+        readFileString19,
         A.join(
           [
             "env:",
@@ -243,8 +267,12 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
         "action.yml",
         "runs:\n  steps:\n    - with:\n        node-version: ${{ inputs.node }}\n        node-version-file: other\n"
       );
-      assertTrue(yield* replaceNodeVersionWithFile(file, [{ yamlPath: ["runs", "steps", 0, "with", "node-version"] }]));
-      strictEqual(yield* fs.readFileString(file), "runs:\n  steps:\n    - with:\n        node-version-file: .nvmrc\n");
+      const replaceNodeVersionWithFile20 = yield* replaceNodeVersionWithFile(file, [
+        { yamlPath: ["runs", "steps", 0, "with", "node-version"] },
+      ]);
+      assertTrue(replaceNodeVersionWithFile20);
+      const readFileString21 = yield* fs.readFileString(file);
+      strictEqual(readFileString21, "runs:\n  steps:\n    - with:\n        node-version-file: .nvmrc\n");
     })
   );
 
@@ -252,10 +280,12 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const file = yield* writeFixture("check.yml", workflow);
-      assertFalse(
-        yield* replaceNodeVersionWithFile(file, [{ yamlPath: ["jobs", "test", "steps", 0, "with", "missing"] }])
-      );
-      strictEqual(yield* fs.readFileString(file), workflow);
+      const replaceNodeVersionWithFile22 = yield* replaceNodeVersionWithFile(file, [
+        { yamlPath: ["jobs", "test", "steps", 0, "with", "missing"] },
+      ]);
+      assertFalse(replaceNodeVersionWithFile22);
+      const readFileString23 = yield* fs.readFileString(file);
+      strictEqual(readFileString23, workflow);
     })
   );
 });

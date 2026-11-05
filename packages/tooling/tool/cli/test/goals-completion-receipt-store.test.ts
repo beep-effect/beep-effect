@@ -65,8 +65,10 @@ it.layer(MemoryStoreTestLayer, { timeout: "60 seconds" })("goal completion recei
       const store = yield* GoalCompletionReceiptStore;
       yield* store.append(receipt("example/repo", "a"));
       yield* store.append(receipt("other/repo", "b"));
-      expect(packets(yield* store.list("Example/Repo"))).toEqual(["a"]);
-      expect(packets(yield* store.list("missing/repo"))).toEqual([]);
+      const list1 = yield* store.list("Example/Repo");
+      expect(packets(list1)).toEqual(["a"]);
+      const list2 = yield* store.list("missing/repo");
+      expect(packets(list2)).toEqual([]);
     })
   );
   it.effect("prefers a provided store over the live workstation store", () =>
@@ -89,11 +91,14 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("goal completion receipt stor
         withStateRoot({ BEEP_GOALS_STATE_ROOT: directory, HOME: root })
       );
       const store = Context.get(context, GoalCompletionReceiptStore);
-      expect(yield* store.list("example/repo")).toEqual([]);
+      const list3 = yield* store.list("example/repo");
+      expect(list3).toEqual([]);
       yield* store.append(receipt("Example/Repo", "a"));
       yield* store.append(receipt("example/repo", "b"));
-      expect(packets(yield* store.list("example/repo"))).toEqual(["a", "b"]);
-      expect(yield* fs.exists(path.join(directory, "github.com__example__repo.jsonl"))).toBe(true);
+      const list4 = yield* store.list("example/repo");
+      expect(packets(list4)).toEqual(["a", "b"]);
+      const exists5 = yield* fs.exists(path.join(directory, "github.com__example__repo.jsonl"));
+      expect(exists5).toBe(true);
     })
   );
   it.effect("falls back to the live store under XDG_STATE_HOME when none is provided", () =>
@@ -104,7 +109,8 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("goal completion receipt stor
       const xdg = path.join(root, "xdg");
       const store = yield* goalCompletionReceiptStore().pipe(withStateRoot({ XDG_STATE_HOME: xdg, HOME: root }));
       yield* store.append(receipt("example/repo", "a"));
-      expect(yield* fs.exists(path.join(xdg, "beep", "goals", "github.com__example__repo.jsonl"))).toBe(true);
+      const exists6 = yield* fs.exists(path.join(xdg, "beep", "goals", "github.com__example__repo.jsonl"));
+      expect(exists6).toBe(true);
     })
   );
   it.effect("reports an unresolvable state directory as a typed command error", () =>
@@ -130,7 +136,8 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("goal completion receipt stor
       const error = yield* store.append(invalid).pipe(Effect.flip);
       expect(error).toBeInstanceOf(YeetCommandError);
       expect(error.message).toBe("Failed to encode the goal completion receipt.");
-      expect(yield* fs.exists(path.join(root, "github.com__example__repo.jsonl"))).toBe(false);
+      const exists7 = yield* fs.exists(path.join(root, "github.com__example__repo.jsonl"));
+      expect(exists7).toBe(false);
     })
   );
   it.effect("maps filesystem failures on append and list to typed command errors", () =>

@@ -166,14 +166,16 @@ const collectPackageSourceRoots = Effect.fn("PackageTestImports.collectPackageSo
       const childStat = yield* fs.stat(childPath).pipe(Effect.option);
 
       if (O.isSome(childStat) && childStat.value.type === "Directory") {
-        roots = A.appendAll(roots, yield* walk(childPath));
+        const walk1 = yield* walk(childPath);
+        roots = A.appendAll(roots, walk1);
       }
     }
 
     return roots;
   });
 
-  return pipe(yield* walk(packagesRoot), A.sort(bySourceRootLengthDescending));
+  const walk2 = yield* walk(packagesRoot);
+  return pipe(walk2, A.sort(bySourceRootLengthDescending));
 });
 
 const collectPackageTestFiles = Effect.fn("PackageTestImports.collectPackageTestFiles")(function* (
@@ -210,13 +212,15 @@ const collectPackageTestFiles = Effect.fn("PackageTestImports.collectPackageTest
     let files = A.empty<string>();
 
     for (const entry of entries) {
-      files = A.appendAll(files, yield* walk(path.join(currentPath, entry)));
+      const walk3 = yield* walk(path.join(currentPath, entry));
+      files = A.appendAll(files, walk3);
     }
 
     return files;
   });
 
-  return pipe(yield* walk(packagesRoot), A.sort(Order.String));
+  const walk4 = yield* walk(packagesRoot);
+  return pipe(walk4, A.sort(Order.String));
 });
 
 const collectModuleSpecifierUses = (

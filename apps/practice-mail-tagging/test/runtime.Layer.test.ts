@@ -121,7 +121,8 @@ describe("makeMailTaggingPassesLayer", () => {
         expect(Duration.toMinutes(passes.schedule.pollInterval)).toBe(5);
         expect(report.scanned).toBe(0);
         expect(report.wrote).toBe(false);
-        expect(yield* fs.exists(settingsEnvironment.PRACTICE_MAIL_TAGGING_BOX_CALL_LEDGER_PATH)).toBe(false);
+        const exists1 = yield* fs.exists(settingsEnvironment.PRACTICE_MAIL_TAGGING_BOX_CALL_LEDGER_PATH);
+        expect(exists1).toBe(false);
       })
     );
   });
@@ -176,16 +177,16 @@ describe("liveMailTaggingDrivers", () => {
   it.layer(Platform, { timeout: "30 seconds" })((it) => {
     it.effect("builds the three drivers from the shared credentials without calling a provider", () =>
       Effect.gen(function* () {
-        const withToken = yield* Layer.build(yield* liveDrivers({ ...settingsEnvironment, ...credentialEnvironment }));
-        const withGrant = yield* Layer.build(
-          yield* liveDrivers({
-            ...settingsEnvironment,
-            ...credentialEnvironment,
-            DMS_BOX_CLIENT_ID: "box-client-0001",
-            DMS_BOX_CLIENT_SECRET: "placeholder-secret",
-            DMS_BOX_ENTERPRISE_ID: "enterprise-0001",
-          })
-        );
+        const liveDrivers2 = yield* liveDrivers({ ...settingsEnvironment, ...credentialEnvironment });
+        const withToken = yield* Layer.build(liveDrivers2);
+        const liveDrivers3 = yield* liveDrivers({
+          ...settingsEnvironment,
+          ...credentialEnvironment,
+          DMS_BOX_CLIENT_ID: "box-client-0001",
+          DMS_BOX_CLIENT_SECRET: "placeholder-secret",
+          DMS_BOX_ENTERPRISE_ID: "enterprise-0001",
+        });
+        const withGrant = yield* Layer.build(liveDrivers3);
 
         expect(Context.getOption(withToken, M365)._tag).toBe("Some");
         expect(Context.getOption(withToken, Box)._tag).toBe("Some");
@@ -197,7 +198,8 @@ describe("liveMailTaggingDrivers", () => {
 
   it.effect("fails when a credential is missing", () =>
     Effect.gen(function* () {
-      assertInstanceOf(yield* Effect.flip(liveDrivers(settingsEnvironment)), Config.ConfigError);
+      const flip4 = yield* Effect.flip(liveDrivers(settingsEnvironment));
+      assertInstanceOf(flip4, Config.ConfigError);
     })
   );
 });

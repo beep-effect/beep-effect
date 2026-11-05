@@ -19,13 +19,13 @@ import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, normalizePath } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
+import { compileAndExpand } from "@beep/walker/Expand";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
-import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
@@ -89,40 +89,21 @@ const collectSourceFiles = Effect.fn("IdentityRegistry.collectSourceFiles")(func
     return A.empty<string>();
   }
 
-  const walk = Effect.fn("IdentityRegistry.collectSourceFiles.walk")(function* (
-    currentPath: string
-  ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-    const stat = yield* fs.stat(currentPath).pipe(Effect.option);
-
-    if (O.isNone(stat)) {
-      return A.empty<string>();
-    }
-
-    if (stat.value.type === "File") {
-      return Str.endsWith(".ts")(currentPath) || Str.endsWith(".tsx")(currentPath)
-        ? A.of(normalizePath(path.resolve(currentPath)))
-        : A.empty<string>();
-    }
-
-    if (stat.value.type !== "Directory") {
-      return A.empty<string>();
-    }
-
-    const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
-    let files = A.empty<string>();
-
-    for (const entry of entries) {
-      if (HashSet.has(EXCLUDED_SCAN_DIRECTORIES, entry)) {
-        continue;
-      }
-
-      files = A.appendAll(files, yield* walk(path.join(currentPath, entry)));
-    }
-
-    return files;
-  });
-
-  return A.sort(yield* walk(sourceRoot), Order.String);
+  return yield* compileAndExpand("**/*.{ts,tsx}", {
+    cwd: path.resolve(sourceRoot),
+    glob: { dot: true },
+    prune: A.fromIterable(EXCLUDED_SCAN_DIRECTORIES),
+    followSymlinks: true,
+    onUnreadable: "skip",
+  }).pipe(
+    Effect.map((files) =>
+      A.sort(
+        A.map(files, (file) => normalizePath(path.resolve(sourceRoot, file))),
+        Order.String
+      )
+    ),
+    Effect.orElseSucceed(A.empty<string>)
+  );
 });
 
 const isIdentityRootModuleSpecifier = (specifier: string): boolean =>
@@ -403,13 +384,12 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
     : labsBefore.success;
 
   const registryContent = yield* fs.readFileString(identityPackagesAbsolutePath);
-  const violations = A.appendAll(
-    A.appendAll(
-      registrySlugViolations(registryContent, slugs, identityPackagesFilePath),
-      labsSegmentViolations(labsState, identityPackagesFilePath)
-    ),
-    yield* collectLocalRootViolations(repoRoot, slugsToDirs)
+  const argument = A.appendAll(
+    registrySlugViolations(registryContent, slugs, identityPackagesFilePath),
+    labsSegmentViolations(labsState, identityPackagesFilePath)
   );
+  const collectLocalRootViolations1 = yield* collectLocalRootViolations(repoRoot, slugsToDirs);
+  const violations = A.appendAll(argument, collectLocalRootViolations1);
 
   if (A.isReadonlyArrayNonEmpty(violations)) {
     return yield* reportViolations(violations);

@@ -275,14 +275,16 @@ describe("MailTagging assembled service", () => {
         const preview = yield* tag("dry-run", "run-0001");
 
         expect([preview.matched, preview.attachmentsFiled, preview.wrote]).toStrictEqual([1, 1, false]);
-        expect(yield* lineCounts).toStrictEqual([0, 0, 0, 0]);
+        const lineCounts1 = yield* lineCounts;
+        expect(lineCounts1).toStrictEqual([0, 0, 0, 0]);
         expect([providers.uploads.length, (yield* Ref.get(providers.outlook)).version]).toStrictEqual([0, 1]);
 
         const applied = yield* tag("apply", "run-0002");
 
         expect([applied.matched, applied.attachmentsFiled, applied.wrote]).toStrictEqual([1, 1, true]);
         expect((yield* Ref.get(providers.outlook)).categories).toStrictEqual(["Personal", "M: 1234.10001", "P: USPTO"]);
-        expect(yield* lineCounts).toStrictEqual([1, 2, 1, 1]);
+        const lineCounts2 = yield* lineCounts;
+        expect(lineCounts2).toStrictEqual([1, 2, 1, 1]);
         expect((yield* files).boxCalls).toStrictEqual([
           '{"workstream":"email-tagging","runLabel":"run-0002","calls":1,"at":"1970-01-01T00:00:00.000Z","exact":true}',
         ]);
@@ -290,7 +292,8 @@ describe("MailTagging assembled service", () => {
         const again = yield* tag("apply", "run-0003");
 
         expect([again.alreadyTagged, again.attachmentsFiled, again.attachmentsDeduped]).toStrictEqual([1, 0, 0]);
-        expect(yield* lineCounts).toStrictEqual([1, 2, 1, 1]);
+        const lineCounts3 = yield* lineCounts;
+        expect(lineCounts3).toStrictEqual([1, 2, 1, 1]);
         expect(providers.uploads).toStrictEqual(["9001/2026-07-02 office-action.pdf"]);
 
         const undone = yield* oneRun(
@@ -307,7 +310,8 @@ describe("MailTagging assembled service", () => {
 
         expect([undone.entries, undone.categoriesRemoved]).toStrictEqual([1, 2]);
         expect((yield* Ref.get(providers.outlook)).categories).toStrictEqual(["Personal"]);
-        expect(yield* lineCounts).toStrictEqual([2, 2, 1, 1]);
+        const lineCounts4 = yield* lineCounts;
+        expect(lineCounts4).toStrictEqual([2, 2, 1, 1]);
       })
     );
   });
@@ -335,9 +339,8 @@ describe("MailTagging assembled service", () => {
         yield* fs.writeFileString(workspace.filingLedgerPath, `${yield* encodeFilingRecord(interruptedIntent)}\n`);
 
         const report = yield* taggingOver(workspace, providers.layer)("apply", "run-0002");
-        const records = yield* Effect.forEach(yield* linesOf(workspace.filingLedgerPath), (line) =>
-          decodeFilingRecord(line)
-        );
+        const linesOf5 = yield* linesOf(workspace.filingLedgerPath);
+        const records = yield* Effect.forEach(linesOf5, (line) => decodeFilingRecord(line));
 
         expect([report.attachmentsFiled, report.attachmentsReconciled, report.attachmentsDeduped]).toStrictEqual([
           1, 0, 0,
@@ -352,7 +355,8 @@ describe("MailTagging assembled service", () => {
           `9001/${intendedName}`,
           "9001/2026-07-02 office-action (039058c6).pdf",
         ]);
-        expect(yield* linesOf(workspace.boxCallLedgerPath)).toStrictEqual([
+        const linesOf6 = yield* linesOf(workspace.boxCallLedgerPath);
+        expect(linesOf6).toStrictEqual([
           '{"workstream":"email-tagging","runLabel":"run-0002","calls":2,"at":"1970-01-01T00:00:00.000Z","exact":true}',
         ]);
       })
@@ -382,9 +386,8 @@ describe("MailTagging assembled service", () => {
         yield* fs.writeFileString(workspace.filingLedgerPath, `${yield* encodeFilingRecord(interruptedIntent)}\n`);
 
         const report = yield* taggingOver(workspace, providers.layer)("apply", "run-0002");
-        const records = yield* Effect.forEach(yield* linesOf(workspace.filingLedgerPath), (line) =>
-          decodeFilingRecord(line)
-        );
+        const linesOf7 = yield* linesOf(workspace.filingLedgerPath);
+        const records = yield* Effect.forEach(linesOf7, (line) => decodeFilingRecord(line));
 
         expect([report.attachmentsFiled, report.attachmentsReconciled, report.attachmentsDeduped]).toStrictEqual([
           0, 1, 0,
@@ -394,7 +397,8 @@ describe("MailTagging assembled service", () => {
           ["FilingCompleted", intendedName, "7001", true],
         ]);
         expect(providers.uploads).toStrictEqual([`9001/${intendedName}`]);
-        expect(yield* linesOf(workspace.boxCallLedgerPath)).toStrictEqual([
+        const linesOf8 = yield* linesOf(workspace.boxCallLedgerPath);
+        expect(linesOf8).toStrictEqual([
           '{"workstream":"email-tagging","runLabel":"run-0002","calls":1,"at":"1970-01-01T00:00:00.000Z","exact":true}',
         ]);
       })

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "claim-performance-gates/v1",
+  "frozenBeforeImplementation": true,
+  "legacy": {
+    "selectedClaims": 538,
+    "minimumStrictMatches": 270,
+    "preserveAll37": true
+  },
+  "heldout": {
+    "minimumFamilies": 20,
+    "minimumClaims": 200,
+    "cpcSections": ["A", "B", "E", "F", "G", "H"],
+    "minimumFamiliesPerSection": 2,
+    "minimumClaimsPerSection": 20,
+    "minimumStrictRate": 0.7,
+    "minimumComplexSubgroupStrictRate": 0.5,
+    "minimumNestedClaims": 30,
+    "minimumFunctionalClaims": 30,
+    "minimumDependentClaims": 50,
+    "minimumMultipleDependentClaims": 20
+  },
+  "coverage": {
+    "minimumInputCoverage": 0.98,
+    "maximumAbstentionRate": 0.1
+  },
+  "alerts": {
+    "minimumEvaluatedAlerts": 100,
+    "minimumPrecision": 0.95,
+    "minimumWilson95Lower": 0.9
+  },
+  "defects": {
+    "minimumIndependentlySupportedDefects": 100,
+    "minimumRecall": 0.8,
+    "minimumWilson95Lower": 0.7,
+    "minimumEachFindingKind": 10
+  },
+  "controls": {
+    "minimumClaims": 200,
+    "maximumErroneousAlertRate": 0.05,
+    "maximumWilson95Upper": 0.1
+  },
+  "unknownPolicy": "Unknown alerts count as incorrect for precision; unknown detections as missed for recall; unknown control outcomes count as erroneous alerts. Unknown structural labels do not count as correct and remain in the frozen denominator.",
+  "attorneyAttendanceRequired": false,
+  "confidenceScope": "Conditional on independent source-grounded automated adjudication; Wilson intervals do not include correlated model error."
+}

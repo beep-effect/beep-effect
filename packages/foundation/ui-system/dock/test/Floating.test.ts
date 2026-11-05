@@ -75,21 +75,19 @@ describe("floating dock topology", () => {
       "floats groups, preserves metadata, collapses docked topology, and rejects repeat float",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const floated = changed(
-          yield* engine.transition(
-            workspace,
-            envelope("float-one", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
-          )
+        const transition1 = yield* engine.transition(
+          workspace,
+          envelope("float-one", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
         );
+        const floated = changed(transition1);
         expect(floated.events).toContainEqual(expect.objectContaining({ kind: "groupFloated", groupId: groupOne }));
         assertSome(DockWorkspace.findTabs(floated.state, groupOne), tabsOne);
         expect(floated.state.floating).toHaveLength(1);
-        const last = changed(
-          yield* engine.transition(
-            PopulatedWorkspace.make({ root: tabsOne }),
-            envelope("float-last", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
-          )
+        const transition2 = yield* engine.transition(
+          PopulatedWorkspace.make({ root: tabsOne }),
+          envelope("float-last", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
         );
+        const last = changed(transition2);
         expect(last.state).toMatchObject({ kind: "empty", floating: [{ root: tabsOne }] });
         const error = yield* Effect.flip(
           engine.transition(
@@ -105,44 +103,47 @@ describe("floating dock topology", () => {
       "activates, updates, reorders, and closes inside a floating member",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        let state = changed(
-          yield* engine.transition(
-            PopulatedWorkspace.make({
-              root: TabsNode.make({ groupId: groupOne, active: panelOne, after: [panelTwo] }),
-            }),
-            envelope("float", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+        const transition3 = yield* engine.transition(
+          PopulatedWorkspace.make({
+            root: TabsNode.make({ groupId: groupOne, active: panelOne, after: [panelTwo] }),
+          }),
+          envelope("float", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+        );
+        let state = changed(transition3).state;
+        const transition4 = yield* engine.transition(
+          state,
+          envelope("activate", ActivatePanelCommand.make({ panelId: panelTwo.id }))
+        );
+        state = changed(transition4).state;
+        const transition5 = yield* engine.transition(
+          state,
+          envelope(
+            "update",
+            UpdateGroupCommand.make({ groupId: groupOne, patch: GroupPatch.make({ hideHeader: O.some(true) }) })
           )
-        ).state;
-        state = changed(
-          yield* engine.transition(state, envelope("activate", ActivatePanelCommand.make({ panelId: panelTwo.id })))
-        ).state;
-        state = changed(
-          yield* engine.transition(
-            state,
-            envelope(
-              "update",
-              UpdateGroupCommand.make({ groupId: groupOne, patch: GroupPatch.make({ hideHeader: O.some(true) }) })
-            )
+        );
+        state = changed(transition5).state;
+        const transition6 = yield* engine.transition(
+          state,
+          envelope(
+            "reorder",
+            MovePanelCommand.make({
+              panelId: panelOne.id,
+              target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(1)) }),
+            })
           )
-        ).state;
-        state = changed(
-          yield* engine.transition(
-            state,
-            envelope(
-              "reorder",
-              MovePanelCommand.make({
-                panelId: panelOne.id,
-                target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(1)) }),
-              })
-            )
-          )
-        ).state;
-        state = changed(
-          yield* engine.transition(state, envelope("close-two", ClosePanelCommand.make({ panelId: panelTwo.id })))
-        ).state;
-        state = changed(
-          yield* engine.transition(state, envelope("close-one", ClosePanelCommand.make({ panelId: panelOne.id })))
-        ).state;
+        );
+        state = changed(transition6).state;
+        const transition7 = yield* engine.transition(
+          state,
+          envelope("close-two", ClosePanelCommand.make({ panelId: panelTwo.id }))
+        );
+        state = changed(transition7).state;
+        const transition8 = yield* engine.transition(
+          state,
+          envelope("close-one", ClosePanelCommand.make({ panelId: panelOne.id }))
+        );
+        state = changed(transition8).state;
         expect(state).toMatchObject({ kind: "empty", floating: [] });
       })
     );
@@ -160,33 +161,30 @@ describe("floating dock topology", () => {
             }),
           }),
         });
-        let state = changed(
-          yield* engine.transition(
-            source,
-            envelope("float-one", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+        const transition9 = yield* engine.transition(
+          source,
+          envelope("float-one", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+        );
+        let state = changed(transition9).state;
+        const transition10 = yield* engine.transition(
+          state,
+          envelope(
+            "panel-to-docked",
+            MovePanelCommand.make({ panelId: panelOne.id, target: TabPlacement.make({ groupId: groupTwo }) })
           )
-        ).state;
-        state = changed(
-          yield* engine.transition(
-            state,
-            envelope(
-              "panel-to-docked",
-              MovePanelCommand.make({ panelId: panelOne.id, target: TabPlacement.make({ groupId: groupTwo }) })
-            )
+        );
+        state = changed(transition10).state;
+        const transition11 = yield* engine.transition(
+          state,
+          envelope(
+            "group-back-floating",
+            MoveGroupCommand.make({
+              groupId: groupTwo,
+              target: GroupSplitPlacement.make({ referenceGroupId: groupOne, side: "left", splitId: splitTwo }),
+            })
           )
-        ).state;
-        state = changed(
-          yield* engine.transition(
-            state,
-            envelope(
-              "group-back-floating",
-              MoveGroupCommand.make({
-                groupId: groupTwo,
-                target: GroupSplitPlacement.make({ referenceGroupId: groupOne, side: "left", splitId: splitTwo }),
-              })
-            )
-          )
-        ).state;
+        );
+        state = changed(transition11).state;
         const encoded = yield* encodeDockSnapshot(DockSnapshot.make({ workspace: state }));
         const decoded = yield* decodeDockSnapshot(encoded);
         expect(decoded.workspace).toEqual(state);
@@ -197,41 +195,37 @@ describe("floating dock topology", () => {
       "docks floating groups into empty roots and merge targets",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const floatingOnly = changed(
-          yield* engine.transition(
-            PopulatedWorkspace.make({ root: tabsOne }),
-            envelope("float", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
-          )
-        ).state;
-        const docked = changed(
-          yield* engine.transition(
-            floatingOnly,
-            envelope(
-              "dock",
-              DockFloatingGroupCommand.make({
-                groupId: groupOne,
-                target: GroupRootSplitPlacement.make({ side: "left", splitId: splitOne }),
-              })
-            )
+        const transition12 = yield* engine.transition(
+          PopulatedWorkspace.make({ root: tabsOne }),
+          envelope("float", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+        );
+        const floatingOnly = changed(transition12).state;
+        const transition13 = yield* engine.transition(
+          floatingOnly,
+          envelope(
+            "dock",
+            DockFloatingGroupCommand.make({
+              groupId: groupOne,
+              target: GroupRootSplitPlacement.make({ side: "left", splitId: splitOne }),
+            })
           )
         );
+        const docked = changed(transition13);
         expect(docked.state).toMatchObject({ kind: "populated", root: tabsOne, floating: [] });
         expect(docked.events).toEqual([expect.objectContaining({ kind: "groupDocked", groupId: groupOne })]);
-        let mixed = changed(
-          yield* engine.transition(
-            workspace,
-            envelope("float-two", FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: secondBox }))
+        const transition14 = yield* engine.transition(
+          workspace,
+          envelope("float-two", FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: secondBox }))
+        );
+        let mixed = changed(transition14).state;
+        const transition15 = yield* engine.transition(
+          mixed,
+          envelope(
+            "merge",
+            DockFloatingGroupCommand.make({ groupId: groupTwo, target: TabPlacement.make({ groupId: groupOne }) })
           )
-        ).state;
-        mixed = changed(
-          yield* engine.transition(
-            mixed,
-            envelope(
-              "merge",
-              DockFloatingGroupCommand.make({ groupId: groupTwo, target: TabPlacement.make({ groupId: groupOne }) })
-            )
-          )
-        ).state;
+        );
+        mixed = changed(transition15).state;
         expect(mixed.floating).toHaveLength(0);
         const error = yield* Effect.flip(
           engine.transition(
@@ -253,12 +247,11 @@ describe("floating dock topology", () => {
       "rejects root-split panel opening when the new group id belongs to a floating group",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const mixed = changed(
-          yield* engine.transition(
-            workspace,
-            envelope("float-two-before-open", FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: firstBox }))
-          )
-        ).state;
+        const transition16 = yield* engine.transition(
+          workspace,
+          envelope("float-two-before-open", FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: firstBox }))
+        );
+        const mixed = changed(transition16).state;
         const error = yield* Effect.flip(
           engine.transition(
             mixed,
@@ -283,12 +276,11 @@ describe("floating dock topology", () => {
       "rejects root-split panel opening when only floating members exist",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const floatingOnly = changed(
-          yield* engine.transition(
-            PopulatedWorkspace.make({ root: tabsOne }),
-            envelope("float", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
-          )
-        ).state;
+        const transition17 = yield* engine.transition(
+          PopulatedWorkspace.make({ root: tabsOne }),
+          envelope("float", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+        );
+        const floatingOnly = changed(transition17).state;
         const error = yield* Effect.flip(
           engine.transition(
             floatingOnly,
@@ -313,24 +305,22 @@ describe("floating dock topology", () => {
       "opens the first docked panel with root placement while preserving floating members",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const floatingOnly = changed(
-          yield* engine.transition(
-            PopulatedWorkspace.make({ root: tabsOne }),
-            envelope("float", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
-          )
-        ).state;
-        const opened = changed(
-          yield* engine.transition(
-            floatingOnly,
-            envelope(
-              "open-root",
-              OpenPanelCommand.make({
-                panel: panelTwo,
-                placement: RootPlacement.make({ groupId: groupTwo }),
-              })
-            )
+        const transition18 = yield* engine.transition(
+          PopulatedWorkspace.make({ root: tabsOne }),
+          envelope("float", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+        );
+        const floatingOnly = changed(transition18).state;
+        const transition19 = yield* engine.transition(
+          floatingOnly,
+          envelope(
+            "open-root",
+            OpenPanelCommand.make({
+              panel: panelTwo,
+              placement: RootPlacement.make({ groupId: groupTwo }),
+            })
           )
         );
+        const opened = changed(transition19);
         expect(opened.state).toMatchObject({
           kind: "populated",
           root: { _tag: "Tabs", groupId: groupTwo },
@@ -343,12 +333,11 @@ describe("floating dock topology", () => {
       "rejects root placement when its group collides with a floating group",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const floatingOnly = changed(
-          yield* engine.transition(
-            PopulatedWorkspace.make({ root: tabsOne }),
-            envelope("float-before-root-open", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
-          )
-        ).state;
+        const transition20 = yield* engine.transition(
+          PopulatedWorkspace.make({ root: tabsOne }),
+          envelope("float-before-root-open", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+        );
+        const floatingOnly = changed(transition20).state;
         const error = yield* Effect.flip(
           engine.transition(
             floatingOnly,
@@ -373,12 +362,11 @@ describe("floating dock topology", () => {
       "rejects moving a floating group to a root split when the docked tree is empty",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const floatingOnly = changed(
-          yield* engine.transition(
-            PopulatedWorkspace.make({ root: tabsOne }),
-            envelope("float-before-root-move", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
-          )
-        ).state;
+        const transition21 = yield* engine.transition(
+          PopulatedWorkspace.make({ root: tabsOne }),
+          envelope("float-before-root-move", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+        );
+        const floatingOnly = changed(transition21).state;
         const error = yield* Effect.flip(
           engine.transition(
             floatingOnly,
@@ -404,15 +392,14 @@ describe("floating dock topology", () => {
       "treats a sole docked group root relocation as unchanged regardless of floating members",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const state = changed(
-          yield* engine.transition(
-            workspace,
-            envelope(
-              "float-two-before-root-relocate",
-              FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: firstBox })
-            )
+        const transition22 = yield* engine.transition(
+          workspace,
+          envelope(
+            "float-two-before-root-relocate",
+            FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: firstBox })
           )
-        ).state;
+        );
+        const state = changed(transition22).state;
         const outcome = yield* engine.transition(
           state,
           envelope(
@@ -435,24 +422,21 @@ describe("floating dock topology", () => {
       "moves floating members, changes z-order, and reports unchanged frontmost positions",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        let state = changed(
-          yield* engine.transition(
-            workspace,
-            envelope("float-one", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
-          )
-        ).state;
-        state = changed(
-          yield* engine.transition(
-            state,
-            envelope("float-two", FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: secondBox }))
-          )
-        ).state;
-        state = changed(
-          yield* engine.transition(
-            state,
-            envelope("move-one", MoveFloatingGroupCommand.make({ groupId: groupOne, anchoredBox: secondBox }))
-          )
-        ).state;
+        const transition23 = yield* engine.transition(
+          workspace,
+          envelope("float-one", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+        );
+        let state = changed(transition23).state;
+        const transition24 = yield* engine.transition(
+          state,
+          envelope("float-two", FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: secondBox }))
+        );
+        state = changed(transition24).state;
+        const transition25 = yield* engine.transition(
+          state,
+          envelope("move-one", MoveFloatingGroupCommand.make({ groupId: groupOne, anchoredBox: secondBox }))
+        );
+        state = changed(transition25).state;
         expect(DockWorkspace.floatingMembers(state).at(-1)?.root).toEqual(tabsOne);
         const unchanged = yield* engine.transition(
           state,
@@ -466,19 +450,20 @@ describe("floating dock topology", () => {
       "rejects floating maximize and projects docked maximize below floating geometry",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const state = changed(
-          yield* engine.transition(
-            workspace,
-            envelope("float-two", FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: firstBox }))
-          )
-        ).state;
+        const transition26 = yield* engine.transition(
+          workspace,
+          envelope("float-two", FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: firstBox }))
+        );
+        const state = changed(transition26).state;
         const error = yield* Effect.flip(
           engine.transition(state, envelope("maximize-floating", MaximizeGroupCommand.make({ groupId: groupTwo })))
         );
         expect(error).toMatchObject({ reason: "group-floating" });
-        const maximized = changed(
-          yield* engine.transition(state, envelope("maximize-docked", MaximizeGroupCommand.make({ groupId: groupOne })))
+        const transition27 = yield* engine.transition(
+          state,
+          envelope("maximize-docked", MaximizeGroupCommand.make({ groupId: groupOne }))
         );
+        const maximized = changed(transition27);
         const geometry = projectWorkspace(maximized.state, {
           container: DockBox.make({ left: 0, top: 0, width: 800, height: 600 }),
         });
@@ -491,15 +476,16 @@ describe("floating dock topology", () => {
       "clears both a populated docked tree and its floating members",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const withFloating = changed(
-          yield* engine.transition(
-            workspace,
-            envelope("float-before-clear", FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: firstBox }))
-          )
-        ).state;
-        const cleared = changed(
-          yield* engine.transition(withFloating, envelope("clear-populated", ClearWorkspaceCommand.make({})))
+        const transition28 = yield* engine.transition(
+          workspace,
+          envelope("float-before-clear", FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: firstBox }))
         );
+        const withFloating = changed(transition28).state;
+        const transition29 = yield* engine.transition(
+          withFloating,
+          envelope("clear-populated", ClearWorkspaceCommand.make({}))
+        );
+        const cleared = changed(transition29);
         expect(cleared.state).toMatchObject({ kind: "empty", floating: [] });
         expect(cleared.events).toContainEqual(expect.objectContaining({ kind: "workspaceCleared" }));
       })
@@ -509,15 +495,16 @@ describe("floating dock topology", () => {
       "clears floating members from an empty-root workspace",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const floatingOnly = changed(
-          yield* engine.transition(
-            PopulatedWorkspace.make({ root: tabsOne }),
-            envelope("float-only-before-clear", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
-          )
-        ).state;
-        const cleared = changed(
-          yield* engine.transition(floatingOnly, envelope("clear-floating-only", ClearWorkspaceCommand.make({})))
+        const transition30 = yield* engine.transition(
+          PopulatedWorkspace.make({ root: tabsOne }),
+          envelope("float-only-before-clear", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
         );
+        const floatingOnly = changed(transition30).state;
+        const transition31 = yield* engine.transition(
+          floatingOnly,
+          envelope("clear-floating-only", ClearWorkspaceCommand.make({}))
+        );
+        const cleared = changed(transition31);
         expect(cleared.state).toMatchObject({ kind: "empty", floating: [] });
         expect(cleared.events).toContainEqual(expect.objectContaining({ kind: "workspaceCleared" }));
       })

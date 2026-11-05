@@ -115,7 +115,8 @@ export const printPracticeKgTelemetrySelfCheck = Effect.fn("PracticeKgTelemetryC
 ) {
   const report = yield* check;
   // The report is schema-built, so an encode failure is a defect.
-  yield* Console.log(yield* Effect.orDie(encodeReport(report)));
+  const orDie1 = yield* Effect.orDie(encodeReport(report));
+  yield* Console.log(orDie1);
   if (!report.ok) {
     return yield* SelfCheckFailure.make({ message: "The telemetry key round trip failed." });
   }

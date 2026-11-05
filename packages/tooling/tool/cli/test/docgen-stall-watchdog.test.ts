@@ -145,7 +145,8 @@ await Effect.runPromise(runDocgenStepWithStallWatchdogForTesting("cache fixture"
         expect(failure.message).toBe(
           "watchdog probe never returned within 250ms on retry; see the child process-tree diagnostics above."
         );
-        const lines = A.filter(yield* TestConsole.logLines, P.isString);
+        const logLines1 = yield* TestConsole.logLines;
+        const lines = A.filter(logLines1, P.isString);
         expect(lines).toContain("[docgen:local] watchdog probe: started: sleep 30");
         expect(lines).toContain("[docgen:local] watchdog probe (retry): started: sleep 30");
         expect(lines).toContain(
@@ -187,9 +188,10 @@ await Effect.runPromise(runDocgenStepWithStallWatchdogForTesting("cache fixture"
           }
         ).pipe(Effect.flip);
 
+        const logLines2 = yield* TestConsole.logLines;
         const diagnostics = A.join(
           A.filter(
-            A.filter(yield* TestConsole.logLines, P.isString),
+            A.filter(logLines2, P.isString),
             Str.startsWith("docgen:local: after abandoning watchdog process fixture: child process tree:")
           ),
           "\n"

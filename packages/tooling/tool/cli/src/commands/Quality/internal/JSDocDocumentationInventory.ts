@@ -1329,7 +1329,8 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
   const srcDir = P.isString(docgenConfig.srcDir) ? docgenConfig.srcDir : "src";
   const exclude = A.isArray(docgenConfig.exclude) ? A.filter(docgenConfig.exclude, P.isString) : [];
   const sourceRoot = path.join(packageInfo.absolutePath, srcDir);
-  const sourceFiles = A.filter(yield* listSourceFiles(sourceRoot, path), (sourceFilePath) =>
+  const listSourceFiles1 = yield* listSourceFiles(sourceRoot, path);
+  const sourceFiles = A.filter(listSourceFiles1, (sourceFilePath) =>
     sourceFileIsInPackageInventory(sourceFilePath, packageInfo, srcDir, exclude, repoRoot, path, candidatePaths)
   );
   const project = createInMemoryTsMorphProject();
@@ -1638,13 +1639,10 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
   // Tracked-only would let `git add` of an unchanged file reuse a cached
   // inventory that never counted it.
   const candidatePaths = hasGitMetadata
-    ? O.some(
-        MutableHashSet.fromIterable(
-          yield* runGitLines(
-            repoRoot,
-            ["ls-files", "--cached", "--others", "--exclude-standard"],
-            gitCommandErrorAdapter
-          )
+    ? yield* Effect.asSome(
+        Effect.map(
+          runGitLines(repoRoot, ["ls-files", "--cached", "--others", "--exclude-standard"], gitCommandErrorAdapter),
+          MutableHashSet.fromIterable
         )
       )
     : O.none<MutableHashSet.MutableHashSet<string>>();

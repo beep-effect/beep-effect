@@ -539,7 +539,8 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
   return yield* withCatalog(
     options.libraryRoot,
     Effect.fnUntraced(function* (catalog) {
-      const createdAt = DateTime.formatIso(yield* DateTime.now);
+      const now1 = yield* DateTime.now;
+      const createdAt = DateTime.formatIso(now1);
       const date = Str.slice(0, 10)(createdAt);
       const canonicalManifestPath = path.join(options.libraryRoot, "library.json");
       const legacyManifestPath = path.join(options.libraryRoot, "manifest.json");

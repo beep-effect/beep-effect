@@ -72,7 +72,8 @@ describe("ChangeDetector — committed changes", () => {
     it.effect("changedFiles returns the diff output, sorted", () =>
       Effect.gen(function* () {
         const detector = yield* ChangeDetector;
-        assert.deepStrictEqual(yield* detector.changedFiles(), ["packages/alpha/src/index.ts"]);
+        const changedFiles1 = yield* detector.changedFiles();
+        assert.deepStrictEqual(changedFiles1, ["packages/alpha/src/index.ts"]);
       })
     );
 
@@ -130,7 +131,8 @@ describe("ChangeDetector — includeUncommitted", () => {
     it.effect("the default omits the working tree entirely", () =>
       Effect.gen(function* () {
         const detector = yield* ChangeDetector;
-        assert.deepStrictEqual(yield* detector.changedFiles(), ["packages/alpha/committed.ts"]);
+        const changedFiles2 = yield* detector.changedFiles();
+        assert.deepStrictEqual(changedFiles2, ["packages/alpha/committed.ts"]);
       })
     );
 
@@ -312,14 +314,16 @@ describe("ChangeDetector — a workspace nested inside a larger git repository",
         const detector = yield* ChangeDetector;
         // If the detector forgot `relative: true`, this would be
         // ["outside/tooling.ts", "repo/packages/alpha/src/index.ts"].
-        assert.deepStrictEqual(yield* detector.changedFiles(), ["packages/alpha/src/index.ts"]);
+        const changedFiles3 = yield* detector.changedFiles();
+        assert.deepStrictEqual(changedFiles3, ["packages/alpha/src/index.ts"]);
       })
     );
 
     it.effect("changedPackages resolves the owning package from the relative path", () =>
       Effect.gen(function* () {
         const detector = yield* ChangeDetector;
-        const names = A.map(yield* detector.changedPackages(), (pkg) => pkg.name);
+        const changedPackages4 = yield* detector.changedPackages();
+        const names = A.map(changedPackages4, (pkg) => pkg.name);
         // A repository-relative path joined onto the workspace root yields
         // /repo/repo/packages/alpha/... — which owns nothing. Silent and wrong.
         assert.deepStrictEqual(names, ["@x/alpha"]);
@@ -329,7 +333,8 @@ describe("ChangeDetector — a workspace nested inside a larger git repository",
     it.effect("affectedPackages walks the reverse graph from the correctly-resolved package", () =>
       Effect.gen(function* () {
         const detector = yield* ChangeDetector;
-        const names = A.map(yield* detector.affectedPackages(), (pkg) => pkg.name).sort();
+        const affectedPackages5 = yield* detector.affectedPackages();
+        const names = A.map(affectedPackages5, (pkg) => pkg.name).sort();
         assert.deepStrictEqual(names, ["@x/alpha", "@x/beta", "@x/web"]);
       })
     );

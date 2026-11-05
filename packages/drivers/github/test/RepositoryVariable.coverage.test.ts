@@ -42,7 +42,8 @@ describe("RepositoryVariable test-double behavior", () => {
         const cause = yield* exit.pipe(Exit.getCause, Effect.fromOption);
         assertExitFailure(exit, cause);
         const defect = yield* cause.pipe(Cause.findDefect, Effect.fromResult);
-        assert.deepStrictEqual(yield* S.decodeUnknownEffect(DefectFields)(defect), {
+        const value1 = yield* S.decodeUnknownEffect(DefectFields)(defect);
+        assert.deepStrictEqual(value1, {
           _tag: "UnstubbedMemberError",
           message: "RepositoryVariable.makeTest: list() was called but not stubbed — pass an override.",
         });
@@ -89,14 +90,18 @@ describe("RepositoryVariable test-double behavior", () => {
       Effect.gen(function* () {
         const start = calls.length;
         const service = yield* RepositoryVariable;
-        assert.strictEqual(yield* service.set("REGION", "west"), undefined);
-        assert.deepStrictEqual(yield* service.list, [VariableInfo.make({ name: "REGION", value: "west" })]);
-        assert.strictEqual(yield* service.delete("REGION"), undefined);
-        assert.strictEqual(yield* service.setForEnvironment("prod", "REGION", "west"), undefined);
-        assert.deepStrictEqual(yield* service.listForEnvironment("prod"), [
-          VariableInfo.make({ name: "REGION", value: "west" }),
-        ]);
-        assert.strictEqual(yield* service.deleteForEnvironment("prod", "REGION"), undefined);
+        const set2 = yield* service.set("REGION", "west");
+        assert.strictEqual(set2, undefined);
+        const list3 = yield* service.list;
+        assert.deepStrictEqual(list3, [VariableInfo.make({ name: "REGION", value: "west" })]);
+        const delete4 = yield* service.delete("REGION");
+        assert.strictEqual(delete4, undefined);
+        const setForEnvironment5 = yield* service.setForEnvironment("prod", "REGION", "west");
+        assert.strictEqual(setForEnvironment5, undefined);
+        const listForEnvironment6 = yield* service.listForEnvironment("prod");
+        assert.deepStrictEqual(listForEnvironment6, [VariableInfo.make({ name: "REGION", value: "west" })]);
+        const deleteForEnvironment7 = yield* service.deleteForEnvironment("prod", "REGION");
+        assert.strictEqual(deleteForEnvironment7, undefined);
         assert.deepStrictEqual(calls.slice(start), [
           ["set", "REGION", "west"],
           ["delete", "REGION"],

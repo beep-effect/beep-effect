@@ -104,7 +104,8 @@ describe("awaitYeetCheckRegistration", () => {
 
       const results = yield* attempt.pipe(awaitYeetCheckRegistration(noDelays));
 
-      expect(yield* Ref.get(callsRef)).toBe(3);
+      const got = yield* Ref.get(callsRef);
+      expect(got).toBe(3);
       expect(A.map(results, (result) => result.exitCode)).toEqual([0]);
     })
   );
@@ -116,7 +117,8 @@ describe("awaitYeetCheckRegistration", () => {
 
       yield* attempt.pipe(awaitYeetCheckRegistration(noDelays));
 
-      expect(yield* Ref.get(callsRef)).toBe(1);
+      const got1 = yield* Ref.get(callsRef);
+      expect(got1).toBe(1);
     })
   );
 
@@ -127,7 +129,8 @@ describe("awaitYeetCheckRegistration", () => {
 
       yield* attempt.pipe(awaitYeetCheckRegistration(noDelays));
 
-      expect(yield* Ref.get(callsRef)).toBe(1);
+      const got2 = yield* Ref.get(callsRef);
+      expect(got2).toBe(1);
     })
   );
 
@@ -138,7 +141,8 @@ describe("awaitYeetCheckRegistration", () => {
 
       const results = yield* attempt.pipe(awaitYeetCheckRegistration(noDelays));
 
-      expect(yield* Ref.get(callsRef)).toBe(A.length(noDelays) + 1);
+      const got3 = yield* Ref.get(callsRef);
+      expect(got3).toBe(A.length(noDelays) + 1);
       // Exhaustion must not launder "no checks" into a pass: the caller sees the
       // non-zero result and the awaiting classification, and fails the phase.
       expect(A.map(results, (result) => result.exitCode)).toEqual([1]);
@@ -152,7 +156,8 @@ describe("awaitYeetCheckRegistration", () => {
 
       yield* attempt.pipe(awaitYeetCheckRegistration([Duration.zero, Duration.zero]));
 
-      const logs = A.map(yield* TestConsole.logLines, String);
+      const logLines4 = yield* TestConsole.logLines;
+      const logs = A.map(logLines4, String);
       expect(A.some(logs, Str.includes("no checks registered for this head yet"))).toBe(true);
       expect(A.some(logs, Str.includes("(1/2)"))).toBe(true);
       expect(A.some(logs, Str.includes("(2/2)"))).toBe(true);
@@ -256,7 +261,8 @@ describe("the monitor phase check watch", () => {
         yield* runMonitorPhaseForTesting(context, monitorSteps(root), recorder, "yeet monitor failed.");
 
         // Both planned steps ran, and the comment stream did not decide the race.
-        expect(A.map(yield* Ref.get(recorder), (executed) => executed.step.id)).toEqual([
+        const got5 = yield* Ref.get(recorder);
+        expect(A.map(got5, (executed) => executed.step.id)).toEqual([
           "monitor:01-pr-context",
           "monitor:02-pr-checks-watch",
         ]);
@@ -382,12 +388,11 @@ describe("plain monitor required census", () => {
             []
           ).pipe(Effect.provideServiceEffect(Git, Git.make), provideSpawner(census));
           expect(watchesOf(census)).toBe(1);
-          expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([0]);
+          const got6 = yield* Ref.get(recorder);
+          expect(A.map(got6, (entry) => entry.result.exitCode)).toEqual([0]);
+          const logLines7 = yield* TestConsole.logLines;
           expect(
-            A.some(
-              A.map(yield* TestConsole.logLines, String),
-              Str.includes("optional check(s) red: Vercel; required census green")
-            )
+            A.some(A.map(logLines7, String), Str.includes("optional check(s) red: Vercel; required census green"))
           ).toBe(true);
         })
       );
@@ -412,7 +417,8 @@ describe("plain monitor required census", () => {
           );
           expect(error.message).toContain("watch failed");
           expect(watchesOf(census)).toBe(1);
-          expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([1]);
+          const got8 = yield* Ref.get(recorder);
+          expect(A.map(got8, (entry) => entry.result.exitCode)).toEqual([1]);
         })
       );
     });
@@ -458,7 +464,8 @@ describe("plain monitor required census", () => {
           yield* TestClock.adjust("10 seconds");
           yield* Fiber.join(watch);
           expect(watchesOf(census)).toBe(2);
-          expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([0]);
+          const got9 = yield* Ref.get(recorder);
+          expect(A.map(got9, (entry) => entry.result.exitCode)).toEqual([0]);
         }),
       20_000
     );
@@ -481,7 +488,8 @@ describe("plain monitor required census", () => {
             ).pipe(Effect.provideServiceEffect(Git, Git.make), provideSpawner(census))
           );
           expect(error.message).toContain("watch failed");
-          expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([1]);
+          const got10 = yield* Ref.get(recorder);
+          expect(A.map(got10, (entry) => entry.result.exitCode)).toEqual([1]);
         })
       );
     });
@@ -514,7 +522,8 @@ describe("plain monitor required census", () => {
           const attempts = watchesOf(census);
           expect(attempts).toBeGreaterThanOrEqual(1);
           expect(attempts).toBeLessThanOrEqual(maxAttempts);
-          expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([1]);
+          const got11 = yield* Ref.get(recorder);
+          expect(A.map(got11, (entry) => entry.result.exitCode)).toEqual([1]);
         }).pipe(TestClock.withLive)
       );
     }

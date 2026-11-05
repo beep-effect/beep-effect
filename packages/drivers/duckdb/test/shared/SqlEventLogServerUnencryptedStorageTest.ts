@@ -115,7 +115,8 @@ const openWithBacklog = Effect.fnUntraced(function* (storage: Storage, storeId: 
 
 const assertDrained = Effect.fnUntraced(function* (changes: Queue.Dequeue<EventJournal.RemoteEntry, Cause.Done>) {
   yield* Effect.yieldNow;
-  assert.strictEqual(Option.isNone(yield* Queue.poll(changes)), true);
+  const poll1 = yield* Queue.poll(changes);
+  assert.strictEqual(Option.isNone(poll1), true);
 });
 
 const assertPersisted = Effect.fnUntraced(function* (
@@ -123,7 +124,9 @@ const assertPersisted = Effect.fnUntraced(function* (
   storeId: StoreId,
   expected: ReadonlyArray<EventJournal.Entry>
 ) {
-  assertEntries(yield* Queue.takeAll(yield* openChanges(storage, storeId)), expected, 1);
+  const openChanges5 = yield* openChanges(storage, storeId);
+  const takeAll2 = yield* Queue.takeAll(openChanges5);
+  assertEntries(takeAll2, expected, 1);
 });
 
 // beep: shared tail of the rollback cases: only the sentinel reaches subscribers and storage.
@@ -299,7 +302,8 @@ export const suite: {
               );
               // The sentinel exposes leaked notifications without sleeps.
               yield* storage.write(storeId, [sentinel]);
-              assertEntries(yield* Queue.takeN(changes, 3), [before, after, sentinel], 2);
+              const takeN3 = yield* Queue.takeN(changes, 3);
+              assertEntries(takeN3, [before, after, sentinel], 2);
               yield* assertDrained(changes);
 
               yield* assertPersisted(storage, storeId, [backlog, before, after, sentinel]);
@@ -331,7 +335,8 @@ export const suite: {
               })
             );
             yield* storage.write(storeId, [sentinel]);
-            assertEntries(yield* Queue.takeN(changes, 5), [outer, nested, deepest, after, sentinel], 2);
+            const takeN4 = yield* Queue.takeN(changes, 5);
+            assertEntries(takeN4, [outer, nested, deepest, after, sentinel], 2);
             yield* assertDrained(changes);
 
             yield* assertPersisted(storage, storeId, [backlog, outer, nested, deepest, after, sentinel]);

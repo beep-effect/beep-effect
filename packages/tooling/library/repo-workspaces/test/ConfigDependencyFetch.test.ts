@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // The fetch rung's guards, over a scripted pnpm: what the rung refuses to use
 // even when pnpm exits zero, and how a pnpm that never ran is reported. The
 // #842 scenario end to end, with real git and a fake pnpm, lives in
@@ -19,6 +20,8 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { fakeProcess } from "./support/fakeProcess.ts";
 import type { FakeProcess, ProcessAction } from "./support/fakeProcess.ts";
@@ -30,7 +33,7 @@ const ROOT = "/repo";
 const STORE = "/store/v11";
 
 const seed = {
-  [`${ROOT}/node_modules/.modules.yaml`]: `"storeDir": ${JSON.stringify(STORE)}\n`,
+  [`${ROOT}/node_modules/.modules.yaml`]: `"storeDir": ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(STORE), identity)}\n`,
   [STORE]: MemoryFileSystem.directory(),
 };
 
@@ -162,7 +165,8 @@ describe("the fetch rung refuses what it cannot verify", () => {
           const fs = yield* FileSystem.FileSystem;
           yield* failureWith(fake);
           assert.include(pinned, `"${NAME}@1.0.0":\n    resolution: {integrity: "${SRI}"}`);
-          assert.isFalse(yield* fs.exists(scratch));
+          const exists1 = yield* fs.exists(scratch);
+          assert.isFalse(exists1);
         })
       );
     });

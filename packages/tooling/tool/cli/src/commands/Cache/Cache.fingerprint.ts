@@ -259,8 +259,8 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
     node: yield* fingerprintExecutable(root, nodePath),
     turbo: yield* fingerprintExecutable(root, turboPath),
     biome: yield* fingerprintExecutable(root, biomePath),
-    runtimeLinker: O.some(
-      yield* collectCacheRuntimeLinker(root, {
+    runtimeLinker: yield* Effect.asSome(
+      collectCacheRuntimeLinker(root, {
         bun: bunPath,
         node: nodePath,
         turbo: turboPath,
@@ -269,8 +269,8 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
         sh: "/usr/bin/sh",
       })
     ),
-    installedDependencies: O.some(
-      yield* inspectCacheDependencyTree(root, (yield* collectCacheCensus(root)).workspaces)
+    installedDependencies: yield* Effect.asSome(
+      inspectCacheDependencyTree(root, (yield* collectCacheCensus(root)).workspaces)
     ),
     sources: [
       CacheCensusSource.make({ path: ".bun-version", sha256: yield* hashBytes(declaration) }),

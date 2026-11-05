@@ -199,7 +199,8 @@ describe("node-level comment model — oracle contract (yaml@2.9.0)", () => {
           const out = yield* doc.stringify();
           assert.strictEqual(out, source);
           const again = yield* YamlDocument.parse(out);
-          assert.strictEqual(yield* again.stringify(), out);
+          const stringify1 = yield* again.stringify();
+          assert.strictEqual(stringify1, out);
         })
       );
     }

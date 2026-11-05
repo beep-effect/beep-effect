@@ -29,7 +29,8 @@ describe("watch readiness", () => {
       yield* Deferred.await(ready);
       yield* fs.writeFileString("/file.txt", "first");
       yield* fs.writeFileString("/file.txt", "second");
-      assert.deepStrictEqual(yield* Fiber.join(events), [
+      const join1 = yield* Fiber.join(events);
+      assert.deepStrictEqual(join1, [
         { _tag: "Update", path: "/file.txt" },
         { _tag: "Update", path: "/file.txt" },
       ]);
@@ -124,8 +125,10 @@ describe("independent identical watch subscriptions", () => {
         { _tag: "Create", path: "/root/sub/first" },
         { _tag: "Create", path: "/root/sub/second" },
       ];
-      assert.deepStrictEqual(yield* Fiber.join(first), expected);
-      assert.deepStrictEqual(yield* Fiber.join(second), expected);
+      const join2 = yield* Fiber.join(first);
+      assert.deepStrictEqual(join2, expected);
+      const join3 = yield* Fiber.join(second);
+      assert.deepStrictEqual(join3, expected);
     })
   );
 
@@ -140,9 +143,11 @@ describe("independent identical watch subscriptions", () => {
         .pipe(Stream.take(2), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
       yield* Effect.yieldNow;
       yield* fs.writeFileString("/root/sub/shared", "one");
-      assert.deepStrictEqual(yield* Fiber.join(first), [{ _tag: "Create", path: "/root/sub/shared" }]);
+      const join4 = yield* Fiber.join(first);
+      assert.deepStrictEqual(join4, [{ _tag: "Create", path: "/root/sub/shared" }]);
       yield* fs.writeFileString("/root/sub/surviving", "two");
-      assert.deepStrictEqual(yield* Fiber.join(second), [
+      const join5 = yield* Fiber.join(second);
+      assert.deepStrictEqual(join5, [
         { _tag: "Create", path: "/root/sub/shared" },
         { _tag: "Create", path: "/root/sub/surviving" },
       ]);

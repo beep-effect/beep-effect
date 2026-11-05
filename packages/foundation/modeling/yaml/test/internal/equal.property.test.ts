@@ -24,7 +24,9 @@ it.effect.prop(
   ([value]) =>
     Effect.gen(function* () {
       const codec = S.fromJsonString(S.Json);
-      const copy = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(value));
+      const argument = S.decodeEffect(codec);
+      const value1 = yield* S.encodeEffect(codec)(value);
+      const copy = yield* argument(value1);
       assert.isTrue(deepEqual(copy, value));
       assert.isTrue(deepEqual({ first: value, second: { nested: copy } }, { second: { nested: value }, first: copy }));
       assert.isFalse(deepEqual({ first: value }, { second: copy }));

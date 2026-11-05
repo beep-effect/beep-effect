@@ -19,7 +19,9 @@ describe("EthereumValidatorPublicKey", () => {
   it.effect(
     "accepts canonical lowercase validator public keys",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownEthereumValidatorPublicKeyEffect(validPublicKey)).toBe(validPublicKey);
+      const decodedUnknownEthereumValidatorPublicKeyEffect =
+        yield* decodeUnknownEthereumValidatorPublicKeyEffect(validPublicKey);
+      expect(decodedUnknownEthereumValidatorPublicKeyEffect).toBe(validPublicKey);
     })
   );
 

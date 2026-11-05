@@ -28,7 +28,8 @@ describe("GlobPattern schema and compilation laws", () => {
       Effect.gen(function* () {
         const encoded = yield* S.encodeEffect(GlobPatternError)(value);
         const decoded = yield* S.decodeEffect(GlobPatternError)(encoded);
-        assert.deepStrictEqual(yield* S.encodeEffect(GlobPatternError)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(GlobPatternError)(decoded);
+        assert.deepStrictEqual(value1, encoded);
         assert.strictEqual(decoded.message, value.message);
       }),
     runs

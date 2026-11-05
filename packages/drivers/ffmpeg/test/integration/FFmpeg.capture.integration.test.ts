@@ -180,7 +180,8 @@ it.layer(NativeCaptureTestLayer, { excludeTestServices: true })("@beep/ffmpeg li
             );
 
             expect(result.frameCount).toBe(3);
-            expect(yield* fs.exists(result.manifestPath)).toBe(true);
+            const exists1 = yield* fs.exists(result.manifestPath);
+            expect(exists1).toBe(true);
 
             // pts accuracy: each frame's mean luma implies the source time the
             // frame was decoded at; it must land within one frame duration of
@@ -272,7 +273,8 @@ it.layer(NativeCaptureTestLayer, { excludeTestServices: true })("@beep/ffmpeg li
               })
             );
             expect(frame.fileName).toBe("single.png");
-            expect(yield* fs.exists(framePath)).toBe(true);
+            const exists2 = yield* fs.exists(framePath);
+            expect(exists2).toBe(true);
           })
         );
       }),

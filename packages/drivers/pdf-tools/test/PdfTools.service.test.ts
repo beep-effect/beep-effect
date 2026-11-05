@@ -545,7 +545,8 @@ describe("@beep/pdf-tools service", () => {
           assertInstanceOf(error, PdfToolsError);
           expect(error.reason).toBe("parse");
           expect(error.message).toBe("rsvg-convert wrote no %PDF-1.x header.");
-          expect(yield* fs.exists(out)).toBe(false);
+          const exists1 = yield* fs.exists(out);
+          expect(exists1).toBe(false);
         })
       );
     });
@@ -1026,7 +1027,8 @@ describe("@beep/pdf-tools service", () => {
           }
           const root = doc.context.lookup(font.ref, PDFDict);
           root.set(PDFName.of("DescendantFonts"), doc.context.obj([child, child]));
-          yield* fs.writeFile(file, yield* Effect.promise(() => doc.save({ useObjectStreams: false })));
+          const promise2 = yield* Effect.promise(() => doc.save({ useObjectStreams: false }));
+          yield* fs.writeFile(file, promise2);
 
           const started = performance.now();
           const structure = yield* (yield* PdfTools).inspect(file);
@@ -1047,7 +1049,8 @@ describe("@beep/pdf-tools service", () => {
           doc.addPage([612, 792]).drawText("A", { font });
           yield* Effect.promise(() => doc.save({ useObjectStreams: false }));
           doc.context.lookup(font.ref, PDFDict).set(PDFName.of("DescendantFonts"), doc.context.obj([font.ref]));
-          yield* fs.writeFile(file, yield* Effect.promise(() => doc.save({ useObjectStreams: false })));
+          const promise3 = yield* Effect.promise(() => doc.save({ useObjectStreams: false }));
+          yield* fs.writeFile(file, promise3);
 
           const exit = yield* Effect.exit((yield* PdfTools).inspect(file));
           const isFailure = exit.pipe(Exit.isFailure);
@@ -1324,7 +1327,8 @@ describe("@beep/pdf-tools service", () => {
           page.node.addAnnot(doc.context.register(note));
           page.node.addAnnot(doc.context.register(noRect));
           page.node.addAnnot(doc.context.register(highlight));
-          yield* fs.writeFile(file, yield* Effect.promise(() => doc.save({ useObjectStreams: false })));
+          const promise4 = yield* Effect.promise(() => doc.save({ useObjectStreams: false }));
+          yield* fs.writeFile(file, promise4);
           const tools = yield* PdfTools;
           const annotations = yield* tools.annotations(file);
           expect(A.map(annotations, (a) => [a.page, a.subtype])).toEqual([

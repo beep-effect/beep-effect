@@ -689,7 +689,8 @@ describe("PackageManagerInstaller", () => {
           );
           writeFileSync(join(cached, "bin", "pnpm.cjs"), "console.log('pnpm')");
 
-          const installed = cachedOf(yield* install("pnpm@7.7.7"));
+          const install1 = yield* install("pnpm@7.7.7");
+          const installed = cachedOf(install1);
           assert.strictEqual(installed.directory, cached);
           assert.strictEqual(installed.binDir, join(cached, ".bin"));
           assert.deepStrictEqual(installed.bins, { pnpm: join(cached, "bin", "pnpm.cjs") });
@@ -891,11 +892,10 @@ describe("PackageManagerInstaller", () => {
               },
             }),
             test: Effect.gen(function* () {
-              const installed = cachedOf(
-                yield* install("npm@9.9.9", { allowAmbient: false }).pipe(
-                  Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true })))
-                )
+              const pipe2 = yield* install("npm@9.9.9", { allowAmbient: false }).pipe(
+                Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true })))
               );
+              const installed = cachedOf(pipe2);
               assert.lengthOf(probes, 0, "the ambient probe must not have been spawned at all");
               assert.strictEqual(installed.source, "tool-cache");
               assert.strictEqual(installed.binDir, join(destination, ".bin"));
@@ -976,11 +976,10 @@ describe("PackageManagerInstaller", () => {
               },
             }),
             test: Effect.gen(function* () {
-              const installed = cachedOf(
-                yield* install("npm@12.0.2").pipe(
-                  Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true })))
-                )
+              const pipe3 = yield* install("npm@12.0.2").pipe(
+                Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true })))
               );
+              const installed = cachedOf(pipe3);
               assert.deepStrictEqual(probes, ["npm --version"], "the ambient probe ran and was rejected");
               assert.strictEqual(installed.source, "tool-cache");
               assert.strictEqual(installed.version, "12.0.2");
@@ -1012,11 +1011,10 @@ describe("PackageManagerInstaller", () => {
               // The REAL spawner probes the host's real npm, whose version is never
               // the fixture's 1.0.0 — so the probe answers, mismatches, and the
               // dist path runs.
-              const installed = cachedOf(
-                yield* install("npm@1.0.0").pipe(
-                  Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true })))
-                )
+              const pipe4 = yield* install("npm@1.0.0").pipe(
+                Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true })))
               );
+              const installed = cachedOf(pipe4);
               assert.deepStrictEqual(script.calls, ["https://registry.npmjs.org/npm/-/npm-1.0.0.tgz"]);
               assert.strictEqual(installed.bins.npm, join(installed.directory, "bin", "npm-cli.js"));
             }),
@@ -1074,11 +1072,10 @@ describe("PackageManagerInstaller", () => {
               },
             }),
             test: Effect.gen(function* () {
-              const installed = cachedOf(
-                yield* install("npm@1.2.3").pipe(
-                  Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true })))
-                )
+              const pipe5 = yield* install("npm@1.2.3").pipe(
+                Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true })))
               );
+              const installed = cachedOf(pipe5);
               assert.strictEqual(installed.bins.npm, join(destination, "bin", "npm-cli.js"));
               assert.strictEqual(installed.binDir, join(destination, ".bin"));
             }),
@@ -1112,18 +1109,17 @@ describe("PackageManagerInstaller", () => {
             S.encodeResult(Json)({ bin: targets }).pipe(Result.getOrThrow)
           );
           for (const relative of R.values(targets)) writeFileSync(join(directory, relative), "fixture");
-          const installed = cachedOf(
-            yield* install("pnpm@7.7.7").pipe(
-              provideScopedLayer(
-                Layer.fresh(
-                  stubbed({
-                    env: { RUNNER_OS: "Linux" },
-                    installer: { find: dual(2, (_tool: string, _version: string) => Effect.succeedSome(directory)) },
-                  })
-                )
+          const pipe6 = yield* install("pnpm@7.7.7").pipe(
+            provideScopedLayer(
+              Layer.fresh(
+                stubbed({
+                  env: { RUNNER_OS: "Linux" },
+                  installer: { find: dual(2, (_tool: string, _version: string) => Effect.succeedSome(directory)) },
+                })
               )
             )
           );
+          const installed = cachedOf(pipe6);
           for (const [name, relative] of R.toEntries(targets)) {
             const literal = `'${Str.replaceAll("'", "'\\''")(join(directory, relative))}'`;
             assert.strictEqual(
@@ -1150,7 +1146,8 @@ describe("PackageManagerInstaller", () => {
           mkdirSync(join(directory, "bin"), { recursive: true });
           writeFileSync(join(directory, "package.json"), '{"bin":{"__proto__":"bin/pnpm.cjs","pnpm":"bin/pnpm.cjs"}}');
           writeFileSync(join(directory, "bin", "pnpm.cjs"), "fixture");
-          const installed = cachedOf(yield* install("pnpm@7.7.7"));
+          const install7 = yield* install("pnpm@7.7.7");
+          const installed = cachedOf(install7);
           assert.deepStrictEqual(R.keys(installed.bins), ["__proto__", "pnpm"]);
           assert.deepStrictEqual(R.get(installed.bins, "__proto__"), O.some(join(directory, "bin", "pnpm.cjs")));
           assert.strictEqual(installed.bins.pnpm, join(directory, "bin", "pnpm.cjs"));
@@ -1179,7 +1176,8 @@ describe("PackageManagerInstaller", () => {
           return {
             layer: live(root, script.fetch),
             test: Effect.gen(function* () {
-              const installed = cachedOf(yield* install("pnpm@5.0.0"));
+              const install8 = yield* install("pnpm@5.0.0");
+              const installed = cachedOf(install8);
               assert.strictEqual(installed.binDir, join(installed.directory, ".bin"));
               // The shim contents are the contract: an exec wrapper naming the
               // FINAL cached entry path — never the staging directory the entry
@@ -1221,7 +1219,8 @@ describe("PackageManagerInstaller", () => {
           });
           const script = scriptedFetch({ "https://registry.npmjs.org/pnpm/-/pnpm-5.0.1.tgz": tgzResponse(archive) });
           const program = Effect.gen(function* () {
-            const installed = cachedOf(yield* install("pnpm@5.0.1"));
+            const install9 = yield* install("pnpm@5.0.1");
+            const installed = cachedOf(install9);
             // The REAL spawner executes the shim itself: shebang, executable
             // bit and `"$@"` quoting all have to hold for this to answer.
             const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
@@ -1615,7 +1614,8 @@ describe("PackageManagerInstaller", () => {
           );
           writeFileSync(join(cached, "bin", "pnpm.cjs"), "console.log('pnpm')");
           // Control: the same pin with no option IS answered from the cache.
-          assert.strictEqual(cachedOf(yield* install("pnpm@7.8.1")).directory, cached);
+          const install10 = yield* install("pnpm@7.8.1");
+          assert.strictEqual(cachedOf(install10).directory, cached);
           // An untyped caller can hand anything across; the option's type is
           // not its validation.
           const garbage = deliberatelyInvalid<IntegrityHashBrand>("not-an-integrity");
@@ -1651,12 +1651,11 @@ describe("PackageManagerInstaller", () => {
           const refused = yield* Effect.flip(install("pnpm@7.8.0", { requireIntegrity: true }));
           assert.strictEqual(refused.reason, "integrityMissing");
           assert.include(refused.message, "requireIntegrity");
-          const installed = cachedOf(
-            yield* install("pnpm@7.8.0", {
-              requireIntegrity: true,
-              integrity: corepack(`sha512.${Str.repeat(128)("a")}`),
-            })
-          );
+          const install11 = yield* install("pnpm@7.8.0", {
+            requireIntegrity: true,
+            integrity: corepack(`sha512.${Str.repeat(128)("a")}`),
+          });
+          const installed = cachedOf(install11);
           assert.strictEqual(installed.directory, cached);
         })
       ),
@@ -1701,11 +1700,10 @@ describe("PackageManagerInstaller", () => {
           return {
             layer: live(root, script.fetch),
             test: Effect.gen(function* () {
-              const installed = cachedOf(
-                yield* install("yarn@1.22.10").pipe(
-                  Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true })))
-                )
+              const pipe12 = yield* install("yarn@1.22.10").pipe(
+                Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true })))
               );
+              const installed = cachedOf(pipe12);
               assert.deepStrictEqual(script.calls, ["https://registry.npmjs.org/yarn/-/yarn-1.22.10.tgz"]);
               assert.strictEqual(installed.bins.yarn, join(installed.directory, "bin", "yarn.js"));
               assert.strictEqual(installed.bins.yarnpkg, join(installed.directory, "bin", "yarn.js"));
@@ -1773,7 +1771,8 @@ describe("PackageManagerInstaller", () => {
           return {
             layer: live(root, script.fetch, { RUNNER_OS: "Linux", RUNNER_ARCH: "X64" }),
             test: Effect.gen(function* () {
-              const installed = cachedOf(yield* install("bun@1.0.0"));
+              const install13 = yield* install("bun@1.0.0");
+              const installed = cachedOf(install13);
               assert.deepStrictEqual(script.calls, [url]);
               // bun's binDir IS the entry directory: the binary is directly
               // executable, so no shim is written for it.
@@ -1897,7 +1896,8 @@ describe("PackageManagerInstaller", () => {
             [urls.exe]: tgzResponse(exe),
           });
           const program = Effect.gen(function* () {
-            const installed = cachedOf(yield* install(`pnpm@${version}`));
+            const install14 = yield* install(`pnpm@${version}`);
+            const installed = cachedOf(install14);
             // Exactly the three registry conversations, for the HOST's target.
             assert.deepStrictEqual(script.calls, [urls.wrapper, urls.packument, urls.exe]);
             const binary = join(installed.directory, "pnpm");
@@ -1965,7 +1965,8 @@ describe("PackageManagerInstaller", () => {
           return {
             layer: live(root, script.fetch, darwinArm),
             test: Effect.gen(function* () {
-              const installed = cachedOf(yield* install("pnpm@11.0.0"));
+              const install15 = yield* install("pnpm@11.0.0");
+              const installed = cachedOf(install15);
               assert.deepStrictEqual(script.calls, [url], "no @pnpm/exe.* conversation may happen for pnpm 11");
               assert.strictEqual(installed.bins.pnpm, join(installed.directory, "bin", "pnpm.mjs"));
               assert.strictEqual(
@@ -2002,7 +2003,8 @@ describe("PackageManagerInstaller", () => {
           return {
             layer: live(root, script.fetch, darwinArm),
             test: Effect.gen(function* () {
-              const installed = cachedOf(yield* install("pnpm@11.0.1"));
+              const install16 = yield* install("pnpm@11.0.1");
+              const installed = cachedOf(install16);
               const shim = (name: string) => readFileSync(join(installed.binDir, name), "utf8");
               assert.strictEqual(
                 shim("pnpm"),
@@ -2234,13 +2236,12 @@ describe("PackageManagerInstaller", () => {
             return {
               layer: live(root, script.fetch, darwinArm),
               test: Effect.gen(function* () {
-                const installed = cachedOf(
-                  yield* install(`pnpm@${version}`, {
-                    registry: mirror,
-                    // Every platform, as a lockfile records them; only the host's is read.
-                    nativeIntegrity: { "@pnpm/exe.linux-x64": wrongSri, "@pnpm/exe.darwin-arm64": sha512Sri(exe) },
-                  })
-                );
+                const install17 = yield* install(`pnpm@${version}`, {
+                  registry: mirror,
+                  // Every platform, as a lockfile records them; only the host's is read.
+                  nativeIntegrity: { "@pnpm/exe.linux-x64": wrongSri, "@pnpm/exe.darwin-arm64": sha512Sri(exe) },
+                });
+                const installed = cachedOf(install17);
                 assert.deepStrictEqual(script.calls, [urls.wrapper, urls.exe], "the packument must not be requested");
                 assert.include(readFileSync(installed.bins.pnpm ?? "", "utf8"), "native-pnpm");
                 rmSync(root, { recursive: true, force: true });
@@ -2397,11 +2398,10 @@ describe("PackageManagerInstaller", () => {
             return {
               layer: live(root, script.fetch, darwinArm),
               test: Effect.gen(function* () {
-                const installed = cachedOf(
-                  yield* install("pnpm@11.2.0", { nativeIntegrity: {} }).pipe(
-                    Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true })))
-                  )
+                const pipe18 = yield* install("pnpm@11.2.0", { nativeIntegrity: {} }).pipe(
+                  Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true })))
                 );
+                const installed = cachedOf(pipe18);
                 assert.deepStrictEqual(script.calls, [url]);
                 assert.strictEqual(installed.bins.pnpm, join(installed.directory, "bin", "pnpm.mjs"));
               }),
@@ -2520,7 +2520,8 @@ describe("PackageManagerInstaller", () => {
           return {
             layer: live(root, script.fetch, darwinArm),
             test: Effect.gen(function* () {
-              const installed = cachedOf(yield* install(`pnpm@${version}`));
+              const install19 = yield* install(`pnpm@${version}`);
+              const installed = cachedOf(install19);
               // The hit was NOT answered: the whole conversation ran…
               assert.deepStrictEqual(script.calls, [urls.wrapper, urls.packument, urls.exe]);
               // …the entry was replaced wholesale (the swap, not an in-place patch)…
@@ -2592,7 +2593,8 @@ describe("PackageManagerInstaller", () => {
                       // No .bin at all — a foreign writer; the fetch always fails, so an
                       // answer proves nothing was downloaded and the shims were regenerated
                       // with the direct-exec body.
-                      const installed = cachedOf(yield* install(`pnpm@${version}`));
+                      const install20 = yield* install(`pnpm@${version}`);
+                      const installed = cachedOf(install20);
                       assert.strictEqual(installed.directory, cached);
                       assert.strictEqual(installed.bins.pnpm, join(cached, "pnpm"));
                       assert.strictEqual(
@@ -2645,7 +2647,8 @@ describe("PackageManagerInstaller", () => {
           return {
             layer: live(root, script.fetch, { RUNNER_OS: "Windows", RUNNER_ARCH: "X64" }),
             test: Effect.gen(function* () {
-              const installed = cachedOf(yield* install(`pnpm@${version}`));
+              const install21 = yield* install(`pnpm@${version}`);
+              const installed = cachedOf(install21);
               assert.deepStrictEqual(script.calls, [urls.wrapper, urls.packument, urls.exe]);
               for (const name of ["pnpm", "pn", "pnpx", "pnx"]) {
                 assert.strictEqual(installed.bins[name], join(installed.directory, `${name}.exe`));
@@ -2760,18 +2763,17 @@ describe("PackageManagerInstaller", () => {
             )
           );
           writeFileSync(join(directory, relative), "fixture");
-          const installed = cachedOf(
-            yield* install("pnpm@2.0.7").pipe(
-              provideScopedLayer(
-                Layer.fresh(
-                  stubbed({
-                    env: { RUNNER_OS: "Windows" },
-                    installer: { find: dual(2, (_tool: string, _version: string) => Effect.succeedSome(directory)) },
-                  })
-                )
+          const pipe22 = yield* install("pnpm@2.0.7").pipe(
+            provideScopedLayer(
+              Layer.fresh(
+                stubbed({
+                  env: { RUNNER_OS: "Windows" },
+                  installer: { find: dual(2, (_tool: string, _version: string) => Effect.succeedSome(directory)) },
+                })
               )
             )
           );
+          const installed = cachedOf(pipe22);
           for (const name of ["pnpm", "COM10", "LPT0", "CONSOLE"]) {
             assert.strictEqual(
               readFileSync(join(installed.binDir, `${name}.cmd`), "utf8"),
@@ -3164,7 +3166,8 @@ describe("PackageManagerInstaller", () => {
               },
             }),
             test: Effect.gen(function* () {
-              const installed = cachedOf(yield* install("pnpm@2.0.6"));
+              const install23 = yield* install("pnpm@2.0.6");
+              const installed = cachedOf(install23);
               assert.deepStrictEqual(asked, ["pnpm@2.0.6"]);
               assert.strictEqual(installed.directory, target);
               assert.strictEqual(
@@ -3228,13 +3231,17 @@ describe("PackageManagerInstaller", () => {
 
         const encode = S.encodeUnknownEffect(InstalledPackageManager);
         const decode = S.decodeUnknownEffect(InstalledPackageManager);
-        const cachedBack = yield* S.encodeResult(Json)(yield* encode(cached)).pipe(
+        const argument = S.encodeResult(Json);
+        const encoded = yield* encode(cached);
+        const cachedBack = yield* argument(encoded).pipe(
           Result.getOrThrowWith((error) => error),
           S.decodeResult(Json),
           Result.getOrThrowWith((error) => error),
           decode
         );
-        const ambientBack = yield* S.encodeResult(Json)(yield* encode(ambient)).pipe(
+        const argument1 = S.encodeResult(Json);
+        const encoded1 = yield* encode(ambient);
+        const ambientBack = yield* argument1(encoded1).pipe(
           Result.getOrThrowWith((error) => error),
           S.decodeResult(Json),
           Result.getOrThrowWith((error) => error),
@@ -3309,10 +3316,10 @@ describe("InstalledPackageManager codec property", () => {
     [Arbitrary.schema(InstalledPackageManager)],
     ([value]) =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(
-          yield* S.decodeEffect(InstalledPackageManager)(yield* S.encodeEffect(InstalledPackageManager)(value)),
-          value
-        );
+        const argument2 = S.decodeEffect(InstalledPackageManager);
+        const value2 = yield* S.encodeEffect(InstalledPackageManager)(value);
+        const value24 = yield* argument2(value2);
+        assert.deepStrictEqual(value24, value);
       }),
     { arbitrary: fcRuns(100) }
   );

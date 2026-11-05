@@ -91,14 +91,17 @@ layer(platform(tree), { timeout: "10 seconds" })("compileAndExpand, expansion", 
 
   it.effect("a literal pattern fast-paths, exactly as descend does", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* compileAndExpand("readme.md", { cwd: "/proj", glob: defaults }), ["readme.md"]);
+      const compileAndExpand1 = yield* compileAndExpand("readme.md", { cwd: "/proj", glob: defaults });
+      assert.deepStrictEqual(compileAndExpand1, ["readme.md"]);
     })
   );
 
   it.effect("zero matches is an empty result, never a failure", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* compileAndExpand("src/**/*.js", { cwd: "/proj", glob: defaults }), []);
-      assert.deepStrictEqual(yield* compileAndExpand("nope/**/*.ts", { cwd: "/proj", glob: defaults }), []);
+      const compileAndExpand2 = yield* compileAndExpand("src/**/*.js", { cwd: "/proj", glob: defaults });
+      assert.deepStrictEqual(compileAndExpand2, []);
+      const compileAndExpand3 = yield* compileAndExpand("nope/**/*.ts", { cwd: "/proj", glob: defaults });
+      assert.deepStrictEqual(compileAndExpand3, []);
     })
   );
 

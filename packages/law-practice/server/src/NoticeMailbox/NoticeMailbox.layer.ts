@@ -378,6 +378,9 @@ export const makeNoticeMailboxLayer = (
   Layer.effect(
     NoticeMailbox,
     Effect.gen(function* () {
-      return makeNoticeMailbox(yield* M365, yield* FileSystem.FileSystem, yield* Path.Path, config);
+      const M3651 = yield* M365;
+      const FileSystem2 = yield* FileSystem.FileSystem;
+      const Path3 = yield* Path.Path;
+      return makeNoticeMailbox(M3651, FileSystem2, Path3, config);
     })
   );

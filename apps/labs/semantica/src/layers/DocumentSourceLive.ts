@@ -82,7 +82,8 @@ const makeDocumentSource = Effect.gen(function* () {
     const body = EventBody.cases.Ingested.make({ document });
     const encodedBody = yield* encodeEventBodyEffect(body).pipe(Effect.orDie);
     const preimage = new TextEncoder().encode(canonicalJson({ body: encodedBody, prev: null }));
-    return ProvenanceEventId.make(yield* hashBytes(preimage));
+    const hashBytes1 = yield* hashBytes(preimage);
+    return ProvenanceEventId.make(hashBytes1);
   });
 
   const verifyExpectedBytes = Effect.fn("DocumentSource.verifyExpectedBytes")(function* (

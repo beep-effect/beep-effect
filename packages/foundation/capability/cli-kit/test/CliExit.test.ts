@@ -39,7 +39,9 @@ describe("CliExit", () => {
   })((it) => {
     it.effect("each layer build is a fresh cell", () =>
       Effect.gen(function* () {
-        yield* Effect.provideService(CliExit.set(2), CliExit, yield* OtherExit);
+        const argument = CliExit.set(2);
+        const OtherExit1 = yield* OtherExit;
+        yield* Effect.provideService(argument, CliExit, OtherExit1);
         const exit = yield* CliExit;
         assert.strictEqual(MutableRef.get(exit.code), 0);
       })

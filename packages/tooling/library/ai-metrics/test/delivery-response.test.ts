@@ -30,22 +30,23 @@ it.effect("distinguishes full and partial 200 replies in both encodings without 
       "{}",
       '{"partialSuccess":{}}',
       '{"partialSuccess":{"rejectedSpans":"0","errorMessage":"private-warning"}}',
-    ])
-      expect(yield* interpretDeliveryHttpReply(jsonReply(body))).toEqual({ _tag: "Accepted" });
-    expect(yield* interpretDeliveryHttpReply(protoReply(new Uint8Array()))).toEqual({ _tag: "Accepted" });
+    ]) {
+      const interpretDeliveryHttpReply7 = yield* interpretDeliveryHttpReply(jsonReply(body));
+      expect(interpretDeliveryHttpReply7).toEqual({ _tag: "Accepted" });
+    }
+    const interpretDeliveryHttpReply1 = yield* interpretDeliveryHttpReply(protoReply(new Uint8Array()));
+    expect(interpretDeliveryHttpReply1).toEqual({ _tag: "Accepted" });
     for (const rejected of [1, 2]) {
-      expect(
-        yield* interpretDeliveryHttpReply(
-          jsonReply(`{"partialSuccess":{"rejectedSpans":"${rejected}","errorMessage":"private-response"}}`)
+      const interpretDeliveryHttpReply2 = yield* interpretDeliveryHttpReply(
+        jsonReply(`{"partialSuccess":{"rejectedSpans":"${rejected}","errorMessage":"private-response"}}`)
+      );
+      expect(interpretDeliveryHttpReply2).toEqual({ _tag: "Partial", rejectedCount: rejected });
+      const interpretDeliveryHttpReply3 = yield* interpretDeliveryHttpReply(
+        protoReply(
+          wire.encode({ partialSuccess: { rejectedSpans: rejected, errorMessage: "private-response" } }).finish()
         )
-      ).toEqual({ _tag: "Partial", rejectedCount: rejected });
-      expect(
-        yield* interpretDeliveryHttpReply(
-          protoReply(
-            wire.encode({ partialSuccess: { rejectedSpans: rejected, errorMessage: "private-response" } }).finish()
-          )
-        )
-      ).toEqual({ _tag: "Partial", rejectedCount: rejected });
+      );
+      expect(interpretDeliveryHttpReply3).toEqual({ _tag: "Partial", rejectedCount: rejected });
     }
   })
 );
@@ -61,50 +62,61 @@ it.effect("keeps malformed, mismatched and impossible successful replies unknown
       '{"partialSuccess":null}',
       "null",
       "[]",
-    ])
-      expect(yield* interpretDeliveryHttpReply(jsonReply(body))).toEqual({
+    ]) {
+      const interpretDeliveryHttpReply8 = yield* interpretDeliveryHttpReply(jsonReply(body));
+      expect(interpretDeliveryHttpReply8).toEqual({
         _tag: "Unknown",
         reason: "invalid-response",
       });
+    }
     for (const body of [
       new Uint8Array([255]),
       wire.encode({ partialSuccess: { rejectedSpans: -1 } }).finish(),
       wire.encode({ partialSuccess: { rejectedSpans: 3 } }).finish(),
-    ])
-      expect(yield* interpretDeliveryHttpReply(protoReply(body))).toEqual({
+    ]) {
+      const interpretDeliveryHttpReply9 = yield* interpretDeliveryHttpReply(protoReply(body));
+      expect(interpretDeliveryHttpReply9).toEqual({
         _tag: "Unknown",
         reason: "invalid-response",
       });
-    expect(
-      yield* interpretDeliveryHttpReply(DeliveryHttpReply.make({ ...jsonReply("{}"), body: new Uint8Array([255]) }))
-    ).toEqual({ _tag: "Unknown", reason: "invalid-response" });
-    expect(
-      yield* interpretDeliveryHttpReply(DeliveryHttpReply.make({ ...jsonReply("{}"), responseContentType: "other" }))
-    ).toEqual({ _tag: "Unknown", reason: "invalid-response" });
-    expect(
-      yield* interpretDeliveryHttpReply(
-        DeliveryHttpReply.make({ ...jsonReply("{}"), responseContentType: "application/x-protobuf" })
-      )
-    ).toEqual({ _tag: "Unknown", reason: "invalid-response" });
+    }
+    const interpretDeliveryHttpReply4 = yield* interpretDeliveryHttpReply(
+      DeliveryHttpReply.make({ ...jsonReply("{}"), body: new Uint8Array([255]) })
+    );
+    expect(interpretDeliveryHttpReply4).toEqual({ _tag: "Unknown", reason: "invalid-response" });
+    const interpretDeliveryHttpReply5 = yield* interpretDeliveryHttpReply(
+      DeliveryHttpReply.make({ ...jsonReply("{}"), responseContentType: "other" })
+    );
+    expect(interpretDeliveryHttpReply5).toEqual({ _tag: "Unknown", reason: "invalid-response" });
+    const interpretDeliveryHttpReply6 = yield* interpretDeliveryHttpReply(
+      DeliveryHttpReply.make({ ...jsonReply("{}"), responseContentType: "application/x-protobuf" })
+    );
+    expect(interpretDeliveryHttpReply6).toEqual({ _tag: "Unknown", reason: "invalid-response" });
     expect(S.is(DeliveryHttpReply)({ ...jsonReply("{}"), body: new Uint8Array(65537) })).toBe(false);
   })
 );
 it.effect("classifies retryable and permanent HTTP refusals without trusting error response bodies", () =>
   Effect.gen(function* () {
-    for (const status of [429, 502, 503, 504])
-      expect(yield* interpretDeliveryHttpReply(jsonReply("private-error", status))).toEqual({
+    for (const status of [429, 502, 503, 504]) {
+      const interpretDeliveryHttpReply10 = yield* interpretDeliveryHttpReply(jsonReply("private-error", status));
+      expect(interpretDeliveryHttpReply10).toEqual({
         _tag: "Retryable",
         status,
       });
-    for (const status of [400, 401, 403, 404, 413, 415, 422, 500, 501])
-      expect(yield* interpretDeliveryHttpReply(jsonReply("private-error", status))).toEqual({
+    }
+    for (const status of [400, 401, 403, 404, 413, 415, 422, 500, 501]) {
+      const interpretDeliveryHttpReply11 = yield* interpretDeliveryHttpReply(jsonReply("private-error", status));
+      expect(interpretDeliveryHttpReply11).toEqual({
         _tag: "Rejected",
         status,
       });
-    for (const status of [201, 202, 204, 301, 302, 307])
-      expect(yield* interpretDeliveryHttpReply(jsonReply("{}", status))).toEqual({
+    }
+    for (const status of [201, 202, 204, 301, 302, 307]) {
+      const interpretDeliveryHttpReply12 = yield* interpretDeliveryHttpReply(jsonReply("{}", status));
+      expect(interpretDeliveryHttpReply12).toEqual({
         _tag: "Unknown",
         reason: "invalid-response",
       });
+    }
   })
 );

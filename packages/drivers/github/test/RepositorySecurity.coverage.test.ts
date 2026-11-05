@@ -39,7 +39,8 @@ describe("RepositorySecurity test doubles", () => {
             const cause = yield* exit.pipe(Exit.getCause, Effect.fromOption);
             assertExitFailure(exit, cause);
             const defect = yield* cause.pipe(Cause.findDefect, Effect.fromResult);
-            assert.deepStrictEqual(yield* S.decodeUnknownEffect(DefectFields)(defect), {
+            const value = yield* S.decodeUnknownEffect(DefectFields)(defect);
+            assert.deepStrictEqual(value, {
               _tag: "UnstubbedMemberError",
               message: `RepositorySecurity.makeTest: ${member}() was called but not stubbed — pass an override.`,
             });
@@ -76,12 +77,18 @@ describe("RepositorySecurity test doubles", () => {
       Effect.gen(function* () {
         const service = yield* RepositorySecurity;
         const start = calls.length;
-        assert.strictEqual(yield* service.vulnerabilityAlerts, true);
-        assert.strictEqual(yield* service.automatedSecurityFixes, false);
-        assert.strictEqual(yield* service.privateVulnerabilityReporting, true);
-        assert.strictEqual(yield* service.setVulnerabilityAlerts(false), undefined);
-        assert.strictEqual(yield* service.setAutomatedSecurityFixes(true), undefined);
-        assert.strictEqual(yield* service.setPrivateVulnerabilityReporting(false), undefined);
+        const vulnerabilityAlerts1 = yield* service.vulnerabilityAlerts;
+        assert.strictEqual(vulnerabilityAlerts1, true);
+        const automatedSecurityFixes2 = yield* service.automatedSecurityFixes;
+        assert.strictEqual(automatedSecurityFixes2, false);
+        const privateVulnerabilityReporting3 = yield* service.privateVulnerabilityReporting;
+        assert.strictEqual(privateVulnerabilityReporting3, true);
+        const setVulnerabilityAlerts4 = yield* service.setVulnerabilityAlerts(false);
+        assert.strictEqual(setVulnerabilityAlerts4, undefined);
+        const setAutomatedSecurityFixes5 = yield* service.setAutomatedSecurityFixes(true);
+        assert.strictEqual(setAutomatedSecurityFixes5, undefined);
+        const setPrivateVulnerabilityReporting6 = yield* service.setPrivateVulnerabilityReporting(false);
+        assert.strictEqual(setPrivateVulnerabilityReporting6, undefined);
         assert.deepStrictEqual(calls.slice(start), [
           ["alerts", false],
           ["fixes", true],

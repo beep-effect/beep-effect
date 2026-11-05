@@ -22,7 +22,8 @@ it.layer(
     ([message]) =>
       Effect.gen(function* () {
         const before = (yield* TestConsole.logLines).length;
-        const date = DateTime.toDateUtc(yield* DateTime.now);
+        const now1 = yield* DateTime.now;
+        const date = DateTime.toDateUtc(now1);
         yield* Effect.withFiber((fiber) =>
           Effect.sync(() => ActionLogger.logger.log({ fiber, logLevel: "Info", message, cause: Cause.empty, date }))
         );
@@ -45,19 +46,18 @@ it.layer(
       Effect.gen(function* () {
         const logger = yield* ActionLogger;
         const before = yield* TestConsole.logLines;
-        assert.strictEqual(
-          yield* logger.withBuffer("success", Effect.as(Effect.logInfo(value), value), { onSuccess: "discard" }),
-          value
+        const withBuffer2 = yield* logger.withBuffer("success", Effect.as(Effect.logInfo(value), value), {
+          onSuccess: "discard",
+        });
+        assert.strictEqual(withBuffer2, value);
+        const logLines3 = yield* TestConsole.logLines;
+        assert.deepStrictEqual(logLines3, before);
+        const flip4 = yield* Effect.flip(
+          logger.withBuffer("failure", Effect.andThen(Effect.logInfo(value), Effect.fail(value)), {
+            onSuccess: "discard",
+          })
         );
-        assert.deepStrictEqual(yield* TestConsole.logLines, before);
-        assert.strictEqual(
-          yield* Effect.flip(
-            logger.withBuffer("failure", Effect.andThen(Effect.logInfo(value), Effect.fail(value)), {
-              onSuccess: "discard",
-            })
-          ),
-          value
-        );
+        assert.strictEqual(flip4, value);
         assert.deepStrictEqual((yield* TestConsole.logLines).slice(before.length), [
           '--- Buffered output for "failure" ---',
           String(value),

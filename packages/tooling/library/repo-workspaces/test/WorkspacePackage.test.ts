@@ -5,10 +5,13 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
+import { identity, pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const base = {
   version: "1.0.0",
@@ -226,11 +229,11 @@ describe("WorkspacePackage.dependencyVersion — inherited names are not depende
   // dependencyVersion did not, and it is typed Option<string> — so it would hand
   // back Option.some(<Function>) and lie about its own type.
   for (const inherited of ["constructor", "toString", "valueOf", "hasOwnProperty", "__proto__"]) {
-    it(`dependencyVersion(${JSON.stringify(inherited)}) is none`, () => {
+    it(`dependencyVersion(${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(inherited), identity)}) is none`, () => {
       assertNone(pkg.dependencyVersion(inherited));
     });
 
-    it(`hasAnyDependencyOn(${JSON.stringify(inherited)}) is false`, () => {
+    it(`hasAnyDependencyOn(${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(inherited), identity)}) is false`, () => {
       assert.isFalse(pkg.hasAnyDependencyOn(inherited));
     });
   }
@@ -262,7 +265,15 @@ describe("WorkspacePackage.manifestRecord", () => {
         sideEffects: false,
       },
     });
-    const wire: unknown = JSON.parse(JSON.stringify(Result.getOrThrow(S.encodeUnknownResult(WorkspacePackage)(pkg))));
+    const wire: unknown = pipe(
+      pkg,
+      S.encodeUnknownResult(WorkspacePackage),
+      Result.getOrThrow,
+      S.encodeUnknownResult(UnknownJson),
+      Result.getOrThrowWith(identity),
+      S.decodeResult(UnknownJson),
+      Result.getOrThrowWith(identity)
+    );
     const decoded = Result.getOrThrow(S.decodeUnknownResult(WorkspacePackage)(wire));
     assert.deepStrictEqual(decoded.manifestRecord, pkg.manifestRecord);
     assert.deepStrictEqual(decoded.dependencies, { effect: "^4.0.0" });
@@ -368,7 +379,9 @@ it.effect.prop(
   [Arbitrary.schema(PublishConfig)],
   ([value]) =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(PublishConfig)(yield* S.encodeEffect(PublishConfig)(value));
+      const argument = S.decodeEffect(PublishConfig);
+      const value1 = yield* S.encodeEffect(PublishConfig)(value);
+      const decoded = yield* argument(value1);
       assert.isTrue(S.toEquivalence(PublishConfig)(decoded, value));
     }),
   { arbitrary: fcRuns(50) }

@@ -27,17 +27,21 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { provideLegacyGh } from "./support/YeetGithub.ts";
 import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
+
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 // `gh run view --job <id> --log-failed` emits `<job>\t<step>\t<timestamp> <line>`
 // and sometimes an `##[error]` workflow-command marker. These fixtures keep that
@@ -513,7 +517,7 @@ const runListJson = (
     readonly headSha: string;
     readonly status: string;
   }>
-) => JSON.stringify(A.map(runs, (run) => ({ ...run, name: "CI" })));
+) => encodeJson(A.map(runs, (run) => ({ ...run, name: "CI" })));
 
 const runJobsJson = (
   jobs: ReadonlyArray<{
@@ -523,7 +527,7 @@ const runJobsJson = (
     readonly status: string;
   }>
 ) =>
-  JSON.stringify({
+  encodeJson({
     total_count: A.length(jobs),
     jobs: A.map(jobs, ({ databaseId, ...job }) => ({
       ...job,
@@ -913,7 +917,8 @@ describe("applyYeetMonitorJobDecision", () => {
         const result = yield* applyYeetMonitorJobDecision(rerunDecision());
 
         expect(result).toBeUndefined();
-        const lines = A.map(yield* TestConsole.logLines, String);
+        const result1 = yield* TestConsole.logLines;
+        const lines = A.map(result1, String);
         expect(A.some(lines, (line) => Str.includes("allowance spent")(line))).toBe(true);
         expect(A.some(lines, (line) => Str.includes("unbounded retry loop")(line))).toBe(true);
       }).pipe(provideLegacyGh, provideSpawner(spawner(1)))
@@ -945,7 +950,8 @@ describe("applyYeetMonitorJobDecision", () => {
         const result = yield* applyYeetMonitorJobDecision(plan.decisions[0]!);
 
         expect(result).toBeUndefined();
-        const lines = A.map(yield* TestConsole.logLines, String);
+        const result2 = yield* TestConsole.logLines;
+        const lines = A.map(result2, String);
         expect(A.some(lines, (line) => Str.includes("reclassifying next poll")(line))).toBe(true);
         expect(spawner.spawns).toEqual([]);
       }).pipe(provideLegacyGh, provideSpawner(spawner));

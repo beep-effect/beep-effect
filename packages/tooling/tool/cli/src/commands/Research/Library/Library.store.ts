@@ -40,7 +40,8 @@ const codec = S.fromJsonString(LibraryCatalog);
  */
 export const hashBytes = Effect.fn("ResearchLibrary.hashBytes")(function* (bytes: Uint8Array) {
   const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, bytes).pipe(mapFailure("Cannot hash library artifact.")));
+  const pipe1 = yield* crypto.digest(Digest.sha256, bytes).pipe(mapFailure("Cannot hash library artifact."));
+  return Hex.encode(pipe1);
 });
 
 /**
@@ -140,17 +141,19 @@ const publishImmutableLink = Effect.fn("ResearchLibrary.publishImmutableLink")(f
       error.reason._tag === "AlreadyExists"
         ? Effect.gen(function* () {
             const realTarget = yield* fs.realPath(target);
-            if (pathEscapes(path, path.relative(realRoot, realTarget)))
+            if (pathEscapes(path, path.relative(realRoot, realTarget))) {
               return yield* LibraryError.make({
                 message: "Concurrent immutable artifact escapes library via symlink.",
                 cause: artifact.path,
               });
+            }
             const winner = yield* fs.readFile(target);
-            if ((yield* hashBytes(winner)) !== artifact.sha256)
+            if ((yield* hashBytes(winner)) !== artifact.sha256) {
               return yield* LibraryError.make({
                 message: "Concurrent immutable artifact content differs.",
                 cause: artifact.path,
               });
+            }
           })
         : Effect.fail(error)
     ),
@@ -211,12 +214,16 @@ export const saveImmutable = Effect.fn("ResearchLibrary.saveImmutable")(function
     role: "artifact",
   });
   const objectPath = `objects/sha256/${sha256}`;
-  if (relative !== objectPath) yield* saveImmutable(root, objectPath, bytes);
+  if (relative !== objectPath) {
+    yield* saveImmutable(root, objectPath, bytes);
+  }
   if (yield* fs.exists(target).pipe(mapFailure("Cannot inspect immutable artifact."))) {
     yield* verifyImmutableTarget(realRoot, target, relativePath, sha256);
-  } else if (relative !== objectPath)
+  } else if (relative !== objectPath) {
     yield* publishImmutableLink(realRoot, path.join(root, objectPath), target, artifact);
-  else yield* stageImmutableObject(realRoot, target, bytes, artifact);
+  } else {
+    yield* stageImmutableObject(realRoot, target, bytes, artifact);
+  }
   return artifact;
 });
 
@@ -415,7 +422,10 @@ const migrateCatalogIdentities = Effect.fn("ResearchLibrary.migrateCatalogIdenti
   catalog: LibraryCatalog
 ) {
   let sources: ReadonlyArray<LibrarySource> = [];
-  for (const source of catalog.sources) sources = mergeMigratedSource(sources, yield* migratedSource(source));
+  for (const source of catalog.sources) {
+    const migratedSource1 = yield* migratedSource(source);
+    sources = mergeMigratedSource(sources, migratedSource1);
+  }
   return LibraryCatalog.make({
     ...catalog,
     sources,
@@ -457,7 +467,8 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
         )
       ),
     Effect.fnUntraced(function* () {
-      const migrated = yield* migrateCatalogIdentities(yield* loadCatalog(root));
+      const loadedCatalog = yield* loadCatalog(root);
+      const migrated = yield* migrateCatalogIdentities(loadedCatalog);
       const artifacts = [
         ...migrated.artifacts,
         ...A.flatMap(migrated.captures, (capture) => capture.artifacts),
@@ -469,11 +480,12 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
         const bytes = yield* fs
           .readFile(path.resolve(root, artifact.path))
           .pipe(mapFailure("Cannot read legacy artifact for object migration."));
-        if (bytes.length !== artifact.bytes || (yield* hashBytes(bytes)) !== artifact.sha256)
+        if (bytes.length !== artifact.bytes || (yield* hashBytes(bytes)) !== artifact.sha256) {
           return yield* LibraryError.make({
             message: "Legacy artifact differs from its immutable receipt.",
             cause: artifact.path,
           });
+        }
         yield* saveImmutable(root, artifact.path, bytes);
       }
       const catalog = yield* update(migrated);

@@ -34,7 +34,8 @@ describe("resolveWorkstationStateDir env matrix", () => {
   for (const [name, env, expected] of [...resolved, ...divergent]) {
     it.effect(name, () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* resolveIn(env), expected);
+        const resolvedIn = yield* resolveIn(env);
+        assert.strictEqual(resolvedIn, expected);
       })
     );
   }

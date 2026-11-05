@@ -89,27 +89,32 @@ const persistWave = Effect.fn("persistWave")(function* (root: string, current: Y
   const paths = yield* yeetInboxPaths(root);
   yield* fs.makeDirectory(paths.dir, { recursive: true });
   const json = yield* YeetRemediationWaveJson.encode(current);
-  yield* fs.writeFileString(yield* yeetDispatchStatePath(root), `${json}\n`);
+  const yeetDispatchStatePath1 = yield* yeetDispatchStatePath(root);
+  yield* fs.writeFileString(yeetDispatchStatePath1, `${json}\n`);
 });
 
 describe("yeetInboxRowLiveness", () => {
   it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     it.effect("is unknown without a wave record", () =>
       Effect.gen(function* () {
-        expect(yeetInboxRowLiveness(yield* row(capsule()), O.none())).toBe("unknown");
+        const row2 = yield* row(capsule());
+        expect(yeetInboxRowLiveness(row2, O.none())).toBe("unknown");
       })
     );
 
     it.effect("is live when the row matches the wave's PR and head", () =>
       Effect.gen(function* () {
-        expect(yeetInboxRowLiveness(yield* row(capsule()), O.some(wave()))).toBe("live");
+        const row3 = yield* row(capsule());
+        expect(yeetInboxRowLiveness(row3, O.some(wave()))).toBe("live");
       })
     );
 
     it.effect("is superseded when the wave moved to another head or PR", () =>
       Effect.gen(function* () {
-        expect(yeetInboxRowLiveness(yield* row(capsule()), O.some(wave({ headSha: "fff999" })))).toBe("superseded");
-        expect(yeetInboxRowLiveness(yield* row(capsule()), O.some(wave({ prNumber: 99 })))).toBe("superseded");
+        const row4 = yield* row(capsule());
+        expect(yeetInboxRowLiveness(row4, O.some(wave({ headSha: "fff999" })))).toBe("superseded");
+        const row5 = yield* row(capsule());
+        expect(yeetInboxRowLiveness(row5, O.some(wave({ prNumber: 99 })))).toBe("superseded");
       })
     );
 
@@ -143,10 +148,12 @@ describe("loadYeetInboxView", () => {
       inTempRepo((root) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          yield* appendYeetInboxRow(root, yield* row(capsule()));
+          const row6 = yield* row(capsule());
+          yield* appendYeetInboxRow(root, row6);
           const paths = yield* yeetInboxPaths(root);
           yield* fs.writeFileString(paths.failuresPath, "garbage line\n", { flag: "a" });
-          yield* appendYeetInboxRow(root, yield* row(capsule({ lane: "Check / Lint" })));
+          const row7 = yield* row(capsule({ lane: "Check / Lint" }));
+          yield* appendYeetInboxRow(root, row7);
 
           const view = yield* loadYeetInboxView(root);
 
@@ -208,7 +215,8 @@ describe("loadYeetInboxView", () => {
           const subject = yield* row(capsule());
           yield* appendYeetInboxRow(root, subject);
           yield* fs.makeDirectory(`${root}/.beep/inbox/acks`, { recursive: true });
-          yield* fs.writeFileString(yield* yeetInboxAckPath(root, subject.id), "corrupted");
+          const yeetInboxAckPath8 = yield* yeetInboxAckPath(root, subject.id);
+          yield* fs.writeFileString(yeetInboxAckPath8, "corrupted");
 
           const view = yield* loadYeetInboxView(root);
 
@@ -238,7 +246,8 @@ describe("loadYeetInboxView", () => {
             resolution: YeetAckFixResolution.make({ sha: "2817f28" }),
           });
           yield* fs.writeFileString(outsideAck, `${yield* YeetAckReceiptJson.encode(receipt)}\n`);
-          yield* fs.symlink(outsideAck, yield* yeetInboxAckPath(repoRoot, subject.id));
+          const yeetInboxAckPath9 = yield* yeetInboxAckPath(repoRoot, subject.id);
+          yield* fs.symlink(outsideAck, yeetInboxAckPath9);
 
           const view = yield* loadYeetInboxView(repoRoot);
 
@@ -362,9 +371,11 @@ describe("loadYeetInboxView", () => {
       inTempRepo((root) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          yield* appendYeetInboxRow(root, yield* row(capsule()));
+          const row10 = yield* row(capsule());
+          yield* appendYeetInboxRow(root, row10);
           const paths = yield* yeetInboxPaths(root);
-          const partial = yield* YeetInboxRowJson.encode(yield* row(capsule({ lane: "Check / Lint" })));
+          const row11 = yield* row(capsule({ lane: "Check / Lint" }));
+          const partial = yield* YeetInboxRowJson.encode(row11);
           // Half of an in-flight append: no trailing newline.
           yield* fs.writeFileString(paths.failuresPath, Str.slice(0, 25)(partial), { flag: "a" });
 
@@ -381,7 +392,8 @@ describe("loadYeetInboxView", () => {
     it.effect("round-trips the joined view through its codec", () =>
       inTempRepo((root) =>
         Effect.gen(function* () {
-          yield* appendYeetInboxRow(root, yield* row(capsule()));
+          const row12 = yield* row(capsule());
+          yield* appendYeetInboxRow(root, row12);
 
           const view = yield* loadYeetInboxView(root);
           const encoded = yield* YeetInboxViewJson.encode(view);

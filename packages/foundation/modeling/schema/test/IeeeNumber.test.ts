@@ -14,7 +14,8 @@ it.effect("IEEE JSON and string-tree codecs preserve finite and non-finite value
         assert.strictEqual(Object.is(decoded, value), true);
       }
     }
-    assert.strictEqual(yield* Effect.isFailure(S.decodeUnknownEffect(IeeeNumber)("1")), true);
+    const isFailure1 = yield* Effect.isFailure(S.decodeUnknownEffect(IeeeNumber)("1"));
+    assert.strictEqual(isFailure1, true);
   })
 );
 
@@ -24,7 +25,10 @@ describe("IeeeNumber codec property", () => {
     [Arbitrary.schema(IeeeNumber)],
     ([value]) =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* S.decodeEffect(IeeeNumber)(yield* S.encodeEffect(IeeeNumber)(value)), value);
+        const argument = S.decodeEffect(IeeeNumber);
+        const value1 = yield* S.encodeEffect(IeeeNumber)(value);
+        const value2 = yield* argument(value1);
+        assert.deepStrictEqual(value2, value);
       }),
     { arbitrary: fcRuns(100) }
   );

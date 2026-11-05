@@ -36,7 +36,8 @@ const makeUsptoRecordLookupLive = Effect.fn("DocumentIdentification.Identificati
   return UsptoRecordLookupShape.make({
     byApplication: Effect.fn("Identification.byApplication")(function* (number: string) {
       yield* numberOnly(number);
-      return O.map(yield* missing(uspto.getApplication(number)), facts);
+      const missing1 = yield* missing(uspto.getApplication(number));
+      return O.map(missing1, facts);
     }),
     byPatent: Effect.fn("Identification.byPatent")(function* (number: string) {
       yield* numberOnly(number);

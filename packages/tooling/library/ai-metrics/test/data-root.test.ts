@@ -111,7 +111,8 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
 
   it.effect("treats blank flag and environment values as absent", () =>
     Effect.gen(function* () {
-      const resolved = resolveRoot(yield* decodeDataRootInput({ envDataRoot: "", flagDataRoot: "   ", homeDir }));
+      const decodedDataRootInput = yield* decodeDataRootInput({ envDataRoot: "", flagDataRoot: "   ", homeDir });
+      const resolved = resolveRoot(decodedDataRootInput);
 
       expect(resolved.path).toBe(xdgDefaultRoot);
       expect(resolved.source).toBe(AiMetricsDataRootSource.Enum["xdg-state-home"]);
@@ -149,17 +150,13 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
       }
 
       // The dankserver rung and an explicit XDG_STATE_HOME still resolve without a home.
-      expect(resolveRoot(yield* decodeDataRootInput({ homeDir: "", stateHome: "/custom/state" })).path).toBe(
-        "/custom/state/beep/ai-metrics"
-      );
-      expect(
-        resolveRoot(
-          yield* decodeDataRootInput({
-            homeDir: "",
-            target: AiMetricsDeployTarget.Enum.dankserver,
-          })
-        ).path
-      ).toBe("/srv/data/ai-metrics");
+      const decodedDataRootInput1 = yield* decodeDataRootInput({ homeDir: "", stateHome: "/custom/state" });
+      expect(resolveRoot(decodedDataRootInput1).path).toBe("/custom/state/beep/ai-metrics");
+      const decodedDataRootInput2 = yield* decodeDataRootInput({
+        homeDir: "",
+        target: AiMetricsDeployTarget.Enum.dankserver,
+      });
+      expect(resolveRoot(decodedDataRootInput2).path).toBe("/srv/data/ai-metrics");
     })
   );
 
@@ -211,7 +208,8 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
       expect(failure).toBeInstanceOf(AiMetricsDataRootError);
       expect(failure.message).toContain("absolute path");
 
-      expect(yield* requireAbsoluteAiMetricsDataRoot(xdgDefaultRoot)).toBe(xdgDefaultRoot);
+      const requireAbsoluteAiMetricsDataRoot3 = yield* requireAbsoluteAiMetricsDataRoot(xdgDefaultRoot);
+      expect(requireAbsoluteAiMetricsDataRoot3).toBe(xdgDefaultRoot);
     })
   );
 
@@ -245,7 +243,8 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
       yield* Effect.forEach(
         accepted,
         Effect.fnUntraced(function* (path) {
-          expect(yield* requireAbsoluteAiMetricsDataRoot(path)).toBe(path);
+          const requireAbsoluteAiMetricsDataRoot4 = yield* requireAbsoluteAiMetricsDataRoot(path);
+          expect(requireAbsoluteAiMetricsDataRoot4).toBe(path);
         }),
         { discard: true }
       );

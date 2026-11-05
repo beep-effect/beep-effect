@@ -53,24 +53,23 @@ const writeFixtureAt = Effect.fn("RoadmapRefsTest.writeFixtureAt")(function* (ro
   yield* fs.writeFileString(path.join(root, "docs", "ROADMAP.md"), roadmap);
   yield* fs.writeFileString(path.join(root, "goals", "resolving", "README.md"), "# Resolving goal\n");
   yield* fs.writeFileString(path.join(root, "explorations", "resolving", "README.md"), "# Resolving exploration\n");
-  yield* fs.writeFileString(
-    path.join(root, "goals", "resolving", "ops", "manifest.json"),
-    yield* encodeJson({
-      schemaVersion: "initiative-manifest/v2",
-      initiative: { id: "resolving", status: "active" },
-      completionGate: {
-        operator: "yeet",
-        requiresPullRequest: true,
-        requiresMergeable: true,
-        statement: "Ship via yeet.",
-        grandfathered: false,
-      },
-      phases: [
-        { id: "P0", status: "complete" },
-        { id: "P1", status: "pending" },
-      ],
-    })
-  );
+  const argument = path.join(root, "goals", "resolving", "ops", "manifest.json");
+  const encodedJson = yield* encodeJson({
+    schemaVersion: "initiative-manifest/v2",
+    initiative: { id: "resolving", status: "active" },
+    completionGate: {
+      operator: "yeet",
+      requiresPullRequest: true,
+      requiresMergeable: true,
+      statement: "Ship via yeet.",
+      grandfathered: false,
+    },
+    phases: [
+      { id: "P0", status: "complete" },
+      { id: "P1", status: "pending" },
+    ],
+  });
+  yield* fs.writeFileString(argument, encodedJson);
 });
 
 /** Writes the fixture checkout into a scoped temp directory and returns its root for `--repo-root`. */
@@ -106,14 +105,16 @@ describe("roadmap-refs lint command", { concurrent: false }, () => {
           const roadmap = yield* fs.readFileString(path.join(repoRoot, FIXTURE_PATH));
           const root = yield* writeFixture(roadmap);
           // The layer (and its TestConsole) is shared across this block, so count only this run's lines.
-          const priorErrorLines = A.length(yield* TestConsole.errorLines);
+          const errorLines1 = yield* TestConsole.errorLines;
+          const priorErrorLines = A.length(errorLines1);
 
           const exit = yield* Effect.exit(runLintCommand(["roadmap-refs", "--repo-root", root]));
           expectReportedExit(exit);
           exit.pipe(Exit.isFailure, assertTrue);
 
+          const errorLines2 = yield* TestConsole.errorLines;
           const issueLines = pipe(
-            yield* TestConsole.errorLines,
+            errorLines2,
             A.drop(priorErrorLines),
             A.filter(P.isString),
             A.filter(Str.startsWith("[roadmap:issue]"))
@@ -154,8 +155,9 @@ describe("roadmap-refs lint command", { concurrent: false }, () => {
           expectReportedExit(exit);
           exit.pipe(Exit.isFailure, assertTrue);
 
+          const errorLines3 = yield* TestConsole.errorLines;
           const blocking = pipe(
-            yield* TestConsole.errorLines,
+            errorLines3,
             A.filter(P.isString),
             A.filter(Str.startsWith("[roadmap:issue]")),
             A.filter(Str.includes('"severity":"error"'))

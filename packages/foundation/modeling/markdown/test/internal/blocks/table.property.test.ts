@@ -220,16 +220,20 @@ describe("table parser properties", () => {
           { textOffset: 1, sourceOffset: 14, length: 2 },
         ],
       });
-      assert.deepStrictEqual(yield* S.decodeEffect(RowSource)(source), source);
-      assert.deepStrictEqual(yield* S.decodeEffect(RawCell)(cell), cell);
-      assert.deepStrictEqual(yield* S.decodeEffect(ScannedRow)(row), row);
-      assert.deepStrictEqual(
-        yield* S.decodeEffect(ScannedRow)({ ...row, complete: false }),
-        ScannedRow.make({ ...row, complete: false })
-      );
-      assert.deepStrictEqual(yield* S.decodeEffect(CellContent)(content), content);
-      assert.deepStrictEqual(yield* S.encodeEffect(RowSource)(source), source);
-      assert.deepStrictEqual(yield* S.encodeEffect(CellContent)(content), content);
+      const value1 = yield* S.decodeEffect(RowSource)(source);
+      assert.deepStrictEqual(value1, source);
+      const value2 = yield* S.decodeEffect(RawCell)(cell);
+      assert.deepStrictEqual(value2, cell);
+      const value3 = yield* S.decodeEffect(ScannedRow)(row);
+      assert.deepStrictEqual(value3, row);
+      const value4 = yield* S.decodeEffect(ScannedRow)({ ...row, complete: false });
+      assert.deepStrictEqual(value4, ScannedRow.make({ ...row, complete: false }));
+      const value5 = yield* S.decodeEffect(CellContent)(content);
+      assert.deepStrictEqual(value5, content);
+      const value6 = yield* S.encodeEffect(RowSource)(source);
+      assert.deepStrictEqual(value6, source);
+      const value7 = yield* S.encodeEffect(CellContent)(content);
+      assert.deepStrictEqual(value7, content);
       assert.isFalse(S.is(ScannedRow)({ ...row, complete: null }));
       assert.isFalse(S.is(RawCell)({ ...cell, end: Number.POSITIVE_INFINITY }));
       assert.isFalse(S.is(RowSource)({ ...source, segments: [{ textOffset: 0, sourceOffset: "10", length: 15 }] }));
@@ -264,7 +268,8 @@ describe("table parser properties", () => {
         const serialized = yield* Markdown.stringify(parsed);
         const reparsed = yield* Markdown.parse(serialized);
         assert.deepStrictEqual(semantic(reparsed), semantic(parsed));
-        assert.strictEqual(yield* Markdown.stringify(reparsed), serialized);
+        const stringify8 = yield* Markdown.stringify(reparsed);
+        assert.strictEqual(stringify8, serialized);
       }),
     runs
   );
@@ -276,10 +281,10 @@ describe("table parser properties", () => {
         const source = sourceOf(text, style);
         const once = MarkdownFormat.formatToString(source, undefined, options);
         assert.strictEqual(MarkdownFormat.formatToString(once, undefined, options), once);
-        assert.deepStrictEqual(
-          semantic(Mdast.toMdast(yield* Markdown.parse(once))),
-          semantic(Mdast.toMdast(yield* Markdown.parse(source)))
-        );
+        const parsed9 = yield* Markdown.parse(once);
+        const argument = semantic(Mdast.toMdast(parsed9));
+        const parsed1 = yield* Markdown.parse(source);
+        assert.deepStrictEqual(argument, semantic(Mdast.toMdast(parsed1)));
       }),
     runs
   );
@@ -302,10 +307,8 @@ describe("table parser properties", () => {
         const formatted = MarkdownFormat.formatToString(source, undefined, options);
         assert.ok(Str.startsWith(prefix)(formatted));
         assert.ok(Str.endsWith(suffix)(formatted));
-        assert.deepStrictEqual(
-          semantic(Mdast.toMdast(yield* Markdown.parse(formatted))),
-          semantic(Mdast.toMdast(parsed))
-        );
+        const parsed10 = yield* Markdown.parse(formatted);
+        assert.deepStrictEqual(semantic(Mdast.toMdast(parsed10)), semantic(Mdast.toMdast(parsed)));
       }),
     runs
   );

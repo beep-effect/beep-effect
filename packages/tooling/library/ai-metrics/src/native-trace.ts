@@ -381,7 +381,8 @@ const decodeBoundaryValue = S.decodeUnknownEffect(S.Option(FixtureSurface));
 const parentIdentity = Effect.fnUntraced(function* (parent: unknown, protobuf: boolean) {
   if (parent === undefined || parent === "") return O.none<string>();
   if (S.is(S.Uint8Array)(parent) && parent.byteLength === 0) return O.none<string>();
-  return O.some(yield* id(parent, 16, protobuf));
+  const id1 = yield* id(parent, 16, protobuf);
+  return O.some(id1);
 });
 const claudeSpanKind = Match.type<string | undefined>().pipe(
   Match.when("claude_code.llm_request", (): typeof SpanKind.Type => "LLM"),
@@ -430,7 +431,7 @@ const sourceUsage = Effect.fnUntraced(function* (
 const privateHash = (salt: string) => (value: string) =>
   hashPrivateIdentifier(value, O.some(salt)).pipe(Effect.mapError(() => failure("hash-failure")));
 const hashTextOption = Effect.fnUntraced(function* (value: O.Option<string>, hash: ReturnType<typeof privateHash>) {
-  return O.isSome(value) ? O.some(yield* hash(value.value)) : O.none();
+  return O.isSome(value) ? yield* Effect.asSome(hash(value.value)) : O.none();
 });
 const readManagedController = Effect.fnUntraced(function* (
   attributes: typeof Attributes.Type,

@@ -157,7 +157,8 @@ it.layer(PartyLedgerMemory)("mail ledger ingestion", (it) => {
       expect(before.versions).toEqual([]);
       const failure = yield* ingestMailRecord(input).pipe(Effect.flip);
       expect(failure._tag).toBe("LedgerConflict");
-      expect(yield* ledger.snapshot).toEqual(before);
+      const resolved1 = yield* ledger.snapshot;
+      expect(resolved1).toEqual(before);
     })
   );
 });

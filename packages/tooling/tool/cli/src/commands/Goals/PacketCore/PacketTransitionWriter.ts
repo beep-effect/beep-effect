@@ -462,12 +462,11 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
       });
       events = A.append(events, genesis);
       seq = 1;
-      parent = O.some(
-        yield* packetEventDigest(genesis).pipe(
-          Effect.provideService(Digest.Digest, crypto),
-          Effect.mapError(streamErrorFromSchema(request.locator.packet, "genesis event could not be encoded"))
-        )
+      const pipe1 = yield* packetEventDigest(genesis).pipe(
+        Effect.provideService(Digest.Digest, crypto),
+        Effect.mapError(streamErrorFromSchema(request.locator.packet, "genesis event could not be encoded"))
       );
+      parent = O.some(pipe1);
     }
     return { events, seq, parent };
   });

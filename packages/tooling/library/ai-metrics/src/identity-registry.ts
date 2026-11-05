@@ -421,8 +421,9 @@ const probeGitRoot = Effect.fn("AiMetrics.identityRegistry.probeGitRoot")(functi
     });
   }
 
+  const readFileOption1 = yield* readFileOption(gitPath);
   const pointer = pipe(
-    yield* readFileOption(gitPath),
+    readFileOption1,
     O.flatMap((content) => firstMatch(gitDirPointerPattern, content)),
     O.map(Str.trim)
   );
@@ -491,7 +492,8 @@ const resolveRevision = Effect.fn("AiMetrics.identityRegistry.resolveRevision")(
   commonGitDir: string
 ): Effect.fn.Return<O.Option<string>, AiMetricsIdentityRegistryError, FileSystem.FileSystem | Path.Path> {
   const pathApi = yield* Path.Path;
-  const head = pipe(yield* readFileOption(pathApi.join(gitDir, "HEAD")), O.map(Str.trim));
+  const readFileOption2 = yield* readFileOption(pathApi.join(gitDir, "HEAD"));
+  const head = pipe(readFileOption2, O.map(Str.trim));
 
   if (O.isNone(head)) {
     return O.none<string>();
@@ -506,7 +508,8 @@ const resolveRevision = Effect.fn("AiMetrics.identityRegistry.resolveRevision")(
     return O.none<string>();
   }
 
-  const loose = pipe(yield* readFileOption(pathApi.join(commonGitDir, ref.value)), O.map(Str.trim));
+  const readFileOption3 = yield* readFileOption(pathApi.join(commonGitDir, ref.value));
+  const loose = pipe(readFileOption3, O.map(Str.trim));
   if (O.isSome(loose) && commitShaPattern.test(loose.value)) {
     return loose;
   }

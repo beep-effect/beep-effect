@@ -323,15 +323,17 @@ const packageOwnsTestProject = Effect.fn("PackageTestTypecheck.packageOwnsTestPr
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const pipe1 = yield* fs.readDirectory(packageDir).pipe(Effect.orElseSucceed(A.empty<string>));
   const candidates = pipe(
-    yield* fs.readDirectory(packageDir).pipe(Effect.orElseSucceed(A.empty<string>)),
+    pipe1,
     A.filter((entry) => Str.startsWith("tsconfig")(entry) && Str.endsWith(".json")(entry)),
     A.map((entry) => path.join(packageDir, entry)),
     A.append(path.join(testDir, "tsconfig.json")),
     A.sort(Order.String)
   );
 
-  return A.isReadonlyArrayEmpty(yield* uncoveredTestSources(packageDir, candidates, testSources));
+  const uncoveredTestSources2 = yield* uncoveredTestSources(packageDir, candidates, testSources);
+  return A.isReadonlyArrayEmpty(uncoveredTestSources2);
 });
 
 const packageBlindSpot = Effect.fn("PackageTestTypecheck.packageBlindSpot")(function* (
@@ -362,7 +364,8 @@ const packageBlindSpot = Effect.fn("PackageTestTypecheck.packageBlindSpot")(func
     R.empty<string, string>
   );
 
-  if (A.isReadonlyArrayEmpty(yield* uncoveredByCheckScript(packageDir, scripts, testSources))) {
+  const uncoveredByCheckScript3 = yield* uncoveredByCheckScript(packageDir, scripts, testSources);
+  if (A.isReadonlyArrayEmpty(uncoveredByCheckScript3)) {
     return O.none();
   }
 

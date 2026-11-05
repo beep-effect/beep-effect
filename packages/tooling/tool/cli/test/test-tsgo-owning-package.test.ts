@@ -27,7 +27,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("test-tsgo package owner
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped();
+      const root = yield* fs.realPath(madeTempDirectoryScoped);
       const repo = path.join(root, "repo");
       const pkg = path.join(repo, "packages", "a");
       yield* writePackage(repo, "root");
@@ -35,7 +36,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("test-tsgo package owner
       const owned = path.join(pkg, "test", "a.test.ts");
       const loose = path.join(repo, "test", "root.test.ts");
 
-      expect(yield* owners(repo, [owned, loose])).toEqual([
+      const owners1 = yield* owners(repo, [owned, loose]);
+      expect(owners1).toEqual([
         ["root", repo, [loose]],
         ["a", pkg, [owned]],
       ]);
@@ -46,7 +48,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("test-tsgo package owner
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const madeTempDirectoryScoped2 = yield* fs.makeTempDirectoryScoped();
+      const root = yield* fs.realPath(madeTempDirectoryScoped2);
       const repo = path.join(root, "repo");
       // `/…/repo-worktrees` starts with `/…/repo` as a string but is not inside it.
       const sibling = path.join(root, "repo-worktrees", "lane");
@@ -54,7 +57,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("test-tsgo package owner
       yield* writePackage(sibling, "foreign");
       const outside = path.join(sibling, "test", "outside.test.ts");
 
-      expect(yield* owners(repo, [outside])).toEqual([["root", repo, [outside]]]);
+      const owners3 = yield* owners(repo, [outside]);
+      expect(owners3).toEqual([["root", repo, [outside]]]);
     })
   );
 });

@@ -18,7 +18,8 @@ describe("Audience schema property floor", () => {
         const encoded = yield* S.encodeEffect(AudienceKind)(value);
         const decoded = yield* S.decodeEffect(AudienceKind)(encoded);
         assert.isTrue(S.toEquivalence(AudienceKind)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(AudienceKind)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(AudienceKind)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -30,7 +31,8 @@ describe("Audience schema property floor", () => {
         const encoded = yield* S.encodeEffect(AudienceSource)(value);
         const decoded = yield* S.decodeEffect(AudienceSource)(encoded);
         assert.isTrue(S.toEquivalence(AudienceSource)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(AudienceSource)(decoded), encoded);
+        const value2 = yield* S.encodeEffect(AudienceSource)(decoded);
+        assert.deepStrictEqual(value2, encoded);
       }),
     runs
   );

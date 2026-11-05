@@ -40,7 +40,7 @@ import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as ErrorReporter from "effect/ErrorReporter";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import * as Headers from "effect/http/Headers";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as Layer from "effect/Layer";
@@ -57,6 +57,8 @@ import { ToolHandlerPayload, translateApiKeyRequired } from "./ApiKeyRequired.ts
 import { CurrentMcpCaller, CurrentMcpDispatchAnchor, McpCallerIdentity } from "./McpCaller.ts";
 import type * as JsonSchema from "effect/JsonSchema";
 import type * as Tracer from "effect/Tracer";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 /**
  * Span attribute keys suppressed by default: the raw, undecoded tool call
@@ -361,7 +363,14 @@ type ToolHandlerResult = {
 };
 
 const textContent = (encoded: unknown): CallToolResult["content"] =>
-  encoded === undefined ? [] : [{ type: "text", text: JSON.stringify(encoded) }];
+  encoded === undefined
+    ? []
+    : [
+        {
+          type: "text",
+          text: Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(encoded), identity),
+        },
+      ];
 
 // Declared failures return their encoded payload; anything else is classified
 // by origin in `classifyToolFailure`. The `api_key_required` envelope is the
@@ -527,7 +536,8 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
       )
     )
   );
-  const services = omitRequestServices(yield* Effect.context<never>());
+  const context1 = yield* Effect.context<never>();
+  const services = omitRequestServices(context1);
   const internalToolError = makeInternalToolError(services);
   for (const tool of R.values<string, AiTool.Any>(built.tools)) {
     const schemas = yield* wireToolSchemas(tool);
@@ -540,7 +550,8 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
       // is looked up by tool name at runtime, so no narrower parameter type is
       // available here.
       handle: Effect.fn("McpKit.handle")(function* (payload) {
-        const requestServices = Context.add(services, CurrentMcpCaller, yield* readRequestCaller) as Context.Context<
+        const readRequestCaller2 = yield* readRequestCaller;
+        const requestServices = Context.add(services, CurrentMcpCaller, readRequestCaller2) as Context.Context<
           AiTool.HandlerServices<Tools[keyof Tools]>
         >;
         return yield* withSanitizedToolSpan(

@@ -13,6 +13,7 @@ export * from "./FallowAuditCache.ts";
 export * from "./GitExec.ts";
 export * from "./GitWorktree.ts";
 export * from "./JournalFile.ts";
+export * from "./PatientGit.ts";
 export * from "./ProcessAttachment.ts";
 export * from "./ProcessIdentity.ts";
 export * from "./ProcessTable.ts";

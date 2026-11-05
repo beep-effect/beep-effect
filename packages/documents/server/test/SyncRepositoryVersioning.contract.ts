@@ -102,7 +102,8 @@ export const staleSyncOperationAfterRequeue = Effect.fnUntraced(function* (repos
   const leased = yield* repository.update(DomainSyncOperation.SyncOperation.make({ ...enqueued, status: "leased" }));
   expect(leased.rowVersion).toBe(2);
 
-  expect(yield* repository.requeueLeased(RequeueLeasedSyncOperationsInput.make(mirror))).toBe(1);
+  const requeueLeased1 = yield* repository.requeueLeased(RequeueLeasedSyncOperationsInput.make(mirror));
+  expect(requeueLeased1).toBe(1);
   const requeued = yield* repository.listQueued(ListQueuedSyncOperationsInput.make(mirror));
   expect(A.map(requeued, (operation) => [operation.id, operation.rowVersion] as const)).toEqual([[leased.id, 3]]);
 
@@ -133,7 +134,8 @@ export const reviewAdvancesSyncConflictVersion = Effect.fnUntraced(function* (re
   expect(recorded.rowVersion).toBe(1);
   const reviewed = yield* repository.markReviewed(MarkSyncConflictReviewedInput.make({ conflictId: recorded.id }));
   expect([reviewed.resolutionStatus, reviewed.rowVersion]).toEqual(["reviewed", 2]);
-  expect(yield* repository.listOpen(ListOpenSyncConflictsInput.make(mirror))).toEqual([]);
+  const listOpen2 = yield* repository.listOpen(ListOpenSyncConflictsInput.make(mirror));
+  expect(listOpen2).toEqual([]);
 });
 
 /**

@@ -656,7 +656,8 @@ export const errnoCases: {
           const p = (...segments: ReadonlyArray<string>) => A.join([root, ...segments], "/");
           yield* seedTree(fs, p);
           const exit = yield* testCase.run(fs, p).pipe(Effect.exit);
-          assertOutcome(exit, resolveExpectation(testCase.expect, implementation, yield* HostProcessPlatform));
+          const HostProcessPlatform1 = yield* HostProcessPlatform;
+          assertOutcome(exit, resolveExpectation(testCase.expect, implementation, HostProcessPlatform1));
           if (testCase.check !== undefined && Exit.isSuccess(exit)) {
             yield* testCase.check(exit.value, fs, p);
           }

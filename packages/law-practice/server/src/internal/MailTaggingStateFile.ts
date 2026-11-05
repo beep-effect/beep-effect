@@ -81,7 +81,7 @@ export const makeStateFileAt = Effect.fn("MailTaggingState.makeStateFileAt")(fun
 
   const read = Effect.gen(function* () {
     const exists = yield* fs.exists(target);
-    return exists ? O.some(yield* fs.readFileString(target)) : O.none<string>();
+    return exists ? yield* Effect.asSome(fs.readFileString(target)) : O.none<string>();
   }).pipe(failing("read"));
 
   return {

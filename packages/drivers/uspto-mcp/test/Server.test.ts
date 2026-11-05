@@ -49,11 +49,13 @@ import * as McpServer from "effect/ai/McpServer";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import { identity } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -74,36 +76,42 @@ const ApplicationMetadataArray = S.Struct({
 }).pipe(S.Array, S.fromJsonString);
 const decodeApplicationMetadataArray = S.decodeEffect(ApplicationMetadataArray);
 
-const applicationEnvelope = JSON.stringify({
-  count: 1,
-  patentFileWrapperDataBag: [
-    {
-      applicationMetaData: {
-        applicationStatusDescriptionText: "Patented Case",
-        filingDate: "2018-09-21",
-        firstApplicantName: "Precision Widgets LLC",
-        firstInventorName: "Ada Lovelace",
-        grantDate: "2020-09-15",
-        inventionTitle: "Adjustable widget assembly",
-        patentNumber: "10772255",
+const applicationEnvelope = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    count: 1,
+    patentFileWrapperDataBag: [
+      {
+        applicationMetaData: {
+          applicationStatusDescriptionText: "Patented Case",
+          filingDate: "2018-09-21",
+          firstApplicantName: "Precision Widgets LLC",
+          firstInventorName: "Ada Lovelace",
+          grantDate: "2020-09-15",
+          inventionTitle: "Adjustable widget assembly",
+          patentNumber: "10772255",
+        },
+        applicationNumberText: "16138242",
       },
-      applicationNumberText: "16138242",
-    },
-  ],
-});
+    ],
+  }),
+  identity
+);
 
 const LARGE_DOCUMENT_COUNT = 200;
 
-const largeDocumentsEnvelope = JSON.stringify({
-  documentBag: Array.from({ length: LARGE_DOCUMENT_COUNT }, (_unused, index) => ({
-    documentCode: `CODE-${index}`,
-    documentCodeDescriptionText:
-      "A verbose, human-readable description of this file-wrapper document, repeated to simulate realistic USPTO ODP payload sizes for the field-tier reshaping proof.",
-    documentIdentifier: `DOC-${index}`,
-    downloadOptionBag: [{ downloadUrl: `https://api.uspto.gov/docs/DOC-${index}.pdf`, mimeTypeIdentifier: "PDF" }],
-    officialDate: "2018-09-21",
-  })),
-});
+const largeDocumentsEnvelope = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    documentBag: Array.from({ length: LARGE_DOCUMENT_COUNT }, (_unused, index) => ({
+      documentCode: `CODE-${index}`,
+      documentCodeDescriptionText:
+        "A verbose, human-readable description of this file-wrapper document, repeated to simulate realistic USPTO ODP payload sizes for the field-tier reshaping proof.",
+      documentIdentifier: `DOC-${index}`,
+      downloadOptionBag: [{ downloadUrl: `https://api.uspto.gov/docs/DOC-${index}.pdf`, mimeTypeIdentifier: "PDF" }],
+      officialDate: "2018-09-21",
+    })),
+  }),
+  identity
+);
 
 const respondWith = (body: string): Layer.Layer<HttpClient.HttpClient> =>
   Layer.succeed(
@@ -323,7 +331,8 @@ describe("uspto-mcp UTF-8 response budgets", () => {
           ),
         });
       const exact = projectDocumentsWithinBudget(documents, options(exactBytes));
-      assert.deepEqual(yield* encodeDocumentsProjectionOutput(exact), expected);
+      const encodedDocumentsProjectionOutput = yield* encodeDocumentsProjectionOutput(exact);
+      assert.deepEqual(encodedDocumentsProjectionOutput, expected);
       const tooSmall = projectDocumentsWithinBudget(documents, options(exactBytes - 1));
       assert.strictEqual(tooSmall._tag, "Fetchable");
       if (tooSmall._tag === "Fetchable") assert.strictEqual(tooSmall.handle.sizeBytes, exactBytes);
@@ -364,8 +373,10 @@ describe("uspto-mcp schema parity", () => {
 
       assert.isTrue(S.is(UsptoMcpFailure)(failure));
       assert.isTrue(S.is(DocumentsProjectionOutput)(projection));
-      assert.deepEqual(yield* encodeUsptoMcpFailure(failure), failureWire);
-      assert.deepEqual(yield* encodeDocumentsProjectionOutput(projection), projectionWire);
+      const encodedUsptoMcpFailure = yield* encodeUsptoMcpFailure(failure);
+      assert.deepEqual(encodedUsptoMcpFailure, failureWire);
+      const encodedDocumentsProjectionOutput1 = yield* encodeDocumentsProjectionOutput(projection);
+      assert.deepEqual(encodedDocumentsProjectionOutput1, projectionWire);
     })
   );
 
@@ -410,7 +421,8 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     [Arbitrary.schema(UsptoApplicationMetadata)],
     ([value]) =>
       Effect.gen(function* () {
-        assertTrue(yield* schemaDecodesToSelf(UsptoApplicationMetadata, value));
+        const schemaDecodesToSelf2 = yield* schemaDecodesToSelf(UsptoApplicationMetadata, value);
+        assertTrue(schemaDecodesToSelf2);
       }),
     { arbitrary: fcRuns(50) }
   );
@@ -420,7 +432,8 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     [Arbitrary.schema(UsptoApplicationMetadata)],
     ([value]) =>
       Effect.gen(function* () {
-        assertTrue(yield* schemaRoundTrips(UsptoApplicationMetadata, value));
+        const schemaRoundTrips3 = yield* schemaRoundTrips(UsptoApplicationMetadata, value);
+        assertTrue(schemaRoundTrips3);
       }),
     { arbitrary: fcRuns(20) }
   );
@@ -430,7 +443,8 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     [Arbitrary.schema(DocumentsProjectionOutput)],
     ([value]) =>
       Effect.gen(function* () {
-        assertTrue(yield* schemaDecodesToSelf(DocumentsProjectionOutput, value));
+        const schemaDecodesToSelf4 = yield* schemaDecodesToSelf(DocumentsProjectionOutput, value);
+        assertTrue(schemaDecodesToSelf4);
       }),
     { arbitrary: fcRuns(50) }
   );
@@ -440,7 +454,8 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     [Arbitrary.schema(DocumentsProjectionOutput)],
     ([value]) =>
       Effect.gen(function* () {
-        assertTrue(yield* schemaRoundTrips(DocumentsProjectionOutput, value));
+        const schemaRoundTrips5 = yield* schemaRoundTrips(DocumentsProjectionOutput, value);
+        assertTrue(schemaRoundTrips5);
       }),
     { arbitrary: fcRuns(20) }
   );
@@ -450,7 +465,8 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     [Arbitrary.schema(UsptoToolErrorReason)],
     ([value]) =>
       Effect.gen(function* () {
-        assertTrue(yield* schemaDecodesToSelf(UsptoToolErrorReason, value));
+        const schemaDecodesToSelf6 = yield* schemaDecodesToSelf(UsptoToolErrorReason, value);
+        assertTrue(schemaDecodesToSelf6);
       }),
     { arbitrary: fcRuns(50) }
   );
@@ -460,7 +476,8 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     [Arbitrary.schema(UsptoToolErrorReason)],
     ([value]) =>
       Effect.gen(function* () {
-        assertTrue(yield* schemaRoundTrips(UsptoToolErrorReason, value));
+        const schemaRoundTrips7 = yield* schemaRoundTrips(UsptoToolErrorReason, value);
+        assertTrue(schemaRoundTrips7);
       }),
     { arbitrary: fcRuns(20) }
   );
@@ -470,7 +487,8 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     [Arbitrary.schema(UsptoToolError)],
     ([value]) =>
       Effect.gen(function* () {
-        assertTrue(yield* schemaDecodesToSelf(UsptoToolError, value));
+        const schemaDecodesToSelf8 = yield* schemaDecodesToSelf(UsptoToolError, value);
+        assertTrue(schemaDecodesToSelf8);
       }),
     { arbitrary: fcRuns(50) }
   );
@@ -480,7 +498,8 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     [Arbitrary.schema(UsptoToolError)],
     ([value]) =>
       Effect.gen(function* () {
-        assertTrue(yield* schemaRoundTrips(UsptoToolError, value));
+        const schemaRoundTrips9 = yield* schemaRoundTrips(UsptoToolError, value);
+        assertTrue(schemaRoundTrips9);
       }),
     { arbitrary: fcRuns(20) }
   );
@@ -490,7 +509,8 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     [Arbitrary.schema(UsptoMcpFailure)],
     ([value]) =>
       Effect.gen(function* () {
-        assertTrue(yield* schemaRoundTrips(UsptoMcpFailure, value));
+        const schemaRoundTrips10 = yield* schemaRoundTrips(UsptoMcpFailure, value);
+        assertTrue(schemaRoundTrips10);
       }),
     { arbitrary: fcRuns(20) }
   );
@@ -500,7 +520,8 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     [Arbitrary.schema(UsptoSearchApplicationsParams)],
     ([value]) =>
       Effect.gen(function* () {
-        assertTrue(yield* schemaDecodesToSelf(UsptoSearchApplicationsParams, value));
+        const schemaDecodesToSelf11 = yield* schemaDecodesToSelf(UsptoSearchApplicationsParams, value);
+        assertTrue(schemaDecodesToSelf11);
       }),
     { arbitrary: fcRuns(50) }
   );
@@ -510,7 +531,8 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     [Arbitrary.schema(UsptoSearchApplicationsParams)],
     ([value]) =>
       Effect.gen(function* () {
-        assertTrue(yield* schemaRoundTrips(UsptoSearchApplicationsParams, value));
+        const schemaRoundTrips12 = yield* schemaRoundTrips(UsptoSearchApplicationsParams, value);
+        assertTrue(schemaRoundTrips12);
       }),
     { arbitrary: fcRuns(20) }
   );
@@ -520,7 +542,8 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     [Arbitrary.schema(UsptoGetDocumentsParams)],
     ([value]) =>
       Effect.gen(function* () {
-        assertTrue(yield* schemaDecodesToSelf(UsptoGetDocumentsParams, value));
+        const schemaDecodesToSelf13 = yield* schemaDecodesToSelf(UsptoGetDocumentsParams, value);
+        assertTrue(schemaDecodesToSelf13);
       }),
     { arbitrary: fcRuns(50) }
   );
@@ -530,7 +553,8 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     [Arbitrary.schema(UsptoGetDocumentsParams)],
     ([value]) =>
       Effect.gen(function* () {
-        assertTrue(yield* schemaRoundTrips(UsptoGetDocumentsParams, value));
+        const schemaRoundTrips14 = yield* schemaRoundTrips(UsptoGetDocumentsParams, value);
+        assertTrue(schemaRoundTrips14);
       }),
     { arbitrary: fcRuns(20) }
   );
@@ -540,7 +564,8 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     [Arbitrary.schema(UsptoMcpServerConfig)],
     ([value]) =>
       Effect.gen(function* () {
-        assertTrue(yield* schemaDecodesToSelf(UsptoMcpServerConfig, value));
+        const schemaDecodesToSelf15 = yield* schemaDecodesToSelf(UsptoMcpServerConfig, value);
+        assertTrue(schemaDecodesToSelf15);
       }),
     { arbitrary: fcRuns(50) }
   );
@@ -550,7 +575,8 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     [Arbitrary.schema(UsptoMcpServerConfig)],
     ([value]) =>
       Effect.gen(function* () {
-        assertTrue(yield* schemaRoundTrips(UsptoMcpServerConfig, value));
+        const schemaRoundTrips16 = yield* schemaRoundTrips(UsptoMcpServerConfig, value);
+        assertTrue(schemaRoundTrips16);
       }),
     { arbitrary: fcRuns(20) }
   );

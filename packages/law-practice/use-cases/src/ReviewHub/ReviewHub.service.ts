@@ -79,9 +79,10 @@ const makeReviewHub = (store: ReviewItemStoreShape, reviews: ReviewQueueShape, q
       return OpenItems.make({ items: A.filter(items, ({ itemId }) => HashSet.has(waiting, itemId)) });
     }, Effect.mapError(toolError)),
     recordAnswer: Effect.fn("ReviewHub.recordAnswer")(function* ({ itemId, answer }: RecordAnswerRequest) {
+      const list1 = yield* store.list;
       const item = yield* Effect.fromOption(
         pipe(
-          A.findFirst(yield* store.list, (stored) => stored.itemId === itemId),
+          A.findFirst(list1, (stored) => stored.itemId === itemId),
           O.filter(ReviewItem.guards.question)
         ),
         () => QuestionNotFoundError.make({ itemId })
@@ -130,6 +131,9 @@ const makeReviewHub = (store: ReviewItemStoreShape, reviews: ReviewQueueShape, q
 export const ReviewHubLive: Layer.Layer<ReviewHub, never, QuestionQueue | ReviewItemStore | ReviewQueue> = Layer.effect(
   ReviewHub,
   Effect.gen(function* () {
-    return makeReviewHub(yield* ReviewItemStore, yield* ReviewQueue, yield* QuestionQueue);
+    const ReviewItemStore2 = yield* ReviewItemStore;
+    const ReviewQueue3 = yield* ReviewQueue;
+    const QuestionQueue4 = yield* QuestionQueue;
+    return makeReviewHub(ReviewItemStore2, ReviewQueue3, QuestionQueue4);
   })
 );

@@ -16,7 +16,8 @@ describe("TerminalEnv schema property floor", () => {
         const encoded = yield* S.encodeEffect(StreamEnv)(value);
         const decoded = yield* S.decodeEffect(StreamEnv)(encoded);
         assert.isTrue(S.toEquivalence(StreamEnv)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(StreamEnv)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(StreamEnv)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

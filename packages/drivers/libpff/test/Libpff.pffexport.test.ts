@@ -328,7 +328,8 @@ describe("makePffexportFileProcessingEngine", { concurrent: false }, () => {
     Effect.fnUntraced(function* ([record]) {
       const json = yield* encodePffexportMessageRecordJson(record);
       const decoded = yield* decodeMessageRecord(json);
-      expect(yield* encodePffexportMessageRecordJson(decoded)).toBe(json);
+      const encodedPffexportMessageRecordJson = yield* encodePffexportMessageRecordJson(decoded);
+      expect(encodedPffexportMessageRecordJson).toBe(json);
     }),
     { arbitrary: fcRuns(25) }
   );
@@ -347,14 +348,16 @@ describe("makePffexportFileProcessingEngine", { concurrent: false }, () => {
         expect(result.warnings).toEqual([]);
         for (const child of result.children) {
           expect(S.is(PosixPath)(child.relativePath)).toBe(true);
-          expect(yield* fs.exists(path.join(exportRoot, child.relativePath))).toBe(true);
-          expect(yield* fs.realPath(path.join(exportRoot, child.relativePath))).toBe(
-            path.join(exportRoot, child.relativePath)
-          );
+          const exists1 = yield* fs.exists(path.join(exportRoot, child.relativePath));
+          expect(exists1).toBe(true);
+          const realPath2 = yield* fs.realPath(path.join(exportRoot, child.relativePath));
+          expect(realPath2).toBe(path.join(exportRoot, child.relativePath));
         }
         const item = path.join(exportRoot, `${operation.source.id}.export`, "folder%5Cpart", "Message00001");
-        expect(yield* fs.readFileString(path.join(item, "Attachments", "a%5Cb.pdf"))).toBe("original");
-        expect(yield* fs.readFileString(path.join(item, "Message.eml"))).toContain('filename="a\\\\b.pdf"');
+        const readFileString3 = yield* fs.readFileString(path.join(item, "Attachments", "a%5Cb.pdf"));
+        expect(readFileString3).toBe("original");
+        const readFileString4 = yield* fs.readFileString(path.join(item, "Message.eml"));
+        expect(readFileString4).toContain('filename="a\\\\b.pdf"');
       })
     );
 
@@ -376,8 +379,10 @@ describe("makePffexportFileProcessingEngine", { concurrent: false }, () => {
           "Message00001",
           "Attachments"
         );
-        expect(yield* fs.readFileString(path.join(root, "a\\b.pdf"))).toBe("original");
-        expect(yield* fs.readFileString(path.join(root, "a%5Cb.pdf"))).toBe("preserved");
+        const readFileString5 = yield* fs.readFileString(path.join(root, "a\\b.pdf"));
+        expect(readFileString5).toBe("original");
+        const readFileString6 = yield* fs.readFileString(path.join(root, "a%5Cb.pdf"));
+        expect(readFileString6).toBe("preserved");
       })
     );
   });
@@ -1151,25 +1156,25 @@ exec "$mapped_command" "\${mapped[@]}"`
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const { exportRoot, operation, stubPath } = yield* fixture(sleepingStub);
-          const engine = yield* makePffexportFileProcessingEngine(
-            yield* decodePffexportEngineConfig({
-              exportRoot,
-              pffexportPath: stubPath,
-              timeoutMillis: 250,
-            })
-          );
+          const decodedPffexportEngineConfig = yield* decodePffexportEngineConfig({
+            exportRoot,
+            pffexportPath: stubPath,
+            timeoutMillis: 250,
+          });
+          const engine = yield* makePffexportFileProcessingEngine(decodedPffexportEngineConfig);
 
           const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
 
           expect(error.reason).toBe("operation-timed-out");
           // Positive child observations prove the export started and handled
           // cancellation; the original late-write absence check remains below.
-          expect(yield* fs.readFileString(path.join(exportRoot, `${operation.source.id}.ready`))).toBe("ready");
-          expect(yield* fs.readFileString(path.join(exportRoot, `${operation.source.id}.cancelled`))).toBe(
-            "terminated"
-          );
+          const readFileString7 = yield* fs.readFileString(path.join(exportRoot, `${operation.source.id}.ready`));
+          expect(readFileString7).toBe("ready");
+          const readFileString8 = yield* fs.readFileString(path.join(exportRoot, `${operation.source.id}.cancelled`));
+          expect(readFileString8).toBe("terminated");
           yield* Effect.sleep("1250 millis");
-          expect(yield* fs.exists(path.join(exportRoot, `${operation.source.id}.late`))).toBe(false);
+          const exists9 = yield* fs.exists(path.join(exportRoot, `${operation.source.id}.late`));
+          expect(exists9).toBe(false);
         })
       );
     }
@@ -1253,7 +1258,8 @@ exec "$mapped_command" "\${mapped[@]}"`
         const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
 
         expect(error.reason).toBe("archive-export-failed");
-        expect(yield* fs.readDirectory(exportRoot)).toStrictEqual([]);
+        const readDirectory10 = yield* fs.readDirectory(exportRoot);
+        expect(readDirectory10).toStrictEqual([]);
       })
     );
   });
@@ -1304,7 +1310,8 @@ exec "$@"
         expect(error.reason).toBe("output-limit-exceeded");
         expect(sandboxArguments).toContain("--size\n1\n--tmpfs\n/output\n");
         expect(sandboxArguments).not.toContain(`${exportRoot}\n/output\n`);
-        expect(yield* fs.readDirectory(exportRoot)).toStrictEqual([]);
+        const readDirectory11 = yield* fs.readDirectory(exportRoot);
+        expect(readDirectory11).toStrictEqual([]);
       })
     );
   });
@@ -1364,8 +1371,10 @@ exec "$@"
 
         expect(firstResult.children.length).toBeGreaterThan(0);
         expect(secondResult.children.length).toBe(firstResult.children.length);
-        expect(yield* fs.exists(path.join(exportRoot, `${operation.source.id}.export`))).toBe(true);
-        expect(A.some(yield* fs.readDirectory(exportRoot), Str.startsWith(".pffexport-quota-"))).toBe(false);
+        const exists12 = yield* fs.exists(path.join(exportRoot, `${operation.source.id}.export`));
+        expect(exists12).toBe(true);
+        const readDirectory13 = yield* fs.readDirectory(exportRoot);
+        expect(A.some(readDirectory13, Str.startsWith(".pffexport-quota-"))).toBe(false);
       })
     );
   });
@@ -1418,11 +1427,14 @@ exec "$@"
         expect(result.children.length).toBe(5);
         for (const child of result.children) {
           expect(S.is(PosixPath)(child.relativePath)).toBe(true);
-          expect(yield* fs.exists(path.join(exportRoot, child.relativePath))).toBe(true);
+          const exists14 = yield* fs.exists(path.join(exportRoot, child.relativePath));
+          expect(exists14).toBe(true);
         }
         const escapedItem = path.join(exportRoot, `${operation.source.id}.export`, "folder%5Cpart", "Message00001");
-        expect(yield* fs.readFileString(path.join(escapedItem, "Attachments", "a%5Cb.pdf"))).toBe("original");
-        expect(yield* fs.readFileString(path.join(escapedItem, "Message.eml"))).toContain('filename="a\\\\b.pdf"');
+        const readFileString15 = yield* fs.readFileString(path.join(escapedItem, "Attachments", "a%5Cb.pdf"));
+        expect(readFileString15).toBe("original");
+        const readFileString16 = yield* fs.readFileString(path.join(escapedItem, "Message.eml"));
+        expect(readFileString16).toContain('filename="a\\\\b.pdf"');
         yield* fs.symlink("/etc/passwd", path.join(item, "Attachments", "unsafe\\link"));
         const unsafeEngine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({
@@ -1521,7 +1533,8 @@ exec "$@"
 
           expect(result.children.length).toBeGreaterThan(0);
           expect(A.some(result.children, (child) => pipe(child.relativePath, Str.includes("stale-junk")))).toBe(false);
-          expect(yield* fs.exists(path.join(exportRoot, `${operation.source.id}.claim`))).toBe(false);
+          const exists17 = yield* fs.exists(path.join(exportRoot, `${operation.source.id}.claim`));
+          expect(exists17).toBe(false);
         })
       );
     }

@@ -65,16 +65,20 @@ describe("GitHubRelease coverage", () => {
             (_id: number, _options?: object) => Effect.succeed([asset])
           ),
         });
-        assert.deepStrictEqual(yield* stub.create({ tag: "v1" }), release);
-        assert.deepStrictEqual(yield* stub.getByTag("v1"), release);
-        assertSome(yield* stub.getByTagOption("v1"), release);
-        assert.deepStrictEqual(yield* stub.list(), [release]);
-        assert.deepStrictEqual(yield* stub.update(1, {}), release);
-        assert.deepStrictEqual(
-          yield* stub.uploadAsset(release, { name: "a", data: "x", contentType: "text/plain" }),
-          asset
-        );
-        assert.deepStrictEqual(yield* stub.listAssets(1), [asset]);
+        const created = yield* stub.create({ tag: "v1" });
+        assert.deepStrictEqual(created, release);
+        const gotByTag = yield* stub.getByTag("v1");
+        assert.deepStrictEqual(gotByTag, release);
+        const gotByTagOption = yield* stub.getByTagOption("v1");
+        assertSome(gotByTagOption, release);
+        const list1 = yield* stub.list();
+        assert.deepStrictEqual(list1, [release]);
+        const update2 = yield* stub.update(1, {});
+        assert.deepStrictEqual(update2, release);
+        const uploadAsset3 = yield* stub.uploadAsset(release, { name: "a", data: "x", contentType: "text/plain" });
+        assert.deepStrictEqual(uploadAsset3, asset);
+        const listAssets4 = yield* stub.listAssets(1);
+        assert.deepStrictEqual(listAssets4, [asset]);
         const defaults = yield* GitHubRelease;
         assert.throws(() => defaults.list(), "GitHubRelease.makeTest: list()");
       })
@@ -101,18 +105,17 @@ describe("GitHubRelease coverage", () => {
     it.effect("projects releases and assets, forwards optional fields and pagination, and only swallows absence", () =>
       Effect.gen(function* () {
         const service = yield* GitHubRelease;
-        assert.deepStrictEqual(
-          yield* service.create({
-            tag: "v1",
-            name: "One",
-            body: "Notes",
-            draft: false,
-            prerelease: true,
-            generateReleaseNotes: false,
-          }),
-          release
-        );
-        assert.deepStrictEqual(yield* bodyAt(0), {
+        const created5 = yield* service.create({
+          tag: "v1",
+          name: "One",
+          body: "Notes",
+          draft: false,
+          prerelease: true,
+          generateReleaseNotes: false,
+        });
+        assert.deepStrictEqual(created5, release);
+        const bodyAt6 = yield* bodyAt(0);
+        assert.deepStrictEqual(bodyAt6, {
           tag_name: "v1",
           name: "One",
           body: "Notes",
@@ -123,49 +126,55 @@ describe("GitHubRelease coverage", () => {
         const minimal = yield* service.create({ tag: "v1" });
         assert.strictEqual(minimal.name, "");
         assert.strictEqual(minimal.body, "");
-        assert.deepStrictEqual(yield* bodyAt(1), { tag_name: "v1" });
-        assertSome(yield* service.getByTagOption("v1"), release);
-        assertNone(yield* service.getByTagOption("absent"));
+        const bodyAt7 = yield* bodyAt(1);
+        assert.deepStrictEqual(bodyAt7, { tag_name: "v1" });
+        const gotByTagOption8 = yield* service.getByTagOption("v1");
+        assertSome(gotByTagOption8, release);
+        const gotByTagOption9 = yield* service.getByTagOption("absent");
+        assertNone(gotByTagOption9);
+        const result10 = yield* Effect.result(service.getByTagOption("private"));
         assertFailure(
-          Result.mapError(yield* Effect.result(service.getByTagOption("private")), (error) => error.kind),
+          Result.mapError(result10, (error) => error.kind),
           "unauthorized"
         );
-        assert.deepStrictEqual(yield* service.list(), [release]);
-        assert.deepStrictEqual(yield* service.list({ page: PageOptions.make({ perPage: 7, maxPages: 1 }) }), [release]);
+        const list11 = yield* service.list();
+        assert.deepStrictEqual(list11, [release]);
+        const list12 = yield* service.list({ page: PageOptions.make({ perPage: 7, maxPages: 1 }) });
+        assert.deepStrictEqual(list12, [release]);
         assert.strictEqual(script.queryOf(6).get("per_page"), "7");
-        assert.deepStrictEqual(
-          yield* service.update(1, { name: "One", body: "Notes", draft: false, prerelease: true }),
-          release
-        );
-        assert.deepStrictEqual(yield* bodyAt(7), {
+        const update13 = yield* service.update(1, { name: "One", body: "Notes", draft: false, prerelease: true });
+        assert.deepStrictEqual(update13, release);
+        const bodyAt14 = yield* bodyAt(7);
+        assert.deepStrictEqual(bodyAt14, {
           name: "One",
           body: "Notes",
           draft: false,
           prerelease: true,
         });
         assert.strictEqual((yield* service.update(1, {})).body, "");
-        assert.deepStrictEqual(yield* bodyAt(8), {});
-        assert.deepStrictEqual(
-          yield* service.uploadAsset(release, { name: "a.zip", data: "abc", contentType: "text/plain" }),
-          asset
-        );
-        assert.deepStrictEqual(
-          yield* service.uploadAsset(release, {
-            name: "a.zip",
-            data: new Uint8Array([1, 2, 3]),
-            contentType: "application/zip",
-            label: "Archive",
-          }),
-          asset
-        );
+        const bodyAt15 = yield* bodyAt(8);
+        assert.deepStrictEqual(bodyAt15, {});
+        const uploadAsset16 = yield* service.uploadAsset(release, {
+          name: "a.zip",
+          data: "abc",
+          contentType: "text/plain",
+        });
+        assert.deepStrictEqual(uploadAsset16, asset);
+        const uploadAsset17 = yield* service.uploadAsset(release, {
+          name: "a.zip",
+          data: new Uint8Array([1, 2, 3]),
+          contentType: "application/zip",
+          label: "Archive",
+        });
+        assert.deepStrictEqual(uploadAsset17, asset);
         assert.strictEqual(script.queryOf(9).get("name"), "a.zip");
         assert.strictEqual(script.queryOf(9).has("label"), false);
         assert.strictEqual(script.queryOf(10).get("label"), "Archive");
         assert.strictEqual(new URL(script.calls[9]?.url ?? "https://invalid").host, "uploads.github.com");
-        assert.deepStrictEqual(yield* service.listAssets(1), [asset]);
-        assert.deepStrictEqual(yield* service.listAssets(1, { page: PageOptions.make({ perPage: 9, maxPages: 1 }) }), [
-          asset,
-        ]);
+        const listAssets18 = yield* service.listAssets(1);
+        assert.deepStrictEqual(listAssets18, [asset]);
+        const listAssets19 = yield* service.listAssets(1, { page: PageOptions.make({ perPage: 9, maxPages: 1 }) });
+        assert.deepStrictEqual(listAssets19, [asset]);
         assert.strictEqual(script.queryOf(12).get("per_page"), "9");
       })
     );
@@ -191,40 +200,45 @@ for (const [field, value] of [
     it.effect(`returns operation-specific release decode failures for invalid ${field}=${value}`, () =>
       Effect.gen(function* () {
         const service = yield* GitHubRelease;
+        const result20 = yield* Effect.result(service.getByTag("v1"));
         assertFailure(
-          Result.mapError(yield* Effect.result(service.getByTag("v1")), (error) => ({
+          Result.mapError(result20, (error) => ({
             tag: error._tag,
             kind: error.kind,
             operation: error.operation,
           })),
           { tag: "GitHubError", kind: "decode", operation: "GitHubRelease.getByTag" }
         );
+        const result21 = yield* Effect.result(service.create({ tag: "v1" }));
         assertFailure(
-          Result.mapError(yield* Effect.result(service.create({ tag: "v1" })), (error) => ({
+          Result.mapError(result21, (error) => ({
             tag: error._tag,
             kind: error.kind,
             operation: error.operation,
           })),
           { tag: "GitHubError", kind: "decode", operation: "GitHubRelease.create" }
         );
+        const result22 = yield* Effect.result(service.list());
         assertFailure(
-          Result.mapError(yield* Effect.result(service.list()), (error) => ({
+          Result.mapError(result22, (error) => ({
             tag: error._tag,
             kind: error.kind,
             operation: error.operation,
           })),
           { tag: "GitHubError", kind: "decode", operation: "GitHubRelease.list" }
         );
+        const result23 = yield* Effect.result(service.update(1, {}));
         assertFailure(
-          Result.mapError(yield* Effect.result(service.update(1, {})), (error) => ({
+          Result.mapError(result23, (error) => ({
             tag: error._tag,
             kind: error.kind,
             operation: error.operation,
           })),
           { tag: "GitHubError", kind: "decode", operation: "GitHubRelease.update" }
         );
+        const result24 = yield* Effect.result(service.getByTagOption("v1"));
         assertFailure(
-          Result.mapError(yield* Effect.result(service.getByTagOption("v1")), (error) => ({
+          Result.mapError(result24, (error) => ({
             tag: error._tag,
             kind: error.kind,
             operation: error.operation,
@@ -242,8 +256,9 @@ for (const size of [1.5, "3", null]) {
     it.effect(`returns a typed asset decode failure for invalid size=${size}`, () =>
       Effect.gen(function* () {
         const service = yield* GitHubRelease;
+        const result25 = yield* Effect.result(service.listAssets(1));
         assertFailure(
-          Result.mapError(yield* Effect.result(service.listAssets(1)), (error) => ({
+          Result.mapError(result25, (error) => ({
             tag: error._tag,
             kind: error.kind,
             operation: error.operation,

@@ -80,6 +80,7 @@ const isolatedSuites = [
   "test/package-verify.test.ts",
   "test/process-identity.test.ts",
   "test/proof-job.test.ts",
+  "test/qa-doctor.test.ts",
   "test/quality-command-dispatch.test.ts",
   "test/quality-tasks.test.ts",
   "test/reflection-lint.test.ts",

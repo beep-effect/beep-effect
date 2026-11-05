@@ -43,7 +43,8 @@ describe("Cuid", () => {
       [arbitrary],
       Effect.fnUntraced(function* ([id]) {
         expect(S.is(Cuid)(id)).toBe(true);
-        expect(yield* encodeCuidEffect(id)).toBe(id);
+        const encodedCuidEffect = yield* encodeCuidEffect(id);
+        expect(encodedCuidEffect).toBe(id);
 
         return true;
       }),
@@ -62,7 +63,8 @@ describe("Cuid", () => {
         fingerprint: "beep",
       });
 
-      expect(yield* encodeCuidSeedEffect(seed)).toEqual({
+      const encodedCuidSeedEffect = yield* encodeCuidSeedEffect(seed);
+      expect(encodedCuidSeedEffect).toEqual({
         timestamp: 1,
         counter: 0,
         random,

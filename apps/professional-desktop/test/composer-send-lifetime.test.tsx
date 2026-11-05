@@ -81,7 +81,8 @@ describe("chat composer send lifetime", { concurrent: false }, () => {
       yield* Effect.promise(() => screen.findByText("hello"));
       fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
-      expect(yield* Effect.promise(() => screen.findByText(/not connected to a conversation/i))).toBeInTheDocument();
+      const promise1 = yield* Effect.promise(() => screen.findByText(/not connected to a conversation/i));
+      expect(promise1).toBeInTheDocument();
       unmount();
     })
   );

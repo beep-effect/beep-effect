@@ -56,6 +56,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
@@ -63,6 +64,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { SkillMigrationRow, VendoredMigrationRow } from "@beep/repo-cli/commands/Skills";
@@ -92,7 +94,8 @@ const readFixtureText = Effect.fn("SkillsProvenanceTest.readFixtureText")(functi
 });
 
 const readFixtureBinary = Effect.fn("SkillsProvenanceTest.readFixtureBinary")(function* (relativePath: string) {
-  const encoded = Str.trim(yield* readFixtureText(relativePath));
+  const readFixtureText1 = yield* readFixtureText(relativePath);
+  const encoded = Str.trim(readFixtureText1);
   return yield* Effect.fromResult(Hex.decode(encoded));
 });
 
@@ -118,7 +121,8 @@ const linkAgentsTarget = Effect.fn("SkillsProvenanceTest.linkAgentsTarget")(func
 const makeStubSource = Effect.fn("SkillsProvenanceTest.makeStubSource")(function* (
   files: ReadonlyArray<SkillUpstreamContentFile>
 ) {
-  const licenseBytes = textEncoder.encode(yield* readFixtureText("shadcn/LICENSE.md"));
+  const readFixtureText2 = yield* readFixtureText("shadcn/LICENSE.md");
+  const licenseBytes = textEncoder.encode(readFixtureText2);
 
   return SkillUpstreamContentSource.of({
     load: Effect.fn("SkillsProvenanceTest.stubSource.load")(() =>
@@ -132,7 +136,8 @@ const makeFixtureSource = Effect.fn("SkillsProvenanceTest.makeFixtureSource")(fu
   const skillText = yield* readFixtureText("shadcn/upstream/SKILL.md");
   const compositionText = yield* readFixtureText("shadcn/upstream/rules/composition.md");
   const pngBytes = yield* readFixtureBinary("shadcn/upstream/assets/example.png.hex");
-  const licenseBytes = textEncoder.encode(yield* readFixtureText("shadcn/LICENSE.md"));
+  const readFixtureText3 = yield* readFixtureText("shadcn/LICENSE.md");
+  const licenseBytes = textEncoder.encode(readFixtureText3);
 
   return SkillUpstreamContentSource.of({
     load: Effect.fn("SkillsProvenanceTest.fixtureSource.load")((resolution) => {
@@ -168,7 +173,8 @@ const makeFixtureSource = Effect.fn("SkillsProvenanceTest.makeFixtureSource")(fu
 layer(TestLayer)("skills-lock/v2 schemas", (it) => {
   it.effect("round-trips every lock block and the complete document", () =>
     Effect.gen(function* () {
-      const fixture = Str.trimEnd(yield* readFixtureText("oracle-lock-v2.json"));
+      const readFixtureText4 = yield* readFixtureText("oracle-lock-v2.json");
+      const fixture = Str.trimEnd(readFixtureText4);
       const document = yield* decodeSkillsLockDocumentJson(fixture);
       const entry = document.skills.oracle;
 
@@ -177,28 +183,44 @@ layer(TestLayer)("skills-lock/v2 schemas", (it) => {
         return;
       }
 
-      expect(yield* decodeSkillUpstream(yield* encodeSkillUpstream(entry.upstream))).toEqual(entry.upstream);
-      expect(yield* decodeSkillSnapshot(yield* encodeSkillSnapshot(entry.snapshot))).toEqual(entry.snapshot);
-      expect(yield* decodeSkillSnapshotFile(yield* encodeSkillSnapshotFile(entry.snapshot.manifest[0]))).toEqual(
-        entry.snapshot.manifest[0]
-      );
-      expect(yield* decodeSkillLicense(yield* encodeSkillLicense(entry.license))).toEqual(entry.license);
-      expect(yield* decodeSkillProvenance(yield* encodeSkillProvenance(entry.provenance))).toEqual(entry.provenance);
-      expect(yield* decodeSkillPatches(yield* encodeSkillPatches(entry.patches))).toEqual(entry.patches);
-      expect(yield* decodeSkillPatch(yield* encodeSkillPatch(entry.patches.series[0]))).toEqual(
-        entry.patches.series[0]
-      );
-      expect(yield* decodeSkillEffective(yield* encodeSkillEffective(entry.effective))).toEqual(entry.effective);
-      expect(
-        yield* S.decodeEffect(VendoredSkillLockEntry)(yield* S.encodeEffect(VendoredSkillLockEntry)(entry))
-      ).toEqual(entry);
-      expect(yield* decodeSkillsLockDocumentJson(yield* encodeSkillsLockDocumentJson(document))).toEqual(document);
+      const encodedSkillUpstream = yield* encodeSkillUpstream(entry.upstream);
+      const decodedSkillUpstream = yield* decodeSkillUpstream(encodedSkillUpstream);
+      expect(decodedSkillUpstream).toEqual(entry.upstream);
+      const encodedSkillSnapshot = yield* encodeSkillSnapshot(entry.snapshot);
+      const decodedSkillSnapshot = yield* decodeSkillSnapshot(encodedSkillSnapshot);
+      expect(decodedSkillSnapshot).toEqual(entry.snapshot);
+      const encodedSkillSnapshotFile = yield* encodeSkillSnapshotFile(entry.snapshot.manifest[0]);
+      const decodedSkillSnapshotFile = yield* decodeSkillSnapshotFile(encodedSkillSnapshotFile);
+      expect(decodedSkillSnapshotFile).toEqual(entry.snapshot.manifest[0]);
+      const encodedSkillLicense = yield* encodeSkillLicense(entry.license);
+      const decodedSkillLicense = yield* decodeSkillLicense(encodedSkillLicense);
+      expect(decodedSkillLicense).toEqual(entry.license);
+      const encodedSkillProvenance = yield* encodeSkillProvenance(entry.provenance);
+      const decodedSkillProvenance = yield* decodeSkillProvenance(encodedSkillProvenance);
+      expect(decodedSkillProvenance).toEqual(entry.provenance);
+      const encodedSkillPatches = yield* encodeSkillPatches(entry.patches);
+      const decodedSkillPatches = yield* decodeSkillPatches(encodedSkillPatches);
+      expect(decodedSkillPatches).toEqual(entry.patches);
+      const encodedSkillPatch = yield* encodeSkillPatch(entry.patches.series[0]);
+      const decodedSkillPatch = yield* decodeSkillPatch(encodedSkillPatch);
+      expect(decodedSkillPatch).toEqual(entry.patches.series[0]);
+      const encodedSkillEffective = yield* encodeSkillEffective(entry.effective);
+      const decodedSkillEffective = yield* decodeSkillEffective(encodedSkillEffective);
+      expect(decodedSkillEffective).toEqual(entry.effective);
+      const argument = S.decodeEffect(VendoredSkillLockEntry);
+      const value1 = yield* S.encodeEffect(VendoredSkillLockEntry)(entry);
+      const value5 = yield* argument(value1);
+      expect(value5).toEqual(entry);
+      const encodedSkillsLockDocumentJson34 = yield* encodeSkillsLockDocumentJson(document);
+      const decodedSkillsLockDocumentJson = yield* decodeSkillsLockDocumentJson(encodedSkillsLockDocumentJson34);
+      expect(decodedSkillsLockDocumentJson).toEqual(document);
     })
   );
 
   it.effect("preserves oracle's inferred medium-confidence d6e773a representation byte-identically", () =>
     Effect.gen(function* () {
-      const fixture = Str.trimEnd(yield* readFixtureText("oracle-lock-v2.json"));
+      const readFixtureText6 = yield* readFixtureText("oracle-lock-v2.json");
+      const fixture = Str.trimEnd(readFixtureText6);
       const document = yield* decodeSkillsLockDocumentJson(fixture);
       const entry = document.skills.oracle;
 
@@ -213,7 +235,8 @@ layer(TestLayer)("skills-lock/v2 schemas", (it) => {
       expect(Str.startsWith("d6e773a")(entry.upstream.sourceRevision)).toBe(true);
       const encoded = yield* encodeSkillsLockDocumentJson(document);
       const decodedAgain = yield* decodeSkillsLockDocumentJson(encoded);
-      expect(yield* encodeSkillsLockDocumentJson(decodedAgain)).toBe(encoded);
+      const encodedSkillsLockDocumentJson = yield* encodeSkillsLockDocumentJson(decodedAgain);
+      expect(encodedSkillsLockDocumentJson).toBe(encoded);
     })
   );
 });
@@ -238,7 +261,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills resolution seeds", (it) => {
           "medium",
         ]);
       }
-      assertNone(yield* findSkillResolutionSeed("yeet"));
+      const foundSkillResolutionSeed = yield* findSkillResolutionSeed("yeet");
+      assertNone(foundSkillResolutionSeed);
     })
   );
 
@@ -270,8 +294,8 @@ const REVISION_2 = "2222222222222222222222222222222222222222";
 const REVISION_3 = "3333333333333333333333333333333333333333";
 const REVISION_4 = "4444444444444444444444444444444444444444";
 
-const SKILLS_LOCK_V1_FIXTURE = `${JSON.stringify(
-  {
+const SKILLS_LOCK_V1_FIXTURE = `${Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))({
     version: 1,
     skills: {
       yeet: { source: "beep-effect/beep-effect", sourceType: "local", computedHash: Str.repeat(64)("0") },
@@ -284,9 +308,8 @@ const SKILLS_LOCK_V1_FIXTURE = `${JSON.stringify(
       },
       adhd: { source: "someone/adhd", sourceType: "github", computedHash: Str.repeat(64)("0"), ref: "main" },
     },
-  },
-  null,
-  2
+  }),
+  identity
 )}\n`;
 
 /** One upstream tree the fake source serves: the three shadcn fixture files, varied by text. */
@@ -386,14 +409,22 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock migration plan", (it) =
     // prototype while decoding yields plain objects, so toStrictEqual would compare
     // prototypes, not data.
     Effect.fnUntraced(function* ([entry, drift, pin, window]) {
-      expect(yield* S.decodeEffect(LocalSkillLockEntry)(yield* S.encodeEffect(LocalSkillLockEntry)(entry))).toEqual(
-        entry
-      );
-      expect(yield* S.decodeEffect(SkillDriftRow)(yield* S.encodeEffect(SkillDriftRow)(drift))).toEqual(drift);
-      expect(yield* S.decodeEffect(SkillPinProposal)(yield* S.encodeEffect(SkillPinProposal)(pin))).toEqual(pin);
-      expect(
-        yield* S.decodeEffect(SkillPathHistoryWindow)(yield* S.encodeEffect(SkillPathHistoryWindow)(window))
-      ).toEqual(window);
+      const argument1 = S.decodeEffect(LocalSkillLockEntry);
+      const value2 = yield* S.encodeEffect(LocalSkillLockEntry)(entry);
+      const value7 = yield* argument1(value2);
+      expect(value7).toEqual(entry);
+      const argument2 = S.decodeEffect(SkillDriftRow);
+      const value3 = yield* S.encodeEffect(SkillDriftRow)(drift);
+      const value8 = yield* argument2(value3);
+      expect(value8).toEqual(drift);
+      const argument3 = S.decodeEffect(SkillPinProposal);
+      const value4 = yield* S.encodeEffect(SkillPinProposal)(pin);
+      const value9 = yield* argument3(value4);
+      expect(value9).toEqual(pin);
+      const argument4 = S.decodeEffect(SkillPathHistoryWindow);
+      const value6 = yield* S.encodeEffect(SkillPathHistoryWindow)(window);
+      const value10 = yield* argument4(value6);
+      expect(value10).toEqual(window);
     }),
     { arbitrary: { runs: 32 } }
   );
@@ -455,7 +486,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock migration plan", (it) =
         expect(shadcn.value.entry.effective.treeHash).toBe(shadcn.value.entry.snapshot.treeHash);
       }
       expect(renderSkillsLockMigrationPlanSummary(plan)).toContain("pristine at 2222222222 (proposed pin)");
-      expect(yield* fs.readFileString(path.join(repoRoot, "skills-lock.json"))).toBe(SKILLS_LOCK_V1_FIXTURE);
+      const readFileString11 = yield* fs.readFileString(path.join(repoRoot, "skills-lock.json"));
+      expect(readFileString11).toBe(SKILLS_LOCK_V1_FIXTURE);
     })
   );
 
@@ -531,10 +563,9 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock migration plan", (it) =
 
       expect(replayed.planDigest).toBe(reviewed.planDigest);
       expect(moved.planDigest).not.toBe(reviewed.planDigest);
-      assertSome(
-        O.map(vendoredRowOf(moved.rows, "shadcn"), (row) => row.pathHistory.head),
-        yield* S.decodeEffect(SkillGitRevision)(REVISION_4)
-      );
+      const argument5 = O.map(vendoredRowOf(moved.rows, "shadcn"), (row) => row.pathHistory.head);
+      const value11 = yield* S.decodeEffect(SkillGitRevision)(REVISION_4);
+      assertSome(argument5, value11);
       expect(renderSkillsLockMigrationPlanSummary(reviewed)).toContain(`plan-digest: ${reviewed.planDigest}`);
     })
   );
@@ -774,8 +805,10 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock write", (it) => {
           Effect.flip
         );
 
-      expect(refusalReason(yield* write(O.none()))).toBe("missing-expect");
-      expect(refusalReason(yield* write(O.some(Str.repeat(64)("0"))))).toBe("digest-mismatch");
+      const write12 = yield* write(O.none());
+      expect(refusalReason(write12)).toBe("missing-expect");
+      const write13 = yield* write(O.some(Str.repeat(64)("0")));
+      expect(refusalReason(write13)).toBe("digest-mismatch");
 
       // A license that moved makes the seeded row unresolved, which a write cannot settle.
       const texts = yield* fixtureTexts();
@@ -795,8 +828,10 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock write", (it) => {
       expect(refusalReason(refusal)).toBe("conflicted-plan");
       expect(refusal.message).toContain("shadcn (provenance-unavailable");
 
-      expect(yield* fs.readFileString(path.join(repoRoot, "skills-lock.json"))).toBe(SKILLS_LOCK_V1_FIXTURE);
-      expect(yield* fs.exists(path.join(repoRoot, ".agents/skill-patches"))).toBe(false);
+      const readFileString14 = yield* fs.readFileString(path.join(repoRoot, "skills-lock.json"));
+      expect(readFileString14).toBe(SKILLS_LOCK_V1_FIXTURE);
+      const exists15 = yield* fs.exists(path.join(repoRoot, ".agents/skill-patches"));
+      expect(exists15).toBe(false);
     })
   );
 
@@ -817,7 +852,9 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock write", (it) => {
       expect(A.map(receipt.patches, (patch) => patch.path)).toEqual([patchPath]);
 
       const lockText = yield* fs.readFileString(path.join(repoRoot, "skills-lock.json"));
-      expect(receipt.lock.sha256).toBe(yield* hashBytes(textEncoder.encode(lockText)));
+      const expectation = expect(receipt.lock.sha256);
+      const hashBytes12 = yield* hashBytes(textEncoder.encode(lockText));
+      expectation.toBe(hashBytes12);
       const lock = yield* decodeSkillsLockDocumentJson(lockText);
       expect(A.map(R.toEntries(lock.skills), ([skill, entry]) => [skill, entry._tag])).toEqual([
         ["adhd", "local"],
@@ -857,12 +894,13 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock write", (it) => {
           "\n"
         )
       );
-      expect(receipt.patches[0]?.sha256).toBe(yield* hashBytes(textEncoder.encode(patchText)));
-      expect(A.sort(yield* fs.readDirectory(path.join(repoRoot, ".agents")), Str.Order)).toEqual([
-        "skill-patches",
-        "skills",
-      ]);
-      expect(A.filter(yield* fs.readDirectory(repoRoot), Str.startsWith("skills-lock.json."))).toEqual([]);
+      const expectation1 = expect(receipt.patches[0]?.sha256);
+      const hashBytes13 = yield* hashBytes(textEncoder.encode(patchText));
+      expectation1.toBe(hashBytes13);
+      const readDirectory16 = yield* fs.readDirectory(path.join(repoRoot, ".agents"));
+      expect(A.sort(readDirectory16, Str.Order)).toEqual(["skill-patches", "skills"]);
+      const readDirectory17 = yield* fs.readDirectory(repoRoot);
+      expect(A.filter(readDirectory17, Str.startsWith("skills-lock.json."))).toEqual([]);
 
       // The lock moved, so the reviewed digest no longer matches; the replanned digest is a no-op.
       const replanned = yield* planSkillsLockMigration(repoRoot).pipe(provide);
@@ -874,7 +912,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock write", (it) => {
       expect(replay.lock).toEqual(receipt.lock);
       expect(replay.patches).toEqual(receipt.patches);
       expect((yield* planSkillsLockMigration(repoRoot).pipe(provide)).planDigest).toBe(replanned.planDigest);
-      expect(yield* fs.readFileString(path.join(repoRoot, "skills-lock.json"))).toBe(lockText);
+      const readFileString18 = yield* fs.readFileString(path.join(repoRoot, "skills-lock.json"));
+      expect(readFileString18).toBe(lockText);
     })
   );
 
@@ -895,7 +934,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock write", (it) => {
       expect(A.map(receipt.patches, (patch) => patch.path)).toEqual([
         ".agents/skill-patches/shadcn/0001-skill-md.patch",
       ]);
-      expect(yield* fs.readFileString(ledgerPath)).toBe("ledger bytes\n");
+      const readFileString19 = yield* fs.readFileString(ledgerPath);
+      expect(readFileString19).toBe("ledger bytes\n");
 
       const replanned = yield* planSkillsLockMigration(repoRoot).pipe(provide);
       const replay = yield* writeSkillsLockMigration(repoRoot, O.some(replanned.planDigest)).pipe(provide);
@@ -936,13 +976,14 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock write", (it) => {
       );
 
       expect(error.message).toContain("Failed to publish skills-lock.json");
-      expect(yield* fs.readFileString(lockPath)).toBe(SKILLS_LOCK_V1_FIXTURE);
-      expect(yield* fs.readDirectory(path.join(repoRoot, ".agents/skill-patches/shadcn"))).toEqual(["0001-old.patch"]);
-      expect(A.sort(yield* fs.readDirectory(path.join(repoRoot, ".agents")), Str.Order)).toEqual([
-        "skill-patches",
-        "skills",
-      ]);
-      expect(A.filter(yield* fs.readDirectory(repoRoot), Str.startsWith("skills-lock.json."))).toEqual([]);
+      const readFileString20 = yield* fs.readFileString(lockPath);
+      expect(readFileString20).toBe(SKILLS_LOCK_V1_FIXTURE);
+      const readDirectory21 = yield* fs.readDirectory(path.join(repoRoot, ".agents/skill-patches/shadcn"));
+      expect(readDirectory21).toEqual(["0001-old.patch"]);
+      const readDirectory22 = yield* fs.readDirectory(path.join(repoRoot, ".agents"));
+      expect(A.sort(readDirectory22, Str.Order)).toEqual(["skill-patches", "skills"]);
+      const readDirectory23 = yield* fs.readDirectory(repoRoot);
+      expect(A.filter(readDirectory23, Str.startsWith("skills-lock.json."))).toEqual([]);
     })
   );
 
@@ -978,8 +1019,10 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock write", (it) => {
       );
 
       expect(error.message).toContain("Failed to publish skills-lock.json");
-      expect(yield* fs.readFileString(lockPath)).toBe(SKILLS_LOCK_V1_FIXTURE);
-      expect(yield* fs.exists(path.join(repoRoot, ".agents/skill-patches"))).toBe(false);
+      const readFileString24 = yield* fs.readFileString(lockPath);
+      expect(readFileString24).toBe(SKILLS_LOCK_V1_FIXTURE);
+      const exists25 = yield* fs.exists(path.join(repoRoot, ".agents/skill-patches"));
+      expect(exists25).toBe(false);
     })
   );
 
@@ -996,7 +1039,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock write", (it) => {
       // and its install moves to where that key resolves, so planning reaches the patch builder.
       const unsafeKey = "../../outside";
       const lockPath = path.join(repoRoot, "skills-lock.json");
-      const lock = yield* decodeSkillsLockDocumentJson(yield* fs.readFileString(lockPath));
+      const readFileString26 = yield* fs.readFileString(lockPath);
+      const lock = yield* decodeSkillsLockDocumentJson(readFileString26);
       const shadcn = lock.skills.shadcn;
       assertTrue(shadcn !== undefined);
       const edited = SkillsLockDocument.make({
@@ -1018,9 +1062,12 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock write", (it) => {
         note: `provenance-unavailable: Skill key "${unsafeKey}" is not a single safe path segment; refusing to place its patches.`,
       });
       expect(refusalReason(refusal)).toBe("conflicted-plan");
-      expect(yield* fs.readFileString(lockPath)).toBe(lockBefore);
-      expect(yield* fs.readDirectory(path.join(repoRoot, ".agents/skill-patches"))).toEqual(["shadcn"]);
-      expect(A.sort(yield* fs.readDirectory(escaped), Str.Order)).toEqual(["SKILL.md", "assets", "rules"]);
+      const readFileString27 = yield* fs.readFileString(lockPath);
+      expect(readFileString27).toBe(lockBefore);
+      const readDirectory28 = yield* fs.readDirectory(path.join(repoRoot, ".agents/skill-patches"));
+      expect(readDirectory28).toEqual(["shadcn"]);
+      const readDirectory29 = yield* fs.readDirectory(escaped);
+      expect(A.sort(readDirectory29, Str.Order)).toEqual(["SKILL.md", "assets", "rules"]);
     })
   );
 
@@ -1148,8 +1195,10 @@ layer(TestLayer, { timeout: "60 seconds" })("skills provenance service", (it) =>
       expect(report.entry.effective.installedTargets).toEqual([".claude/skills/shadcn", ".agents/skills/shadcn"]);
       expect(report.entry.effective.installedTreeHash).toHaveLength(64);
       expect(report.entry.effective.treeHash).not.toBe(report.entry.snapshot.treeHash);
-      expect(yield* fs.exists(path.join(repoRoot, "skills-lock.json"))).toBe(false);
-      expect(yield* fs.exists(path.join(repoRoot, ".agents/skill-patches"))).toBe(false);
+      const exists30 = yield* fs.exists(path.join(repoRoot, "skills-lock.json"));
+      expect(exists30).toBe(false);
+      const exists31 = yield* fs.exists(path.join(repoRoot, ".agents/skill-patches"));
+      expect(exists31).toBe(false);
     })
   );
 
@@ -1239,8 +1288,12 @@ layer(TestLayer, { timeout: "60 seconds" })("skills provenance service", (it) =>
         ".agents/skill-patches/shadcn/0001-added-empty-md.patch",
         ".agents/skill-patches/shadcn/0002-removed-empty-md.patch",
       ]);
-      expect(report.entry.patches.series[0]?.sha256).toBe(yield* hashBytes(textEncoder.encode(addedPatch)));
-      expect(report.entry.patches.series[1]?.sha256).toBe(yield* hashBytes(textEncoder.encode(deletedPatch)));
+      const expectation2 = expect(report.entry.patches.series[0]?.sha256);
+      const hashBytes14 = yield* hashBytes(textEncoder.encode(addedPatch));
+      expectation2.toBe(hashBytes14);
+      const expectation3 = expect(report.entry.patches.series[1]?.sha256);
+      const hashBytes15 = yield* hashBytes(textEncoder.encode(deletedPatch));
+      expectation3.toBe(hashBytes15);
     })
   );
 
@@ -1331,7 +1384,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills provenance service", (it) =>
 
       const outsideOutput = path.join(outsideDirectory, "must-not-be-created");
       expect(run(outsideOutput).exitCode).toBe(65);
-      expect(yield* fs.exists(outsideOutput)).toBe(false);
+      const exists32 = yield* fs.exists(outsideOutput);
+      expect(exists32).toBe(false);
 
       const linkedOutput = path.join(auditedRepo, "linked-output");
       yield* fs.symlink(outsideDirectory, linkedOutput);
@@ -1339,7 +1393,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills provenance service", (it) =>
 
       const validOutput = path.join(auditedRepo, "observations");
       expect(run(validOutput).exitCode).toBe(0);
-      expect(yield* fs.exists(validOutput)).toBe(true);
+      const exists33 = yield* fs.exists(validOutput);
+      expect(exists33).toBe(true);
       const bwrapArguments = yield* fs.readFileString(capturePath);
       expect(bwrapArguments).toContain(`${validOutput}\n/out\n`);
       expect(bwrapArguments).toContain(`${auditedRepo}\n/repo\n`);

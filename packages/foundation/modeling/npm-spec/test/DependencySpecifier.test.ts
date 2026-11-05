@@ -44,7 +44,8 @@ describe("DependencySpecifier schema", () => {
   it.effect("accepts every recognized specifier", () =>
     Effect.gen(function* () {
       for (const specifier of valid) {
-        assert.strictEqual(yield* S.decodeEffect(DependencySpecifier)(specifier), specifier);
+        const value1 = yield* S.decodeEffect(DependencySpecifier)(specifier);
+        assert.strictEqual(value1, specifier);
       }
     })
   );
@@ -219,7 +220,8 @@ describe("WorkspaceSpecifier#resolve", () => {
 describe("DependencySpecifier.decode", () => {
   it.effect("returns the branded value for a valid specifier", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* DependencySpecifier.decode("^1.0.0"), "^1.0.0");
+      const decoded2 = yield* DependencySpecifier.decode("^1.0.0");
+      assert.strictEqual(decoded2, "^1.0.0");
     })
   );
 

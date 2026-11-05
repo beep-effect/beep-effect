@@ -108,9 +108,12 @@ const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requiremen
 
 describe("filterYeetInboxEntries", () => {
   const fixtures = Effect.gen(function* () {
-    const p0 = entry(yield* row(capsule()));
-    const p1 = entry(yield* row(capsule({ lane: "Check / Lint" }), "P1"));
-    const acked = entry(yield* row(capsule({ lane: "Check / Docs" })), true);
+    const row1 = yield* row(capsule());
+    const p0 = entry(row1);
+    const row2 = yield* row(capsule({ lane: "Check / Lint" }), "P1");
+    const p1 = entry(row2);
+    const row3 = yield* row(capsule({ lane: "Check / Docs" }));
+    const acked = entry(row3, true);
     return { acked, p0, p1 };
   });
 
@@ -147,7 +150,8 @@ describe("renderYeetInboxEntryLine", () => {
   it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     it.effect("phrases an unacked live row with its coordinates", () =>
       Effect.gen(function* () {
-        const line = renderYeetInboxEntryLine(entry(yield* row(capsule())));
+        const row4 = yield* row(capsule());
+        const line = renderYeetInboxEntryLine(entry(row4));
 
         expect(line).toContain("P0 live unacked");
         expect(line).toContain("Check / Coverage");
@@ -182,8 +186,11 @@ describe("renderYeetInboxView", () => {
   it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     it.effect("summarizes counts in the header and lists one line per entry", () =>
       Effect.gen(function* () {
+        const row5 = yield* row(capsule());
+        const argument = entry(row5);
+        const row7 = yield* row(capsule({ lane: "Check / Lint" }));
         const view = YeetInboxView.make({
-          entries: [entry(yield* row(capsule())), entry(yield* row(capsule({ lane: "Check / Lint" })), true)],
+          entries: [argument, entry(row7, true)],
           skippedLines: 3,
           unreadable: false,
         });
@@ -208,8 +215,11 @@ describe("renderYeetInboxView (unreadable)", () => {
 
 describe("renderYeetInboxListOutput", () => {
   const view = Effect.fnUntraced(function* () {
+    const row6 = yield* row(capsule());
+    const argument1 = entry(row6);
+    const row8 = yield* row(capsule({ lane: "Check / Lint" }), "P1");
     return YeetInboxView.make({
-      entries: [entry(yield* row(capsule())), entry(yield* row(capsule({ lane: "Check / Lint" }), "P1"), true)],
+      entries: [argument1, entry(row8, true)],
       skippedLines: 2,
       unreadable: false,
     });
@@ -218,7 +228,8 @@ describe("renderYeetInboxListOutput", () => {
   it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     it.effect("renders the filtered operator text", () =>
       Effect.gen(function* () {
-        const output = yield* renderYeetInboxListOutput(yield* view(), { json: false, severity: "all", unacked: true });
+        const view7 = yield* view();
+        const output = yield* renderYeetInboxListOutput(view7, { json: false, severity: "all", unacked: true });
         const lines = Str.split(output, "\n");
 
         expect(A.headNonEmpty(lines)).toBe("[yeet] inbox: 1 row(s), 1 unacked, 2 skipped line(s)");
@@ -230,7 +241,8 @@ describe("renderYeetInboxListOutput", () => {
 
     it.effect("encodes a decodable JSON document carrying only the shown entries", () =>
       Effect.gen(function* () {
-        const output = yield* renderYeetInboxListOutput(yield* view(), { json: true, severity: "P1", unacked: false });
+        const view8 = yield* view();
+        const output = yield* renderYeetInboxListOutput(view8, { json: true, severity: "P1", unacked: false });
         const decoded = yield* YeetInboxViewJson.decode(output);
 
         expect(decoded.schemaVersion).toBe("yeet-inbox-view/v1");
@@ -430,7 +442,8 @@ describe("ackYeetInboxRow", () => {
 
           // Updating the bounded active index for unrelated evidence must not
           // discard a waived row that will become actionable again.
-          yield* appendYeetInboxRow(root, yield* row(capsule({ lane: "Check / Lint" }), "P1"));
+          const row9 = yield* row(capsule({ lane: "Check / Lint" }), "P1");
+          yield* appendYeetInboxRow(root, row9);
 
           const state = yield* readYeetAckState(root, subject.id);
           expect(state.acked).toBe(false);
@@ -532,14 +545,16 @@ describe("yeet inbox runners", () => {
     it.effect("list prints the resolved checkout's inbox as text and as decodable JSON", () =>
       inTempCheckout((root) =>
         Effect.gen(function* () {
-          yield* appendYeetInboxRow(root, yield* row(capsule()));
+          const row10 = yield* row(capsule());
+          yield* appendYeetInboxRow(root, row10);
 
           yield* runYeetInboxList({ json: false, severity: "all", unacked: false });
           yield* runYeetInboxList({ json: true, severity: "all", unacked: true });
 
           // The text listing is one multi-line log entry; the JSON document is
           // the second entry.
-          const lines = A.map(yield* TestConsole.logLines, String);
+          const logLines11 = yield* TestConsole.logLines;
+          const lines = A.map(logLines11, String);
           expect(A.length(lines)).toBe(2);
           expect(O.getOrElse(A.head(lines), () => "")).toContain(
             "[yeet] inbox: 1 row(s), 1 unacked, 0 skipped line(s)"
@@ -564,7 +579,8 @@ describe("yeet inbox runners", () => {
 
           yield* runYeetInboxAck({ ...noResolutionFlags, id: subject.id, reason: "actually flaky", wontfix: true });
 
-          const lines = A.map(yield* TestConsole.logLines, String);
+          const logLines12 = yield* TestConsole.logLines;
+          const lines = A.map(logLines12, String);
           expect(A.some(lines, (line) => Str.includes("acked")(line))).toBe(true);
           expect(A.some(lines, (line) => Str.includes("replaced an existing receipt")(line))).toBe(true);
         }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -582,7 +598,8 @@ describe("yeet inbox runners", () => {
 
           const view = yield* loadYeetInboxView(root);
           expect(A.map(view.entries, (candidate) => candidate.row.id)).toStrictEqual([subject.id]);
-          const lines = A.map(yield* TestConsole.logLines, String);
+          const logLines13 = yield* TestConsole.logLines;
+          const lines = A.map(logLines13, String);
           expect(A.some(lines, (line) => Str.includes("appended")(line))).toBe(true);
         }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
       )

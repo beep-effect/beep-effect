@@ -237,42 +237,32 @@ describe("@beep/govinfo", () => {
         reason: "response status",
         status: 429,
       });
-      expect(encode(Sort, yield* decodeSort({ field: "publishdate", sortOrder: "DESC" }))).toEqual({
+      const decodedSort = yield* decodeSort({ field: "publishdate", sortOrder: "DESC" });
+      expect(encode(Sort, decodedSort)).toEqual({
         field: "publishdate",
         sortOrder: "DESC",
       });
-      expect(encode(SearchBody, yield* decodeUnknownSearchBody(searchBodyEncoded))).toEqual(searchBodyEncoded);
-      expect(encode(Search.Payload, yield* decodeUnknownSearchPayload(searchBodyEncoded))).toEqual(searchBodyEncoded);
-      expect(encode(SearchResult, yield* decodeSearchResult(searchResultEncoded))).toEqual(searchResultEncoded);
-      expect(encode(Search.Success, yield* decodeSearchSuccess({ count: 1, offsetMark: "next", results: [] }))).toEqual(
-        {
-          count: 1,
-          offsetMark: "next",
-          results: [],
-        }
-      );
-      expect(encode(GranuleMetadata, yield* decodeGranuleMetadata(granuleMetadataEncoded))).toEqual(
-        granuleMetadataEncoded
-      );
-      expect(encode(PackageInfo, yield* decodePackageInfo(packageInfoEncoded))).toEqual(packageInfoEncoded);
-      expect(encode(SummaryItem, yield* decodeSummaryItem(summaryItemEncoded))).toEqual(summaryItemEncoded);
-      expect(encode(CollectionSummary, yield* decodeCollectionSummary([summaryItemEncoded]))).toEqual([
-        summaryItemEncoded,
-      ]);
-      expect(
-        encode(
-          GranuleContainer,
-          yield* decodeGranuleContainer({
-            count: BigInt(1),
-            granules: [granuleMetadataEncoded],
-            message: "",
-            nextPage: "https://api.govinfo.gov/packages/CREC-2024-01-03/granules?offsetMark=next&pageSize=100",
-            offset: 0,
-            pageSize: 100,
-            previousPage: "",
-          })
-        )
-      ).toEqual({
+      const decodedUnknownSearchBody = yield* decodeUnknownSearchBody(searchBodyEncoded);
+      expect(encode(SearchBody, decodedUnknownSearchBody)).toEqual(searchBodyEncoded);
+      const decodedUnknownSearchPayload = yield* decodeUnknownSearchPayload(searchBodyEncoded);
+      expect(encode(Search.Payload, decodedUnknownSearchPayload)).toEqual(searchBodyEncoded);
+      const decodedSearchResult = yield* decodeSearchResult(searchResultEncoded);
+      expect(encode(SearchResult, decodedSearchResult)).toEqual(searchResultEncoded);
+      const decodedSearchSuccess = yield* decodeSearchSuccess({ count: 1, offsetMark: "next", results: [] });
+      expect(encode(Search.Success, decodedSearchSuccess)).toEqual({
+        count: 1,
+        offsetMark: "next",
+        results: [],
+      });
+      const decodedGranuleMetadata = yield* decodeGranuleMetadata(granuleMetadataEncoded);
+      expect(encode(GranuleMetadata, decodedGranuleMetadata)).toEqual(granuleMetadataEncoded);
+      const decodedPackageInfo = yield* decodePackageInfo(packageInfoEncoded);
+      expect(encode(PackageInfo, decodedPackageInfo)).toEqual(packageInfoEncoded);
+      const decodedSummaryItem = yield* decodeSummaryItem(summaryItemEncoded);
+      expect(encode(SummaryItem, decodedSummaryItem)).toEqual(summaryItemEncoded);
+      const decodedCollectionSummary = yield* decodeCollectionSummary([summaryItemEncoded]);
+      expect(encode(CollectionSummary, decodedCollectionSummary)).toEqual([summaryItemEncoded]);
+      const decodedGranuleContainer = yield* decodeGranuleContainer({
         count: BigInt(1),
         granules: [granuleMetadataEncoded],
         message: "",
@@ -281,18 +271,23 @@ describe("@beep/govinfo", () => {
         pageSize: 100,
         previousPage: "",
       });
-      expect(
-        encode(
-          CollectionContainer,
-          yield* decodeCollectionContainer({
-            count: 1,
-            message: "",
-            nextPage: "https://api.govinfo.gov/collections/CREC/2024-01-01T00:00:00Z?offsetMark=next&pageSize=10",
-            packages: [packageInfoEncoded],
-            previousPage: "",
-          })
-        )
-      ).toEqual({
+      expect(encode(GranuleContainer, decodedGranuleContainer)).toEqual({
+        count: BigInt(1),
+        granules: [granuleMetadataEncoded],
+        message: "",
+        nextPage: "https://api.govinfo.gov/packages/CREC-2024-01-03/granules?offsetMark=next&pageSize=100",
+        offset: 0,
+        pageSize: 100,
+        previousPage: "",
+      });
+      const decodedCollectionContainer = yield* decodeCollectionContainer({
+        count: 1,
+        message: "",
+        nextPage: "https://api.govinfo.gov/collections/CREC/2024-01-01T00:00:00Z?offsetMark=next&pageSize=10",
+        packages: [packageInfoEncoded],
+        previousPage: "",
+      });
+      expect(encode(CollectionContainer, decodedCollectionContainer)).toEqual({
         count: 1,
         message: "",
         nextPage: "https://api.govinfo.gov/collections/CREC/2024-01-01T00:00:00Z?offsetMark=next&pageSize=10",

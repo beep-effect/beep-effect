@@ -63,7 +63,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("doctest Turbo inputs", (it) 
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
-      const config = yield* decodeConfiguration(yield* fs.readFileString(`${repoRoot}/turbo.json`));
+      const readFileString1 = yield* fs.readFileString(`${repoRoot}/turbo.json`);
+      const config = yield* decodeConfiguration(readFileString1);
       expect(config.tasks.doctest.cache).toBe(true);
       expect(config.tasks.doctest.outputs).toEqual([]);
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "doctest-turbo-" });
@@ -138,9 +139,11 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("doctest Turbo inputs", (it) 
         yield* writeFile(root, file, `${original}\n`);
         expect((yield* hash()) === baseline, file).toBe(A.contains(unrelated, file));
         yield* writeFile(root, file, original);
-        expect(yield* hash(), `${file}: restored`).toBe(baseline);
+        const hash2 = yield* hash();
+        expect(hash2, `${file}: restored`).toBe(baseline);
       }
-      expect(yield* hash("0")).not.toBe(baseline);
+      const hash3 = yield* hash("0");
+      expect(hash3).not.toBe(baseline);
     }),
     { timeout: 180_000 }
   );
@@ -153,7 +156,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("test and docgen Turbo cache 
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
-      const config = yield* decodeConfiguration(yield* fs.readFileString(`${repoRoot}/turbo.json`));
+      const readFileString4 = yield* fs.readFileString(`${repoRoot}/turbo.json`);
+      const config = yield* decodeConfiguration(readFileString4);
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "test-docgen-turbo-" });
       yield* writeJson(root, "package.json", {
         name: "test-docgen-fixture",
@@ -253,17 +257,20 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("test and docgen Turbo cache 
       }
 
       const baseline = yield* hashes();
-      expect(yield* hashes()).toEqual(baseline);
+      const hashes5 = yield* hashes();
+      expect(hashes5).toEqual(baseline);
       const regenerated = yield* hashes("1");
       A.forEach(regenerated, (hash, index) => {
         expect(hash, `regeneration task ${index}`).not.toBe(baseline[index]);
       });
-      expect(yield* hashes("0"), "normal hashes restored after regeneration").toEqual(baseline);
+      const hashes6 = yield* hashes("0");
+      expect(hashes6, "normal hashes restored after regeneration").toEqual(baseline);
       for (const owner of ["consumer", "upstream", "docgen", "helper"]) {
         for (const directory of ["docs", "dist", ".beep", "coverage"]) {
           const file = `packages/${owner}/${directory}/generated.ts`;
           yield* writeFile(root, file, "export const generated = 1;\n");
-          expect(yield* hashes(), file).toEqual(baseline);
+          const hashes7 = yield* hashes();
+          expect(hashes7, file).toEqual(baseline);
         }
       }
       for (const file of files) {
@@ -285,7 +292,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("test and docgen Turbo cache 
         expect(mutated[1] === baseline[1], `${file}: property`).toBe(generator);
         expect(mutated[2] === baseline[2], `${file}: docgen`).toBe(sharedTestConfig);
         yield* writeFile(root, file, original);
-        expect(yield* hashes(), `${file}: restored`).toEqual(baseline);
+        const hashes8 = yield* hashes();
+        expect(hashes8, `${file}: restored`).toEqual(baseline);
       }
     }),
     { timeout: 180_000 }
@@ -299,7 +307,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("CLI Turbo configuration cons
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
-      const config = yield* decodeConfiguration(yield* fs.readFileString(`${repoRoot}/turbo.json`));
+      const readFileString9 = yield* fs.readFileString(`${repoRoot}/turbo.json`);
+      const config = yield* decodeConfiguration(readFileString9);
       const override = yield* fs.readFileString(`${repoRoot}/packages/tooling/tool/cli/turbo.json`);
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "cli-turbo-inputs-" });
       yield* writeJson(root, "package.json", {
@@ -360,7 +369,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("CLI Turbo configuration cons
       expect(mutated[1]).not.toBe(baseline[1]);
       expect(mutated[2]).toBe(baseline[2]);
       yield* writeConfiguration(["src/**"]);
-      expect(yield* hashes()).toEqual(baseline);
+      const hashes10 = yield* hashes();
+      expect(hashes10).toEqual(baseline);
     }),
     { timeout: 60_000 }
   );

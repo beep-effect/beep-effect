@@ -106,7 +106,8 @@ describe("VerdictLog", () => {
           recordedAt: DateTime.makeUnsafe(0),
           lockedAt: O.some(DateTime.makeUnsafe(0)),
         });
-        MutableHashMap.set(store, "verdict-rows/v2", yield* S.encodeEffect(VerdictRows)([locked]));
+        const value1 = yield* S.encodeEffect(VerdictRows)([locked]);
+        MutableHashMap.set(store, "verdict-rows/v2", value1);
 
         const log = yield* VerdictLog;
         const error = yield* Effect.flip(log.record(verdict("wrong")));
@@ -229,12 +230,16 @@ describe("VerdictLog", () => {
         assertSome(MutableHashMap.get(store, "verdict-rows"), legacy);
         const next = yield* log.record(verdict("right"));
         expect(next.revision).toBe(3);
-        expect(
-          yield* store.pipe(MutableHashMap.get("verdict-rows/v2"), O.getOrUndefined, S.decodeUnknownEffect(VerdictRows))
-        ).toHaveLength(4);
+        const pipe2 = yield* store.pipe(
+          MutableHashMap.get("verdict-rows/v2"),
+          O.getOrUndefined,
+          S.decodeUnknownEffect(VerdictRows)
+        );
+        expect(pipe2).toHaveLength(4);
         // A nonempty v2 log wins even when the reversal key is unreadable.
         MutableHashMap.set(store, "verdict-rows", "unreadable old data");
-        expect(yield* log.exportJsonl).toContain('"recordedAt":3000');
+        const exportJsonl3 = yield* log.exportJsonl;
+        expect(exportJsonl3).toContain('"recordedAt":3000');
       })
     );
   });
@@ -269,17 +274,20 @@ describe("VerdictLog", () => {
           // A lock row is never a verdict, however recent.
           { itemId: item.itemId, batchId: "other", verdict: "wrong", revision: 20, recordedAt: 3000, lockedAt: 3000 },
         ]);
-        MutableHashMap.set(store, "verdict-rows/v2", yield* S.encodeEffect(VerdictRows)(rows));
+        const value4 = yield* S.encodeEffect(VerdictRows)(rows);
+        MutableHashMap.set(store, "verdict-rows/v2", value4);
         const log = yield* VerdictLog;
+        const current5 = yield* log.current(item.itemId);
         assertSome(
-          O.map(yield* log.current(item.itemId), (row) => row.verdict),
+          O.map(current5, (row) => row.verdict),
           "withdrawn"
         );
         const fresh = yield* log.record(verdict("right"));
         expect(fresh.batchId).toBe("session:s-1");
         expect(fresh.revision).toBe(1);
         assertNone(fresh.lockedAt);
-        assertNone(yield* log.current("missing"));
+        const current6 = yield* log.current("missing");
+        assertNone(current6);
       })
     );
   });
@@ -301,7 +309,8 @@ describe("VerdictLog", () => {
           { itemId: item.itemId, batchId: "session:s-1", verdict: "wrong", revision: 1, recordedAt: 0 },
           { itemId: item.itemId, batchId: "other", verdict: "right", revision: 1, recordedAt: 2000 },
         ]);
-        MutableHashMap.set(store, "verdict-rows/v2", yield* S.encodeEffect(VerdictRows)(rows));
+        const value7 = yield* S.encodeEffect(VerdictRows)(rows);
+        MutableHashMap.set(store, "verdict-rows/v2", value7);
         const log = yield* VerdictLog;
         expect((yield* Effect.flip(log.record(verdict("wrong"))))._tag).toBe("VerdictLocked");
       })

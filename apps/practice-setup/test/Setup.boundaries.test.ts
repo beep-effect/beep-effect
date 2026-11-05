@@ -76,7 +76,8 @@ it.layer(platform, { concurrent: false, timeout: "5 seconds" })(
               yield* fs.makeDirectory("/local/AnthropicClaude", { recursive: true });
               yield* fs.writeFileString("/local/AnthropicClaude/claude.exe", "fixture executable");
             }
-            yield* use(yield* SetupHost, calls);
+            const SetupHost1 = yield* SetupHost;
+            yield* use(SetupHost1, calls);
           })
         );
       });
@@ -86,7 +87,8 @@ it.layer(platform, { concurrent: false, timeout: "5 seconds" })(
       "detects a per-user executable without querying registry or MSIX",
       { executable: true },
       Effect.fnUntraced(function* (host, calls) {
-        expect(yield* host.claudeInstall).toBe("per-user");
+        const claudeInstall2 = yield* host.claudeInstall;
+        expect(claudeInstall2).toBe("per-user");
         expect(calls).toEqual([]);
       })
     );
@@ -94,7 +96,8 @@ it.layer(platform, { concurrent: false, timeout: "5 seconds" })(
       "accepts registry detection before querying MSIX",
       { registry: true },
       Effect.fnUntraced(function* (host, calls) {
-        expect(yield* host.claudeInstall).toBe("per-user");
+        const claudeInstall3 = yield* host.claudeInstall;
+        expect(claudeInstall3).toBe("per-user");
         expect(A.map(calls, (call) => call.command)).toEqual(["reg.exe"]);
       })
     );
@@ -103,7 +106,8 @@ it.layer(platform, { concurrent: false, timeout: "5 seconds" })(
         `distinguishes MSIX=${msix} from a missing install`,
         { msix },
         Effect.fnUntraced(function* (host, calls) {
-          expect(yield* host.claudeInstall).toBe(msix ? "msix" : "missing");
+          const claudeInstall4 = yield* host.claudeInstall;
+          expect(claudeInstall4).toBe(msix ? "msix" : "missing");
           expect(A.map(calls, (call) => call.command)).toEqual(["reg.exe", "powershell.exe"]);
         })
       );
@@ -147,7 +151,8 @@ it.layer(platform, { concurrent: false, timeout: "5 seconds" })(
       "passes installer arguments and shell text without parsing user text as PowerShell",
       { shellExit: 1 },
       Effect.fnUntraced(function* (host, calls) {
-        expect(yield* host.runInstaller("/fixture/setup.exe", ["/S"])).toBe(1);
+        const resultInstaller = yield* host.runInstaller("/fixture/setup.exe", ["/S"]);
+        expect(resultInstaller).toBe(1);
         // Without the per-user executable the file goes to Explorer, whose nonzero
         // exit is allowed because it can already have opened the file.
         yield* host.openInClaude("/fixture/bundle.mcpb");
@@ -163,9 +168,11 @@ it.layer(platform, { concurrent: false, timeout: "5 seconds" })(
         expect(calls[0]?.args).toEqual(["/S"]);
         expect(calls[2]?.options.env).toMatchObject({ BEEP_SETUP_TEXT: text });
         expect(calls[2]?.args).not.toContain(text);
-        expect(yield* host.stateDir).toBe("/local/beep/practice-setup");
+        const stateDir5 = yield* host.stateDir;
+        expect(stateDir5).toBe("/local/beep/practice-setup");
         const fs = yield* FileSystem.FileSystem;
-        expect(yield* fs.exists("/local/beep/practice-setup")).toBe(true);
+        const exists6 = yield* fs.exists("/local/beep/practice-setup");
+        expect(exists6).toBe(true);
       })
     );
     exercise(
@@ -186,8 +193,10 @@ it.layer(platform, { concurrent: false, timeout: "5 seconds" })(
             yield* fs.makeDirectory("/target", { recursive: true });
             const bundle = yield* GatewayBundle;
             assertSome(bundle.version, "1.2.3");
-            expect(yield* bundle.materialize("/target")).toBe("/target/practice-gateway.mcpb");
-            expect(yield* fs.readFileString("/target/practice-gateway.mcpb")).toBe("synthetic bundle bytes");
+            const materialize7 = yield* bundle.materialize("/target");
+            expect(materialize7).toBe("/target/practice-gateway.mcpb");
+            const readFileString8 = yield* fs.readFileString("/target/practice-gateway.mcpb");
+            expect(readFileString8).toBe("synthetic bundle bytes");
           })
         );
       }

@@ -32,18 +32,27 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           { id: "ai", label: "AI" },
           { id: "dev", label: "DEV" },
         ]);
-        expect(yield* secretsLayoutIdentity(transformed.fields)).toBe(yield* secretsLayoutIdentity(decoded.fields));
-        expect(yield* S.encodeEffect(AccountsSecretsItemJson)(transformed)).toContain('"extra":{"keep":true}');
+        const secretsLayoutIdentity1 = yield* secretsLayoutIdentity(transformed.fields);
+        const expectation = expect(secretsLayoutIdentity1);
+        const secretsLayoutIdentity2 = yield* secretsLayoutIdentity(decoded.fields);
+        expectation.toBe(secretsLayoutIdentity2);
+        const value2 = yield* S.encodeEffect(AccountsSecretsItemJson)(transformed);
+        expect(value2).toContain('"extra":{"keep":true}');
         expect(transformed.urls).toEqual([{ href: "https://fixture.invalid" }]);
-        expect(yield* layoutSecretsItem(transformed)).toEqual(transformed);
+        const layoutSecretsItem3 = yield* layoutSecretsItem(transformed);
+        expect(layoutSecretsItem3).toEqual(transformed);
         const unmapped = yield* S.decodeEffect(AccountsSecretsItemJson)(
           '{"fields":[{"id":"x","label":"UNKNOWN","type":"STRING","value":"synthetic-only"}],"sections":[]}'
         );
-        expect(yield* layoutSecretsItem(unmapped).pipe(Effect.isFailure)).toBe(true);
+        const pipe4 = yield* layoutSecretsItem(unmapped).pipe(Effect.isFailure);
+        expect(pipe4).toBe(true);
         const changed = yield* S.decodeEffect(AccountsSecretsItemJson)(
           Str.replace("synthetic-secret-z", "different-synthetic-value")(item)
         );
-        expect(yield* secretsLayoutIdentity(changed.fields)).not.toBe(yield* secretsLayoutIdentity(decoded.fields));
+        const secretsLayoutIdentity5 = yield* secretsLayoutIdentity(changed.fields);
+        const argument = expect(secretsLayoutIdentity5).not;
+        const secretsLayoutIdentity3 = yield* secretsLayoutIdentity(decoded.fields);
+        argument.toBe(secretsLayoutIdentity3);
       })
     );
 
@@ -58,12 +67,16 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             extension: value,
           });
           const transformed = yield* layoutSecretsItem(original);
-          expect(yield* secretsLayoutIdentity(transformed.fields)).toBe(yield* secretsLayoutIdentity(original.fields));
+          const secretsLayoutIdentity6 = yield* secretsLayoutIdentity(transformed.fields);
+          const expectation1 = expect(secretsLayoutIdentity6);
+          const secretsLayoutIdentity4 = yield* secretsLayoutIdentity(original.fields);
+          expectation1.toBe(secretsLayoutIdentity4);
           const encoded = yield* S.encodeEffect(AccountsSecretsItem)(transformed);
           expect(encoded.extension).toBe(value);
           expect(encoded.fields[0]?.extra).toBe(value);
           const decoded = yield* S.decodeEffect(AccountsSecretsItem)(encoded);
-          expect(yield* layoutSecretsItem(decoded)).toEqual(transformed);
+          const layoutSecretsItem7 = yield* layoutSecretsItem(decoded);
+          expect(layoutSecretsItem7).toEqual(transformed);
         })
     );
 
@@ -108,19 +121,26 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           return { code, stdout, stderr };
         }, Effect.scoped);
         expect((yield* run(false, false)).code).toBe(0);
-        expect(yield* fs.readFileString(path.join(root, "operations"))).toBe("item get\n");
-        expect(yield* fs.exists(path.join(root, "edited.json"))).toBe(false);
+        const readFileString8 = yield* fs.readFileString(path.join(root, "operations"));
+        expect(readFileString8).toBe("item get\n");
+        const exists9 = yield* fs.exists(path.join(root, "edited.json"));
+        expect(exists9).toBe(false);
         expect((yield* run(true, false)).code).not.toBe(0);
-        expect(yield* fs.readFileString(path.join(root, "operations"))).toBe("item get\n");
+        const readFileString10 = yield* fs.readFileString(path.join(root, "operations"));
+        expect(readFileString10).toBe("item get\n");
         const applied = yield* run(true, true);
         expect(applied.code, applied.stderr).toBe(0);
         expect(applied.stdout).toContain("written version 7: 4 fields, sections: AI DEV");
-        expect(yield* fs.readFileString(path.join(root, "operations"))).toBe("item get\nitem get\nitem edit\n");
-        const sent = yield* S.decodeEffect(AccountsSecretsItemJson)(
-          yield* fs.readFileString(path.join(root, "edited.json"))
-        );
+        const readFileString11 = yield* fs.readFileString(path.join(root, "operations"));
+        expect(readFileString11).toBe("item get\nitem get\nitem edit\n");
+        const argument1 = S.decodeEffect(AccountsSecretsItemJson);
+        const readFileString5 = yield* fs.readFileString(path.join(root, "edited.json"));
+        const sent = yield* argument1(readFileString5);
         const original = yield* S.decodeEffect(AccountsSecretsItemJson)(item);
-        expect(yield* secretsLayoutIdentity(sent.fields)).toBe(yield* secretsLayoutIdentity(original.fields));
+        const secretsLayoutIdentity12 = yield* secretsLayoutIdentity(sent.fields);
+        const expectation2 = expect(secretsLayoutIdentity12);
+        const secretsLayoutIdentity7 = yield* secretsLayoutIdentity(original.fields);
+        expectation2.toBe(secretsLayoutIdentity7);
       })
     );
   }

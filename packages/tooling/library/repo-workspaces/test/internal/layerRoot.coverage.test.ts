@@ -20,10 +20,14 @@ it.effect("defers root lookup and forwards ambient cwd, explicit cwd and the opt
     };
     const ambient = findLayerRoot(roots, undefined);
     assert.deepStrictEqual(calls, []);
-    assert.strictEqual(yield* ambient, process.cwd());
-    assert.strictEqual(yield* findLayerRoot({})(roots), process.cwd());
-    assert.strictEqual(yield* findLayerRoot(roots, { cwd: "/repo/child" }), "/repo/child");
-    assert.strictEqual(yield* findLayerRoot(roots, { cwd: "/repo/child", stopAt: "/repo" }), "/repo/child");
+    const ambient1 = yield* ambient;
+    assert.strictEqual(ambient1, process.cwd());
+    const value = yield* findLayerRoot({})(roots);
+    assert.strictEqual(value, process.cwd());
+    const foundLayerRoot = yield* findLayerRoot(roots, { cwd: "/repo/child" });
+    assert.strictEqual(foundLayerRoot, "/repo/child");
+    const foundLayerRoot2 = yield* findLayerRoot(roots, { cwd: "/repo/child", stopAt: "/repo" });
+    assert.strictEqual(foundLayerRoot2, "/repo/child");
     assert.deepStrictEqual(calls, [
       [process.cwd(), undefined],
       [process.cwd(), undefined],

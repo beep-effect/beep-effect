@@ -142,8 +142,10 @@ describe("identity registration removal", () => {
         ],
         "\n"
       );
-      expect(yield* withRegistry(siblingOnly, courtlistenerNeeded)).toBe(true);
-      expect(yield* withRegistry(PREFIX_SIBLING_REGISTRY, courtlistenerNeeded)).toBe(false);
+      const withRegistry1 = yield* withRegistry(siblingOnly, courtlistenerNeeded);
+      expect(withRegistry1).toBe(true);
+      const withRegistry2 = yield* withRegistry(PREFIX_SIBLING_REGISTRY, courtlistenerNeeded);
+      expect(withRegistry2).toBe(false);
     })
   );
 

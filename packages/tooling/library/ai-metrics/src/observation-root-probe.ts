@@ -304,16 +304,15 @@ export const probeObservationRoots = Effect.fn("AiMetrics.probeObservationRoots"
       })
     );
     const observedAt = yield* DateTime.now;
-    const boundaryEvidenceId = yield* hashPublicTextSha256(
-      yield* encodeVersionHostRecordJson({
-        version: "declared-root-probe/v1",
-        host,
-        populationWindowStart: declaration.populationWindowStart,
-        populationWindowEnd: declaration.populationWindowEnd,
-        rootReceiptIds: A.map(rootReceipts, (receipt) => receipt.evidenceId),
-        requestedHarnesses: ObservationHarness.literals,
-      })
-    );
+    const encodedVersionHostRecordJson = yield* encodeVersionHostRecordJson({
+      version: "declared-root-probe/v1",
+      host,
+      populationWindowStart: declaration.populationWindowStart,
+      populationWindowEnd: declaration.populationWindowEnd,
+      rootReceiptIds: A.map(rootReceipts, (receipt) => receipt.evidenceId),
+      requestedHarnesses: ObservationHarness.literals,
+    });
+    const boundaryEvidenceId = yield* hashPublicTextSha256(encodedVersionHostRecordJson);
     return ObservationRootProbeResult.make({
       inventory: ObservationInventory.make({
         observedAt,
