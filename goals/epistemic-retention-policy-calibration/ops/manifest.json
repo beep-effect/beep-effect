@@ -3,13 +3,13 @@
   "initiative": {
     "id": "epistemic-retention-policy-calibration",
     "title": "Epistemic Retention Policy Calibration",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-28",
-    "updated": "2026-10-29",
+    "updated": "2026-11-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/epistemic-retention-policy-calibration",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Produce reproducible offline retention calibration evidence and an approval-ready recommendation; keep production inert pending evidence and separate explicit approval.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -82,12 +82,12 @@
     {
       "id": "P3",
       "name": "Yeet calibration delivery through merge",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Reflect, verify completion and retire lane",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -110,7 +110,7 @@
     "goals/epistemic-bitemporal-edge-core"
   ],
   "blockedBy": [],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2357
   }

@@ -53,7 +53,7 @@
 
 ## Status
 
-Lifecycle: `active`, with `proposedCloseout` to `completed-retained`; the
+Lifecycle: `completed-retained`, with `proposedCloseout` to `completed-retained`; the
 closeout content merged in #2493; the docs-only re-finals #2532 and #2586
 follow, and #2586 is the final pull request, merged only after its own
 until-ready job reports merge-ready

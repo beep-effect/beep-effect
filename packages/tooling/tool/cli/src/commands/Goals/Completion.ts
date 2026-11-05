@@ -1290,6 +1290,14 @@ const refreshRecord = Effect.fn("Goals.Completion.refreshRecord")(function* (
   }
   yield* write(receipt);
   yield* Console.log(`[goals:completion] ${record.slug} #${final.value.number}: ${receipt.outcome}`);
+  // Verification is proof, not closeout: the packet finishes only when its
+  // committed closeout record merges, so name that step at the moment it opens.
+  const proposal = manifest.value.proposedCloseout;
+  if (receipt.outcome === "verified" && proposal !== undefined) {
+    yield* Console.log(
+      `[goals:completion] next: bun run beep goals set-status ${record.slug} ${proposal.status}, then merge that packet-state PR`
+    );
+  }
 });
 const refresh = Effect.fn("Goals.Completion.refresh")(function* (
   slug: O.Option<string>,

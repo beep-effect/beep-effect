@@ -1439,8 +1439,9 @@ export const goalCloseoutVerification: {
  *
  * Every operator-facing surface that has the clone-scoped receipt at hand
  * (`session open`, `goals doctor`, `goals explain`) prints this one form, so a
- * verified packet reads as `completed-retained (verified via #N)` everywhere
- * and an unverified one never hides that the field is still derived.
+ * verified proposal reads as `completed-retained (verified via #N, adoption pending)`
+ * everywhere until `goals set-status` adopts it, and an unverified one never
+ * hides that the field is still derived.
  *
  * **Example** (Render both verification states)
  *
@@ -1454,7 +1455,7 @@ export const goalCloseoutVerification: {
  *   proposedCloseout,
  *   verification: "verified",
  * })
- * console.log(renderGoalCloseoutView(verified)) // "completed-retained (verified via #7)"
+ * console.log(renderGoalCloseoutView(verified)) // "completed-retained (verified via #7, adoption pending)"
  * console.log(renderGoalCloseoutView(GoalCloseoutView.make({ ...verified, operativeStatus: "active", verification: "unverified" })))
  * // "completed-retained (proposed via #7, unverified)"
  * ```
@@ -1466,7 +1467,7 @@ export const goalCloseoutVerification: {
  */
 export const renderGoalCloseoutView = (view: GoalCloseoutView): string =>
   GoalCloseoutVerification.is.verified(view.verification)
-    ? `${view.proposedCloseout.status} (verified via #${view.proposedCloseout.finalPullRequest})`
+    ? `${view.proposedCloseout.status} (verified via #${view.proposedCloseout.finalPullRequest}, adoption pending)`
     : `${view.proposedCloseout.status} (proposed via #${view.proposedCloseout.finalPullRequest}, unverified)`;
 
 /**
@@ -1474,8 +1475,8 @@ export const renderGoalCloseoutView = (view: GoalCloseoutView): string =>
  *
  * **Details**
  *
- * A verified record prints the same `completed-retained (verified via #N)` line
- * a verified proposal prints, so adopting the proposal changes no operator line.
+ * A verified record prints `completed-retained (verified via #N)`; only a
+ * committed record drops the `adoption pending` suffix a verified proposal carries.
  *
  * **Example** (Render both verification states)
  *

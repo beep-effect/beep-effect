@@ -3,13 +3,13 @@
   "initiative": {
     "id": "agent-observability-foundation",
     "title": "Trustworthy agent observability foundation",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-27",
-    "updated": "2026-11-03",
+    "updated": "2026-11-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-observability-foundation",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Prove metadata identity, coverage and bounded durable delivery across roots and surfaces before live enrollment.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -141,17 +141,17 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -171,7 +171,7 @@
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],
   "dependencies": [],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2655
   }

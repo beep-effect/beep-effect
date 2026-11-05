@@ -4,7 +4,7 @@ Current delivery: coordination-repaired final checkpoint [PR2655](https://github
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Explicitly launched by the operator on 2026-10-27. Source: [manifest](./ops/manifest.json). PR2364 has merged, but canonical completion remains unsatisfied. Current-source qualification and a genuinely verified follow-up delivery are in progress; see the [post-merge audit](./research/POST-MERGE-QUALIFICATION.md). The original forwarder service and timer remain masked and inactive.
 

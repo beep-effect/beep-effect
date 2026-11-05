@@ -1,6 +1,6 @@
 # Epistemic Retention Policy Calibration
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](ops/manifest.json)
 

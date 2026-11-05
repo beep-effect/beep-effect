@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active` until the closeout PR's completion is verified; P0 through P8
+Lifecycle: `completed-retained` until the closeout PR's completion is verified; P0 through P8
 complete (P8 on 2026-11-02, E1 accepted as a residual by the operator).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
