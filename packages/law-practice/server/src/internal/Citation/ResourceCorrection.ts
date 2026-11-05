@@ -1,4 +1,4 @@
-/** ResourceCitation.corrected_reporter/corrected_page from eyecite 2.7.6.
+/** ResourceCitation reporter/page/citation correction from eyecite 2.7.6.
  * Free Law Project, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
@@ -10,13 +10,18 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationFrozenEditions, readCitationFrozenEdition } from "./FrozenEditions.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
-import { citationPythonPointAt, makeCitationPythonUnicode, sliceCitationPythonStorage } from "./PythonUnicode.ts";
+import {
+  citationPythonPointAt,
+  makeCitationPythonUnicode,
+  replaceCitationPythonStorage,
+  sliceCitationPythonStorage,
+} from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationTextBudget, makeCitationTextBudget } from "./TextBudget.ts";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ResourceCorrection");
-const Reason = LiteralKit(["invalid-input", "invalid-policy", "missing-reporter"]).pipe(
+const Reason = LiteralKit(["invalid-input", "invalid-policy", "missing-reporter", "invalid-reporter-replacement"]).pipe(
   $I.annoteSchema("Reason", { description: "Closed resource correction failures without text or references." })
 );
 const Correctable = LiteralKit(["NY Slip Op", "Misc. 3d"]).pipe(
@@ -50,8 +55,23 @@ export class CitationResourceCorrectionInput extends S.Opaque<
     })
   )
 ) {}
+/** Native matched text and built-in groups before reporter/page substitution.
+ * @internal @category models @since 0.0.0
+ */
+export class CitationResourceCitationCorrectionInput extends S.Opaque<
+  CitationResourceCitationCorrectionInput,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ ...CitationResourceCorrectionInput.fields, matchedText: CitationPythonUnicodeStorage }).pipe(
+    $I.annoteSchema("CitationResourceCitationCorrectionInput", {
+      description: "Owned source match plus original groups and authenticated edition for literal correction.",
+    })
+  )
+) {}
 const correctable = S.is(Correctable);
 const Input = S.toType(CitationResourceCorrectionInput);
+const CitationInput = S.toType(CitationResourceCitationCorrectionInput);
+const sameStorage = S.toEquivalence(S.toType(CitationPythonUnicodeStorage));
 const fail = (reason: typeof Reason.Type) => CitationResourceCorrectionFailure.make({ reason });
 const writeAscii = (view: DataView, width: 1 | 2 | 4, index: number, point: number) => {
   if (width === 1) view.setUint8(index, point);
@@ -112,8 +132,10 @@ export const makeCitationResourceCorrection = Effect.fn("Citation.makeResourceCo
       ? null
       : (yield* unicode.fromStorageReserved(request.reporter, budget.reserve)).storage;
   }, timing.timed);
-  const page = Effect.fn("Citation.correctedPage")(function* (raw: unknown) {
-    const { request, budget } = yield* prepare(raw);
+  const correctPage = Effect.fn("Citation.correctResourcePage")(function* (
+    request: CitationResourceCorrectionInput,
+    budget: CitationTextBudget["Service"]
+  ) {
     const pageInput = O.fromNullishOr(request.page);
     if (O.isNone(pageInput)) return null;
     const source = yield* unicode.fromStorageReserved(pageInput.value, budget.reserve);
@@ -125,6 +147,39 @@ export const makeCitationResourceCorrection = Effect.fn("Citation.makeResourceCo
       standard = (yield* readCitationFrozenEdition(owner, request.editionGuess)).value.short_name;
     if (!correctable(rawReporter.text) && !correctable(standard)) return source.storage;
     return yield* correctPageMarkers(source, budget);
+  });
+  const page = Effect.fn("Citation.correctedPage")(function* (raw: unknown) {
+    const { request, budget } = yield* prepare(raw);
+    return yield* correctPage(request, budget);
   }, timing.timed);
-  return { reporter, page };
+  const citation = Effect.fn("Citation.correctedResourceCitation")(function* (raw: unknown) {
+    const decoded = yield* S.decodeUnknownEffect(CitationInput)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+    const { request, budget } = yield* prepare(decoded);
+    let corrected = (yield* unicode.fromStorageReserved(decoded.matchedText, budget.reserve)).storage;
+    if (request.editionGuess !== null) {
+      const edition = yield* readCitationFrozenEdition(owner, request.editionGuess);
+      if (request.reporter === undefined || request.reporter === null)
+        return yield* fail("invalid-reporter-replacement");
+      const oldReporter = yield* unicode.fromStorageReserved(request.reporter, budget.reserve);
+      const newReporter = yield* unicode.fromTextReserved(edition.value.short_name, budget.reserve);
+      corrected = yield* replaceCitationPythonStorage(corrected, oldReporter.storage, newReporter.storage, (layout) =>
+        budget.reserve(layout.utf16Units)
+      );
+    }
+    const correctedPage = yield* correctPage(request, budget);
+    if (
+      correctedPage !== null &&
+      correctedPage.bytes.length > 0 &&
+      request.page !== undefined &&
+      request.page !== null
+    ) {
+      const original = yield* unicode.fromStorageReserved(request.page, budget.reserve);
+      if (!sameStorage(correctedPage, original.storage))
+        corrected = yield* replaceCitationPythonStorage(corrected, original.storage, correctedPage, (layout) =>
+          budget.reserve(layout.utf16Units)
+        );
+    }
+    return corrected;
+  }, timing.timed);
+  return { reporter, page, citation };
 });

@@ -310,3 +310,12 @@ history/evidence/2026-11-03-edition-inference.md.
   from source spans and replay consumers after shared schema refactors. Fallow
   duplication was removed through existing metadata/test owners, without
   suppressions or reduced floors.
+
+- 2026-11-05 resource rendering: repeated native outputs initially produced a
+  1251360-byte fixture above the existing formatter limit. Interning outputs
+  preserves all 6709 new source observations at 746507 bytes, with bounded
+  reference codecs. Fallow found repeated allocation setup and one overly
+  broad replay test; sharing the native allocation owner and separating the
+  replacement and composed-method replay removed both findings. Direct native
+  tests must prepare branded owned Unicode before calling trusted low-level
+  helpers; the package type check caught raw fixture carriers at that boundary.

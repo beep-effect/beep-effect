@@ -1461,3 +1461,12 @@ prior pin-span start. Negative source starts remain unverified model state.
 The existing shared metadata operation owns timing, admission, fresh Scope,
 native captures and invocation budgets; no new transport or scheduler is added.
 Complete case composition and post-case helpers remain separate obligations.
+
+### Resource citation substitution (2026-11-05)
+
+The private resource stage replaces original reporter text before corrected
+page text, using original groups for both decisions. Native literal replacement
+retains Python-point boundaries, empty-search insertion and replacement bytes.
+Two cooperative passes measure and reserve canonical receiving output before
+allocation. Existing captured owner, deadlines and fresh/enclosing invocation
+budgets remain authoritative. Full metadata formatting remains open.

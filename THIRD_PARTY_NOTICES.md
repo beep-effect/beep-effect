@@ -849,3 +849,10 @@ pre-case-metadata.json derive from eyecite 2.7.6 helpers.add_pre_citation and
 PRE_FULL_CITATION_REGEX at the pinned revision above (Free Law Project,
 BSD-2-Clause). Existing CPython/regex profile attribution applies to the source
 pattern observations; no additional regex runtime is distributed.
+
+Complete resource citation substitution in ResourceCorrection.ts and
+resource-citation-correction.json derives from eyecite 2.7.6
+ResourceCitation.corrected_citation at the pinned revision above (Free Law
+Project, BSD-2-Clause). Native Python replacement behavior is observed from
+CPython 3.11.15; the existing full PSF notice applies. Canonical edition strings
+retain the existing reporters-db attribution. No Python runtime is distributed.

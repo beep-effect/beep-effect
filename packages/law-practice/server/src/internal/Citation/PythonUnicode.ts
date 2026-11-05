@@ -227,6 +227,17 @@ const copyNativeRange = Effect.fn("Citation.copyNativeRange")(function* (
   return cursor;
 });
 
+const allocateNativeOutput = Effect.fn("Citation.allocateNativeOutput")(function* <E>(
+  width: 1 | 2 | 4,
+  pythonLength: number,
+  utf16Units: number,
+  beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
+) {
+  const layout = CitationPythonSliceLayout.make({ width, pythonLength, utf16Units, byteLength: pythonLength * width });
+  yield* beforeAllocate(layout);
+  return new Uint8Array(layout.byteLength);
+});
+
 /** Concatenate validated native ranges without projecting surrogate words.
  * The caller validates ranges and reserves exact receiving sizes before allocation.
  * @internal @category operations @since 0.0.0
@@ -245,12 +256,83 @@ export const concatCitationPythonRanges = Effect.fn("Citation.concatNativeRanges
   const width = A.reduce(sizes, 1 as 1 | 2 | 4, (a, size) => (a > size.width ? a : size.width));
   const pythonLength = A.reduce(sizes, 0, (a, size) => a + size.pythonLength);
   const utf16Units = A.reduce(sizes, 0, (a, size) => a + size.utf16Units);
-  const layout = CitationPythonSliceLayout.make({ width, pythonLength, utf16Units, byteLength: pythonLength * width });
-  yield* beforeAllocate(layout);
-  const bytes = new Uint8Array(layout.byteLength);
+  const bytes = yield* allocateNativeOutput(width, pythonLength, utf16Units, beforeAllocate);
   let cursor = 0;
   for (const range of ranges)
     cursor = yield* copyNativeRange(range.source, range.start, range.end, bytes, width, cursor);
+  return CitationPythonUnicodeStorage.make({ width, bytes });
+});
+
+const nativeReplacementMatches = Effect.fn("Citation.nativeReplacementMatches")(function* (
+  source: CitationPythonUnicodeStorage,
+  needle: CitationPythonUnicodeStorage,
+  start: number
+) {
+  const count = needle.bytes.length / needle.width;
+  for (let offset = 0; offset < count; offset++) {
+    if (offset % 4096 === 0) yield* Effect.yieldNow;
+    if (citationPythonPointAt(source, start + offset) !== citationPythonPointAt(needle, offset)) return false;
+  }
+  return true;
+});
+const visitNativeReplacement = Effect.fn("Citation.visitNativeReplacement")(function* <E>(
+  source: CitationPythonUnicodeStorage,
+  needle: CitationPythonUnicodeStorage,
+  replacement: CitationPythonUnicodeStorage,
+  visit: (word: CitationPythonUnicodeStorage, start: number, end: number) => Effect.Effect<void, E>
+) {
+  const length = source.bytes.length / source.width;
+  const oldLength = needle.bytes.length / needle.width;
+  const newLength = replacement.bytes.length / replacement.width;
+  let start = 0;
+  let index = 0;
+  while (index + oldLength <= length) {
+    if (index % 4096 === 0) yield* Effect.yieldNow;
+    const matches = yield* nativeReplacementMatches(source, needle, index);
+    if (matches) {
+      yield* visit(source, start, index);
+      yield* visit(replacement, 0, newLength);
+      start = index + oldLength;
+      index += Num.max(oldLength, 1);
+    } else index++;
+  }
+  yield* visit(source, start, length);
+});
+/** Replace all nonoverlapping native Python words, including empty-needle
+ * insertion, without UTF-16 projection or JavaScript replacement templates.
+ * Inputs are already validated immutable owned storage. Two cooperative scans
+ * measure exact canonical output before reservation and allocation; no match
+ * list or per-occurrence payload is retained. The caller supplies timing and
+ * the receiving allocation authority, as for concatCitationPythonRanges.
+ * @internal @category operations @since 0.0.0
+ */
+export const replaceCitationPythonStorage = Effect.fn("Citation.replaceNativeStorage")(function* <E>(
+  source: CitationPythonUnicodeStorage,
+  needle: CitationPythonUnicodeStorage,
+  replacement: CitationPythonUnicodeStorage,
+  beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
+) {
+  let width: 1 | 2 | 4 = 1;
+  let pythonLength = 0;
+  let utf16Units = 0;
+  yield* visitNativeReplacement(source, needle, replacement, (word, start, end) =>
+    measureCitationPythonSlice(word, start, end).pipe(
+      Effect.map((size) => {
+        width = width > size.width ? width : size.width;
+        pythonLength += size.pythonLength;
+        utf16Units += size.utf16Units;
+      })
+    )
+  );
+  const bytes = yield* allocateNativeOutput(width, pythonLength, utf16Units, beforeAllocate);
+  let cursor = 0;
+  yield* visitNativeReplacement(source, needle, replacement, (word, start, end) =>
+    copyNativeRange(word, start, end, bytes, width, cursor).pipe(
+      Effect.map((next) => {
+        cursor = next;
+      })
+    )
+  );
   return CitationPythonUnicodeStorage.make({ width, bytes });
 });
 

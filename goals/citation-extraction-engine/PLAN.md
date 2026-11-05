@@ -944,3 +944,9 @@ accounting checker.
   540 observations; both actual runtimes compare 230 smoke rows with fourteen
   confirmed exits each. Full hosted replay and remaining case composition stay
   open. See history/evidence/2026-11-05-pre-case-metadata.md.
+
+- 2026-11-05: complete private resource citation substitution now preserves
+  original reporter/page replacement order and native point semantics. All
+  4117 source renderings, 2592 native replacement cases and 5858 prior method
+  calls compare. Metadata formatting and other goal acceptance remain open.
+  See history/evidence/2026-11-05-resource-citation-correction.md.
