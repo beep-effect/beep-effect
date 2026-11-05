@@ -171,6 +171,12 @@ export const measureCitationPythonSlice = Effect.fn("Citation.measureNativeSlice
     byteLength: (end - start) * width,
   });
 });
+const writeNativePoint = (view: DataView, width: 1 | 2 | 4, index: number, point: number) => {
+  const offset = index * width;
+  if (width === 1) view.setUint8(offset, point);
+  else if (width === 2) view.setUint16(offset, point, true);
+  else view.setUint32(offset, point, true);
+};
 const materializeSlice = Effect.fn("Citation.materializeNativeSlice")(function* (
   source: CitationPythonUnicodeStorage,
   start: number,
@@ -183,10 +189,7 @@ const materializeSlice = Effect.fn("Citation.materializeNativeSlice")(function* 
   for (let index = start; index < end; index++) {
     if (index % 4096 === 0) yield* Effect.yieldNow;
     const point = readPoint(source.bytes, index * source.width, source.width);
-    const offset = (index - start) * width;
-    if (width === 1) view.setUint8(offset, point);
-    else if (width === 2) view.setUint16(offset, point, true);
-    else view.setUint32(offset, point, true);
+    writeNativePoint(view, width, index - start, point);
   }
   return CitationPythonUnicodeStorage.make({ width, bytes });
 });
@@ -236,6 +239,44 @@ const allocateNativeOutput = Effect.fn("Citation.allocateNativeOutput")(function
   const layout = CitationPythonSliceLayout.make({ width, pythonLength, utf16Units, byteLength: pythonLength * width });
   yield* beforeAllocate(layout);
   return new Uint8Array(layout.byteLength);
+});
+const visitKeptNativePoints = Effect.fn("Citation.visitKeptNativePoints")(function* (
+  source: CitationPythonUnicodeStorage,
+  keep: (point: number) => boolean,
+  visit: (point: number) => void
+) {
+  const length = source.bytes.length / source.width;
+  for (let index = 0; index < length; index++) {
+    if (index % 4096 === 0) yield* Effect.yieldNow;
+    const point = citationPythonPointAt(source, index);
+    if (keep(point)) visit(point);
+  }
+});
+/** Filter already owned native points with a trusted pure server predicate.
+ * Two cooperative passes measure and reserve exact canonical output before its
+ * allocation. The predicate is server composition, never a request field; input
+ * remains immutable through both passes, as for native slicing/replacement.
+ * @internal @category operations @since 0.0.0
+ */
+export const filterCitationPythonStorage = Effect.fn("Citation.filterNativeStorage")(function* <E>(
+  source: CitationPythonUnicodeStorage,
+  keep: (point: number) => boolean,
+  beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
+) {
+  let largest = 0;
+  let pythonLength = 0;
+  let utf16Units = 0;
+  yield* visitKeptNativePoints(source, keep, (point) => {
+    pythonLength++;
+    utf16Units += pointUnits(point);
+    largest = Num.max(largest, point);
+  });
+  const width = widthOf(largest);
+  const bytes = yield* allocateNativeOutput(width, pythonLength, utf16Units, beforeAllocate);
+  const view = new DataView(bytes.buffer);
+  let cursor = 0;
+  yield* visitKeptNativePoints(source, keep, (point) => writeNativePoint(view, width, cursor++, point));
+  return CitationPythonUnicodeStorage.make({ width, bytes });
 });
 
 /** Concatenate validated native ranges without projecting surrogate words.

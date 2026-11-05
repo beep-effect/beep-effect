@@ -402,6 +402,10 @@
     {
       "path": "ops/check-cleaner-unicode.ts",
       "purpose": "Portable Bun validation of complete Unicode source evidence; mandatory twelfth audit component, with no target-parity claim."
+    },
+    {
+      "path": "ops/probe-court-lookup.py",
+      "purpose": "Capture the complete pinned 2798-row court order, every original court/prefix lookup, native Unicode controls and all-point normalization scalar law."
     }
   ]
 }

@@ -44,7 +44,14 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-03-source-extractor-capture-witnesses.md",
         "goals/citation-extraction-engine/ops/probe-regex-modes.py",
         "packages/law-practice/use-cases/test/fixtures/eyecite/regex-modes.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-03-regex-modes-and-source-engines.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-03-regex-modes-and-source-engines.md",
+        "goals/citation-extraction-engine/ops/probe-court-lookup.py",
+        "packages/law-practice/server/src/internal/Citation/CourtLookup.ts",
+        "packages/law-practice/server/test/CitationCourtLookup.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/court-table.json",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/court-words.json",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/court-lookup.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-court-lookup.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -361,7 +368,14 @@
       "id": "legacy-vocabulary-identity",
       "statement": "Map frozen oracle vocabulary to public identities while preserving historical parser metadata, ambiguity and distinct historical authority semantics.",
       "referencePaths": [
-        "goals/citation-extraction-engine/history/evidence/2026-10-28-vocabulary-version-mapping.md"
+        "goals/citation-extraction-engine/history/evidence/2026-10-28-vocabulary-version-mapping.md",
+        "goals/citation-extraction-engine/ops/probe-court-lookup.py",
+        "packages/law-practice/server/src/internal/Citation/CourtLookup.ts",
+        "packages/law-practice/server/test/CitationCourtLookup.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/court-table.json",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/court-words.json",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/court-lookup.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-court-lookup.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

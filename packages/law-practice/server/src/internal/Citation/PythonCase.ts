@@ -42,9 +42,11 @@ export const makeCitationPythonLower = Effect.fn("Citation.makePythonLower")(fun
     Duration.toMillis,
     Duration.millis
   );
-  const lower = Effect.fn($I`lower`)(
-    function* (input: unknown) {
-      const source = yield* unicode.fromStorage(input);
+  const lowerImpl = Effect.fn($I`lower`)(
+    function* <E = never>(input: unknown, beforeAllocate?: (units: number) => Effect.Effect<void, E>) {
+      const source = yield* beforeAllocate === undefined
+        ? unicode.fromStorage(input)
+        : unicode.fromStorageReserved(input, beforeAllocate);
       const { bytes, width } = source.storage;
       const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       const read = (index: number) =>
@@ -81,9 +83,10 @@ export const makeCitationPythonLower = Effect.fn("Citation.makePythonLower")(fun
             largest = Num.max(largest, point);
           }
         }
-        return { length, largest };
+        return { length, largest, utf16 };
       });
-      const { length, largest } = yield* measure;
+      const { length, largest, utf16 } = yield* measure;
+      if (beforeAllocate !== undefined) yield* beforeAllocate(utf16);
       const outputWidth = widthOf(largest);
       const output = new Uint8Array(length * outputWidth);
       const target = new DataView(output.buffer);
@@ -106,5 +109,12 @@ export const makeCitationPythonLower = Effect.fn("Citation.makePythonLower")(fun
     Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(fail("deadline-exceeded")) }),
     Effect.provideService(Clock.Clock, clock)
   );
-  return { lower };
+  const lower = Effect.fn("Citation.lowerNativeWord")((input: unknown) => lowerImpl(input));
+  const lowerReserved = Effect.fn("Citation.lowerReservedNativeWord")(function* <E>(
+    input: unknown,
+    beforeAllocate: (units: number) => Effect.Effect<void, E>
+  ) {
+    return yield* lowerImpl(input, beforeAllocate);
+  });
+  return { lower, lowerReserved };
 });

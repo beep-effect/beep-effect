@@ -235,3 +235,9 @@ contibutors = "contibutors"
 [type.citation-metadata-strings]
 extend-glob = ["metadata-strings.json"]
 extend-ignore-re = ['"bytes": "[0-9a-f]*"']
+
+# Authenticated upstream court IDs and every truncated prefix are source data.
+# Keep headers/provenance checked; do not correct or globally allow their words.
+[type.citation-court-data]
+extend-glob = ["court-table.json", "court-lookup.json"]
+extend-ignore-re = ['"(?:payload|keys|cases)": "(?:\\.|[^"\\])*"']

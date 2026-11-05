@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "665383f402880f2524fccb0aa5070921d115d02f7293da1baa595285f04516a3",
+  "planSha256": "fd7fd61c2c91866b07d4b58a0742794b278f6e17a5d45f9652dcfca7329109d5",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -72,7 +72,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexAlphabet.ts",
-          "sha256": "d4bc481081d4eeef828de4aab5540777ef47c4685bd3f7de8aacdb1d6fe69cf8"
+          "sha256": "644a20552216c1d971fa2923b7b36f35755d9bd7877f93917e1e0fd0af2b9d11"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexAlphabet.test.ts",
@@ -92,7 +92,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexProgram.ts",
-          "sha256": "dd8531c7e8bc29e755ecf0beebeb126f76e8fdbe39ca830275286366203b9055"
+          "sha256": "37faddcd9c5e624b8c0dc64bf140e3ad097f0f4d66c705e1848de983fe9d6591"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexDescriptors.ts",
@@ -108,7 +108,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexProgram.test.ts",
-          "sha256": "7e5727dd103b408d2567adbe9a5505b01876535063a6c336ad289b64485699a1"
+          "sha256": "5f919fa1b64aed692326f36085c9c2ffc07608e19aafa96258a9bf58c0ab83d8"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-regex-program-compiler.md",
@@ -132,7 +132,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorkerEvaluation.ts",
-          "sha256": "2af7f4714b21bfa105e600e85935f10d3e8a527b5d0ddb338d49aa86bac406b7"
+          "sha256": "24e9fa600ab5b732f8d008e4dcfdd0ea5ebabafa3b92ea047d4debfcd4ba4f6f"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorkerProgram.ts",
@@ -173,6 +173,34 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-regex-modes-and-source-engines.md",
           "sha256": "3ab0f48d19dafa5afb0292f2d77ac0f4a162ed33ffa3dee7af232abee4089a88"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-court-lookup.py",
+          "sha256": "27aa1067f11cf79ef74b7f7b0001707aee41ffb4f92440d72e4e9854e9a134a4"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/CourtLookup.ts",
+          "sha256": "d29aba3a76ba25a216c3dda8fdfbe5c5c829a1233eaaa6fcd17e615f84db8f57"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationCourtLookup.test.ts",
+          "sha256": "7a39d94955bb0c2c71ec06f191054942ec9beab8df969baefa206274f70dac83"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/court-table.json",
+          "sha256": "2a0ee8d810577297440ff5a52da8b479a265953262ea1fb479005ef95ae6054c"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/court-words.json",
+          "sha256": "8b354b13a3d6314568a76c7689690dd9ae547072897cb452825dcf639ca7fc4e"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/court-lookup.json",
+          "sha256": "fcd99932bfab35fc94de74ecb9c8a335a8700bf0d0da57f835f5ef0054bc75db"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-court-lookup.md",
+          "sha256": "2263af6b92a4b10becaa270912a88437d76a2583f8a86a70320012c0f3159002"
         }
       ],
       "workflowState": "audit",
@@ -481,7 +509,7 @@
         },
         {
           "path": "packages/law-practice/use-cases/test/CitationSafetyFailure.test.ts",
-          "sha256": "297eb73d07653428e3b6ebcb680822cd956ed10eaebb298a5b0ad8af77928bcf"
+          "sha256": "980ef287ed9c0f04cf0efbb98cca9a16f2564a6730da954ce839c3cdb18fb5de"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlCompletion.ts",
@@ -813,7 +841,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/PythonUnicode.ts",
-          "sha256": "0f88707431d350ce9637992e49abc2c4c12886eacab5f4a8306b2a25ad727316"
+          "sha256": "b90799425fbca2cdb6ce400ce710091074929df5a282f9a60f20f5016554abb4"
         },
         {
           "path": "packages/law-practice/server/test/CitationPythonUnicode.test.ts",
@@ -877,7 +905,7 @@
         },
         {
           "path": "packages/law-practice/use-cases/test/CitationOracleArtifact.test.ts",
-          "sha256": "c8b91b9040f4a546851e538aadc765d99051d50663e04120cce62025de92e2d2"
+          "sha256": "fbc0c1687ecad0a9991e17e0f0ad55b2bced7b3b1dc104c2fec8118524dc0080"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-hosted-quality-repair.md",
@@ -946,7 +974,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationNativeSpawner.fixtures.ts",
-          "sha256": "02a784484a4aa0c60e8c3f8f48e5e03965bd06495b9336745788ac0e1511cba5"
+          "sha256": "e25b195401ff8ba2595050cfb35f662b675165fbb8eab6903f1194381e5de939"
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationCleanerNamedHtml.test.ts",
@@ -1171,6 +1199,34 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-28-vocabulary-version-mapping.md",
           "sha256": "8bb4dc8b4b24f947e695441ad4ef797d06e07cddce34f8c8318fe413b29b87b4"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-court-lookup.py",
+          "sha256": "27aa1067f11cf79ef74b7f7b0001707aee41ffb4f92440d72e4e9854e9a134a4"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/CourtLookup.ts",
+          "sha256": "d29aba3a76ba25a216c3dda8fdfbe5c5c829a1233eaaa6fcd17e615f84db8f57"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationCourtLookup.test.ts",
+          "sha256": "7a39d94955bb0c2c71ec06f191054942ec9beab8df969baefa206274f70dac83"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/court-table.json",
+          "sha256": "2a0ee8d810577297440ff5a52da8b479a265953262ea1fb479005ef95ae6054c"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/court-words.json",
+          "sha256": "8b354b13a3d6314568a76c7689690dd9ae547072897cb452825dcf639ca7fc4e"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/court-lookup.json",
+          "sha256": "fcd99932bfab35fc94de74ecb9c8a335a8700bf0d0da57f835f5ef0054bc75db"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-court-lookup.md",
+          "sha256": "2263af6b92a4b10becaa270912a88437d76a2583f8a86a70320012c0f3159002"
         }
       ],
       "workflowState": "audit",

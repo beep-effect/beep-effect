@@ -5,6 +5,7 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -107,7 +108,15 @@ const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
 // With at most 8192 intervals there are at most 16385 cells. Starting at
 // U+0100 avoids regex syntax and never reaches the surrogate range.
 const symbol = (cell: number) => String.fromCodePoint(0x100 + cell);
-const cellFor = (boundaries: ReadonlyArray<number>, point: number) => {
+/** Locate a validated point in sorted boundaries with a terminal upper sentinel.
+ * The caller proves nonempty boundaries and point < the sentinel. Points below
+ * the first boundary map to zero; interval users must still check their start.
+ * @internal @category operations @since 0.0.0
+ */
+export const citationRegexCellFor: {
+  (point: number): (boundaries: ReadonlyArray<number>) => number;
+  (boundaries: ReadonlyArray<number>, point: number): number;
+} = dual(2, (boundaries: ReadonlyArray<number>, point: number) => {
   let low = 0;
   let high = A.length(boundaries) - 1;
   while (low + 1 < high) {
@@ -116,7 +125,7 @@ const cellFor = (boundaries: ReadonlyArray<number>, point: number) => {
     else high = middle;
   }
   return low;
-};
+});
 const makeBoundaries = Effect.fn("Citation.partitionRegexAtoms")(function* (sets: CitationRegexAtomSets) {
   const endpoints = new Uint32Array(2 + 2 * A.length(sets.intervals));
   endpoints[0] = 0;
@@ -134,8 +143,8 @@ const encodeInterval = Effect.fnUntraced(function* (
   boundaries: ReadonlyArray<number>,
   available: number
 ) {
-  const first = cellFor(boundaries, row.start);
-  const last = cellFor(boundaries, row.end);
+  const first = citationRegexCellFor(boundaries, row.start);
+  const last = citationRegexCellFor(boundaries, row.end);
   const units = first === last ? 1 : 3;
   if (units > available) return yield* safety("patternUtf16");
   return first === last ? symbol(first) : `${symbol(first)}-${symbol(last)}`;
@@ -184,7 +193,7 @@ const encodeSource = Effect.fn("Citation.encodeRegexAlphabetSource")(function* (
   for (let index = 0; index < value.pythonLength; index++) {
     if (index % 4096 === 0) yield* Effect.yieldNow;
     const point = sourcePoint(view, native.width, index);
-    chunk += symbol(cellFor(boundaries, point));
+    chunk += symbol(citationRegexCellFor(boundaries, point));
     if (Str.length(chunk) === 4096) {
       chunks.push(chunk);
       chunk = "";
