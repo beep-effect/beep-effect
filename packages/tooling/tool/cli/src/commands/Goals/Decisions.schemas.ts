@@ -175,6 +175,7 @@ const SingleLine = S.String.check(
  *   title: "Forward-only migration",
  *   date: "2026-11-05",
  *   reversal: "Delete the marker block and move the entries back into the table.",
+ *   kind: "decision",
  * })
  * console.log(frontmatter.kind) // "decision"
  * ```

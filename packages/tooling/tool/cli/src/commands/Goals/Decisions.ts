@@ -275,11 +275,11 @@ const isKind = S.is(GoalDecisionKind);
  * **Example** (Build the add effect)
  *
  * ```ts
- * import { runGoalsDecisionsAdd } from "@beep/repo-cli/commands/Goals/Decisions"
+ * import { GoalDecisionAddInput, runGoalsDecisionsAdd } from "@beep/repo-cli/commands/Goals/Decisions"
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
- * const effect = runGoalsDecisionsAdd({
+ * const effect = runGoalsDecisionsAdd(GoalDecisionAddInput.make({
  *   slug: "demo",
  *   title: "Forward-only migration",
  *   reversal: "Move the entries back.",
@@ -289,7 +289,7 @@ const isKind = S.is(GoalDecisionKind);
  *   pullRequest: O.none(),
  *   date: O.some("2026-11-05"),
  *   topic: O.none(),
- * })
+ * }))
  * console.log(Effect.isEffect(effect))
  * ```
  *

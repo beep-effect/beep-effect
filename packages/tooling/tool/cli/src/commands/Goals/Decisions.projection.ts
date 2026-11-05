@@ -5,9 +5,9 @@
  * **Details**
  *
  * Nothing here touches the filesystem. Readers hand in file names and text
- * through {@link GoalDecisionReader}; `beep goals doctor` and `beep goals
- * decisions` share this core so the drift check and the writer can never
- * disagree about the expected text.
+ * through {@link GoalDecisionReader}; the doctor and the `decisions` command
+ * share this core so the drift check and the writer can never disagree about
+ * the expected text.
  *
  * @packageDocumentation
  * @since 0.0.0
