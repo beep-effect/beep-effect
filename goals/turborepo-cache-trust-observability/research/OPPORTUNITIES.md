@@ -2272,6 +2272,17 @@ same test. Enumerate the same four input pairs in one loop instead, preserving
 every assertion and avoiding helper extraction or a raised threshold. Owner:
 this PR; current hosted Fallow proof remains required after the repair.
 
+### 2026-11-03 — include directory metadata in pilot source guards
+
+While following the native permission counterexample, inspection of
+`Cache.pilot.ts` found that its internal snapshot recorded files and symlink
+targets but omitted directory/root metadata and empty directories. Its file
+limit was checked only at directory entry. Add those entries to the existing
+annotated snapshot model and enforce the ceiling before each append. Hosted
+orchestration regressions must reject metadata-only changes for selected and
+dependency packages, refuse overflow and prove cleanup without issuing a
+receipt. No new scanner, state store, runtime policy or qualification grant is
+needed. No local verify/publish or package proof is run.
 ### Installed dependency digest differs across protected inspections, 2026-11-03
 
 - Work: independently freeze the actual protected source/toolchain profile.

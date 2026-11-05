@@ -1,0 +1,2503 @@
+{
+  "schemaVersion": "citation-unicode-dictionary/v1",
+  "scope": "combined Unicode/general-key transitions; source hash production, split tables and complete cleaner registry remain open",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "python": "3.11.15",
+  "pythonHashSeed": "0",
+  "hashWidth": 64,
+  "hashAlgorithm": "siphash13",
+  "producerSha256": "b16918181f76f7f10e9875d4cb241fb8e9223eeaa58ac11f0f70d13a48d249d6",
+  "dictionarySourceSha256": "474b899187e73c5ec416b82e17346d2c17616b1b662e1c2fd1c7e53bb2bf19d8",
+  "cpythonLicenseSha256": "3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf",
+  "oracleLicenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "cases": [
+    {
+      "name": "exact-text",
+      "keys": [
+        {
+          "objectId": 0,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 1,
+          "kind": "text",
+          "text": "inline_whitespace",
+          "hash": "-1792869599575314601",
+          "token": "inline_whitespace"
+        },
+        {
+          "objectId": 2,
+          "kind": "text",
+          "text": "all_whitespace",
+          "hash": "-2342240716901292806",
+          "token": "all_whitespace"
+        },
+        {
+          "objectId": 3,
+          "kind": "text",
+          "text": "underscores",
+          "hash": "3742174686126599441",
+          "token": "underscores"
+        },
+        {
+          "objectId": 4,
+          "kind": "text",
+          "text": "xml",
+          "hash": "1092426368563753006",
+          "token": "xml"
+        },
+        {
+          "objectId": 5,
+          "kind": "host",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 6,
+          "kind": "host",
+          "text": "",
+          "hash": "-4559037671519806539",
+          "token": "other"
+        },
+        {
+          "objectId": 7,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        }
+      ],
+      "initial": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 7
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 7
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 6
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 6
+            },
+            {
+              "kind": "compare",
+              "left": 6,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "host-hit",
+      "keys": [
+        {
+          "objectId": 0,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 1,
+          "kind": "text",
+          "text": "inline_whitespace",
+          "hash": "-1792869599575314601",
+          "token": "inline_whitespace"
+        },
+        {
+          "objectId": 2,
+          "kind": "text",
+          "text": "all_whitespace",
+          "hash": "-2342240716901292806",
+          "token": "all_whitespace"
+        },
+        {
+          "objectId": 3,
+          "kind": "text",
+          "text": "underscores",
+          "hash": "3742174686126599441",
+          "token": "underscores"
+        },
+        {
+          "objectId": 4,
+          "kind": "text",
+          "text": "xml",
+          "hash": "1092426368563753006",
+          "token": "xml"
+        },
+        {
+          "objectId": 5,
+          "kind": "host",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 6,
+          "kind": "host",
+          "text": "",
+          "hash": "-4559037671519806539",
+          "token": "other"
+        },
+        {
+          "objectId": 7,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        }
+      ],
+      "initial": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 5
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 5
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 7
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 6
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 6
+            },
+            {
+              "kind": "compare",
+              "left": 6,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "host-miss",
+      "keys": [
+        {
+          "objectId": 0,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 1,
+          "kind": "text",
+          "text": "inline_whitespace",
+          "hash": "-1792869599575314601",
+          "token": "inline_whitespace"
+        },
+        {
+          "objectId": 2,
+          "kind": "text",
+          "text": "all_whitespace",
+          "hash": "-2342240716901292806",
+          "token": "all_whitespace"
+        },
+        {
+          "objectId": 3,
+          "kind": "text",
+          "text": "underscores",
+          "hash": "3742174686126599441",
+          "token": "underscores"
+        },
+        {
+          "objectId": 4,
+          "kind": "text",
+          "text": "xml",
+          "hash": "1092426368563753006",
+          "token": "xml"
+        },
+        {
+          "objectId": 5,
+          "kind": "host",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "missing"
+        },
+        {
+          "objectId": 6,
+          "kind": "host",
+          "text": "",
+          "hash": "-4559037671519806539",
+          "token": "other"
+        },
+        {
+          "objectId": 7,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        }
+      ],
+      "initial": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 5
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 5
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 7
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 6
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 6
+            },
+            {
+              "kind": "compare",
+              "left": 6,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "host-set-hit",
+      "keys": [
+        {
+          "objectId": 0,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 1,
+          "kind": "text",
+          "text": "inline_whitespace",
+          "hash": "-1792869599575314601",
+          "token": "inline_whitespace"
+        },
+        {
+          "objectId": 2,
+          "kind": "text",
+          "text": "all_whitespace",
+          "hash": "-2342240716901292806",
+          "token": "all_whitespace"
+        },
+        {
+          "objectId": 3,
+          "kind": "text",
+          "text": "underscores",
+          "hash": "3742174686126599441",
+          "token": "underscores"
+        },
+        {
+          "objectId": 4,
+          "kind": "text",
+          "text": "xml",
+          "hash": "1092426368563753006",
+          "token": "xml"
+        },
+        {
+          "objectId": 5,
+          "kind": "host",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 6,
+          "kind": "host",
+          "text": "",
+          "hash": "-4559037671519806539",
+          "token": "other"
+        },
+        {
+          "objectId": 7,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        }
+      ],
+      "initial": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 5,
+            "value": 55
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 5
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 55
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 7
+          },
+          "outcome": {
+            "status": "value",
+            "result": 55
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 55
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 6
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 6
+            },
+            {
+              "kind": "compare",
+              "left": 6,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 55
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "host-set-miss",
+      "keys": [
+        {
+          "objectId": 0,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 1,
+          "kind": "text",
+          "text": "inline_whitespace",
+          "hash": "-1792869599575314601",
+          "token": "inline_whitespace"
+        },
+        {
+          "objectId": 2,
+          "kind": "text",
+          "text": "all_whitespace",
+          "hash": "-2342240716901292806",
+          "token": "all_whitespace"
+        },
+        {
+          "objectId": 3,
+          "kind": "text",
+          "text": "underscores",
+          "hash": "3742174686126599441",
+          "token": "underscores"
+        },
+        {
+          "objectId": 4,
+          "kind": "text",
+          "text": "xml",
+          "hash": "1092426368563753006",
+          "token": "xml"
+        },
+        {
+          "objectId": 5,
+          "kind": "host",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "missing"
+        },
+        {
+          "objectId": 6,
+          "kind": "host",
+          "text": "",
+          "hash": "-4559037671519806539",
+          "token": "other"
+        },
+        {
+          "objectId": 7,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        }
+      ],
+      "initial": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 5,
+            "value": 55
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 5
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            },
+            {
+              "objectId": 5,
+              "value": 55
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 7
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            },
+            {
+              "objectId": 5,
+              "value": 55
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 6
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 6
+            },
+            {
+              "kind": "compare",
+              "left": 6,
+              "right": 0
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 6
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 6
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            },
+            {
+              "objectId": 5,
+              "value": 55
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "delete-in-equality",
+      "keys": [
+        {
+          "objectId": 0,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 1,
+          "kind": "text",
+          "text": "inline_whitespace",
+          "hash": "-1792869599575314601",
+          "token": "inline_whitespace"
+        },
+        {
+          "objectId": 2,
+          "kind": "text",
+          "text": "all_whitespace",
+          "hash": "-2342240716901292806",
+          "token": "all_whitespace"
+        },
+        {
+          "objectId": 3,
+          "kind": "text",
+          "text": "underscores",
+          "hash": "3742174686126599441",
+          "token": "underscores"
+        },
+        {
+          "objectId": 4,
+          "kind": "text",
+          "text": "xml",
+          "hash": "1092426368563753006",
+          "token": "xml"
+        },
+        {
+          "objectId": 5,
+          "kind": "host",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 6,
+          "kind": "host",
+          "text": "",
+          "hash": "-4559037671519806539",
+          "token": "other"
+        },
+        {
+          "objectId": 7,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        }
+      ],
+      "initial": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 5
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 5
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 0
+            },
+            {
+              "kind": "remove",
+              "key": 0,
+              "result": 100
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 7
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 6
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 6
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "update-in-equality",
+      "keys": [
+        {
+          "objectId": 0,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 1,
+          "kind": "text",
+          "text": "inline_whitespace",
+          "hash": "-1792869599575314601",
+          "token": "inline_whitespace"
+        },
+        {
+          "objectId": 2,
+          "kind": "text",
+          "text": "all_whitespace",
+          "hash": "-2342240716901292806",
+          "token": "all_whitespace"
+        },
+        {
+          "objectId": 3,
+          "kind": "text",
+          "text": "underscores",
+          "hash": "3742174686126599441",
+          "token": "underscores"
+        },
+        {
+          "objectId": 4,
+          "kind": "text",
+          "text": "xml",
+          "hash": "1092426368563753006",
+          "token": "xml"
+        },
+        {
+          "objectId": 5,
+          "kind": "host",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 6,
+          "kind": "host",
+          "text": "",
+          "hash": "-4559037671519806539",
+          "token": "other"
+        },
+        {
+          "objectId": 7,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        }
+      ],
+      "initial": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 5
+          },
+          "outcome": {
+            "status": "value",
+            "result": 99
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 5
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 0
+            },
+            {
+              "kind": "set",
+              "key": 0,
+              "value": 99
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 99
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 7
+          },
+          "outcome": {
+            "status": "value",
+            "result": 99
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 99
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 6
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 6
+            },
+            {
+              "kind": "compare",
+              "left": 6,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 99
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "clear-refill",
+      "keys": [
+        {
+          "objectId": 0,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 1,
+          "kind": "text",
+          "text": "inline_whitespace",
+          "hash": "-1792869599575314601",
+          "token": "inline_whitespace"
+        },
+        {
+          "objectId": 2,
+          "kind": "text",
+          "text": "all_whitespace",
+          "hash": "-2342240716901292806",
+          "token": "all_whitespace"
+        },
+        {
+          "objectId": 3,
+          "kind": "text",
+          "text": "underscores",
+          "hash": "3742174686126599441",
+          "token": "underscores"
+        },
+        {
+          "objectId": 4,
+          "kind": "text",
+          "text": "xml",
+          "hash": "1092426368563753006",
+          "token": "xml"
+        },
+        {
+          "objectId": 5,
+          "kind": "host",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 6,
+          "kind": "host",
+          "text": "",
+          "hash": "-4559037671519806539",
+          "token": "other"
+        },
+        {
+          "objectId": 7,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        }
+      ],
+      "initial": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 5
+          },
+          "outcome": {
+            "status": "value",
+            "result": 200
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 5
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 0
+            },
+            {
+              "kind": "clear"
+            },
+            {
+              "kind": "set",
+              "key": 0,
+              "value": 200
+            },
+            {
+              "kind": "set",
+              "key": 1,
+              "value": 201
+            },
+            {
+              "kind": "set",
+              "key": 2,
+              "value": 202
+            },
+            {
+              "kind": "set",
+              "key": 3,
+              "value": 203
+            },
+            {
+              "kind": "set",
+              "key": 4,
+              "value": 204
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 200
+            },
+            {
+              "objectId": 1,
+              "value": 201
+            },
+            {
+              "objectId": 2,
+              "value": 202
+            },
+            {
+              "objectId": 3,
+              "value": 203
+            },
+            {
+              "objectId": 4,
+              "value": 204
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 7
+          },
+          "outcome": {
+            "status": "value",
+            "result": 200
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 200
+            },
+            {
+              "objectId": 1,
+              "value": 201
+            },
+            {
+              "objectId": 2,
+              "value": 202
+            },
+            {
+              "objectId": 3,
+              "value": 203
+            },
+            {
+              "objectId": 4,
+              "value": 204
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 6
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 6
+            },
+            {
+              "kind": "compare",
+              "left": 6,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 200
+            },
+            {
+              "objectId": 1,
+              "value": 201
+            },
+            {
+              "objectId": 2,
+              "value": 202
+            },
+            {
+              "objectId": 3,
+              "value": 203
+            },
+            {
+              "objectId": 4,
+              "value": 204
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "convert-in-equality",
+      "keys": [
+        {
+          "objectId": 0,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 1,
+          "kind": "text",
+          "text": "inline_whitespace",
+          "hash": "-1792869599575314601",
+          "token": "inline_whitespace"
+        },
+        {
+          "objectId": 2,
+          "kind": "text",
+          "text": "all_whitespace",
+          "hash": "-2342240716901292806",
+          "token": "all_whitespace"
+        },
+        {
+          "objectId": 3,
+          "kind": "text",
+          "text": "underscores",
+          "hash": "3742174686126599441",
+          "token": "underscores"
+        },
+        {
+          "objectId": 4,
+          "kind": "text",
+          "text": "xml",
+          "hash": "1092426368563753006",
+          "token": "xml"
+        },
+        {
+          "objectId": 5,
+          "kind": "host",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 6,
+          "kind": "host",
+          "text": "",
+          "hash": "-4559037671519806539",
+          "token": "other"
+        },
+        {
+          "objectId": 7,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        }
+      ],
+      "initial": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 5
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 5
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 0
+            },
+            {
+              "kind": "hash",
+              "key": 6
+            },
+            {
+              "kind": "compare",
+              "left": 6,
+              "right": 0
+            },
+            {
+              "kind": "set",
+              "key": 6,
+              "value": 106
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            },
+            {
+              "objectId": 6,
+              "value": 106
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 7
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            },
+            {
+              "objectId": 6,
+              "value": 106
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 6
+          },
+          "outcome": {
+            "status": "value",
+            "result": 106
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 6
+            },
+            {
+              "kind": "compare",
+              "left": 6,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            },
+            {
+              "objectId": 6,
+              "value": 106
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "delete-raise",
+      "keys": [
+        {
+          "objectId": 0,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 1,
+          "kind": "text",
+          "text": "inline_whitespace",
+          "hash": "-1792869599575314601",
+          "token": "inline_whitespace"
+        },
+        {
+          "objectId": 2,
+          "kind": "text",
+          "text": "all_whitespace",
+          "hash": "-2342240716901292806",
+          "token": "all_whitespace"
+        },
+        {
+          "objectId": 3,
+          "kind": "text",
+          "text": "underscores",
+          "hash": "3742174686126599441",
+          "token": "underscores"
+        },
+        {
+          "objectId": 4,
+          "kind": "text",
+          "text": "xml",
+          "hash": "1092426368563753006",
+          "token": "xml"
+        },
+        {
+          "objectId": 5,
+          "kind": "host",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 6,
+          "kind": "host",
+          "text": "",
+          "hash": "-4559037671519806539",
+          "token": "other"
+        },
+        {
+          "objectId": 7,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        }
+      ],
+      "initial": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 5
+          },
+          "outcome": {
+            "status": "error",
+            "kind": "ValueError"
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 5
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 0
+            },
+            {
+              "kind": "remove",
+              "key": 0,
+              "result": 100
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 7
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 6
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 6
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "subclass-hit",
+      "keys": [
+        {
+          "objectId": 0,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 1,
+          "kind": "text",
+          "text": "inline_whitespace",
+          "hash": "-1792869599575314601",
+          "token": "inline_whitespace"
+        },
+        {
+          "objectId": 2,
+          "kind": "text",
+          "text": "all_whitespace",
+          "hash": "-2342240716901292806",
+          "token": "all_whitespace"
+        },
+        {
+          "objectId": 3,
+          "kind": "text",
+          "text": "underscores",
+          "hash": "3742174686126599441",
+          "token": "underscores"
+        },
+        {
+          "objectId": 4,
+          "kind": "text",
+          "text": "xml",
+          "hash": "1092426368563753006",
+          "token": "xml"
+        },
+        {
+          "objectId": 5,
+          "kind": "subclass",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 6,
+          "kind": "host",
+          "text": "",
+          "hash": "-4559037671519806539",
+          "token": "other"
+        },
+        {
+          "objectId": 7,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        }
+      ],
+      "initial": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 5
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 5
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 7
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 6
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 6
+            },
+            {
+              "kind": "compare",
+              "left": 6,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "subclass-miss",
+      "keys": [
+        {
+          "objectId": 0,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 1,
+          "kind": "text",
+          "text": "inline_whitespace",
+          "hash": "-1792869599575314601",
+          "token": "inline_whitespace"
+        },
+        {
+          "objectId": 2,
+          "kind": "text",
+          "text": "all_whitespace",
+          "hash": "-2342240716901292806",
+          "token": "all_whitespace"
+        },
+        {
+          "objectId": 3,
+          "kind": "text",
+          "text": "underscores",
+          "hash": "3742174686126599441",
+          "token": "underscores"
+        },
+        {
+          "objectId": 4,
+          "kind": "text",
+          "text": "xml",
+          "hash": "1092426368563753006",
+          "token": "xml"
+        },
+        {
+          "objectId": 5,
+          "kind": "subclass",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "missing"
+        },
+        {
+          "objectId": 6,
+          "kind": "host",
+          "text": "",
+          "hash": "-4559037671519806539",
+          "token": "other"
+        },
+        {
+          "objectId": 7,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        }
+      ],
+      "initial": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 5
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 5
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 7
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 6
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 6
+            },
+            {
+              "kind": "compare",
+              "left": 6,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "clear-after-general",
+      "keys": [
+        {
+          "objectId": 0,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 1,
+          "kind": "text",
+          "text": "inline_whitespace",
+          "hash": "-1792869599575314601",
+          "token": "inline_whitespace"
+        },
+        {
+          "objectId": 2,
+          "kind": "text",
+          "text": "all_whitespace",
+          "hash": "-2342240716901292806",
+          "token": "all_whitespace"
+        },
+        {
+          "objectId": 3,
+          "kind": "text",
+          "text": "underscores",
+          "hash": "3742174686126599441",
+          "token": "underscores"
+        },
+        {
+          "objectId": 4,
+          "kind": "text",
+          "text": "xml",
+          "hash": "1092426368563753006",
+          "token": "xml"
+        },
+        {
+          "objectId": 5,
+          "kind": "host",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        },
+        {
+          "objectId": 6,
+          "kind": "host",
+          "text": "",
+          "hash": "-4559037671519806539",
+          "token": "other"
+        },
+        {
+          "objectId": 7,
+          "kind": "text",
+          "text": "html",
+          "hash": "-4559037671519806539",
+          "token": "html"
+        }
+      ],
+      "initial": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 5,
+            "value": 55
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "hash",
+              "key": 5
+            },
+            {
+              "kind": "compare",
+              "left": 5,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 55
+            },
+            {
+              "objectId": 1,
+              "value": 101
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "clear"
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [],
+          "entries": []
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 300
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 300
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 7
+          },
+          "outcome": {
+            "status": "value",
+            "result": 300
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 300
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -7,6 +7,24 @@
  */
 
 /**
+ * Schema-owned citation safety ceilings and explicitly supplied execution policy.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export {
+  CitationEngineAbsoluteMaxima,
+  CitationEngineEffectivePolicy,
+  CitationEngineLimits,
+  CitationEngineLimitTightening,
+} from "./CitationEngine/CitationEngine.limits.ts";
+/**
+ * Closed citation resource names and nontruncating safety failures.
+ * @category errors
+ * @since 0.0.0
+ */
+export { CitationSafetyBudget, CitationSafetyLimitExceeded } from "./CitationEngine/CitationEngine.safety.ts";
+/**
  * Local failure-preserving source inspection tool.
  * @category tools
  * @since 0.0.0

@@ -1,0 +1,821 @@
+{
+  "schemaVersion": "citation-dispatch-decisions/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "python": "3.11.15",
+  "pythonHashSeed": "0",
+  "versions": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22"
+  },
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "producerSha256": "a0a88acf2b9b0a4e33f29ecac84af6b848a3dcc6559eaccb18428346a7c33fb0",
+  "sources": {
+    "models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a",
+    "resolve.py": "651ede8c2a2d5df9ec9c9f1145530a6de7fca15304d1816b7f620a81ab3f2044"
+  },
+  "scope": "Actual callbacks with observational list.append subclass; these scenes have unique per-entry lists, so normalized insertion/list allocation slots coincide. No shared-list selection or native integer-entry-ID claim.",
+  "cases": [
+    {
+      "name": "distinct-equal-returned-key",
+      "kinds": ["case", "case"],
+      "action": "equal",
+      "hosts": [
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        },
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "decisions": [
+        {
+          "mention": 0,
+          "callback": "full",
+          "resource": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          },
+          "assignment": {
+            "entrySlot": 0,
+            "listSlot": 0,
+            "resource": {
+              "kind": "host",
+              "slot": 0,
+              "token": "same"
+            }
+          }
+        },
+        {
+          "mention": 1,
+          "callback": "full",
+          "resource": {
+            "kind": "host",
+            "slot": 1,
+            "token": "same"
+          },
+          "assignment": {
+            "entrySlot": 0,
+            "listSlot": 0,
+            "resource": {
+              "kind": "host",
+              "slot": 0,
+              "token": "same"
+            }
+          }
+        }
+      ],
+      "groups": [
+        {
+          "entrySlot": 0,
+          "listSlot": 0,
+          "resource": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          },
+          "members": [0, 1]
+        }
+      ],
+      "trace": [
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        },
+        {
+          "kind": "bool",
+          "slot": 1,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 1,
+          "raw": "7"
+        },
+        {
+          "kind": "eq",
+          "slot": 0,
+          "other": {
+            "kind": "host",
+            "slot": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "falsy-retained-result",
+      "kinds": ["case", "id"],
+      "action": "falsy",
+      "hosts": [
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": false,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        },
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": false,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "decisions": [
+        {
+          "mention": 0,
+          "callback": "full",
+          "resource": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          },
+          "assignment": null
+        },
+        {
+          "mention": 1,
+          "callback": "id",
+          "resource": {
+            "kind": "none"
+          },
+          "assignment": null
+        }
+      ],
+      "groups": [],
+      "trace": [
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": false
+        },
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": false
+        }
+      ]
+    },
+    {
+      "name": "truth-changes-during-append",
+      "kinds": ["case", "id"],
+      "action": "truth-change",
+      "hosts": [
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": false,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        },
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": false,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "decisions": [
+        {
+          "mention": 0,
+          "callback": "full",
+          "resource": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          },
+          "assignment": {
+            "entrySlot": 0,
+            "listSlot": 0,
+            "resource": {
+              "kind": "host",
+              "slot": 0,
+              "token": "same"
+            }
+          }
+        },
+        {
+          "mention": 1,
+          "callback": "id",
+          "resource": {
+            "kind": "none"
+          },
+          "assignment": null
+        }
+      ],
+      "groups": [
+        {
+          "entrySlot": 0,
+          "listSlot": 0,
+          "resource": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          },
+          "members": [0]
+        }
+      ],
+      "trace": [
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        },
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": false
+        }
+      ]
+    },
+    {
+      "name": "removed-entry-history",
+      "kinds": ["case", "id", "id"],
+      "action": "clear-new",
+      "hosts": [
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        },
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "decisions": [
+        {
+          "mention": 0,
+          "callback": "full",
+          "resource": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          },
+          "assignment": {
+            "entrySlot": 0,
+            "listSlot": 0,
+            "resource": {
+              "kind": "host",
+              "slot": 0,
+              "token": "same"
+            }
+          }
+        },
+        {
+          "mention": 1,
+          "callback": "id",
+          "resource": {
+            "kind": "host",
+            "slot": 1,
+            "token": "same"
+          },
+          "assignment": {
+            "entrySlot": 1,
+            "listSlot": 1,
+            "resource": {
+              "kind": "host",
+              "slot": 1,
+              "token": "same"
+            }
+          }
+        },
+        {
+          "mention": 2,
+          "callback": "id",
+          "resource": {
+            "kind": "host",
+            "slot": 1,
+            "token": "same"
+          },
+          "assignment": {
+            "entrySlot": 1,
+            "listSlot": 1,
+            "resource": {
+              "kind": "host",
+              "slot": 1,
+              "token": "same"
+            }
+          }
+        }
+      ],
+      "groups": [
+        {
+          "entrySlot": 1,
+          "listSlot": 1,
+          "resource": {
+            "kind": "host",
+            "slot": 1,
+            "token": "same"
+          },
+          "members": [1, 2]
+        }
+      ],
+      "trace": [
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        },
+        {
+          "kind": "bool",
+          "slot": 1,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 1,
+          "raw": "7"
+        },
+        {
+          "kind": "hash",
+          "slot": 1,
+          "raw": "7"
+        },
+        {
+          "kind": "bool",
+          "slot": 1,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 1,
+          "raw": "7"
+        },
+        {
+          "kind": "bool",
+          "slot": 1,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 1,
+          "raw": "7"
+        }
+      ]
+    },
+    {
+      "name": "same-object-reinsert-history",
+      "kinds": ["case", "id", "id"],
+      "action": "clear-same",
+      "hosts": [
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        },
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "decisions": [
+        {
+          "mention": 0,
+          "callback": "full",
+          "resource": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          },
+          "assignment": {
+            "entrySlot": 0,
+            "listSlot": 0,
+            "resource": {
+              "kind": "host",
+              "slot": 0,
+              "token": "same"
+            }
+          }
+        },
+        {
+          "mention": 1,
+          "callback": "id",
+          "resource": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          },
+          "assignment": {
+            "entrySlot": 1,
+            "listSlot": 1,
+            "resource": {
+              "kind": "host",
+              "slot": 0,
+              "token": "same"
+            }
+          }
+        },
+        {
+          "mention": 2,
+          "callback": "id",
+          "resource": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          },
+          "assignment": {
+            "entrySlot": 1,
+            "listSlot": 1,
+            "resource": {
+              "kind": "host",
+              "slot": 0,
+              "token": "same"
+            }
+          }
+        }
+      ],
+      "groups": [
+        {
+          "entrySlot": 1,
+          "listSlot": 1,
+          "resource": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          },
+          "members": [1, 2]
+        }
+      ],
+      "trace": [
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        },
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        },
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        },
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        }
+      ]
+    },
+    {
+      "name": "unknown-resets-last",
+      "kinds": ["case", "unknown", "id"],
+      "action": "unknown",
+      "hosts": [
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        },
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "decisions": [
+        {
+          "mention": 0,
+          "callback": "full",
+          "resource": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          },
+          "assignment": {
+            "entrySlot": 0,
+            "listSlot": 0,
+            "resource": {
+              "kind": "host",
+              "slot": 0,
+              "token": "same"
+            }
+          }
+        },
+        {
+          "mention": 1,
+          "callback": "unknown",
+          "resource": {
+            "kind": "none"
+          },
+          "assignment": null
+        },
+        {
+          "mention": 2,
+          "callback": "id",
+          "resource": {
+            "kind": "none"
+          },
+          "assignment": null
+        }
+      ],
+      "groups": [
+        {
+          "entrySlot": 0,
+          "listSlot": 0,
+          "resource": {
+            "kind": "host",
+            "slot": 0,
+            "token": "same"
+          },
+          "members": [0]
+        }
+      ],
+      "trace": [
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        }
+      ]
+    },
+    {
+      "name": "none-full-result",
+      "kinds": ["case", "id"],
+      "action": "none",
+      "hosts": [
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        },
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "decisions": [
+        {
+          "mention": 0,
+          "callback": "full",
+          "resource": {
+            "kind": "none"
+          },
+          "assignment": null
+        },
+        {
+          "mention": 1,
+          "callback": "id",
+          "resource": {
+            "kind": "none"
+          },
+          "assignment": null
+        }
+      ],
+      "groups": [],
+      "trace": []
+    },
+    {
+      "name": "live-returned-presentation",
+      "kinds": ["case", "id"],
+      "action": "presentation-change",
+      "hosts": [
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        },
+        {
+          "hashRaw": "7",
+          "mode": "token",
+          "token": "same",
+          "truth": true,
+          "truthAfterHash": null,
+          "failHash": false,
+          "failEq": false,
+          "failBool": false
+        }
+      ],
+      "decisions": [
+        {
+          "mention": 0,
+          "callback": "full",
+          "resource": {
+            "kind": "host",
+            "slot": 0,
+            "token": "changed"
+          },
+          "assignment": {
+            "entrySlot": 0,
+            "listSlot": 0,
+            "resource": {
+              "kind": "host",
+              "slot": 0,
+              "token": "changed"
+            }
+          }
+        },
+        {
+          "mention": 1,
+          "callback": "id",
+          "resource": {
+            "kind": "host",
+            "slot": 0,
+            "token": "changed"
+          },
+          "assignment": {
+            "entrySlot": 0,
+            "listSlot": 0,
+            "resource": {
+              "kind": "host",
+              "slot": 0,
+              "token": "changed"
+            }
+          }
+        }
+      ],
+      "groups": [
+        {
+          "entrySlot": 0,
+          "listSlot": 0,
+          "resource": {
+            "kind": "host",
+            "slot": 0,
+            "token": "changed"
+          },
+          "members": [0, 1]
+        }
+      ],
+      "trace": [
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        },
+        {
+          "kind": "bool",
+          "slot": 0,
+          "result": true
+        },
+        {
+          "kind": "hash",
+          "slot": 0,
+          "raw": "7"
+        }
+      ]
+    }
+  ]
+}

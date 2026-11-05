@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "signature-key-sourcebound-native-replay/v1",
+  "recordedAt": "2026-11-03T19:10:57.778423+00:00",
+  "authority": "Actual offline synthetic key-length semantics and source/raw-capture joins only; feature, task, protected producer and rollout acceptance remain pending.",
+  "sourceRevision": "105ea5acf1d800414e9f9ac4f35dd3fe2e76969d",
+  "nativeEvidence": {
+    "path": "native-signature-key-sourcebound-controls-2026-11-03.json",
+    "sha256": "71b41704a9c54dda269700c881841d9926e7ba82e7c36d4a49b32e4e105c5fdf",
+    "cases": 168,
+    "classificationCounts": {
+      "task-executed": 162,
+      "provided-key-too-short-before-task": 6
+    },
+    "sourceBindings": [
+      {
+        "path": "goals/turborepo-quality-cache-adoption/research/native-signature-key-controls.py",
+        "sha256": "2afde39e782ed441b181ce400ac14280a4ce8a1a2c8281a0e86a9fbb80e05b78"
+      },
+      {
+        "path": "goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json",
+        "sha256": "b98316567400a2323e0868b8558fb9250d7ceb5fd2e2af7354782e5bc8803c6d"
+      },
+      {
+        "path": "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py",
+        "sha256": "49e4fd3edc49365f32dc2ce3cdec00e8b0d22034a54a9c1a37bbfd08f868baf0"
+      },
+      {
+        "path": ".bun-version",
+        "sha256": "d03d8b268b4171328ac2458ce8ca82d69a1fde38469d4e4faae4f8fa8d8a5e35"
+      }
+    ],
+    "clients": {
+      "stable": {
+        "reportedVersion": "2.11.10",
+        "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+      },
+      "canary": {
+        "reportedVersion": "2.11.11-canary.1",
+        "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+      }
+    },
+    "bunVersion": "1.4.4"
+  },
+  "validation": {
+    "sameSemanticRowsAsHistoricalReport": true,
+    "checkedRawFiles": 336,
+    "rawCaptureBytes": 46878,
+    "rawDigestsAndPerCaseBoundsMatched": true,
+    "privateValidationReceiptSha256": "adfb98856a0aa5e6b8568febdadcadcfc9c504afcf93649e48cb5e745824c9e6"
+  },
+  "admission": {
+    "existingScheduler": true,
+    "tokens": 1,
+    "matchingProcessAdmittedAndReleased": true,
+    "waitMs": 69,
+    "runtimeMs": 3373,
+    "memoryPeakBytes": 278233088,
+    "wrapperElapsedSeconds": 3.809
+  },
+  "bounds": {
+    "wholeSeconds": 600,
+    "perCaseSeconds": 20,
+    "stdoutBytes": 1048576,
+    "stderrBytes": 65536
+  },
+  "isolation": {
+    "networkIsolated": true,
+    "onlySyntheticCredentials": true,
+    "repositoryNotMounted": true,
+    "sourceAndToolsUnchanged": true,
+    "productionCacheTraffic": false
+  },
+  "observations": [
+    "With remote mode, signature and longerSignatureKey enabled, supplied keys shorter than 32 UTF-8 bytes were rejected before task execution.",
+    "Missing keys still allowed task execution with a later signature warning; native length enforcement does not replace Beep missing-key role policy.",
+    "Local-only and signature-disabled controls did not enforce remote key length.",
+    "The 168 current-driver cases reproduce the historical semantic rows on the same pinned stable and canary clients; historical source/report bytes remain unchanged."
+  ],
+  "historicalEvidence": {
+    "path": "native-signature-key-controls.json",
+    "sha256": "295dee52c2f80d3e19fe4b0bf11f1d9d219bff217ea2c7f2e7c00786cb58d6e4",
+    "unchanged": true
+  },
+  "metadataControls": {
+    "path": "signature-key-source-binding-controls.json",
+    "cases": 13,
+    "scope": "Separate prefix-only controls stub version probes and refuse every real subprocess; their zero native/task count does not describe this replay."
+  },
+  "repositoryQualitySuitesRunLocally": false,
+  "syntheticFixtureTasksExecuted": 162,
+  "featureAcceptanceStatus": "pending",
+  "taskQualificationGranted": false,
+  "productionSigningChanged": false,
+  "pending": [
+    "Actual signed artifact transport/restoration and current-source protected producer provenance.",
+    "Qualified missing-key role behavior, signed rollout configuration and consumer/profile controls.",
+    "Whole-goal acceptance and observation windows."
+  ]
+}

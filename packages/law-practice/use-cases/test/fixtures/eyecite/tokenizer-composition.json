@@ -1,0 +1,1600 @@
+{
+  "cases": [
+    {
+      "candidates": 0,
+      "citations": [],
+      "id": 0,
+      "items": [],
+      "selected": [],
+      "source": {
+        "bytes": "",
+        "width": 1
+      },
+      "tokens": []
+    },
+    {
+      "candidates": 0,
+      "citations": [],
+      "id": 1,
+      "items": [
+        {
+          "data": {
+            "bytes": "706c61696e",
+            "width": 1
+          },
+          "kind": "Text"
+        }
+      ],
+      "selected": [],
+      "source": {
+        "bytes": "706c61696e",
+        "width": 1
+      },
+      "tokens": []
+    },
+    {
+      "candidates": 2,
+      "citations": [[0, 0]],
+      "id": 2,
+      "items": [
+        {
+          "id": 0,
+          "kind": "Token"
+        }
+      ],
+      "selected": [0, 6],
+      "source": {
+        "bytes": "49642e",
+        "width": 1
+      },
+      "tokens": [
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "49642e",
+              "width": 1
+            },
+            "end": 3,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "49642e",
+                "width": 1
+              }
+            },
+            "kind": "IdToken",
+            "short": false,
+            "start": 0,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 4,
+      "citations": [[0, 0], [2, 1]],
+      "id": 3,
+      "items": [
+        {
+          "id": 0,
+          "kind": "Token"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 1,
+          "kind": "Token"
+        }
+      ],
+      "selected": [0, 6],
+      "source": {
+        "bytes": "69642e2049442e",
+        "width": 1
+      },
+      "tokens": [
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "69642e",
+              "width": 1
+            },
+            "end": 3,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "69642e",
+                "width": 1
+              }
+            },
+            "kind": "IdToken",
+            "short": false,
+            "start": 0,
+            "variation": []
+          }
+        },
+        {
+          "id": 1,
+          "seed": {
+            "data": {
+              "bytes": "49442e",
+              "width": 1
+            },
+            "end": 7,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "49442e",
+                "width": 1
+              }
+            },
+            "kind": "IdToken",
+            "short": false,
+            "start": 4,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 2,
+      "citations": [[2, 0]],
+      "id": 4,
+      "items": [
+        {
+          "data": {
+            "bytes": "61",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 0,
+          "kind": "Token"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "data": {
+            "bytes": "62",
+            "width": 1
+          },
+          "kind": "Text"
+        }
+      ],
+      "selected": [0, 6],
+      "source": {
+        "bytes": "612049642e2062",
+        "width": 1
+      },
+      "tokens": [
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "49642e",
+              "width": 1
+            },
+            "end": 5,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "49642e",
+                "width": 1
+              }
+            },
+            "kind": "IdToken",
+            "short": false,
+            "start": 2,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 1,
+      "citations": [[0, 0]],
+      "id": 5,
+      "items": [
+        {
+          "id": 0,
+          "kind": "Token"
+        }
+      ],
+      "selected": [1],
+      "source": {
+        "bytes": "7375707261",
+        "width": 1
+      },
+      "tokens": [
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "7375707261",
+              "width": 1
+            },
+            "end": 5,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "7375707261",
+                "width": 1
+              }
+            },
+            "kind": "SupraToken",
+            "short": false,
+            "start": 0,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 4,
+      "citations": [[0, 0], [2, 1], [4, 2]],
+      "id": 6,
+      "items": [
+        {
+          "id": 0,
+          "kind": "Token"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 1,
+          "kind": "Token"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 2,
+          "kind": "Token"
+        }
+      ],
+      "selected": [4, 1, 0, 6],
+      "source": {
+        "bytes": "7365652073757072612049642e",
+        "width": 1
+      },
+      "tokens": [
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "736565",
+              "width": 1
+            },
+            "end": 3,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "736565",
+                "width": 1
+              }
+            },
+            "kind": "StopWordToken",
+            "short": false,
+            "start": 0,
+            "variation": []
+          }
+        },
+        {
+          "id": 1,
+          "seed": {
+            "data": {
+              "bytes": "7375707261",
+              "width": 1
+            },
+            "end": 9,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "7375707261",
+                "width": 1
+              }
+            },
+            "kind": "SupraToken",
+            "short": false,
+            "start": 4,
+            "variation": []
+          }
+        },
+        {
+          "id": 2,
+          "seed": {
+            "data": {
+              "bytes": "49642e",
+              "width": 1
+            },
+            "end": 13,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "49642e",
+                "width": 1
+              }
+            },
+            "kind": "IdToken",
+            "short": false,
+            "start": 10,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 2,
+      "citations": [[0, 0], [2, 1]],
+      "id": 7,
+      "items": [
+        {
+          "id": 0,
+          "kind": "Token"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 1,
+          "kind": "Token"
+        }
+      ],
+      "selected": [2, 3],
+      "source": {
+        "bytes": "b620a7",
+        "width": 1
+      },
+      "tokens": [
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "b6",
+              "width": 1
+            },
+            "end": 1,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "b6",
+                "width": 1
+              }
+            },
+            "kind": "ParagraphToken",
+            "short": false,
+            "start": 0,
+            "variation": []
+          }
+        },
+        {
+          "id": 1,
+          "seed": {
+            "data": {
+              "bytes": "a7",
+              "width": 1
+            },
+            "end": 3,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "a7",
+                "width": 1
+              }
+            },
+            "kind": "SectionToken",
+            "short": false,
+            "start": 2,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 1,
+      "citations": [[0, 0]],
+      "id": 8,
+      "items": [
+        {
+          "id": 0,
+          "kind": "Token"
+        }
+      ],
+      "selected": [5],
+      "source": {
+        "bytes": "5b434954455d",
+        "width": 1
+      },
+      "tokens": [
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "5b434954455d",
+              "width": 1
+            },
+            "end": 6,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "5b434954455d",
+                "width": 1
+              }
+            },
+            "kind": "PlaceholderCitationToken",
+            "short": false,
+            "start": 0,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 4,
+      "citations": [[0, 1], [1, 0], [2, 2]],
+      "id": 9,
+      "items": [
+        {
+          "id": 1,
+          "kind": "Token"
+        },
+        {
+          "id": 0,
+          "kind": "Token"
+        },
+        {
+          "id": 2,
+          "kind": "Token"
+        }
+      ],
+      "selected": [5, 0, 1, 6],
+      "source": {
+        "bytes": "49642e5b434954455d7375707261",
+        "width": 1
+      },
+      "tokens": [
+        {
+          "id": 1,
+          "seed": {
+            "data": {
+              "bytes": "49642e",
+              "width": 1
+            },
+            "end": 3,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "49642e",
+                "width": 1
+              }
+            },
+            "kind": "IdToken",
+            "short": false,
+            "start": 0,
+            "variation": []
+          }
+        },
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "5b434954455d",
+              "width": 1
+            },
+            "end": 9,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "5b434954455d",
+                "width": 1
+              }
+            },
+            "kind": "PlaceholderCitationToken",
+            "short": false,
+            "start": 3,
+            "variation": []
+          }
+        },
+        {
+          "id": 2,
+          "seed": {
+            "data": {
+              "bytes": "7375707261",
+              "width": 1
+            },
+            "end": 14,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "7375707261",
+                "width": 1
+              }
+            },
+            "kind": "SupraToken",
+            "short": false,
+            "start": 9,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 2,
+      "citations": [[2, 0]],
+      "id": 10,
+      "items": [
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 0,
+          "kind": "Token"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        }
+      ],
+      "selected": [0, 6],
+      "source": {
+        "bytes": "202049642e2020",
+        "width": 1
+      },
+      "tokens": [
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "49642e",
+              "width": 1
+            },
+            "end": 5,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "49642e",
+                "width": 1
+              }
+            },
+            "kind": "IdToken",
+            "short": false,
+            "start": 2,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 2,
+      "citations": [[1, 0]],
+      "id": 11,
+      "items": [
+        {
+          "data": {
+            "bytes": "09",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 0,
+          "kind": "Token"
+        },
+        {
+          "data": {
+            "bytes": "0a",
+            "width": 1
+          },
+          "kind": "Text"
+        }
+      ],
+      "selected": [0, 6],
+      "source": {
+        "bytes": "0949642e0a",
+        "width": 1
+      },
+      "tokens": [
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "49642e",
+              "width": 1
+            },
+            "end": 4,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "49642e",
+                "width": 1
+              }
+            },
+            "kind": "IdToken",
+            "short": false,
+            "start": 1,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 3,
+      "citations": [[2, 1], [4, 0]],
+      "id": 12,
+      "items": [
+        {
+          "data": {
+            "bytes": "ced7010035d80000cedf0000",
+            "width": 4
+          },
+          "kind": "Text"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 1,
+          "kind": "Token"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 0,
+          "kind": "Token"
+        }
+      ],
+      "selected": [2, 0, 6],
+      "source": {
+        "bytes": "ced7010035d80000cedf00002000000049000000640000002e00000020000000b6000000",
+        "width": 4
+      },
+      "tokens": [
+        {
+          "id": 1,
+          "seed": {
+            "data": {
+              "bytes": "49642e",
+              "width": 1
+            },
+            "end": 7,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "49642e",
+                "width": 1
+              }
+            },
+            "kind": "IdToken",
+            "short": false,
+            "start": 4,
+            "variation": []
+          }
+        },
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "b6",
+              "width": 1
+            },
+            "end": 9,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "b6",
+                "width": 1
+              }
+            },
+            "kind": "ParagraphToken",
+            "short": false,
+            "start": 8,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 2,
+      "citations": [[2, 0]],
+      "id": 13,
+      "items": [
+        {
+          "data": {
+            "bytes": "3001",
+            "width": 2
+          },
+          "kind": "Text"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 0,
+          "kind": "Token"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "data": {
+            "bytes": "a303",
+            "width": 2
+          },
+          "kind": "Text"
+        }
+      ],
+      "selected": [0, 6],
+      "source": {
+        "bytes": "30012000490044002e002000a303",
+        "width": 2
+      },
+      "tokens": [
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "49442e",
+              "width": 1
+            },
+            "end": 5,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "49442e",
+                "width": 1
+              }
+            },
+            "kind": "IdToken",
+            "short": false,
+            "start": 2,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 2,
+      "citations": [[0, 0], [2, 1]],
+      "id": 14,
+      "items": [
+        {
+          "id": 0,
+          "kind": "Token"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 1,
+          "kind": "Token"
+        }
+      ],
+      "selected": [4],
+      "source": {
+        "bytes": "73656520736565",
+        "width": 1
+      },
+      "tokens": [
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "736565",
+              "width": 1
+            },
+            "end": 3,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "736565",
+                "width": 1
+              }
+            },
+            "kind": "StopWordToken",
+            "short": false,
+            "start": 0,
+            "variation": []
+          }
+        },
+        {
+          "id": 1,
+          "seed": {
+            "data": {
+              "bytes": "736565",
+              "width": 1
+            },
+            "end": 7,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "736565",
+                "width": 1
+              }
+            },
+            "kind": "StopWordToken",
+            "short": false,
+            "start": 4,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 1,
+      "citations": [[1, 0]],
+      "id": 15,
+      "items": [
+        {
+          "data": {
+            "bytes": "78",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 0,
+          "kind": "Token"
+        },
+        {
+          "data": {
+            "bytes": "59",
+            "width": 1
+          },
+          "kind": "Text"
+        }
+      ],
+      "selected": [4],
+      "source": {
+        "bytes": "7873656559",
+        "width": 1
+      },
+      "tokens": [
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "736565",
+              "width": 1
+            },
+            "end": 4,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "736565",
+                "width": 1
+              }
+            },
+            "kind": "StopWordToken",
+            "short": false,
+            "start": 1,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 4,
+      "citations": [[0, 2], [1, 3], [2, 0], [3, 1]],
+      "id": 16,
+      "items": [
+        {
+          "id": 2,
+          "kind": "Token"
+        },
+        {
+          "id": 3,
+          "kind": "Token"
+        },
+        {
+          "id": 0,
+          "kind": "Token"
+        },
+        {
+          "id": 1,
+          "kind": "Token"
+        }
+      ],
+      "selected": [2, 3],
+      "source": {
+        "bytes": "a7a7b6b6",
+        "width": 1
+      },
+      "tokens": [
+        {
+          "id": 2,
+          "seed": {
+            "data": {
+              "bytes": "a7",
+              "width": 1
+            },
+            "end": 1,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "a7",
+                "width": 1
+              }
+            },
+            "kind": "SectionToken",
+            "short": false,
+            "start": 0,
+            "variation": []
+          }
+        },
+        {
+          "id": 3,
+          "seed": {
+            "data": {
+              "bytes": "a7",
+              "width": 1
+            },
+            "end": 2,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "a7",
+                "width": 1
+              }
+            },
+            "kind": "SectionToken",
+            "short": false,
+            "start": 1,
+            "variation": []
+          }
+        },
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "b6",
+              "width": 1
+            },
+            "end": 3,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "b6",
+                "width": 1
+              }
+            },
+            "kind": "ParagraphToken",
+            "short": false,
+            "start": 2,
+            "variation": []
+          }
+        },
+        {
+          "id": 1,
+          "seed": {
+            "data": {
+              "bytes": "b6",
+              "width": 1
+            },
+            "end": 4,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "b6",
+                "width": 1
+              }
+            },
+            "kind": "ParagraphToken",
+            "short": false,
+            "start": 3,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 0,
+      "citations": [],
+      "id": 17,
+      "items": [
+        {
+          "data": {
+            "bytes": "6e6f7468696e67",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "data": {
+            "bytes": "6d617463686573",
+            "width": 1
+          },
+          "kind": "Text"
+        }
+      ],
+      "selected": [],
+      "source": {
+        "bytes": "6e6f7468696e67206d617463686573",
+        "width": 1
+      },
+      "tokens": []
+    },
+    {
+      "candidates": 6,
+      "citations": [[0, 0], [2, 2], [4, 1], [6, 3]],
+      "id": 18,
+      "items": [
+        {
+          "id": 0,
+          "kind": "Token"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 2,
+          "kind": "Token"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 1,
+          "kind": "Token"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 3,
+          "kind": "Token"
+        }
+      ],
+      "selected": [0, 1, 6],
+      "source": {
+        "bytes": "49642e2073757072612049642e207375707261",
+        "width": 1
+      },
+      "tokens": [
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "49642e",
+              "width": 1
+            },
+            "end": 3,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "49642e",
+                "width": 1
+              }
+            },
+            "kind": "IdToken",
+            "short": false,
+            "start": 0,
+            "variation": []
+          }
+        },
+        {
+          "id": 2,
+          "seed": {
+            "data": {
+              "bytes": "7375707261",
+              "width": 1
+            },
+            "end": 9,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "7375707261",
+                "width": 1
+              }
+            },
+            "kind": "SupraToken",
+            "short": false,
+            "start": 4,
+            "variation": []
+          }
+        },
+        {
+          "id": 1,
+          "seed": {
+            "data": {
+              "bytes": "49642e",
+              "width": 1
+            },
+            "end": 13,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "49642e",
+                "width": 1
+              }
+            },
+            "kind": "IdToken",
+            "short": false,
+            "start": 10,
+            "variation": []
+          }
+        },
+        {
+          "id": 3,
+          "seed": {
+            "data": {
+              "bytes": "7375707261",
+              "width": 1
+            },
+            "end": 19,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "7375707261",
+                "width": 1
+              }
+            },
+            "kind": "SupraToken",
+            "short": false,
+            "start": 14,
+            "variation": []
+          }
+        }
+      ]
+    },
+    {
+      "candidates": 2,
+      "citations": [[0, 0], [2, 1]],
+      "id": 19,
+      "items": [
+        {
+          "id": 0,
+          "kind": "Token"
+        },
+        {
+          "data": {
+            "bytes": "20",
+            "width": 1
+          },
+          "kind": "Text"
+        },
+        {
+          "id": 1,
+          "kind": "Token"
+        }
+      ],
+      "selected": [5],
+      "source": {
+        "bytes": "5b434954455d205b434954455d",
+        "width": 1
+      },
+      "tokens": [
+        {
+          "id": 0,
+          "seed": {
+            "data": {
+              "bytes": "5b434954455d",
+              "width": 1
+            },
+            "end": 6,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "5b434954455d",
+                "width": 1
+              }
+            },
+            "kind": "PlaceholderCitationToken",
+            "short": false,
+            "start": 0,
+            "variation": []
+          }
+        },
+        {
+          "id": 1,
+          "seed": {
+            "data": {
+              "bytes": "5b434954455d",
+              "width": 1
+            },
+            "end": 13,
+            "exact": [],
+            "groups": {
+              "body": {
+                "bytes": "5b434954455d",
+                "width": 1
+              }
+            },
+            "kind": "PlaceholderCitationToken",
+            "short": false,
+            "start": 7,
+            "variation": []
+          }
+        }
+      ]
+    }
+  ],
+  "configuration": {
+    "editions": [],
+    "extractors": [
+      {
+        "descriptor": {
+          "flags": 2,
+          "patternSha256": "93646eed50fe54a865fa2027ba6ff1d053871dd7176ac292f0d6e53eaaf4f5ba",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 3,
+            "names": {
+              "body": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "ordering": {
+          "equalityClass": 0,
+          "flags": 2,
+          "hash": "9099769795994238050",
+          "id": 0,
+          "strings": [
+            {
+              "bytes": "69642e",
+              "width": 1
+            }
+          ]
+        },
+        "pattern": {
+          "bytes": "283f503c626f64793e49645c2e29",
+          "width": 1
+        },
+        "recipe": {
+          "exact": [],
+          "flags": 2,
+          "id": 0,
+          "kind": "IdToken",
+          "patternSha256": "93646eed50fe54a865fa2027ba6ff1d053871dd7176ac292f0d6e53eaaf4f5ba",
+          "short": false,
+          "variation": []
+        }
+      },
+      {
+        "descriptor": {
+          "flags": 2,
+          "patternSha256": "bb3e2b465390d5a3c25cca1ec9e283a08c8ce80f6fd892076659863e2ac12a5b",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 5,
+            "names": {
+              "body": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "ordering": {
+          "equalityClass": 1,
+          "flags": 2,
+          "hash": "1927296259913976162",
+          "id": 1,
+          "strings": [
+            {
+              "bytes": "7375707261",
+              "width": 1
+            }
+          ]
+        },
+        "pattern": {
+          "bytes": "283f503c626f64793e737570726129",
+          "width": 1
+        },
+        "recipe": {
+          "exact": [],
+          "flags": 2,
+          "id": 1,
+          "kind": "SupraToken",
+          "patternSha256": "bb3e2b465390d5a3c25cca1ec9e283a08c8ce80f6fd892076659863e2ac12a5b",
+          "short": false,
+          "variation": []
+        }
+      },
+      {
+        "descriptor": {
+          "flags": 0,
+          "patternSha256": "048f3403bfbf9385bc1f0caf12ef1a4e40f9e91fc9e1ca5e9720572758068d73",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 1,
+            "names": {
+              "body": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "ordering": {
+          "equalityClass": 2,
+          "flags": 0,
+          "hash": "-1466878968555244088",
+          "id": 2,
+          "strings": [
+            {
+              "bytes": "b6",
+              "width": 1
+            }
+          ]
+        },
+        "pattern": {
+          "bytes": "283f503c626f64793eb629",
+          "width": 1
+        },
+        "recipe": {
+          "exact": [],
+          "flags": 0,
+          "id": 2,
+          "kind": "ParagraphToken",
+          "patternSha256": "048f3403bfbf9385bc1f0caf12ef1a4e40f9e91fc9e1ca5e9720572758068d73",
+          "short": false,
+          "variation": []
+        }
+      },
+      {
+        "descriptor": {
+          "flags": 0,
+          "patternSha256": "7b82b617ebc33b7229a3bf749e273f80dd6fe2581edb0bde4186fbd0500642fc",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 1,
+            "names": {
+              "body": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "ordering": {
+          "equalityClass": 3,
+          "flags": 0,
+          "hash": "-1880899508023563186",
+          "id": 3,
+          "strings": [
+            {
+              "bytes": "a7",
+              "width": 1
+            }
+          ]
+        },
+        "pattern": {
+          "bytes": "283f503c626f64793ea729",
+          "width": 1
+        },
+        "recipe": {
+          "exact": [],
+          "flags": 0,
+          "id": 3,
+          "kind": "SectionToken",
+          "patternSha256": "7b82b617ebc33b7229a3bf749e273f80dd6fe2581edb0bde4186fbd0500642fc",
+          "short": false,
+          "variation": []
+        }
+      },
+      {
+        "descriptor": {
+          "flags": 2,
+          "patternSha256": "630154c55de4652200e00e8dd684f5e3faa890b02cc8a2521d6debef644e1e5e",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 3,
+            "names": {
+              "body": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "ordering": {
+          "equalityClass": 4,
+          "flags": 2,
+          "hash": "-5770361663109986416",
+          "id": 4,
+          "strings": [
+            {
+              "bytes": "736565",
+              "width": 1
+            }
+          ]
+        },
+        "pattern": {
+          "bytes": "283f503c626f64793e73656529",
+          "width": 1
+        },
+        "recipe": {
+          "exact": [],
+          "flags": 2,
+          "id": 4,
+          "kind": "StopWordToken",
+          "patternSha256": "630154c55de4652200e00e8dd684f5e3faa890b02cc8a2521d6debef644e1e5e",
+          "short": false,
+          "variation": []
+        }
+      },
+      {
+        "descriptor": {
+          "flags": 0,
+          "patternSha256": "a5a68a1bb560ba2be7e4a58171b066aedc682c91b1515b0a477e46d09d0b6557",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 6,
+            "names": {
+              "body": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "ordering": {
+          "equalityClass": 5,
+          "flags": 0,
+          "hash": "-8023908986190725064",
+          "id": 5,
+          "strings": [
+            {
+              "bytes": "5b434954455d",
+              "width": 1
+            }
+          ]
+        },
+        "pattern": {
+          "bytes": "283f503c626f64793e5c5b434954455c5d29",
+          "width": 1
+        },
+        "recipe": {
+          "exact": [],
+          "flags": 0,
+          "id": 5,
+          "kind": "PlaceholderCitationToken",
+          "patternSha256": "a5a68a1bb560ba2be7e4a58171b066aedc682c91b1515b0a477e46d09d0b6557",
+          "short": false,
+          "variation": []
+        }
+      },
+      {
+        "descriptor": {
+          "flags": 2,
+          "patternSha256": "93646eed50fe54a865fa2027ba6ff1d053871dd7176ac292f0d6e53eaaf4f5ba",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 3,
+            "names": {
+              "body": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "ordering": {
+          "equalityClass": 6,
+          "flags": 2,
+          "hash": "-3911602177532701473",
+          "id": 6,
+          "strings": [
+            {
+              "bytes": "69642e",
+              "width": 1
+            }
+          ]
+        },
+        "pattern": {
+          "bytes": "283f503c626f64793e49645c2e29",
+          "width": 1
+        },
+        "recipe": {
+          "exact": [],
+          "flags": 2,
+          "id": 6,
+          "kind": "Token",
+          "patternSha256": "93646eed50fe54a865fa2027ba6ff1d053871dd7176ac292f0d6e53eaaf4f5ba",
+          "short": false,
+          "variation": []
+        }
+      }
+    ]
+  },
+  "hashSeed": "0",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "producerSha256": "a80fb747b64ec2b4835e61742c82e2323dd51524acf8620ff0382e236bc417d1",
+  "python": "3.11.15",
+  "schemaVersion": "citation-tokenizer-composition/v1",
+  "scope": "Actual source composition over seven controlled built-in extractors; full canonical engine and family safety remain open.",
+  "sources": {
+    "models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a",
+    "tokenizers.py": "de2d345fe0211aa4f48d633035567ec941f113e48c41990b0b036db63d984a01"
+  }
+}

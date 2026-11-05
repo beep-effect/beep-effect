@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "native-html-resource-safety-2026-10-29",
+  "status": "approved",
+  "date": "2026-10-29",
+  "authorization": {
+    "source": "direct human conversation reply",
+    "questionItemId": [
+      "request_user_input_async",
+      "call_392045c7df86459786267cd81e1a18f0",
+      0
+    ],
+    "answer": "Approve explicit safety divergence (Recommended)"
+  },
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "sourceAudit": {
+    "path": "packages/law-practice/use-cases/test/fixtures/eyecite/html-cleaner-audit.json",
+    "sha256": "049bbadd90348588e2e7a1c62daf1f5dba0b6865df9f2001b9461b8b80f9cb71",
+    "evidencedCases": ["depth-256", "depth-257", "depth-300"]
+  },
+  "scope": {
+    "trigger": "native HTML parser resource exhaustion",
+    "failureTag": "CitationSafetyLimitExceeded",
+    "operation": "clean",
+    "limit": "nativeHtmlParserResource",
+    "discardPartialResult": true,
+    "preserveOtherHtmlBehavior": true,
+    "configurableLimitAdded": false
+  },
+  "qualification": {
+    "completionGuard": "focused source-completion replay only",
+    "nativeParserBackend": "pending",
+    "canonicalCompletion": false,
+    "normalizationLaw": false
+  }
+}
