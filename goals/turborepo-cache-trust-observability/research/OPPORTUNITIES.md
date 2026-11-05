@@ -2309,3 +2309,7 @@ No local verify, publish or repository test suite was run.
 ### 2026-11-05: Keep successful inspection evidence after diagnostic refusal
 
 Accepted-main workflow run42126399874 / job127591603870 failed with `invalid-input-or-stream`; its source inspection passed but the following source upload was skipped. The retained104-byte refusal cannot distinguish memory, archive, process, filesystem or input failures. Gate the source upload on successful inspection plus its report output, independently of later diagnostic success. Retain only fixed categorical failure codes, with no exception messages, paths, payloads or environment values. The actual cause remains unknown; an unchanged retry cannot repair the missing evidence.
+
+### 2026-11-05: Treat review API exhaustion as unknown state
+
+PR #2707 closeout could not read review state because GitHub GraphQL reported its API limit exhausted. A minimal quota query confirmed zero remaining and reset at 23:31:05Z; the REST quota snapshot had shown a different GraphQL allowance, so it was insufficient evidence to resume reads. Preserve the failed receipt and hold review/merge readiness until an actual post-reset read succeeds. Share and respect the authenticated API reset across metadata consumers to prevent repeated failed polls; this is an environment wait, not an empty review inventory. No credential or subscription change.
