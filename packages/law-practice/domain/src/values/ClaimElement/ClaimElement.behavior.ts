@@ -15,6 +15,7 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { constant, dual, flow, identity, pipe } from "effect/Function";
@@ -593,6 +594,10 @@ class NominalBoundaryPlan extends S.Opaque<NominalBoundaryPlan, { readonly brand
       "shared-participle",
       "coordinated-action",
       "relational-complement",
+      "possessive-singular-article",
+      "possessive-plural-quantity",
+      "possessive-regular-singular",
+      "possessive-known-plural",
     ]),
   }).pipe(
     $I.annoteSchema("NominalBoundaryPlan", {
@@ -713,6 +718,92 @@ const participialNominalPlan = (
       : O.none();
   });
 };
+const definitePossessivePlan = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  end: number
+): O.Option<NominalBoundaryPlan> => {
+  const article = tokenWordAt(tokens, index);
+  const auxiliary = tokenWordAt(tokens, end);
+  const head = tokenWordAt(tokens, end - 1);
+  if (!HashSet.has(HashSet.make("the", "said"), article)) return O.none();
+  // Definite s-final heads are ambiguous (regular plurals, mass nouns,
+  // irregular plurals and singular status-like forms). Only the existing
+  // count-head inventory supplies a plural fact; all other s-final heads fall back.
+  if (Str.endsWith("s")(head))
+    return auxiliary === "have" &&
+      HashSet.has(nominalFollowers, head) &&
+      HashSet.has(nominalFollowers, Str.slice(0, -1)(head)) &&
+      !Str.endsWith("ss")(head)
+      ? O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "possessive-known-plural" }))
+      : O.none();
+  return auxiliary === "has"
+    ? O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "possessive-regular-singular" }))
+    : O.none();
+};
+const possessiveAgreementPlan = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  end: number
+): O.Option<NominalBoundaryPlan> => {
+  const auxiliary = tokenWordAt(tokens, end);
+  const article = tokenWordAt(tokens, index);
+  const pluralQuantity =
+    surfaceAt(tokens, index)(["a", "plurality", "of"]) ||
+    surfaceAt(tokens, index)(["one", "or", "more"]) ||
+    surfaceAt(tokens, index + 1)(["one", "or", "more"]) ||
+    surfaceAt(tokens, index + 1)(["plurality", "of"]);
+  if (pluralQuantity)
+    return auxiliary === "have"
+      ? O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "possessive-plural-quantity" }))
+      : O.none();
+  if (HashSet.has(HashSet.make("a", "an"), article))
+    return auxiliary === "has"
+      ? O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "possessive-singular-article" }))
+      : O.none();
+  return definitePossessivePlan(tokens, index, end);
+};
+// A recognized singular finite form competes regardless of number-looking
+// modifiers earlier in the subject. The legacy copular guard stays unchanged.
+const possessiveFiniteCompetes = (tokens: ReadonlyArray<Span>, index: number, headStart: number): boolean => {
+  const word = tokenWordAt(tokens, index);
+  const singular =
+    Str.endsWith("s")(word) &&
+    A.some([word, Str.slice(0, -1)(word), Str.slice(0, -2)(word)], (form) => HashSet.has(predicateWords, form));
+  return singular || finiteCompetes(tokens, index, headStart);
+};
+// Agreement here is structural evidence, not an open-class noun dictionary.
+// In particular an internal plural-looking modifier never determines number.
+const possessiveNominalPlan = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  headStart: number,
+  quotations: ReadonlyArray<Span>
+): O.Option<NominalBoundaryPlan> => {
+  if (index !== 0 && !HashSet.has(HashSet.make("wherein", "whereby"), tokenWordAt(tokens, index - 1))) return O.none();
+  const boundary = A.findFirstIndex(A.drop(tokens, headStart), (_, offset) => {
+    const at = headStart + offset;
+    return hardNominalBarrier(tokens, at, quotations) || HashSet.has(punctuation, tokenWordAt(tokens, at));
+  });
+  return O.flatMap(boundary, (offset) => {
+    const end = headStart + offset;
+    const auxiliary = tokenWordAt(tokens, end);
+    if (offset === 0 || !HashSet.has(HashSet.make("has", "have"), auxiliary)) return O.none();
+    const prefix = A.take(A.drop(tokens, headStart), offset);
+    if (
+      A.some(
+        prefix,
+        ({ text }, before) =>
+          quotedTokenAt(tokens, headStart + before, quotations) ||
+          !O.isSome(Str.match(/^[a-z][a-z-]*$/u)(text)) ||
+          possessiveFiniteCompetes(tokens, headStart + before, headStart)
+      )
+    )
+      return O.none();
+    if (!explicitLexicalObjectAt(tokens, end + 1, quotations)) return O.none();
+    return possessiveAgreementPlan(tokens, index, end);
+  });
+};
 const inspectionNominalPlan: NominalPlanner = (tokens, index, headStart, quotations) =>
   O.getOrElse(
     O.orElse(participialNominalPlan(tokens, headStart, quotations), () =>
@@ -722,9 +813,14 @@ const inspectionNominalPlan: NominalPlanner = (tokens, index, headStart, quotati
   );
 
 class InspectionSourceRole extends S.Opaque<InspectionSourceRole, { readonly brand: unique symbol }>()(
-  S.Struct({ resumeAt: S.Int, reason: S.Literals(["reciprocal-argument", "relational-link"]) }).pipe(
+  S.Struct({
+    consumedStart: S.Int,
+    resumeAt: S.Int,
+    reason: S.Literals(["reciprocal-argument", "relational-link", "licensed-infinitive"]),
+  }).pipe(
     $I.annoteSchema("InspectionSourceRole", {
-      description: "A complete grammatical source interval that is relation text, not an entity mention.",
+      description:
+        "A consumed source interval containing grammatical relation or predicate text, with its scanner continuation.",
     })
   )
 ) {}
@@ -778,16 +874,96 @@ const reciprocalAt = (tokens: ReadonlyArray<Span>, index: number, quotations: Re
     HashSet.has(HashSet.make("to", "from", "with", "between", "against", "among", "of"), tokenWordAt(tokens, index - 1))
   );
 };
+const InfinitiveSlotRole = LiteralKit([
+  "quantity",
+  "grammatical-function",
+  "ambiguous-multiplier",
+  "lexical-candidate",
+]).pipe(
+  $I.annoteSchema("InfinitiveSlotRole", {
+    description: "Closed quantity/function-slot exclusions checked before admitting an unknown infinitival verb.",
+  })
+);
+type InfinitiveSlotRole = typeof InfinitiveSlotRole.Type;
+// Closed grammatical classes, not open noun/verb entries. A token with both a
+// function/quantity reading and a possible lexical verb reading stays ambiguous.
+const quantitySlotWords = HashSet.fromIterable(
+  Str.split(
+    "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred thousand million billion trillion half quarter third few fewer many much little less more most least several some any enough all both either neither each every no another approximately roughly nearly almost exactly precisely",
+    " "
+  )
+);
+const multiplierSlotWords = HashSet.fromIterable(
+  Str.split(
+    "single double triple quadruple quintuple sextuple septuple octuple nonuple decuple multiple once twice thrice",
+    " "
+  )
+);
+const functionSlotWords = HashSet.fromIterable(
+  Str.split(
+    "aboard about above across after against along alongside amid amidst among amongst around as astride at atop before behind below beneath beside besides between beyond by concerning considering despite down during except excluding following for from in including inside into like minus near notwithstanding of off on onto opposite outside over past per plus regarding round save since than through throughout till to toward towards under underneath unlike until unto up upon versus via with within without only merely solely also even rather quite very too",
+    " "
+  )
+);
+const isQuantitySlot = (word: string): boolean =>
+  A.every(Str.split(word, "-"), (part) => HashSet.has(quantitySlotWords, part) || HashSet.has(ordinalWords, part));
+const infinitiveSlotRole = (word: string): InfinitiveSlotRole => {
+  if (isQuantitySlot(word)) return "quantity";
+  if (HashSet.has(multiplierSlotWords, word)) return "ambiguous-multiplier";
+  if (HashSet.has(boundaryWords, word) || HashSet.has(functionSlotWords, word)) return "grammatical-function";
+  return "lexical-candidate";
+};
+const licensedVerbAt = (tokens: ReadonlyArray<Span>, index: number): boolean =>
+  infinitiveSlotRole(tokenWordAt(tokens, index)) === "lexical-candidate" &&
+  O.exists(A.get(tokens, index), ({ text }) => O.isSome(Str.match(/^[a-z][a-z-]*$/u)(text)));
+const explicitLexicalObjectAt = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  quotations: ReadonlyArray<Span>
+): boolean =>
+  O.isSome(determinerAt(tokens, index)) &&
+  lexicalComplementAt(tokens, index, quotations) &&
+  !O.exists(A.get(tokens, index), ({ text }) => text === "A" || text === "AN");
+// Closed introducers establish a verbal slot independently of the verb's
+// spelling. The object is proved separately and remains available to scanning.
+const licensedInfinitiveAt = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  quotations: ReadonlyArray<Span>
+): O.Option<InspectionSourceRole> => {
+  const purpose = surfaceAt(tokens, index)(["so", "as", "to"]);
+  const licensed =
+    HashSet.has(HashSet.make("configured", "adapted", "operable", "arranged"), tokenWordAt(tokens, index)) &&
+    surfaceAt(tokens, index + 1)(["to"]);
+  if (!purpose && !licensed) return O.none();
+  if (
+    A.some(
+      A.take(tokens, index),
+      ({ text }, at) =>
+        HashSet.has(HashSet.make('"', "“", "”", "‘", "’"), text) && !quotedTokenAt(tokens, at, quotations)
+    )
+  )
+    return O.none();
+  const verbAt = index + (purpose ? 3 : 2);
+  const objectAt = verbAt + 1;
+  if (!licensedVerbAt(tokens, verbAt) || !explicitLexicalObjectAt(tokens, objectAt, quotations)) return O.none();
+  if (A.some(A.range(index, objectAt), (at) => quotedTokenAt(tokens, at, quotations))) return O.none();
+  return O.some(InspectionSourceRole.make({ consumedStart: index, resumeAt: objectAt, reason: "licensed-infinitive" }));
+};
 const inspectionRoleAt = (
   tokens: ReadonlyArray<Span>,
   index: number,
   quotations: ReadonlyArray<Span>
 ): O.Option<InspectionSourceRole> => {
+  const infinitive = licensedInfinitiveAt(tokens, index, quotations);
+  if (O.isSome(infinitive)) return infinitive;
   if (reciprocalAt(tokens, index, quotations))
-    return O.some(InspectionSourceRole.make({ resumeAt: index + 2, reason: "reciprocal-argument" }));
+    return O.some(
+      InspectionSourceRole.make({ consumedStart: index, resumeAt: index + 2, reason: "reciprocal-argument" })
+    );
   const previous = tokenWordAt(tokens, index - 1);
   if (relationAt(tokens, index, quotations) && (HashSet.has(copulas, previous) || isPredicateToken(tokens, index - 1)))
-    return O.some(InspectionSourceRole.make({ resumeAt: index + 2, reason: "relational-link" }));
+    return O.some(InspectionSourceRole.make({ consumedStart: index, resumeAt: index + 2, reason: "relational-link" }));
   return O.none();
 };
 const relationalNominalPlan = (
@@ -819,8 +995,10 @@ type LexicalGrammar = {
 const strictLexicalGrammar: LexicalGrammar = { plan: legacyNominalPlan, ignoreAt: () => O.none() };
 const inspectionLexicalGrammar: LexicalGrammar = {
   plan: (tokens, index, headStart, quotations) =>
-    O.getOrElse(relationalNominalPlan(tokens, headStart, quotations), () =>
-      inspectionNominalPlan(tokens, index, headStart, quotations)
+    O.getOrElse(possessiveNominalPlan(tokens, index, headStart, quotations), () =>
+      O.getOrElse(relationalNominalPlan(tokens, headStart, quotations), () =>
+        inspectionNominalPlan(tokens, index, headStart, quotations)
+      )
     ),
   ignoreAt: inspectionRoleAt,
 };
