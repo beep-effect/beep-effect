@@ -22,7 +22,6 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
 import { runToExit } from "@beep/repo-cli-kit/process/StepExec";
-import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, pipe } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -31,6 +30,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { makeGoalPacketWorkingTreeReader } from "./Doctor.ts";
 import { isJsonRecord, listGoalPacketsStrict, parseGoalManifestText } from "./Inventory.ts";
+import { GoalManifestFormatter } from "./Manifest.service.ts";
 import {
   diffResearchReports,
   listedManifestStrings,
@@ -42,6 +42,7 @@ import {
 } from "./ManifestProjection.ts";
 import type { GoalPacketReader } from "./Doctor.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
+import type { GoalManifestFormatterShape } from "./Manifest.service.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Manifest");
 
@@ -112,30 +113,55 @@ const projectionRow = Effect.fn("Goals.projectionRow")(function* <E, R>(
  * console.log(Effect.isEffect(collectManifestProjectionRows())) // true
  * ```
  *
+ * @param repoRoot - Checkout to scan; packet paths are joined onto it.
  * @returns The drifted packets in slug order, each with its rewritten manifest text.
  * @category queries
  * @since 0.0.0
  */
-export const collectManifestProjectionRows = Effect.fn("Goals.collectManifestProjectionRows")(function* () {
-  const records = yield* listGoalPacketsStrict();
-  const reader = yield* makeGoalPacketWorkingTreeReader();
+export const collectManifestProjectionRows = Effect.fn("Goals.collectManifestProjectionRows")(function* (
+  repoRoot = "."
+) {
+  const records = yield* listGoalPacketsStrict(repoRoot);
+  const reader = yield* makeGoalPacketWorkingTreeReader(repoRoot);
   const rows = yield* Effect.forEach(records, (record) => projectionRow(record, reader), {
     concurrency: 1,
   });
   return A.getSomes(rows);
 });
 
-const formatManifests = Effect.fn("Goals.formatManifests")(function* (paths: ReadonlyArray<string>) {
-  // Biome decides line breaks (a short array collapses to one line); the JSONC edit cannot
-  // predict that, so the writer formats exactly the files it rewrote.
-  const repoRoot = yield* findRepoRoot();
-  const args = ["biome", "format", "--write", ...paths];
-  const exitCode = yield* runToExit({ command: "bunx", args, cwd: repoRoot, stdio: "ignore" });
-  if (exitCode !== 0) {
-    yield* Console.error(`[goals:manifest] bunx ${A.join(args, " ")} exited ${exitCode}.`);
-    return yield* failWithReportedExit("goals manifest: biome format failed on the rewritten manifests.");
-  }
-});
+/**
+ * Live {@link GoalManifestFormatter}: `bunx biome format --write` over the rewritten manifests.
+ *
+ * **Details**
+ *
+ * Biome decides line breaks (a short array collapses to one line); the JSONC
+ * edit cannot predict that, so the writer formats exactly the files it
+ * rewrote. A non-zero Biome exit fails the command, because the unformatted
+ * manifests would red the hosted Biome lane.
+ *
+ * **Example** (Read the live formatter's shape)
+ *
+ * ```ts
+ * import { biomeManifestFormatter } from "@beep/repo-cli/commands/Goals/Manifest"
+ *
+ * console.log(typeof biomeManifestFormatter.format) // "function"
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const biomeManifestFormatter: GoalManifestFormatterShape = {
+  format: Effect.fn("Goals.biomeManifestFormatter")(function* (repoRoot: string, paths: ReadonlyArray<string>) {
+    const args = ["biome", "format", "--write", ...paths];
+    const exitCode = yield* runToExit({ command: "bunx", args, cwd: repoRoot, stdio: "ignore" }).pipe(
+      Effect.orElseSucceed(() => 1)
+    );
+    if (exitCode !== 0) {
+      yield* Console.error(`[goals:manifest] bunx ${A.join(args, " ")} exited ${exitCode}.`);
+      return yield* failWithReportedExit("goals manifest: biome format failed on the rewritten manifests.");
+    }
+  }),
+};
 
 const driftLine = (row: ManifestProjectionRow): string => `- ${row.slug}: ${renderResearchReportsDrift(row.drift)}`;
 
@@ -151,18 +177,23 @@ const driftLine = (row: ManifestProjectionRow): string => `- ${row.slug}: ${rend
  * console.log(Effect.isEffect(runGoalsManifest({ write: false, check: true }))) // true
  * ```
  *
+ * @param options - `write` rewrites drifted manifests; `check` (the default) only reports them.
+ * @param repoRoot - Checkout to scan and write into.
  * @category use-cases
  * @since 0.0.0
  */
-export const runGoalsManifest = Effect.fn("Goals.runGoalsManifest")(function* (options: {
-  readonly write: boolean;
-  readonly check: boolean;
-}) {
+export const runGoalsManifest = Effect.fn("Goals.runGoalsManifest")(function* (
+  options: {
+    readonly write: boolean;
+    readonly check: boolean;
+  },
+  repoRoot = "."
+) {
   if (options.write && options.check) {
     yield* Console.error("[goals:manifest] --write and --check are mutually exclusive.");
     return yield* failWithReportedExit("goals manifest: --write and --check are mutually exclusive.");
   }
-  const rows = yield* collectManifestProjectionRows();
+  const rows = yield* collectManifestProjectionRows(repoRoot);
   if (A.isReadonlyArrayEmpty(rows)) {
     yield* Console.log("[goals:manifest] OK: every researchReports array matches its research/ listing.");
     return;
@@ -174,10 +205,14 @@ export const runGoalsManifest = Effect.fn("Goals.runGoalsManifest")(function* (o
       "goals manifest: researchReports drift; run bun run beep goals manifest --write."
     );
   }
-  yield* Effect.forEach(rows, (row) => writeContainedFileString(".", row.manifestPath, row.nextText), {
+  yield* Effect.forEach(rows, (row) => writeContainedFileString(repoRoot, row.manifestPath, row.nextText), {
     discard: true,
   });
-  yield* formatManifests(A.map(rows, (row) => row.manifestPath));
+  const formatter = yield* Effect.serviceOption(GoalManifestFormatter);
+  yield* O.getOrElse(formatter, () => biomeManifestFormatter).format(
+    repoRoot,
+    A.map(rows, (row) => row.manifestPath)
+  );
   yield* Effect.forEach(rows, (row) => Console.log(driftLine(row)), { discard: true });
   yield* Console.log(`[goals:manifest] wrote ${A.length(rows)} manifest(s).`);
 });

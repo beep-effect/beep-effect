@@ -5,6 +5,8 @@ import {
 } from "@beep/repo-cli/commands/Goals/Doctor";
 import { GoalResearchReportPath } from "@beep/repo-cli/commands/Goals/Goals.schemas";
 import { GoalPacketRecord } from "@beep/repo-cli/commands/Goals/Inventory";
+import { collectManifestProjectionRows, runGoalsManifest } from "@beep/repo-cli/commands/Goals/Manifest";
+import { GoalManifestFormatter } from "@beep/repo-cli/commands/Goals/Manifest.service";
 import {
   diffResearchReports,
   listedManifestStrings,
@@ -13,10 +15,11 @@ import {
   ResearchReportsDrift,
   renderResearchReportsDrift,
 } from "@beep/repo-cli/commands/Goals/ManifestProjection";
+import { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe } from "@effect/vitest";
-import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertInstanceOf, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -187,6 +190,15 @@ describe("goal manifest researchReports projection", () => {
     assertTrue(Str.endsWith("\n")(next) === Str.endsWith("\n")(text));
   });
 
+  it("exposes pipeable forms and refuses a non-object manifest", () => {
+    assertNone(planResearchProjection(["research/a.md"])(manifestText({ researchReports: ["research/a.md"] })));
+    assertNone(planResearchProjection("[]", ["research/a.md"]));
+    assertNone(diffResearchReports(["research/a.md"])(["research/a.md"]));
+    assert.deepStrictEqual(listedManifestStrings("researchReports")({ researchReports: ["research/a.md"] }), [
+      "research/a.md",
+    ]);
+  });
+
   it("plans nothing when the array already matches, and deletes the key for an empty projection", () => {
     assertNone(planResearchProjection(manifestText({ researchReports: ["research/a.md"] }), ["research/a.md"]));
     assertNone(planResearchProjection(manifestText({}), []));
@@ -225,6 +237,71 @@ describe("goal manifest researchReports projection", () => {
         assert.deepStrictEqual(researchFiles, ["research/SOURCES.md", "research/untracked.md"]);
         const opsFiles = yield* reader.opsFiles(packet);
         assert.deepStrictEqual(opsFiles, ["ops/bench.ts"]);
+      })
+    );
+
+    it.effect("goals manifest reports drift, rewrites it with --write, and is then clean", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-goals-manifest-command-" });
+        const handle = yield* spawner.spawn(ChildProcess.make("git", ["init", "-q"], { cwd: root }));
+        const initExit = yield* handle.exitCode;
+        assert.strictEqual(initExit, 0);
+        const formatted: Array<string> = [];
+        const formatter = {
+          format: (_root: string, paths: ReadonlyArray<string>) => Effect.sync(() => void formatted.push(...paths)),
+        };
+        const packet = (slug: string) => path.join(root, "goals", slug);
+        // drifted: lists a stale row and a cross-packet pointer, misses two files on disk
+        yield* fs.makeDirectory(path.join(packet("drifted"), "research", "evidence"), { recursive: true });
+        yield* fs.makeDirectory(path.join(packet("drifted"), "ops"), { recursive: true });
+        yield* fs.writeFileString(path.join(packet("drifted"), "research", "SOURCES.md"), "");
+        yield* fs.writeFileString(path.join(packet("drifted"), "research", "evidence", "run.json"), "{}");
+        yield* fs.writeFileString(
+          path.join(packet("drifted"), "ops", "manifest.json"),
+          manifestText({ researchReports: ["research/SOURCES.md", "research/gone.md", "history/p1.md"] })
+        );
+        // in sync
+        yield* fs.makeDirectory(path.join(packet("clean"), "research"), { recursive: true });
+        yield* fs.makeDirectory(path.join(packet("clean"), "ops"), { recursive: true });
+        yield* fs.writeFileString(path.join(packet("clean"), "research", "SOURCES.md"), "");
+        yield* fs.writeFileString(
+          path.join(packet("clean"), "ops", "manifest.json"),
+          manifestText({ researchReports: ["research/SOURCES.md"] })
+        );
+        // unparsable manifest: the doctor's finding, skipped here
+        yield* fs.makeDirectory(path.join(packet("broken"), "ops"), { recursive: true });
+        yield* fs.writeFileString(path.join(packet("broken"), "ops", "manifest.json"), "{ not json");
+
+        const rows = yield* collectManifestProjectionRows(root);
+        assert.deepStrictEqual(
+          A.map(rows, (row) => row.slug),
+          ["drifted"]
+        );
+        assert.deepStrictEqual(rows[0]?.drift.unlisted, ["research/evidence/run.json"]);
+        assert.deepStrictEqual(rows[0]?.drift.missing, ["research/gone.md"]);
+        assert.deepStrictEqual(rows[0]?.drift.references, ["history/p1.md"]);
+
+        const both = yield* runGoalsManifest({ write: true, check: true }, root).pipe(Effect.flip);
+        assertInstanceOf(both, CliReportedExit);
+        const checked = yield* runGoalsManifest({ write: false, check: true }, root).pipe(Effect.flip);
+        assertInstanceOf(checked, CliReportedExit);
+        assertTrue(Str.includes("goals manifest --write")(checked.message));
+
+        yield* runGoalsManifest({ write: true, check: false }, root).pipe(
+          Effect.provideService(GoalManifestFormatter, formatter)
+        );
+        assert.deepStrictEqual(formatted, [path.join(packet("drifted"), "ops", "manifest.json")]);
+        const rewrittenText = yield* fs.readFileString(path.join(packet("drifted"), "ops", "manifest.json"));
+        const rewritten = decodeJson(rewrittenText) as Readonly<Record<string, unknown>>;
+        assert.deepStrictEqual(rewritten.researchReports, ["research/SOURCES.md", "research/evidence/run.json"]);
+        assert.deepStrictEqual(rewritten.researchReferences, ["history/p1.md"]);
+
+        yield* runGoalsManifest({ write: false, check: false }, root);
+        const after = yield* collectManifestProjectionRows(root);
+        assert.deepStrictEqual(after, []);
       })
     );
   });

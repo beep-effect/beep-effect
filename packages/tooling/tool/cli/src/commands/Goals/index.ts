@@ -126,6 +126,13 @@ export * from "./Graph.ts";
  */
 export * from "./Inventory.ts";
 /**
+ * Formatter port of the manifest writer.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./Manifest.service.ts";
+/**
  * `beep goals manifest`: the generated `researchReports` projection writer and check.
  *
  * @since 0.0.0
