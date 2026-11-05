@@ -50,7 +50,8 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })((it) => {
       );
       expect(exitCode).not.toBe(0);
       expect(stdout + stderr).toContain("Generated output drift detected");
-      expect(yield* fs.readFileString(target)).toBe(edited);
+      const retained = yield* fs.readFileString(target);
+      expect(retained).toBe(edited);
       const after = yield* Effect.forEach(
         siblings,
         (relative) => fs.readFileString(path.join(fixture, "src", relative)),
