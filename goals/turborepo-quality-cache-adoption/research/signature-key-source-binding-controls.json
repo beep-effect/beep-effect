@@ -1,0 +1,163 @@
+{
+  "schemaVersion": "signature-key-source-binding-controls/v1",
+  "recordedAt": "2026-11-03T18:47:21.521363+00:00",
+  "authority": "Metadata prefix regression only; no native semantic replay or qualification.",
+  "sourceBindings": [
+    {
+      "role": "legacy",
+      "sha256": "ed62bcf2883d45f44301181e5cd2d13c2807ff0ba51dcede52c12b08dfa3c3fb"
+    },
+    {
+      "role": "current",
+      "sha256": "2afde39e782ed441b181ce400ac14280a4ce8a1a2c8281a0e86a9fbb80e05b78"
+    },
+    {
+      "role": "control",
+      "sha256": "f70233f2d8c22930c6eb8aa1d8548a06ee7f4940ec48c9836b7f43e61ed60538"
+    },
+    {
+      "role": "historical-native-report",
+      "sha256": "295dee52c2f80d3e19fe4b0bf11f1d9d219bff217ea2c7f2e7c00786cb58d6e4"
+    }
+  ],
+  "cases": 13,
+  "rows": [
+    {
+      "driver": "legacy",
+      "target": "unchanged",
+      "suffixBytes": 0,
+      "result": "unchanged-inputs-bound",
+      "stubbedVersionProbes": 2,
+      "nativeInvocations": 0,
+      "taskExecutions": 0,
+      "outputReportAbsent": true
+    },
+    {
+      "driver": "legacy",
+      "target": "pins",
+      "suffixBytes": 1,
+      "result": "legacy-parsed-old-bytes-but-bound-new-bytes",
+      "stubbedVersionProbes": 2,
+      "nativeInvocations": 0,
+      "taskExecutions": 0,
+      "outputReportAbsent": true
+    },
+    {
+      "driver": "legacy",
+      "target": "pins",
+      "suffixBytes": 2,
+      "result": "legacy-parsed-old-bytes-but-bound-new-bytes",
+      "stubbedVersionProbes": 2,
+      "nativeInvocations": 0,
+      "taskExecutions": 0,
+      "outputReportAbsent": true
+    },
+    {
+      "driver": "legacy",
+      "target": "harness",
+      "suffixBytes": 1,
+      "result": "legacy-parsed-old-bytes-but-bound-new-bytes",
+      "stubbedVersionProbes": 2,
+      "nativeInvocations": 0,
+      "taskExecutions": 0,
+      "outputReportAbsent": true
+    },
+    {
+      "driver": "legacy",
+      "target": "harness",
+      "suffixBytes": 2,
+      "result": "legacy-parsed-old-bytes-but-bound-new-bytes",
+      "stubbedVersionProbes": 2,
+      "nativeInvocations": 0,
+      "taskExecutions": 0,
+      "outputReportAbsent": true
+    },
+    {
+      "driver": "current",
+      "target": "unchanged",
+      "suffixBytes": 0,
+      "result": "unchanged-inputs-bound",
+      "stubbedVersionProbes": 2,
+      "nativeInvocations": 0,
+      "taskExecutions": 0,
+      "outputReportAbsent": true
+    },
+    {
+      "driver": "current",
+      "target": "pins",
+      "suffixBytes": 1,
+      "result": "source-movement-refused-before-probes",
+      "stubbedVersionProbes": 0,
+      "nativeInvocations": 0,
+      "taskExecutions": 0,
+      "outputReportAbsent": true
+    },
+    {
+      "driver": "current",
+      "target": "pins",
+      "suffixBytes": 2,
+      "result": "source-movement-refused-before-probes",
+      "stubbedVersionProbes": 0,
+      "nativeInvocations": 0,
+      "taskExecutions": 0,
+      "outputReportAbsent": true
+    },
+    {
+      "driver": "current",
+      "target": "harness",
+      "suffixBytes": 1,
+      "result": "source-movement-refused-before-probes",
+      "stubbedVersionProbes": 0,
+      "nativeInvocations": 0,
+      "taskExecutions": 0,
+      "outputReportAbsent": true
+    },
+    {
+      "driver": "current",
+      "target": "harness",
+      "suffixBytes": 2,
+      "result": "source-movement-refused-before-probes",
+      "stubbedVersionProbes": 0,
+      "nativeInvocations": 0,
+      "taskExecutions": 0,
+      "outputReportAbsent": true
+    },
+    {
+      "driver": "current",
+      "target": "bun-pin",
+      "suffixBytes": 1,
+      "result": "source-movement-refused-before-probes",
+      "stubbedVersionProbes": 0,
+      "nativeInvocations": 0,
+      "taskExecutions": 0,
+      "outputReportAbsent": true
+    },
+    {
+      "driver": "current",
+      "target": "bun-pin",
+      "suffixBytes": 2,
+      "result": "source-movement-refused-before-probes",
+      "stubbedVersionProbes": 0,
+      "nativeInvocations": 0,
+      "taskExecutions": 0,
+      "outputReportAbsent": true
+    },
+    {
+      "driver": "current",
+      "target": "external-pins",
+      "suffixBytes": 0,
+      "result": "external-pin-manifest-refused-before-read",
+      "stubbedVersionProbes": 0,
+      "nativeInvocations": 0,
+      "taskExecutions": 0,
+      "outputReportAbsent": true
+    }
+  ],
+  "nativeInvocations": 0,
+  "taskExecutions": 0,
+  "historical168CaseObservationUnchanged": true,
+  "limits": [
+    "Bun version queries are stubs; no native binary is executed.",
+    "Real signed transport, current driver replay and feature acceptance remain pending."
+  ]
+}
