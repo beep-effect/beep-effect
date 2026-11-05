@@ -8,13 +8,18 @@
 import { DuckDb } from "@beep/duckdb";
 import { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import {
+  ClaimInspection,
+  ClaimInspectionLive,
+  ClaimInspectionPageRequest,
   ClaimSelfCheck,
   ClaimSelfCheckLive,
+  UsptoClaimInputs,
   UsptoClaims,
   UsptoClaimsError,
 } from "@beep/law-practice-use-cases/ClaimSelfCheck";
 import {
   ClaimSelfCheckReviewRequest,
+  claimInspectInput,
   claimSelfCheckReview,
   PracticeKgCandidateClaimsNotLoadedResult,
   PracticeKgCorrespondentAddressError,
@@ -327,6 +332,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
 > = PracticeKgToolkit.toLayer(
   Effect.gen(function* () {
     const selfCheck = yield* ClaimSelfCheck;
+    const inspection = yield* ClaimInspection;
     const bundle = yield* PracticeKgBundle;
     const duckdb = yield* DuckDb;
     const sql = (yield* SqlClientService).withoutTransforms();
@@ -425,6 +431,11 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
       claim_self_check: Effect.fn("PracticeKgTools.claim_self_check")((request) =>
         claimSelfCheckReview(ClaimSelfCheckReviewRequest.make(request)).pipe(
           Effect.provideService(ClaimSelfCheck, selfCheck)
+        )
+      ),
+      claim_inspect_input: Effect.fn("PracticeKgTools.claim_inspect_input")((request) =>
+        claimInspectInput(ClaimInspectionPageRequest.make(request)).pipe(
+          Effect.provideService(ClaimInspection, inspection)
         )
       ),
       kg_candidate_claims: Effect.fn("PracticeKgTools.kg_candidate_claims")(
@@ -599,6 +610,23 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
               UsptoClaimsError.make({
                 reason: "unavailable",
                 message: "This local review tool accepts supplied claims and does not fetch USPTO documents.",
+              })
+            )
+          ),
+        })
+      )
+    )
+  ),
+  Layer.provide(
+    ClaimInspectionLive.pipe(
+      Layer.provide(
+        Layer.succeed(UsptoClaimInputs, {
+          inputs: Effect.fn("ClaimInspectionLocal.publicInputsUnavailable")(() =>
+            Effect.fail(
+              UsptoClaimsError.make({
+                reason: "unavailable",
+                message:
+                  "This local inspection tool accepts supplied source records and does not fetch USPTO documents.",
               })
             )
           ),

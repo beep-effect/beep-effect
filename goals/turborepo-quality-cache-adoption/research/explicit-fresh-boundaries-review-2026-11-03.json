@@ -1,0 +1,153 @@
+{
+  "schemaVersion": "cache-adoption-explicit-fresh-review/v1",
+  "recordedAt": "2026-11-03T14:34:15.220382+00:00",
+  "authority": "Literal-source whole-task keep-fresh decisions only. No task execution, pure prerequisite qualification, configuration change or whole-goal acceptance.",
+  "sourceBaseRevision": "31e2ac20f34a1c699a35be55f67881dbf0d8ffd0",
+  "priorPopulation": {
+    "gitRevision": "91abf45a50d0c8bb786796f88d8d6093867e45e8",
+    "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
+    "sha256": "06496e1d84f8519896daae215d7dcf2b6747ce461c5fcdab96934a88ad5ed1e7"
+  },
+  "priorFreshReview": {
+    "path": "research/accepted31e-fresh-disposition-review-2026-11-03.json",
+    "sha256": "79ce88220db3c017d278c87f9248e95e25f733d15d99fbb3c4aa0d644eed8f5e"
+  },
+  "censusSha256": "1ace258b07a1fa04216a40ed9730d9ab8163055b9444b8ff2e5ad3724380c77c",
+  "verifiedCensusSourceBindings": 458,
+  "independentAcceptedSourceComparisons": [
+    {
+      "path": "apps/beep-effect-web/package.json",
+      "sha256": "6bb77f1d9539f890c69238bd1fdf4d2a7f13ad0363a1d6116a024ed5c2e91c9c",
+      "acceptedRevisionMatched": true
+    },
+    {
+      "path": "apps/beep-effect-web/turbo.json",
+      "sha256": "377d43a7204b727d9cb97534c959078fab21fdc406f0687b3f1d3b88c6b3a65d",
+      "acceptedRevisionMatched": true
+    },
+    {
+      "path": "package.json",
+      "sha256": "9e2d3038445730ff066327641c19ff6c2d27a87028ab718ec4d64f18cacbdd6a",
+      "acceptedRevisionMatched": true
+    },
+    {
+      "path": "turbo.json",
+      "sha256": "0701e8a2c259880643cae15516f9838d7d7b4875911cf1c304aa2fc88ee592f3",
+      "acceptedRevisionMatched": true
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "sha256": "07efca6dbb18410e4cf01925cbb05d76927e137c4a85843ffbffbce7343b3861",
+      "acceptedRevisionMatched": true
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+      "sha256": "87d2b8a4a3a5ac2ef87a55f21bd04eaeaf7c06714fb92329804814c13ba6ca4c",
+      "acceptedRevisionMatched": true
+    }
+  ],
+  "acceptedSourceBytesCompared": 617611,
+  "rows": [
+    {
+      "computation": "@beep/beep-effect-web#dev",
+      "reason": "persistent-development-service",
+      "literalCommand": "portless beep-effect-web.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'",
+      "effectiveConfiguration": {
+        "cache": false,
+        "inputs": [
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../package.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": ["^build"],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "configurationId": "daf795440b81eb5fcf6e465a0af3d6129ac24b24d7166a74cfad89dd0bdafa1c",
+      "basis": "The command starts the named Vite development server through portless; a completed cached task cannot restore a running server.",
+      "purePrerequisite": "@beep/public-site#build remains independently pending qualification."
+    },
+    {
+      "computation": "@beep/beep-effect-web#lint:fix",
+      "reason": "source-mutating-fixer",
+      "literalCommand": "bun run beep:lint:fix",
+      "effectiveConfiguration": {
+        "cache": false,
+        "inputs": [
+          "!../../tsconfig*.json",
+          "!.beep/**",
+          "!.fallow/**",
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../biome.jsonc",
+          "../../package.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "configurationId": "8345f9dadc3f03f83ead61da0ed83adabf486cce80628e7298b1a7bcfb7f12ea",
+      "basis": "The wrapper requests source mutation with --write; logs-only reuse cannot perform the mutation.",
+      "purePrerequisite": "@beep/beep-effect-web#lint remains independently pending qualification."
+    },
+    {
+      "computation": "//#repo-sanity:bun-audit",
+      "reason": "required-live-security-verdict",
+      "literalCommand": "bun run beep quality bun-audit",
+      "effectiveConfiguration": {
+        "cache": false,
+        "inputs": [
+          "./.bun-version",
+          "./.nvmrc",
+          "./package.json",
+          "./tsconfig.base.json",
+          "./tsconfig.json",
+          "./tsconfig.packages.json",
+          "bun.lock",
+          "osv-scanner.toml"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [
+          "@beep/repo-cli#lint:policy-fingerprint:quality-bun-audit"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "configurationId": "eaf05196f18252bdf3318e743374926866ed45fd66fc5eef9e25ff467731333f",
+      "basis": "The command reads current ignore expiry and queries the live vulnerability advisory set. Source-exact reuse cannot prove an unchanged external advisory set; the existing lane-proof owner explicitly excludes this lane.",
+      "purePrerequisite": "@beep/repo-cli#lint:policy-fingerprint:quality-bun-audit remains independently pending qualification."
+    }
+  ],
+  "counts": {
+    "priorReviewedWholeTaskFreshDispositions": 201,
+    "newExplicitReviews": 3,
+    "reviewedWholeTaskFreshDispositions": 204,
+    "remainingCurrentSourceReviews": 2232
+  },
+  "purePrerequisites": "Each named pure prerequisite remains pending its own tuple-specific qualification and supported adoption.",
+  "rollback": "Restore only these three population rows from the named prior Git revision and remove this report reference; runtime configuration is unchanged.",
+  "taskBodiesExecuted": 0,
+  "qualificationLedgerChanged": false,
+  "productionChanges": false,
+  "fullGoalAcceptanceChanged": false
+}

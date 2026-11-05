@@ -25,6 +25,12 @@ export {
  */
 export { CitationSafetyBudget, CitationSafetyLimitExceeded } from "./CitationEngine/CitationEngine.safety.ts";
 /**
+ * Local failure-preserving source inspection tool.
+ * @category tools
+ * @since 0.0.0
+ */
+export * from "./ClaimInspection.tools.ts";
+/**
  * Claim self-check models, errors, USPTO claims port and service contract.
  *
  * **Example** (Verify the self-check service export)
@@ -127,7 +133,7 @@ export * from "./PatentClaimCandidate/index.ts";
  * ```ts
  * import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server"
  *
- * console.log(Object.keys(PracticeKgToolkit.tools).length) // 12
+ * console.log(Object.keys(PracticeKgToolkit.tools).length) // 13
  * ```
  *
  * @category tools
