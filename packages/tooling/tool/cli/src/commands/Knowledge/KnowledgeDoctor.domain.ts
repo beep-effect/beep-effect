@@ -287,6 +287,7 @@ const derivePackets = (oracle: KnowledgeTreeOracle) =>
   Effect.flatMap(readKnowledgeGoalPacketRecords(oracle), (records) => Effect.forEach(records, recordFacts));
 
 const REFLECTIONS_DIR = "history/reflections";
+const DECISIONS_DIR = "decisions";
 
 const ancestorDirectories = (paths: HashSet.HashSet<string>): HashSet.HashSet<string> =>
   HashSet.fromIterable(
@@ -353,21 +354,21 @@ export const makeKnowledgeGoalPacketReader = (
       }
     }
   }
-  return {
-    reflectionFiles: (packetPath) => {
-      const prefix = `${packetPath}/${REFLECTIONS_DIR}/`;
-      return Effect.succeed(
-        A.getSomes(
-          A.map(oracle.trackedEntries, (entry) =>
-            pipe(
-              O.liftPredicate(entry.path, Str.startsWith(prefix)),
-              O.map(Str.slice(Str.length(prefix))),
-              O.filter((name) => !pipe(name, Str.includes("/")))
-            )
-          )
+  const directFiles = (prefix: string): ReadonlyArray<string> =>
+    A.getSomes(
+      A.map(oracle.trackedEntries, (entry) =>
+        pipe(
+          O.liftPredicate(entry.path, Str.startsWith(prefix)),
+          O.map(Str.slice(Str.length(prefix))),
+          O.filter((name) => !pipe(name, Str.includes("/")))
         )
-      );
-    },
+      )
+    );
+  return {
+    decisionFiles: (packetPath) => Effect.succeed(directFiles(`${packetPath}/${DECISIONS_DIR}/`)),
+    readDecision: (packetPath, file) => readText(oracle, `${packetPath}/${DECISIONS_DIR}/${file}`),
+    readDocument: (packetPath, document) => readTextIfTracked(oracle, paths, `${packetPath}/${document}`),
+    reflectionFiles: (packetPath) => Effect.succeed(directFiles(`${packetPath}/${REFLECTIONS_DIR}/`)),
     opsFiles: (packetPath) =>
       Effect.succeed(
         A.sort(O.getOrElse(MutableHashMap.get(opsFilesByPacket, packetPath), A.empty<string>), Order.String)

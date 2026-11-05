@@ -6787,13 +6787,13 @@
       "reason": "buildCacheConformanceCorpus(repoRoot) walks the real checkout to build the corpus under test. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the corpus builder takes a seeded root instead of the checkout."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-dependencies.test.ts:6:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-dependencies.test.ts:11:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-dependencies.test.ts",
-      "line": 6,
-      "endLine": 6,
+      "line": 11,
+      "endLine": 11,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -7491,6 +7491,27 @@
       "reason": "The committed fixtures/gate-order-handoff-knip-retired.json is read at findRepoRoot(). The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the handoff fixture is seeded into a MemoryFileSystem volume."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/goals-decisions.test.ts:14:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/goals-decisions.test.ts",
+      "line": 14,
+      "endLine": 14,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/goals-doctor-path-security.test.ts:3:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -8128,13 +8149,13 @@
       "reason": "The subject opens DuckDB on a path in the temp root, natively and not through FileSystem. #1875 wave 7 memory trial (H5): fails with \"Failed to open DuckDB connection\". Owner: @beep/repo-cli. Exit: retire when DuckDB accepts an in-memory database for the sift, or EV010 recognises DuckDB-file suites as a native-engine subject (#1855 wave 8 register)."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/research-library-acquisition.test.ts:34:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/research-library-acquisition.test.ts:35:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/research-library-acquisition.test.ts",
-      "line": 34,
-      "endLine": 34,
+      "line": 35,
+      "endLine": 35,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
