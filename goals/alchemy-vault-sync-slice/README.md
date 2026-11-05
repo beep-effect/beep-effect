@@ -42,5 +42,5 @@ Not started.
 ## Notes
 
 - P0 starts with the four spikes named in `SPEC.md` Constraints (annotation propagation, envelope survival, event version slot, Postgres replay path) and fixes the driver package location.
-- The `/teach` lesson behind D8 lives outside the repo at `~/YeeBois/teach/local-first-sync/` (artifact https://claude.ai/artifact/GG7dSXrmLj6zWTpH8rfVLg).
+- The `/teach` lesson behind D8 lives outside the repo at `$HOME/YeeBois/teach/local-first-sync/` (artifact https://claude.ai/artifact/GG7dSXrmLj6zWTpH8rfVLg).
 - Research lane reports: `explorations/alchemy-domain-adoption/research/01-03-*.md`.

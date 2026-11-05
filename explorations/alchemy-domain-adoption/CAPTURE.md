@@ -9,7 +9,7 @@ dated heading at the bottom.
 
 ## 2026-11-03 (operator dump, verbatim intent)
 
-I want to start using the Alchemy Domain module (https://alchemy.run/domain/what-is-ddd/) from alchemy (https://alchemy.run/llms.txt). Source cloned at `~/YeeBois/references/effect/alchemy` (also `.repos/alchemy`).
+I want to start using the Alchemy Domain module (https://alchemy.run/domain/what-is-ddd/) from alchemy (https://alchemy.run/llms.txt). Source cloned at `$HOME/YeeBois/references/effect/alchemy` (also `.repos/alchemy`).
 
 Reasoning:
 - We use DDD in vertical slices.
@@ -42,4 +42,4 @@ Firm decision. This packet is about research, implementation, levers and how to 
 
 Sam Goodwin on X (@samgoodwin89, status 2117367781444444417): "Alchemy Domain now supports event replay for when you deploy a new View/Projection or update a View and need to re-compute. Implemented as a fan-out workflow, supporting millions of Durable Objects orchestrated by `alchemy deploy`." Diagram: "Deploys roll out every change to a model" — backfill run → 6 relay levels (fan-out of six per Cloudflare Worker invocation) → instances → view keys. Relevance: Backfill/replay is Cloudflare-shaped upstream (packages/domain/src/Backfill.ts, 2230 lines); the Postgres platform (D1) needs its own replay path, likely a plain SQL scan rather than a fan-out tree.
 
-Operator asked for a /teach lesson on "full replica sync" vs offline intents before re-answering round-2 Q3 (local-first). Teaching workspace: ~/YeeBois/teach/local-first-sync/.
+Operator asked for a /teach lesson on "full replica sync" vs offline intents before re-answering round-2 Q3 (local-first). Teaching workspace: $HOME/YeeBois/teach/local-first-sync/.

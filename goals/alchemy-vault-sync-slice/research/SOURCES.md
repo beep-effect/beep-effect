@@ -2,14 +2,14 @@
 
 - **Source exploration:** `explorations/alchemy-domain-adoption` — primary ledger: `explorations/alchemy-domain-adoption/research/SOURCES.md` (this file is the carried copy at graduation, 2026-11-05).
 
-- **Cluster / origin:** operator capture 2026-11-03 (`explorations/alchemy-domain-adoption/CAPTURE.md`) plus three research lanes run 2026-11-03 from the headless proxy: `gpt-6-astra` medium (source analysis of the alchemy checkout and the beep domain packages), `muse-wonder-1.0` xhigh deep-research, `grok-4.7` xhigh deep-research with native x_search. Prompts, briefs and logs: `~/.cache/beep/alchemy-domain-research/`.
-- **Provenance:** `explorations/alchemy-domain-adoption/research/01-astra-source-analysis.md`, `explorations/alchemy-domain-adoption/research/02-muse-deep-research.md`, `explorations/alchemy-domain-adoption/research/03-grok-deep-research.md`; `/teach` lesson workspace `~/YeeBois/teach/local-first-sync/` (R1–R9 in its `RESOURCES.md`).
+- **Cluster / origin:** operator capture 2026-11-03 (`explorations/alchemy-domain-adoption/CAPTURE.md`) plus three research lanes run 2026-11-03 from the headless proxy: `gpt-6-astra` medium (source analysis of the alchemy checkout and the beep domain packages), `muse-wonder-1.0` xhigh deep-research, `grok-4.7` xhigh deep-research with native x_search. Prompts, briefs and logs: `$HOME/.cache/beep/alchemy-domain-research/`.
+- **Provenance:** `explorations/alchemy-domain-adoption/research/01-astra-source-analysis.md`, `explorations/alchemy-domain-adoption/research/02-muse-deep-research.md`, `explorations/alchemy-domain-adoption/research/03-grok-deep-research.md`; `/teach` lesson workspace `$HOME/YeeBois/teach/local-first-sync/` (R1–R9 in its `RESOURCES.md`).
 
 ## 1. Mined source corpus
 
 | Source | Title | Upstream (repo) | Location | Theme | Disposition |
 |--------|-------|-----------------|----------|-------|-------------|
-| `alchemy-domain` | `@alchemy.run/domain` 2.0.0-beta.85 source | alchemy-run/alchemy | `~/YeeBois/references/effect/alchemy/packages/domain/src/` (also `.repos/alchemy`) | kernel: decide/evolve, envelopes, CatchUp, Backfill, Platform contract, InMemory + Cloudflare DO platforms, Saga on `effect/workflow` | port-with-attribution (Platform contract shape); reference for everything else, consumed as a dependency |
+| `alchemy-domain` | `@alchemy.run/domain` 2.0.0-beta.85 source | alchemy-run/alchemy | `$HOME/YeeBois/references/effect/alchemy/packages/domain/src/` (also `.repos/alchemy`) | kernel: decide/evolve, envelopes, CatchUp, Backfill, Platform contract, InMemory + Cloudflare DO platforms, Saga on `effect/workflow` | port-with-attribution (Platform contract shape); reference for everything else, consumed as a dependency |
 | `alchemy-docs` | alchemy.run/domain docs (model, event, view-security, testing-models, testing-apis, local-first, optimistic-updates, mcp, sessions, deadlines, unique, http, cli, observability) | alchemy-run/alchemy (docs) | https://alchemy.run/domain/* | public contract and intended usage | reference |
 | `beep-entity-kit` | hand-rolled entity kit being retired | this repo | `packages/shared/domain/src/entity/*` (AuditEntity, BaseEntity, EntityId, EntityKit, EntityRef, OrgEntity, PublicEntityId, Principal, SourceKind, primitives) | semantics to preserve as explicit schemas (D3) | extract semantics, delete kit |
 | `beep-domain-slices` | the nine `@beep/<slice>-domain` packages | this repo | `packages/{agents,architecture-lab,documents,epistemic,law-practice,ontology,party,shared,workspace}/domain` | migration targets; 115 files import `@beep/shared-domain` | migrate (vault-sync first, D5) |
@@ -52,7 +52,7 @@ Local-first and MCP:
 - https://alchemy.run/domain/view-security , https://alchemy.run/domain/testing-models , https://alchemy.run/domain/testing-apis , https://alchemy.run/domain/model , https://alchemy.run/domain/event
 - https://zero.rocicorp.dev/docs/queries , https://zero.rocicorp.dev/docs/auth , https://livestore.dev/ — topology 3 references (D8)
 - https://modelcontextprotocol.io/specification/2025-11-25/server/tools , https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization
-- Teaching workspace `~/YeeBois/teach/local-first-sync/RESOURCES.md` R1–R9 (Replicache, Figma multiplayer, Ink & Switch local-first essay, Kleppmann, Bailis et al. invariant confluence [verify before quoting], Automerge)
+- Teaching workspace `$HOME/YeeBois/teach/local-first-sync/RESOURCES.md` R1–R9 (Replicache, Figma multiplayer, Ink & Switch local-first essay, Kleppmann, Bailis et al. invariant confluence [verify before quoting], Automerge)
 
 ## 4. In-repo capability references
 
@@ -69,4 +69,4 @@ Local-first and MCP:
 
 - Packet: `explorations/alchemy-domain-adoption/CAPTURE.md`, `explorations/alchemy-domain-adoption/DECISIONS.md` (D0–D17), the three lane reports under `explorations/alchemy-domain-adoption/research/`.
 - Related: `goals/beep-effect-web-alchemy` (closed 2026-11-02; first alchemy core usage in the repo), standards `ARCHITECTURE.md` / `DECISIONS.md` / `GLOSSARY.md` (amendments pending, open question).
-- Teaching: `~/YeeBois/teach/local-first-sync/` and artifact https://claude.ai/artifact/GG7dSXrmLj6zWTpH8rfVLg.
+- Teaching: `$HOME/YeeBois/teach/local-first-sync/` and artifact https://claude.ai/artifact/GG7dSXrmLj6zWTpH8rfVLg.

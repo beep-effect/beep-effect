@@ -30,5 +30,5 @@ None. Graduated 2026-11-05 into [`goals/alchemy-vault-sync-slice`](../../goals/a
 
 - 2026-11-03: packet opened from operator dump; three research lanes launched; align round 1 started.
 - 2026-11-03: three lane reports landed in `research/`; rounds 1–2 locked D1–D7 (Postgres platform, event streams authoritative, strangler, direct import, vault-sync first, Cluster workflow engine, single-writer cutover).
-- 2026-11-05: `/teach` lesson on sync topologies (`~/YeeBois/teach/local-first-sync/`) revised the local-first answer; D8 locked (offline intents + prediction, CRDTs scoped to content values later). Round 3 opened.
+- 2026-11-05: `/teach` lesson on sync topologies (`$HOME/YeeBois/teach/local-first-sync/`) revised the local-first answer; D8 locked (offline intents + prediction, CRDTs scoped to content values later). Round 3 opened.
 - 2026-11-05: rounds 3–4 locked D9–D17; BRIEF.md and MAP.md written; operator confirmed the shape; graduated into `goals/alchemy-vault-sync-slice`.
