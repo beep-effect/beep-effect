@@ -462,6 +462,34 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
     { arbitrary: { runs: 20 } }
   );
 
+  it("refuses a lane that stands on the main branch instead of its own branch", () => {
+    const plan = YeetRetirePlan.make({
+      worktreePath: "/clones/x/.claude/worktrees/lane",
+      owningClone: "/clones/x",
+      name: "lane",
+      branch: "main",
+    });
+    const onMain = SweepGitState.make({
+      branch: "main",
+      mainBranch: "main",
+      headBranch: "main",
+      worktreeDirty: false,
+      mainCheckedOutElsewhere: false,
+      branchCheckedOutElsewhere: false,
+      branchMergedIntoBase: true,
+      lockfileMovedOnMainUpdate: false,
+      statusProbeUnreliable: false,
+      worktreeProbeUnreliable: false,
+      localTip: O.some("1ed08f66df016a18c6d7d56bd97aa778912cb37b"),
+    });
+    expect(retireVerdict(plan, onMain)).toEqual(
+      YeetRetireVerdict.cases.refused.make({
+        reason:
+          "the lane stands on main, not on its own branch; run `git switch -` (or `git switch <lane-branch>`) in /clones/x/.claude/worktrees/lane, then retry",
+      })
+    );
+  });
+
   it("judges a lane by its pull request when one was observed, otherwise by git", () => {
     const plan = YeetRetirePlan.make({
       worktreePath: "/clones/x/.claude/worktrees/lane",

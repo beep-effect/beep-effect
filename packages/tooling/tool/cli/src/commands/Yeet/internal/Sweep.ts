@@ -67,7 +67,10 @@
  * blocked them. Under `--retire` the swept branch lives in the lane, so for the
  * owning clone the rule reads "not on `main`": a clone parked on another branch
  * keeps its checkout and receives only the ref-only steps (`fetch-prune`,
- * `ff-main`, the branch deletions). Gating on HEAD being `main` alone would be
+ * `ff-main`, the branch deletions). A sweep that runs inside a linked worktree
+ * (the readiness monitor's post-merge sweep in a lane) never moves it either:
+ * the lane keeps its pull request branch, so `yeet sweep --retire` can still
+ * judge and delete that branch. Gating on HEAD being `main` alone would be
  * wrong: the second pass above and `monitor --until-merged` both rely on
  * `end-state` moving a clone off the merged branch. (Receipt 2026-09-28: a
  * sweep switched a clone from a live branch to `main` under another session's
@@ -238,6 +241,7 @@ export class SweepGitState extends S.Opaque<SweepGitState, { readonly brand: uni
     pullRequestState: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     pullRequestHeadBranch: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     pullRequestHeadOid: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    linkedWorktree: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   }).pipe(
     $I.annoteSchema("SweepGitState", {
       description: "Read-only git and GitHub facts one post-merge workspace sweep is planned from.",
@@ -398,9 +402,21 @@ const liveCheckoutPrecondition = (state: SweepGitState): SweepPrecondition =>
     headIsMovable(state)
   );
 
+// A linked worktree is a lane that `yeet sweep --retire` retires by its pull
+// request branch. Switching it to `main` (possible whenever the owning clone
+// stands on another branch, so `main` is free) made the retire judge `main`
+// instead and leave the lane's branch behind (#1939, #1985, #2017, #2700).
+const laneKeepsBranchPrecondition = (state: SweepGitState): SweepPrecondition =>
+  precondition(
+    `the checkout is the owning clone; a linked worktree keeps ${state.branch} for \`yeet sweep --retire\``,
+    !state.linkedWorktree
+  );
+
 // What `git switch main` needs when the clone is not on `main` already: a HEAD
-// the sweep may move, a clean tree, and `main` not held by another worktree.
+// the sweep may move, a clean tree, `main` not held by another worktree, and a
+// checkout that is the owning clone rather than a lane.
 const switchToMainPreconditions = (state: SweepGitState): ReadonlyArray<SweepPrecondition> => [
+  laneKeepsBranchPrecondition(state),
   liveCheckoutPrecondition(state),
   cleanWorktreePrecondition(state),
   mainFreePrecondition(state),
@@ -1056,6 +1072,11 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
     remoteBranchAbsent: remote.absent,
     pullRequestState: O.flatMap(pullRequest, (view) => optionFromNonEmpty(view.state)),
     pullRequestHeadBranch: O.flatMap(pullRequest, (view) => optionFromNonEmpty(view.headRefName)),
+    // `git worktree list` names the owning clone first, so any other top level
+    // is a linked lane. An unreadable list already blocks the switch through
+    // `mainCheckedOutElsewhere`, so it reads as the clone here.
+    linkedWorktree:
+      !probeUnreliable(worktreeList) && O.exists(A.head(worktrees), (first) => first.path !== toplevel.output),
     pullRequestHeadOid: O.flatMap(pullRequest, (view) =>
       O.flatMap(O.fromNullishOr(view.headRefOid), optionFromNonEmpty)
     ),
