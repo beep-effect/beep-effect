@@ -113,7 +113,8 @@ const boundedPage = Effect.fn("ClaimInspection.boundedPage")(function* (
       })
     )
   );
-  const remaining = A.prepend(A.drop(report.records, start), first);
+  const following = A.drop(report.records, start);
+  const remaining = A.prepend(following, first);
   const completePage = pageOf(report, summary, remaining);
   if ((yield* responseBytes(completePage)) <= responseLimit) return completePage;
   let records: A.NonEmptyReadonlyArray<ClaimInputInspection> = [first];
@@ -125,16 +126,12 @@ const boundedPage = Effect.fn("ClaimInspection.boundedPage")(function* (
         "No page was delivered: the full ledger plus one whole inspection record exceeds 1 MiB. No supplied record is cleared; this source requires review outside this tool. Do not drop or renumber source records to fit the limit.",
     });
   }
-  let next = start;
-  while (next < report.records.length) {
-    const record = A.get(report.records, next);
-    if (O.isNone(record)) break;
-    const candidateRecords = A.append(records, record.value);
+  for (const record of following) {
+    const candidateRecords = A.append(records, record);
     const candidate = pageOf(report, summary, candidateRecords);
     if ((yield* responseBytes(candidate)) > responseLimit) break;
     records = candidateRecords;
     page = candidate;
-    next += 1;
   }
   return page;
 });
