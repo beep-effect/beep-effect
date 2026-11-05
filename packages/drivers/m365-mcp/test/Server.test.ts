@@ -186,11 +186,13 @@ const continueStdioConversation = Effect.fn("continueStdioConversation")(functio
   if (currentStage === 0 && Str.includes(`"id":1`)(output)) {
     yield* Ref.set(stage, 1);
     yield* Effect.log("M365 MCP completed server/discover requestId=1; awaiting tools/list requestId=2");
-    yield* Queue.offer(stdin, encodeRequest(yield* Effect.orDie(listRequest)));
+    const orDie1 = yield* Effect.orDie(listRequest);
+    yield* Queue.offer(stdin, encodeRequest(orDie1));
   } else if (currentStage === 1 && Str.includes(`"id":2`)(output)) {
     yield* Ref.set(stage, 2);
     yield* Effect.log("M365 MCP completed tools/list requestId=2; awaiting tools/call requestId=3");
-    yield* Queue.offer(stdin, encodeRequest(yield* Effect.orDie(callRequest)));
+    const orDie2 = yield* Effect.orDie(callRequest);
+    yield* Queue.offer(stdin, encodeRequest(orDie2));
   } else if (Str.includes(DriveId)(output)) {
     yield* Effect.log("M365 MCP completed tools/call requestId=3");
     yield* Deferred.succeed(ready, void 0);
@@ -325,7 +327,8 @@ describe("M365 MCP server", () => {
         })
       ).pipe(Layer.provide(makeStdioTestLayer(stdin, stdout, stage, ready)), Layer.provide(MockM365Layer));
 
-      yield* Queue.offer(stdin, encodeRequest(yield* discoverRequest));
+      const discoverRequest3 = yield* discoverRequest;
+      yield* Queue.offer(stdin, encodeRequest(discoverRequest3));
       yield* Effect.log("M365 MCP awaiting server/discover requestId=1");
       const fiber = yield* serverLayer.pipe(Layer.launch, Effect.forkChild({ startImmediately: true }));
 
@@ -354,7 +357,8 @@ describe("M365 MCP server", () => {
         Layer.provide(MockM365Layer)
       );
       const parent = yield* Effect.gen(function* () {
-        yield* Queue.offer(stdin, encodeRequest(yield* discoverRequest));
+        const discoverRequest4 = yield* discoverRequest;
+        yield* Queue.offer(stdin, encodeRequest(discoverRequest4));
         yield* Effect.log("M365 MCP awaiting server/discover requestId=1");
         yield* serverLayer.pipe(
           Layer.launch,
@@ -369,7 +373,8 @@ describe("M365 MCP server", () => {
         );
       }).pipe(Effect.forkChild({ startImmediately: true }));
       const exit = yield* Fiber.await(parent);
-      assert.strictEqual(yield* Ref.get(released), 1);
+      const got = yield* Ref.get(released);
+      assert.strictEqual(got, 1);
       Match.value(outcome).pipe(
         Match.when("normal", () => assertExitSuccess(exit, undefined)),
         Match.when("failed", () => assertExitFailure(exit, Cause.fail("planned parent failure"))),

@@ -1636,8 +1636,10 @@ const decodeUuidOption = S.decodeUnknownOption(UUID);
 // The detached monitor job that writes a `cleared` receipt; both are absent
 // when the loop runs attached.
 const monitorJobAttribution = Effect.fn("YeetMonitorLoop.jobAttribution")(function* () {
-  const jobId = O.flatMap(yield* configStringOption(PROOF_JOB_ENV.jobId), decodeUuidOption);
-  const unit = O.filter(yield* configStringOption(PROOF_JOB_ENV.jobUnit), Str.isNonEmpty);
+  const configStringOption1 = yield* configStringOption(PROOF_JOB_ENV.jobId);
+  const jobId = O.flatMap(configStringOption1, decodeUuidOption);
+  const configStringOption2 = yield* configStringOption(PROOF_JOB_ENV.jobUnit);
+  const unit = O.filter(configStringOption2, Str.isNonEmpty);
   return { jobId, unit };
 });
 
@@ -2008,7 +2010,8 @@ const closeoutMonitorHead = Effect.fn("YeetMonitorLoop.closeoutHead")(function* 
   if (Result.isFailure(closedOut)) {
     return Result.fail(MonitorPoll.make({ ...poll, failure: O.some(closedOut.failure) }));
   }
-  const at = DateTime.formatIso(yield* options.now ?? DateTime.now);
+  const value3 = yield* options.now ?? DateTime.now;
+  const at = DateTime.formatIso(value3);
   const timeline = yeetHeadTimelineStamp(O.getOrThrow(poll.head).timeline, "closeoutAt", at);
   const head = O.some(MonitorHeadState.make({ ...current, timeline }));
   const nextPoll = MonitorPoll.make({ ...poll, head });
@@ -2062,11 +2065,15 @@ const reportMonitorSettleTransition = Effect.fn("YeetMonitorLoop.reportSettleTra
 ) {
   const to = O.getOrNull(verdict.reason);
   if (O.isNone(previous)) {
-    if (to !== null) yield* Console.log(`[yeet] settle: ${to}`);
+    if (to !== null) {
+      yield* Console.log(`[yeet] settle: ${to}`);
+    }
     return;
   }
   const from = O.getOrNull(previous.value.reason);
-  if (from !== to) yield* Console.log(`[yeet] settle: ${from ?? "settled"} → ${to ?? "settled"}`);
+  if (from !== to) {
+    yield* Console.log(`[yeet] settle: ${from ?? "settled"} → ${to ?? "settled"}`);
+  }
 });
 
 const settleAndCloseoutMonitorHead = Effect.fn("YeetMonitorLoop.settleAndCloseout")(function* (
@@ -2096,7 +2103,8 @@ const settleAndCloseoutMonitorHead = Effect.fn("YeetMonitorLoop.settleAndCloseou
     next = closedOut.success;
     verdict = settleMonitorHead(next, current, policy);
   }
-  return Result.succeed(yield* stampMonitorReadiness(next, current, verdict));
+  const stampMonitorReadiness4 = yield* stampMonitorReadiness(next, current, verdict);
+  return Result.succeed(stampMonitorReadiness4);
 });
 
 const reportMonitorObservation = Effect.fn("YeetMonitorLoop.reportObservation")(function* (
@@ -2376,12 +2384,9 @@ const escalateMonitorWave = Effect.fn("YeetMonitorLoop.escalateWave")(function* 
   const prNumber = O.fromUndefinedOr(observation.snapshot.remote.number);
   const headSha = observation.snapshot.remote.headSha;
   if (O.isNone(prNumber) || O.isNone(headSha)) return;
-  const wave = yield* loadYeetPrWave(
-    context.repoRoot,
-    prNumber.value,
-    yield* Ref.get(escalation.escalated),
-    O.some(yield* Ref.get(escalation.redSet))
-  );
+  const got = yield* Ref.get(escalation.escalated);
+  const got5 = yield* Ref.get(escalation.redSet);
+  const wave = yield* loadYeetPrWave(context.repoRoot, prNumber.value, got, O.some(got5));
   if (O.isNone(wave)) return;
   const escalated = yield* escalation.escalate(
     context.repoRoot,
@@ -2615,15 +2620,16 @@ export const runYeetMonitorUntilMerged: {
     );
     // Wall-clock loop start, not `options.now`, so the window never spends a
     // tick of an injected poll clock.
+    const argument1 = {
+      since: options.commentsSince ?? (yield* Effect.map(DateTime.now, DateTime.formatIso)),
+      actingLogin: yield* Ref.make(O.none<string>()),
+    };
     const scope: MonitorLoopScope = {
-      comments: {
-        since: options.commentsSince ?? DateTime.formatIso(yield* DateTime.now),
-        actingLogin: yield* Ref.make(O.none<string>()),
-      },
+      comments: argument1,
       // Read before the first poll converges anything, so every row this loop
       // writes, and every row another writer adds meanwhile, counts as new.
       waveBaseline: HashSet.has(terminals, YeetMonitorTerminalState.Enum.wave)
-        ? O.some(yield* loadYeetInboxRowIds(context.repoRoot))
+        ? yield* Effect.asSome(loadYeetInboxRowIds(context.repoRoot))
         : O.none(),
       escalation: yield* monitorWaveEscalation(options),
       github: yield* makeYeetGhLoginOnce(context.repoRoot),
@@ -2646,6 +2652,8 @@ const collectMonitorStatus = Effect.fn("YeetMonitorLoop.collectStatus")(function
   collectStatus: typeof collectYeetStatus = collectYeetStatus
 ) {
   const snapshot = yield* collectStatus(context, true);
-  if (O.isSome(snapshot.remote.readFailure)) return yield* snapshot.remote.readFailure.value;
+  if (O.isSome(snapshot.remote.readFailure)) {
+    return yield* snapshot.remote.readFailure.value;
+  }
   return snapshot;
 });

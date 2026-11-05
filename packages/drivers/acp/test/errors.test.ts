@@ -92,7 +92,8 @@ describe("ACP errors", () => {
         reason: RpcClientError.RpcClientDefect.make({ message: "ACP protocol terminated.", cause: original }),
       });
 
-      assert.strictEqual(yield* callRpc(Effect.fail(failure), "initialize").pipe(Effect.flip), original);
+      const pipe1 = yield* callRpc(Effect.fail(failure), "initialize").pipe(Effect.flip);
+      assert.strictEqual(pipe1, original);
     })
   );
 
@@ -261,8 +262,10 @@ describe("ACP errors", () => {
       );
       assert.strictEqual(error.message, "Invalid payload for ACP extension method 'x/private'.");
       assert.notInclude(error.message, secret);
-      assert.notInclude(yield* requestDiagnosticsJson(error), secret);
-      assert.notInclude(yield* encodeUnknownJson(error.toProtocolError()), secret);
+      const requestDiagnosticsJson2 = yield* requestDiagnosticsJson(error);
+      assert.notInclude(requestDiagnosticsJson2, secret);
+      const encodedUnknownJson = yield* encodeUnknownJson(error.toProtocolError());
+      assert.notInclude(encodedUnknownJson, secret);
       assert.deepStrictEqual(error.toProtocolError().data, {
         issueCount: O.getOrThrow(error.issueCount),
         issueKinds: O.getOrThrow(error.issueKinds),
@@ -275,7 +278,8 @@ describe("ACP errors", () => {
       assert.strictEqual(protocolError.operation, "decode-notification-payload");
       assert.deepStrictEqual(protocolError.maximumPathDepth, O.some(2));
       assert.notInclude(protocolError.message, secret);
-      assert.notInclude(yield* parseDiagnosticsJson(protocolError), secret);
+      const parsedDiagnosticsJson = yield* parseDiagnosticsJson(protocolError);
+      assert.notInclude(parsedDiagnosticsJson, secret);
       assert.isFalse("detail" in protocolError);
     })
   );
@@ -321,9 +325,12 @@ describe("ACP errors", () => {
 
       assert.notInclude(requestError.message, SECRET_MARKER);
       assert.notInclude(parseError.message, SECRET_MARKER);
-      assert.notInclude(yield* encodeUnknownJson(requestError.toProtocolError()), SECRET_MARKER);
-      assert.notInclude(yield* requestDiagnosticsJson(requestError), SECRET_MARKER);
-      assert.notInclude(yield* parseDiagnosticsJson(parseError), SECRET_MARKER);
+      const encodedUnknownJson3 = yield* encodeUnknownJson(requestError.toProtocolError());
+      assert.notInclude(encodedUnknownJson3, SECRET_MARKER);
+      const requestDiagnosticsJson4 = yield* requestDiagnosticsJson(requestError);
+      assert.notInclude(requestDiagnosticsJson4, SECRET_MARKER);
+      const parsedDiagnosticsJson5 = yield* parseDiagnosticsJson(parseError);
+      assert.notInclude(parsedDiagnosticsJson5, SECRET_MARKER);
     }),
     { arbitrary: fcRuns(50) }
   );

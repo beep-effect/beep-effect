@@ -43,7 +43,8 @@ describe("Mdast boundary coverage", () => {
   it.effect("rejects deep acyclic input through the Effect failure channel", () =>
     Effect.gen(function* () {
       for (const depth of [16_000, 513]) {
-        assertExitSuccess(yield* Effect.exit(Mdast.fromMdast(foreignTree(depth)).pipe(Effect.flip)), depthError);
+        const exit1 = yield* Effect.exit(Mdast.fromMdast(foreignTree(depth)).pipe(Effect.flip));
+        assertExitSuccess(exit1, depthError);
       }
     })
   );
@@ -58,7 +59,8 @@ describe("Mdast boundary coverage", () => {
         assert.deepStrictEqual(decoded, result.success);
         assert.strictEqual(decoded.children.length, 2);
         const projected = Mdast.toMdast(decoded);
-        assert.deepStrictEqual(Mdast.toMdast(yield* Mdast.fromMdast(projected)), projected);
+        const fromMdast2 = yield* Mdast.fromMdast(projected);
+        assert.deepStrictEqual(Mdast.toMdast(fromMdast2), projected);
       }
     })
   );
@@ -101,7 +103,8 @@ describe("Mdast boundary coverage", () => {
         ])
       );
       const projected = Mdast.toMdast(root);
-      assert.deepStrictEqual(Mdast.toMdast(yield* Mdast.fromMdast(projected)), projected);
+      const fromMdast3 = yield* Mdast.fromMdast(projected);
+      assert.deepStrictEqual(Mdast.toMdast(fromMdast3), projected);
       const child = root.children[0];
       assert.strictEqual(child?.type, "mdxJsxFlowElement");
       if (child?.type === "mdxJsxFlowElement") {
@@ -168,7 +171,8 @@ it.effect("projects optional list, table, reference and code fields canonically"
         },
       ],
     });
-    assert.deepStrictEqual(Mdast.toMdast(yield* Mdast.fromMdast(Mdast.toMdast(root))), Mdast.toMdast(root));
+    const fromMdast4 = yield* Mdast.fromMdast(Mdast.toMdast(root));
+    assert.deepStrictEqual(Mdast.toMdast(fromMdast4), Mdast.toMdast(root));
     assert.strictEqual(root.children.length, 4);
   })
 );
@@ -194,7 +198,8 @@ it.effect("projects every dialect's flow and phrasing forms and literal frontmat
       '# heading\n\n> *em* **strong** ~~deleted~~ `code` <b>x</b>  \n> next\n\n- one\n- two\n\n```js meta\ncode\n```\n\n![alt](./image "title") [link](./url "title") ![ref][id] [ref][id] [^note]\n\n[id]: ./target "title"\n\n[^note]: note\n\n| a | b |\n| :--- | ---: |\n| c | d |\n\n---\n';
     const root = yield* Markdown.parse(source);
     const plain = Mdast.toMdast(root);
-    assert.deepStrictEqual(Mdast.toMdast(yield* Mdast.fromMdast(plain)), plain);
+    const fromMdast5 = yield* Mdast.fromMdast(plain);
+    assert.deepStrictEqual(Mdast.toMdast(fromMdast5), plain);
     for (const [type, fence] of [
       ["yaml", "---"],
       ["toml", "+++"],
@@ -204,7 +209,8 @@ it.effect("projects every dialect's flow and phrasing forms and literal frontmat
         `${fence}\nvalue\n${type === "json" ? "---" : fence}\n`,
         MarkdownParseOptions.make({ frontmatter: true })
       );
-      assert.deepStrictEqual(Mdast.toMdast(yield* Mdast.fromMdast(Mdast.toMdast(parsed))), Mdast.toMdast(parsed));
+      const fromMdast6 = yield* Mdast.fromMdast(Mdast.toMdast(parsed));
+      assert.deepStrictEqual(Mdast.toMdast(fromMdast6), Mdast.toMdast(parsed));
       assert.strictEqual(parsed.children[0]?.type === "frontmatter" ? parsed.children[0].format : undefined, type);
     }
     const foreign = yield* Mdast.fromMdast({
@@ -216,7 +222,8 @@ it.effect("projects every dialect's flow and phrasing forms and literal frontmat
         { type: "code", value: "carriage\r" },
       ],
     });
-    assert.deepStrictEqual(Mdast.toMdast(yield* Mdast.fromMdast(Mdast.toMdast(foreign))), Mdast.toMdast(foreign));
+    const fromMdast7 = yield* Mdast.fromMdast(Mdast.toMdast(foreign));
+    assert.deepStrictEqual(Mdast.toMdast(fromMdast7), Mdast.toMdast(foreign));
     assert.strictEqual(
       (yield* Effect.flip(Mdast.fromMdast({ type: "root", children: [{ type: "unknown" }] })))._tag,
       "MdastDecodeError"
@@ -241,6 +248,7 @@ it.effect("projects absent link titles and image titles and alt text to mdast de
     const plain = Mdast.toMdast(root);
     const defaults = yield* S.decodeUnknownEffect(ProjectedDefaults)(plain);
     assert.strictEqual(defaults.children[0].children[1].alt, "");
-    assert.deepStrictEqual(Mdast.toMdast(yield* Mdast.fromMdast(plain)), plain);
+    const fromMdast8 = yield* Mdast.fromMdast(plain);
+    assert.deepStrictEqual(Mdast.toMdast(fromMdast8), plain);
   })
 );

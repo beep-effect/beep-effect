@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // The range-tolerant `packageManager` field: `<name>@<range>[+<integrity>]`.
 //
 // The class exists so the presence-lenient `PackageManifest` can read the
@@ -89,7 +90,8 @@ describe("PackageManagerRange.FromString", () => {
     Effect.gen(function* () {
       for (const input of ["pnpm@^11.20.0", "pnpm@11.2.0", "yarn@>=4 <5", "bun@1.2.x", "npm@11.2.0+sha512.abc"]) {
         const pm = yield* decode(input);
-        assert.strictEqual(yield* encode(pm), input);
+        const encoded1 = yield* encode(pm);
+        assert.strictEqual(encoded1, input);
       }
     })
   );
@@ -227,7 +229,10 @@ describe("PackageManagerRange.fromDevEngine", () => {
 
 describe("PackageManagerRange devEngines entry as a plain object", () => {
   it("accepts the encoded shape read straight off disk, with no DevEngine construction", () => {
-    const raw: unknown = JSON.parse('{"name":"pnpm","version":"^12.6.0","onFail":"download"}');
+    const raw: unknown = Result.getOrThrowWith(
+      S.decodeResult(UnknownJson)('{"name":"pnpm","version":"^12.6.0","onFail":"download"}'),
+      identity
+    );
     assertTrue(S.is(DevEngineEntry)(raw));
     const read = PackageManagerRange.fromDevEngineResult(raw);
     assertSuccess(read, Result.getOrThrow(read));
@@ -307,6 +312,8 @@ describe("PackageManagerRange operator, baseVersion and withVersion", () => {
 
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { $PackageJsonId } from "@beep/identity/packages";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 describe("PackageManagerRange.fromDevEngineResult property", () => {
   it.effect.prop(

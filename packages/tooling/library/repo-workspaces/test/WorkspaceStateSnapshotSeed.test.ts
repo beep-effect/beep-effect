@@ -132,9 +132,12 @@ describe("WorkspaceStateSnapshot — the seeded catalogResolver", () => {
         const resolver = yield* CatalogResolver;
         // A resolver blind to the seed would answer differently from `resolve`
         // on the very snapshot it is bound to.
-        assertSome(yield* resolver.rangeOf("effect", O.none()), "^4.0.0");
-        assertSome(yield* resolver.rangeOf("react", O.none()), "^18.2.0");
-        assertNone(yield* resolver.rangeOf("lodash", O.none()));
+        const rangeOf1 = yield* resolver.rangeOf("effect", O.none());
+        assertSome(rangeOf1, "^4.0.0");
+        const rangeOf2 = yield* resolver.rangeOf("react", O.none());
+        assertSome(rangeOf2, "^18.2.0");
+        const rangeOf3 = yield* resolver.rangeOf("lodash", O.none());
+        assertNone(rangeOf3);
       })
     );
   });
@@ -312,9 +315,9 @@ it.effect.prop(
   [Arbitrary.schema(WorkspaceStateSnapshot)],
   ([value]) =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(WorkspaceStateSnapshot)(
-        yield* S.encodeEffect(WorkspaceStateSnapshot)(value)
-      );
+      const argument = S.decodeEffect(WorkspaceStateSnapshot);
+      const value1 = yield* S.encodeEffect(WorkspaceStateSnapshot)(value);
+      const decoded = yield* argument(value1);
       assert.isTrue(S.toEquivalence(WorkspaceStateSnapshot)(decoded, value));
     }),
   { arbitrary: fcRuns(50) }

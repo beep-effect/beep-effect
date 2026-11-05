@@ -14,7 +14,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(EnumerationFailureKind)(value);
       const decoded = yield* S.decodeEffect(EnumerationFailureKind)(encoded);
       assert.isTrue(S.toEquivalence(EnumerationFailureKind)(decoded, value));
-      assert.strictEqual(yield* S.encodeEffect(EnumerationFailureKind)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(EnumerationFailureKind)(decoded);
+      assert.strictEqual(value1, encoded);
     }),
   runs
 );

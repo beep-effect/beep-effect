@@ -47,7 +47,8 @@ describe("CliColor.enabled", () => {
     )((it) => {
       it.effect(label, () =>
         Effect.gen(function* () {
-          assert.strictEqual(yield* CliColor.enabled, expected);
+          const enabled1 = yield* CliColor.enabled;
+          assert.strictEqual(enabled1, expected);
         })
       );
     });
@@ -66,7 +67,8 @@ describe("CliColor.enabled", () => {
       "TTY, NO_COLOR empty with a provider that preserves empty strings — no-color.org: only non-empty disables",
       () =>
         Effect.gen(function* () {
-          assert.strictEqual(yield* CliColor.enabled, true);
+          const enabled2 = yield* CliColor.enabled;
+          assert.strictEqual(enabled2, true);
         })
     );
   });
@@ -79,7 +81,8 @@ describe("CliColor.enabled", () => {
   )((it) => {
     it.effect("an ambient TerminalEnv decides, even over a non-TTY Stdio", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* CliColor.enabled, true);
+        const enabled3 = yield* CliColor.enabled;
+        assert.strictEqual(enabled3, true);
       })
     );
   });

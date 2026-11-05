@@ -1269,3 +1269,62 @@ independent artifact inspection before approval; no unchanged retry or authority
 is granted by this repair. Reverse by disabling preparation and reverting this
 prerequisite delta, retaining the failure receipt. Existing consumers, secrets,
 producer activation, qualification and whole-goal acceptance remain unchanged.
+
+
+### Diagnose actual installed-dependency drift before approval, 2026-11-03
+
+Two successful authenticated source inspections disagree only on the installed
+dependency digest despite equal aggregate counts, sizes and links. Keep the
+production `canonical-gnu-tar/v1` digest and every source/profile acceptance
+check unchanged. Do not infer a cause or approve either environment from that
+comparison. The compact preparation receipt binds both historical observations.
+
+Add a credential-free research observer under this packet, called only by the
+existing protected source-inspection leaf after its normal report. Stream the
+identical canonical archive twice, retain package-level content, mode, link and
+header digests, and refuse a source mismatch or between-pass drift. No payload
+bytes, arbitrary paths, stderr text, environment values or secrets are retained.
+The observer grants no producer, upload or qualification authority.
+
+Retain the existing one-runner, ten-minute job and one-day artifact retention.
+The observer has a 300-second deadline, 256 MiB process memory ceiling, two
+sequential archive streams capped at 6 GiB each, at most 600,000 entries and
+4,096 package groups per pass, and a four-MiB aggregate source-plus-diagnostic
+artifact ceiling. It runs no task body or dependency installation and receives
+no cache, issuer or application capability. A refusal can retain only its
+bounded diagnostic; the ordinary source artifact remains success-only.
+
+Author hosted tiny-tree regressions against the production dependency digest,
+content/mode/link mutations, between-pass drift, stale/replaced source, physical
+root, special entries and publication overflow. Per the operator, push without
+local verify/publish, package suites or repository tests; these authored cases
+remain unproven until hosted CI runs them. After primary acceptance, authenticate
+two actual observations and repair the attributed cause without weakening the
+profile. Reversal removes the observer invocation, separate artifact and research
+helper while preserving both original reports and all existing production gates.
+All whole-goal acceptance criteria remain incomplete.
+
+### Complete read-only pilot tree snapshots, 2026-11-03
+
+Include the package root and every visited directory in the existing internal
+pilot snapshot, alongside regular files and symlink targets. Retain complete
+filesystem modes for roots, directories and regular files. A directory uses an
+empty-content digest with its distinct mode/type and relative path; even an
+empty directory therefore changes the snapshot. The digest remains an internal
+before/after guard, not a new persisted receipt or qualification authority.
+
+Apply the existing 5,000-entry ceiling before each append and retain the depth
+limit. The former file counter ran only when entering a directory, so a wide
+leaf list could exceed it; counting every entry closes that gap. Keep the
+existing top-level `.turbo` exclusion for native logs and summaries.
+
+Author nine supervisory regression cases: file, nested-directory and package-
+root mode changes, plus empty-directory creation, in both the selected package
+and a dependency; a wide empty-directory population must hit the entry limit.
+Require the specific source-change/bound error, no experiment receipt and
+owned fixture cleanup. Hosted CI is authoritative under the operator's explicit
+no-local-verify/publish instruction; authored cases are not passing evidence.
+
+This change grants no task/profile qualification or signing activation. Existing
+receipts remain historical under their original source. Reverse through Git;
+no public protocol/schema, persisted state or cloud resource migration is needed.

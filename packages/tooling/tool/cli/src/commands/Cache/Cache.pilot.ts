@@ -179,9 +179,11 @@ const NativeTask = S.Struct({
   ),
 });
 const NativeSummary = S.Struct({ tasks: S.Array(NativeTask) });
-class PilotFile extends S.Opaque<PilotFile, { readonly brand: unique symbol }>()(
+class PilotTreeEntry extends S.Opaque<PilotTreeEntry, { readonly brand: unique symbol }>()(
   S.Struct({ path: S.NonEmptyString, mode: S.Natural, sha256: Sha256Hex }).pipe(
-    $I.annoteSchema("PilotFile", { description: "A regular package source file observed before or after execution." })
+    $I.annoteSchema("PilotTreeEntry", {
+      description: "A package root, directory, regular file or symlink observed before or after execution.",
+    })
   )
 ) {}
 class PilotRoot extends S.Opaque<PilotRoot, { readonly brand: unique symbol }>()(
@@ -227,8 +229,9 @@ const captureHost = Effect.fn("CachePilot.captureHost")(function* (root: string,
     env: { PATH: "/usr/bin", HOME: "/nonexistent", GIT_CONFIG_NOSYSTEM: "1", GIT_OPTIONAL_LOCKS: "0" },
     bound: captureBound,
   }).pipe(Effect.timeout(Duration.seconds(30)));
-  if (result.exitCode !== 0 || result.truncated)
+  if (result.exitCode !== 0 || result.truncated) {
     return yield* CacheCommandError.new("Pilot Git identity check failed or exceeded its bound.");
+  }
   return Str.trim(result.stdout);
 });
 const inputDigest = Effect.fn("CachePilot.inputDigest")(function* (inputs: Readonly<Record<string, string>>) {
@@ -246,8 +249,9 @@ const copyPackage = Effect.fn("CachePilot.copyPackage")(function* (source: strin
     relative: string,
     depth: number
   ): Effect.fn.Return<void, CacheCommandError | PlatformError.PlatformError> {
-    if (depth > 16 || ++entries > 5000)
+    if (depth > 16 || ++entries > 5000) {
       return yield* CacheCommandError.new("Pilot source tree exceeded its traversal bound.");
+    }
     const from = path.join(source, relative);
     const to = path.join(target, relative);
     const link = yield* fs.readLink(from).pipe(Effect.option);
@@ -259,17 +263,25 @@ const copyPackage = Effect.fn("CachePilot.copyPackage")(function* (source: strin
     const info = yield* fs.stat(from);
     if (info.type === "Directory") {
       yield* fs.makeDirectory(to);
-      for (const name of A.sort(yield* fs.readDirectory(from), Order.String))
+      for (const name of yield* Effect.map(fs.readDirectory(from), (value) => A.sort(value, Order.String))) {
         yield* visit(path.join(relative, name), depth + 1);
-    } else if (info.type === "File") yield* fs.copyFile(from, to);
-    else return yield* CacheCommandError.new("Pilot package source contains an unsupported file kind.");
+      }
+    } else if (info.type === "File") {
+      yield* fs.copyFile(from, to);
+    } else {
+      return yield* CacheCommandError.new("Pilot package source contains an unsupported file kind.");
+    }
   });
   yield* visit("", 0);
 });
 const snapshot = Effect.fn("CachePilot.snapshot")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const files: Array<PilotFile> = [];
+  const directoryDigest = yield* hashText("");
+  const rootInfo = yield* fs.stat(root);
+  let entries: ReadonlyArray<PilotTreeEntry> = [
+    PilotTreeEntry.make({ path: ".", mode: S.Natural.make(rootInfo.mode), sha256: directoryDigest }),
+  ];
   const visit = Effect.fn("CachePilot.snapshotVisit")(function* (
     relative: string,
     depth: number
@@ -278,50 +290,66 @@ const snapshot = Effect.fn("CachePilot.snapshot")(function* (root: string) {
     CacheCommandError | FsGuardError | S.SchemaError | PlatformError.PlatformError,
     FileSystem.FileSystem | Path.Path | Digest.Digest
   > {
-    if (depth > 16 || files.length > 5000)
+    if (depth > 16) {
       return yield* CacheCommandError.new("Pilot source tree exceeded its traversal bound.");
+    }
+    const readDirectory1 = yield* fs.readDirectory(path.join(root, relative));
     yield* Effect.forEach(
-      A.sort(yield* fs.readDirectory(path.join(root, relative)), Order.String),
+      A.sort(readDirectory1, Order.String),
       Effect.fn("CachePilot.snapshotEntry")(function* (name) {
         if (relative === "" && name === ".turbo") return;
+        if (A.length(entries) >= 5000) {
+          return yield* CacheCommandError.new("Pilot source tree exceeded its traversal bound.");
+        }
         const child = path.join(relative, name);
         const link = yield* fs.readLink(path.join(root, child)).pipe(Effect.option);
         if (O.isSome(link)) {
-          files.push(
-            PilotFile.make({ path: child, mode: S.Natural.make(0o120000), sha256: yield* hashText(link.value) })
+          entries = A.append(
+            entries,
+            PilotTreeEntry.make({ path: child, mode: S.Natural.make(0o120000), sha256: yield* hashText(link.value) })
           );
           return;
         }
         const info = yield* fs.stat(path.join(root, child));
-        if (info.type === "Directory") yield* visit(child, depth + 1);
-        else if (info.type === "File")
-          files.push(
-            PilotFile.make({
+        if (info.type === "Directory") {
+          entries = A.append(
+            entries,
+            PilotTreeEntry.make({ path: child, mode: S.Natural.make(info.mode), sha256: directoryDigest })
+          );
+          yield* visit(child, depth + 1);
+        } else if (info.type === "File") {
+          entries = A.append(
+            entries,
+            PilotTreeEntry.make({
               path: child,
-              mode: S.Natural.make(info.mode & 0o777),
+              mode: S.Natural.make(info.mode),
               sha256: yield* readBytes(root, child).pipe(Effect.flatMap(hashBytes)),
             })
           );
-        else return yield* CacheCommandError.new("Pilot package source contains an unsupported file kind.");
+        } else {
+          return yield* CacheCommandError.new("Pilot package source contains an unsupported file kind.");
+        }
       }),
       { concurrency: 1, discard: true }
     );
   });
   yield* visit("", 0);
-  return yield* PilotFile.pipe(S.Array, JsonStringCodec).encode(files).pipe(Effect.flatMap(hashText));
+  return yield* PilotTreeEntry.pipe(S.Array, JsonStringCodec).encode(entries).pipe(Effect.flatMap(hashText));
 });
 
 const validatePilotClient = Effect.fn("CachePilot.validateClient")(function* (
   current: CacheActivationPreview,
   request: CachePilotRequest
 ) {
-  if ((request.channel === "canary") !== Str.includes("-canary.")(request.client.version))
+  if ((request.channel === "canary") !== Str.includes("-canary.")(request.client.version)) {
     return yield* CacheCommandError.new("Pilot client version and channel disagree.");
+  }
   if (
     request.channel === "stable" &&
     !S.toEquivalence(S.Struct({ version: S.String, sha256: Sha256Hex }))(request.client, current.source.toolchain.turbo)
-  )
+  ) {
     return yield* CacheCommandError.new("Stable pilot client differs from the reviewed toolchain.");
+  }
 });
 
 const validatePilotClosure = Effect.fn("CachePilot.validateClosure")(function* (
@@ -331,23 +359,26 @@ const validatePilotClosure = Effect.fn("CachePilot.validateClosure")(function* (
   const installed = yield* current.source.toolchain.installedDependencies.pipe(
     Effect.fromOption(() => CacheCommandError.new("Pilot qualification requires an installed dependency identity."))
   );
-  if (!S.toEquivalence(CacheDependencyTree)(installed, dependencies.tree))
+  if (!S.toEquivalence(CacheDependencyTree)(installed, dependencies.tree)) {
     return yield* CacheCommandError.new("Pilot dependency snapshot differs from the observed normal installation.");
+  }
   const selectedNode = yield* A.findFirst(current.source.configuration.nodes, (node) => node.id === identityTask).pipe(
     Effect.fromOption(() => CacheCommandError.new("The pilot computation is absent."))
   );
-  if (!A.contains(selectedNode.configuration.env, "BEEP_CACHE_TOOLCHAIN_DIGEST"))
+  if (!A.contains(selectedNode.configuration.env, "BEEP_CACHE_TOOLCHAIN_DIGEST")) {
     return yield* CacheCommandError.new("The pilot must declare BEEP_CACHE_TOOLCHAIN_DIGEST as a hashed input.");
+  }
   const dependencyNodes = A.filter(current.source.configuration.nodes, (node) => node.id !== identityTask);
   if (
     A.some(
       dependencyNodes,
       (node) => (node.id !== typesTask && !R.has(additionalDependencyDirectories, node.id)) || node.configuration.cache
     )
-  )
+  ) {
     return yield* CacheCommandError.new(
       "Pilot dependencies must be limited to fresh, unqualified types, fc-runs and test-runner lint."
     );
+  }
   return dependencyNodes;
 });
 
@@ -374,9 +405,12 @@ const runPilot = Effect.fn("CachePilot.run")(
     ownedUpload: O.Option<PilotTransport>
   ) {
     const verifyPilotEnvironment = Effect.fn("CachePilot.verifyPilotEnvironment")(function* () {
-      if ((yield* HostProcessPlatform) !== "linux" || (yield* HostProcessArchitecture) !== "x64")
+      if ((yield* HostProcessPlatform) !== "linux" || (yield* HostProcessArchitecture) !== "x64") {
         return yield* CacheCommandError.new("The real pilot sandbox requires Linux x64.");
-      if (mode === "signed") yield* assertCachePrivateNetwork;
+      }
+      if (mode === "signed") {
+        yield* assertCachePrivateNetwork;
+      }
     });
     yield* verifyPilotEnvironment();
     const fs = yield* FileSystem.FileSystem;
@@ -389,10 +423,12 @@ const runPilot = Effect.fn("CachePilot.run")(
       );
       const activationRequest = CacheActivationRequest.make({ computation: identityTask, ...preview.activation });
       const current = yield* cache.activation(root, activationRequest);
-      if (!S.toEquivalence(CacheActivationPreview)(current, preview))
+      if (!S.toEquivalence(CacheActivationPreview)(current, preview)) {
         return yield* CacheCommandError.new("The pilot activation preview is stale.");
-      if (mode === "signed" && request.selection !== "full")
+      }
+      if (mode === "signed" && request.selection !== "full") {
         return yield* CacheCommandError.new("Signed comparisons require full selection.");
+      }
       return Tuple.make(current, activationRequest);
     });
     const [current, activationRequest] = yield* resolveReviewedActivation();
@@ -419,24 +455,28 @@ const runPilot = Effect.fn("CachePilot.run")(
           A.some([...sourceRoots, commonGit, dependencies.directory, "/usr"], (mount) =>
             isResolvedPathWithinRoot(path, { root: mount, candidate: issuer })
           )
-        )
+        ) {
           return yield* CacheCommandError.new("Issuer material must remain outside every signed pilot input mount.");
+        }
       }
     });
     yield* verifySourceIssuerExclusion();
     const sourceRootA = O.getOrThrow(A.get(sourceRoots, 0));
     const sourceRootB = O.getOrThrow(A.get(sourceRoots, 1));
-    if (sourceRootA === sourceRootB)
+    if (sourceRootA === sourceRootB) {
       return yield* CacheCommandError.new("Cross-root pilot observations require two distinct registered worktrees.");
+    }
     yield* Effect.forEach(
       sourceRoots,
       Effect.fn("CachePilot.verifySourceWorktree")(function* (source) {
-        if (!A.some(context.entries, (entry) => entry.path === source && entry.head === revision) || source === root)
+        if (!A.some(context.entries, (entry) => entry.path === source && entry.head === revision) || source === root) {
           return yield* CacheCommandError.new(
             "A pilot source is not a distinct registered worktree at the current revision."
           );
-        if ((yield* captureHost(source, ["status", "--porcelain", "--untracked-files=all"])) !== "")
+        }
+        if ((yield* captureHost(source, ["status", "--porcelain", "--untracked-files=all"])) !== "") {
           return yield* CacheCommandError.new("Pilot source worktrees must be clean before read-only execution.");
+        }
       }),
       { concurrency: 1, discard: true }
     );
@@ -451,8 +491,9 @@ const runPilot = Effect.fn("CachePilot.run")(
         [node, current.source.toolchain.node.sha256],
         [turbo, request.client.sha256],
       ] as const) {
-        if ((yield* hashExecutable(executable)) !== expected)
+        if ((yield* hashExecutable(executable)) !== expected) {
           return yield* CacheCommandError.new("A pilot executable differs from its exact content pin.");
+        }
       }
     });
     yield* verifyTools();
@@ -488,8 +529,9 @@ const runPilot = Effect.fn("CachePilot.run")(
           executables: { ...reviewedLinker.executables, turbo: runtimeLinker.executables.turbo },
         })
       )
-    )
+    ) {
       return yield* CacheCommandError.new("Pilot libraries differ from the reviewed normal runtime.");
+    }
     const runtimeIdentity = yield* fingerprintCacheComputation(
       current.source.key,
       census,
@@ -514,14 +556,17 @@ const runPilot = Effect.fn("CachePilot.run")(
       A.some([root, ...sourceRoots, commonGit, dependencies.directory, "/usr"], (mount) =>
         isResolvedPathWithinRoot(path, { root: mount, candidate: experiment })
       )
-    )
+    ) {
       return yield* CacheCommandError.new("Private pilot storage must remain outside every source input mount.");
+    }
     const prepare = Effect.fn("CachePilot.prepare")(function* (
       source: string,
       label: PilotRoot["label"],
       name: string
     ) {
-      if (needsProfile) yield* verifyCacheIdentityLintProfile(source);
+      if (needsProfile) {
+        yield* verifyCacheIdentityLintProfile(source);
+      }
       const directory = path.join(experiment, name);
       yield* fs.makeDirectory(directory);
       const identity = path.join(directory, "identity");
@@ -540,15 +585,17 @@ const runPilot = Effect.fn("CachePilot.run")(
         { concurrency: 1 }
       ).pipe(Effect.map((entries) => R.fromEntries(A.getSomes(entries))));
       for (const packageRoot of [identity, types, ...R.values(additionalPackages)]) {
-        if (yield* fs.exists(path.join(packageRoot, ".turbo")))
+        if (yield* fs.exists(path.join(packageRoot, ".turbo"))) {
           return yield* CacheCommandError.new("Clean pilot source unexpectedly contains runtime outputs.");
+        }
         yield* fs.makeDirectory(path.join(packageRoot, ".turbo"));
       }
       yield* writeContainedFileString(types, "turbo.json", typesConfig);
       yield* writeContainedFileString(identity, "turbo.json", before);
       const gitDirectory = yield* captureHost(source, ["rev-parse", "--absolute-git-dir"]);
-      if (path.dirname(gitDirectory) !== path.join(commonGit, "worktrees"))
+      if (path.dirname(gitDirectory) !== path.join(commonGit, "worktrees")) {
         return yield* CacheCommandError.new("Pilot source uses unsupported Git metadata placement.");
+      }
       const gitFile = path.join(directory, "gitfile");
       yield* writeContainedFileString(directory, "gitfile", `gitdir: /git/worktrees/${path.basename(gitDirectory)}\n`);
       return PilotRoot.make({
@@ -603,8 +650,9 @@ const runPilot = Effect.fn("CachePilot.run")(
           }),
           A.getSomes
         );
-        for (const name of A.sort(A.dedupe([...existing, ...added]), Order.String))
+        for (const name of A.sort(A.dedupe([...existing, ...added]), Order.String)) {
           yield* visit(path.join(relative, name));
+        }
       });
       const visit = Effect.fn("CachePilot.mountVisit")(function* (
         relative: string
@@ -637,16 +685,17 @@ const runPilot = Effect.fn("CachePilot.run")(
       fixture: PilotRoot,
       transport: O.Option<PilotTransport>
     ) {
-      for (const name of ["run", "identity-log", "types-log", "cache"])
+      for (const name of ["run", "identity-log", "types-log", "cache"]) {
         yield* fs.makeDirectory(path.join(fixture.directory, name), { recursive: true });
-      for (const relative of R.keys(fixture.additionalPackages))
+      }
+      for (const relative of R.keys(fixture.additionalPackages)) {
         yield* fs.makeDirectory(path.join(fixture.directory, "dependency-logs", relative), { recursive: true });
+      }
       if (O.isSome(transport)) {
-        yield* writeContainedFileString(
-          fixture.directory,
-          "run/config.json",
-          yield* JsonStringCodec(S.Struct({ teamId: S.String })).encode({ teamId: transport.value.namespace })
-        );
+        const encoded2 = yield* JsonStringCodec(S.Struct({ teamId: S.String })).encode({
+          teamId: transport.value.namespace,
+        });
+        yield* writeContainedFileString(fixture.directory, "run/config.json", encoded2);
       }
     });
     const invoke = Effect.fn("CachePilot.invoke")(function* (
@@ -656,8 +705,9 @@ const runPilot = Effect.fn("CachePilot.run")(
       env: Readonly<Record<string, string>> = {},
       transport: O.Option<PilotTransport> = O.none()
     ) {
-      if (needsProfile && env.BIOME_CONFIG_PATH !== undefined)
+      if (needsProfile && env.BIOME_CONFIG_PATH !== undefined) {
         return yield* CacheCommandError.new("Pilot scenario cannot override the governed lint profile.");
+      }
       yield* prepareInvocation(fixture, transport);
       return yield* runCapturedStreams({
         command: "/usr/bin/bwrap",
@@ -759,21 +809,28 @@ const runPilot = Effect.fn("CachePilot.run")(
             sh: () => "/usr/bin/sh",
           })(role);
           const observed = yield* invoke(firstRoot, "/fixture", ["/usr/bin/ldd", "--", executable]);
-          if (observed.exitCode !== 0 || observed.truncated || Str.trim(observed.stderr) !== "")
+          if (observed.exitCode !== 0 || observed.truncated || Str.trim(observed.stderr) !== "") {
             return yield* CacheCommandError.new(`Sandbox ${role} library discovery failed.`);
+          }
           const paths = yield* parseCacheLinkerOutput(observed.stdout);
           const expectedFiles = CacheLinkerResolution.match(runtimeLinker.executables[role], {
             Static: A.empty<CacheLinkedFile>,
             Dynamic: ({ files }): ReadonlyArray<CacheLinkedFile> => files,
           });
           const expected = A.map(expectedFiles, (file) => file.path);
-          if (!S.toEquivalence(S.Array(S.String))(paths, expected))
+          if (!S.toEquivalence(S.Array(S.String))(paths, expected)) {
             return yield* CacheCommandError.new(
               `Sandbox ${role} library resolution differs from the reviewed runtime.`
             );
+          }
           for (const file of expectedFiles)
-            if (!S.toEquivalence(CacheLinkedFile)(file, yield* inspectCacheLinkedFile(file.path)))
+            if (
+              !(yield* Effect.map(inspectCacheLinkedFile(file.path), (value) =>
+                S.toEquivalence(CacheLinkedFile)(file, value)
+              ))
+            ) {
               return yield* CacheCommandError.new(`Sandbox ${role} library target changed during validation.`);
+            }
         }),
         { concurrency: 1, discard: true }
       );
@@ -787,10 +844,11 @@ const runPilot = Effect.fn("CachePilot.run")(
         ["turbo", request.client.version],
       ]) {
         const observed = yield* invoke(firstRoot, "/fixture", [`/tools/${executable}`, "--version"]);
-        if (observed.exitCode !== 0 || observed.truncated || Str.trim(observed.stdout) !== expected)
+        if (observed.exitCode !== 0 || observed.truncated || Str.trim(observed.stdout) !== expected) {
           return yield* CacheCommandError.new(
             `Sandbox ${executable} version check failed (exit ${observed.exitCode}).`
           );
+        }
       }
     });
     yield* verifySandboxVersions();
@@ -807,8 +865,9 @@ const runPilot = Effect.fn("CachePilot.run")(
             A.contains(task.environmentVariables.configured, runtimeKeyObservation) &&
             (!needsProfile || O.exists(task.environmentVariables.passthrough, A.contains(expectedProfile)))
         )
-      )
+      ) {
         return yield* CacheCommandError.new("The native pilot plan omitted the verified runtime key.");
+      }
     });
     const verifyNativePlans = Effect.fn("CachePilot.verifyNativePlans")(function* () {
       const expectedProfile = yield* profileObservation("/fixture");
@@ -825,8 +884,9 @@ const runPilot = Effect.fn("CachePilot.run")(
             "--env-mode=strict",
             "--dry=json",
           ]);
-          if (dry.exitCode !== 0 || dry.truncated)
+          if (dry.exitCode !== 0 || dry.truncated) {
             return yield* CacheCommandError.new("Pilot dry-run setup failed or exceeded its capture bound.");
+          }
           const plan = yield* JsonStringCodec(NativeSummary).decode(dry.stdout);
           yield* validateNativePlanRuntime(plan, expectedProfile);
           const joined = yield* joinCacheCensusPlan(census.workspaces, plan);
@@ -838,8 +898,9 @@ const runPilot = Effect.fn("CachePilot.run")(
               ),
               expectedTasks
             )
-          )
+          ) {
             return yield* CacheCommandError.new("Pilot graph differs from the reviewed identity task closure.");
+          }
           for (const node of joined) {
             const expected = yield* A.findFirst(census.nodes, (row) => row.id === node.id).pipe(
               Effect.fromOption(() => CacheCommandError.new("Pilot dry node is absent from the current census."))
@@ -848,10 +909,11 @@ const runPilot = Effect.fn("CachePilot.run")(
               node.inputsDigest !== expected.inputsDigest ||
               node.commandDigest !== expected.commandDigest ||
               !S.toEquivalence(CacheTaskConfiguration)(node.configuration, expected.configuration)
-            )
+            ) {
               return yield* CacheCommandError.new(
                 "Read-only pilot inputs or configuration differ from the live census."
               );
+            }
           }
         }),
         { concurrency: 1, discard: true }
@@ -863,8 +925,9 @@ const runPilot = Effect.fn("CachePilot.run")(
         O.flatMap((execution) => execution.exitCode),
         Effect.fromOption(() => CacheCommandError.new("A native task omitted its execution verdict."))
       );
-      if (task.cache.remote || (task.cache.status === "HIT" && !task.cache.local))
+      if (task.cache.remote || (task.cache.status === "HIT" && !task.cache.local)) {
         return yield* CacheCommandError.new("A pilot hit lacks exclusive local origin evidence.");
+      }
       return CachePilotTask.make({
         computation: task.taskId,
         taskHash: task.hash,
@@ -889,8 +952,9 @@ const runPilot = Effect.fn("CachePilot.run")(
             expectedDependencies
           )) ||
         A.some(dependencies, (task) => !A.contains(expectedDependencies, task.computation) || task.origin !== "fresh")
-      )
+      ) {
         return yield* CacheCommandError.new("Pilot dependency was unexpected or reused an unqualified artifact.");
+      }
     });
     const verifyReplayLog = Effect.fn("CachePilot.verifyReplayLog")(function* (
       fixture: PilotRoot,
@@ -898,8 +962,9 @@ const runPilot = Effect.fn("CachePilot.run")(
       enabled: boolean
     ) {
       const logNames = yield* fs.readDirectory(path.join(fixture.directory, "identity-log"));
-      if (A.some(logNames, (name) => name !== "turbo-lint.log"))
+      if (A.some(logNames, (name) => name !== "turbo-lint.log")) {
         return yield* CacheCommandError.new("Pilot produced an undeclared persistent output beside its replay log.");
+      }
       const log = yield* readContainedFileBytesNoFollow(
         fixture.directory,
         "identity-log/turbo-lint.log",
@@ -907,15 +972,20 @@ const runPilot = Effect.fn("CachePilot.run")(
       );
       const replayLogMatches =
         O.isSome(log.contents) && (yield* hashBytes(log.contents.value)) === (yield* hashText(text));
-      if (enabled && !replayLogMatches)
+      if (enabled && !replayLogMatches) {
         return yield* CacheCommandError.new("Enabled pilot execution omitted an identical bounded replay log.");
+      }
       return replayLogMatches;
     });
     const prepareExecution = Effect.fn("CachePilot.prepareExecution")(function* (fixture: PilotRoot, enabled: boolean) {
-      for (const name of ["run", "identity-log", "types-log", "dependency-logs"])
+      for (const name of ["run", "identity-log", "types-log", "dependency-logs"]) {
         yield* fs.remove(path.join(fixture.directory, name), { recursive: true, force: true });
-      if (fixture.omitChild) yield* fs.remove(path.join(fixture.identity, "turbo.json"), { force: true });
-      else yield* writeContainedFileString(fixture.identity, "turbo.json", enabled ? fixture.after : fixture.before);
+      }
+      if (fixture.omitChild) {
+        yield* fs.remove(path.join(fixture.identity, "turbo.json"), { force: true });
+      } else {
+        yield* writeContainedFileString(fixture.identity, "turbo.json", enabled ? fixture.after : fixture.before);
+      }
     });
     const verifyExecutionEnvironment = Effect.fn("CachePilot.verifyExecutionEnvironment")(function* (
       fixture: PilotRoot,
@@ -923,14 +993,16 @@ const runPilot = Effect.fn("CachePilot.run")(
       task: typeof NativeTask.Type,
       expectedProfile: string
     ) {
-      if (!fixture.omitChild && !A.contains(task.environmentVariables.configured, runtimeKeyObservation))
+      if (!fixture.omitChild && !A.contains(task.environmentVariables.configured, runtimeKeyObservation)) {
         return yield* CacheCommandError.new(`Native pilot run ${id} omitted the verified runtime key.`);
+      }
       if (
         needsProfile &&
         !fixture.omitChild &&
         !O.exists(task.environmentVariables.passthrough, A.contains(expectedProfile))
-      )
+      ) {
         return yield* CacheCommandError.new(`Native pilot run ${id} omitted the verified lint profile.`);
+      }
     });
     const verifySignedCapture = Effect.fn("CachePilot.verifySignedCapture")(function* (
       transport: O.Option<PilotTransport>,
@@ -943,8 +1015,9 @@ const runPilot = Effect.fn("CachePilot.run")(
           A.some(transport.value.secrets, (secret) =>
             A.some([captured.stdout, captured.stderr, text], (value) => Str.includes(Redacted.value(secret))(value))
           )
-        )
+        ) {
           return yield* CacheCommandError.new("Signed pilot capture contains synthetic credential material.");
+        }
       }
     });
     const executeNative = Effect.fn("CachePilot.executeNative")(function* (
@@ -985,10 +1058,13 @@ const runPilot = Effect.fn("CachePilot.run")(
         env,
         transport
       );
-      if (captured.truncated) return yield* CacheCommandError.new("Pilot process capture exceeded its bound.");
+      if (captured.truncated) {
+        return yield* CacheCommandError.new("Pilot process capture exceeded its bound.");
+      }
       const names = yield* fs.readDirectory(path.join(fixture.directory, "run/runs"));
-      if (names.length !== 1)
+      if (names.length !== 1) {
         return yield* CacheCommandError.new("Pilot did not produce exactly one native run summary.");
+      }
       const bytes = yield* readBytes(fixture.directory, `run/runs/${O.getOrThrow(A.head(names))}`);
       yield* verifySignedCapture(transport, captured, bytes);
       const summary = yield* decodeText(bytes).pipe(Effect.flatMap(JsonStringCodec(NativeSummary).decode));
@@ -999,20 +1075,24 @@ const runPilot = Effect.fn("CachePilot.run")(
       );
       yield* validateDependencyObservations(fixture, dependencies);
       const selected = A.filter(summary.tasks, (task) => task.taskId === identityTask);
-      if (selected.length > 1) return yield* CacheCommandError.new("Native pilot summary repeated the selected task.");
+      if (selected.length > 1) {
+        return yield* CacheCommandError.new("Native pilot summary repeated the selected task.");
+      }
       const afterTrees = yield* Effect.forEach(
         [fixture.identity, fixture.types, ...R.values(fixture.additionalPackages)],
         snapshot,
         { concurrency: 2 }
       );
       const sourceTreeUnchanged = S.toEquivalence(S.Array(Sha256Hex))(beforeTrees, afterTrees);
-      if (!sourceTreeUnchanged)
+      if (!sourceTreeUnchanged) {
         return yield* CacheCommandError.new("Read-only pilot package source changed during execution.");
+      }
       const outcome = yield* A.match(selected, {
         onEmpty: Effect.fn("CachePilot.blocked")(function* () {
           const failed = A.filter(dependencies, (task) => task.exitCode !== 0);
-          if (captured.exitCode === 0 || !A.isArrayNonEmpty(failed))
+          if (captured.exitCode === 0 || !A.isArrayNonEmpty(failed)) {
             return yield* CacheCommandError.new("Selected task was omitted without an observed failed dependency.");
+          }
           return CachePilotOutcome.cases.Blocked.make({ failedDependencies: failed });
         }),
         onNonEmpty: Effect.fn("CachePilot.executed")(function* ([task]: A.NonEmptyReadonlyArray<
@@ -1026,8 +1106,9 @@ const runPilot = Effect.fn("CachePilot.run")(
                 O.flatMap((execution) => execution.exitCode),
                 Effect.fromOption(() => CacheCommandError.new("Signed selected task omitted its exit verdict."))
               );
-              if (task.cache.local || (task.cache.status === "HIT") !== task.cache.remote)
+              if (task.cache.local || (task.cache.status === "HIT") !== task.cache.remote) {
                 return yield* CacheCommandError.new("Signed selected task lacks exclusive remote origin evidence.");
+              }
               return CacheSignedPilotTask.make({
                 computation: task.taskId,
                 taskHash: task.hash,
@@ -1037,8 +1118,9 @@ const runPilot = Effect.fn("CachePilot.run")(
               });
             }),
           });
-          if (task.command !== "bun run beep:lint" || (captured.exitCode === 0) !== (observation.exitCode === 0))
+          if (task.command !== "bun run beep:lint" || (captured.exitCode === 0) !== (observation.exitCode === 0)) {
             return yield* CacheCommandError.new("Selected pilot command or verdict disagrees with its graph.");
+          }
           const capture = {
             computation: identityTask,
             taskHash: task.hash,
@@ -1054,8 +1136,9 @@ const runPilot = Effect.fn("CachePilot.run")(
           if (
             A.isReadonlyArrayNonEmpty(inspectCacheFixtureCapture(text, false)) ||
             Str.includes("qualification-canary")(text)
-          )
+          ) {
             return yield* CacheCommandError.new("Selected pilot capture exposed an unsafe canary or absolute path.");
+          }
           const replayLogMatches = yield* verifyReplayLog(fixture, text, enabled);
           return {
             _tag: "Executed",
@@ -1085,7 +1168,9 @@ const runPilot = Effect.fn("CachePilot.run")(
         summarySha256: yield* hashBytes(bytes),
         sourceTreeUnchanged,
       };
-      if (O.isNone(transport)) return yield* S.decodeUnknownEffect(CachePilotRun)(observed);
+      if (O.isNone(transport)) {
+        return yield* S.decodeUnknownEffect(CachePilotRun)(observed);
+      }
       const run = yield* S.decodeUnknownEffect(CacheSignedPilotRun)(observed);
       const nativeSummary = yield* decodeText(bytes).pipe(
         Effect.flatMap(JsonStringCodec(CacheProtocolNativeSummary).decode)
@@ -1106,21 +1191,23 @@ const runPilot = Effect.fn("CachePilot.run")(
     });
     const verifyFinalIntegrity = Effect.fn("CachePilot.verifyFinalIntegrity")(function* () {
       yield* verifyTools();
-      if (
-        !S.toEquivalence(CacheRuntimeLinkerSnapshot)(
-          runtimeLinker,
-          yield* collectCacheRuntimeLinker(root, runtimeExecutables)
-        )
-      )
+      const argument = S.toEquivalence(CacheRuntimeLinkerSnapshot);
+      const collectCacheRuntimeLinker1 = yield* collectCacheRuntimeLinker(root, runtimeExecutables);
+      if (!argument(runtimeLinker, collectCacheRuntimeLinker1)) {
         return yield* CacheCommandError.new("Pilot startup libraries changed during execution.");
-      if (!S.toEquivalence(CacheActivationPreview)(yield* cache.activation(root, activationRequest), current))
+      }
+      const argument1 = S.toEquivalence(CacheActivationPreview);
+      const activation2 = yield* cache.activation(root, activationRequest);
+      if (!argument1(activation2, current)) {
         return yield* CacheCommandError.new("Pilot source configuration drifted during execution.");
+      }
       for (const source of sourceRoots)
         if (
           (yield* captureHost(source, ["status", "--porcelain", "--untracked-files=all"])) !== "" ||
           (yield* captureHost(source, ["rev-parse", "HEAD"])) !== revision
-        )
+        ) {
           return yield* CacheCommandError.new("Read-only pilot worktree changed during execution.");
+        }
       yield* verifyCacheDependencies(root, dependencies);
     });
 
@@ -1222,8 +1309,9 @@ const runPilot = Effect.fn("CachePilot.run")(
       fixture: PilotRoot,
       id: typeof mutationIds.Type
     ) {
-      if (id === "root-lint-config")
+      if (id === "root-lint-config") {
         yield* writeContainedFileString(fixture.identity, "src/index.ts", "export const = ;\n");
+      }
       if (id === "dependency-source") {
         yield* writeContainedFileString(
           fixture.identity,
@@ -1270,8 +1358,9 @@ const runPilot = Effect.fn("CachePilot.run")(
               "-c",
               `exec /tools/biome format --stdin-file-path=/fixture/${identityDirectory}/turbo.json < /fixture/${identityDirectory}/turbo.json`,
             ]);
-            if (formatted.exitCode !== 0 || formatted.truncated)
+            if (formatted.exitCode !== 0 || formatted.truncated) {
               return yield* CacheCommandError.new("Cannot format the child-config control with pinned Biome.");
+            }
             return formatted.stdout;
           });
           changedText = yield* change(fixture.after);
@@ -1348,19 +1437,23 @@ const runPilot = Effect.fn("CachePilot.run")(
       yield* applyMutation();
       if (
         !A.contains(mutationIds.pick(["child-task-config", "missing-child-config", "dependency-source"]).literals, id)
-      )
+      ) {
         changedFixture = yield* overlayRootFile(fixture, changedPath, changedText);
-      if (needsProfile && id === "root-lint-config")
+      }
+      if (needsProfile && id === "root-lint-config") {
+        const renderCacheIdentityLintProfile3 = yield* renderCacheIdentityLintProfile(changedText);
         changedFixture = yield* overlayRootFile(
           changedFixture,
           "biome.identity.jsonc",
-          yield* renderCacheIdentityLintProfile(changedText)
+          renderCacheIdentityLintProfile3
         );
+      }
+      const argument2 = yield* hashText(original);
       return PilotMutationChange.make({
         fixture: changedFixture,
         changedPath,
-        beforeSha256: yield* hashText(original),
-        afterSha256: id === "missing-child-config" ? O.none() : O.some(yield* hashText(changedText)),
+        beforeSha256: argument2,
+        afterSha256: id === "missing-child-config" ? O.none() : yield* Effect.asSome(hashText(changedText)),
       });
     });
     const prepareNonExecution = Effect.fn("CachePilot.prepareNonExecution")(function* (
@@ -1368,23 +1461,25 @@ const runPilot = Effect.fn("CachePilot.run")(
       rootConfiguration: O.Option<string>
     ) {
       let fixture = yield* prepare(sourceRoots[0], "root-a", `non-execution-${reason}`);
-      if (O.isSome(rootConfiguration)) fixture = yield* overlayRootFile(fixture, "turbo.json", rootConfiguration.value);
+      if (O.isSome(rootConfiguration)) {
+        fixture = yield* overlayRootFile(fixture, "turbo.json", rootConfiguration.value);
+      }
       if (reason === "missing-root-config")
         fixture = PilotRoot.make({ ...fixture, omitted: ["turbo.json", "turbo.jsonc"] });
-      else if (reason === "malformed-root-config") fixture = yield* overlayRootFile(fixture, "turbo.json", '{"tasks":');
-      else if (reason === "malformed-child-config")
+      else if (reason === "malformed-root-config") {
+        fixture = yield* overlayRootFile(fixture, "turbo.json", '{"tasks":');
+      } else if (reason === "malformed-child-config") {
         yield* writeContainedFileString(fixture.identity, "turbo.json", '{"tasks":');
-      else {
+      } else {
         const manifest = yield* readBytes(fixture.identity, "package.json").pipe(
           Effect.flatMap(decodeText),
           Effect.flatMap(decodeJsonObjectText)
         );
         const scripts = yield* decodeJsonObject(manifest.scripts);
-        yield* writeContainedFileString(
-          fixture.identity,
-          "package.json",
-          yield* JsonStringCodec(S.JsonObject).encode(R.set(manifest, "scripts", R.remove(scripts, "lint")))
+        const encoded3 = yield* JsonStringCodec(S.JsonObject).encode(
+          R.set(manifest, "scripts", R.remove(scripts, "lint"))
         );
+        yield* writeContainedFileString(fixture.identity, "package.json", encoded3);
       }
       return fixture;
     });
@@ -1425,35 +1520,38 @@ const runPilot = Effect.fn("CachePilot.run")(
         "--log-prefix=task",
         "--ui=stream",
       ]);
-      if (captured.truncated)
+      if (captured.truncated) {
         return yield* CacheCommandError.new("A native non-execution control exceeded its capture bound.");
+      }
       const summaryDirectory = path.join(fixture.directory, "run/runs");
       const names = (yield* fs.exists(summaryDirectory)) ? yield* fs.readDirectory(summaryDirectory) : [];
       const summaryPresent = names.length === 1;
       const selectedExecutionObserved = yield* observeSelectedExecution(fixture, names);
       const expectedDiagnostic = matchesNonExecutionDiagnostic(reason, captured.stderr);
+      const argument3 = yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(fixture.directory)}`);
+      const argument4 = yield* hashText(captured.stdout);
+      const argument5 = yield* hashText(captured.stderr);
       const observation = CacheSignedPilotNonExecution.make({
         id: reason,
         reason,
-        isolationRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(fixture.directory)}`),
+        isolationRoot: argument3,
         exitCode: captured.exitCode,
-        stdoutSha256: yield* hashText(captured.stdout),
-        stderrSha256: yield* hashText(captured.stderr),
+        stdoutSha256: argument4,
+        stderrSha256: argument5,
         summarySha256: summaryPresent
-          ? O.some(
-              yield* readBytes(fixture.directory, `run/runs/${O.getOrThrow(A.head(names))}`).pipe(
-                Effect.flatMap(hashBytes)
-              )
+          ? yield* Effect.asSome(
+              readBytes(fixture.directory, `run/runs/${O.getOrThrow(A.head(names))}`).pipe(Effect.flatMap(hashBytes))
             )
           : O.none(),
         selectedExecutionObserved,
         diagnostic: reason !== "absent-script" && expectedDiagnostic ? O.some(reason) : O.none(),
       });
       if (!observation.passed) {
-        if (mode === "signed")
+        if (mode === "signed") {
           return yield* CacheCommandError.new(
             "Signed native refusal or absent-script evidence differs from its expected case."
           );
+        }
         const diagnostics = `.beep/cache/pilot-observations/${path.basename(experiment)}/${reason}`;
         yield* writeContainedFileString(root, `${diagnostics}/stdout.txt`, captured.stdout);
         yield* writeContainedFileString(root, `${diagnostics}/stderr.txt`, captured.stderr);
@@ -1489,8 +1587,9 @@ const runPilot = Effect.fn("CachePilot.run")(
         "--env-mode=strict",
         "--dry=json",
       ]);
-      if (captured.exitCode !== 0 || captured.truncated)
+      if (captured.exitCode !== 0 || captured.truncated) {
         return yield* CacheCommandError.new("Missing-child refusal requires a complete native dry plan.");
+      }
       const plan = yield* JsonStringCodec(NativeSummary).decode(captured.stdout);
       const task = yield* A.findFirst(plan.tasks, (task) => task.taskId === identityTask).pipe(
         Effect.fromOption(() => CacheCommandError.new("Missing-child refusal omitted its selected dry-plan task."))
@@ -1504,7 +1603,8 @@ const runPilot = Effect.fn("CachePilot.run")(
           )
         )
       );
-      const guardRejected = yield* validateNativePlanRuntime(plan, yield* profileObservation("/fixture")).pipe(
+      const profileObservation4 = yield* profileObservation("/fixture");
+      const guardRejected = yield* validateNativePlanRuntime(plan, profileObservation4).pipe(
         Effect.match({
           onFailure: (error) => error.message === "The native pilot plan omitted the verified runtime key.",
           onSuccess: () => false,
@@ -1558,8 +1658,9 @@ const runPilot = Effect.fn("CachePilot.run")(
           {},
           O.some(transport)
         ).pipe(Effect.flatMap(decodeSignedPilotRun));
-        if (uploaded.graphExitCode !== 0 || uploaded.outcome.selected.origin !== "fresh")
+        if (uploaded.graphExitCode !== 0 || uploaded.outcome.selected.origin !== "fresh") {
           return yield* CacheCommandError.new("Owned producer upload requires a successful fresh graph.");
+        }
         yield* Console.log(CacheSignedPilotPhase.Enum["signed-pilot:final-integrity"]);
         yield* verifyFinalIntegrity();
         return uploaded;
@@ -1569,7 +1670,8 @@ const runPilot = Effect.fn("CachePilot.run")(
         const captureControls = yield* Effect.forEach(
           CacheSignedPilotCaptureControl.fields.case.literals,
           Effect.fn("CachePilot.captureControl")(function* (control) {
-            const marker = Hex.encode(yield* crypto.randomBytes(32));
+            const randomBytes5 = yield* crypto.randomBytes(32);
+            const marker = Hex.encode(randomBytes5);
             const probe = CacheSignedPilotCaptureControl.fields.case.match({
               "credential-output": () => `process.stdout.write("${marker}\\n");`,
               "terminal-control": () => 'process.stdout.write("probe\\rhidden\\n");',
@@ -1586,13 +1688,10 @@ const runPilot = Effect.fn("CachePilot.run")(
             );
             const scripts = yield* decodeJsonObject(manifest.scripts);
             yield* writeContainedFileString(root.identity, "capture-probe.ts", probe);
-            yield* writeContainedFileString(
-              root.identity,
-              "package.json",
-              yield* JsonStringCodec(S.JsonObject).encode(
-                R.set(manifest, "scripts", R.set(scripts, "beep:lint", "bun capture-probe.ts"))
-              )
+            const encoded6 = yield* JsonStringCodec(S.JsonObject).encode(
+              R.set(manifest, "scripts", R.set(scripts, "beep:lint", "bun capture-probe.ts"))
             );
+            yield* writeContainedFileString(root.identity, "package.json", encoded6);
             const namespace = `team_capture_${request.channel}_${control}`;
             const writer = yield* freshCapability;
             const reader = yield* freshCapability;
@@ -1614,13 +1713,15 @@ const runPilot = Effect.fn("CachePilot.run")(
               {},
               O.some(transport)
             ).pipe(Effect.result);
-            if (Result.isSuccess(outcome) || outcome.failure.message !== cacheSignedCaptureDiagnostic(control))
+            if (Result.isSuccess(outcome) || outcome.failure.message !== cacheSignedCaptureDiagnostic(control)) {
               return yield* CacheCommandError.new(
                 `Native capture control ${control} did not reach its expected rejection.`
               );
+            }
             const names = yield* fs.readDirectory(path.join(root.directory, "run/runs"));
-            if (names.length !== 1)
+            if (names.length !== 1) {
               return yield* CacheCommandError.new("Native capture control lacks one execution summary.");
+            }
             const bytes = yield* readBytes(root.directory, `run/runs/${O.getOrThrow(A.head(names))}`);
             const summary = yield* decodeText(bytes).pipe(Effect.flatMap(JsonStringCodec(NativeSummary).decode));
             const selected = A.filter(summary.tasks, (task) => task.taskId === identityTask);
@@ -1634,10 +1735,11 @@ const runPilot = Effect.fn("CachePilot.run")(
               task.command !== "bun run beep:lint" ||
               task.cache.status === "HIT" ||
               !O.contains(0)(O.flatMap(task.execution, (execution) => execution.exitCode))
-            )
+            ) {
               return yield* CacheCommandError.new(
                 "Native capture control requires a successful fresh selected execution."
               );
+            }
             return CacheSignedPilotCaptureControl.make({
               case: control,
               isolationRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(root.directory)}`),
@@ -1663,8 +1765,9 @@ const runPilot = Effect.fn("CachePilot.run")(
             );
             // Each new root starts without a cache; native observations must still prove fresh execution.
             for (const fixture of [leftRoot, rightRoot])
-              if (yield* fs.exists(path.join(fixture.directory, "cache")))
+              if (yield* fs.exists(path.join(fixture.directory, "cache"))) {
                 return yield* CacheCommandError.new("Signed fresh comparison requires a new isolated cache directory.");
+              }
             const [left, right] = yield* Effect.all(
               [
                 execute(leftRoot, `signed-fresh-${pair}-left`, true, true),
@@ -1710,16 +1813,18 @@ const runPilot = Effect.fn("CachePilot.run")(
               mutationEvidence,
               (evidence) => evidence.seed.outcome.selected.taskHash === producer.outcome.selected.taskHash
             )
-          )
+          ) {
             return yield* CacheCommandError.new(
               "Signed producer diverged from fresh authority or failed seeded invalidation."
             );
+          }
         });
         const validateSignedProtectionProbe = Effect.fn("CachePilot.validateSignedProtectionProbe")(function* (
           protectionProbe: Effect.Success<ReturnType<typeof invoke>>
         ) {
-          if (protectionProbe.exitCode !== 0 || protectionProbe.truncated || Str.trim(protectionProbe.stderr) !== "")
+          if (protectionProbe.exitCode !== 0 || protectionProbe.truncated || Str.trim(protectionProbe.stderr) !== "") {
             return yield* CacheCommandError.new("Signed pilot reader protection probe failed.");
+          }
         });
         const runSignedPair = Effect.fn("CachePilot.signedPair")(function* (
           pair: number,
@@ -1781,10 +1886,11 @@ const runPilot = Effect.fn("CachePilot.run")(
                 seed.graphExitCode !== expectedExit ||
                 seed.outcome.selected.exitCode !== expectedExit ||
                 seed.outcome.selected.origin !== "fresh"
-              )
+              ) {
                 return yield* CacheCommandError.new(
                   "Signed mutation seed disagrees with its case-derived fresh verdict."
                 );
+              }
               const [freshChange, producerChange, readerChange] = yield* Effect.all(
                 [
                   applyMutationControl(fresh, id, signedConfig),
@@ -1801,8 +1907,9 @@ const runPilot = Effect.fn("CachePilot.run")(
                     change.beforeSha256 === producerChange.beforeSha256 &&
                     sameMutationDigest(change.afterSha256, producerChange.afterSha256)
                 )
-              )
+              ) {
                 return yield* CacheCommandError.new("Signed mutation roots received different configuration changes.");
+              }
               fresh = freshChange.fixture;
               producerRoot = producerChange.fixture;
               readerRoot = readerChange.fixture;
@@ -1817,8 +1924,9 @@ const runPilot = Effect.fn("CachePilot.run")(
           const archive = yield* fixture
             .artifactBytes(producer.outcome.selected.taskHash)
             .pipe(Effect.flatMap((bytes) => inspectCacheSignedPilotArchive(bytes, secrets)));
-          if (archive.logSha256 !== producer.outcome.logSha256 || archive.logBytes !== producer.outcome.logBytes)
+          if (archive.logSha256 !== producer.outcome.logSha256 || archive.logBytes !== producer.outcome.logBytes) {
             return yield* CacheCommandError.new("Signed uploaded archive differs from its verified producer log.");
+          }
           const protectedRecordPath = path.join(experiment, `protected-${pair}.json`);
           const protectedRecord = yield* JsonStringCodec(CacheSignedPilotRun).encode(producer);
           yield* writeContainedFileString(experiment, `protected-${pair}.key`, Redacted.value(issuerCanary));
@@ -1900,8 +2008,15 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
               seed: evidence.seed,
               comparison,
             });
-            mutations.push(yield* validateCacheSignedPilotMutation(mutation, current.source.key, request.client));
-          } else yield* validateCacheSignedPilotPair(comparison, current.source.key, request.client);
+            const validateCacheSignedPilotMutation7 = yield* validateCacheSignedPilotMutation(
+              mutation,
+              current.source.key,
+              request.client
+            );
+            mutations.push(validateCacheSignedPilotMutation7);
+          } else {
+            yield* validateCacheSignedPilotPair(comparison, current.source.key, request.client);
+          }
           return comparison;
         }, Effect.scoped);
         yield* Console.log(CacheSignedPilotPhase.Enum["signed-pilot:baseline-comparisons"]);
@@ -2098,8 +2213,9 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
           );
           checks.push(CacheSyntheticCheck.make({ name: `shadow-${scenario.id}`, passed: equivalent }));
           checks.push(CacheSyntheticCheck.make({ name: `input-${scenario.id}`, passed: inputHashExpectationMet }));
-          if (!equivalent || !inputHashExpectationMet)
+          if (!equivalent || !inputHashExpectationMet) {
             return yield* CacheCommandError.new(`Real pilot shadow ${scenario.id} diverged; local reuse has stopped.`);
+          }
         }
       });
       yield* runShadowComparisons();
@@ -2143,11 +2259,8 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
         yield* prepareMutationBaseline(fixture, id);
         const env = { QUALIFICATION_CONFIG_INPUT: "changed", QUALIFICATION_CHILD_INPUT: "changed" };
         const seeded = yield* execute(fixture, `${id}-baseline`, true, true, "/fixture", env);
-        const mutation = yield* applyMutationControl(
-          fixture,
-          id,
-          yield* readBytes(fixture.source, "turbo.json").pipe(Effect.flatMap(decodeText))
-        );
+        const pipe8 = yield* readBytes(fixture.source, "turbo.json").pipe(Effect.flatMap(decodeText));
+        const mutation = yield* applyMutationControl(fixture, id, pipe8);
         const changedFixture = mutation.fixture;
         const changed = yield* execute(changedFixture, `${id}-changed`, true, true, "/fixture", env);
         const replayed = yield* execute(changedFixture, `${id}-replay`, true, true, "/fixture", env);

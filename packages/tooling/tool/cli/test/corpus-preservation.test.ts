@@ -287,11 +287,8 @@ it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T
       yield* runCorpusCommand(["preserve", "verify", "--corpus-root", corpusRoot]);
 
       const provenancePath = path.join(corpusRoot, "raw", "provenance.jsonl");
-      const provenanceLines = pipe(
-        yield* fs.readFileString(provenancePath),
-        Str.split(/\r?\n/u),
-        A.filter(Str.isNonEmpty)
-      );
+      const readFileString1 = yield* fs.readFileString(provenancePath);
+      const provenanceLines = pipe(readFileString1, Str.split(/\r?\n/u), A.filter(Str.isNonEmpty));
       const provenance = yield* Effect.forEach(provenanceLines, CorpusLedgerRecordJson.decode);
       expect(A.filter(provenance, isT7ArchiveProvenanceRecord)).toHaveLength(3);
 
@@ -809,8 +806,10 @@ it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T
       const mutationWriter = Context.get(mutationContext, ArchiveWriter);
       const changed = yield* mutationWriter.archiveObject(mutationSource, mutationDest, mutationIdentity);
       expect(changed.kind).toBe("changed-during-copy");
-      expect(yield* fs.exists(mutationDest)).toBe(false);
-      expect(yield* Context.get(mutationContext, PreservationManifestStore).readAll).toHaveLength(0);
+      const exists2 = yield* fs.exists(mutationDest);
+      expect(exists2).toBe(false);
+      const readAll3 = yield* Context.get(mutationContext, PreservationManifestStore).readAll;
+      expect(readAll3).toHaveLength(0);
 
       const removedSource = path.join(root, "removed-during-copy.bin");
       yield* fs.writeFile(removedSource, new Uint8Array([1, 2, 3]));
@@ -895,17 +894,21 @@ it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T
         .archiveObject(coarseTimestampSource, coarseTimestampDest, coarseTimestampIdentity)
         .pipe(Effect.flip);
       expect(coarseTimestampFailure.operation).toBe("copy-verify");
-      expect(yield* fs.exists(coarseTimestampDest)).toBe(false);
+      const exists4 = yield* fs.exists(coarseTimestampDest);
+      expect(exists4).toBe(false);
 
       const crashDest = path.join(root, "archive", "crash.bin");
       const landed = yield* writer.archiveObject(source, crashDest, identity);
       expect(landed.kind).toBe("copied");
       const store = Context.get(context, PreservationManifestStore);
-      expect(yield* store.readAll).toHaveLength(0);
+      const readAll5 = yield* store.readAll;
+      expect(readAll5).toHaveLength(0);
       const recovered = yield* writer.archiveObject(source, crashDest, identity);
       expect(recovered.kind).toBe("already-complete");
-      yield* store.append(yield* rowFor(identity, "crash.bin", recovered));
-      expect(yield* store.readAll).toHaveLength(1);
+      const rowFor6 = yield* rowFor(identity, "crash.bin", recovered);
+      yield* store.append(rowFor6);
+      const readAll7 = yield* store.readAll;
+      expect(readAll7).toHaveLength(1);
       const recoveryReport = yield* Context.get(context, PreservationVerifier).verify(path.join(root, "archive"));
       expect(recoveryReport.summary.verified).toBe(1);
     })
@@ -928,7 +931,8 @@ it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T
       for (const name of names) {
         const identity = yield* identityFor(source, name);
         const outcome = yield* writer.archiveObject(source, path.join(archiveRoot, name), identity);
-        yield* store.append(yield* rowFor(identity, name, outcome));
+        const rowFor8 = yield* rowFor(identity, name, outcome);
+        yield* store.append(rowFor8);
       }
       const sourceSha = yield* hashBytes(bytes);
       const statBefore = SourceStabilityObservation.make({
@@ -940,68 +944,64 @@ it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T
         sizeBytes: S.Natural.make(bytes.byteLength),
       });
       const escapeIdentity = yield* identityFor(source, "escape.bin");
-      yield* store.append(
-        yield* rowFor(escapeIdentity, "../source.bin", {
-          bytesReused: S.Natural.make(bytes.byteLength),
-          kind: "already-complete",
-          sha256: sourceSha,
-          statAfter,
-          statBefore,
-        })
-      );
+      const rowFor9 = yield* rowFor(escapeIdentity, "../source.bin", {
+        bytesReused: S.Natural.make(bytes.byteLength),
+        kind: "already-complete",
+        sha256: sourceSha,
+        statAfter,
+        statBefore,
+      });
+      yield* store.append(rowFor9);
       const symlinkIdentity = yield* identityFor(source, "symlink.bin");
       yield* fs.symlink(source, path.join(archiveRoot, "symlink.bin"));
-      yield* store.append(
-        yield* rowFor(symlinkIdentity, "symlink.bin", {
-          bytesReused: S.Natural.make(bytes.byteLength),
-          kind: "already-complete",
-          sha256: sourceSha,
-          statAfter,
-          statBefore,
-        })
-      );
+      const rowFor10 = yield* rowFor(symlinkIdentity, "symlink.bin", {
+        bytesReused: S.Natural.make(bytes.byteLength),
+        kind: "already-complete",
+        sha256: sourceSha,
+        statAfter,
+        statBefore,
+      });
+      yield* store.append(rowFor10);
       const directoryIdentity = yield* identityFor(source, "directory.bin");
       yield* fs.makeDirectory(path.join(archiveRoot, "directory.bin"));
-      yield* store.append(
-        yield* rowFor(directoryIdentity, "directory.bin", {
-          bytesReused: S.Natural.make(bytes.byteLength),
-          kind: "already-complete",
-          sha256: sourceSha,
-          statAfter,
-          statBefore,
-        })
-      );
+      const rowFor11 = yield* rowFor(directoryIdentity, "directory.bin", {
+        bytesReused: S.Natural.make(bytes.byteLength),
+        kind: "already-complete",
+        sha256: sourceSha,
+        statAfter,
+        statBefore,
+      });
+      yield* store.append(rowFor11);
       const resumedIdentity = yield* identityFor(source, "resumed.bin");
       yield* fs.writeFile(path.join(archiveRoot, "resumed.bin"), bytes);
-      yield* store.append(
-        yield* rowFor(resumedIdentity, "resumed.bin", {
-          bytesCopied: S.Natural.make(0),
-          bytesReused: S.Natural.make(bytes.byteLength),
-          kind: "resume-completed",
-          sha256: sourceSha,
-          statAfter,
-          statBefore,
-        })
-      );
-      yield* store.append(
-        yield* rowFor(yield* identityFor(source, "changed.bin"), "changed.bin", {
-          kind: "changed-during-copy",
-          statAfter,
-          statBefore,
-        })
-      );
-      yield* store.append(
-        yield* rowFor(yield* identityFor(source, "discarded.bin"), "discarded.bin", {
-          bytesDiscarded: S.Natural.make(1),
-          kind: "resume-discarded",
-        })
-      );
-      yield* store.append(
-        yield* rowFor(yield* identityFor(source, "unreadable.bin"), "unreadable.bin", {
-          kind: "unreadable",
-          message: "synthetic",
-        })
-      );
+      const rowFor12 = yield* rowFor(resumedIdentity, "resumed.bin", {
+        bytesCopied: S.Natural.make(0),
+        bytesReused: S.Natural.make(bytes.byteLength),
+        kind: "resume-completed",
+        sha256: sourceSha,
+        statAfter,
+        statBefore,
+      });
+      yield* store.append(rowFor12);
+      const identityFor17 = yield* identityFor(source, "changed.bin");
+      const rowFor13 = yield* rowFor(identityFor17, "changed.bin", {
+        kind: "changed-during-copy",
+        statAfter,
+        statBefore,
+      });
+      yield* store.append(rowFor13);
+      const identityFor18 = yield* identityFor(source, "discarded.bin");
+      const rowFor14 = yield* rowFor(identityFor18, "discarded.bin", {
+        bytesDiscarded: S.Natural.make(1),
+        kind: "resume-discarded",
+      });
+      yield* store.append(rowFor14);
+      const identityFor19 = yield* identityFor(source, "unreadable.bin");
+      const rowFor15 = yield* rowFor(identityFor19, "unreadable.bin", {
+        kind: "unreadable",
+        message: "synthetic",
+      });
+      yield* store.append(rowFor15);
       yield* fs.writeFile(path.join(archiveRoot, "changed.bin"), bytes);
       yield* fs.writeFile(path.join(archiveRoot, "discarded.bin"), bytes);
       yield* fs.writeFile(path.join(archiveRoot, "unreadable.bin"), bytes);
@@ -1045,7 +1045,8 @@ it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T
         statBefore: SourceStabilityObservation.make({ mtimeEpoch: 0, sizeBytes: S.Natural.make(0) }),
       });
       const encodedRow = yield* PreservationManifestRowJson.encode(row);
-      expect(yield* PreservationManifestRowJson.decode(encodedRow)).toEqual(row);
+      const decoded16 = yield* PreservationManifestRowJson.decode(encodedRow);
+      expect(decoded16).toEqual(row);
       expect(
         isPreservationManifestRow({
           ...row,

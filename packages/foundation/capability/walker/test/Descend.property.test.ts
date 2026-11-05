@@ -43,7 +43,8 @@ describe("descent schemas", () => {
         const decoded = yield* S.decodeEffect(DescendError)(encoded);
         assertTrue(S.toEquivalence(DescendError)(decoded, value));
         assert.strictEqual(decoded.message, value.message);
-        assert.deepStrictEqual(yield* S.encodeEffect(DescendError)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(DescendError)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -57,7 +58,8 @@ describe("descent schemas", () => {
         const decoded = yield* S.decodeEffect(UnreadableDirectory)(encoded);
         assertTrue(S.toEquivalence(UnreadableDirectory)(decoded, value));
         assert.strictEqual(decoded.cause, value.cause);
-        assert.deepStrictEqual(yield* S.encodeEffect(UnreadableDirectory)(decoded), encoded);
+        const value2 = yield* S.encodeEffect(UnreadableDirectory)(decoded);
+        assert.deepStrictEqual(value2, encoded);
       }),
     runs
   );
@@ -73,7 +75,8 @@ describe("descent schemas", () => {
         const encoded = yield* S.encodeEffect(DescendResult)(value);
         const decoded = yield* S.decodeEffect(DescendResult)(encoded);
         assertTrue(S.toEquivalence(DescendResult)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(DescendResult)(decoded), encoded);
+        const value3 = yield* S.encodeEffect(DescendResult)(decoded);
+        assert.deepStrictEqual(value3, encoded);
       }),
     runs
   );

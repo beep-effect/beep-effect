@@ -107,7 +107,8 @@ const fixture = Effect.fn("NativeScheduleTest.fixture")(function* (
   const context = yield* Layer.build(BunHttpServer.layer({ hostname: "127.0.0.1", port: 0 }));
   const server = Context.get(context, HttpServer.HttpServer);
   const origin = HttpServer.formatAddress(server.address);
-  const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
+  const build1 = yield* Layer.build(NodeHttpClient.layerNodeHttp);
+  const client = Context.get(build1, HttpClient.HttpClient);
   const policy = NativeDeliveryPolicy.make({
     endpoint: Redacted.make(`${origin}/v1/traces`),
     project: "synthetic-proof",
@@ -142,13 +143,17 @@ const fixture = Effect.fn("NativeScheduleTest.fixture")(function* (
         yield* Ref.update(reads, (n) => n + 1);
         return yield* HttpServerResponse.json({ data: [], next_cursor: null }, { status: yield* Ref.get(readStatus) });
       }
-      const wire = new TextDecoder().decode(yield* request.arrayBuffer);
+      const argument = new TextDecoder();
+      const arrayBuffer1 = yield* request.arrayBuffer;
+      const wire = argument.decode(arrayBuffer1);
       expect(wire).not.toContain("private-prompt");
       expect(wire).not.toContain("private-synthetic-command");
       expect((yield* sql`SELECT attempt_id FROM observation_delivery_attempts`).length).toBeGreaterThan(0);
       yield* Ref.update(posts, (n) => n + 1);
       yield* Deferred.succeed(entered, undefined);
-      if (yield* Ref.get(hang)) yield* gate.await;
+      if (yield* Ref.get(hang)) {
+        yield* gate.await;
+      }
       return HttpServerResponse.uint8Array(new Uint8Array(), {
         status: yield* Ref.get(status),
         contentType: "application/x-protobuf",
@@ -162,7 +167,8 @@ const fixture = Effect.fn("NativeScheduleTest.fixture")(function* (
   // Every tick runs under a TestClock seeded at the current time. Only the test moves its wall time
   // or fires its sleeps, so neither delay windows nor the tick deadline follow host load.
   const clock = yield* TestClock.make({ warningDelay: "30 seconds" });
-  yield* clock.setTime(yield* Clock.currentTimeMillis);
+  const currentTimeMillis2 = yield* Clock.currentTimeMillis;
+  yield* clock.setTime(currentTimeMillis2);
   const pin = <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.provideService(effect, Clock.Clock, clock);
   const reopen = (p = schedulePolicy) =>
     Effect.map(makeNativeDeliveryScheduler(intake, config, p, sender, reader), (scheduler) => ({
@@ -208,7 +214,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const tick = yield* scheduler.tick;
       assertTrue(tick._tag === "Complete");
       expect(tick.outcomes).toHaveLength(1);
-      expect(yield* Ref.get(f.posts)).toBe(1);
+      const got = yield* Ref.get(f.posts);
+      expect(got).toBe(1);
     })
   )
 );
@@ -218,11 +225,13 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
     Effect.gen(function* () {
       const f = yield* fixture();
       const scheduler = yield* f.reopen();
-      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
+      const tick3 = yield* scheduler.tick;
+      expect(tick3).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
       yield* f.clock.adjust(-60000);
       const regressed = yield* scheduler.tick;
       expect(regressed).toMatchObject({ outcomes: [{ reason: "clock-regression" }] });
-      expect(yield* Ref.get(f.posts)).toBe(1);
+      const got4 = yield* Ref.get(f.posts);
+      expect(got4).toBe(1);
     })
   )
 );
@@ -231,9 +240,12 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   it.effect("rejects replay qualification for another target before persisting a schedule", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      expect(yield* f.reopen(replayPolicy(id("e"))).pipe(Effect.flip)).toMatchObject({ reason: "configuration" });
-      expect(yield* f.sql`SELECT name FROM sqlite_master WHERE name='observation_native_schedule'`).toHaveLength(0);
-      expect(yield* Ref.get(f.posts)).toBe(0);
+      const pipe5 = yield* f.reopen(replayPolicy(id("e"))).pipe(Effect.flip);
+      expect(pipe5).toMatchObject({ reason: "configuration" });
+      const value6 = yield* f.sql`SELECT name FROM sqlite_master WHERE name='observation_native_schedule'`;
+      expect(value6).toHaveLength(0);
+      const got7 = yield* Ref.get(f.posts);
+      expect(got7).toBe(0);
     })
   )
 );
@@ -246,16 +258,22 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const tick = scheduler.tick;
       yield* tick;
       yield* f.clock.adjust(120);
-      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Reconciled", result: { _tag: "Missing" } }] });
+      const tick8 = yield* tick;
+      expect(tick8).toMatchObject({ outcomes: [{ _tag: "Reconciled", result: { _tag: "Missing" } }] });
       yield* Ref.set(f.readStatus, 503);
       yield* f.clock.adjust(300);
-      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Failed", reason: "readback" }] });
-      expect(yield* Ref.get(f.posts)).toBe(1);
+      const tick9 = yield* tick;
+      expect(tick9).toMatchObject({ outcomes: [{ _tag: "Failed", reason: "readback" }] });
+      const got10 = yield* Ref.get(f.posts);
+      expect(got10).toBe(1);
       yield* Ref.set(f.readStatus, 200);
-      expect(yield* tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
+      const tick11 = yield* tick;
+      expect(tick11).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
       yield* f.clock.adjust(120);
-      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
-      expect(yield* Ref.get(f.posts)).toBe(2);
+      const tick12 = yield* tick;
+      expect(tick12).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
+      const got13 = yield* Ref.get(f.posts);
+      expect(got13).toBe(2);
     })
   )
 );
@@ -276,8 +294,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const tick = f.pin(scheduler.tick);
       yield* tick;
       yield* f.clock.adjust(120);
-      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Reconciled", result: { _tag: "Mismatch" } }] });
-      expect(yield* Ref.get(f.posts)).toBe(1);
+      const tick14 = yield* tick;
+      expect(tick14).toMatchObject({ outcomes: [{ _tag: "Reconciled", result: { _tag: "Mismatch" } }] });
+      const got15 = yield* Ref.get(f.posts);
+      expect(got15).toBe(1);
     })
   )
 );
@@ -289,16 +309,21 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const policy = replayPolicy(f.config.targetId);
       yield* Effect.gen(function* () {
         const reconstructed = yield* f.reopen(policy);
-        expect(yield* reconstructed.tick).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
+        const tick16 = yield* reconstructed.tick;
+        expect(tick16).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
         yield* f.clock.adjust(120);
       }).pipe(Effect.replicateEffect(8, { discard: true }));
       const scheduler = yield* f.reopen(policy);
-      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Held", reason: "attempt-limit" }] });
-      expect(yield* Ref.get(f.posts)).toBe(8);
-      expect(yield* f.sender.ledger.state(f.batch.spans[0]?.eventId ?? id("0"))).toMatchObject({
+      const tick17 = yield* scheduler.tick;
+      expect(tick17).toMatchObject({ outcomes: [{ _tag: "Held", reason: "attempt-limit" }] });
+      const got18 = yield* Ref.get(f.posts);
+      expect(got18).toBe(8);
+      const state19 = yield* f.sender.ledger.state(f.batch.spans[0]?.eventId ?? id("0"));
+      expect(state19).toMatchObject({
         value: { state: "accepted-unverified", attempts: 8 },
       });
-      expect(yield* f.reopen().pipe(Effect.flip)).toMatchObject({ reason: "configuration" });
+      const pipe20 = yield* f.reopen().pipe(Effect.flip);
+      expect(pipe20).toMatchObject({ reason: "configuration" });
     })
   )
 );
@@ -313,15 +338,19 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const first = yield* scheduler.tick.pipe(Effect.forkChild);
       yield* Deferred.await(f.entered);
       yield* Fiber.interrupt(first);
-      expect(yield* f.sender.ledger.state(f.batch.spans[0]?.eventId ?? id("0"))).toMatchObject({
+      const state21 = yield* f.sender.ledger.state(f.batch.spans[0]?.eventId ?? id("0"));
+      expect(state21).toMatchObject({
         value: { state: "unresolved", attempts: 1 },
       });
       yield* f.release;
       yield* f.clock.adjust(120);
       const restarted = yield* f.reopen(policy);
-      expect(yield* restarted.tick).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
-      expect(yield* Ref.get(f.posts)).toBe(2);
-      expect(yield* Ref.get(f.reads)).toBe(1);
+      const tick22 = yield* restarted.tick;
+      expect(tick22).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
+      const got23 = yield* Ref.get(f.posts);
+      expect(got23).toBe(2);
+      const got24 = yield* Ref.get(f.reads);
+      expect(got24).toBe(1);
     })
   )
 );
@@ -341,20 +370,29 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
         ),
       });
       const scheduler = yield* f.reopen(policy);
-      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
+      const tick25 = yield* scheduler.tick;
+      expect(tick25).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
       yield* f.clock.adjust(120);
-      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
-      expect(yield* Ref.get(f.posts)).toBe(2);
-      expect(yield* Ref.get(f.reads)).toBe(1);
+      const tick26 = yield* scheduler.tick;
+      expect(tick26).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
+      const got27 = yield* Ref.get(f.posts);
+      expect(got27).toBe(2);
+      const got28 = yield* Ref.get(f.reads);
+      expect(got28).toBe(1);
       const attempts = yield* f.sql`SELECT payload FROM observation_delivery_attempts ORDER BY sequence`;
       expect(attempts).toHaveLength(2);
       const rows = yield* f.sql`SELECT attempt_id FROM observation_delivery_attempts ORDER BY sequence`;
-      const first = yield* f.sender.ledger.attempt(yield* S.decodeUnknownEffect(Sha256Hex)(rows[0]?.attempt_id));
-      const repeated = yield* f.sender.ledger.attempt(yield* S.decodeUnknownEffect(Sha256Hex)(rows[1]?.attempt_id));
-      if (O.isNone(first) || O.isNone(repeated)) return yield* Effect.die("Missing test attempt");
+      const value29 = yield* S.decodeUnknownEffect(Sha256Hex)(rows[0]?.attempt_id);
+      const first = yield* f.sender.ledger.attempt(value29);
+      const value30 = yield* S.decodeUnknownEffect(Sha256Hex)(rows[1]?.attempt_id);
+      const repeated = yield* f.sender.ledger.attempt(value30);
+      if (O.isNone(first) || O.isNone(repeated)) {
+        return yield* Effect.die("Missing test attempt");
+      }
       expect(first.value.payloadDigest).toBe(repeated.value.payloadDigest);
       expect(first.value.attemptId).not.toBe(repeated.value.attemptId);
-      expect(yield* f.sender.ledger.state(f.batch.spans[0]?.eventId ?? id("0"))).toMatchObject({
+      const state31 = yield* f.sender.ledger.state(f.batch.spans[0]?.eventId ?? id("0"));
+      expect(state31).toMatchObject({
         value: { state: "accepted-unverified", attempts: 2 },
       });
     })
@@ -382,7 +420,9 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const now = yield* Clock.currentTimeMillis;
       const f = yield* fixture(1, O.some(`${now - 60000}000000`));
       const tick = yield* (yield* f.reopen()).tick;
-      if (tick._tag !== "Complete" || O.isNone(tick.lag)) return yield* Effect.die("Missing age sample");
+      if (tick._tag !== "Complete" || O.isNone(tick.lag)) {
+        return yield* Effect.die("Missing age sample");
+      }
       expect(O.getOrElse(tick.lag.value.maxSourceAgeMillis, () => -1)).toBeGreaterThanOrEqual(60000);
       expect(O.getOrElse(tick.lag.value.maxAcceptedAgeMillis, () => 60000)).toBeLessThan(60000);
       expect(tick.lag.value.unknownSourceTimes).toBe(0);
@@ -444,12 +484,15 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       );
       yield* f.clock.adjust(120);
       const scheduler = yield* f.reopen();
-      expect(yield* scheduler.tick).toMatchObject({
+      const tick32 = yield* scheduler.tick;
+      expect(tick32).toMatchObject({
         _tag: "Complete",
         outcomes: [{ _tag: "Reconciled", eventId: ids[0], result: { _tag: "Missing" } }],
       });
-      expect(yield* Ref.get(f.posts)).toBe(1);
-      expect(yield* Ref.get(f.reads)).toBe(1);
+      const got33 = yield* Ref.get(f.posts);
+      expect(got33).toBe(1);
+      const got34 = yield* Ref.get(f.reads);
+      expect(got34).toBe(1);
     })
   )
 );
@@ -460,21 +503,26 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const f = yield* fixture(3);
       for (const span of f.batch.spans) {
         const scheduler = yield* f.reopen();
-        expect(yield* scheduler.tick).toMatchObject({
+        const tick35 = yield* scheduler.tick;
+        expect(tick35).toMatchObject({
           _tag: "Complete",
           outcomes: [{ _tag: "Sent", eventId: span.eventId, result: { outcome: { _tag: "Accepted" } } }],
         });
       }
-      expect(yield* Ref.get(f.posts)).toBe(3);
+      const got36 = yield* Ref.get(f.posts);
+      expect(got36).toBe(3);
       yield* f.clock.adjust(120);
       const reopened = yield* f.reopen();
-      expect(yield* reopened.tick).toMatchObject({
+      const tick37 = yield* reopened.tick;
+      expect(tick37).toMatchObject({
         _tag: "Complete",
         wrapped: true,
         outcomes: [{ _tag: "Reconciled", result: { _tag: "Missing" } }],
       });
-      expect(yield* Ref.get(f.posts)).toBe(3);
-      expect(yield* Ref.get(f.reads)).toBe(1);
+      const got38 = yield* Ref.get(f.posts);
+      expect(got38).toBe(3);
+      const got39 = yield* Ref.get(f.reads);
+      expect(got39).toBe(1);
     })
   )
 );
@@ -488,12 +536,16 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
         NativeSchedulePolicy.make({ ...schedulePolicy, retryDelayMillis: 400, maxRetryDelayMillis: 400 })
       );
       const tick = scheduler.tick;
-      expect(yield* tick).toMatchObject({ outcomes: [{ result: { outcome: { _tag: "Retryable" } } }] });
-      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Held", reason: "retry-delay" }] });
-      expect(yield* Ref.get(f.posts)).toBe(1);
+      const tick40 = yield* tick;
+      expect(tick40).toMatchObject({ outcomes: [{ result: { outcome: { _tag: "Retryable" } } }] });
+      const tick41 = yield* tick;
+      expect(tick41).toMatchObject({ outcomes: [{ _tag: "Held", reason: "retry-delay" }] });
+      const got42 = yield* Ref.get(f.posts);
+      expect(got42).toBe(1);
       yield* f.clock.adjust(420);
       yield* Ref.set(f.status, 200);
-      expect(yield* tick).toMatchObject({ outcomes: [{ result: { outcome: { _tag: "Accepted" } } }] });
+      const tick43 = yield* tick;
+      expect(tick43).toMatchObject({ outcomes: [{ result: { outcome: { _tag: "Accepted" } } }] });
       const attempts = yield* f.sql`SELECT attempt_id FROM observation_delivery_attempts`;
       expect(attempts).toHaveLength(2);
       expect(attempts[0]).not.toEqual(attempts[1]);
@@ -507,11 +559,15 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const f = yield* fixture(2);
       const scheduler = yield* f.reopen();
       yield* Ref.set(f.status, 400);
-      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ result: { outcome: { _tag: "Rejected" } } }] });
+      const tick44 = yield* scheduler.tick;
+      expect(tick44).toMatchObject({ outcomes: [{ result: { outcome: { _tag: "Rejected" } } }] });
       yield* Ref.set(f.status, 200);
-      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Sent", eventId: f.batch.spans[1]?.eventId }] });
-      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Held", reason: "permanent-refusal" }] });
-      expect(yield* Ref.get(f.posts)).toBe(2);
+      const tick45 = yield* scheduler.tick;
+      expect(tick45).toMatchObject({ outcomes: [{ _tag: "Sent", eventId: f.batch.spans[1]?.eventId }] });
+      const tick46 = yield* scheduler.tick;
+      expect(tick46).toMatchObject({ outcomes: [{ _tag: "Held", reason: "permanent-refusal" }] });
+      const got47 = yield* Ref.get(f.posts);
+      expect(got47).toBe(2);
     })
   )
 );
@@ -528,8 +584,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const stalled = yield* scheduler.tick.pipe(Effect.forkChild);
       yield* Deferred.await(f.entered);
       yield* f.clock.adjust(400);
-      expect(yield* Fiber.join(stalled)).toEqual({ _tag: "Deadline" });
-      expect(yield* Ref.get(f.posts)).toBe(1);
+      const join48 = yield* Fiber.join(stalled);
+      expect(join48).toEqual({ _tag: "Deadline" });
+      const got49 = yield* Ref.get(f.posts);
+      expect(got49).toBe(1);
       yield* f.release;
       const reopened = yield* f.reopen(policy);
       const result = yield* reopened.tick;
@@ -541,9 +599,12 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
           { _tag: "Reconciled", eventId: f.batch.spans[0]?.eventId, result: { _tag: "Missing" } },
         ],
       });
-      expect(yield* Ref.get(f.posts)).toBe(3);
-      expect(yield* Ref.get(f.reads)).toBe(1);
-      expect(yield* f.sender.ledger.state(f.batch.spans[0]?.eventId ?? id("0"))).toMatchObject({
+      const got50 = yield* Ref.get(f.posts);
+      expect(got50).toBe(3);
+      const got51 = yield* Ref.get(f.reads);
+      expect(got51).toBe(1);
+      const state52 = yield* f.sender.ledger.state(f.batch.spans[0]?.eventId ?? id("0"));
+      expect(state52).toMatchObject({
         value: { state: "unresolved", attempts: 1 },
       });
     })
@@ -558,11 +619,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       yield* Ref.set(f.hang, true);
       const first = yield* scheduler.tick.pipe(Effect.forkChild);
       yield* Deferred.await(f.entered);
-      expect(yield* scheduler.tick.pipe(Effect.flip)).toMatchObject({ reason: "busy" });
+      const pipe53 = yield* scheduler.tick.pipe(Effect.flip);
+      expect(pipe53).toMatchObject({ reason: "busy" });
       yield* Fiber.interrupt(first);
       yield* f.release;
-      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Sent", eventId: f.batch.spans[1]?.eventId }] });
-      expect(yield* Ref.get(f.posts)).toBe(2);
+      const tick54 = yield* scheduler.tick;
+      expect(tick54).toMatchObject({ outcomes: [{ _tag: "Sent", eventId: f.batch.spans[1]?.eventId }] });
+      const got55 = yield* Ref.get(f.posts);
+      expect(got55).toBe(2);
     })
   )
 );
@@ -572,13 +636,15 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
     Effect.gen(function* () {
       const f = yield* fixture();
       const scheduler = yield* f.reopen();
-      expect(
-        yield* f.reopen(NativeSchedulePolicy.make({ ...schedulePolicy, maxEvents: 2 })).pipe(Effect.flip)
-      ).toMatchObject({ reason: "configuration" });
+      const pipe56 = yield* f.reopen(NativeSchedulePolicy.make({ ...schedulePolicy, maxEvents: 2 })).pipe(Effect.flip);
+      expect(pipe56).toMatchObject({ reason: "configuration" });
       yield* f.sql`UPDATE observation_native_schedule SET span_index=8 WHERE singleton=1`;
-      expect(yield* scheduler.tick.pipe(Effect.flip)).toMatchObject({ reason: "storage" });
-      expect(yield* Ref.get(f.posts)).toBe(0);
-      expect(yield* Ref.get(f.reads)).toBe(0);
+      const pipe57 = yield* scheduler.tick.pipe(Effect.flip);
+      expect(pipe57).toMatchObject({ reason: "storage" });
+      const got58 = yield* Ref.get(f.posts);
+      expect(got58).toBe(0);
+      const got59 = yield* Ref.get(f.reads);
+      expect(got59).toBe(0);
     })
   )
 );
@@ -609,14 +675,18 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       yield* f.pin(journal.acceptPage(page, O.none()));
       const frame = page.frames[0];
       const native = f.batch.spans[0];
-      if (frame === undefined || frame._tag !== "Accepted" || native === undefined)
+      if (frame === undefined || frame._tag !== "Accepted" || native === undefined) {
         return yield* Effect.die("Invalid synthetic events");
+      }
       expect(frame.occurrenceId).not.toBe(native.eventId);
       const first = yield* f.reopen();
-      expect(yield* first.tick).toMatchObject({ outcomes: [{ _tag: "Sent", eventId: native.eventId }] });
+      const tick60 = yield* first.tick;
+      expect(tick60).toMatchObject({ outcomes: [{ _tag: "Sent", eventId: native.eventId }] });
       const restarted = yield* f.reopen();
-      expect(yield* restarted.tick).toMatchObject({ outcomes: [{ _tag: "Sent", eventId: frame.occurrenceId }] });
-      expect(yield* Ref.get(f.posts)).toBe(2);
+      const tick61 = yield* restarted.tick;
+      expect(tick61).toMatchObject({ outcomes: [{ _tag: "Sent", eventId: frame.occurrenceId }] });
+      const got62 = yield* Ref.get(f.posts);
+      expect(got62).toBe(2);
     })
   )
 );
@@ -638,14 +708,19 @@ for (const initial of ["accepted", "interrupted"]) {
         }
         yield* f.clock.adjust(120);
         yield* Ref.set(f.status, 400);
-        expect(yield* scheduler.tick).toMatchObject({
+        const tick63 = yield* scheduler.tick;
+        expect(tick63).toMatchObject({
           outcomes: [{ _tag: "Sent", result: { outcome: { _tag: "Rejected" } } }],
         });
         yield* f.clock.adjust(120);
-        expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Held", reason: "permanent-refusal" }] });
-        expect(yield* Ref.get(f.posts)).toBe(2);
-        expect(yield* Ref.get(f.reads)).toBe(2);
-        expect(yield* f.sender.ledger.state(f.batch.spans[0]?.eventId ?? id("0"))).toMatchObject({
+        const tick64 = yield* scheduler.tick;
+        expect(tick64).toMatchObject({ outcomes: [{ _tag: "Held", reason: "permanent-refusal" }] });
+        const got65 = yield* Ref.get(f.posts);
+        expect(got65).toBe(2);
+        const got66 = yield* Ref.get(f.reads);
+        expect(got66).toBe(2);
+        const state67 = yield* f.sender.ledger.state(f.batch.spans[0]?.eventId ?? id("0"));
+        expect(state67).toMatchObject({
           value: {
             state: initial === "accepted" ? "accepted-unverified" : "unresolved",
             attempts: 2,
@@ -663,22 +738,32 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const tick = Effect.flatMap(f.reopen(), (scheduler) => scheduler.tick);
       yield* tick;
       yield* f.clock.adjust(120);
-      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
-      expect(yield* tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
+      const tick68 = yield* tick;
+      expect(tick68).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
+      const tick69 = yield* tick;
+      expect(tick69).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
       yield* f.clock.adjust(120);
-      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
+      const tick70 = yield* tick;
+      expect(tick70).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
       yield* f.clock.adjust(120);
-      expect(yield* tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
+      const tick71 = yield* tick;
+      expect(tick71).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
       yield* f.clock.adjust(110);
-      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
+      const tick72 = yield* tick;
+      expect(tick72).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
       yield* f.clock.adjust(220);
-      expect(yield* tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
+      const tick73 = yield* tick;
+      expect(tick73).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
       yield* f.clock.adjust(220);
-      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
+      const tick74 = yield* tick;
+      expect(tick74).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
       yield* f.clock.adjust(420);
-      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
-      expect(yield* Ref.get(f.reads)).toBe(5);
-      expect(yield* Ref.get(f.posts)).toBe(1);
+      const tick75 = yield* tick;
+      expect(tick75).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
+      const got76 = yield* Ref.get(f.reads);
+      expect(got76).toBe(5);
+      const got77 = yield* Ref.get(f.posts);
+      expect(got77).toBe(1);
     })
   )
 );
@@ -691,16 +776,21 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       yield* tick;
       yield* f.clock.adjust(120);
       yield* Ref.set(f.readStatus, 503);
-      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Failed", reason: "readback" }] });
-      expect(yield* tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
+      const tick78 = yield* tick;
+      expect(tick78).toMatchObject({ outcomes: [{ _tag: "Failed", reason: "readback" }] });
+      const tick79 = yield* tick;
+      expect(tick79).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
       yield* f.clock.adjust(120);
       const interrupted = yield* makeNativeDeliveryScheduler(f.intake, f.config, schedulePolicy, f.sender, {
         reconcile: () => Effect.interrupt,
       });
       yield* f.pin(interrupted.tick).pipe(Effect.exit);
-      expect(yield* tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
-      expect(yield* Ref.get(f.reads)).toBe(1);
-      expect(yield* Ref.get(f.posts)).toBe(1);
+      const tick80 = yield* tick;
+      expect(tick80).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
+      const got81 = yield* Ref.get(f.reads);
+      expect(got81).toBe(1);
+      const got82 = yield* Ref.get(f.posts);
+      expect(got82).toBe(1);
     })
   )
 );
@@ -713,9 +803,12 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       yield* f.clock.adjust(120);
       yield* (yield* f.reopen()).tick;
       yield* f.sql`UPDATE observation_delivery_queries SET recorded_at=recorded_at+1`;
-      expect(yield* (yield* f.reopen()).tick).toMatchObject({ outcomes: [{ _tag: "Failed", reason: "storage" }] });
-      expect(yield* Ref.get(f.reads)).toBe(1);
-      expect(yield* Ref.get(f.posts)).toBe(1);
+      const tick83 = yield* (yield* f.reopen()).tick;
+      expect(tick83).toMatchObject({ outcomes: [{ _tag: "Failed", reason: "storage" }] });
+      const got84 = yield* Ref.get(f.reads);
+      expect(got84).toBe(1);
+      const got85 = yield* Ref.get(f.posts);
+      expect(got85).toBe(1);
     })
   )
 );

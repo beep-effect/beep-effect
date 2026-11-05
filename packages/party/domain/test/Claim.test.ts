@@ -1,5 +1,5 @@
 import { ClaimVersion } from "@beep/party-domain/Claim";
-import { logicalKey, Proposition } from "@beep/party-domain/Proposition";
+import { logicalKey, Proposition, partiesOf } from "@beep/party-domain/Proposition";
 import { PartyId } from "@beep/shared-domain/identity/Party";
 import { describe, expect, it } from "@effect/vitest";
 import * as TestUtils from "@effect/vitest/utils";
@@ -48,7 +48,8 @@ describe("party claim binding", () => {
   it.effect("round-trips the shared envelope with party-owned ids", () =>
     Effect.gen(function* () {
       const decoded = yield* S.decodeUnknownEffect(ClaimVersion)(row);
-      expect(yield* S.encodeEffect(ClaimVersion)(decoded)).toEqual(row);
+      const encoded = yield* S.encodeEffect(ClaimVersion)(decoded);
+      expect(encoded).toEqual(row);
       expect(SchemaAST.resolveIdentifier(ClaimVersion.ast)).toContain("party-domain");
     })
   );
@@ -64,6 +65,70 @@ describe("party claim binding", () => {
     const b = Proposition.cases.SameParty.make({ left: PartyId.make(10), right: PartyId.make(2) });
     expect(logicalKey(a)).toEqual(logicalKey(b));
     pipe(S.decodeResult(Proposition)({ _tag: "SameParty", left: 1, right: 1 }), Result.isFailure, TestUtils.assertTrue);
+  });
+
+  it("preserves semantic roles and framed identities for account, organization and context claims", () => {
+    const cases: ReadonlyArray<{
+      readonly input: unknown;
+      readonly key: string;
+      readonly parties: ReadonlyArray<number>;
+    }> = [
+      {
+        input: { _tag: "AccountIdentifier", account: "party-acct:a", identifier: "party-ident:a" },
+        key: "17:AccountIdentifier12:party-acct:a13:party-ident:a",
+        parties: [],
+      },
+      {
+        input: { _tag: "MailboxKind", account: "party-acct:a", kind: "shared" },
+        key: "11:MailboxKind12:party-acct:a",
+        parties: [],
+      },
+      {
+        input: { _tag: "AccountControl", account: "party-acct:a", controller: 2, relation: "operated-by" },
+        key: "14:AccountControl12:party-acct:a1:211:operated-by",
+        parties: [2],
+      },
+      {
+        input: { _tag: "VoiceAuthor", voice: "party-voice:a", author: 2 },
+        key: "11:VoiceAuthor13:party-voice:a1:2",
+        parties: [2],
+      },
+      {
+        input: { _tag: "PartyName", party: 1, nameKind: "legal", value: "Acme" },
+        key: "9:PartyName1:15:legal4:Acme",
+        parties: [1],
+      },
+      {
+        input: { _tag: "Membership", member: 1, organization: 2, role: null, title: null },
+        key: "10:Membership1:11:2",
+        parties: [1, 2],
+      },
+      {
+        input: { _tag: "ReportsTo", subordinate: 1, superior: 2, organization: null },
+        key: "9:ReportsTo1:11:2",
+        parties: [1, 2],
+      },
+      {
+        input: { _tag: "DelegateOf", delegate: 1, principal: 2, account: null },
+        key: "10:DelegateOf1:11:2",
+        parties: [1, 2],
+      },
+      {
+        input: { _tag: "ContextRole", party: 1, context: "party-ctx:a", role: "https://example.test/witness" },
+        key: "11:ContextRole1:111:party-ctx:a28:https://example.test/witness",
+        parties: [1],
+      },
+      {
+        input: { _tag: "External", subject: 1, object: 2, predicate: "https://example.test/knows" },
+        key: "8:External1:126:https://example.test/knows1:2",
+        parties: [1, 2],
+      },
+    ];
+    for (const fixture of cases) {
+      const value = Result.getOrThrow(S.decodeUnknownResult(Proposition)(fixture.input));
+      expect(logicalKey(value)).toBe(fixture.key);
+      expect(partiesOf(value)).toEqual(fixture.parties);
+    }
   });
 
   it("keeps delimiter-bearing name payloads unambiguous", () => {

@@ -191,7 +191,8 @@ describe("GitHubCacheBlobStore", () => {
       it.effect("reads both the camelCase and the snake_case spelling of a signed url", () =>
         Effect.gen(function* () {
           MutableHashMap.set(blobs, "https://blob.example/snake", new Uint8Array([1]));
-          assert.isTrue(yield* Effect.flatMap(BlobStore, (blobStore) => blobStore.has("k")));
+          const flatMap1 = yield* Effect.flatMap(BlobStore, (blobStore) => blobStore.has("k"));
+          assert.isTrue(flatMap1);
         })
       );
     });
@@ -276,7 +277,8 @@ describe("GitHubCacheBlobStore", () => {
     )((it) => {
       it.effect("reports a miss as nothing, and a transport failure as a failure", () =>
         Effect.gen(function* () {
-          assertNone(yield* Effect.flatMap(BlobStore, (blobStore) => blobStore.get("absent", Meta)));
+          const flatMap2 = yield* Effect.flatMap(BlobStore, (blobStore) => blobStore.get("absent", Meta));
+          assertNone(flatMap2);
           const error = yield* Effect.flip(Effect.flatMap(AlternateBlobStore, (blobStore) => blobStore.get("k", Meta)));
           assert.strictEqual(error._tag, "BlobStoreError");
         })

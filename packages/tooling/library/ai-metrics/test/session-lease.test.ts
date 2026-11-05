@@ -56,7 +56,9 @@ const activeLease = (transition: SessionLeaseTransition): SessionLease => {
 };
 
 const startedLease = Effect.fnUntraced(function* () {
-  return activeLease(transitionSessionLease(O.none(), yield* startEvent));
+  const argument = O.none();
+  const startEvent1 = yield* startEvent;
+  return activeLease(transitionSessionLease(argument, startEvent1));
 });
 
 const activityEvent = (observedAt = "2026-09-03T12:01:00.000Z", eventDigest = hashC, sessionId = hashA) =>
@@ -115,9 +117,11 @@ describe("telemetry-v2 session leases", () => {
     "round-trips schema-generated leases and liveness events",
     [Arbitrary.schema(SessionLease), Arbitrary.schema(SessionLeaseEvent)],
     Effect.fnUntraced(function* ([lease, event]) {
-      const roundTrippedLease = yield* SessionLease.decodeEffect(yield* SessionLease.encodeEffect(lease));
+      const encodedEffect = yield* SessionLease.encodeEffect(lease);
+      const roundTrippedLease = yield* SessionLease.decodeEffect(encodedEffect);
 
-      const roundTrippedEvent = yield* decodeEvent(yield* encodeEvent(event));
+      const encodedEvent = yield* encodeEvent(event);
+      const roundTrippedEvent = yield* decodeEvent(encodedEvent);
 
       pipe(leaseEquivalent(lease, roundTrippedLease), assertTrue);
 
@@ -128,9 +132,13 @@ describe("telemetry-v2 session leases", () => {
 
   it.effect("creates a lease only from SessionStart and renews on ordinary activity", () =>
     Effect.gen(function* () {
-      const started = transitionSessionLease(O.none(), yield* startEvent);
+      const argument1 = O.none();
+      const startEvent2 = yield* startEvent;
+      const started = transitionSessionLease(argument1, startEvent2);
       const lease = activeLease(started);
-      const renewed = transitionSessionLease(O.some(lease), yield* activityEvent());
+      const argument2 = O.some(lease);
+      const activityEvent3 = yield* activityEvent();
+      const renewed = transitionSessionLease(argument2, activityEvent3);
       const renewedLease = activeLease(renewed);
 
       expect(started.status === "active" && started.outcome).toBe("started");
@@ -143,38 +151,43 @@ describe("telemetry-v2 session leases", () => {
 
   it.effect("quarantines missing, duplicate, and backwards transitions", () =>
     Effect.gen(function* () {
-      const missing = transitionSessionLease(O.none(), yield* activityEvent());
-      const missingOpen = transitionSessionLease(O.none(), yield* openWaitEvent);
-      const missingClose = transitionSessionLease(
-        O.none(),
-        yield* decodeEvent({
-          event: "wait-closed",
-          sessionId: hashA,
-          observedAt: "2026-09-03T12:03:00.000Z",
-          eventDigest: hashF,
-          waitId: hashE,
-          evidenceTier: "derived",
-          oipTaint: "clear",
-        })
-      );
-      const missingEnd = transitionSessionLease(
-        O.none(),
-        yield* decodeEvent({
-          event: "session-end",
-          sessionId: hashA,
-          observedAt: "2026-09-03T12:05:00.000Z",
-          eventDigest: hashF,
-          evidenceTier: "derived",
-          oipTaint: "clear",
-        })
-      );
+      const argument3 = O.none();
+      const activityEvent4 = yield* activityEvent();
+      const missing = transitionSessionLease(argument3, activityEvent4);
+      const argument4 = O.none();
+      const openWaitEvent5 = yield* openWaitEvent;
+      const missingOpen = transitionSessionLease(argument4, openWaitEvent5);
+      const argument5 = O.none();
+      const decodedEvent = yield* decodeEvent({
+        event: "wait-closed",
+        sessionId: hashA,
+        observedAt: "2026-09-03T12:03:00.000Z",
+        eventDigest: hashF,
+        waitId: hashE,
+        evidenceTier: "derived",
+        oipTaint: "clear",
+      });
+      const missingClose = transitionSessionLease(argument5, decodedEvent);
+      const argument6 = O.none();
+      const decodedEvent6 = yield* decodeEvent({
+        event: "session-end",
+        sessionId: hashA,
+        observedAt: "2026-09-03T12:05:00.000Z",
+        eventDigest: hashF,
+        evidenceTier: "derived",
+        oipTaint: "clear",
+      });
+      const missingEnd = transitionSessionLease(argument6, decodedEvent6);
       const lease = yield* startedLease();
-      const duplicate = transitionSessionLease(O.some(lease), yield* startEvent);
-      const backwards = transitionSessionLease(O.some(lease), yield* activityEvent("2026-09-03T11:59:59.000Z", hashD));
-      const mismatched = transitionSessionLease(
-        O.some(lease),
-        yield* activityEvent("2026-09-03T12:01:00.000Z", hashC, hashB)
-      );
+      const argument7 = O.some(lease);
+      const startEvent7 = yield* startEvent;
+      const duplicate = transitionSessionLease(argument7, startEvent7);
+      const argument8 = O.some(lease);
+      const activityEvent8 = yield* activityEvent("2026-09-03T11:59:59.000Z", hashD);
+      const backwards = transitionSessionLease(argument8, activityEvent8);
+      const argument9 = O.some(lease);
+      const activityEvent9 = yield* activityEvent("2026-09-03T12:01:00.000Z", hashC, hashB);
+      const mismatched = transitionSessionLease(argument9, activityEvent9);
 
       expect(missing.status === "quarantined" && missing.reason).toBe("missing-lease");
       expect(missingOpen.status === "quarantined" && missingOpen.reason).toBe("missing-lease");
@@ -188,35 +201,38 @@ describe("telemetry-v2 session leases", () => {
 
   it.effect("closes only the exact pending wait and keeps an unmatched close open", () =>
     Effect.gen(function* () {
-      const opened = transitionSessionLease(O.some(yield* startedLease()), yield* openWaitEvent);
+      const startedLease1 = yield* startedLease();
+      const argument10 = O.some(startedLease1);
+      const openWaitEvent10 = yield* openWaitEvent;
+      const opened = transitionSessionLease(argument10, openWaitEvent10);
       const openedLease = activeLease(opened);
-      const duplicate = transitionSessionLease(O.some(openedLease), yield* openWaitEvent);
+      const argument11 = O.some(openedLease);
+      const openWaitEvent11 = yield* openWaitEvent;
+      const duplicate = transitionSessionLease(argument11, openWaitEvent11);
       const duplicateLease = activeLease(duplicate);
-      const unmatched = transitionSessionLease(
-        O.some(duplicateLease),
-        yield* decodeEvent({
-          event: "wait-closed",
-          sessionId: hashA,
-          observedAt: "2026-09-03T12:03:00.000Z",
-          eventDigest: hashF,
-          waitId: hashB,
-          evidenceTier: "derived",
-          oipTaint: "clear",
-        })
-      );
+      const argument12 = O.some(duplicateLease);
+      const decodedEvent12 = yield* decodeEvent({
+        event: "wait-closed",
+        sessionId: hashA,
+        observedAt: "2026-09-03T12:03:00.000Z",
+        eventDigest: hashF,
+        waitId: hashB,
+        evidenceTier: "derived",
+        oipTaint: "clear",
+      });
+      const unmatched = transitionSessionLease(argument12, decodedEvent12);
       const unmatchedLease = activeLease(unmatched);
-      const matched = transitionSessionLease(
-        O.some(unmatchedLease),
-        yield* decodeEvent({
-          event: "wait-closed",
-          sessionId: hashA,
-          observedAt: "2026-09-03T12:04:00.000Z",
-          eventDigest: hashC,
-          waitId: hashE,
-          evidenceTier: "derived",
-          oipTaint: "clear",
-        })
-      );
+      const argument13 = O.some(unmatchedLease);
+      const decodedEvent13 = yield* decodeEvent({
+        event: "wait-closed",
+        sessionId: hashA,
+        observedAt: "2026-09-03T12:04:00.000Z",
+        eventDigest: hashC,
+        waitId: hashE,
+        evidenceTier: "derived",
+        oipTaint: "clear",
+      });
+      const matched = transitionSessionLease(argument13, decodedEvent13);
 
       expect(opened.status === "active" && opened.outcome).toBe("wait-opened");
       expect(duplicate.status === "active" && duplicate.outcome).toBe("wait-open-duplicate");
@@ -230,18 +246,20 @@ describe("telemetry-v2 session leases", () => {
 
   it.effect("carries pending waits into the observed terminal result for honest tombstoning", () =>
     Effect.gen(function* () {
-      const openedLease = activeLease(transitionSessionLease(O.some(yield* startedLease()), yield* openWaitEvent));
-      const ended = transitionSessionLease(
-        O.some(openedLease),
-        yield* decodeEvent({
-          event: "session-end",
-          sessionId: hashA,
-          observedAt: "2026-09-03T12:05:00.000Z",
-          eventDigest: hashF,
-          evidenceTier: "derived",
-          oipTaint: "clear",
-        })
-      );
+      const startedLease2 = yield* startedLease();
+      const argument14 = O.some(startedLease2);
+      const openWaitEvent14 = yield* openWaitEvent;
+      const openedLease = activeLease(transitionSessionLease(argument14, openWaitEvent14));
+      const argument15 = O.some(openedLease);
+      const decodedEvent15 = yield* decodeEvent({
+        event: "session-end",
+        sessionId: hashA,
+        observedAt: "2026-09-03T12:05:00.000Z",
+        eventDigest: hashF,
+        evidenceTier: "derived",
+        oipTaint: "clear",
+      });
+      const ended = transitionSessionLease(argument15, decodedEvent15);
 
       expect(ended.status).toBe("ended");
       if (ended.status !== "ended") throw new Error("Expected ended session lease transition");
@@ -252,7 +270,10 @@ describe("telemetry-v2 session leases", () => {
 
   it.effect("requires expiry candidates to encode the exact elapsed idle interval", () =>
     Effect.gen(function* () {
-      const lease = activeLease(transitionSessionLease(O.some(yield* startedLease()), yield* activityEvent()));
+      const startedLease3 = yield* startedLease();
+      const argument16 = O.some(startedLease3);
+      const activityEvent16 = yield* activityEvent();
+      const lease = activeLease(transitionSessionLease(argument16, activityEvent16));
       const candidate = yield* candidateFrom(lease);
       const encoded = yield* encodeCandidate(candidate);
       const invalid = {
@@ -267,7 +288,10 @@ describe("telemetry-v2 session leases", () => {
 
   it.effect("defers tombstones for a missing or renewed live lease", () =>
     Effect.gen(function* () {
-      const lease = activeLease(transitionSessionLease(O.some(yield* startedLease()), yield* activityEvent()));
+      const startedLease4 = yield* startedLease();
+      const argument17 = O.some(startedLease4);
+      const activityEvent17 = yield* activityEvent();
+      const lease = activeLease(transitionSessionLease(argument17, activityEvent17));
       const candidate = yield* candidateFrom(lease);
       const evidence = yield* reconciliationEvidence();
 
@@ -279,24 +303,26 @@ describe("telemetry-v2 session leases", () => {
 
   it.effect("defers tombstones for identity disagreement, later activity, or an open wait", () =>
     Effect.gen(function* () {
-      const lease = activeLease(transitionSessionLease(O.some(yield* startedLease()), yield* activityEvent()));
+      const startedLease5 = yield* startedLease();
+      const argument18 = O.some(startedLease5);
+      const activityEvent18 = yield* activityEvent();
+      const lease = activeLease(transitionSessionLease(argument18, activityEvent18));
       const candidate = yield* candidateFrom(lease);
-      const mismatch = reconcileExpiredSessionLease(
-        candidate,
-        O.some(candidate.leaseDigest),
-        yield* reconciliationEvidence({ sessionId: hashB })
-      );
-      const later = reconcileExpiredSessionLease(
-        candidate,
-        O.some(candidate.leaseDigest),
-        yield* reconciliationEvidence({ sourceLastObservedAt: "2026-09-03T12:01:00.001Z" })
-      );
-      const sourceOpen = reconcileExpiredSessionLease(
-        candidate,
-        O.some(candidate.leaseDigest),
-        yield* reconciliationEvidence({ sourceOpenWaitIds: [hashE] })
-      );
-      const leaseOpen = activeLease(transitionSessionLease(O.some(yield* startedLease()), yield* openWaitEvent));
+      const argument19 = O.some(candidate.leaseDigest);
+      const reconciliationEvidence19 = yield* reconciliationEvidence({ sessionId: hashB });
+      const mismatch = reconcileExpiredSessionLease(candidate, argument19, reconciliationEvidence19);
+      const argument20 = O.some(candidate.leaseDigest);
+      const reconciliationEvidence20 = yield* reconciliationEvidence({
+        sourceLastObservedAt: "2026-09-03T12:01:00.001Z",
+      });
+      const later = reconcileExpiredSessionLease(candidate, argument20, reconciliationEvidence20);
+      const argument21 = O.some(candidate.leaseDigest);
+      const reconciliationEvidence21 = yield* reconciliationEvidence({ sourceOpenWaitIds: [hashE] });
+      const sourceOpen = reconcileExpiredSessionLease(candidate, argument21, reconciliationEvidence21);
+      const startedLease6 = yield* startedLease();
+      const argument22 = O.some(startedLease6);
+      const openWaitEvent22 = yield* openWaitEvent;
+      const leaseOpen = activeLease(transitionSessionLease(argument22, openWaitEvent22));
       const encodedLeaseOpen = yield* SessionLease.encodeEffect(leaseOpen);
       const leaseOpenCandidate = yield* decodeCandidate({
         schemaVersion: "telemetry-v2/session-lease-expiry-candidate/v1",
@@ -306,11 +332,9 @@ describe("telemetry-v2 session leases", () => {
         ttlMs: 600_000,
         idleMs: 600_000,
       });
-      const open = reconcileExpiredSessionLease(
-        leaseOpenCandidate,
-        O.some(leaseOpenCandidate.leaseDigest),
-        yield* reconciliationEvidence()
-      );
+      const argument23 = O.some(leaseOpenCandidate.leaseDigest);
+      const reconciliationEvidence23 = yield* reconciliationEvidence();
+      const open = reconcileExpiredSessionLease(leaseOpenCandidate, argument23, reconciliationEvidence23);
 
       expect(mismatch.status === "deferred" && mismatch.reason).toBe("evidence-session-mismatch");
       expect(later.status === "deferred" && later.reason).toBe("later-source-activity");
@@ -321,13 +345,14 @@ describe("telemetry-v2 session leases", () => {
 
   it.effect("tombstones only after every veto clears and never guesses a semantic outcome", () =>
     Effect.gen(function* () {
-      const lease = activeLease(transitionSessionLease(O.some(yield* startedLease()), yield* activityEvent()));
+      const startedLease7 = yield* startedLease();
+      const argument24 = O.some(startedLease7);
+      const activityEvent24 = yield* activityEvent();
+      const lease = activeLease(transitionSessionLease(argument24, activityEvent24));
       const candidate = yield* candidateFrom(lease);
-      const result = reconcileExpiredSessionLease(
-        candidate,
-        O.some(candidate.leaseDigest),
-        yield* reconciliationEvidence()
-      );
+      const argument25 = O.some(candidate.leaseDigest);
+      const reconciliationEvidence25 = yield* reconciliationEvidence();
+      const result = reconcileExpiredSessionLease(candidate, argument25, reconciliationEvidence25);
 
       expect(result.status).toBe("tombstoned");
       if (result.status !== "tombstoned") throw new Error("Expected tombstoned reconciliation");
@@ -338,7 +363,10 @@ describe("telemetry-v2 session leases", () => {
 
   it.effect("keeps lease and reconciliation wire keys free of content-bearing fields", () =>
     Effect.gen(function* () {
-      const lease = activeLease(transitionSessionLease(O.some(yield* startedLease()), yield* activityEvent()));
+      const startedLease8 = yield* startedLease();
+      const argument26 = O.some(startedLease8);
+      const activityEvent26 = yield* activityEvent();
+      const lease = activeLease(transitionSessionLease(argument26, activityEvent26));
       const candidate = yield* candidateFrom(lease);
       const evidence = yield* reconciliationEvidence();
       const result = reconcileExpiredSessionLease(candidate, O.some(candidate.leaseDigest), evidence);

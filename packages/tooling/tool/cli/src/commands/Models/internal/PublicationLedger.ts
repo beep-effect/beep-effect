@@ -211,7 +211,8 @@ export const makePublicationLedger = Effect.fn("PublicationLedger.make")(functio
       message: `Cannot create the recovery lock (${error.reason._tag}); refusing recovery.`,
     });
   const createLock = Effect.fnUntraced(function* (lock: string) {
-    const stamp = yield* O.match(yield* currentOwner, {
+    const currentOwner1 = yield* currentOwner;
+    const stamp = yield* O.match(currentOwner1, {
       onNone: () => Effect.succeed(""),
       onSome: (owner) => encodeOwner(owner).pipe(Effect.orDie),
     });
@@ -228,7 +229,8 @@ export const makePublicationLedger = Effect.fn("PublicationLedger.make")(functio
     return held;
   });
   const unreadableLockStale = Effect.fnUntraced(function* (lock: string) {
-    const lockTime = O.flatMap(yield* fs.stat(lock).pipe(Effect.option), (info) => info.mtime);
+    const pipe2 = yield* fs.stat(lock).pipe(Effect.option);
+    const lockTime = O.flatMap(pipe2, (info) => info.mtime);
     const probe = `${lock}.${yield* Random.nextIntBetween(0, 0xffffff)}.clock`;
     const nowTime = yield* fs.writeFileString(probe, "", { flag: "wx", mode: 0o600 }).pipe(
       Effect.andThen(fs.stat(probe)),
@@ -248,7 +250,8 @@ export const makePublicationLedger = Effect.fn("PublicationLedger.make")(functio
   });
   const reclaimLock = Effect.fnUntraced(function* (lock: string, stale: string) {
     const aside = `${lock}.${yield* Random.nextIntBetween(0, 0xffffff)}.stale`;
-    if (O.isNone(yield* fs.rename(lock, aside).pipe(Effect.option))) return false;
+    const pipe3 = yield* fs.rename(lock, aside).pipe(Effect.option);
+    if (O.isNone(pipe3)) return false;
     const moved = yield* fs.readFileString(aside).pipe(Effect.option);
     if (!O.contains(moved, stale)) {
       yield* fs.link(aside, lock).pipe(Effect.ignore);
@@ -400,8 +403,9 @@ export const dropStalePublicationPartials = Effect.fn("PublicationLedger.dropSta
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const readDirectory4 = yield* fs.readDirectory(directory);
   const stale = A.filter(
-    yield* fs.readDirectory(directory),
+    readDirectory4,
     (entry) => Str.startsWith(`${id}.json.`)(entry) && Str.endsWith(".partial")(entry)
   );
   yield* Effect.forEach(stale, (entry) => fs.remove(path.join(directory, entry), { force: true }), { discard: true });

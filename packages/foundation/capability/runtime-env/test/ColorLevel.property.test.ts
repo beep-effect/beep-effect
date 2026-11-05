@@ -16,7 +16,8 @@ describe("ColorLevel schema property floor", () => {
         const encoded = yield* S.encodeEffect(ColorLevel)(value);
         const decoded = yield* S.decodeEffect(ColorLevel)(encoded);
         assert.isTrue(S.toEquivalence(ColorLevel)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(ColorLevel)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(ColorLevel)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

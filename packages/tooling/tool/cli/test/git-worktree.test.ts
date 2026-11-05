@@ -62,9 +62,12 @@ it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCr
         yield* runGit(repoRoot, ["worktree", "add", "--quiet", "--detach", linked]);
         yield* fs.symlink(linked, alias);
 
-        assertSome(yield* isRegisteredWorktree(repoRoot, linked), true);
-        assertSome(yield* isRegisteredWorktree(repoRoot, alias), true);
-        assertSome(yield* isRegisteredWorktree(repoRoot, repoRoot), true);
+        const isRegisteredWorktree1 = yield* isRegisteredWorktree(repoRoot, linked);
+        assertSome(isRegisteredWorktree1, true);
+        const isRegisteredWorktree2 = yield* isRegisteredWorktree(repoRoot, alias);
+        assertSome(isRegisteredWorktree2, true);
+        const isRegisteredWorktree3 = yield* isRegisteredWorktree(repoRoot, repoRoot);
+        assertSome(isRegisteredWorktree3, true);
       })
     )
   );
@@ -77,8 +80,10 @@ it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCr
         const plain = path.join(root, "plain");
         yield* fs.makeDirectory(plain);
 
-        assertSome(yield* isRegisteredWorktree(repoRoot, plain), false);
-        assertSome(yield* isRegisteredWorktree(repoRoot, path.join(root, "missing")), false);
+        const isRegisteredWorktree4 = yield* isRegisteredWorktree(repoRoot, plain);
+        assertSome(isRegisteredWorktree4, false);
+        const isRegisteredWorktree5 = yield* isRegisteredWorktree(repoRoot, path.join(root, "missing"));
+        assertSome(isRegisteredWorktree5, false);
       })
     )
   );
@@ -91,13 +96,15 @@ it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCr
         const notARepository = path.join(root, "not-a-repository");
         yield* fs.makeDirectory(notARepository);
 
-        assertNone(yield* isRegisteredWorktree(notARepository, notARepository));
+        const isRegisteredWorktree6 = yield* isRegisteredWorktree(notARepository, notARepository);
+        assertNone(isRegisteredWorktree6);
+        const pipe7 = yield* isRegisteredWorktree(repoRoot, repoRoot).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
+          provideSpawner(failingSpawner)
+        );
         assertNone(
           // `Git` is rebuilt over the failing spawner: the probe takes the service from the context (W1b).
-          yield* isRegisteredWorktree(repoRoot, repoRoot).pipe(
-            Effect.provideServiceEffect(Git, Git.make),
-            provideSpawner(failingSpawner)
-          )
+          pipe7
         );
       })
     )
@@ -112,9 +119,12 @@ it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCr
         yield* runGit(repoRoot, ["worktree", "add", "--quiet", "--detach", linked]);
         yield* fs.writeFileString(path.join(linked, "scratch.txt"), "local change\n");
 
-        expect(yield* removeGitWorktree(repoRoot, linked)).toBe(true);
-        expect(yield* fs.exists(linked)).toBe(false);
-        assertSome(yield* isRegisteredWorktree(repoRoot, linked), false);
+        const removeGitWorktree8 = yield* removeGitWorktree(repoRoot, linked);
+        expect(removeGitWorktree8).toBe(true);
+        const exists9 = yield* fs.exists(linked);
+        expect(exists9).toBe(false);
+        const isRegisteredWorktree10 = yield* isRegisteredWorktree(repoRoot, linked);
+        assertSome(isRegisteredWorktree10, false);
       })
     )
   );
@@ -127,14 +137,15 @@ it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCr
         const plain = path.join(root, "plain");
         yield* fs.makeDirectory(plain);
 
-        expect(yield* removeGitWorktree(repoRoot, plain)).toBe(false);
-        expect(yield* fs.exists(plain)).toBe(true);
-        expect(
-          yield* removeGitWorktree(repoRoot, plain).pipe(
-            Effect.provideServiceEffect(Git, Git.make),
-            provideSpawner(failingSpawner)
-          )
-        ).toBe(false);
+        const removeGitWorktree11 = yield* removeGitWorktree(repoRoot, plain);
+        expect(removeGitWorktree11).toBe(false);
+        const exists12 = yield* fs.exists(plain);
+        expect(exists12).toBe(true);
+        const pipe13 = yield* removeGitWorktree(repoRoot, plain).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
+          provideSpawner(failingSpawner)
+        );
+        expect(pipe13).toBe(false);
       })
     )
   );

@@ -70,7 +70,8 @@ describe("DocumentIntakeTarget vault notice", { concurrent: false }, () => {
       expect(getByTestId("intake-vault-unavailable")).toHaveTextContent("Workspace vault status is unavailable");
       fireEvent.click(getByTestId("intake-vault-retry"));
       yield* Effect.promise(() => waitFor(() => expect(queryByTestId("intake-vault-unavailable")).toBeNull()));
-      expect(yield* Ref.get(attempts)).toBe(2);
+      const got = yield* Ref.get(attempts);
+      expect(got).toBe(2);
       unmount();
     })
   );

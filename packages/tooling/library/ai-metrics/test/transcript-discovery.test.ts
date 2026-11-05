@@ -67,8 +67,9 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
           `${roots[0]}/rollout-a.jsonl`,
           `${roots[0]}/nested/rollout-b.jsonl`,
           `${roots[1]}/rollout-c.jsonl`,
-        ])
+        ]) {
           yield* f.fs.writeFileString(file, line);
+        }
         const input = f.input(roots);
         const discovery = yield* makeTranscriptDiscovery(
           TranscriptDiscoveryInput.make({
@@ -131,7 +132,8 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
         const truncated = yield* runDiscoveredTranscriptSweep(f.config, restarted, policy);
         expect(A.some(truncated.sweep.outcomes, (o) => o._tag === "Accepted" && o.reset === "truncated")).toBe(true);
         const wrong = TranscriptIntakeConfig.make({ ...f.config, namespaceId: Sha256Hex.make(Str.repeat(64)("b")) });
-        expect(yield* runDiscoveredTranscriptSweep(wrong, restarted, policy).pipe(Effect.flip)).toMatchObject({
+        const pipe1 = yield* runDiscoveredTranscriptSweep(wrong, restarted, policy).pipe(Effect.flip);
+        expect(pipe1).toMatchObject({
           reason: "namespace",
         });
       })
@@ -145,7 +147,9 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
       yield* f.fs.makeDirectory(`${f.dir}/wide`);
       yield* f.fs.makeDirectory(`${f.dir}/links`);
       yield* f.fs.writeFileString(`${f.dir}/deep/a/b/rollout-hidden.jsonl`, line);
-      for (const n of A.range(1, 3)) yield* f.fs.writeFileString(`${f.dir}/wide/rollout-${n}.jsonl`, line);
+      for (const n of A.range(1, 3)) {
+        yield* f.fs.writeFileString(`${f.dir}/wide/rollout-${n}.jsonl`, line);
+      }
       yield* f.fs.symlink(`${f.dir}/wide`, `${f.dir}/linked-root`);
       yield* f.fs.symlink(`${f.dir}/wide/rollout-1.jsonl`, `${f.dir}/links/rollout-link.jsonl`);
       const d = yield* makeTranscriptDiscovery(
@@ -172,7 +176,8 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
       yield* f.fs.makeDirectory(`${f.dir}/actual/nested`, { recursive: true });
       yield* f.fs.symlink(`${f.dir}/actual`, `${f.dir}/alias`);
       for (const path of [`${f.dir}/alias`, `${f.dir}/alias/nested`]) {
-        expect(yield* makeTranscriptDiscovery(f.input([path])).pipe(Effect.flip)).toMatchObject({
+        const pipe2 = yield* makeTranscriptDiscovery(f.input([path])).pipe(Effect.flip);
+        expect(pipe2).toMatchObject({
           reason: "configuration",
         });
       }
@@ -199,7 +204,8 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
         "import os,sys; root=os.fsencode(sys.argv[1]); open(root+b'/invalid-'+bytes([255]),'wb').close(); os.mkdir(root+b'/directory-'+bytes([254]))",
         f.dir,
       ]);
-      expect(yield* setup.exitCode).toBe(0);
+      const exitCode3 = yield* setup.exitCode;
+      expect(exitCode3).toBe(0);
       yield* f.fs.writeFileString(`${f.dir}/rollout-valid.jsonl`, line);
       const d = yield* makeTranscriptDiscovery(
         TranscriptDiscoveryInput.make({ ...f.input([f.dir]), maxEntries: 64, maxFiles: 32 })
@@ -266,7 +272,9 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
   it.effect("offers an unrecorded page again before advancing discovery", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      for (const name of ["a", "b", "c", "d"]) yield* f.fs.writeFileString(`${f.dir}/rollout-${name}.jsonl`, line);
+      for (const name of ["a", "b", "c", "d"]) {
+        yield* f.fs.writeFileString(`${f.dir}/rollout-${name}.jsonl`, line);
+      }
       const d = yield* makeTranscriptDiscovery(
         TranscriptDiscoveryInput.make({ ...f.input([f.dir]), maxEntries: 64, maxFiles: 2 })
       );
@@ -275,7 +283,8 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
       const first = yield* d.next;
       expect(first.sources).toHaveLength(2);
       // The sweep for the first page never recorded its reads (an interrupted cycle).
-      expect(paths(yield* d.next)).toEqual(paths(first));
+      const next4 = yield* d.next;
+      expect(paths(next4)).toEqual(paths(first));
       const recorded = yield* runDiscoveredTranscriptSweep(f.config, d, policy);
       expect(recorded.sweep.outcomes).toHaveLength(2);
       const later = yield* d.next;
@@ -304,8 +313,12 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
         }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, tracked))
       );
       expect((yield* Ref.get(handles)).length).toBe(2);
-      for (const handle of yield* Ref.get(handles)) expect(yield* handle.isRunning).toBe(false);
-      expect(yield* d.next.pipe(Effect.flip)).toMatchObject({ reason: "closed" });
+      for (const handle of yield* Ref.get(handles)) {
+        const isRunning1 = yield* handle.isRunning;
+        expect(isRunning1).toBe(false);
+      }
+      const pipe5 = yield* d.next.pipe(Effect.flip);
+      expect(pipe5).toMatchObject({ reason: "closed" });
     })
   )
 );
@@ -313,10 +326,12 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
   it.effect("rejects overlapping or relative declarations before creating helper processes", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      for (const paths of [[f.dir, `${f.dir}/nested`], [f.dir, `${f.dir}/./`], ["relative"], ["/"]])
-        expect(yield* makeTranscriptDiscovery(f.input(paths)).pipe(Effect.flip)).toMatchObject({
+      for (const paths of [[f.dir, `${f.dir}/nested`], [f.dir, `${f.dir}/./`], ["relative"], ["/"]]) {
+        const pipe3 = yield* makeTranscriptDiscovery(f.input(paths)).pipe(Effect.flip);
+        expect(pipe3).toMatchObject({
           reason: "configuration",
         });
+      }
     })
   )
 );
@@ -326,7 +341,8 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
     Effect.gen(function* () {
       const f = yield* fixture();
       const blank = TranscriptDiscoveryInput.make({ ...f.input([f.dir]), hashSalt: Redacted.make("  ") });
-      expect(yield* makeTranscriptDiscovery(blank).pipe(Effect.flip)).toMatchObject({ reason: "configuration" });
+      const pipe6 = yield* makeTranscriptDiscovery(blank).pipe(Effect.flip);
+      expect(pipe6).toMatchObject({ reason: "configuration" });
     })
   )
 );
@@ -354,9 +370,13 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
       ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, stalled));
       const running = yield* d.next.pipe(Effect.forkChild);
       yield* Deferred.await(reading);
-      expect(yield* d.next.pipe(Effect.flip)).toMatchObject({ reason: "busy" });
+      const pipe7 = yield* d.next.pipe(Effect.flip);
+      expect(pipe7).toMatchObject({ reason: "busy" });
       yield* Fiber.interrupt(running);
-      for (const handle of yield* Ref.get(handles)) expect(yield* handle.isRunning).toBe(false);
+      for (const handle of yield* Ref.get(handles)) {
+        const isRunning4 = yield* handle.isRunning;
+        expect(isRunning4).toBe(false);
+      }
     })
   )
 );

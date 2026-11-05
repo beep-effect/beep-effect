@@ -250,10 +250,9 @@ describe("pure goal completion resolver", () => {
       );
       expect(receipt.outcome).toBe("unsatisfied");
       // Rewrite the stored JSON into the shape written before `history` existed.
-      const legacyText = Str.replace(
-        /,"history":"(gating|unread)"/gu,
-        ""
-      )(yield* encodeGoalCompletionReceiptJson(receipt));
+      const argument = Str.replace(/,"history":"(gating|unread)"/gu, "");
+      const encodedGoalCompletionReceiptJson = yield* encodeGoalCompletionReceiptJson(receipt);
+      const legacyText = argument(encodedGoalCompletionReceiptJson);
       expect(Str.includes('"history"')(legacyText)).toBe(false);
       const legacy = yield* decodeGoalCompletionReceiptJson(legacyText);
       const sources = O.getOrThrow(O.flatMap(legacy.requiredChecks, (value) => value.mergeTimeInventory)).ruleSources;
@@ -538,12 +537,15 @@ it.layer(
   it.effect("derives the operative status from the proposal once a matching receipt verifies", () =>
     Effect.gen(function* () {
       const value = manifest();
-      const unverified = O.getOrThrow(yield* goalCloseoutView("unmentioned-packet", value, O.none()));
+      const goalCloseoutView1 = yield* goalCloseoutView("unmentioned-packet", value, O.none());
+      const unverified = O.getOrThrow(goalCloseoutView1);
       expect(unverified.operativeStatus).toBe("active");
       expect(unverified.verification).toBe("unverified");
       expect(renderGoalCloseoutView(unverified)).toBe("completed-retained (proposed via #1429, unverified)");
 
-      const verified = O.getOrThrow(yield* goalCloseoutView("unmentioned-packet", value, O.some(yield* receipt())));
+      const receipt11 = yield* receipt();
+      const goalCloseoutView2 = yield* goalCloseoutView("unmentioned-packet", value, O.some(receipt11));
+      const verified = O.getOrThrow(goalCloseoutView2);
       expect(verified.operativeStatus).toBe("completed-retained");
       expect(verified.verification).toBe("verified");
       expect(renderGoalCloseoutView(verified)).toBe("completed-retained (verified via #1429)");
@@ -560,7 +562,8 @@ it.layer(
         initiative: { id: "unmentioned-packet", status: "active" },
         completionGate: proposalGate,
       });
-      assertNone(yield* goalCloseoutView("unmentioned-packet", value, O.none()));
+      const goalCloseoutView3 = yield* goalCloseoutView("unmentioned-packet", value, O.none());
+      assertNone(goalCloseoutView3);
     })
   );
 
@@ -568,18 +571,22 @@ it.layer(
     Effect.gen(function* () {
       const value = manifest();
       expect(goalPullRequestRefs(value)).toEqual([{ number: 1429, role: "final" }]);
-      expect(yield* projectGoalLifecycle(value, O.none())).toBe("active");
+      const projectGoalLifecycle4 = yield* projectGoalLifecycle(value, O.none());
+      expect(projectGoalLifecycle4).toBe("active");
       expect(compileCapabilityProjection([value]).packets[0]?.status).toBe("active");
       const row = yield* receipt();
-      expect(yield* projectGoalLifecycle(value, O.some(GoalCompletionReceipt.make({ ...row, merge: O.none() })))).toBe(
-        "active"
+      const projectGoalLifecycle5 = yield* projectGoalLifecycle(
+        value,
+        O.some(GoalCompletionReceipt.make({ ...row, merge: O.none() }))
       );
+      expect(projectGoalLifecycle5).toBe("active");
     })
   );
   it.effect("activates a merged proposal with exact-head hosted proof without rewriting its manifest", () =>
     Effect.gen(function* () {
       const value = manifest();
-      const status = yield* projectGoalLifecycle(value, O.some(yield* receipt()));
+      const receipt6 = yield* receipt();
+      const status = yield* projectGoalLifecycle(value, O.some(receipt6));
       expect(status).toBe("completed-retained");
       expect(compileCapabilityProjection([value], { [value.initiative.id]: status }).packets[0]?.status).toBe(
         "completed-retained"
@@ -634,7 +641,10 @@ it.layer(
             ],
           }),
         ];
-        for (const candidate of bad) expect(yield* projectGoalLifecycle(manifest(), O.some(candidate))).toBe("active");
+        for (const candidate of bad) {
+          const projectGoalLifecycle1 = yield* projectGoalLifecycle(manifest(), O.some(candidate));
+          expect(projectGoalLifecycle1).toBe("active");
+        }
       })
   );
   it.effect("validates operative status and final PR identity independently of prose", () =>
@@ -643,8 +653,9 @@ it.layer(
         { ...manifest(), initiative: { id: "unmentioned-packet", status: "completed-retained" } },
         { ...manifest(), proposedCloseout: { ...proposal, status: "achieved" } },
         { ...manifest(), completionGate: { ...proposalGate, pullRequests: [{ number: 99, role: "final" }] } },
-      ])
+      ]) {
         expect((yield* S.decodeUnknownEffect(GoalManifest)(candidate).pipe(Effect.exit))._tag).toBe("Failure");
+      }
       const matching = yield* S.decodeEffect(GoalManifest)({
         ...manifest(),
         completionGate: { ...proposalGate, pullRequests: [{ number: 1429, role: "final" }] },
@@ -668,7 +679,8 @@ it.layer(
         (yield* S.decodeEffect(GoalManifest)({ ...manifest(), completionGate: gate }).pipe(Effect.exit))._tag
       ).toBe("Failure");
       const paused = GoalManifest.make({ ...manifest(), initiative: { id: "unmentioned-packet", status: "paused" } });
-      expect(yield* projectGoalLifecycle(paused, O.none())).toBe("paused");
+      const projectGoalLifecycle7 = yield* projectGoalLifecycle(paused, O.none());
+      expect(projectGoalLifecycle7).toBe("paused");
     })
   );
   const adopted = () => {
@@ -682,10 +694,17 @@ it.layer(
   it.effect("keeps the declaration digest and final PR when a verified proposal becomes a committed record", () =>
     Effect.gen(function* () {
       const record = yield* S.decodeEffect(GoalManifest)(adopted());
-      expect(yield* goalCompletionDeclarationDigest(record)).toBe(yield* goalCompletionDeclarationDigest(manifest()));
+      const goalCompletionDeclarationDigest8 = yield* goalCompletionDeclarationDigest(record);
+      const expectation = expect(goalCompletionDeclarationDigest8);
+      const goalCompletionDeclarationDigest2 = yield* goalCompletionDeclarationDigest(manifest());
+      expectation.toBe(goalCompletionDeclarationDigest2);
       expect(goalPullRequestRefs(record)).toEqual(goalPullRequestRefs(manifest()));
-      expect(yield* projectGoalLifecycle(record, O.some(yield* receipt()))).toBe("completed-retained");
-      assertNone(yield* goalCloseoutView("unmentioned-packet", record, O.some(yield* receipt())));
+      const receipt12 = yield* receipt();
+      const projectGoalLifecycle9 = yield* projectGoalLifecycle(record, O.some(receipt12));
+      expect(projectGoalLifecycle9).toBe("completed-retained");
+      const receipt13 = yield* receipt();
+      const goalCloseoutView10 = yield* goalCloseoutView("unmentioned-packet", record, O.some(receipt13));
+      assertNone(goalCloseoutView10);
       expect(
         renderGoalCloseoutRecord(GoalCloseoutRecord.make({ status: "completed-retained", finalPullRequest: 7 }))
       ).toBe("completed-retained via #7");
@@ -703,8 +722,9 @@ it.layer(
         { ...adopted(), proposedCloseout: proposal },
         { ...adopted(), completionGate: { ...proposalGate, pullRequests: [{ number: 99, role: "final" }] } },
         { ...adopted(), completionGate: gate },
-      ])
+      ]) {
         expect((yield* S.decodeUnknownEffect(GoalManifest)(candidate).pipe(Effect.exit))._tag).toBe("Failure");
+      }
     })
   );
 });

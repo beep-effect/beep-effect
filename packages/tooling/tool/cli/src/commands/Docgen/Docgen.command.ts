@@ -264,17 +264,16 @@ const docgenStatusCommand = Command.make(
       const notConfigured = A.filter(packages, (pkg) => pkg.status === "not-configured");
 
       if (json) {
-        yield* Console.log(
-          yield* renderDocgenJson({
-            packages,
-            summary: {
-              total: packages.length,
-              configuredAndGenerated: configuredAndGenerated.length,
-              configuredNotGenerated: configuredNotGenerated.length,
-              notConfigured: notConfigured.length,
-            },
-          })
-        );
+        const renderDocgenJson1 = yield* renderDocgenJson({
+          packages,
+          summary: {
+            total: packages.length,
+            configuredAndGenerated: configuredAndGenerated.length,
+            configuredNotGenerated: configuredNotGenerated.length,
+            notConfigured: notConfigured.length,
+          },
+        });
+        yield* Console.log(renderDocgenJson1);
         return;
       }
 
@@ -329,7 +328,8 @@ const docgenGenerateCommand = Command.make(
       );
 
       if (json) {
-        yield* Console.log(yield* renderDocgenJson(results));
+        const renderDocgenJson2 = yield* renderDocgenJson(results);
+        yield* Console.log(renderDocgenJson2);
         if (A.some(results, (result) => !result.success)) {
           return yield* failWithReportedExit("docgen: generation failed for one or more package(s).");
         }
@@ -623,23 +623,22 @@ const docgenCheckCommand = Command.make(
       const failures = A.filter(analyses, (analysis) => analysis.summary.missingDocumentation > 0);
 
       if (json) {
-        yield* Console.log(
-          yield* renderDocgenJson({
-            analyses,
-            proofManifests,
-            summary: {
-              packages: targets.length,
-              analyzedPackages: analyses.length,
-              skippedByProofManifest,
-              failingPackages: failures.length,
-              missingDocumentation: A.reduce(
-                failures,
-                0,
-                (total, analysis) => total + analysis.summary.missingDocumentation
-              ),
-            },
-          })
-        );
+        const renderDocgenJson3 = yield* renderDocgenJson({
+          analyses,
+          proofManifests,
+          summary: {
+            packages: targets.length,
+            analyzedPackages: analyses.length,
+            skippedByProofManifest,
+            failingPackages: failures.length,
+            missingDocumentation: A.reduce(
+              failures,
+              0,
+              (total, analysis) => total + analysis.summary.missingDocumentation
+            ),
+          },
+        });
+        yield* Console.log(renderDocgenJson3);
         if (failures.length > 0) {
           return yield* failWithReportedExit("docgen: check found missing documentation.");
         }
@@ -763,7 +762,8 @@ const doctestPlans = (report: DoctestReport): ReadonlyArray<MarkPlan> =>
 const renderDoctestReport = Effect.fn("Docgen.renderDoctestReport")(function* (report: DoctestReport, json: boolean) {
   if (json) {
     const encoded = yield* encodeDoctestReport(report);
-    yield* Console.log(yield* jsonStringifyPretty(encoded));
+    const jsonStringifyPretty4 = yield* jsonStringifyPretty(encoded);
+    yield* Console.log(jsonStringifyPretty4);
     return;
   }
   yield* Console.log(

@@ -297,7 +297,8 @@ export const PermissionContinuityLive = Layer.effect(
               Effect.flatMap(decodeClaudeApp),
               Effect.mapError(() => failure("Cannot decode selected Claude app record"))
             );
-            const transcript = lines(yield* readText(resolve(pair.transcript)));
+            const readText1 = yield* readText(resolve(pair.transcript));
+            const transcript = lines(readText1);
             const decoded = A.map(transcript, (line) => decodeClaudeLine(line));
             const rows = A.getSomes(decoded);
             const modeRow = A.findLast(rows, (row) => row.type === "user" && O.isSome(row.permissionMode));

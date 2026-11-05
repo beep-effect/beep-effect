@@ -39,10 +39,14 @@ const decodeRelativeUriReference = S.decodeUnknownEffect(RelativeURIReference);
 describe("URI", () => {
   it.effect("accepts representative absolute and relative URI forms", () =>
     Effect.gen(function* () {
-      expect(yield* decodeUri("https://example.com/path?q=1#frag")).toBe("https://example.com/path?q=1#frag");
-      expect(yield* decodeAbsoluteUri("mailto:user@example.com")).toBe("mailto:user@example.com");
-      expect(yield* decodeUriReference("../child?q=1")).toBe("../child?q=1");
-      expect(yield* decodeRelativeUriReference("../child?q=1")).toBe("../child?q=1");
+      const decodedUri = yield* decodeUri("https://example.com/path?q=1#frag");
+      expect(decodedUri).toBe("https://example.com/path?q=1#frag");
+      const decodedAbsoluteUri = yield* decodeAbsoluteUri("mailto:user@example.com");
+      expect(decodedAbsoluteUri).toBe("mailto:user@example.com");
+      const decodedUriReference = yield* decodeUriReference("../child?q=1");
+      expect(decodedUriReference).toBe("../child?q=1");
+      const decodedRelativeUriReference = yield* decodeRelativeUriReference("../child?q=1");
+      expect(decodedRelativeUriReference).toBe("../child?q=1");
     })
   );
 

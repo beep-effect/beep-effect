@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "claim-colon-scope-measurement/v1",
+  "strict": 39,
+  "selected": 538,
+  "parsed": 537,
+  "abstained": 455,
+  "strictGains": [],
+  "lostOriginal37": [],
+  "lostPrior39": [],
+  "authoritativeComponentCounts": {
+    "matchedElements": {
+      "before": 711,
+      "after": 724,
+      "claimsImproved": 13,
+      "claimsRegressed": 0
+    },
+    "matchedEdges": {
+      "before": 2024,
+      "after": 2107,
+      "claimsImproved": 20,
+      "claimsRegressed": 0
+    }
+  },
+  "diagnosticNodeMismatchClaims": {
+    "before": 300,
+    "after": 294
+  },
+  "diagnosticOnly": true,
+  "numericalGatesPassed": false,
+  "goalCompletionClaimed": false,
+  "sourceFreeze": "research/implementation-colon-scope-001.json",
+  "implementationDigest": "67fea554cb685ba672d8437e031010ede3b2f84b3f1469bfa06310170206aced",
+  "proof": {
+    "focusedTests": 87,
+    "originalRulesUnchanged": 35,
+    "newScopeTests": 15,
+    "domainAndExplicitTestFallowFindings": 0,
+    "packageAuditSeconds": 16.4,
+    "packageDocgenSeconds": 10.6,
+    "independentReviewRequiredFindings": 0,
+    "reviewFindingRepaired": "Competing active enumeration headers do not establish a unique scope exit"
+  },
+  "evidence": {
+    "results.json": "ffcb5357af53960e50f2025db88a2ad1e264b13aaa9f804b52c82dbaffa951ea",
+    "gates.json": "8f338ab80cbcce0a2a040eec5cd439c39aeb29d8af7efa43862fac19b90ace03",
+    "preservation.json": "97739efe35ddbbb73887ba1559a0c1f15c501422672fd48c871feaf09c750347",
+    "diagnostics.json": "68dcd3d4b2feb079f8c74cd817ea4ab98ec0a8e35ea533c7693db06347b2c519"
+  }
+}

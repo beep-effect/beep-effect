@@ -159,7 +159,8 @@ it.effect(
 
     yield* sendAll(input, [result(initialize.id, v2InitializeResult), result(ext.id, { ok: true })]);
     yield* Fiber.join(initializeFiber);
-    assert.deepEqual(yield* Fiber.join(extFiber), { ok: true });
+    const join1 = yield* Fiber.join(extFiber);
+    assert.deepEqual(join1, { ok: true });
 
     const { answer, outbound } = yield* exchange(
       input,
@@ -257,12 +258,14 @@ A.forEach([1, 2], (protocolVersion) =>
       };
       // `session/elicitation` and the older underscore name (recorded from Devin) get the nested result.
       yield* send(input, request("legacy-question", "session/elicitation", question));
-      assert.deepEqual(yield* takeResponse(output), {
+      const takeResponse2 = yield* takeResponse(output);
+      assert.deepEqual(takeResponse2, {
         id: "legacy-question",
         result: { action: { action: "accept", content: { branch: "main" } } },
       });
       yield* send(input, request("devin-question", "_session/elicitation", question));
-      assert.deepEqual(yield* takeResponse(output), {
+      const takeResponse3 = yield* takeResponse(output);
+      assert.deepEqual(takeResponse3, {
         id: "devin-question",
         result: { action: { action: "accept", content: { branch: "main" } } },
       });
@@ -270,7 +273,8 @@ A.forEach([1, 2], (protocolVersion) =>
       const completed = yield* Deferred.make<Compat.CompleteElicitationNotification>();
       yield* acp.handleElicitationComplete((done) => Deferred.succeed(completed, done).pipe(Effect.asVoid));
       yield* send(input, notification("session/elicitation/complete", { elicitationId: "legacy-login" }));
-      assert.deepEqual(yield* Deferred.await(completed), { elicitationId: "legacy-login" });
+      const await4 = yield* Deferred.await(completed);
+      assert.deepEqual(await4, { elicitationId: "legacy-login" });
 
       const promptFiber = yield* Effect.forkScoped(
         acp.agent.prompt({ sessionId: "native-session-1", prompt: [{ type: "text", text: "hello" }] })
@@ -287,8 +291,10 @@ A.forEach([1, 2], (protocolVersion) =>
         }),
         result(prompt.id, { stopReason: "end_turn" }),
       ]);
-      assert.deepEqual(yield* Fiber.join(promptFiber), { stopReason: "end_turn" });
-      assert.deepEqual(yield* Ref.get(updates), [
+      const join5 = yield* Fiber.join(promptFiber);
+      assert.deepEqual(join5, { stopReason: "end_turn" });
+      const got = yield* Ref.get(updates);
+      assert.deepEqual(got, [
         {
           sessionId: "native-session-1",
           update: {
@@ -326,7 +332,8 @@ it.effect(
       acp.agent.setProvider({ providerId: "provider", apiType: "openai", baseUrl: "https://x.test" })
     );
     yield* expectMethodNotFound(acp.agent.disableProvider({ providerId: "provider" }));
-    assert.equal(yield* Queue.size(output), 0);
+    const size6 = yield* Queue.size(output);
+    assert.equal(size6, 0);
 
     const mode = yield* exchange(input, output, acp.agent.setSessionMode({ sessionId: "session-1", modeId: "ask" }));
     assert.equal(mode.outbound.method, "session/set_mode");
@@ -367,7 +374,8 @@ it.effect(
       ["session/delete", { sessionId: "session-1" }]
     );
     yield* expectMethodNotFound(acp.agent.setSessionMode({ sessionId: "session-1", modeId: "ask" }));
-    assert.equal(yield* Queue.size(output), 0);
+    const size7 = yield* Queue.size(output);
+    assert.equal(size7, 0);
   })
 );
 
@@ -412,8 +420,9 @@ it.effect(
       A.map(responses, ({ id }) => id),
       ["permission-a", "permission-b"]
     );
+    const got8 = yield* Ref.get(contexts);
     assert.sameDeepMembers(
-      A.map(yield* Ref.get(contexts), ({ method, requestId }) => ({ method, requestId })),
+      A.map(got8, ({ method, requestId }) => ({ method, requestId })),
       [
         { method: "session/request_permission", requestId: "permission-a" },
         { method: "session/request_permission", requestId: "permission-b" },
@@ -431,7 +440,8 @@ it.effect(
     yield* acp.handleRequestPermission((permission) => Deferred.succeed(received, permission).pipe(Effect.as(allow)));
 
     yield* send(input, request(9, "session/request_permission", toolCallPermission));
-    assert.deepEqual(yield* takeResponse(output), { id: 9, result: allow });
+    const takeResponse9 = yield* takeResponse(output);
+    assert.deepEqual(takeResponse9, { id: 9, result: allow });
     assert.deepEqual((yield* Deferred.await(received)).toolCall, { toolCallId: "shared-tool", title: "Shared tool" });
   })
 );
@@ -463,7 +473,8 @@ it.effect(
       idle("agent-session-1", { _meta: meta }),
     ]);
 
-    assert.deepEqual(yield* Fiber.join(promptFiber), { stopReason: "end_turn", _meta: meta });
+    const join10 = yield* Fiber.join(promptFiber);
+    assert.deepEqual(join10, { stopReason: "end_turn", _meta: meta });
   })
 );
 
@@ -478,16 +489,19 @@ it.effect(
 
     const rejected = yield* expectFailure(acp.agent.prompt(prompt));
     assert.equal(rejected.message, "ACP session 'session-1' already has an active prompt.");
-    assert.equal(yield* Queue.size(output), 0);
+    const size11 = yield* Queue.size(output);
+    assert.equal(size11, 0);
 
     yield* sendAll(input, [result(firstRequest.id, {}), idle("session-1")]);
-    assert.deepEqual(yield* Fiber.join(first), { stopReason: "end_turn" });
+    const join12 = yield* Fiber.join(first);
+    assert.deepEqual(join12, { stopReason: "end_turn" });
 
     // The session accepts a new prompt once the first one completed.
     const second = yield* Effect.forkScoped(acp.agent.prompt(prompt));
     const secondRequest = yield* takeRequest(output);
     yield* sendAll(input, [result(secondRequest.id, {}), idle("session-1", { stopReason: "cancelled" })]);
-    assert.deepEqual(yield* Fiber.join(second), { stopReason: "cancelled" });
+    const join13 = yield* Fiber.join(second);
+    assert.deepEqual(join13, { stopReason: "cancelled" });
   })
 );
 
@@ -503,7 +517,8 @@ it.effect(
     const first = yield* Effect.forkScoped(acp.agent.prompt(prompt));
     const firstRequest = yield* takeRequest(output);
     yield* sendAll(input, [result(firstRequest.id, {}), idle("session-1", { usage: { totalTokens: 1 } })]);
-    assert.deepEqual(yield* Fiber.join(first), { stopReason: "end_turn" });
+    const join14 = yield* Fiber.join(first);
+    assert.deepEqual(join14, { stopReason: "end_turn" });
 
     const second = yield* Effect.forkScoped(acp.agent.prompt(prompt));
     const secondRequest = yield* takeRequest(output);
@@ -511,7 +526,8 @@ it.effect(
       result(secondRequest.id, {}),
       idle("session-1", { stopReason: "cancelled", error: "not an error object", usage: "unknown" }),
     ]);
-    assert.deepEqual(yield* Fiber.join(second), { stopReason: "cancelled" });
+    const join15 = yield* Fiber.join(second);
+    assert.deepEqual(join15, { stopReason: "cancelled" });
   })
 );
 
@@ -557,13 +573,15 @@ A.forEach(["v1", "v2"] as const, (protocolGeneration) =>
       yield* protocolGeneration === "v1"
         ? send(input, result(outbound.id, { stopReason: "end_turn" }))
         : sendAll(input, [result(outbound.id, {}), idle("session-1")]);
-      assert.deepEqual(yield* Fiber.join(promptFiber), { stopReason: "end_turn" });
+      const join16 = yield* Fiber.join(promptFiber);
+      assert.deepEqual(join16, { stopReason: "end_turn" });
 
       // A sentinel without an original content block fails locally instead of reaching the agent.
       const opaque = Compat.UnknownContent.make({ type: Compat.ACP_UNKNOWN, originalType: "chart", raw: 5 });
       const rejected = yield* expectFailure(acp.agent.prompt({ sessionId: "session-1", prompt: [opaque] }));
       assert.equal(AcpError.AcpRequestError.is(rejected) ? rejected.code : 0, -32602);
-      assert.equal(yield* Queue.size(output), 0);
+      const size17 = yield* Queue.size(output);
+      assert.equal(size17, 0);
     })
   )
 );
@@ -585,9 +603,12 @@ it.effect(
 
     const terminal = yield* Deferred.await(terminated);
     assert.equal(terminal._tag, "AcpInputStreamEndedError");
-    assert.strictEqual(yield* promptFiber.pipe(Fiber.join, expectFailure), terminal);
-    assert.strictEqual(yield* expectFailure(acp.agent.listSessions({})), terminal);
-    assert.strictEqual(yield* expectFailure(acp.agent.cancel({ sessionId: "session-1" })), terminal);
+    const pipe18 = yield* promptFiber.pipe(Fiber.join, expectFailure);
+    assert.strictEqual(pipe18, terminal);
+    const expectFailure19 = yield* expectFailure(acp.agent.listSessions({}));
+    assert.strictEqual(expectFailure19, terminal);
+    const expectFailure20 = yield* expectFailure(acp.agent.cancel({ sessionId: "session-1" }));
+    assert.strictEqual(expectFailure20, terminal);
   })
 );
 
@@ -639,7 +660,8 @@ it.effect(
       assert.deepEqual(error.method, O.some("session/list"));
     }
     yield* send(input, result(secondRequest.id, { sessions: [] }));
-    assert.deepEqual(yield* Fiber.join(second), { sessions: [] });
+    const join21 = yield* Fiber.join(second);
+    assert.deepEqual(join21, { sessions: [] });
   })
 );
 
@@ -667,7 +689,8 @@ it.effect(
       request("typed-1", "x/typed_request", { message: "hello from typed request" }),
     ]);
     // The typed request is read after every earlier notification was dispatched.
-    assert.deepEqual(yield* takeResponse(output), {
+    const takeResponse22 = yield* takeResponse(output);
+    assert.deepEqual(takeResponse22, {
       id: "typed-1",
       result: { ok: true, echoedMessage: "hello from typed request" },
     });
@@ -677,10 +700,14 @@ it.effect(
     yield* acp.handleSessionUpdate((update) => Ref.update(updates, A.append(update)));
     yield* acp.handleElicitationComplete((done) => Ref.update(completions, A.append(done)));
 
-    assert.lengthOf(yield* Ref.get(updates), 2);
-    assert.deepEqual(yield* Ref.get(completions), [{ elicitationId: "elicitation-1" }]);
-    assert.deepEqual(yield* Ref.get(typedRequests), [{ message: "hello from typed request" }]);
-    assert.deepEqual(yield* Ref.get(typedNotifications), [{ count: 2 }]);
+    const got23 = yield* Ref.get(updates);
+    assert.lengthOf(got23, 2);
+    const got24 = yield* Ref.get(completions);
+    assert.deepEqual(got24, [{ elicitationId: "elicitation-1" }]);
+    const got25 = yield* Ref.get(typedRequests);
+    assert.deepEqual(got25, [{ message: "hello from typed request" }]);
+    const got26 = yield* Ref.get(typedNotifications);
+    assert.deepEqual(got26, [{ count: 2 }]);
   })
 );
 
@@ -753,13 +780,17 @@ it.effect(
 
     const terminal = { sessionId: "session-1", terminalId: "terminal-1" };
     yield* send(input, request(1, "fs/read_text_file", { sessionId: "session-1", path: "/work/a.txt" }));
-    assert.deepEqual(yield* takeResponse(output), { id: 1, result: { content: "file text" } });
+    const takeResponse27 = yield* takeResponse(output);
+    assert.deepEqual(takeResponse27, { id: 1, result: { content: "file text" } });
     yield* send(input, request(2, "fs/write_text_file", { sessionId: "session-1", path: "/work/a.txt", content: "x" }));
-    assert.deepEqual(yield* takeResponse(output), { id: 2, result: {} });
+    const takeResponse28 = yield* takeResponse(output);
+    assert.deepEqual(takeResponse28, { id: 2, result: {} });
     yield* send(input, request(3, "terminal/kill", terminal));
-    assert.deepEqual(yield* takeResponse(output), { id: 3, result: {} });
+    const takeResponse29 = yield* takeResponse(output);
+    assert.deepEqual(takeResponse29, { id: 3, result: {} });
     yield* send(input, request(4, "terminal/release", terminal));
-    assert.deepEqual(yield* takeResponse(output), { id: 4, result: {} });
+    const takeResponse30 = yield* takeResponse(output);
+    assert.deepEqual(takeResponse30, { id: 4, result: {} });
     // No terminal/create handler is registered.
     yield* send(input, request(5, "terminal/create", { sessionId: "session-1", command: "ls" }));
     assert.equal((yield* takeError(output)).error.code, -32601);
@@ -778,15 +809,18 @@ it.effect(
     const params = { serverId: "test-server", requestId: "mcp-1", method: "tools/list" };
 
     yield* send(input, request(1, "mcp/message", params));
-    assert.deepEqual(yield* takeResponse(output), { id: 1, result: { result: { tools: [] } } });
-    assert.deepEqual(yield* Deferred.await(received), params);
+    const takeResponse31 = yield* takeResponse(output);
+    assert.deepEqual(takeResponse31, { id: 1, result: { result: { tools: [] } } });
+    const await32 = yield* Deferred.await(received);
+    assert.deepEqual(await32, params);
     // schema-v2.0.0-alpha.9 and schema-v1.26.0 removed `mcp/connect` and `mcp/disconnect`.
     yield* send(input, request(2, "mcp/connect", { serverId: "test-server" }));
     assert.equal((yield* takeError(output)).error.code, -32601);
 
     const progress = { serverId: "test-server", requestId: "mcp-1", method: "notifications/progress" };
     yield* acp.agent.notifyMcp(progress);
-    assert.deepEqual(yield* takeNotification(output), { method: "mcp/message", params: progress });
+    const takeNotification33 = yield* takeNotification(output);
+    assert.deepEqual(takeNotification33, { method: "mcp/message", params: progress });
   })
 );
 
@@ -815,11 +849,13 @@ A.forEach(["accept", "decline", "cancel"] as const, (action) =>
         yield* acp.handleElicitation((question) => Deferred.succeed(received, question).pipe(Effect.as(response)));
 
         yield* send(input, request(71, method, elicitationForm));
-        assert.deepEqual(yield* takeResponse(output), {
+        const takeResponse34 = yield* takeResponse(output);
+        assert.deepEqual(takeResponse34, {
           id: 71,
           result: method === "elicitation/create" ? response : { action: answer, _meta: response._meta },
         });
-        assert.deepEqual(yield* Deferred.await(received), elicitationForm);
+        const await35 = yield* Deferred.await(received);
+        assert.deepEqual(await35, elicitationForm);
       })
     )
   )
@@ -834,7 +870,8 @@ A.forEach(["elicitation/complete", "session/elicitation/complete"], (method) =>
       const received = yield* Deferred.make<Compat.CompleteElicitationNotification>();
       yield* acp.handleElicitationComplete((done) => Deferred.succeed(received, done).pipe(Effect.asVoid));
       yield* send(input, notification(method, { elicitationId: "elicitation-1" }));
-      assert.deepEqual(yield* Deferred.await(received), { elicitationId: "elicitation-1" });
+      const await36 = yield* Deferred.await(received);
+      assert.deepEqual(await36, { elicitationId: "elicitation-1" });
     })
   )
 );
@@ -851,7 +888,8 @@ it.effect(
     const rejected = yield* takeError(output);
     assert.equal(rejected.error.code, -32602);
     assert.notInclude(rejected.error.message, "123");
-    assert.equal(yield* Ref.get(calls), 0);
+    const got37 = yield* Ref.get(calls);
+    assert.equal(got37, 0);
   })
 );
 
@@ -875,7 +913,8 @@ it.effect(
     const received = yield* Deferred.make<string>();
     yield* acp.handleSessionUpdate((update) => Deferred.succeed(received, update.sessionId).pipe(Effect.asVoid));
     yield* send(input, textChunk("session-1", "hi"));
-    assert.equal(yield* Deferred.await(received), "seen:session-1");
+    const await38 = yield* Deferred.await(received);
+    assert.equal(await38, "seen:session-1");
   })
 );
 
@@ -1006,7 +1045,8 @@ it.effect(
     const next = yield* Effect.forkScoped(acp.agent.prompt(prompt));
     const nextRequest = yield* takeRequest(output);
     yield* sendAll(input, [result(nextRequest.id, {}), idle("session-1")]);
-    assert.deepEqual(yield* Fiber.join(next), { stopReason: "end_turn" });
+    const join39 = yield* Fiber.join(next);
+    assert.deepEqual(join39, { stopReason: "end_turn" });
   })
 );
 
@@ -1025,9 +1065,12 @@ it.effect(
     );
 
     yield* sendAll(input, [notification("x/unregistered", { hello: "world" }), notification("x/known", { count: 1 })]);
-    assert.deepEqual(yield* Queue.take(unknown), ["x/unregistered", { hello: "world" }]);
-    assert.deepEqual(yield* Queue.take(known), { count: 1 });
-    assert.equal(yield* Queue.size(unknown), 0);
+    const take40 = yield* Queue.take(unknown);
+    assert.deepEqual(take40, ["x/unregistered", { hello: "world" }]);
+    const take41 = yield* Queue.take(known);
+    assert.deepEqual(take41, { count: 1 });
+    const size42 = yield* Queue.size(unknown);
+    assert.equal(size42, 0);
   })
 );
 
@@ -1042,7 +1085,8 @@ it.effect(
 
     const terminal = yield* pending.pipe(Fiber.join, expectFailure);
     assert.equal(terminal._tag, "AcpInputStreamEndedError");
-    assert.strictEqual(yield* expectFailure(acp.agent.listSessions({})), terminal);
+    const expectFailure43 = yield* expectFailure(acp.agent.listSessions({}));
+    assert.strictEqual(expectFailure43, terminal);
   })
 );
 
@@ -1090,18 +1134,17 @@ it.layer(SpawnerLayer, { timeout: "30 seconds" })("effect-acp client child-proce
       const handle = yield* spawnChildAgent(echoAgentScript);
       yield* handle.stderr.pipe(Stream.runDrain, Effect.forkScoped);
       const chunks = yield* Ref.make(0);
-      const acp = Context.get(
-        yield* Layer.build(
-          AcpClient.layerChildProcess({
-            handle,
-            transformStdout: Stream.tap(() => Ref.update(chunks, (count) => count + 1)),
-          })
-        ),
-        AcpClient.AcpClient
+      const build44 = yield* Layer.build(
+        AcpClient.layerChildProcess({
+          handle,
+          transformStdout: Stream.tap(() => Ref.update(chunks, (count) => count + 1)),
+        })
       );
+      const acp = Context.get(build44, AcpClient.AcpClient);
       const sessions = yield* acp.agent.listSessions({});
       assert.deepEqual(sessions, { sessions: [] });
-      assert.isAtLeast(yield* Ref.get(chunks), 1);
+      const got45 = yield* Ref.get(chunks);
+      assert.isAtLeast(got45, 1);
     })
   );
 
@@ -1185,10 +1228,12 @@ it.layer(Logger.layer([errorCollector]), { timeout: "10 seconds" })("effect-acp 
       assert.equal((yield* takeError(output)).id, "ext-a");
 
       yield* sendAll(input, [notification("x/notification-dies", {}), textChunk("session-1", "hi")]);
-      assert.equal(yield* Queue.take(updates), "session-1");
+      const take46 = yield* Queue.take(updates);
+      assert.equal(take46, "session-1");
 
       yield* send(input, request("ext-b", "x/test", { hello: "world" }));
-      assert.deepEqual(yield* takeResponse(output), { id: "ext-b", result: { ok: true } });
+      const takeResponse47 = yield* takeResponse(output);
+      assert.deepEqual(takeResponse47, { id: "ext-b", result: { ok: true } });
 
       assert.deepEqual(A.sort(errorLogs, Str.Order), [
         "ACP extension request handler failed for 'x/dies'",

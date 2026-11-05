@@ -21,7 +21,8 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
         const digest = yield* digestFile(fs, "/digest-property", "sha256");
         assert.deepStrictEqual(digest, sha256(bytes));
         assert.deepStrictEqual(sha256(text), digest);
-        assert.strictEqual(yield* digestFileHex("/digest-property", "sha256")(fs), sha256Hex(bytes));
+        const value = yield* digestFileHex("/digest-property", "sha256")(fs);
+        assert.strictEqual(value, sha256Hex(bytes));
         assert.strictEqual(Hex.encode(digest), sha256Hex(text));
       }),
     runs

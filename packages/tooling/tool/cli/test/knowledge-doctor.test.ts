@@ -594,11 +594,14 @@ describe("knowledge doctor scan", () => {
             "goals/demo/history/b.md": "`goals/y.md`",
           },
         });
-        const first = yield* encodeKnowledgeDoctorReportJson(yield* scanKnowledgeDoctorTree(tree));
-        const second = yield* encodeKnowledgeDoctorReportJson(yield* scanKnowledgeDoctorTree(tree));
+        const scanKnowledgeDoctorTree1 = yield* scanKnowledgeDoctorTree(tree);
+        const first = yield* encodeKnowledgeDoctorReportJson(scanKnowledgeDoctorTree1);
+        const scanKnowledgeDoctorTree2 = yield* scanKnowledgeDoctorTree(tree);
+        const second = yield* encodeKnowledgeDoctorReportJson(scanKnowledgeDoctorTree2);
         assert.strictEqual(first, second);
         const decoded = yield* decodeKnowledgeDoctorReportJson(first);
-        assert.strictEqual(yield* encodeKnowledgeDoctorReportJson(decoded), first);
+        const encodedKnowledgeDoctorReportJson = yield* encodeKnowledgeDoctorReportJson(decoded);
+        assert.strictEqual(encodedKnowledgeDoctorReportJson, first);
         // goals/demo tracks a file but no manifest, so the goals doctor's manifest-missing is listed as delegated.
         assert.include(renderKnowledgeDoctorHumanReport(decoded), "blocking findings (3) under 3 root(s):");
       })
@@ -680,9 +683,11 @@ describe("knowledge doctor counterfactual harness", () => {
         const withoutGlobal = overlayWithout(tree, CommandNodeWitness.make({ commandPath: [], option: "help" }));
         assert.strictEqual(A.length(withoutGlobal.globalOptions), A.length(KNOWLEDGE_CLI_GLOBAL_FLAGS) - 1);
         const withoutRoot = overlayWithout(tree, CommandNodeWitness.make({ commandPath: [] }));
-        assertNone(yield* withoutRoot.commandTree);
+        const commandTree3 = yield* withoutRoot.commandTree;
+        assertNone(commandTree3);
         const withoutRefs = overlayWithout(tree, CommandNodeWitness.make({ commandPath: ["knowledge", "refs"] }));
-        const resolution = O.map(yield* withoutRefs.commandTree, (root) =>
+        const commandTree4 = yield* withoutRefs.commandTree;
+        const resolution = O.map(commandTree4, (root) =>
           KnowledgeCommandSurface.resolveStaticCommand(root, ["knowledge", "refs"])
         );
         assert.deepStrictEqual(O.getOrNull(resolution), ["unknown", ["knowledge", "refs"]]);

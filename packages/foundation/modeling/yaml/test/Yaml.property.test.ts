@@ -14,7 +14,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -48,8 +49,10 @@ describe("facade properties", () => {
       Effect.gen(function* () {
         const bound = Yaml.bind(Value);
         const text = yield* bound.encode(value);
-        assert.deepStrictEqual(yield* bound.decode(text), value);
-        assert.deepStrictEqual(yield* S.decodeEffect(bound.schema)(text), value);
+        const decoded2 = yield* bound.decode(text);
+        assert.deepStrictEqual(decoded2, value);
+        const value3 = yield* S.decodeEffect(bound.schema)(text);
+        assert.deepStrictEqual(value3, value);
       }),
     runs
   );
@@ -63,8 +66,11 @@ describe("facade properties", () => {
         const parsed = yield* Yaml.parse(input);
         const canonical = yield* Yaml.stringify(parsed);
         assert.deepStrictEqual(parsed, value);
-        assert.deepStrictEqual(yield* Yaml.parse(canonical), parsed);
-        assert.strictEqual(yield* Yaml.stringify(yield* Yaml.parse(canonical)), canonical);
+        const parsed4 = yield* Yaml.parse(canonical);
+        assert.deepStrictEqual(parsed4, parsed);
+        const parsed7 = yield* Yaml.parse(canonical);
+        const stringify5 = yield* Yaml.stringify(parsed7);
+        assert.strictEqual(stringify5, canonical);
         assertSuccess(Yaml.parseResult(input), parsed);
         assertSuccess(Yaml.stringifyResult(parsed), canonical);
         const stream = `${input}---\n${text}`;
@@ -72,10 +78,12 @@ describe("facade properties", () => {
         assert.deepStrictEqual(values, [value, value]);
         assertSuccess(Yaml.parseAllResult(stream), values);
         const rendered = yield* S.encodeEffect(All)([value, value]);
-        assert.deepStrictEqual(yield* Yaml.parseAll(rendered), values);
+        const parsedAll = yield* Yaml.parseAll(rendered);
+        assert.deepStrictEqual(parsedAll, values);
         const stripped = Yaml.stripComments(input);
         assert.strictEqual(Yaml.stripComments(stripped), stripped);
-        assert.deepStrictEqual(yield* Yaml.parse(stripped), value);
+        const parsed6 = yield* Yaml.parse(stripped);
+        assert.deepStrictEqual(parsed6, value);
         assert.isTrue(Yaml.equals(input, canonical));
         assert.isTrue(Yaml.equalsValue(input, value));
       }),

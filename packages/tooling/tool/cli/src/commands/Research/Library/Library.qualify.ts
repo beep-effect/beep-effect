@@ -63,11 +63,12 @@ export const qualifyLibrary = Effect.fn("Library.qualify")(function* (
   root: string,
   options = LibraryQualifyOptions.make({ adapters: [], sourceIds: [], maxProbes: 3 })
 ) {
-  if (A.contains(options.adapters, removedLibraryWebAdapter))
+  if (A.contains(options.adapters, removedLibraryWebAdapter)) {
     return yield* LibraryError.make({
       message: `Adapter ${removedLibraryWebAdapter} was removed and cannot be probed; its retained receipts still verify.`,
       cause: "options",
     });
+  }
   const catalog = yield* loadCatalog(root);
   const captureProbeCandidates = Effect.fn("Library.qualify.captureProbeCandidates")(function* (
     initial: LibrarySource,
@@ -83,7 +84,8 @@ export const qualifyLibrary = Effect.fn("Library.qualify")(function* (
     return { capturedSource, capture };
   });
   const probeAdapter = Effect.fn("Library.qualify.probeAdapter")(function* (adapter: string) {
-    const recordedAt = DateTime.formatIso(yield* DateTime.now);
+    const now1 = yield* DateTime.now;
+    const recordedAt = DateTime.formatIso(now1);
     const id = yield* hashBytes(new TextEncoder().encode(`${adapter}\n${recordedAt}`));
     const candidates = A.take(
       A.filter(
@@ -125,10 +127,12 @@ export const qualifyLibrary = Effect.fn("Library.qualify")(function* (
       complete: capture.complete,
       artifacts: capture.artifacts,
     });
+    const argument = `qualifications/${id}/probe.json`;
+    const encodedLibraryJson = yield* encodeLibraryJson(probe);
     const evidence = yield* saveLibraryText(
       root,
-      `qualifications/${id}/probe.json`,
-      yield* encodeLibraryJson(probe),
+      argument,
+      encodedLibraryJson,
       "application/json",
       "qualification-probe"
     );

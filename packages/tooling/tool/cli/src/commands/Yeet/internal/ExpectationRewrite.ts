@@ -605,7 +605,8 @@ export const verifyExpectationRewrites = Effect.fn("Yeet.verifyExpectationRewrit
   }
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const home = O.getOrElse(yield* configStringOption("HOME"), () => repoRoot);
+  const configStringOption1 = yield* configStringOption("HOME");
+  const home = O.getOrElse(configStringOption1, () => repoRoot);
   const cacheRoot = path.join(home, ".cache", "beep", "final-check");
   yield* fs.makeDirectory(cacheRoot, { recursive: true }).pipe(Effect.mapError(commandFailure("mkdir")));
   const baseRoot = path.join(cacheRoot, `base-${Str.slice(0, 12)(mergeBase)}-${yield* Clock.currentTimeMillis}`);

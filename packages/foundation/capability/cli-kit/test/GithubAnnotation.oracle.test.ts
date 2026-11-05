@@ -2,10 +2,14 @@ import { GithubAnnotation } from "@beep/cli-kit";
 import { WorkflowCommand } from "@beep/github-commands";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { GithubAnnotationProperties } from "@beep/cli-kit";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 type Level = "error" | "warning" | "notice";
 const LEVELS: ReadonlyArray<Level> = ["error", "warning", "notice"];
@@ -78,7 +82,7 @@ describe("GithubAnnotation.format against the WorkflowCommand oracle", () => {
         assert.strictEqual(
           GithubAnnotation.format({ level }, message),
           oracle({ level }, message),
-          JSON.stringify(message)
+          Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(message), identity)
         );
       }
     }
@@ -93,7 +97,7 @@ describe("GithubAnnotation.format against the WorkflowCommand oracle", () => {
           assert.strictEqual(
             GithubAnnotation.format(annotation, "m"),
             oracle(annotation, "m"),
-            `${level} ${key} ${JSON.stringify(value)}`
+            `${level} ${key} ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)}`
           );
         }
         const all: GithubAnnotationProperties.Encoded = {
@@ -108,7 +112,7 @@ describe("GithubAnnotation.format against the WorkflowCommand oracle", () => {
         assert.strictEqual(
           GithubAnnotation.format(all, value),
           oracle(all, value),
-          `${level} all ${JSON.stringify(value)}`
+          `${level} all ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)}`
         );
       }
     }
@@ -134,7 +138,7 @@ describe("GithubAnnotation.format against the WorkflowCommand oracle", () => {
       assert.strictEqual(
         GithubAnnotation.format({ level: "error" }, message),
         oracle({ level: "error" }, message),
-        JSON.stringify(message)
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(message), identity)
       );
       cases++;
     }
@@ -145,7 +149,7 @@ describe("GithubAnnotation.format against the WorkflowCommand oracle", () => {
         assert.strictEqual(
           GithubAnnotation.format(annotation, "m"),
           oracle(annotation, "m"),
-          JSON.stringify([title, file])
+          Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)([title, file]), identity)
         );
         cases++;
       }
@@ -169,7 +173,7 @@ describe("GithubAnnotation.format against the WorkflowCommand oracle", () => {
         assert.deepStrictEqual(
           decoded,
           { level: "error", properties: { title, file: `f${title}`, line: "3", col: "4" }, message },
-          JSON.stringify([message, title])
+          Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)([message, title]), identity)
         );
       }
     }
@@ -184,7 +188,7 @@ describe("GithubAnnotation.format against the WorkflowCommand oracle", () => {
       "::debug::x\n::add-mask::secret",
     ]) {
       const out = GithubAnnotation.format({ level: "error", title: "t\n::error::x" }, message);
-      assert.notMatch(out, /[\r\n]/, JSON.stringify(message));
+      assert.notMatch(out, /[\r\n]/, Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(message), identity));
       assert.lengthOf(A.fromIterable(Str.matchAll(/^::/gm)(out)), 1, "exactly one command on the line");
     }
   });

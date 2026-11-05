@@ -225,7 +225,9 @@ describe("@beep/ciops KPI contract", () => {
     Effect.gen(function* () {
       const EpisodeJson = S.fromJsonString(KpiEpisode);
       const json = yield* S.encodeEffect(EpisodeJson)(episode);
-      expect(S.toEquivalence(KpiEpisode)(yield* S.decodeEffect(EpisodeJson)(json), episode)).toBe(true);
+      const argument = S.toEquivalence(KpiEpisode);
+      const value = yield* S.decodeEffect(EpisodeJson)(json);
+      expect(argument(value, episode)).toBe(true);
       expect(json).toContain('"changeEventId":"iv-1427-push-first-publish"');
       expect(json).toContain('"adoption":"pre"');
     })
@@ -259,9 +261,13 @@ describe("@beep/ciops KPI contract", () => {
     ([episode, row]) =>
       Effect.gen(function* () {
         const episodeEncoded = yield* S.encodeEffect(KpiEpisode)(episode);
-        expect(S.toEquivalence(KpiEpisode)(yield* S.decodeEffect(KpiEpisode)(episodeEncoded), episode)).toBe(true);
+        const argument1 = S.toEquivalence(KpiEpisode);
+        const value1 = yield* S.decodeEffect(KpiEpisode)(episodeEncoded);
+        expect(argument1(value1, episode)).toBe(true);
         const rowEncoded = yield* S.encodeEffect(ChangeEventRow)(row);
-        expect(S.toEquivalence(ChangeEventRow)(yield* S.decodeEffect(ChangeEventRow)(rowEncoded), row)).toBe(true);
+        const argument2 = S.toEquivalence(ChangeEventRow);
+        const value2 = yield* S.decodeEffect(ChangeEventRow)(rowEncoded);
+        expect(argument2(value2, row)).toBe(true);
       }),
     { arbitrary: fcRuns(64) }
   );
@@ -276,13 +282,21 @@ describe("@beep/ciops KPI contract", () => {
     ],
     ([adoption, percentile, starvation, replica]) =>
       Effect.gen(function* () {
-        const adoptionBack = yield* S.decodeEffect(AdoptionTableRow)(yield* S.encodeEffect(AdoptionTableRow)(adoption));
+        const argument3 = S.decodeEffect(AdoptionTableRow);
+        const value3 = yield* S.encodeEffect(AdoptionTableRow)(adoption);
+        const adoptionBack = yield* argument3(value3);
         expect(S.toEquivalence(AdoptionTableRow)(adoptionBack, adoption)).toBe(true);
-        const percentileBack = yield* S.decodeEffect(PercentileRow)(yield* S.encodeEffect(PercentileRow)(percentile));
+        const argument4 = S.decodeEffect(PercentileRow);
+        const value4 = yield* S.encodeEffect(PercentileRow)(percentile);
+        const percentileBack = yield* argument4(value4);
         expect(S.toEquivalence(PercentileRow)(percentileBack, percentile)).toBe(true);
-        const starvationBack = yield* S.decodeEffect(StarvationRow)(yield* S.encodeEffect(StarvationRow)(starvation));
+        const argument5 = S.decodeEffect(StarvationRow);
+        const value5 = yield* S.encodeEffect(StarvationRow)(starvation);
+        const starvationBack = yield* argument5(value5);
         expect(S.toEquivalence(StarvationRow)(starvationBack, starvation)).toBe(true);
-        const replicaBack = yield* S.decodeEffect(M1ReplicaRow)(yield* S.encodeEffect(M1ReplicaRow)(replica));
+        const argument6 = S.decodeEffect(M1ReplicaRow);
+        const value6 = yield* S.encodeEffect(M1ReplicaRow)(replica);
+        const replicaBack = yield* argument6(value6);
         expect(S.toEquivalence(M1ReplicaRow)(replicaBack, replica)).toBe(true);
       }),
     { arbitrary: fcRuns(64) }
@@ -293,9 +307,9 @@ describe("@beep/ciops KPI contract", () => {
     [Arbitrary.schema(Cq012Decomposition)],
     ([decomposition]) =>
       Effect.gen(function* () {
-        const back = yield* S.decodeEffect(Cq012Decomposition)(
-          yield* S.encodeEffect(Cq012Decomposition)(decomposition)
-        );
+        const argument7 = S.decodeEffect(Cq012Decomposition);
+        const value7 = yield* S.encodeEffect(Cq012Decomposition)(decomposition);
+        const back = yield* argument7(value7);
         expect(S.toEquivalence(Cq012Decomposition)(back, decomposition)).toBe(true);
       }),
     { arbitrary: fcRuns(64) }

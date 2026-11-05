@@ -23,7 +23,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(equivalent(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -40,11 +41,10 @@ describe("VersioningStrategy schema laws", () => {
 it.effect("detection options reuse the exact optional fixed-groups field without defaults", () =>
   Effect.gen(function* () {
     assert.strictEqual(VersioningDetectOptions.fields.fixedGroups, ClassifyOptions.fields.fixedGroups);
-    assert.deepStrictEqual(yield* S.decodeEffect(VersioningDetectOptions)({}), {});
-    assert.deepStrictEqual(
-      yield* S.decodeEffect(VersioningDetectOptions)({ fixedGroups: [["", "missing-package"], []] }),
-      { fixedGroups: [["", "missing-package"], []] }
-    );
+    const value2 = yield* S.decodeEffect(VersioningDetectOptions)({});
+    assert.deepStrictEqual(value2, {});
+    const value3 = yield* S.decodeEffect(VersioningDetectOptions)({ fixedGroups: [["", "missing-package"], []] });
+    assert.deepStrictEqual(value3, { fixedGroups: [["", "missing-package"], []] });
     assert.isFalse(S.is(VersioningDetectOptions)({ fixedGroups: undefined }));
   })
 );

@@ -47,7 +47,7 @@ import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
@@ -59,6 +59,8 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import type { ParcelId } from "@beep/palantiri";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const decodeParcelCatalogJson = S.decodeEffect(S.fromJsonString(ParcelCatalog));
 const captureOutput = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
@@ -165,7 +167,10 @@ const toolText = Effect.fnUntraced(function* (name: keyof typeof PalantiriToolki
   const final = A.findLast(results, (result) => !result.preliminary);
   expect(O.isSome(final)).toBe(true);
   // The text content the MCP server sends: the encoded result as JSON.
-  return O.match(final, { onNone: () => "", onSome: (result) => JSON.stringify(result.encodedResult) });
+  return O.match(final, {
+    onNone: () => "",
+    onSome: (result) => Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(result.encodedResult), identity),
+  });
 });
 
 const toolHandlers = layerPalantiriToolHandlers.pipe(Layer.provideMerge(runtimeOver(workingSources)));
@@ -212,14 +217,17 @@ describe("beep palantiri mcp", () => {
       const seen = yield* Deferred.make<boolean>();
       const probe = Layer.effectDiscard(
         Effect.gen(function* () {
-          yield* Deferred.succeed(seen, yield* Logger.LogToStderr);
+          const LogToStderr1 = yield* Logger.LogToStderr;
+          yield* Deferred.succeed(seen, LogToStderr1);
         })
       );
       const fiber = yield* probe.pipe(servePalantiriMcp, Effect.forkChild);
-      expect(yield* Deferred.await(seen)).toBe(true);
+      const await2 = yield* Deferred.await(seen);
+      expect(await2).toBe(true);
       yield* Fiber.interrupt(fiber);
       // Outside the host the default stays stdout.
-      expect(yield* Logger.LogToStderr).toBe(false);
+      const LogToStderr3 = yield* Logger.LogToStderr;
+      expect(LogToStderr3).toBe(false);
     })
   );
 });
@@ -244,7 +252,8 @@ describe("beep session open hot parcels", () => {
       yield* atNoon;
       const fiber = yield* hangingSources.pipe(runtimeOver, hotParcels(HOT_PARCELS_TIMEOUT), Effect.forkChild);
       yield* TestClock.adjust("3 seconds");
-      const lines = renderHotBlock(yield* Fiber.join(fiber));
+      const join4 = yield* Fiber.join(fiber);
+      const lines = renderHotBlock(join4);
       expect(lines).toHaveLength(4);
       expect(lines[2]).toBe("- lane-reds: Unknown (timed out after 2s)");
       expect(lines[3]).toMatch(/^- host-pressure: .+ \(fresh as of /);
@@ -256,13 +265,11 @@ describe("beep session open hot parcels", () => {
       const stuck = Layer.effect(PalantiriClient, Effect.never);
       const fiber = yield* stuck.pipe(hotParcels(HOT_PARCELS_TIMEOUT), Effect.forkChild);
       yield* TestClock.adjust("3 seconds");
-      expect(renderHotBlock(yield* Fiber.join(fiber))).toEqual([
-        "[palantiri] hot parcels: Unknown (timed out after 2s)",
-      ]);
+      const join5 = yield* Fiber.join(fiber);
+      expect(renderHotBlock(join5)).toEqual(["[palantiri] hot parcels: Unknown (timed out after 2s)"]);
       const broken = Layer.effect(PalantiriClient, Effect.die("no client"));
-      expect(renderHotBlock(yield* hotParcels(broken, HOT_PARCELS_TIMEOUT))).toEqual([
-        "[palantiri] hot parcels: Unknown (read failed)",
-      ]);
+      const hotParcels6 = yield* hotParcels(broken, HOT_PARCELS_TIMEOUT);
+      expect(renderHotBlock(hotParcels6)).toEqual(["[palantiri] hot parcels: Unknown (read failed)"]);
     })
   );
 
@@ -310,15 +317,17 @@ describe("beep session open hot parcels", () => {
         const file = path.join(root, HOT_PARCELS_FILE);
         yield* atNoon;
         const broken = Layer.effect(PalantiriClient, Effect.die("no client"));
-        expect(yield* broken.pipe(printHotParcels(HOT_PARCELS_TIMEOUT), captureOutput)).toBe(
-          "[palantiri] hot parcels: Unknown (read failed)"
-        );
-        expect(yield* fs.exists(file)).toBe(false);
+        const pipe7 = yield* broken.pipe(printHotParcels(HOT_PARCELS_TIMEOUT), captureOutput);
+        expect(pipe7).toBe("[palantiri] hot parcels: Unknown (read failed)");
+        const exists8 = yield* fs.exists(file);
+        expect(exists8).toBe(false);
         const printed = yield* workingSources.pipe(runtimeOver, printHotParcels(HOT_PARCELS_TIMEOUT), captureOutput);
         expect(A.length(Str.split("\n")(printed))).toBe(4);
         expect(((yield* fs.stat(file)).mode & 0o777).toString(8)).toBe("600");
         expect(((yield* fs.stat(root)).mode & 0o777).toString(8)).toBe("700");
-        const staged = yield* S.decodeEffect(HotParcelsJson)(yield* fs.readFileString(file));
+        const argument = S.decodeEffect(HotParcelsJson);
+        const readFileString1 = yield* fs.readFileString(file);
+        const staged = yield* argument(readFileString1);
         expect(A.map(staged.lines, (line) => line.parcel)).toEqual(["account-headroom", "lane-reds", "host-pressure"]);
         expect(DateTime.formatIso(staged.writtenAt)).toBe("2026-10-15T12:00:00.000Z");
         // A parcel that keeps timing out carries its last read line as stale,
@@ -348,7 +357,9 @@ describe("beep session open hot parcels", () => {
         });
         const capped = yield* stageHotParcels(withLaneRedsTimedOut);
         expect(laneRedsLine(capped)).toEqual(["- lane-reds: Unknown (timed out after 2s)"]);
-        const restaged = yield* S.decodeEffect(HotParcelsJson)(yield* fs.readFileString(file));
+        const argument1 = S.decodeEffect(HotParcelsJson);
+        const readFileString2 = yield* fs.readFileString(file);
+        const restaged = yield* argument1(readFileString2);
         assertSome(
           A.findFirst(restaged.lines, (line) => line.parcel === "lane-reds"),
           timedOut
@@ -358,11 +369,11 @@ describe("beep session open hot parcels", () => {
           file,
           '{"schemaVersion":"palantiri-hot/v1","writtenAt":"2026-10-15T12:00:00.000Z","lines":[{"parcel":"lane-reds","state":"read","text":"0 reds (fresh as of 2026-10-15T12:00:00.000Z)"}]}'
         );
-        expect(laneRedsLine(yield* stageHotParcels(withLaneRedsTimedOut))).toEqual([
-          "- lane-reds: Unknown (timed out after 2s)",
-        ]);
+        const stageHotParcels9 = yield* stageHotParcels(withLaneRedsTimedOut);
+        expect(laneRedsLine(stageHotParcels9)).toEqual(["- lane-reds: Unknown (timed out after 2s)"]);
         // The rewrite leaves no temporary file behind.
-        expect(yield* fs.readDirectory(root)).toEqual([HOT_PARCELS_FILE]);
+        const readDirectory10 = yield* fs.readDirectory(root);
+        expect(readDirectory10).toEqual([HOT_PARCELS_FILE]);
       }).pipe(withEnv({ BEEP_PALANTIRI_STATE_ROOT: "/state/palantiri", HOME: "/home/nobody" }))
     );
   });
@@ -374,7 +385,8 @@ describe("hot parcels and catalog codecs", () => {
     [Arbitrary.schema(HotParcels)],
     Effect.fnUntraced(function* ([hot]) {
       const text = yield* S.encodeEffect(HotParcelsJson)(hot);
-      expect(yield* S.decodeEffect(HotParcelsJson)(text)).toEqual(hot);
+      const value11 = yield* S.decodeEffect(HotParcelsJson)(text);
+      expect(value11).toEqual(hot);
     }),
     { arbitrary: fcRuns(24) }
   );
@@ -384,7 +396,10 @@ describe("hot parcels and catalog codecs", () => {
     [Arbitrary.schema(ParcelCatalog)],
     Effect.fnUntraced(function* ([catalog]) {
       const codec = S.fromJsonString(ParcelCatalog);
-      expect(yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(catalog))).toEqual(catalog);
+      const argument2 = S.decodeEffect(codec);
+      const value3 = yield* S.encodeEffect(codec)(catalog);
+      const value12 = yield* argument2(value3);
+      expect(value12).toEqual(catalog);
     }),
     { arbitrary: fcRuns(24) }
   );

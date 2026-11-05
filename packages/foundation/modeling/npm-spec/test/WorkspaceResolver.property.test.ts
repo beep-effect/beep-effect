@@ -18,7 +18,8 @@ describe("WorkspaceResolver property floor", () => {
         const encoded = yield* S.encodeEffect(DependencyResolutionError)(error);
         const decoded = yield* S.decodeEffect(DependencyResolutionError)(encoded);
         assertTrue(equivalent(decoded, error));
-        assert.deepStrictEqual(yield* S.encodeEffect(DependencyResolutionError)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(DependencyResolutionError)(decoded);
+        assert.deepStrictEqual(value1, encoded);
         assert.strictEqual(decoded.message, error.message);
       }),
     runs
@@ -37,7 +38,8 @@ describe("WorkspaceResolver property floor", () => {
         assert.strictEqual(error.cause, cause);
         assert.deepStrictEqual(encoded.cause, { name: cause.name, message, stack });
         const decoded = yield* S.decodeEffect(DependencyResolutionError)(encoded);
-        assert.deepStrictEqual(yield* S.encodeEffect(DependencyResolutionError)(decoded), encoded);
+        const value2 = yield* S.encodeEffect(DependencyResolutionError)(decoded);
+        assert.deepStrictEqual(value2, encoded);
         assert.strictEqual(decoded.specifier, specifier);
         assert.strictEqual(decoded.reason, "mechanism");
       }),
@@ -69,8 +71,10 @@ describe("WorkspaceResolver property floor", () => {
       ([packageName]) =>
         Effect.gen(function* () {
           const resolver = yield* WorkspaceResolver;
-          assertNone(yield* resolver.versionOf(packageName));
-          assertNone(yield* resolver.versionOf(packageName));
+          const versionOf3 = yield* resolver.versionOf(packageName);
+          assertNone(versionOf3);
+          const versionOf4 = yield* resolver.versionOf(packageName);
+          assertNone(versionOf4);
         }),
       runs
     );

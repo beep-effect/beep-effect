@@ -98,7 +98,8 @@ describe("@beep/law-practice-use-cases daily notice", () => {
         const nextDay = yield* run(1, day(15));
 
         expect(A.map([first, second, nextDay], ({ status }) => status)).toStrictEqual(["sent", "already-sent", "sent"]);
-        expect(A.map(yield* sentSoFar, ({ subject }) => subject)).toStrictEqual([
+        const sentSoFar1 = yield* sentSoFar;
+        expect(A.map(sentSoFar1, ({ subject }) => subject)).toStrictEqual([
           "Claude: 2 questions waiting",
           "Claude: 1 question waiting",
         ]);
@@ -118,7 +119,8 @@ describe("@beep/law-practice-use-cases daily notice", () => {
             Str.Order
           )
         ).toStrictEqual(["already-sent", "sent"]);
-        expect(yield* sentSoFar).toHaveLength(1);
+        const sentSoFar2 = yield* sentSoFar;
+        expect(sentSoFar2).toHaveLength(1);
       })
     );
   });
@@ -149,7 +151,8 @@ describe("@beep/law-practice-use-cases daily notice", () => {
 
         expect(S.is(NoticeMailboxError)(failure) && failure.operation).toBe("send");
         expect((yield* run(2, day(14))).status).toBe("already-sent");
-        expect(yield* sentSoFar).toStrictEqual([]);
+        const sentSoFar3 = yield* sentSoFar;
+        expect(sentSoFar3).toStrictEqual([]);
       })
     );
   });

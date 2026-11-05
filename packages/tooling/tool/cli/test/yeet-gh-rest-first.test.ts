@@ -166,23 +166,28 @@ it.layer(
       expect(pr.body).toBe("");
       expect(pr.labels).toEqual(["ready-for-heavy"]);
       assertSome(pr.mergeableState, "clean");
-      expect(A.length(yield* rest.checkRuns(pr.headSha))).toBe(3);
-      expect(yield* rest.requiredStatusContexts("main")).toEqual(["Lint", "Test Unit"]);
+      const checkRuns1 = yield* rest.checkRuns(pr.headSha);
+      expect(A.length(checkRuns1)).toBe(3);
+      const requiredStatusContexts2 = yield* rest.requiredStatusContexts("main");
+      expect(requiredStatusContexts2).toEqual(["Lint", "Test Unit"]);
       const timeline = yield* rest.reviewTimeline(1501);
       assertSome(O.map(timeline.readyAt, DateTime.formatIso), "2026-10-06T16:20:00.000Z");
       assertSome(O.map(timeline.forcedAt, DateTime.formatIso), "2026-10-06T16:35:00.000Z");
-      assertSome(O.map(yield* rest.headFirstReceivedAt(pr.headSha), DateTime.formatIso), "2026-10-06T16:30:00.000Z");
+      const headFirstReceivedAt3 = yield* rest.headFirstReceivedAt(pr.headSha);
+      assertSome(O.map(headFirstReceivedAt3, DateTime.formatIso), "2026-10-06T16:30:00.000Z");
     })
   );
 
   it.effect("finds the open pull request for a branch and reports none for another", () =>
     Effect.gen(function* () {
       const rest = yield* GithubRest;
+      const openPullRequestForBranch4 = yield* rest.openPullRequestForBranch("beep-effect", "feat/gh-rest-first");
       assertSome(
-        O.map(yield* rest.openPullRequestForBranch("beep-effect", "feat/gh-rest-first"), (pr) => pr.number),
+        O.map(openPullRequestForBranch4, (pr) => pr.number),
         1501
       );
-      assertNone(yield* rest.openPullRequestForBranch("beep-effect", "feat/other"));
+      const openPullRequestForBranch5 = yield* rest.openPullRequestForBranch("beep-effect", "feat/other");
+      assertNone(openPullRequestForBranch5);
     })
   );
 
@@ -191,7 +196,8 @@ it.layer(
       const rest = yield* GithubRest;
       yield* rest.removeLabel(1501, "absent");
       // An empty one-item page of inline comments proves zero review threads.
-      expect(yield* rest.hasReviewComments(1501)).toBe(false);
+      const hasReviewComments6 = yield* rest.hasReviewComments(1501);
+      expect(hasReviewComments6).toBe(false);
     })
   );
 });
@@ -258,7 +264,8 @@ it.layer(
   it.effect("runs the guarded effect when the probe shows enough points", () =>
     Effect.gen(function* () {
       const budget = yield* GraphqlBudget;
-      expect(yield* budget.guard("op", GraphqlBudgetPolicy.noWait)(Effect.succeed("ran"))).toBe("ran");
+      const value = yield* budget.guard("op", GraphqlBudgetPolicy.noWait)(Effect.succeed("ran"));
+      expect(value).toBe("ran");
     })
   );
 });
@@ -320,7 +327,8 @@ it.layer(resettingBudget, { timeout: "30 seconds" })("GraphqlBudget guard across
         Effect.forkChild
       );
       yield* TestClock.adjust(Duration.minutes(11));
-      expect(yield* Fiber.join(fiber)).toBe("ran");
+      const join7 = yield* Fiber.join(fiber);
+      expect(join7).toBe("ran");
     })
   );
 });
@@ -365,7 +373,8 @@ describe("inherited-red body reconciliation", () => {
           Ref.update(writes, A.append(update.body ?? "")).pipe(Effect.as(pr({ body: update.body ?? "" }))),
       };
       yield* recordInheritedRedsWithRest(rest, 1501, entries, pr().headSha);
-      expect(yield* Ref.get(writes)).toEqual([expected]);
+      const got = yield* Ref.get(writes);
+      expect(got).toEqual([expected]);
       expect(expected).toContain("New provenance");
     })
   );
@@ -386,8 +395,10 @@ describe("inherited-red body reconciliation", () => {
         )
       );
       expect(error.message).toContain("all three");
-      expect(yield* Ref.get(reads)).toBe(4);
-      expect(yield* Ref.get(writes)).toBe(0);
+      const got8 = yield* Ref.get(reads);
+      expect(got8).toBe(4);
+      const got9 = yield* Ref.get(writes);
+      expect(got9).toBe(0);
     })
   );
 
@@ -410,7 +421,8 @@ describe("inherited-red body reconciliation", () => {
         )
       );
       expect(error.message).toContain("markers");
-      expect(yield* Ref.get(writes)).toBe(0);
+      const got10 = yield* Ref.get(writes);
+      expect(got10).toBe(0);
     })
   );
 
@@ -433,7 +445,8 @@ describe("inherited-red body reconciliation", () => {
         )
       );
       expect(error.message).toContain("drifted");
-      expect(yield* Ref.get(writes)).toBe(1);
+      const got11 = yield* Ref.get(writes);
+      expect(got11).toBe(1);
     })
   );
 
@@ -452,10 +465,14 @@ describe("inherited-red body reconciliation", () => {
         [],
         pr().headSha
       );
-      expect(yield* Ref.get(body)).toContain("None: no required check is red on this head.");
-      expect(yield* Ref.get(body)).toContain(`Inherited reds (S11) at ${Str.slice(0, 10)(pr().headSha)}`);
-      expect(yield* Ref.get(body)).toContain("Summary");
-      expect(yield* Ref.get(writes)).toBe(1);
+      const got12 = yield* Ref.get(body);
+      expect(got12).toContain("None: no required check is red on this head.");
+      const got13 = yield* Ref.get(body);
+      expect(got13).toContain(`Inherited reds (S11) at ${Str.slice(0, 10)(pr().headSha)}`);
+      const got14 = yield* Ref.get(body);
+      expect(got14).toContain("Summary");
+      const got15 = yield* Ref.get(writes);
+      expect(got15).toBe(1);
     })
   );
 
@@ -471,7 +488,8 @@ describe("inherited-red body reconciliation", () => {
         [],
         pr().headSha
       );
-      expect(yield* Ref.get(writes)).toBe(0);
+      const got16 = yield* Ref.get(writes);
+      expect(got16).toBe(0);
     })
   );
 
@@ -488,7 +506,8 @@ describe("inherited-red body reconciliation", () => {
         entries,
         pr().headSha
       );
-      expect(yield* Ref.get(writes)).toBe(0);
+      const got17 = yield* Ref.get(writes);
+      expect(got17).toBe(0);
     })
   );
 });

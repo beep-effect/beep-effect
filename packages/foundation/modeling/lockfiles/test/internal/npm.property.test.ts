@@ -31,9 +31,14 @@ it.effect.prop(
         packages: { "node_modules/effect": { version: sample.version } },
       });
       const parsed = yield* parseNpm(text);
-      const canonical = yield* render(yield* read(text));
-      assert.strictEqual(yield* render(yield* read(canonical)), canonical);
-      assertTrue(S.toEquivalence(LockfileFields)(yield* parseNpm(canonical), parsed));
+      const read1 = yield* read(text);
+      const canonical = yield* render(read1);
+      const read3 = yield* read(canonical);
+      const render2 = yield* render(read3);
+      assert.strictEqual(render2, canonical);
+      const argument = S.toEquivalence(LockfileFields);
+      const parsedNpm = yield* parseNpm(canonical);
+      assertTrue(argument(parsedNpm, parsed));
       assert.strictEqual(parsed.packages[0]?.version, sample.version);
       assert.strictEqual(parsed.packages[0]?.instanceId, "node_modules/effect");
     }),

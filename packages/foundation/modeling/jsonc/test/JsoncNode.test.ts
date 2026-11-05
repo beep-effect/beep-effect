@@ -5,7 +5,7 @@ import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vi
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
-import { constant } from "effect/Function";
+import { constant, identity } from "effect/Function";
 import * as Hash from "effect/Hash";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -13,6 +13,8 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const tree = (text: string): JsoncNode => Jsonc.parseTreeResult(text).pipe(Result.getOrThrow, O.getOrThrow);
 
@@ -134,7 +136,8 @@ describe("JsoncNode", () => {
   describe("find", () => {
     it.effect("navigates object keys and array indices", () =>
       Effect.gen(function* () {
-        const root = O.getOrThrow(yield* Jsonc.parseTree('{ "a": { "b": [10, 20] } }'));
+        const parsedTree = yield* Jsonc.parseTree('{ "a": { "b": [10, 20] } }');
+        const root = O.getOrThrow(parsedTree);
         assert.strictEqual(O.map(root.find(["a", "b", 1]), (node) => node.toValue()).pipe(O.getOrThrow), 20);
         assertSome(
           O.map(root.find([]), (node) => node.type),
@@ -243,9 +246,8 @@ describe("JsoncNode", () => {
   describe("toValue", () => {
     it.effect("reconstructs nested values", () =>
       Effect.gen(function* () {
-        const root = O.getOrThrow(
-          yield* Jsonc.parseTree('{ "x": [1, { "y": true }], "z": null, "f": false, "s": "str" }')
-        );
+        const parsedTree1 = yield* Jsonc.parseTree('{ "x": [1, { "y": true }], "z": null, "f": false, "s": "str" }');
+        const root = O.getOrThrow(parsedTree1);
         assert.deepStrictEqual(root.toValue(), { x: [1, { y: true }], z: null, f: false, s: "str" });
       })
     );
@@ -320,7 +322,10 @@ describe("JsoncNode", () => {
         length: 3,
         children: [makeNodeUnsafe({ type: "number", offset: 1, length: 1, value: 1 })],
       });
-      assert.deepStrictEqual(deepArray(255).toValue(), JSON.parse(`${Str.repeat(255)("[")}1${Str.repeat(255)("]")}`));
+      assert.deepStrictEqual(
+        deepArray(255).toValue(),
+        Result.getOrThrowWith(S.decodeResult(UnknownJson)(`${Str.repeat(255)("[")}1${Str.repeat(255)("]")}`), identity)
+      );
       assert.strictEqual(leaf.children?.[0]?.toValue(), 1);
     });
 

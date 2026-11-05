@@ -34,10 +34,14 @@ const decodeRelativeIRIReference = S.decodeUnknownEffect(RelativeIRIReference);
 describe("IRI", () => {
   it.effect("accepts representative internationalized and relative forms through the facade", () =>
     Effect.gen(function* () {
-      expect(yield* decodeIRI("https://例え.テスト/δοκιμή?q=値#片段")).toBe("https://例え.テスト/δοκιμή?q=値#片段");
-      expect(yield* decodeAbsoluteIRI("mailto:用户@example.org")).toBe("mailto:用户@example.org");
-      expect(yield* decodeIRIReference("../résumé/δοκιμή?x=値#片段")).toBe("../résumé/δοκιμή?x=値#片段");
-      expect(yield* decodeRelativeIRIReference("folder/child:leaf")).toBe("folder/child:leaf");
+      const decodedIRI = yield* decodeIRI("https://例え.テスト/δοκιμή?q=値#片段");
+      expect(decodedIRI).toBe("https://例え.テスト/δοκιμή?q=値#片段");
+      const decodedAbsoluteIRI = yield* decodeAbsoluteIRI("mailto:用户@example.org");
+      expect(decodedAbsoluteIRI).toBe("mailto:用户@example.org");
+      const decodedIRIReference = yield* decodeIRIReference("../résumé/δοκιμή?x=値#片段");
+      expect(decodedIRIReference).toBe("../résumé/δοκιμή?x=値#片段");
+      const decodedRelativeIRIReference = yield* decodeRelativeIRIReference("folder/child:leaf");
+      expect(decodedRelativeIRIReference).toBe("folder/child:leaf");
     })
   );
 

@@ -120,10 +120,13 @@ describe("layerPracticeKgSpoolKey", () => {
         const file = yield* fs.readFileString(keyPath).pipe(Effect.flatMap(decodeKeyFile));
         expect(file.protection).toBe("dpapi-ffi");
         expect(file.wrappedBase64).not.toBe(materialOf(first));
-        expect(Str.includes(materialOf(first))(yield* fs.readFileString(keyPath))).toBe(false);
+        const argument = Str.includes(materialOf(first));
+        const readFileString1 = yield* fs.readFileString(keyPath);
+        expect(argument(readFileString1)).toBe(false);
         expect(((yield* fs.stat(keyPath)).mode & 0o777).toString(8)).toBe("600");
         expect(((yield* fs.stat(telemetryDir)).mode & 0o777).toString(8)).toBe("700");
-        expect(yield* fs.readDirectory(telemetryDir)).toEqual(["key.1.dpapi"]);
+        const readDirectory1 = yield* fs.readDirectory(telemetryDir);
+        expect(readDirectory1).toEqual(["key.1.dpapi"]);
       })
     );
   });
@@ -135,10 +138,12 @@ describe("layerPracticeKgSpoolKey", () => {
         const rotated = yield* loadKey(fakeDpapi("dpapi-powershell", { failUnwrap: true }));
         expect([rotated.epoch, rotated.protection]).toEqual(["2", "dpapi-powershell"]);
         expect(materialOf(rotated)).not.toBe(materialOf(first));
-        expect(materialOf(yield* loadKey(fakeDpapi("dpapi-powershell")))).toBe(materialOf(rotated));
+        const loadedKey = yield* loadKey(fakeDpapi("dpapi-powershell"));
+        expect(materialOf(loadedKey)).toBe(materialOf(rotated));
         // The old key file is never overwritten; the new epoch is a new file.
         const fs = yield* FileSystem.FileSystem;
-        expect(A.sort(yield* fs.readDirectory(telemetryDir), Order.String)).toEqual(["key.1.dpapi", "key.2.dpapi"]);
+        const readDirectory2 = yield* fs.readDirectory(telemetryDir);
+        expect(A.sort(readDirectory2, Order.String)).toEqual(["key.1.dpapi", "key.2.dpapi"]);
       })
     );
   });
@@ -151,7 +156,8 @@ describe("layerPracticeKgSpoolKey", () => {
         yield* fs.writeFileString(keyPath, "{broken");
         const key = yield* loadKey(fakeDpapi("dpapi-ffi"));
         expect(key.epoch).toBe("2");
-        expect(yield* fs.readFileString(keyPath)).toBe("{broken");
+        const readFileString3 = yield* fs.readFileString(keyPath);
+        expect(readFileString3).toBe("{broken");
         const next = yield* fs.readFileString(`${telemetryDir}/key.2.dpapi`).pipe(Effect.flatMap(decodeKeyFile));
         expect(next.epoch).toBe(2);
       })
@@ -166,8 +172,10 @@ describe("layerPracticeKgSpoolKey", () => {
         expect([left.epoch, right.epoch]).toEqual(["1", "1"]);
         expect(materialOf(right)).toBe(materialOf(left));
         const fs = yield* FileSystem.FileSystem;
-        expect(yield* fs.readDirectory(telemetryDir)).toEqual(["key.1.dpapi"]);
-        expect(materialOf(yield* loadKey(fakeDpapi("dpapi-ffi")))).toBe(materialOf(left));
+        const readDirectory4 = yield* fs.readDirectory(telemetryDir);
+        expect(readDirectory4).toEqual(["key.1.dpapi"]);
+        const loadedKey5 = yield* loadKey(fakeDpapi("dpapi-ffi"));
+        expect(materialOf(loadedKey5)).toBe(materialOf(left));
       })
     );
   });
@@ -223,9 +231,11 @@ describe("layerDpapiPowerShell", () => {
         const port = yield* DpapiPort;
         const secret = encoder.encode(canary);
         const wrapped = yield* port.protect(secret);
-        expect(decoder.decode(yield* port.unprotect(wrapped))).toBe(canary);
+        const unprotect6 = yield* port.unprotect(wrapped);
+        expect(decoder.decode(unprotect6)).toBe(canary);
         expect(port.protection).toBe("dpapi-powershell");
-        expect(yield* roundTripDpapi(port)).toBe("dpapi-powershell");
+        const roundTripDpapi7 = yield* roundTripDpapi(port);
+        expect(roundTripDpapi7).toBe("dpapi-powershell");
         expect(A.length(argvSeen)).toBe(4);
         for (const argv of argvSeen) {
           expect(argv[0]).toBe("powershell.exe");
@@ -251,8 +261,10 @@ describe("roundTripDpapi", () => {
   it.effect("refuses a DPAPI path whose wrapped bytes equal the plaintext", () =>
     Effect.gen(function* () {
       const identity = DpapiPort.of({ protection: "dpapi-ffi", protect: Effect.succeed, unprotect: Effect.succeed });
-      expect(yield* Effect.flip(roundTripDpapi(identity))).toBeInstanceOf(TelemetryKeyFailure);
-      expect(yield* roundTripDpapi(DpapiPort.of({ ...identity, protection: "dev-file" }))).toBe("dev-file");
+      const flip8 = yield* Effect.flip(roundTripDpapi(identity));
+      expect(flip8).toBeInstanceOf(TelemetryKeyFailure);
+      const roundTripDpapi9 = yield* roundTripDpapi(DpapiPort.of({ ...identity, protection: "dev-file" }));
+      expect(roundTripDpapi9).toBe("dev-file");
     })
   );
 });
@@ -266,17 +278,16 @@ describe("resolvePracticeKgTelemetryDir", () => {
       Effect.gen(function* () {
         const resolve = (platform: string, env: Record<string, string>) =>
           resolvePracticeKgTelemetryDir(platform).pipe(withEnv(env), Effect.map(O.getOrUndefined));
-        expect(yield* resolve("win32", { LOCALAPPDATA: "C:/Users/a/AppData/Local" })).toBe(
-          "C:/Users/a/AppData/Local/beep/practice-kg/telemetry"
-        );
-        expect(yield* resolve("linux", { XDG_STATE_HOME: "/state", HOME: "/home/a" })).toBe(
-          "/state/beep/practice-kg/telemetry"
-        );
-        expect(yield* resolve("linux", { HOME: "/home/a" })).toBe("/home/a/.local/state/beep/practice-kg/telemetry");
-        expect(yield* resolve("win32", { HOME: "/home/a" })).toBeUndefined();
-        expect(yield* resolve("win32", { PRACTICE_KG_TELEMETRY_DIR: "/override", LOCALAPPDATA: "C:/x" })).toBe(
-          "/override"
-        );
+        const resolved = yield* resolve("win32", { LOCALAPPDATA: "C:/Users/a/AppData/Local" });
+        expect(resolved).toBe("C:/Users/a/AppData/Local/beep/practice-kg/telemetry");
+        const resolved10 = yield* resolve("linux", { XDG_STATE_HOME: "/state", HOME: "/home/a" });
+        expect(resolved10).toBe("/state/beep/practice-kg/telemetry");
+        const resolved11 = yield* resolve("linux", { HOME: "/home/a" });
+        expect(resolved11).toBe("/home/a/.local/state/beep/practice-kg/telemetry");
+        const resolved12 = yield* resolve("win32", { HOME: "/home/a" });
+        expect(resolved12).toBeUndefined();
+        const resolved13 = yield* resolve("win32", { PRACTICE_KG_TELEMETRY_DIR: "/override", LOCALAPPDATA: "C:/x" });
+        expect(resolved13).toBe("/override");
       })
     );
   });

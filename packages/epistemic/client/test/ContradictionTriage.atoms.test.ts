@@ -398,7 +398,8 @@ describe("@beep/epistemic-client contradiction atoms", () => {
         AtomRegistry.getResult(registry, selectedContradictionCandidateAtom, { suspendOnWaiting: true })
       );
 
-      const capturedRequests = A.map(yield* Ref.get(requests), ({ knownAt, validAt }) => ({
+      const got = yield* Ref.get(requests);
+      const capturedRequests = A.map(got, ({ knownAt, validAt }) => ({
         knownAt: DateTime.toEpochMillis(knownAt),
         validAt: DateTime.toEpochMillis(validAt),
       }));

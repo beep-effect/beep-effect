@@ -79,7 +79,8 @@ describe("Lexical.codec", { concurrent: false }, () => {
 
       const projected = editorStateToDocument(state);
       expect(projected).toEqual(MdModel.Document.make({ children: [MdModel.P.make({ children: [] })] }));
-      expect(yield* roundTrip(projected)).toEqual(projected);
+      const roundTrip1 = yield* roundTrip(projected);
+      expect(roundTrip1).toEqual(projected);
     })
   );
 
@@ -135,7 +136,8 @@ describe("Lexical.codec", { concurrent: false }, () => {
         ],
       });
 
-      expect(yield* roundTrip(document)).toEqual(document);
+      const roundTrip2 = yield* roundTrip(document);
+      expect(roundTrip2).toEqual(document);
     })
   );
 
@@ -181,7 +183,8 @@ describe("Lexical.codec", { concurrent: false }, () => {
           children: [MdModel.P.make({ children: [MdModel.A.make({ href, children: [mdText(href)] })] })],
         });
 
-        expect(yield* roundTrip(document)).toEqual(document);
+        const roundTrip3 = yield* roundTrip(document);
+        expect(roundTrip3).toEqual(document);
       }
     })
   );
@@ -194,7 +197,8 @@ describe("Lexical.codec", { concurrent: false }, () => {
         children: [MdModel.P.make({ children: [MdModel.A.make({ href, children: [] })] })],
       });
 
-      expect(yield* roundTrip(document)).toEqual(
+      const roundTrip4 = yield* roundTrip(document);
+      expect(roundTrip4).toEqual(
         MdModel.Document.make({
           children: [MdModel.P.make({ children: [MdModel.A.make({ href, children: [mdText(href)] })] })],
         })
@@ -237,8 +241,10 @@ describe("Lexical.codec", { concurrent: false }, () => {
         ],
       });
 
-      expect(yield* roundTrip(hostile)).toEqual(converged);
-      expect(yield* roundTrip(converged)).toEqual(converged);
+      const roundTrip5 = yield* roundTrip(hostile);
+      expect(roundTrip5).toEqual(converged);
+      const roundTrip6 = yield* roundTrip(converged);
+      expect(roundTrip6).toEqual(converged);
     })
   );
 
@@ -284,8 +290,10 @@ describe("Lexical.codec", { concurrent: false }, () => {
       });
 
       pipe(refineSafeDocument(document), Result.isSuccess, assertTrue);
-      expect(yield* roundTrip(document)).toEqual(converged);
-      expect(yield* roundTrip(converged)).toEqual(converged);
+      const roundTrip7 = yield* roundTrip(document);
+      expect(roundTrip7).toEqual(converged);
+      const roundTrip8 = yield* roundTrip(converged);
+      expect(roundTrip8).toEqual(converged);
     })
   );
 
@@ -305,8 +313,10 @@ describe("Lexical.codec", { concurrent: false }, () => {
         children: [MdModel.Table.make({ children: [row], headerRow: true })],
       });
 
-      expect(yield* roundTrip(aligned)).toEqual(structural);
-      expect(yield* roundTrip(structural)).toEqual(structural);
+      const roundTrip9 = yield* roundTrip(aligned);
+      expect(roundTrip9).toEqual(structural);
+      const roundTrip10 = yield* roundTrip(structural);
+      expect(roundTrip10).toEqual(structural);
     })
   );
 
@@ -328,7 +338,8 @@ describe("Lexical.codec", { concurrent: false }, () => {
       for (const document of [emptyHeaderTable, emptyHeaderRow]) {
         const converged = yield* roundTrip(document);
         expect(converged.children[0]).toMatchObject({ _tag: "table", headerRow: false });
-        expect(yield* roundTrip(converged)).toEqual(converged);
+        const roundTrip11 = yield* roundTrip(converged);
+        expect(roundTrip11).toEqual(converged);
       }
     })
   );
@@ -351,7 +362,8 @@ describe("Lexical.codec", { concurrent: false }, () => {
         frontmatter: O.some({ title: "Retain me" }),
       });
 
-      expect(yield* roundTrip(withFrontmatter)).toEqual(MdModel.Document.make({ children }));
+      const roundTrip12 = yield* roundTrip(withFrontmatter);
+      expect(roundTrip12).toEqual(MdModel.Document.make({ children }));
     })
   );
 
@@ -381,7 +393,8 @@ describe("Lexical.codec", { concurrent: false }, () => {
       }
 
       const document = MdModel.Document.make({ children: [labeled, unlabeled] });
-      expect(yield* roundTrip(document)).toEqual(document);
+      const roundTrip13 = yield* roundTrip(document);
+      expect(roundTrip13).toEqual(document);
     })
   );
 
@@ -403,7 +416,8 @@ describe("Lexical.codec", { concurrent: false }, () => {
         if (node.type === "paragraph") expect(node.children[0]?.type).toBe("link");
 
         const document = MdModel.Document.make({ children: [paragraph] });
-        expect(yield* roundTrip(document)).toEqual(document);
+        const roundTrip14 = yield* roundTrip(document);
+        expect(roundTrip14).toEqual(document);
       }
     })
   );
@@ -431,9 +445,8 @@ describe("Lexical.codec", { concurrent: false }, () => {
         expect(node.children[0]).toMatchObject({ type: "link", url: `${ARTIFACT_URI_PREFIX}bad id` });
       }
 
-      expect(yield* roundTrip(MdModel.Document.make({ children: [invalidArtifactLink] }))).toEqual(
-        MdModel.Document.make({ children: [invalidArtifactLink] })
-      );
+      const roundTrip15 = yield* roundTrip(MdModel.Document.make({ children: [invalidArtifactLink] }));
+      expect(roundTrip15).toEqual(MdModel.Document.make({ children: [invalidArtifactLink] }));
     })
   );
 
@@ -466,7 +479,8 @@ describe("Lexical.codec", { concurrent: false }, () => {
         assertSome(validNode.language, "ts");
       }
 
-      expect(yield* roundTrip(MdModel.Document.make({ children: [invalidLanguage] }))).toEqual(
+      const roundTrip16 = yield* roundTrip(MdModel.Document.make({ children: [invalidLanguage] }));
+      expect(roundTrip16).toEqual(
         MdModel.Document.make({
           children: [MdModel.Pre.make({ value: "console.log('beep')", language: O.none() })],
         })
@@ -516,7 +530,8 @@ describe("Lexical.codec", { concurrent: false }, () => {
         ],
       });
 
-      expect(yield* roundTrip(document)).toEqual(
+      const roundTrip17 = yield* roundTrip(document);
+      expect(roundTrip17).toEqual(
         MdModel.Document.make({
           children: [
             MdModel.P.make({
@@ -631,7 +646,8 @@ describe("Lexical.codec", { concurrent: false }, () => {
           }),
         ],
       });
-      expect(yield* roundTrip(nestedDocument)).toEqual(nestedDocument);
+      const roundTrip18 = yield* roundTrip(nestedDocument);
+      expect(roundTrip18).toEqual(nestedDocument);
     })
   );
 
@@ -704,7 +720,8 @@ describe("Lexical.codec", { concurrent: false }, () => {
         ],
       });
 
-      expect(yield* roundTrip(document)).toEqual(
+      const roundTrip19 = yield* roundTrip(document);
+      expect(roundTrip19).toEqual(
         MdModel.Document.make({
           children: [
             MdModel.Ul.make({
@@ -751,7 +768,8 @@ describe("Lexical.codec", { concurrent: false }, () => {
     { document: DocumentArbitrary },
     Effect.fnUntraced(function* ({ document }) {
       const once = yield* roundTrip(document);
-      expect(yield* roundTrip(once)).toEqual(once);
+      const roundTrip20 = yield* roundTrip(once);
+      expect(roundTrip20).toEqual(once);
     }),
     { arbitrary: fcRuns(50) }
   );
@@ -770,7 +788,8 @@ describe("Lexical.codec", { concurrent: false }, () => {
         ],
       });
 
-      expect(yield* roundTrip(document)).toEqual(
+      const roundTrip21 = yield* roundTrip(document);
+      expect(roundTrip21).toEqual(
         MdModel.Document.make({
           children: [
             MdModel.BlockQuote.make({

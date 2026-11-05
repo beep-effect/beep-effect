@@ -93,9 +93,12 @@ export class TranscriptExportError extends S.TaggedError<TranscriptExportError, 
 export const encodeTranscriptTraceBatch = Effect.fn("AiMetrics.encodeTranscriptTraceBatch")(function* (
   input: TranscriptExportInput
 ) {
-  if (input.cursor.namespaceId !== input.namespaceId) return yield* TranscriptExportError.make({ reason: "namespace" });
-  if (A.dedupe(A.map(input.frames, (f) => f.occurrenceId)).length !== input.frames.length)
+  if (input.cursor.namespaceId !== input.namespaceId) {
+    return yield* TranscriptExportError.make({ reason: "namespace" });
+  }
+  if (A.dedupe(A.map(input.frames, (f) => f.occurrenceId)).length !== input.frames.length) {
     return yield* TranscriptExportError.make({ reason: "identity" });
+  }
   const sourceId = yield* hashPublicTextSha256(
     `reconstructed-source/v1:${input.hostId}:${input.namespaceId}:${input.cursor.source}:${input.cursor.pathHash}`
   ).pipe(Effect.mapError(() => TranscriptExportError.make({ reason: "digest" })));
@@ -103,19 +106,19 @@ export const encodeTranscriptTraceBatch = Effect.fn("AiMetrics.encodeTranscriptT
   const spans = yield* Effect.forEach(
     input.frames,
     Effect.fnUntraced(function* (frame) {
-      const trace = Str.slice(
-        0,
-        32
-      )(
-        yield* hashPublicTextSha256(`reconstructed-trace/v1:${input.hostId}:${input.namespaceId}:${frame.occurrenceId}`)
+      const argument = Str.slice(0, 32);
+      const hashPublicTextSha2561 = yield* hashPublicTextSha256(
+        `reconstructed-trace/v1:${input.hostId}:${input.namespaceId}:${frame.occurrenceId}`
       );
-      const span = Str.slice(
-        0,
-        16
-      )(
-        yield* hashPublicTextSha256(`reconstructed-span/v1:${input.hostId}:${input.namespaceId}:${frame.occurrenceId}`)
+      const trace = argument(hashPublicTextSha2561);
+      const argument1 = Str.slice(0, 16);
+      const hashPublicTextSha2562 = yield* hashPublicTextSha256(
+        `reconstructed-span/v1:${input.hostId}:${input.namespaceId}:${frame.occurrenceId}`
       );
-      if (/^0+$/.test(trace) || /^0+$/.test(span)) return yield* TranscriptExportError.make({ reason: "identity" });
+      const span = argument1(hashPublicTextSha2562);
+      if (/^0+$/.test(trace) || /^0+$/.test(span)) {
+        return yield* TranscriptExportError.make({ reason: "identity" });
+      }
       const m = frame.metadata;
       const time = O.flatMap(m.sourceTime, parseSourceEventTime);
       const point = O.match(time, {

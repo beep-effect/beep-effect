@@ -1123,12 +1123,14 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
       }
       const folderId = MutableHashMap.get(folderIds, planned.folderPathKey);
       if (O.isNone(folderId) || planned.source._tag !== "Present") {
-        return settled(yield* notAttempted(action.entryDigest, "file", "dependency-failed"));
+        const notAttempted1 = yield* notAttempted(action.entryDigest, "file", "dependency-failed");
+        return settled(notAttempted1);
       }
       const cost = uploadProviderCalls(action);
       if (budgetStopped || !(yield* affordable(cost))) {
         budgetStopped = true;
-        return settled(yield* notAttempted(action.entryDigest, "file", "budget-exhausted"));
+        const notAttempted2 = yield* notAttempted(action.entryDigest, "file", "budget-exhausted");
+        return settled(notAttempted2);
       }
       yield* charge(cost);
       return {

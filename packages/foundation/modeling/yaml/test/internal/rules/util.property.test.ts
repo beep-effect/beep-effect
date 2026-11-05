@@ -16,7 +16,8 @@ describe("util schema properties", () => {
         const encoded = yield* S.encodeEffect(nonNegativeIntegerOption)(value);
         const decoded = yield* S.decodeEffect(nonNegativeIntegerOption)(encoded);
         assert.isTrue(S.toEquivalence(nonNegativeIntegerOption)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(nonNegativeIntegerOption)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(nonNegativeIntegerOption)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -28,7 +29,8 @@ describe("util schema properties", () => {
         const encoded = yield* S.encodeEffect(positiveIntegerOption)(value);
         const decoded = yield* S.decodeEffect(positiveIntegerOption)(encoded);
         assert.isTrue(S.toEquivalence(positiveIntegerOption)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(positiveIntegerOption)(decoded), encoded);
+        const value2 = yield* S.encodeEffect(positiveIntegerOption)(decoded);
+        assert.deepStrictEqual(value2, encoded);
       }),
     runs
   );
@@ -40,7 +42,8 @@ describe("util schema properties", () => {
         const encoded = yield* S.encodeEffect(ScalarRole)(value);
         const decoded = yield* S.decodeEffect(ScalarRole)(encoded);
         assert.isTrue(S.toEquivalence(ScalarRole)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(ScalarRole)(decoded), encoded);
+        const value3 = yield* S.encodeEffect(ScalarRole)(decoded);
+        assert.deepStrictEqual(value3, encoded);
       }),
     runs
   );

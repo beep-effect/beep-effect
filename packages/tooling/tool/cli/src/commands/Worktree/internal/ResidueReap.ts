@@ -315,7 +315,8 @@ const censusDirectory = Effect.fnUntraced(function* (
         return { ...accumulator, skipReason: O.some("census-overflow") };
       }
       const entryPath = path.join(directory, name);
-      if (O.isSome(yield* fs.readLink(entryPath).pipe(Effect.option))) {
+      const pipe1 = yield* fs.readLink(entryPath).pipe(Effect.option);
+      if (O.isSome(pipe1)) {
         return combineCensus(accumulator, {
           ...emptyCensus(),
           entriesScanned: 1,
@@ -457,7 +458,8 @@ const discoverSessionTree = Effect.fnUntraced(function* (
         ),
         remaining: scan.remaining,
       });
-      if (O.isSome(yield* fs.readLink(entryPath).pipe(Effect.option))) {
+      const pipe2 = yield* fs.readLink(entryPath).pipe(Effect.option);
+      if (O.isSome(pipe2)) {
         return skipped("wrong-shape");
       }
       const stat = yield* Effect.result(fs.stat(entryPath));
@@ -488,7 +490,8 @@ const canonicalDirectory = Effect.fnUntraced(function* (
 ): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  if (O.isSome(yield* fs.readLink(candidatePath).pipe(Effect.option))) {
+  const pipe3 = yield* fs.readLink(candidatePath).pipe(Effect.option);
+  if (O.isSome(pipe3)) {
     return O.none();
   }
   // Resolve BOTH sides before the containment check: a symlinked HOME or temp root must
@@ -527,18 +530,17 @@ const procCwdProbe = Effect.fnUntraced(function* (
     return O.none();
   }
   const ancestry = yield* invokerAncestryPids();
-  const cwds = A.getSomes(
-    yield* Effect.forEach(
-      A.filter(
-        listing.success,
-        (pid) => isProcPidName(pid) && O.exists(N.parse(pid), (parsed) => !HashSet.has(ancestry, parsed))
-      ),
-      Effect.fnUntraced(function* (pid) {
-        return yield* fs.readLink(path.join(PROC_ROOT, pid, "cwd")).pipe(Effect.option);
-      }),
-      { concurrency: 16 }
-    )
+  const forEach4 = yield* Effect.forEach(
+    A.filter(
+      listing.success,
+      (pid) => isProcPidName(pid) && O.exists(N.parse(pid), (parsed) => !HashSet.has(ancestry, parsed))
+    ),
+    Effect.fnUntraced(function* (pid) {
+      return yield* fs.readLink(path.join(PROC_ROOT, pid, "cwd")).pipe(Effect.option);
+    }),
+    { concurrency: 16 }
   );
+  const cwds = A.getSomes(forEach4);
   // Unreadable pids are dropped, never fail-closed: measurement on a healthy host
   // shows a permanent population of unreadable-by-construction pids — every foreign
   // uid, plus this user's own ptrace-protected processes (systemd --user, sd-pam, the
@@ -692,7 +694,8 @@ const topLevelDirectoryCandidates = Effect.fnUntraced(function* (
   if (!exists) {
     return A.empty();
   }
-  if (O.isNone(yield* canonicalDirectory(homeBoundary, root))) {
+  const canonicalDirectory5 = yield* canonicalDirectory(homeBoundary, root);
+  if (O.isNone(canonicalDirectory5)) {
     return [candidate(root, root, reapClass, "skip", { skipReason: "path-changed" })];
   }
   const listing = yield* Effect.result(fs.readDirectory(root));
@@ -744,7 +747,8 @@ const turboCandidates = Effect.fnUntraced(function* (
     listing.success,
     Effect.fnUntraced(function* (name) {
       const entryPath = path.join(cacheRoot, name);
-      if (O.isSome(yield* fs.readLink(entryPath).pipe(Effect.option))) {
+      const pipe6 = yield* fs.readLink(entryPath).pipe(Effect.option);
+      if (O.isSome(pipe6)) {
         return candidate(cacheRoot, entryPath, "turbo-cache", "skip", { skipReason: "wrong-shape" });
       }
       const stat = yield* fs.stat(entryPath).pipe(Effect.option);
@@ -777,14 +781,16 @@ const resolvedOrLexical = Effect.fnUntraced(function* (
 ): Effect.fn.Return<string, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  return O.getOrElse(yield* fs.realPath(candidatePath).pipe(Effect.option), () => path.resolve(candidatePath));
+  const pipe7 = yield* fs.realPath(candidatePath).pipe(Effect.option);
+  return O.getOrElse(pipe7, () => path.resolve(candidatePath));
 });
 
 const rootModifiedMillis = Effect.fnUntraced(function* (
   candidatePath: string
 ): Effect.fn.Return<O.Option<number>, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  return O.flatMap(yield* fs.stat(candidatePath).pipe(Effect.option), mtimeMillis);
+  const pipe8 = yield* fs.stat(candidatePath).pipe(Effect.option);
+  return O.flatMap(pipe8, mtimeMillis);
 });
 
 const procPidProbe = Effect.fnUntraced(function* (
@@ -824,10 +830,9 @@ const mergedPreviewCandidate = Effect.fnUntraced(function* (
     });
   // No census: an installed preview carries a full node_modules tree that overflows it.
   // The root and its `.git` link file are written when the preview is checked out.
-  const modified = newestOption(
-    yield* rootModifiedMillis(shape.success),
-    yield* rootModifiedMillis(path.join(shape.success, ".git"))
-  );
+  const rootModifiedMillis9 = yield* rootModifiedMillis(shape.success);
+  const rootModifiedMillis41 = yield* rootModifiedMillis(path.join(shape.success, ".git"));
+  const modified = newestOption(rootModifiedMillis9, rootModifiedMillis41);
   if (O.isNone(modified)) {
     return skip("stat-failed");
   }
@@ -867,7 +872,8 @@ const mergedPreviewCandidates = Effect.fnUntraced(function* (
   if (!exists) {
     return A.empty();
   }
-  if (O.isNone(yield* canonicalDirectory(checkoutRoot, yeetRoot))) {
+  const canonicalDirectory10 = yield* canonicalDirectory(checkoutRoot, yeetRoot);
+  if (O.isNone(canonicalDirectory10)) {
     return [candidate(yeetRoot, yeetRoot, "merged-preview", "skip", { skipReason: "wrong-shape" })];
   }
   const listing = yield* Effect.result(fs.readDirectory(yeetRoot));
@@ -889,7 +895,8 @@ const turboRunEntry = Effect.fnUntraced(function* (
 ): Effect.fn.Return<ResidueReapCandidate, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  if (O.isSome(yield* fs.readLink(entryPath).pipe(Effect.option))) {
+  const pipe11 = yield* fs.readLink(entryPath).pipe(Effect.option);
+  if (O.isSome(pipe11)) {
     return candidate(runsRoot, entryPath, "turbo-runs", "skip", { skipReason: "wrong-shape" });
   }
   const stat = yield* fs.stat(entryPath).pipe(Effect.option);
@@ -914,7 +921,8 @@ const turboRunCandidates = Effect.fnUntraced(function* (
   }
   // Same constraint as the per-checkout cache: a linked runs root must never let
   // removal reach files the report attributes to this checkout.
-  if (O.isNone(yield* canonicalDirectory(checkoutRoot, runsRoot))) {
+  const canonicalDirectory12 = yield* canonicalDirectory(checkoutRoot, runsRoot);
+  if (O.isNone(canonicalDirectory12)) {
     return [candidate(runsRoot, runsRoot, "turbo-runs", "skip", { skipReason: "wrong-shape" })];
   }
   const listing = yield* Effect.result(fs.readDirectory(runsRoot));
@@ -950,7 +958,7 @@ const sharedTurboEntry = Effect.fnUntraced(function* (
   const skip = (skipReason: ResidueReapSkipReason): Result.Result<SharedTurboMember, ResidueReapCandidate> =>
     Result.fail(candidate(cacheRoot, entryPath, "shared-turbo-cache", "skip", { skipReason }));
   const key = sharedTurboGroupKey(name);
-  if (O.isNone(key) || O.isSome(yield* fs.readLink(entryPath).pipe(Effect.option))) {
+  if (O.isNone(key) || (yield* Effect.map(fs.readLink(entryPath).pipe(Effect.option), O.isSome))) {
     return skip("wrong-shape");
   }
   const stat = yield* fs.stat(entryPath).pipe(Effect.option);
@@ -1024,7 +1032,10 @@ const sharedTurboCacheCandidates = Effect.fnUntraced(function* (
   if (!exists) {
     return { candidates: A.empty(), warnings: A.empty() };
   }
-  if (!path.isAbsolute(cacheRoot) || O.isNone(yield* canonicalDirectory(policy.homeBoundary, cacheRoot))) {
+  if (
+    !path.isAbsolute(cacheRoot) ||
+    (yield* Effect.map(canonicalDirectory(policy.homeBoundary, cacheRoot), O.isNone))
+  ) {
     return {
       candidates: [candidate(cacheRoot, cacheRoot, "shared-turbo-cache", "skip", { skipReason: "path-changed" })],
       warnings: [`Skipped shared Turbo cache ${cacheRoot}: it is not a directory inside the home root.`],
@@ -1091,7 +1102,9 @@ const citedQualificationViews = Effect.fnUntraced(function* (
       const receipt = yield* fs
         .readFileString(receiptPath)
         .pipe(Effect.flatMap(decodeQualificationViewReceiptJson), Effect.option);
-      return O.isSome(receipt) ? O.some(O.some(yield* resolvedOrLexical(receipt.value.directory))) : O.none();
+      return O.isSome(receipt)
+        ? yield* resolvedOrLexical(receipt.value.directory).pipe(Effect.asSome, Effect.asSome)
+        : O.none();
     }),
     { concurrency: 4 }
   );
@@ -1131,7 +1144,8 @@ const assessQualificationViews = Effect.fnUntraced(function* (
   if (!exists) {
     return A.empty();
   }
-  if (O.isNone(yield* canonicalDirectory(policy.homeBoundary, viewsRoot))) {
+  const canonicalDirectory13 = yield* canonicalDirectory(policy.homeBoundary, viewsRoot);
+  if (O.isNone(canonicalDirectory13)) {
     return [candidate(viewsRoot, viewsRoot, "qualification-views", "skip", { skipReason: "path-changed" })];
   }
   const listing = yield* Effect.result(fs.readDirectory(viewsRoot));
@@ -1163,7 +1177,8 @@ const assessQualificationViews = Effect.fnUntraced(function* (
       if (index < policy.qualificationViewsKeep) {
         return skip("kept-newest");
       }
-      if (A.contains(cited.value, yield* resolvedOrLexical(view.path))) {
+      const resolvedOrLexical14 = yield* resolvedOrLexical(view.path);
+      if (A.contains(cited.value, resolvedOrLexical14)) {
         return skip("evidence-referenced");
       }
       const liveness = yield* directoryLivenessSkip(view.path, policy.cwdProbe);
@@ -1186,7 +1201,10 @@ const reassessSessionFile = Effect.fnUntraced(function* (
 ): Effect.fn.Return<ResidueReapCandidate, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  if (protectedSessionName(path, assessed.path) || O.isSome(yield* fs.readLink(assessed.path).pipe(Effect.option))) {
+  if (
+    protectedSessionName(path, assessed.path) ||
+    (yield* Effect.map(fs.readLink(assessed.path).pipe(Effect.option), O.isSome))
+  ) {
     return ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" });
   }
   const stat = yield* fs.stat(assessed.path).pipe(Effect.option);
@@ -1210,7 +1228,7 @@ const reassessTurboEntry = Effect.fnUntraced(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const stat = yield* fs.stat(assessed.path).pipe(Effect.option);
-  if (O.isNone(stat) || O.isSome(yield* fs.readLink(assessed.path).pipe(Effect.option))) {
+  if (O.isNone(stat) || (yield* Effect.map(fs.readLink(assessed.path).pipe(Effect.option), O.isSome))) {
     return ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" });
   }
   if (Str.Equivalence(stat.value.type, "Directory")) {
@@ -1250,7 +1268,8 @@ const reassessSharedTurboMember = Effect.fnUntraced(function* (
   assessed: ResidueReapCandidate
 ): Effect.fn.Return<ResidueReapCandidate, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  if (O.isSome(yield* fs.readLink(assessed.path).pipe(Effect.option))) {
+  const pipe15 = yield* fs.readLink(assessed.path).pipe(Effect.option);
+  if (O.isSome(pipe15)) {
     return pathChanged(assessed);
   }
   const stat = yield* fs.stat(assessed.path).pipe(Effect.option);
@@ -1352,7 +1371,8 @@ const resolveApplyTarget = Effect.fnUntraced(function* (
   // ancestors are resolved exactly once here so that every apply-time check AND the
   // removal share one symlink-free path: an ancestor link repointed after reassessment
   // can then neither redirect the checks to one directory nor the deletion to another.
-  if (O.isSome(yield* fs.readLink(assessed.path).pipe(Effect.option))) {
+  const pipe16 = yield* fs.readLink(assessed.path).pipe(Effect.option);
+  if (O.isSome(pipe16)) {
     return O.none();
   }
   const root = yield* fs.realPath(assessed.root).pipe(Effect.option);
@@ -1366,7 +1386,8 @@ const resolveApplyTarget = Effect.fnUntraced(function* (
   // The inode behind the resolved path is what the removal is later bound to, so an
   // entry renamed into that path after the checks carries another identity and is
   // never touched.
-  const identity = O.flatMap(yield* fs.stat(target.value).pipe(Effect.option), directoryIdentity);
+  const pipe17 = yield* fs.stat(target.value).pipe(Effect.option);
+  const identity = O.flatMap(pipe17, directoryIdentity);
   return O.map(identity, (bound) => ({
     candidate: ResidueReapCandidate.make({ ...assessed, root: root.value, path: target.value }),
     identity: bound,
@@ -1421,7 +1442,8 @@ const publishSyncedArchiveIntent = Effect.fnUntraced(function* (
   const archive = yield* ResidueArchive;
   yield* syncDirectory(path.dirname(intent.source));
   yield* syncDirectory(path.dirname(intent.destination));
-  yield* archive.publish(journalPath, yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase })), label);
+  const encodedIntent = yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase }));
+  yield* archive.publish(journalPath, encodedIntent, label);
 });
 
 // Processes follow moved inodes. A refused rollback remains journaled for restore.
@@ -1443,11 +1465,10 @@ const fenceArchiveMove = Effect.fnUntraced(function* (intent: ResidueArchiveInte
       yield* syncDirectory(path.dirname(intent.source));
       yield* syncDirectory(path.dirname(intent.destination));
     }
-    yield* archive.publish(
-      journalPath,
-      yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase: restored ? "restored" : "fenced-live" })),
-      "residue live fence refusal"
+    const encodedIntent18 = yield* encodeIntent(
+      ResidueArchiveIntent.make({ ...intent, phase: restored ? "restored" : "fenced-live" })
     );
+    yield* archive.publish(journalPath, encodedIntent18, "residue live fence refusal");
     return yield* ResidueArchiveError.make({
       message: `Archive has a live or unknown writer; rollback outcome: ${rolledBack}`,
       skipReason: "lock-held",
@@ -1493,14 +1514,16 @@ const archiveCandidate = Effect.fnUntraced(function* (
   });
   const result = yield* Effect.result(
     Effect.gen(function* () {
-      yield* archive.publish(journalPath, yield* encodeIntent(intent), "residue archive intent");
+      const encodedIntent19 = yield* encodeIntent(intent);
+      yield* archive.publish(journalPath, encodedIntent19, "residue archive intent");
       yield* checkpoint("intent");
       const moved = yield* archive.move(intent.source, intent.destination, resolved.identity).pipe(Effect.scoped);
-      if (!BoundMoveOutcome.is.moved(moved) && !BoundMoveOutcome.is["moved-unsynced"](moved))
+      if (!BoundMoveOutcome.is.moved(moved) && !BoundMoveOutcome.is["moved-unsynced"](moved)) {
         return yield* ResidueArchiveError.make({
           message: `Archive move refused: ${moved}`,
           skipReason: BoundMoveOutcome.is["identity-changed"](moved) ? "path-changed" : "removal-failed",
         });
+      }
       yield* fenceArchiveMove(intent, journalPath);
       yield* publishSyncedArchiveIntent(intent, journalPath, "moved", "residue archive move");
       yield* checkpoint("moved");
@@ -1659,19 +1682,26 @@ const ensureArchiveDirectories = Effect.fnUntraced(function* (checkout: string, 
   yield* Effect.forEach(
     all,
     Effect.fnUntraced(function* (dir) {
-      if (O.isSome(yield* fs.readLink(dir).pipe(Effect.option)))
+      const pipe20 = yield* fs.readLink(dir).pipe(Effect.option);
+      if (O.isSome(pipe20)) {
         return yield* ResidueArchiveError.make({ message: "Archive directory is a symlink" });
-      if (!(yield* fs.exists(dir)))
+      }
+      if (!(yield* fs.exists(dir))) {
         yield* fs.makeDirectory(dir).pipe(
           Effect.catchIf(
             (error) => Str.Equivalence(error.reason._tag, "AlreadyExists"),
             () => Effect.void
           )
         );
-      if (O.isSome(yield* fs.readLink(dir).pipe(Effect.option)))
+      }
+      const pipe21 = yield* fs.readLink(dir).pipe(Effect.option);
+      if (O.isSome(pipe21)) {
         return yield* ResidueArchiveError.make({ message: "Archive directory became a symlink" });
-      if (O.isNone(yield* canonicalDirectory(realCheckout, dir)))
+      }
+      const canonicalDirectory22 = yield* canonicalDirectory(realCheckout, dir);
+      if (O.isNone(canonicalDirectory22)) {
         return yield* ResidueArchiveError.make({ message: "Archive directory escaped checkout" });
+      }
       yield* syncDirectory(dir);
       yield* syncDirectory(path.dirname(dir));
     }),
@@ -1921,10 +1951,13 @@ const visitCheckoutDirectory = Effect.fnUntraced(function* (
   const { beep, name, realEntry } = location;
   const absolute = path.join(beep, name);
   const marker = yield* fs.exists(path.join(absolute, ".git")).pipe(Effect.option);
-  if (O.isNone(marker)) return yield* Effect.fail<ResidueReapSkipReason>("stat-failed");
+  if (O.isNone(marker)) {
+    return yield* Effect.fail<ResidueReapSkipReason>("stat-failed");
+  }
   const embedded = marker.value;
-  if (embedded && !Str.Equivalence(absolute, realEntry) && cwdWithin(path, absolute, realEntry))
+  if (embedded && !Str.Equivalence(absolute, realEntry) && cwdWithin(path, absolute, realEntry)) {
     return yield* Effect.fail<ResidueReapSkipReason>("protected-name");
+  }
   const outside = !cwdWithin(path, realEntry, absolute);
   if (!outside || (!Str.Equivalence(path.basename(name), "node_modules") && !embedded)) {
     scan.pending.push(name);
@@ -1948,10 +1981,15 @@ const visitCheckoutEntry = Effect.fnUntraced(function* (
   scan.beneath.push(location.name);
   yield* checkScanCap(scan, cap);
   const absolute = path.join(location.beep, location.name);
-  if (O.isSome(yield* fs.readLink(absolute).pipe(Effect.option))) return;
+  const pipe23 = yield* fs.readLink(absolute).pipe(Effect.option);
+  if (O.isSome(pipe23)) return;
   const info = yield* fs.stat(absolute).pipe(Effect.option);
-  if (O.isNone(info)) return yield* Effect.fail<ResidueReapSkipReason>("stat-failed");
-  if (Str.Equivalence(info.value.type, "Directory")) yield* visitCheckoutDirectory(scan, location, cap);
+  if (O.isNone(info)) {
+    return yield* Effect.fail<ResidueReapSkipReason>("stat-failed");
+  }
+  if (Str.Equivalence(info.value.type, "Directory")) {
+    yield* visitCheckoutDirectory(scan, location, cap);
+  }
 });
 
 const visitCheckoutChildren = Effect.fnUntraced(function* (
@@ -1962,7 +2000,9 @@ const visitCheckoutChildren = Effect.fnUntraced(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const listing = yield* fs.readDirectory(path.join(location.beep, location.parent)).pipe(Effect.option);
-  if (O.isNone(listing)) return yield* Effect.fail<ResidueReapSkipReason>("census-failed");
+  if (O.isNone(listing)) {
+    return yield* Effect.fail<ResidueReapSkipReason>("census-failed");
+  }
   for (const child of listing.value) {
     if (Str.isEmpty(location.parent) && isBookkeepingDirectory(child)) continue;
     yield* visitCheckoutEntry(scan, { ...location, name: path.join(location.parent, child) }, cap);
@@ -1997,10 +2037,14 @@ const checkoutProcessFileSkip = Effect.fnUntraced(function* (checkout: string, n
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const absolute = path.join(checkout, ".beep", name);
-  if (O.isSome(yield* fs.readLink(absolute).pipe(Effect.option))) return O.none<ResidueReapSkipReason>();
-  if (Str.endsWith(".lock")(name)) return yield* checkoutLockSkip(checkout, absolute);
-  if (Str.endsWith(".pid")(name) || Str.Equivalence(path.basename(name), "pid"))
+  const pipe24 = yield* fs.readLink(absolute).pipe(Effect.option);
+  if (O.isSome(pipe24)) return O.none<ResidueReapSkipReason>();
+  if (Str.endsWith(".lock")(name)) {
+    return yield* checkoutLockSkip(checkout, absolute);
+  }
+  if (Str.endsWith(".pid")(name) || Str.Equivalence(path.basename(name), "pid")) {
     return yield* checkoutPidSkip(absolute, policy);
+  }
   return O.none<ResidueReapSkipReason>();
 });
 const checkoutDraftSkip = Effect.fnUntraced(function* (beep: string) {
@@ -2030,7 +2074,8 @@ const checkoutWriteSkip = Effect.fnUntraced(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const absolute = path.join(beep, name);
-  if (O.isSome(yield* fs.readLink(absolute).pipe(Effect.option))) return O.none<ResidueReapSkipReason>();
+  const pipe25 = yield* fs.readLink(absolute).pipe(Effect.option);
+  if (O.isSome(pipe25)) return O.none<ResidueReapSkipReason>();
   const info = yield* fs.stat(absolute).pipe(Effect.option);
   if (O.isNone(info) || O.isNone(mtimeMillis(info.value))) return O.some<ResidueReapSkipReason>("stat-failed");
   const operationalWrite = !Str.Equivalence(info.value.type, "Directory") || HashSet.has(scan.opaque, name);
@@ -2124,7 +2169,7 @@ const checkoutAuthoritySkip = Effect.fnUntraced(function* (
   if (
     !pathIsStrictlyWithin(path, checkout, path.resolve(checkout, ruling.evidence)) ||
     !Str.Equivalence(ruling.evidence, path.relative(checkout, path.resolve(checkout, ruling.evidence))) ||
-    O.isSome(yield* fs.readLink(path.join(checkout, ruling.evidence)).pipe(Effect.option))
+    (yield* Effect.map(fs.readLink(path.join(checkout, ruling.evidence)).pipe(Effect.option), O.isSome))
   )
     return O.some<ResidueReapSkipReason>("owner-ruling-required");
   const proof = yield* runRepoCommandCapture(
@@ -2223,7 +2268,8 @@ const assessCheckoutResidue = Effect.fnUntraced(function* (entry: ResidueReapCan
   const skip = (reason: ResidueReapSkipReason) =>
     ResidueReapCandidate.make({ ...enriched, action: "skip", skipReason: reason });
   if (O.isNone(info)) return skip("stat-failed");
-  if (O.isSome(yield* fs.readLink(entry.path).pipe(Effect.option))) return skip("path-changed");
+  const pipe26 = yield* fs.readLink(entry.path).pipe(Effect.option);
+  if (O.isSome(pipe26)) return skip("path-changed");
   if (O.isSome(tree.skipReason)) return skip(tree.skipReason.value);
   if (O.isNone(ruling)) return skip(unruledSkip(entry));
   const eligibility = yield* checkoutEligibilitySkip(entry, policy, {
@@ -2271,8 +2317,9 @@ const checkoutContainerCandidates = Effect.fnUntraced(function* (
   const nested = O.isSome(scoped)
     ? yield* fs.readDirectory(scoped.value).pipe(Effect.option)
     : O.none<ReadonlyArray<string>>();
-  if (O.isSome(scoped) && O.isNone(nested))
+  if (O.isSome(scoped) && O.isNone(nested)) {
     return yield* unreadCheckoutContainer(checkout, root, scoped.value, reapClass);
+  }
   const targets = O.isSome(nested)
     ? A.map(nested.value, (child) =>
         path.join(
@@ -2379,9 +2426,10 @@ const resolveHomeRoot = Effect.fnUntraced(function* (options: ResidueReapOptions
   // An empty or relative HOME must fail closed here: resolving it would silently make
   // the current working directory the cleanup root.
   const configured = O.fromUndefinedOr(options.homeRoot);
-  return path.resolve(
-    yield* decodeResidueReapHomeRoot(O.isSome(configured) ? configured.value : yield* Config.String("HOME"))
+  const decodedResidueReapHomeRoot = yield* decodeResidueReapHomeRoot(
+    O.isSome(configured) ? configured.value : yield* Config.String("HOME")
   );
+  return path.resolve(decodedResidueReapHomeRoot);
 });
 
 const resolveRepoRoot = Effect.fnUntraced(function* (options: ResidueReapOptions) {
@@ -2395,8 +2443,9 @@ const resolveSharedTurboCacheRoot = Effect.fnUntraced(function* (options: Residu
   const configured = O.fromUndefinedOr(options.sharedTurboCacheRoot);
   return O.isSome(configured)
     ? configured.value
-    : O.getOrElse(O.filter(yield* Config.option(Config.String("TURBO_CACHE_DIR")), Str.isNonEmpty), () =>
-        path.join(beepCacheRoot, "turbo")
+    : yield* Effect.map(
+        Effect.map(Config.option(Config.String("TURBO_CACHE_DIR")), (value) => O.filter(value, Str.isNonEmpty)),
+        (value) => O.getOrElse(value, () => path.join(beepCacheRoot, "turbo"))
       );
 });
 
@@ -2473,7 +2522,8 @@ const sessionCandidates = Effect.fnUntraced(function* (settings: ResidueReapSett
     (): SessionScan => ({ candidates: A.empty(), remaining: policy.entryCap }),
     Effect.fnUntraced(function* (scan: SessionScan, root: string) {
       if (!(yield* fs.exists(root))) return scan;
-      if (O.isNone(yield* canonicalDirectory(policy.homeBoundary, root))) {
+      const canonicalDirectory27 = yield* canonicalDirectory(policy.homeBoundary, root);
+      if (O.isNone(canonicalDirectory27)) {
         return {
           candidates: A.append(
             scan.candidates,
@@ -2574,7 +2624,8 @@ const applyResidue = (
     ? Effect.forEach(
         candidates,
         Effect.fnUntraced(function* (entry) {
-          return yield* applyCandidate(entry, yield* outerBoundaryFor(settings, entry), settings.policy, checkpoint);
+          const outerBoundaryFor28 = yield* outerBoundaryFor(settings, entry);
+          return yield* applyCandidate(entry, outerBoundaryFor28, settings.policy, checkpoint);
         }),
         { concurrency: 1 }
       )
@@ -2604,17 +2655,20 @@ const restoreArchivedIntent = Effect.fnUntraced(function* (context: RecoveryInte
   const fs = yield* FileSystem.FileSystem;
   const archive = yield* ResidueArchive;
   const refuse = recoveryRefusal;
-  if (yield* fs.exists(intent.source)) return yield* refuse("Restore refuses an occupied source", "path-changed");
+  if (yield* fs.exists(intent.source)) {
+    return yield* refuse("Restore refuses an occupied source", "path-changed");
+  }
   const moved = yield* archive
     .move(intent.destination, intent.source, DirectoryIdentity.make(intent))
     .pipe(Effect.scoped);
-  if (!BoundMoveOutcome.is.moved(moved) && !BoundMoveOutcome.is["moved-unsynced"](moved))
+  if (!BoundMoveOutcome.is.moved(moved) && !BoundMoveOutcome.is["moved-unsynced"](moved)) {
     return yield* refuse(
       `Restore failed: ${moved}; archive intent retained`,
       BoundMoveOutcome.is["identity-changed"](moved) || BoundMoveOutcome.is["destination-occupied"](moved)
         ? "path-changed"
         : "removal-failed"
     );
+  }
   yield* publishSyncedArchiveIntent(intent, journalPath, "restored", "residue archive restore");
   return unapplied(ResidueReapCandidate.make({ ...entry, action: "skip", retentionReason: "restored from archive" }));
 });
@@ -2627,11 +2681,8 @@ const reconcileArchivedIntent = Effect.fnUntraced(function* (context: RecoveryIn
     kinds: ProcessHandleKind.literals,
   });
   if (O.isNone(holders) || A.isReadonlyArrayNonEmpty(holders.value)) {
-    yield* archive.publish(
-      journalPath,
-      yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase: "fenced-live" })),
-      "live archive preserved"
-    );
+    const encodedIntent29 = yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase: "fenced-live" }));
+    yield* archive.publish(journalPath, encodedIntent29, "live archive preserved");
     return yield* refuse("Archived inode has live or unknown writers; preserved for restore", "lock-held");
   }
   yield* publishSyncedArchiveIntent(intent, journalPath, "moved", "reconciled residue archive move");
@@ -2641,11 +2692,8 @@ const reconcileSourceIntent = Effect.fnUntraced(function* (context: RecoveryInte
   const { entry, intent, journalPath, realOwner, settings, restore } = context;
   const archive = yield* ResidueArchive;
   if (restore) {
-    yield* archive.publish(
-      journalPath,
-      yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase: "restored" })),
-      "reconciled residue restore"
-    );
+    const encodedIntent30 = yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase: "restored" }));
+    yield* archive.publish(journalPath, encodedIntent30, "reconciled residue restore");
     return unapplied(ResidueReapCandidate.make({ ...entry, action: "skip", retentionReason: "source retained" }));
   }
   return yield* applyCandidate(entry, O.some(realOwner), settings.policy, () => Effect.void);
@@ -2681,16 +2729,24 @@ const recoverArchiveIntent = Effect.fnUntraced(function* (context: RecoveryInten
   const retained = archivePhaseSkip(context);
   if (O.isSome(retained)) return retained.value;
   const identityAt = Effect.fnUntraced(function* (target: string) {
-    if (O.isSome(yield* fs.readLink(target).pipe(Effect.option))) return false;
-    return O.exists(O.flatMap(yield* fs.stat(target).pipe(Effect.option), directoryIdentity), (identity) =>
+    const pipe31 = yield* fs.readLink(target).pipe(Effect.option);
+    if (O.isSome(pipe31)) return false;
+    const pipe32 = yield* fs.stat(target).pipe(Effect.option);
+    return O.exists(O.flatMap(pipe32, directoryIdentity), (identity) =>
       sameDirectoryIdentity(identity, DirectoryIdentity.make(intent))
     );
   });
   const sourceMatches = yield* identityAt(intent.source);
   const archived = yield* identityAt(intent.destination);
-  if (restore && archived) return yield* restoreArchivedIntent(context);
-  if (archived && !(yield* fs.exists(intent.source))) return yield* reconcileArchivedIntent(context);
-  if (sourceMatches && !(yield* fs.exists(intent.destination))) return yield* reconcileSourceIntent(context);
+  if (restore && archived) {
+    return yield* restoreArchivedIntent(context);
+  }
+  if (archived && !(yield* fs.exists(intent.source))) {
+    return yield* reconcileArchivedIntent(context);
+  }
+  if (sourceMatches && !(yield* fs.exists(intent.destination))) {
+    return yield* reconcileSourceIntent(context);
+  }
   return yield* refuse("Archive source or destination identity changed; manual recovery required", "path-changed");
 });
 const resolveRecoveryAddresses = Effect.fnUntraced(function* (
@@ -2716,13 +2772,15 @@ const resolveRecoveryAddresses = Effect.fnUntraced(function* (
       )
     );
   const resolvedSource = path.join(resolvedParent, path.basename(entry.path));
-  const resolvedDestination = path.join(yield* fs.realPath(path.dirname(destination)), path.basename(destination));
+  const realPath33 = yield* fs.realPath(path.dirname(destination));
+  const resolvedDestination = path.join(realPath33, path.basename(destination));
   if (
     !A.contains(report.checkoutRoots, owner) ||
     !pathIsStrictlyWithin(path, boundary, resolvedSource) ||
     cwdWithin(path, path.join(boundary, "residue-reap"), resolvedSource)
-  )
+  ) {
     return yield* refuse("Archive source boundary mismatch", "path-changed");
+  }
   return { resolvedSource, resolvedDestination };
 });
 type RecoveryRow = {
@@ -2763,7 +2821,8 @@ const recoverArchiveEntry = Effect.fnUntraced(function* (
     return unapplied(ResidueReapCandidate.make({ ...entry, action: "skip" }));
   const owner = optionOr(entry.checkoutRoot, settings.repoRoot);
   const realOwner = yield* fs.realPath(owner);
-  if (!Str.Equivalence(realOwner, yield* fs.realPath(settings.repoRoot)))
+  const realPath34 = yield* fs.realPath(settings.repoRoot);
+  if (!Str.Equivalence(realOwner, realPath34))
     return unapplied(
       ResidueReapCandidate.make({
         ...entry,
@@ -2772,9 +2831,12 @@ const recoverArchiveEntry = Effect.fnUntraced(function* (
         retentionReason: "fleet observation only; recover from the owning checkout",
       })
     );
-  if (!hasIntent) return yield* applyCandidate(entry, O.some(realOwner), settings.policy, () => Effect.void);
+  if (!hasIntent) {
+    return yield* applyCandidate(entry, O.some(realOwner), settings.policy, () => Effect.void);
+  }
   const addresses = yield* resolveRecoveryAddresses(entry, owner, destination, context);
-  const intent = yield* decodeIntent(yield* fs.readFileString(journalPath));
+  const readFileString35 = yield* fs.readFileString(journalPath);
+  const intent = yield* decodeIntent(readFileString35);
   yield* assertIntentBinding(intent, addresses, entry.path);
   return yield* recoverArchiveIntent({ ...context, entry, intent, destination, journalPath, realOwner });
 });
@@ -2784,14 +2846,19 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
   const path = yield* Path.Path;
   const archive = yield* ResidueArchive;
   const refuse = recoveryRefusal;
-  if (!isRunId(runId)) return yield* refuse("Invalid residue archive run id");
+  if (!isRunId(runId)) {
+    return yield* refuse("Invalid residue archive run id");
+  }
   const root = runDirectory(path, settings.repoRoot, runId);
-  if (!(yield* fs.exists(path.join(root, "plan.json"))))
+  if (!(yield* fs.exists(path.join(root, "plan.json")))) {
     return yield* refuse("Archive plan.json does not exist; recovery creates no run");
+  }
   yield* ensureArchiveDirectories(settings.repoRoot, runId);
-  const report = yield* decodeReport(yield* fs.readFileString(path.join(root, "plan.json")));
-  if (!Str.Equivalence(report.repoRoot, settings.repoRoot) || !Str.Equivalence(optionOr(report.runId, ""), runId))
+  const readFileString36 = yield* fs.readFileString(path.join(root, "plan.json"));
+  const report = yield* decodeReport(readFileString36);
+  if (!Str.Equivalence(report.repoRoot, settings.repoRoot) || !Str.Equivalence(optionOr(report.runId, ""), runId)) {
     return yield* refuse("Archive report owner mismatch");
+  }
   const rows: ReadonlyArray<RecoveryRow> = yield* Effect.forEach(
     report.candidates,
     Effect.fnUntraced(function* (entry, index) {
@@ -2827,8 +2894,11 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
     reclaimedBytes: 0,
     warnings: A.appendAll(report.warnings, warnings),
   });
-  yield* archive.publish(recoveryPath, yield* encodeReport(result), "residue recovery report");
-  if (A.isReadonlyArrayNonEmpty(refusalWarnings)) return yield* refuse(A.join(refusalWarnings, "\n"));
+  const encodedReport = yield* encodeReport(result);
+  yield* archive.publish(recoveryPath, encodedReport, "residue recovery report");
+  if (A.isReadonlyArrayNonEmpty(refusalWarnings)) {
+    return yield* refuse(A.join(refusalWarnings, "\n"));
+  }
   return result;
 });
 
@@ -2852,14 +2922,18 @@ const requestedArchiveRecovery = Effect.fnUntraced(function* (
   const resume = O.fromUndefinedOr(options.resume);
   const restore = O.fromUndefinedOr(options.restore);
   if (O.isSome(resume) || O.isSome(restore)) {
-    if (O.isSome(resume) && O.isSome(restore))
+    if (O.isSome(resume) && O.isSome(restore)) {
       return yield* ResidueArchiveError.make({ message: "Choose resume or restore, not both" });
+    }
     const id = O.getOrElse(
       O.orElse(restore, () => resume),
       () => ""
     );
-    if (!isRunId(id)) return yield* ResidueArchiveError.make({ message: "Invalid residue archive run id" });
-    return O.some(yield* recoverArchiveRun(settings, id, O.isSome(restore)));
+    if (!isRunId(id)) {
+      return yield* ResidueArchiveError.make({ message: "Invalid residue archive run id" });
+    }
+    const recoverArchiveRun37 = yield* recoverArchiveRun(settings, id, O.isSome(restore));
+    return O.some(recoverArchiveRun37);
   }
   return O.none<ResidueReapReport>();
 });
@@ -2870,8 +2944,10 @@ const executeResidueReap = Effect.fnUntraced(function* (settings: ResidueReapSet
   const fs = yield* FileSystem.FileSystem;
   const archive = yield* ResidueArchive;
   const beepRoot = path.join(settings.repoRoot, ".beep");
-  if (O.isSome(yield* fs.readLink(beepRoot).pipe(Effect.option)))
+  const pipe38 = yield* fs.readLink(beepRoot).pipe(Effect.option);
+  if (O.isSome(pipe38)) {
     return yield* ResidueArchiveError.make({ message: "Checkout .beep is a symlink" });
+  }
   const recovery = yield* requestedArchiveRecovery(settings, options);
   if (O.isSome(recovery)) return recovery.value;
   const found = yield* discoverResidue(settings);
@@ -2925,9 +3001,12 @@ const executeResidueReap = Effect.fnUntraced(function* (settings: ResidueReapSet
   // Persist the complete dry run before mutation: kill after the first intent still
   // leaves a readable source/destination plan for every row.
   const dryRun = makeReport(A.map(candidates, unapplied), false);
-  yield* archive.publish(path.join(runRoot, "plan.json"), yield* encodeReport(dryRun), "residue immutable plan");
+  const argument = path.join(runRoot, "plan.json");
+  const encodedReport1 = yield* encodeReport(dryRun);
+  yield* archive.publish(argument, encodedReport1, "residue immutable plan");
   if (!apply) {
-    yield* archive.publish(reportPath, yield* encodeReport(dryRun), "residue dry-run report");
+    const encodedReport39 = yield* encodeReport(dryRun);
+    yield* archive.publish(reportPath, encodedReport39, "residue dry-run report");
     return dryRun;
   }
   const outcomes = yield* applyResidue(
@@ -2937,7 +3016,8 @@ const executeResidueReap = Effect.fnUntraced(function* (settings: ResidueReapSet
     optionOr(options.archiveCheckpoint, () => Effect.void)
   );
   const report = makeReport(outcomes, true);
-  yield* archive.publish(reportPath, yield* encodeReport(report), "residue applied report");
+  const encodedReport40 = yield* encodeReport(report);
+  yield* archive.publish(reportPath, encodedReport40, "residue applied report");
   return report;
 });
 

@@ -629,7 +629,8 @@ const finish = (settings: DescendSettings, matches: ReadonlyArray<string>): Read
 const literalMatches = Effect.fnUntraced(function* (settings: DescendSettings, literal: string) {
   const path = yield* Path.Path;
   if (escapesCwd(literal)) return A.empty<string>();
-  return O.exists(yield* typeOf(path.join(settings.cwd, literal)), isFileKind) ? A.of(literal) : A.empty<string>();
+  const typeOf1 = yield* typeOf(path.join(settings.cwd, literal));
+  return O.exists(typeOf1, isFileKind) ? A.of(literal) : A.empty<string>();
 });
 
 /**
@@ -649,7 +650,8 @@ const resolveBase = Effect.fnUntraced(function* (settings: DescendSettings) {
   const base = settings.pattern.negated ? "" : Str.replace(/\/+$/, "")(settings.pattern.enumerationPrefix);
   if (escapesCwd(base)) return O.none<DescendFrame>();
   const absolute = base === "" ? settings.cwd : path.join(settings.cwd, base);
-  if (!O.exists(yield* typeOf(absolute), isDirectoryKind)) return O.none<DescendFrame>();
+  const typeOf2 = yield* typeOf(absolute);
+  if (!O.exists(typeOf2, isDirectoryKind)) return O.none<DescendFrame>();
   if (!settings.followSymlinks)
     return O.some<DescendFrame>({ relative: base, absolute, depth: 0, ancestors: NO_ANCESTORS });
   const real = yield* realPathOf(settings, absolute, base);
@@ -761,7 +763,10 @@ const descendImpl: (
     );
   }
   const literal = pattern.literalPath;
-  if (O.isSome(literal)) return finish(settings, yield* literalMatches(settings, literal.value));
+  if (O.isSome(literal)) {
+    const literalMatches1 = yield* literalMatches(settings, literal.value);
+    return finish(settings, literalMatches1);
+  }
   const root = yield* resolveBase(settings);
   if (O.isNone(root)) return finish(settings, A.empty());
   const sinks: DescendSinks = { results: [], frames: [root.value] };

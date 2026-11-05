@@ -29,7 +29,9 @@ describe("crispened schema parity", () => {
     "round-trips schema-derived import bindings",
     [ImportBindingArbitrary],
     Effect.fnUntraced(function* ([binding]) {
-      expect(yield* decodeImportBinding(yield* encodeImportBinding(binding))).toEqual(binding);
+      const encodedImportBinding = yield* encodeImportBinding(binding);
+      const decodedImportBinding = yield* decodeImportBinding(encodedImportBinding);
+      expect(decodedImportBinding).toEqual(binding);
       expect(
         ImportBinding.match(binding, {
           named: ({ local }) => local,
@@ -45,7 +47,9 @@ describe("crispened schema parity", () => {
     "round-trips Biome reports with integer source coordinates",
     [BiomeReportArbitrary],
     Effect.fnUntraced(function* ([report]) {
-      expect(yield* decodeBiomeReport(yield* encodeBiomeReport(report))).toEqual(report);
+      const encodedBiomeReport = yield* encodeBiomeReport(report);
+      const decodedBiomeReport = yield* decodeBiomeReport(encodedBiomeReport);
+      expect(decodedBiomeReport).toEqual(report);
       for (const diagnostic of report.diagnostics ?? []) {
         const start = diagnostic.location?.start;
         if (start?.line !== undefined) {
@@ -65,7 +69,9 @@ describe("crispened schema parity", () => {
     "round-trips oxlint reports with integer source coordinates",
     [OxlintReportArbitrary],
     Effect.fnUntraced(function* ([report]) {
-      expect(yield* decodeOxlintReport(yield* encodeOxlintReport(report))).toEqual(report);
+      const encodedOxlintReport = yield* encodeOxlintReport(report);
+      const decodedOxlintReport = yield* decodeOxlintReport(encodedOxlintReport);
+      expect(decodedOxlintReport).toEqual(report);
       for (const diagnostic of report.diagnostics ?? []) {
         for (const label of diagnostic.labels ?? []) {
           if (label.span?.line !== undefined) {
@@ -93,7 +99,8 @@ describe("subprocess report failures", () => {
     }
     it.effect(`accepts an empty valid ${report === BiomeReport ? "Biome" : "oxlint"} report`, () =>
       Effect.gen(function* () {
-        expect(yield* jsonReportParser(report)("{}")).toEqual({});
+        const value = yield* jsonReportParser(report)("{}");
+        expect(value).toEqual({});
       })
     );
   }

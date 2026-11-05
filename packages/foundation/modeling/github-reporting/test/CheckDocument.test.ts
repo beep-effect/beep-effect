@@ -115,7 +115,8 @@ describe("CheckDocument", () => {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "running" }));
           yield* TestClock.adjust("499 millis");
-          assert.deepStrictEqual(yield* Ref.get(writes), []);
+          const got = yield* Ref.get(writes);
+          assert.deepStrictEqual(got, []);
           yield* TestClock.adjust("1 millis");
           assert.strictEqual((yield* Ref.get(writes)).length, 1);
         }).pipe(withLayer(layer));
@@ -166,9 +167,11 @@ describe("CheckDocument", () => {
           yield* TestClock.adjust("400 millis");
           yield* doc.report("build", CheckReport.make({ state: "fail" }));
           yield* TestClock.adjust("100 millis");
-          assert.deepStrictEqual(yield* Ref.get(writes), [], "the report at 400ms prevents settling at 500ms");
+          const got1 = yield* Ref.get(writes);
+          assert.deepStrictEqual(got1, [], "the report at 400ms prevents settling at 500ms");
           yield* TestClock.adjust("249 millis");
-          assert.deepStrictEqual(yield* Ref.get(writes), [], "no write before the 750ms deadline");
+          const got2 = yield* Ref.get(writes);
+          assert.deepStrictEqual(got2, [], "no write before the 750ms deadline");
           yield* TestClock.adjust("1 millis");
           const all = yield* Ref.get(writes);
           assert.strictEqual(all.length, 1, "exactly one write at 750ms, before the next full quiet interval");
@@ -259,7 +262,8 @@ describe("CheckDocument", () => {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "running" }));
           yield* TestClock.adjust("500 millis");
-          assert.deepStrictEqual(yield* Ref.get(writes), [], "the write failed and was logged");
+          const got3 = yield* Ref.get(writes);
+          assert.deepStrictEqual(got3, [], "the write failed and was logged");
           yield* Ref.set(broken, false);
           yield* doc.report("build", CheckReport.make({ state: "pass" }));
           yield* TestClock.adjust("500 millis");
@@ -531,7 +535,8 @@ describe("CheckDocument", () => {
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "pass", outcome: "newer run" }));
-          assert.strictEqual(yield* doc.flush, "written");
+          const flush4 = yield* doc.flush;
+          assert.strictEqual(flush4, "written");
         }).pipe(withLayer(newer.layer));
         const afterNewer = yield* Ref.get(remote);
 
@@ -539,11 +544,14 @@ describe("CheckDocument", () => {
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "fail", outcome: "stale rerun" }));
-          assert.strictEqual(yield* doc.flush, "stale");
+          const flush5 = yield* doc.flush;
+          assert.strictEqual(flush5, "stale");
         }).pipe(withLayer(older.layer));
 
-        assert.deepStrictEqual(yield* Ref.get(older.writes), [], "the stale run must not write");
-        assert.strictEqual(yield* Ref.get(remote), afterNewer, "the newer run's document is intact");
+        const got6 = yield* Ref.get(older.writes);
+        assert.deepStrictEqual(got6, [], "the stale run must not write");
+        const got7 = yield* Ref.get(remote);
+        assert.strictEqual(got7, afterNewer, "the newer run's document is intact");
         const parsed = Result.getOrThrow(
           ManagedDocument.parseResult({ namespace: NS, key: KEY, text: afterNewer ?? "" })
         );
@@ -564,7 +572,8 @@ describe("CheckDocument", () => {
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "pass", outcome: "newer run" }));
-          assert.strictEqual(yield* doc.flush, "written");
+          const flush8 = yield* doc.flush;
+          assert.strictEqual(flush8, "written");
         }).pipe(withLayer(newer.layer));
 
         // The stale run flushes twice — the report-driven pass plus an
@@ -572,13 +581,16 @@ describe("CheckDocument", () => {
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "fail", outcome: "stale rerun" }));
-          assert.strictEqual(yield* doc.flush, "stale");
-          assert.strictEqual(yield* doc.flush, "stale");
+          const flush9 = yield* doc.flush;
+          assert.strictEqual(flush9, "stale");
+          const flush10 = yield* doc.flush;
+          assert.strictEqual(flush10, "stale");
         }).pipe(withLayer(older.layer), withLayer(Logger.layer([collector])));
 
         // The debug-level repeat is below the default minimum level, so the
         // consumer-visible count across both stale passes is exactly one.
-        const dropped = A.filter(yield* Ref.get(lines), Str.includes("pass dropped"));
+        const got11 = yield* Ref.get(lines);
+        const dropped = A.filter(got11, Str.includes("pass dropped"));
         assert.strictEqual(dropped.length, 1, "one INFO drop line across two stale passes");
       })
     );
@@ -592,13 +604,15 @@ describe("CheckDocument", () => {
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "running", outcome: "older run" }));
-          assert.strictEqual(yield* doc.flush, "written");
+          const flush12 = yield* doc.flush;
+          assert.strictEqual(flush12, "written");
         }).pipe(withLayer(older.layer));
 
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "pass", outcome: "newer run" }));
-          assert.strictEqual(yield* doc.flush, "written");
+          const flush13 = yield* doc.flush;
+          assert.strictEqual(flush13, "written");
         }).pipe(withLayer(newer.layer));
 
         const final = (yield* Ref.get(remote)) ?? "";
@@ -620,13 +634,15 @@ describe("CheckDocument", () => {
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "running" }));
-          assert.strictEqual(yield* doc.flush, "written");
+          const flush14 = yield* doc.flush;
+          assert.strictEqual(flush14, "written");
         }).pipe(withLayer(first.layer));
 
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "pass" }));
-          assert.strictEqual(yield* doc.flush, "written");
+          const flush15 = yield* doc.flush;
+          assert.strictEqual(flush15, "written");
         }).pipe(withLayer(second.layer));
 
         const final = (yield* Ref.get(remote)) ?? "";
@@ -644,13 +660,15 @@ describe("CheckDocument", () => {
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "running" }));
-          assert.strictEqual(yield* doc.flush, "written");
+          const flush16 = yield* doc.flush;
+          assert.strictEqual(flush16, "written");
         }).pipe(withLayer(unstamped.layer));
 
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "pass" }));
-          assert.strictEqual(yield* doc.flush, "written", "no stamp on the document, so any stamped pass may write");
+          const flush17 = yield* doc.flush;
+          assert.strictEqual(flush17, "written", "no stamp on the document, so any stamped pass may write");
         }).pipe(withLayer(stamped.layer));
       })
     );
@@ -662,9 +680,11 @@ describe("CheckDocument", () => {
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "pass" }));
-          assert.strictEqual(yield* doc.flush, "written");
+          const flush18 = yield* doc.flush;
+          assert.strictEqual(flush18, "written");
           // The same state, the same per-run stamp: byte-identical render.
-          assert.strictEqual(yield* doc.flush, "unchanged");
+          const flush19 = yield* doc.flush;
+          assert.strictEqual(flush19, "unchanged");
           assert.strictEqual((yield* Ref.get(writes)).length, 1);
         }).pipe(withLayer(layer));
       })
@@ -695,8 +715,10 @@ describe("CheckDocument", () => {
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "pass" }));
-          assert.strictEqual(yield* doc.flush, "written");
-          assert.strictEqual(yield* doc.flush, "unchanged");
+          const flush20 = yield* doc.flush;
+          assert.strictEqual(flush20, "written");
+          const flush21 = yield* doc.flush;
+          assert.strictEqual(flush21, "unchanged");
           assert.strictEqual((yield* Ref.get(writes)).length, 1);
         }).pipe(withLayer(layer));
       })
@@ -724,7 +746,8 @@ describe("CheckDocument", () => {
     it.effect("a stubbed flush carries the outcome type", () =>
       Effect.gen(function* () {
         const doc = yield* CheckDocument;
-        assert.strictEqual(yield* doc.flush, "unchanged");
+        const flush22 = yield* doc.flush;
+        assert.strictEqual(flush22, "unchanged");
       }).pipe(withLayer(CheckDocument.layerTest({ flush: Effect.succeed("unchanged" as const) })))
     );
   });
@@ -734,7 +757,8 @@ describe("CheckFlushOutcome schema contract", () => {
   it.effect("accepts exactly the three reconciliation outcomes", () =>
     Effect.gen(function* () {
       for (const outcome of ["written", "unchanged", "stale"]) {
-        assert.strictEqual(yield* S.decodeUnknownEffect(CheckFlushOutcome)(outcome), outcome);
+        const value = yield* S.decodeUnknownEffect(CheckFlushOutcome)(outcome);
+        assert.strictEqual(value, outcome);
       }
       assert.strictEqual(CheckFlushOutcome.literals.length, 3);
       assert.isFalse(S.is(CheckFlushOutcome)("failed"));

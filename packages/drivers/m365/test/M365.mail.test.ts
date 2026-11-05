@@ -118,7 +118,8 @@ const MailTestHttpLayer = Layer.effect(
     return MailTestHttp.of({
       captures: Ref.get(capturesRef),
       handle: Effect.fn("MailTestHttp.handle")(function* (request) {
-        const index = A.length(yield* Ref.get(capturesRef));
+        const got = yield* Ref.get(capturesRef);
+        const index = A.length(got);
         yield* Ref.update(
           capturesRef,
           A.append({
@@ -328,7 +329,8 @@ describe("@beep/m365 mail outbound verbs", () => {
           )
         );
 
-        expect(routes(yield* testHttp.captures)).toStrictEqual([`GET ${MESSAGE_URL}`]);
+        const captures1 = yield* testHttp.captures;
+        expect(routes(captures1)).toStrictEqual([`GET ${MESSAGE_URL}`]);
         assertSome(addresses, [O.some("hidden@example.test")]);
         assertSome(O.map(message.toRecipients, A.length), 2);
         assertSome(O.map(message.ccRecipients, A.length), 1);
@@ -396,7 +398,8 @@ describe("@beep/m365 mail outbound verbs", () => {
 
         yield* m365.addMessageAttachment(attachmentRequest(new Uint8Array(M365_ATTACHMENT_SINGLE_REQUEST_MAX_BYTES)));
 
-        expect(routes(yield* testHttp.captures)).toStrictEqual([`POST ${MESSAGE_URL}/attachments`]);
+        const captures2 = yield* testHttp.captures;
+        expect(routes(captures2)).toStrictEqual([`POST ${MESSAGE_URL}/attachments`]);
       })
     );
   });
@@ -522,7 +525,8 @@ describe("@beep/m365 mail outbound verbs", () => {
         );
 
         const attachment = yield* m365.addMessageAttachment(attachmentRequest(new Uint8Array(total)));
-        const puts = A.drop(yield* testHttp.captures, 1);
+        const captures3 = yield* testHttp.captures;
+        const puts = A.drop(captures3, 1);
 
         expect(A.map(puts, (request) => request.headers["content-range"])).toStrictEqual([
           `bytes 0-${total - 1}/${total}`,
@@ -558,7 +562,8 @@ describe("@beep/m365 mail outbound verbs", () => {
           `${MESSAGE_URL}/attachments/createUploadSession`
         );
         assertSome(insecureSession, "response decoding");
-        expect(yield* testHttp.captures).toHaveLength(3);
+        const captures4 = yield* testHttp.captures;
+        expect(captures4).toHaveLength(3);
       })
     );
   });
@@ -577,7 +582,8 @@ describe("@beep/m365 mail outbound verbs", () => {
 
         assertSome(empty, "request encoding");
         assertSome(oversize, "request encoding");
-        expect(yield* testHttp.captures).toHaveLength(0);
+        const captures5 = yield* testHttp.captures;
+        expect(captures5).toHaveLength(0);
       })
     );
   });
@@ -618,7 +624,8 @@ describe("@beep/m365 mail outbound verbs", () => {
         const reason = yield* reasonOf(m365.sendDraftMessage(sendRequest));
 
         assertSome(reason, "ambiguous write");
-        expect(yield* testHttp.captures).toHaveLength(1);
+        const captures6 = yield* testHttp.captures;
+        expect(captures6).toHaveLength(1);
       })
     );
   });
@@ -634,7 +641,8 @@ describe("@beep/m365 mail outbound verbs", () => {
         const reason = yield* reasonOf(m365.sendDraftMessage(sendRequest));
 
         assertSome(reason, "ambiguous write");
-        expect(yield* testHttp.captures).toHaveLength(1);
+        const captures7 = yield* testHttp.captures;
+        expect(captures7).toHaveLength(1);
       })
     );
   });
@@ -651,10 +659,8 @@ describe("@beep/m365 mail outbound verbs", () => {
 
         yield* m365.sendDraftMessage(sendRequest);
 
-        expect(routes(yield* testHttp.captures)).toStrictEqual([
-          `POST ${MESSAGE_URL}/send`,
-          `POST ${MESSAGE_URL}/send`,
-        ]);
+        const captures8 = yield* testHttp.captures;
+        expect(routes(captures8)).toStrictEqual([`POST ${MESSAGE_URL}/send`, `POST ${MESSAGE_URL}/send`]);
       })
     );
   });
@@ -679,7 +685,8 @@ describe("@beep/m365 mail outbound verbs", () => {
         ]);
 
         expect(reasons).toStrictEqual(A.replicate(O.some("request encoding"), 5));
-        expect(yield* testHttp.captures).toHaveLength(0);
+        const captures9 = yield* testHttp.captures;
+        expect(captures9).toHaveLength(0);
       })
     );
   });

@@ -9,13 +9,14 @@
  *
  * @since 0.0.0
  */
+
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
@@ -23,6 +24,7 @@ import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
@@ -64,7 +66,7 @@ import * as HashMap from "effect/HashMap";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-const DATA = ${JSON.stringify(JSON.stringify(entries))};
+const DATA = ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(entries), identity)), identity)};
 
 const decodeEntities = S.Tuple([S.String, S.String]).pipe(S.Array, S.fromJsonString, S.decodeResult);
 
@@ -98,7 +100,8 @@ const program = Effect.gen(function* () {
   const response = yield* HttpClient.get(SOURCE).pipe(Effect.flatMap(HttpClientResponse.filterStatusOk));
   const document = yield* HttpClientResponse.schemaBodyJson(EntitiesDocument)(response);
   const entries = entriesOf(document);
-  const fetchedOn = DateTime.formatIsoDateUtc(yield* DateTime.now);
+  const now1 = yield* DateTime.now;
+  const fetchedOn = DateTime.formatIsoDateUtc(now1);
   const target = path.join(import.meta.dirname, "..", "src", "internal", "entityMap.ts");
   yield* fs.writeFileString(target, render(entries, fetchedOn));
   yield* Effect.log(`wrote ${entries.length} entities to ${target}`);

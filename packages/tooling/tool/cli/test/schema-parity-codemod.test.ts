@@ -457,13 +457,13 @@ layer(TestLayer, { timeout: "60 seconds" })("schema-parity codemod run", (it) =>
           ["thunk", 1],
         ]
       );
+      const readFileString1 = yield* fs.readFileString(path.join(root, FIXTURE_MODULE));
       assert.strictEqual(
-        yield* fs.readFileString(path.join(root, FIXTURE_MODULE)),
+        readFileString1,
         `${kitHeader}export const all = Status.literals;\nexport const one = Status.Enum.live;\n`
       );
-      const leftovers = A.filter(yield* fs.readDirectory(path.join(root, "packages/example/src")), (name) =>
-        Str.includes(".schema-parity-codemod-staged")(name)
-      );
+      const readDirectory2 = yield* fs.readDirectory(path.join(root, "packages/example/src"));
+      const leftovers = A.filter(readDirectory2, (name) => Str.includes(".schema-parity-codemod-staged")(name));
       assert.deepStrictEqual(leftovers, []);
     })
   );
@@ -496,9 +496,12 @@ layer(TestLayer, { timeout: "60 seconds" })("schema-parity codemod run", (it) =>
       );
 
       assert.deepStrictEqual(report.filesChanged, [FIXTURE_MODULE]);
-      assert.strictEqual(yield* fs.readFileString(sentinel), "outside untouched\n");
-      assert.strictEqual(yield* fs.readLink(predictable), sentinel);
-      assert.include(yield* fs.readFileString(path.join(root, FIXTURE_MODULE)), "Status.literals");
+      const readFileString3 = yield* fs.readFileString(sentinel);
+      assert.strictEqual(readFileString3, "outside untouched\n");
+      const readLink4 = yield* fs.readLink(predictable);
+      assert.strictEqual(readLink4, sentinel);
+      const readFileString5 = yield* fs.readFileString(path.join(root, FIXTURE_MODULE));
+      assert.include(readFileString5, "Status.literals");
     })
   );
 
@@ -520,7 +523,8 @@ layer(TestLayer, { timeout: "60 seconds" })("schema-parity codemod run", (it) =>
 
       assert.strictEqual(report.mode, "dry-run");
       assert.deepStrictEqual(report.filesChanged, [FIXTURE_MODULE]);
-      assert.strictEqual(yield* fs.readFileString(path.join(root, FIXTURE_MODULE)), original);
+      const readFileString6 = yield* fs.readFileString(path.join(root, FIXTURE_MODULE));
+      assert.strictEqual(readFileString6, original);
     })
   );
 
@@ -547,7 +551,8 @@ layer(TestLayer, { timeout: "60 seconds" })("schema-parity codemod run", (it) =>
 
       assertInstanceOf(error, SchemaParityCodemodError);
       assertTrue(Str.startsWith(`Failed to write ${report}: `)(error.message), error.message);
-      strictEqual(yield* fs.readFileString(path.join(root, FIXTURE_MODULE)), original);
+      const readFileString7 = yield* fs.readFileString(path.join(root, FIXTURE_MODULE));
+      strictEqual(readFileString7, original);
     })
   );
 });

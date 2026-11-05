@@ -25,7 +25,8 @@ describe("composer state properties", () => {
         const encoded = yield* S.encodeEffect(NodeMeta)(value);
         const decoded = yield* S.decodeEffect(NodeMeta)(encoded);
         assert.strictEqual(S.toEquivalence(NodeMeta)(decoded, value), true);
-        assert.deepStrictEqual(yield* S.encodeEffect(NodeMeta)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(NodeMeta)(decoded);
+        assert.deepStrictEqual(value1, encoded);
         clearMeta(decoded);
         assert.deepStrictEqual(decoded, NodeMeta.make({}));
         assert.strictEqual(hasMeta(decoded), false);

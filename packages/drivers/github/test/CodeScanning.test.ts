@@ -156,7 +156,8 @@ describe("CodeScanningSetup", () => {
     Effect.gen(function* () {
       const omitted = yield* S.decodeEffect(CodeScanningSetup)({});
       assert.deepStrictEqual<CodeScanningSetup.Encoded>(omitted, {});
-      assert.deepStrictEqual(yield* S.encodeEffect(CodeScanningSetup)(omitted), {});
+      const value1 = yield* S.encodeEffect(CodeScanningSetup)(omitted);
+      assert.deepStrictEqual(value1, {});
       const explicit = yield* Effect.exit(S.decodeUnknownEffect(CodeScanningSetup)({ runner_label: undefined }));
       explicit.pipe(Exit.isFailure, assertTrue);
     })
@@ -174,7 +175,8 @@ describe("CodeScanningSetup", () => {
       };
       const value = yield* S.decodeEffect(CodeScanningSetup)(input);
       assert.deepStrictEqual<CodeScanningSetup.Encoded>(value, input);
-      assert.deepStrictEqual(yield* S.encodeEffect(CodeScanningSetup)(value), input);
+      const value2 = yield* S.encodeEffect(CodeScanningSetup)(value);
+      assert.deepStrictEqual(value2, input);
     })
   );
 });
@@ -187,7 +189,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(CodeScanningSetup)(value);
       const decoded = yield* S.decodeEffect(CodeScanningSetup)(encoded);
       assert.isTrue(S.toEquivalence(CodeScanningSetup)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(CodeScanningSetup)(decoded), encoded);
+      const value3 = yield* S.encodeEffect(CodeScanningSetup)(decoded);
+      assert.deepStrictEqual(value3, encoded);
     }),
   { arbitrary: fcRuns(100) }
 );

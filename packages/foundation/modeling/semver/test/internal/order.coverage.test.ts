@@ -92,12 +92,14 @@ describe("structural order schemas", () => {
       assert.strictEqual(S.is(VersionParts)(parts), true);
       const decoded = yield* S.decodeEffect(VersionParts)(parts);
       assert.deepStrictEqual(decoded, parts);
-      assert.deepStrictEqual(yield* S.encodeEffect(VersionParts)(decoded), parts);
+      const value = yield* S.encodeEffect(VersionParts)(decoded);
+      assert.deepStrictEqual(value, parts);
       const comparator = ComparatorParts.make({ operator: ">=", version: parts });
       assert.strictEqual(S.is(ComparatorParts)(comparator), true);
       const bound = yield* S.decodeEffect(ComparatorParts)(comparator);
       assert.deepStrictEqual(bound, comparator);
-      assert.deepStrictEqual(yield* S.encodeEffect(ComparatorParts)(bound), comparator);
+      const value1 = yield* S.encodeEffect(ComparatorParts)(bound);
+      assert.deepStrictEqual(value1, comparator);
       assert.strictEqual(S.is(VersionParts)({ ...parts, minor: null }), false);
       assert.strictEqual(S.is(ComparatorParts)({ ...comparator, operator: "~" }), false);
     })

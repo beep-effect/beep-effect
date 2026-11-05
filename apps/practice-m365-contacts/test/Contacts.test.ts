@@ -99,7 +99,9 @@ const overJob = Effect.fn("overJob")(function* <A, E>(
   const fake = ContactsMailbox.of({
     inventory: Ref.get(inventory),
     createFolder: Effect.gen(function* () {
-      if (folderCreationFails) return yield* M365Error.fromReason("response status", { status: 403 });
+      if (folderCreationFails) {
+        return yield* M365Error.fromReason("response status", { status: 403 });
+      }
       const folder = GraphContactFolder.make({ id: "seed-folder", displayName: O.some(seedFolderName) });
       yield* Ref.update(inventory, (snapshot) =>
         MailboxInventory.make({ ...snapshot, folders: A.append(snapshot.folders, folder) })
@@ -126,12 +128,15 @@ const overJob = Effect.fn("overJob")(function* <A, E>(
           contacts: A.append(snapshot.contacts, MailboxContact.make({ contact, folderId: O.some(folderId) })),
         })
       );
-      if (ambiguous) return yield* M365Error.fromReason("ambiguous write");
+      if (ambiguous) {
+        return yield* M365Error.fromReason("ambiguous write");
+      }
       return contact;
     }),
     delete: Effect.fnUntraced(function* (row, changeKey) {
-      if (O.isSome(changeKey) && !O.contains(changeKey.value)(row.contact.changeKey))
+      if (O.isSome(changeKey) && !O.contains(changeKey.value)(row.contact.changeKey)) {
         return yield* M365Error.fromReason("response status", { status: 412 });
+      }
       yield* Ref.update(deleted, A.append(row.contact.id));
       yield* Ref.update(inventory, (snapshot) =>
         MailboxInventory.make({
@@ -255,14 +260,57 @@ describe("contact seeding", () => {
             vcfOnly: 0,
           });
           expect(O.getOrThrow(census.census).csvInputs[0]?.inputsSharingHash).toBe(2);
-          expect(yield* Effect.flip(loadContacts(ContactInputs.make({ csv: [one], vcf: [vcf] }), false))).toMatchObject(
-            {
-              reason: "input",
-            }
-          );
+          const flip1 = yield* Effect.flip(loadContacts(ContactInputs.make({ csv: [one], vcf: [vcf] }), false));
+          expect(flip1).toMatchObject({
+            reason: "input",
+          });
         })
       )
     );
+    it.effect("preserves normalized business phone numbers in the created contact", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const input = path.join(root, "phone.csv");
+          yield* fs.writeFileString(
+            input,
+            "First Name,Last Name,Company,E-mail Address,Business Phone\nFixture,Person,Fixture company,person@example.test,+12025550123\n"
+          );
+          const run = yield* overJob(
+            root,
+            empty,
+            ContactSeeding.use((job) => job.apply(ContactInputs.make({ csv: [input], vcf: [] }), true))
+          );
+          expect(run.created).toBe(1);
+          const created = O.getOrThrow(A.head(run.inventory.contacts));
+          const payload = O.getOrThrow(created.contact.rawJson);
+          expect(payload).toMatchObject({ businessPhones: ["+12025550123"] });
+        })
+      )
+    );
+
+    it.effect("rejects invalid undo selection and missing confirmation before changing the mailbox", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const run = yield* overJob(
+            root,
+            empty,
+            ContactSeeding.use((job) =>
+              Effect.all([
+                job.undo(O.none(), false, false, true).pipe(Effect.flip),
+                job.undo(O.some("synthetic-run"), false, false, false).pipe(Effect.flip),
+              ])
+            )
+          );
+          expect(run.result).toMatchObject([{ reason: "input" }, { reason: "confirmation" }]);
+          expect(run.created).toBe(0);
+          expect(run.deleted).toEqual([]);
+          expect(run.journals).toEqual([]);
+        })
+      )
+    );
+
     it.effect("applies once, records marker/version, plans zero creates and supports both undo dry runs", () =>
       withFiles(
         Effect.fnUntraced(function* (root) {
@@ -278,14 +326,17 @@ describe("contact seeding", () => {
               Effect.fnUntraced(function* (job) {
                 const applied = yield* job.apply(inputs, true);
                 expect(applied.created).toBe(1);
-                expect(yield* job.dryRun(inputs, false, false)).toMatchObject({ Create: 0, SkipAlreadySeeded: 1 });
+                const dryRun2 = yield* job.dryRun(inputs, false, false);
+                expect(dryRun2).toMatchObject({ Create: 0, SkipAlreadySeeded: 1 });
                 const second = yield* job.apply(inputs, true);
                 expect(second.created).toBe(0);
-                expect(yield* job.undo(O.some(applied.runId), false, true, false)).toMatchObject({
+                const undo3 = yield* job.undo(O.some(applied.runId), false, true, false);
+                expect(undo3).toMatchObject({
                   deleted: 1,
                   edited: 0,
                 });
-                expect(yield* job.undo(O.none(), true, true, false)).toMatchObject({ deleted: 1 });
+                const undo4 = yield* job.undo(O.none(), true, true, false);
+                expect(undo4).toMatchObject({ deleted: 1 });
                 yield* job.undo(O.some(applied.runId), false, false, true);
                 return applied;
               })
@@ -316,9 +367,12 @@ describe("contact seeding", () => {
               Effect.fnUntraced(function* (job) {
                 const applied = yield* job.apply(ContactInputs.make({ csv: [input], vcf: [] }), true);
                 expect(applied).toMatchObject({ created: 0, SkipExistsInMailbox: 1, failed: 0 });
-                expect(yield* job.undo(O.some(applied.runId), false, true, false)).toMatchObject({ deleted: 0 });
-                expect(yield* job.undo(O.some(applied.runId), false, false, true)).toMatchObject({ deleted: 0 });
-                expect(yield* Effect.flip(job.undo(O.some("missing-run"), false, true, false))).toMatchObject({
+                const undo5 = yield* job.undo(O.some(applied.runId), false, true, false);
+                expect(undo5).toMatchObject({ deleted: 0 });
+                const undo6 = yield* job.undo(O.some(applied.runId), false, false, true);
+                expect(undo6).toMatchObject({ deleted: 0 });
+                const flip7 = yield* Effect.flip(job.undo(O.some("missing-run"), false, true, false));
+                expect(flip7).toMatchObject({
                   reason: "missing-journal",
                 });
                 return applied;
@@ -405,10 +459,12 @@ describe("contact seeding", () => {
             empty,
             ContactSeeding.use(
               Effect.fnUntraced(function* (job) {
-                expect(yield* Effect.flip(job.undo(O.some(journal.runId), false, true, false))).toMatchObject({
+                const flip8 = yield* Effect.flip(job.undo(O.some(journal.runId), false, true, false));
+                expect(flip8).toMatchObject({
                   reason: "ambiguous-write",
                 });
-                expect(yield* Effect.flip(job.undo(O.some(journal.runId), false, false, true))).toMatchObject({
+                const flip9 = yield* Effect.flip(job.undo(O.some(journal.runId), false, false, true));
+                expect(flip9).toMatchObject({
                   reason: "ambiguous-write",
                 });
               })
@@ -496,10 +552,9 @@ describe("contact seeding", () => {
             ],
           });
           yield* fs.makeDirectory(path.join(root, "state"));
-          yield* fs.writeFileString(
-            path.join(root, "state", "fixture-run.json"),
-            yield* S.encodeEffect(JournalJson)(journal)
-          );
+          const argument = path.join(root, "state", "fixture-run.json");
+          const value1 = yield* S.encodeEffect(JournalJson)(journal);
+          yield* fs.writeFileString(argument, value1);
           const edited = GraphContact.make({
             ...stored("edited", "Edited fixture", "edited@example.test", O.some(journal.runId)),
             changeKey: O.some("version-2"),
@@ -509,12 +564,15 @@ describe("contact seeding", () => {
             inventoryOf([edited]),
             ContactSeeding.use(
               Effect.fnUntraced(function* (job) {
-                expect(yield* job.undo(O.some(journal.runId), false, true, false)).toMatchObject({
+                const undo10 = yield* job.undo(O.some(journal.runId), false, true, false);
+                expect(undo10).toMatchObject({
                   deleted: 0,
                   edited: 1,
                 });
-                expect(yield* job.undo(O.none(), true, true, false)).toMatchObject({ deleted: 1, edited: 1 });
-                expect(yield* job.undo(O.some(journal.runId), false, false, true)).toMatchObject({
+                const undo11 = yield* job.undo(O.none(), true, true, false);
+                expect(undo11).toMatchObject({ deleted: 1, edited: 1 });
+                const undo12 = yield* job.undo(O.some(journal.runId), false, false, true);
+                expect(undo12).toMatchObject({
                   deleted: 0,
                   edited: 1,
                 });
@@ -539,8 +597,10 @@ describe("contact seeding", () => {
             inventoryOf([stored("untracked", "Other fixture", "other@example.test", O.some("unknown-run"))]),
             ContactSeeding.use(
               Effect.fnUntraced(function* (job) {
-                expect(yield* Effect.flip(job.apply(inputs, false))).toMatchObject({ reason: "confirmation" });
-                expect(yield* Effect.flip(job.apply(inputs, true))).toMatchObject({ reason: "untracked-tagged" });
+                const flip13 = yield* Effect.flip(job.apply(inputs, false));
+                expect(flip13).toMatchObject({ reason: "confirmation" });
+                const flip14 = yield* Effect.flip(job.apply(inputs, true));
+                expect(flip14).toMatchObject({ reason: "untracked-tagged" });
               })
             )
           );
@@ -585,12 +645,16 @@ describe("contact seeding", () => {
                 const receipt = yield* job.export(out);
                 expect(receipt.count).toBe(1);
                 expect(receipt.sha256).toHaveLength(64);
-                const content = yield* S.decodeEffect(ExportRowJson)(yield* fs.readFileString(out));
+                const argument1 = S.decodeEffect(ExportRowJson);
+                const readFileString2 = yield* fs.readFileString(out);
+                const content = yield* argument1(readFileString2);
                 expect(content).toMatchObject(wire);
                 expect((yield* fs.stat(out)).mode & 0o777).toBe(0o600);
                 expect((yield* fs.stat(path.dirname(out))).mode & 0o777).toBe(0o700);
-                expect(yield* Effect.flip(job.export(out))).toMatchObject({ reason: "unsafe-export" });
-                expect(yield* Effect.flip(job.export(path.join(root, "checkout", "bad.jsonl")))).toMatchObject({
+                const flip15 = yield* Effect.flip(job.export(out));
+                expect(flip15).toMatchObject({ reason: "unsafe-export" });
+                const flip16 = yield* Effect.flip(job.export(path.join(root, "checkout", "bad.jsonl")));
+                expect(flip16).toMatchObject({
                   reason: "unsafe-export",
                 });
                 return receipt;
@@ -625,7 +689,8 @@ describe("contact seeding", () => {
           expect(blocked).toMatchObject({ reason: "locked" });
           yield* withWriterLock(state, Effect.void);
           yield* fs.writeFileString(path.join(root, "state", "bad.json"), "not-json");
-          expect(yield* Effect.flip(state.journals)).toMatchObject({ reason: "state" });
+          const flip17 = yield* Effect.flip(state.journals);
+          expect(flip17).toMatchObject({ reason: "state" });
         })
       )
     );

@@ -22,8 +22,12 @@ describe("extends target resolution properties", () => {
         const target = `./base-${segment}.json`;
         const manifest = { ".": target, "./base": { types: target, default: "./ignored.json" } };
         const codec = S.fromJsonString(Exports);
-        const parsed = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(manifest));
-        const reparsed = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(parsed));
+        const argument = S.decodeEffect(codec);
+        const value = yield* S.encodeEffect(codec)(manifest);
+        const parsed = yield* argument(value);
+        const argument1 = S.decodeEffect(codec);
+        const value1 = yield* S.encodeEffect(codec)(parsed);
+        const reparsed = yield* argument1(value1);
         assert.deepStrictEqual(resolveExports(reparsed, "./base"), resolveExports(parsed, "./base"));
         assert.deepStrictEqual(resolveExports(parsed, "./base"), {
           targets: [target, "./ignored.json"],
@@ -51,10 +55,14 @@ describe("extends target resolution properties", () => {
             resolveExtendsTarget(spec, "/project/config.json").pipe(
               Effect.provideService(FileSystem.FileSystem, memory.fileSystem)
             );
-          assertSome(yield* lookup(`./base-${segment}`), absolute);
-          assertSome(yield* lookup(`.\\base-${segment}.json`), absolute);
-          assertSome(yield* lookup(absolute), absolute);
-          assertNone(yield* lookup(`./missing-${segment}.json`));
+          const lookup1 = yield* lookup(`./base-${segment}`);
+          assertSome(lookup1, absolute);
+          const lookup2 = yield* lookup(`.\\base-${segment}.json`);
+          assertSome(lookup2, absolute);
+          const lookup3 = yield* lookup(absolute);
+          assertSome(lookup3, absolute);
+          const lookup4 = yield* lookup(`./missing-${segment}.json`);
+          assertNone(lookup4);
         }),
       runs
     );

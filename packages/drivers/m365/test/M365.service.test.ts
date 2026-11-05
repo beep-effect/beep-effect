@@ -551,7 +551,8 @@ describe("@beep/m365 service", () => {
         yield* m365.getMessage(M365GetMessageRequest.make({ messageId: "message-id" }));
 
         assertSome(message.subject, "Office action response");
-        const urls = A.map(yield* testHttp.captures, (capture) => decodeURIComponent(capture.url));
+        const captures1 = yield* testHttp.captures;
+        const urls = A.map(captures1, (capture) => decodeURIComponent(capture.url));
         expect(urls).toStrictEqual([
           `${GRAPH_BASE_URL}/users/user-id/messages/message-id?$select=subject,from,receivedDateTime,webLink`,
           `${GRAPH_BASE_URL}/me/messages/message-id`,

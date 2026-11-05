@@ -234,9 +234,10 @@ const requiredText = (name: string): Effect.Effect<string, M365EnvError> =>
 export const loadM365AppOnlyEnv = Effect.fn("M365.loadAppOnlyEnv")(function* (
   prefix: string
 ): Effect.fn.Return<M365AppOnlyEnvSettings, M365EnvError> {
-  const names = m365AppOnlyEnvNames(
-    yield* decodePrefix(prefix).pipe(Effect.mapError(() => M365EnvError.of("The environment prefix", "invalid")))
+  const pipe1 = yield* decodePrefix(prefix).pipe(
+    Effect.mapError(() => M365EnvError.of("The environment prefix", "invalid"))
   );
+  const names = m365AppOnlyEnvNames(pipe1);
   const tenantId = yield* requiredText(names.tenantId);
   const clientId = yield* requiredText(names.clientId);
   const thumbprintSha256 = yield* requiredText(names.certThumbprintSha256);

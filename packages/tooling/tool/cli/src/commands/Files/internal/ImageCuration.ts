@@ -520,11 +520,10 @@ const analyzePixels = Effect.fn("Files.analyzeImageAuditPixels")(function* (
     `${decoded.info.width}x${decoded.info.height}x${decoded.info.channels}:`
   );
   const crypto = yield* Digest.Digest;
-  const decodedHash = Hex.encode(
-    yield* crypto
-      .digest(Digest.sha256, concatBytes([decodedHeader, decoded.data]))
-      .pipe(FilesCommandError.mapError(`Failed to hash decoded pixels for "${source.path}"`))
-  );
+  const pipe1 = yield* crypto
+    .digest(Digest.sha256, concatBytes([decodedHeader, decoded.data]))
+    .pipe(FilesCommandError.mapError(`Failed to hash decoded pixels for "${source.path}"`));
+  const decodedHash = Hex.encode(pipe1);
 
   return {
     colorHash: colorHashFromRgb(color.data, color.info.channels),
@@ -691,12 +690,10 @@ const renderJsonContent = Effect.fn("Files.renderImageCurationJson")(function* (
   value: unknown,
   description: string
 ): Effect.fn.Return<string, FilesCommandError> {
-  return pipe(
-    yield* encodeUnknownJson(value).pipe(
-      Effect.mapError((cause) => FilesCommandError.new(cause, `Failed to encode ${description}`))
-    ),
-    Str.concat("\n")
+  const pipe2 = yield* encodeUnknownJson(value).pipe(
+    Effect.mapError((cause) => FilesCommandError.new(cause, `Failed to encode ${description}`))
   );
+  return pipe(pipe2, Str.concat("\n"));
 });
 
 const writeJsonAtomically = Effect.fn("Files.writeImageCurationJsonAtomically")(function* (

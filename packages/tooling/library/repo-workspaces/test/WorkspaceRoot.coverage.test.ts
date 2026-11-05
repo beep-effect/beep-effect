@@ -10,10 +10,13 @@ describe("WorkspaceRoot test-layer boundary semantics", () => {
     it.effect("exact and slash-terminated ceilings admit the configured root", () =>
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot.makeTest("/repo/member");
-        assert.strictEqual(yield* roots.find("/repo/member", { stopAt: "/repo/member" }), "/repo/member");
-        assert.strictEqual(yield* roots.find("/repo/member", { stopAt: "/" }), "/repo/member");
+        const found = yield* roots.find("/repo/member", { stopAt: "/repo/member" });
+        assert.strictEqual(found, "/repo/member");
+        const found1 = yield* roots.find("/repo/member", { stopAt: "/" });
+        assert.strictEqual(found1, "/repo/member");
         const windows = yield* WorkspaceRoot.makeTest("\\repo\\member");
-        assert.strictEqual(yield* windows.find("ignored", { stopAt: "/" }), "\\repo\\member");
+        const found2 = yield* windows.find("ignored", { stopAt: "/" });
+        assert.strictEqual(found2, "\\repo\\member");
       })
     );
   });
@@ -21,7 +24,8 @@ describe("WorkspaceRoot test-layer boundary semantics", () => {
     it.effect("the layer exposes the configured root", () =>
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
-        assert.strictEqual(yield* roots.find("/repo/app"), "/repo");
+        const found3 = yield* roots.find("/repo/app");
+        assert.strictEqual(found3, "/repo");
       })
     );
   });

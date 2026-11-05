@@ -554,7 +554,7 @@ export const applyNormalizePlan = Effect.fn("Files.applyNormalizePlan")(function
                 formatPlatformError("Failed to stat normalized image", tempPath, PlatformErrorOptions.make({ cause }))
               )
             );
-          const outputHash = dedupe ? O.some(yield* hashFileSha256(tempPath)) : O.none<FileSha256Hash>();
+          const outputHash = dedupe ? yield* Effect.asSome(hashFileSha256(tempPath)) : O.none<FileSha256Hash>();
           const candidates = O.isSome(outputHash)
             ? pipe(HashMap.get(seenOutputs, outputHash.value), O.getOrElse(A.empty<NormalizeSeenOutput>))
             : A.empty<NormalizeSeenOutput>();

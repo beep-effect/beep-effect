@@ -16,7 +16,8 @@ describe("RuntimeEnv schema property floor", () => {
         const encoded = yield* S.encodeEffect(RuntimeEnv)(value);
         const decoded = yield* S.decodeEffect(RuntimeEnv)(encoded);
         assert.isTrue(S.toEquivalence(RuntimeEnv)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(RuntimeEnv)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(RuntimeEnv)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -28,7 +29,8 @@ describe("RuntimeEnv schema property floor", () => {
         const encoded = yield* S.encodeEffect(CiName)(value);
         const decoded = yield* S.decodeEffect(CiName)(encoded);
         assert.isTrue(S.toEquivalence(CiName)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(CiName)(decoded), encoded);
+        const value2 = yield* S.encodeEffect(CiName)(decoded);
+        assert.deepStrictEqual(value2, encoded);
       }),
     runs
   );
@@ -43,10 +45,13 @@ describe("RuntimeEnv JSON persistence fidelity", () => {
       Effect.gen(function* () {
         const text = yield* S.encodeEffect(codec)(value);
         const parsed = yield* S.decodeEffect(codec)(text);
-        const reparsed = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(parsed));
+        const argument = S.decodeEffect(codec);
+        const value4 = yield* S.encodeEffect(codec)(parsed);
+        const reparsed = yield* argument(value4);
         assert.isTrue(S.toEquivalence(RuntimeEnv)(parsed, value));
         assert.isTrue(S.toEquivalence(RuntimeEnv)(reparsed, parsed));
-        assert.strictEqual(yield* S.encodeEffect(codec)(reparsed), text);
+        const value3 = yield* S.encodeEffect(codec)(reparsed);
+        assert.strictEqual(value3, text);
       }),
     runs
   );

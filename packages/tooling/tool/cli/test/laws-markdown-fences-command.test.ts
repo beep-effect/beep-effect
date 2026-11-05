@@ -15,10 +15,13 @@ import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -110,16 +113,19 @@ const unclosedFences = markdownOf(
   fence
 );
 const brokenHistory = markdownOf(`${fence}ts`, "const history: number = 'text'", fence);
-const skillsLock = `${JSON.stringify({
-  version: 2,
-  skills: {
-    demo: {
-      _tag: "local",
-      installedTargets: [".claude/skills/demo"],
-      installedTreeHash: Str.repeat(64)("0"),
+const skillsLock = `${Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    version: 2,
+    skills: {
+      demo: {
+        _tag: "local",
+        installedTargets: [".claude/skills/demo"],
+        installedTreeHash: Str.repeat(64)("0"),
+      },
     },
-  },
-})}\n`;
+  }),
+  identity
+)}\n`;
 
 const writeRepoFile = Effect.fn("MarkdownFencesCommandTest.writeRepoFile")(function* (
   root: string,
@@ -140,7 +146,8 @@ const runGit = Effect.fn("MarkdownFencesCommandTest.runGit")(function* (root: st
     stdout: "ignore",
     stderr: "ignore",
   });
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode1 = yield* handle.exitCode;
+  expect(exitCode1).toBe(0);
 });
 
 /** A git checkout with the repository's compiler, a guidance file, a generated region and a history packet. */
@@ -249,7 +256,8 @@ it.layer(TestLayer, { timeout: "120 seconds" })((it) => {
     it.effect(
       "reports as text, fails strict text and JSON checks, and passes a narrowed check",
       Effect.fnUntraced(function* () {
-        yield* enterDirectory(yield* makeFixtureCheckout(true));
+        const madeFixtureCheckout = yield* makeFixtureCheckout(true);
+        yield* enterDirectory(madeFixtureCheckout);
 
         const report = yield* runInProcess(["markdown-fences"]).pipe(withEmptyConfig, Effect.exit);
         const check = yield* runInProcess(["markdown-fences", "--check"]).pipe(withEmptyConfig, Effect.exit);

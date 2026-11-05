@@ -53,22 +53,28 @@ const approveWith = Effect.fnUntraced(function* (answer: unknown, capabilities: 
 describe("ElicitedApprovals", () => {
   it.effect("approves when the lawyer accepts with approve checked", () =>
     Effect.gen(function* () {
-      expect(yield* approveWith({ action: "accept", content: { approve: true } })).toBe("approved");
+      const approveWith1 = yield* approveWith({ action: "accept", content: { approve: true } });
+      expect(approveWith1).toBe("approved");
     })
   );
 
   it.effect("declines an unchecked accept, a decline and a cancel", () =>
     Effect.gen(function* () {
-      expect(yield* approveWith({ action: "accept", content: { approve: false } })).toBe("declined");
-      expect(yield* approveWith({ action: "decline" })).toBe("declined");
-      expect(yield* approveWith({ action: "cancel" })).toBe("declined");
+      const approveWith2 = yield* approveWith({ action: "accept", content: { approve: false } });
+      expect(approveWith2).toBe("declined");
+      const approveWith3 = yield* approveWith({ action: "decline" });
+      expect(approveWith3).toBe("declined");
+      const approveWith4 = yield* approveWith({ action: "cancel" });
+      expect(approveWith4).toBe("declined");
     })
   );
 
   it.effect("declines without prompting when the client lacks elicitation or no client exists", () =>
     Effect.gen(function* () {
-      expect(yield* approveWith({ action: "accept", content: { approve: true } }, {})).toBe("declined");
-      expect(yield* approve).toBe("declined");
+      const approveWith5 = yield* approveWith({ action: "accept", content: { approve: true } }, {});
+      expect(approveWith5).toBe("declined");
+      const approve6 = yield* approve;
+      expect(approve6).toBe("declined");
     })
   );
 
@@ -110,22 +116,27 @@ const gatewayApproveWith = Effect.fnUntraced(function* (
 describe("GatewayApprovals", () => {
   it.effect("asks in a Windows dialog when the client cannot elicit", () =>
     Effect.gen(function* () {
-      expect(yield* gatewayApproveWith({ answersYes: true }, {})).toBe("approved");
-      expect(yield* gatewayApproveWith({ answersYes: false }, {})).toBe("declined");
+      const gatewayApproveWith7 = yield* gatewayApproveWith({ answersYes: true }, {});
+      expect(gatewayApproveWith7).toBe("approved");
+      const gatewayApproveWith8 = yield* gatewayApproveWith({ answersYes: false }, {});
+      expect(gatewayApproveWith8).toBe("declined");
     })
   );
 
   it.effect("prefers elicitation when the client supports it", () =>
     Effect.gen(function* () {
       // The fake client declines the elicitation; the Yes dialog is never consulted.
-      expect(yield* gatewayApproveWith({ answersYes: true }, { elicitation: {} })).toBe("declined");
+      const gatewayApproveWith9 = yield* gatewayApproveWith({ answersYes: true }, { elicitation: {} });
+      expect(gatewayApproveWith9).toBe("declined");
     })
   );
 
   it.effect("declines off Windows and outside an MCP call without asking", () =>
     Effect.gen(function* () {
-      expect(yield* gatewayApproveWith({ answersYes: true, isWindows: false }, {})).toBe("declined");
-      expect(yield* gatewayApprove({ answersYes: true })).toBe("declined");
+      const gatewayApproveWith10 = yield* gatewayApproveWith({ answersYes: true, isWindows: false }, {});
+      expect(gatewayApproveWith10).toBe("declined");
+      const gatewayApprove11 = yield* gatewayApprove({ answersYes: true });
+      expect(gatewayApprove11).toBe("declined");
     })
   );
 });

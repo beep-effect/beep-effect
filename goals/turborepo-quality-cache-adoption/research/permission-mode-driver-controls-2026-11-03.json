@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "cache-permission-mode-driver-controls/v1",
+  "recordedAt": "2026-11-03T11:00:12.462500+00:00",
+  "authority": "Four early driver refusals only; no repository quality suite or native task execution.",
+  "sourceBindings": [
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-permission-mode-controls.py",
+      "sha256": "b0d0c161cf64be3034abd13338586515295f30a16235de8923f83779939b36d6"
+    }
+  ],
+  "rows": [
+    {
+      "case": "optimized-python",
+      "exit": 1,
+      "expectedReasonObserved": true,
+      "newReportAbsent": true,
+      "noNewRawCapture": true,
+      "diagnosticSha256": "29751f8ab2021fa2ee1b7f38f08bbe9678927721e9c62ab58ad19cc405963a2c"
+    },
+    {
+      "case": "existing-report",
+      "exit": 1,
+      "expectedReasonObserved": true,
+      "newReportAbsent": true,
+      "noNewRawCapture": true,
+      "diagnosticSha256": "86b8a5622ec4ce2516e8a94f331a71cfeb9976a59e98c9df270953b618748510"
+    },
+    {
+      "case": "existing-raw-capture",
+      "exit": 1,
+      "expectedReasonObserved": true,
+      "newReportAbsent": true,
+      "noNewRawCapture": true,
+      "diagnosticSha256": "86b8a5622ec4ce2516e8a94f331a71cfeb9976a59e98c9df270953b618748510"
+    },
+    {
+      "case": "wrong-native-pin",
+      "exit": 1,
+      "expectedReasonObserved": true,
+      "newReportAbsent": true,
+      "noNewRawCapture": true,
+      "diagnosticSha256": "0f63e8d1dd2ddc44ed7277bffe338d9d4c630ad5f0d792026896e6daad5501a8"
+    }
+  ],
+  "passingReportSha256": "b3f22d819570ef6b0ad4facc261a308f15509759fab7ebe2474f2d42e7c09f19",
+  "passingReportUnchanged": true,
+  "pinsNeverModifiedInSourceCheckout": true,
+  "tasksExecuted": 0
+}

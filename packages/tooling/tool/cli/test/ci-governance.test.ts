@@ -34,42 +34,41 @@ const writer = (environment: string, token = "${{ github.event_name == 'push' &&
 describe("CI governance policy", () => {
   it.effect("requires a writer environment and trusted caller expression", () =>
     Effect.gen(function* () {
-      expect(
-        yield* workflowPolicyDiagnostics(
-          "fixture.yml",
-          writer("${{ github.event_name == 'push' && 'turbo-cache-write' || null }}")
-        )
-      ).toEqual([]);
-      expect(yield* workflowPolicyDiagnostics("fixture.yml", writer(""))).toContain(
-        "writer: write token requires the trusted Turbo writer environment"
+      const workflowPolicyDiagnostics1 = yield* workflowPolicyDiagnostics(
+        "fixture.yml",
+        writer("${{ github.event_name == 'push' && 'turbo-cache-write' || null }}")
       );
-      expect(
-        yield* workflowPolicyDiagnostics("fixture.yml", writer("turbo-cache-write", "${{ secrets.TURBO_TOKEN }}"))
-      ).toContain("writer: writer input must stay guarded in the caller workflow");
+      expect(workflowPolicyDiagnostics1).toEqual([]);
+      const workflowPolicyDiagnostics2 = yield* workflowPolicyDiagnostics("fixture.yml", writer(""));
+      expect(workflowPolicyDiagnostics2).toContain("writer: write token requires the trusted Turbo writer environment");
+      const workflowPolicyDiagnostics3 = yield* workflowPolicyDiagnostics(
+        "fixture.yml",
+        writer("turbo-cache-write", "${{ secrets.TURBO_TOKEN }}")
+      );
+      expect(workflowPolicyDiagnostics3).toContain("writer: writer input must stay guarded in the caller workflow");
     })
   );
   it.effect("rejects an unguarded step environment writer token", () =>
     Effect.gen(function* () {
       const text =
         'on: push\njobs:\n  writer:\n    environment: turbo-cache-write\n    steps:\n      - run: bun run check\n        env:\n          TURBO_TOKEN: "${{ secrets.TURBO_TOKEN }}"\n';
-      expect(yield* workflowPolicyDiagnostics("fixture.yml", text)).toContain(
-        "writer: writer input must stay guarded in the caller workflow"
-      );
+      const workflowPolicyDiagnostics4 = yield* workflowPolicyDiagnostics("fixture.yml", text);
+      expect(workflowPolicyDiagnostics4).toContain("writer: writer input must stay guarded in the caller workflow");
     })
   );
   it.effect("rejects a matrix writer without the Turbo-only condition", () =>
     Effect.gen(function* () {
       const text = `${writer("${{ github.event_name == 'push' && 'turbo-cache-write' || null }}")}    strategy:\n      matrix:\n        include:\n          - uses_turbo: 'false'\n`;
-      expect(yield* workflowPolicyDiagnostics("fixture.yml", text)).toContain(
-        "writer: write token requires the trusted Turbo writer environment"
-      );
+      const workflowPolicyDiagnostics5 = yield* workflowPolicyDiagnostics("fixture.yml", text);
+      expect(workflowPolicyDiagnostics5).toContain("writer: write token requires the trusted Turbo writer environment");
     })
   );
   it.effect("rejects unbounded artifacts and cancelled main pushes", () =>
     Effect.gen(function* () {
       const text =
         "on:\n  push:\n    branches: [main]\nconcurrency:\n  group: main\n  cancel-in-progress: true\njobs:\n  upload:\n    steps:\n      - uses: actions/upload-artifact@abc\n        with:\n          path: output\n";
-      expect(yield* workflowPolicyDiagnostics("fixture.yml", text)).toEqual([
+      const workflowPolicyDiagnostics6 = yield* workflowPolicyDiagnostics("fixture.yml", text);
+      expect(workflowPolicyDiagnostics6).toEqual([
         "upload: artifact retention-days missing",
         "main pushes must not be cancelled by workflow concurrency",
       ]);
@@ -77,18 +76,24 @@ describe("CI governance policy", () => {
   );
   it.effect("fails on malformed YAML rather than reporting clean", () =>
     Effect.gen(function* () {
-      expect(yield* workflowPolicyDiagnostics("bad.yml", "jobs: [").pipe(Effect.isFailure)).toBe(true);
+      const pipe7 = yield* workflowPolicyDiagnostics("bad.yml", "jobs: [").pipe(Effect.isFailure);
+      expect(pipe7).toBe(true);
     })
   );
   it.effect("rejects a setup action that saves an Actions cache", () =>
     Effect.gen(function* () {
       const action = (uses: string) =>
         `runs:\n  using: composite\n  steps:\n    - run: bun install\n    - uses: ${uses}\n`;
-      expect(yield* setupActionSavesNoCache(action("actions/cache/restore@55cc8345"))).toBe(true);
-      expect(yield* setupActionSavesNoCache(action("actions/cache/save@55cc8345"))).toBe(false);
-      expect(yield* setupActionSavesNoCache(action("actions/cache@55cc8345"))).toBe(false);
-      expect(yield* setupActionSavesNoCache("runs:\n  steps: []\n")).toBe(true);
-      expect(yield* setupActionSavesNoCache("inputs: {}\n").pipe(Effect.isFailure)).toBe(true);
+      const setupActionSavesNoCache8 = yield* setupActionSavesNoCache(action("actions/cache/restore@55cc8345"));
+      expect(setupActionSavesNoCache8).toBe(true);
+      const setupActionSavesNoCache9 = yield* setupActionSavesNoCache(action("actions/cache/save@55cc8345"));
+      expect(setupActionSavesNoCache9).toBe(false);
+      const setupActionSavesNoCache10 = yield* setupActionSavesNoCache(action("actions/cache@55cc8345"));
+      expect(setupActionSavesNoCache10).toBe(false);
+      const setupActionSavesNoCache11 = yield* setupActionSavesNoCache("runs:\n  steps: []\n");
+      expect(setupActionSavesNoCache11).toBe(true);
+      const pipe12 = yield* setupActionSavesNoCache("inputs: {}\n").pipe(Effect.isFailure);
+      expect(pipe12).toBe(true);
     })
   );
   it.effect("keeps exactly one size label and preserves unrelated labels", () =>
@@ -223,7 +228,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer)
         Effect.gen(function* () {
           const context = yield* Layer.build(GithubPolicyClientLive);
           const client = Context.get(context, GithubPolicyClient);
-          expect(yield* client.read("repos/{owner}/{repo}/pulls/7")).toEqual({ changed_files: 3 });
+          const read13 = yield* client.read("repos/{owner}/{repo}/pulls/7");
+          expect(read13).toEqual({ changed_files: 3 });
           yield* client.write("POST /repos/{owner}/{repo}/issues/{issue_number}/labels", {
             issue_number: 7,
             labels: ["size/S"],
@@ -249,7 +255,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer)
           yield* runGovernance(["settings", "--check"]);
           yield* runGovernance(["held-group"]);
           yield* runGovernance(["pr-size", "7"]);
-          const logs = A.map(yield* TestConsole.logLines, String);
+          const logLines14 = yield* TestConsole.logLines;
+          const logs = A.map(logLines14, String);
           expect(logs).toContain("settings: desktop release reviewer protection present");
           expect(logs).toContain("held-group: clean");
           expect(logs).toContain("Changed files: 3; label: size/S");

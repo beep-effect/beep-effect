@@ -212,8 +212,9 @@ export const serveCachePrivateSocket = Effect.fn("Cache.servePrivateSocket")(fun
   const socket = path.join(directory, "cache.sock");
   const server = yield* BunHttpServer.make({ unix: socket, maxRequestBodySize }).pipe(Effect.catchDefect(bindFailure));
   yield* server.serve(app);
-  if (!NetAddress.isUnixPathAddress(server.address))
+  if (!NetAddress.isUnixPathAddress(server.address)) {
     return yield* CacheCommandError.new("Private cache server did not bind a Unix socket.");
+  }
   yield* fs.chmod(socket, 0o600);
   return Redacted.make(server.address);
 }, CacheCommandError.mapError("Cannot run the private cache socket server."));
@@ -254,8 +255,9 @@ const readFixtureBody = Effect.fn("CacheFixture.readBody")(function* (request: H
 export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(function* (
   credentials: CacheFixtureCredentials
 ) {
-  if (Redacted.value(credentials.reader) === Redacted.value(credentials.writer))
+  if (Redacted.value(credentials.reader) === Redacted.value(credentials.writer)) {
     return yield* CacheCommandError.new("Fixture reader and writer capabilities must differ.");
+  }
   const artifacts = yield* Ref.make(HashMap.empty<string, StoredArtifact>());
   const events = yield* Ref.make(A.empty<CacheFixtureEvent>());
   const sequence = yield* Ref.make(0);
@@ -273,18 +275,22 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
       body = new Uint8Array(),
       tag: O.Option<string> = O.none()
     ) {
+      const argument = S.Natural.make(id);
+      const argument1 = O.isSome(artifact) && status === 200 ? yield* Effect.asSome(hashBytes(body)) : O.none();
+      const argument2 = S.Natural.make(body.byteLength);
+      const argument3 = O.isSome(tag);
       const event = CacheFixtureEvent.make({
-        sequence: S.Natural.make(id),
+        sequence: argument,
         scenario: current,
         operation,
         role,
         status,
         artifact,
-        digest: O.isSome(artifact) && status === 200 ? O.some(yield* hashBytes(body)) : O.none(),
-        bytes: S.Natural.make(body.byteLength),
-        tagPresent: O.isSome(tag),
+        digest: argument1,
+        bytes: argument2,
+        tagPresent: argument3,
         requestTagSha256: O.isSome(requestTag)
-          ? O.some(yield* hashBytes(new TextEncoder().encode(requestTag.value)))
+          ? yield* Effect.asSome(hashBytes(new TextEncoder().encode(requestTag.value)))
           : O.none(),
       });
       yield* Ref.update(events, (all) => (all.length < requestLimit + 1 ? A.append(all, event) : all));
@@ -304,13 +310,20 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
     role: CacheFixtureEvent["role"],
     reply: ReturnType<typeof makeReply>
   ) {
-    if (role !== "writer") return yield* reply(403, "put", O.some(key));
-    if (!O.contains("application/octet-stream")(Headers.get(request.headers, "content-type")))
+    if (role !== "writer") {
+      return yield* reply(403, "put", O.some(key));
+    }
+    if (!O.contains("application/octet-stream")(Headers.get(request.headers, "content-type"))) {
       return yield* reply(415, "put", O.some(key));
+    }
     const tag = Headers.get(request.headers, "x-artifact-tag");
-    if (O.isNone(tag) || !S.is(Tag)(tag.value)) return yield* reply(400, "put", O.some(key));
+    if (O.isNone(tag) || !S.is(Tag)(tag.value)) {
+      return yield* reply(400, "put", O.some(key));
+    }
     const body = yield* readFixtureBody(request);
-    if (Result.isFailure(body)) return yield* reply(body.failure, "put", O.some(key));
+    if (Result.isFailure(body)) {
+      return yield* reply(body.failure, "put", O.some(key));
+    }
     const bytes = body.success;
     const stored = StoredArtifact.make({ body: bytes, digest: yield* hashBytes(bytes), tag: tag.value });
     const status = yield* Ref.modify(artifacts, (all) => {
@@ -328,12 +341,21 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
     current: CacheFixtureScenario,
     reply: ReturnType<typeof makeReply>
   ) {
-    if (request.method !== "GET" && request.method !== "HEAD") return yield* reply(405, "rejected", O.some(key));
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      return yield* reply(405, "rejected", O.some(key));
+    }
     const operation = request.method === "GET" ? "get" : "head";
-    if (current.fault === "unavailable") return yield* reply(503, operation, O.some(key));
-    if (current.fault === "throttled") return yield* reply(429, operation, O.some(key));
-    const stored = HashMap.get(yield* Ref.get(artifacts), key);
-    if (O.isNone(stored)) return yield* reply(404, operation, O.some(key));
+    if (current.fault === "unavailable") {
+      return yield* reply(503, operation, O.some(key));
+    }
+    if (current.fault === "throttled") {
+      return yield* reply(429, operation, O.some(key));
+    }
+    const got = yield* Ref.get(artifacts);
+    const stored = HashMap.get(got, key);
+    if (O.isNone(stored)) {
+      return yield* reply(404, operation, O.some(key));
+    }
     const body = readFaultBody(stored.value, current.fault);
     const tag = readFaultTag(stored.value, current.fault);
     return yield* reply(200, operation, O.some(key), body, tag);
@@ -347,14 +369,25 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
     // Avoid introducing additional URL normalization at this boundary.
     const parts = Str.split(request.url, "?");
     const pathname = A.head(parts).pipe(O.getOrThrow);
-    if (!validFixtureSelectors(parts, credentials.namespace)) return yield* reply(403, "rejected");
-    if (pathname === "/v8/artifacts/status" && request.method === "GET")
+    if (!validFixtureSelectors(parts, credentials.namespace)) {
+      return yield* reply(403, "rejected");
+    }
+    if (pathname === "/v8/artifacts/status" && request.method === "GET") {
       return yield* reply(200, "status", O.none(), new TextEncoder().encode('{"status":"enabled"}'));
-    if (pathname === "/v8/artifacts/events") return yield* reply(404, "events");
-    if (pathname === "/v8/artifacts") return yield* reply(404, "batch");
-    if (!Str.startsWith("/v8/artifacts/")(pathname)) return yield* reply(404, "rejected");
+    }
+    if (pathname === "/v8/artifacts/events") {
+      return yield* reply(404, "events");
+    }
+    if (pathname === "/v8/artifacts") {
+      return yield* reply(404, "batch");
+    }
+    if (!Str.startsWith("/v8/artifacts/")(pathname)) {
+      return yield* reply(404, "rejected");
+    }
     const key = Str.slice("/v8/artifacts/".length)(pathname);
-    if (!S.is(CacheFixtureArtifactKey)(key)) return yield* reply(400, "rejected");
+    if (!S.is(CacheFixtureArtifactKey)(key)) {
+      return yield* reply(400, "rejected");
+    }
     return yield* request.method === "PUT"
       ? putArtifact(request, key, role, reply)
       : readArtifact(request, key, current, reply);
@@ -366,8 +399,12 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
     const bearer = Headers.get(request.headers, "authorization");
     const role = fixtureRole(credentials, bearer);
     const reply = makeReply(id, current, role, Headers.get(request.headers, "x-artifact-tag"));
-    if (id > requestLimit) return yield* reply(429, "rejected");
-    if (role === "unknown") return yield* reply(401, "rejected");
+    if (id > requestLimit) {
+      return yield* reply(429, "rejected");
+    }
+    if (role === "unknown") {
+      return yield* reply(401, "rejected");
+    }
     return yield* routeRequest(request, role, current, reply);
   });
   return {

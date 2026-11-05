@@ -163,20 +163,25 @@ export const collectCacheRuntimeLinker = Effect.fn("CacheLinker.collect")(functi
 ) {
   const detectorBefore = yield* inspectCacheLinkedFile(detector);
   const loaderBefore = yield* inspectCacheLinkedFile(loader);
-  const resolutions = R.fromEntries(
-    yield* Effect.forEach(
-      CacheRuntimeExecutable.literals,
-      Effect.fn("CacheLinker.role")(function* (role) {
-        return Tuple.make(role, yield* inspectCacheLinkerResolution(root, executables[role]));
-      }),
-      { concurrency: 1 }
-    )
+  const forEach1 = yield* Effect.forEach(
+    CacheRuntimeExecutable.literals,
+    Effect.fn("CacheLinker.role")(function* (role) {
+      const inspectCacheLinkerResolution2 = yield* inspectCacheLinkerResolution(root, executables[role]);
+      return Tuple.make(role, inspectCacheLinkerResolution2);
+    }),
+    { concurrency: 1 }
   );
+  const resolutions = R.fromEntries(forEach1);
+  const argument = S.toEquivalence(CacheLinkedFile);
+  const inspectCacheLinkedFile1 = yield* inspectCacheLinkedFile(detector);
   if (
-    !S.toEquivalence(CacheLinkedFile)(detectorBefore, yield* inspectCacheLinkedFile(detector)) ||
-    !S.toEquivalence(CacheLinkedFile)(loaderBefore, yield* inspectCacheLinkedFile(loader))
-  )
+    !argument(detectorBefore, inspectCacheLinkedFile1) ||
+    !(yield* Effect.map(inspectCacheLinkedFile(loader), (value) =>
+      S.toEquivalence(CacheLinkedFile)(loaderBefore, value)
+    ))
+  ) {
     return yield* CacheCommandError.new("Library discovery helper or loader changed during inspection.");
+  }
   return CacheRuntimeLinkerSnapshot.make({
     format: "glibc-ldd/v1",
     detector: detectorBefore,

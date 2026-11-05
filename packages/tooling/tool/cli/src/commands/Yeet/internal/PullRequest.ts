@@ -628,7 +628,8 @@ const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
   | Git
   | YeetGithubServices
 > {
-  const resolved = yield* resolvePullRequestTitle(context, message, yield* branchCommitRange(context));
+  const commitRange = yield* branchCommitRange(context);
+  const resolved = yield* resolvePullRequestTitle(context, message, commitRange);
   const title = resolved.title;
   yield* Console.log(`[yeet] --pr: title from ${resolved.source}: ${title}`);
   const bodyPath = yield* runOutputPathForContext(context, "pr-body.md");
@@ -695,7 +696,8 @@ const syncExistingPullRequestTitle = Effect.fn("Yeet.syncExistingPullRequestTitl
       message: `pull request #${existing.number} keeps its title`,
     });
   }
-  const resolved = yield* resolvePullRequestTitle(context, message, yield* branchCommitRange(context)).pipe(
+  const commitRange = yield* branchCommitRange(context);
+  const resolved = yield* resolvePullRequestTitle(context, message, commitRange).pipe(
     Effect.asSome,
     Effect.catchTag("YeetCommandError", (error) =>
       Effect.as(Console.error(`[yeet] warning: ${error.message}`), O.none())

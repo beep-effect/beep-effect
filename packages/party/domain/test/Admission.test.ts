@@ -8,7 +8,7 @@ import {
   SupportCountInput,
   SupportFacts,
 } from "@beep/party-domain/Admission";
-import { ClaimVersion, DependenceAssessment } from "@beep/party-domain/Claim";
+import { ClaimVersion, DependenceAssessment, ReviewState } from "@beep/party-domain/Claim";
 import { ActivityId, AssertionId } from "@beep/party-domain/Ids";
 import { describe, expect, expectTypeOf, it } from "@effect/vitest";
 import * as TestUtils from "@effect/vitest/utils";
@@ -57,6 +57,41 @@ describe("independent evidence and admission tiers", () => {
     expectTypeOf<Admitted<"client-facing">>().not.toExtend<Admitted<"deposition-ready">>();
   });
   it.layer(AcmeFixtureLive, { timeout: "30 seconds" })("adversarial-source corroboration", (it) => {
+    it.effect("rejects unaccepted or challenged evidence and exposes the minted proof tier", () =>
+      Effect.gen(function* () {
+        const fx = yield* AcmeFixture;
+        const policy = AdmissionPolicy.make({
+          id: "reviewed-and-uncontested",
+          version: "1",
+          tier: "client-facing",
+          clauses: [
+            AdmissionClause.cases.RequireReviewerAcceptance.make({}),
+            AdmissionClause.cases.NoOpenChallenge.make({}),
+          ],
+        });
+        const evidence = AdmissionEvidence.make({ version: fx.averyAuthorship, supports: [], dependence: [] });
+        const proof = Result.getOrThrow(admit({ policy, evidence, knowledgeTime: at(20) }));
+        expect(proof.provenTier).toBe("client-facing");
+        const refused = admit({
+          policy,
+          knowledgeTime: at(20),
+          evidence: AdmissionEvidence.make({
+            ...evidence,
+            version: ClaimVersion.make({
+              ...evidence.version,
+              review: ReviewState.cases.Proposed.make({}),
+              challengedBy: [a],
+            }),
+          }),
+        });
+        pipe(refused, Result.isFailure, TestUtils.assertTrue);
+        if (Result.isFailure(refused))
+          expect(A.map(refused.failure.unmet, (row) => row.clause._tag)).toEqual([
+            "RequireReviewerAcceptance",
+            "NoOpenChallenge",
+          ]);
+      })
+    );
     it.effect("requires independent testimony outside one interested production", () =>
       Effect.gen(function* () {
         const fx = yield* AcmeFixture;

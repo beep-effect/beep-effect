@@ -183,11 +183,14 @@ describe("@beep/docket-intake commands", () => {
 
         yield* handlers.poll(noFlags);
         const lines = yield* printed;
-        const report = yield* decodeCycleReport(yield* firstLine);
+        const firstLine1 = yield* firstLine;
+        const report = yield* decodeCycleReport(firstLine1);
         const journal = yield* readDocketJournal(STATE_DIRECTORY);
 
-        expect(yield* Ref.get(log.initialSince)).toStrictEqual(["2030-01-01T06:00:00.000Z"]);
-        expect(yield* Ref.get(harness.listings)).toBe(1);
+        const got = yield* Ref.get(log.initialSince);
+        expect(got).toStrictEqual(["2030-01-01T06:00:00.000Z"]);
+        const got2 = yield* Ref.get(harness.listings);
+        expect(got2).toBe(1);
         assertSome((yield* Ref.get(harness.state)).cursor, "2030-01-09T10:00:00.000Z");
         expect(lines).toHaveLength(1);
         expect([report.runId, report.processed, report.entered]).toStrictEqual(["run-19700101T000000000Z", 1, 1]);
@@ -197,8 +200,10 @@ describe("@beep/docket-intake commands", () => {
           "message-marked",
           "run-completed",
         ]);
-        expect(HashMap.size(yield* Ref.get(harness.entries))).toBe(5);
-        expect(yield* Ref.get(harness.marked)).toStrictEqual(["m1"]);
+        const got3 = yield* Ref.get(harness.entries);
+        expect(HashMap.size(got3)).toBe(5);
+        const got4 = yield* Ref.get(harness.marked);
+        expect(got4).toStrictEqual(["m1"]);
       })
     );
   });
@@ -217,7 +222,8 @@ describe("@beep/docket-intake commands", () => {
         const state = yield* Ref.get(harness.state);
 
         // The test clock stands at the Unix epoch.
-        expect(yield* Ref.get(log.initialSince)).toStrictEqual(["1970-01-01T00:00:00.000Z"]);
+        const got5 = yield* Ref.get(log.initialSince);
+        expect(got5).toStrictEqual(["1970-01-01T00:00:00.000Z"]);
         assertSome(state.cursor, "1970-01-01T00:00:00.000Z");
         assertSome(
           O.map(kind, (error) => [error.kind, error.message]),
@@ -241,10 +247,8 @@ describe("@beep/docket-intake commands", () => {
         const seeded = (yield* Ref.get(harness.state)).cursor;
         yield* Effect.exit(handlers.poll({ ...since, since: O.some(DateTime.makeUnsafe("2029-06-01T00:00:00Z")) }));
 
-        expect(yield* Ref.get(log.initialSince)).toStrictEqual([
-          "2029-12-01T00:00:00.000Z",
-          "2029-06-01T00:00:00.000Z",
-        ]);
+        const got6 = yield* Ref.get(log.initialSince);
+        expect(got6).toStrictEqual(["2029-12-01T00:00:00.000Z", "2029-06-01T00:00:00.000Z"]);
         assertSome(seeded, "2029-12-01T00:00:00.000Z");
         assertSome((yield* Ref.get(harness.state)).cursor, "2029-12-01T00:00:00.000Z");
       })
@@ -273,7 +277,8 @@ describe("@beep/docket-intake commands", () => {
         assertSome(first.cursor, "2030-01-09T10:02:00.000Z");
         expect(A.sort(R.keys(second.ledger), Str.Order)).toStrictEqual(["m1", "m2", "m3"]);
         assertSome(second.cursor, "2030-01-09T10:03:00.000Z");
-        expect(yield* Ref.get(harness.marked)).toStrictEqual(["m1", "m2", "m3"]);
+        const got7 = yield* Ref.get(harness.marked);
+        expect(got7).toStrictEqual(["m1", "m2", "m3"]);
       })
     );
   });
@@ -290,7 +295,8 @@ describe("@beep/docket-intake commands", () => {
         const stopped = yield* Fiber.interrupt(running).pipe(Effect.andThen(Fiber.await(running)));
 
         expect(Exit.hasInterrupts(stopped)).toBe(true);
-        expect(yield* Ref.get(harness.listings)).toBe(1);
+        const got8 = yield* Ref.get(harness.listings);
+        expect(got8).toBe(1);
       })
     );
   });
@@ -308,7 +314,8 @@ describe("@beep/docket-intake commands", () => {
         yield* fs.writeFileString(STATE_FILE, encoded);
 
         yield* handlers.dryRun(noFlags);
-        const report = yield* decodeDryRunReport(yield* firstLine);
+        const firstLine9 = yield* firstLine;
+        const report = yield* decodeDryRunReport(firstLine9);
 
         expect([report.dryRun, report.seen, report.processed, report.entered]).toStrictEqual([true, 1, 1, 1]);
         expect(
@@ -320,11 +327,16 @@ describe("@beep/docket-intake commands", () => {
         expect(A.map(A.take(report.entries, 1), (entry) => entry.date.toISOString())).toStrictEqual(["2030-04-08"]);
         expect(A.every(report.entries, (entry) => A.contains(entry.flags, "matter-lookup-failed"))).toBe(true);
         // Nothing reached the calendar or the mailbox, and the real state directory is as it was.
-        expect(HashMap.size(yield* Ref.get(harness.entries))).toBe(0);
-        expect(yield* Ref.get(harness.marked)).toStrictEqual([]);
-        expect(yield* fs.readFileString(STATE_FILE)).toBe(encoded);
-        expect(A.sort(yield* fs.readDirectory(STATE_DIRECTORY), Str.Order)).toStrictEqual(["dry-run", "state.json"]);
-        expect(yield* fs.exists(`${STATE_DIRECTORY}/dry-run/leftover.txt`)).toBe(false);
+        const got10 = yield* Ref.get(harness.entries);
+        expect(HashMap.size(got10)).toBe(0);
+        const got11 = yield* Ref.get(harness.marked);
+        expect(got11).toStrictEqual([]);
+        const readFileString12 = yield* fs.readFileString(STATE_FILE);
+        expect(readFileString12).toBe(encoded);
+        const readDirectory13 = yield* fs.readDirectory(STATE_DIRECTORY);
+        expect(A.sort(readDirectory13, Str.Order)).toStrictEqual(["dry-run", "state.json"]);
+        const exists14 = yield* fs.exists(`${STATE_DIRECTORY}/dry-run/leftover.txt`);
+        expect(exists14).toBe(false);
         assertNone((yield* Ref.get(harness.state)).cursor);
       })
     );
@@ -352,7 +364,8 @@ describe("@beep/docket-intake commands", () => {
           O.map(refused, (error) => error.kind),
           "refused"
         );
-        expect(yield* Ref.get(fake.calls)).toStrictEqual([]);
+        const got15 = yield* Ref.get(fake.calls);
+        expect(got15).toStrictEqual([]);
       })
     );
   });
@@ -368,8 +381,10 @@ describe("@beep/docket-intake commands", () => {
         yield* handlers.undo({ dryRun: true, run: "latest", yes: false });
         const dryCalls = yield* Ref.get(fake.calls);
         yield* handlers.undo({ dryRun: false, run: DocketRunId.make("run-19700101T000000000Z"), yes: true });
-        const calls = A.drop(yield* Ref.get(fake.calls), A.length(dryCalls));
-        const lines = A.drop(yield* printed, 1);
+        const got16 = yield* Ref.get(fake.calls);
+        const calls = A.drop(got16, A.length(dryCalls));
+        const printed17 = yield* printed;
+        const lines = A.drop(printed17, 1);
         const journal = yield* readDocketJournal(STATE_DIRECTORY);
 
         expect(A.every(dryCalls, (call) => Str.startsWith("get")(call))).toBe(true);
@@ -424,12 +439,14 @@ describe("@beep/docket-intake commands", () => {
         yield* handlers.undo({ dryRun: false, run: "latest", yes: true });
         const journal = yield* readDocketJournal(STATE_DIRECTORY);
 
-        expect(A.drop(yield* printed, 1)).toStrictEqual([
+        const printed18 = yield* printed;
+        expect(A.drop(printed18, 1)).toStrictEqual([
           '{"runId":"run-19700101T000000000Z","startedAt":"1970-01-01T00:00:00.000Z","eventsCreated":0,"messagesMarked":0,"eventsDeleted":0,"eventsKept":0,"eventsGone":0,"messagesUnmarked":0,"messagesGone":0,"eventsAdopted":0,"completed":{"entered":0,"failed":0,"needsReview":0,"notDocket":0,"processed":0,"seen":0}}',
           '{"runId":"run-19700101T000000000Z","dryRun":false,"deleted":0,"kept":0,"gone":0,"unmarked":0,"messagesGone":0,"ledgerCleared":0,"messagesKept":0,"alreadyUndone":0}',
         ]);
         expect(A.map(journal, (line) => line.kind)).toStrictEqual(["run-completed"]);
-        expect(A.filter(yield* Ref.get(fake.calls), (call) => !Str.startsWith("get")(call))).toStrictEqual([]);
+        const got19 = yield* Ref.get(fake.calls);
+        expect(A.filter(got19, (call) => !Str.startsWith("get")(call))).toStrictEqual([]);
       })
     );
   });
@@ -445,14 +462,12 @@ describe("@beep/docket-intake commands", () => {
           // The cycle enters and marks `m1`; its question was stored before questions named their email.
           yield* handlers.poll(noFlags);
           yield* fs.makeDirectory(REVIEW_HUB, { recursive: true });
-          const questions = Context.get(
-            yield* Layer.build(DocketQuestionsLive.pipe(Layer.provide(BunCrypto.layer))),
-            DocketQuestions
+          const build20 = yield* Layer.build(DocketQuestionsLive.pipe(Layer.provide(BunCrypto.layer)));
+          const questions = Context.get(build20, DocketQuestions);
+          const build21 = yield* Layer.build(
+            makeReviewFilesLayer(ReviewFilesConfig.make({ dataDirectory: REVIEW_HUB }))
           );
-          const store = Context.get(
-            yield* Layer.build(makeReviewFilesLayer(ReviewFilesConfig.make({ dataDirectory: REVIEW_HUB }))),
-            ReviewItemStore
-          );
+          const store = Context.get(build21, ReviewItemStore);
           const stored = yield* questions.raise(
             DocketQuestionInput.make({
               outcome: DocketNeedsReview.make({
@@ -478,7 +493,8 @@ describe("@beep/docket-intake commands", () => {
           yield* handlers.backfillQuestions({ apply: false });
           const dry = yield* fs.readFileString(`${REVIEW_HUB}/items.jsonl`);
           yield* handlers.backfillQuestions({ apply: true });
-          const lines = A.drop(yield* printed, 1);
+          const printed22 = yield* printed;
+          const lines = A.drop(printed22, 1);
           const reports = yield* Effect.forEach(lines, (line) => decodeBackfillReport(line));
 
           expect(A.map(reports, ({ applied, enriched, found }) => [applied, found, enriched])).toStrictEqual([
@@ -487,7 +503,9 @@ describe("@beep/docket-intake commands", () => {
           ]);
           expect(A.every(lines, (line) => !Str.includes("Office action response")(line))).toBe(true);
           assertTrue(!Str.includes("Office action response")(dry));
-          assertTrue(Str.includes("Office action response")(yield* fs.readFileString(`${REVIEW_HUB}/items.jsonl`)));
+          const argument = Str.includes("Office action response");
+          const readFileString1 = yield* fs.readFileString(`${REVIEW_HUB}/items.jsonl`);
+          assertTrue(argument(readFileString1));
         })
       );
     }
@@ -544,7 +562,8 @@ describe("@beep/docket-intake commands", () => {
         yield* handlers.smoke({ write: true });
 
         expect(readOnly).toStrictEqual(["listMessages", "listCategories"]);
-        assertSome(A.last(yield* Ref.get(fake.calls)), "deleteEvent event-1");
+        const got23 = yield* Ref.get(fake.calls);
+        assertSome(A.last(got23), "deleteEvent event-1");
       })
     );
   });

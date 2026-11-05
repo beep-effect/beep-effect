@@ -7,9 +7,11 @@
 
 import { A, O } from "@beep/utils";
 import * as Eq from "effect/Equal";
-import { dual, flow, pipe } from "effect/Function";
+import { dual, flow, identity, pipe } from "effect/Function";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import {
   ArtifactCompatibilityPolicy,
   ArtifactDriftChange,
@@ -22,6 +24,8 @@ import type {
   CourtVocabularyRecord,
   ReporterVocabularyRecord,
 } from "./CourtReporterVocabulary.model.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const compatibleChanges: ReadonlyArray<ArtifactDriftChangeKind> = [
   "addition",
@@ -109,21 +113,29 @@ const normalizeCourt = (record: CourtVocabularyRecord): NormalizedRecord => ({
   plainAliases: normalizeStringSet(record.aliases),
   ranges: pipe(
     record.effectiveRanges,
-    A.map(({ start, end }) => JSON.stringify([normalizeOption(start), normalizeOption(end)])),
+    A.map(({ start, end }) =>
+      Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)([normalizeOption(start), normalizeOption(end)]),
+        identity
+      )
+    ),
     normalizeStringSet
   ),
-  semanticContent: JSON.stringify([
-    record.sourceId,
-    record.name,
-    normalizeOption(record.nameAbbreviation),
-    record.citationString,
-    normalizeOption(record.sourceJurisdiction),
-    record.system,
-    normalizeOption(record.type),
-    normalizeOption(record.hierarchyLevel),
-    record.location,
-    normalizeOption(record.parentId),
-  ]),
+  semanticContent: Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)([
+      record.sourceId,
+      record.name,
+      normalizeOption(record.nameAbbreviation),
+      record.citationString,
+      normalizeOption(record.sourceJurisdiction),
+      record.system,
+      normalizeOption(record.type),
+      normalizeOption(record.hierarchyLevel),
+      record.location,
+      normalizeOption(record.parentId),
+    ]),
+    identity
+  ),
   status: record.status,
   successorId: record.successorId,
 });
@@ -138,16 +150,22 @@ const normalizeReporter = (record: ReporterVocabularyRecord): NormalizedRecord =
   ranges: pipe(
     record.editions,
     A.map(({ abbreviation, start, end }) =>
-      JSON.stringify([abbreviation, normalizeOption(start), normalizeOption(end)])
+      Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)([abbreviation, normalizeOption(start), normalizeOption(end)]),
+        identity
+      )
     ),
     normalizeStringSet
   ),
-  semanticContent: JSON.stringify([
-    record.primaryAbbreviation,
-    record.name,
-    record.citeType,
-    normalizeStringSet(record.jurisdictions),
-  ]),
+  semanticContent: Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)([
+      record.primaryAbbreviation,
+      record.name,
+      record.citeType,
+      normalizeStringSet(record.jurisdictions),
+    ]),
+    identity
+  ),
   status: record.status,
   successorId: record.successorId,
 });
@@ -304,10 +322,20 @@ const compareAliases = (
 
   return [
     ...A.map(additions, (alias) =>
-      change("aliasAddition", subjectKind, [next.id], `Alias ${JSON.stringify(alias)} was added.`)
+      change(
+        "aliasAddition",
+        subjectKind,
+        [next.id],
+        `Alias ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(alias), identity)} was added.`
+      )
     ),
     ...A.map(removals, (alias) =>
-      change("aliasRemoval", subjectKind, [next.id], `Alias ${JSON.stringify(alias)} was removed.`)
+      change(
+        "aliasRemoval",
+        subjectKind,
+        [next.id],
+        `Alias ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(alias), identity)} was removed.`
+      )
     ),
   ];
 };
@@ -492,7 +520,7 @@ const compareFamily = (
               "abbreviationReuse",
               subjectKind,
               owners,
-              `Alias ${JSON.stringify(alias)} became contextual because it names multiple identities.`
+              `Alias ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(alias), identity)} became contextual because it names multiple identities.`
             )
           )
         : O.none();

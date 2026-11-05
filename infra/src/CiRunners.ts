@@ -57,8 +57,12 @@ import { A, Bool, O, Str } from "@beep/utils";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { optionalPulumiConfigFields } from "./internal/PulumiConfigSchema.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $InfraId.create("CiRunners");
 
@@ -941,77 +945,89 @@ const renderCiRunnersReaperHandlerSource = (): string =>
     "\n"
   );
 
-const lambdaAssumeRolePolicy = JSON.stringify({
-  Statement: [
-    {
-      Action: "sts:AssumeRole",
-      Effect: "Allow",
-      Principal: {
-        Service: "lambda.amazonaws.com",
+const lambdaAssumeRolePolicy = Result.getOrThrowWith(
+  S.encodeUnknownResult(UnknownJson)({
+    Statement: [
+      {
+        Action: "sts:AssumeRole",
+        Effect: "Allow",
+        Principal: {
+          Service: "lambda.amazonaws.com",
+        },
       },
-    },
-  ],
-  Version: "2012-10-17",
-});
+    ],
+    Version: "2012-10-17",
+  }),
+  identity
+);
 
-const flowLogsAssumeRolePolicy = JSON.stringify({
-  Statement: [
-    {
-      Action: "sts:AssumeRole",
-      Effect: "Allow",
-      Principal: {
-        Service: "vpc-flow-logs.amazonaws.com",
+const flowLogsAssumeRolePolicy = Result.getOrThrowWith(
+  S.encodeUnknownResult(UnknownJson)({
+    Statement: [
+      {
+        Action: "sts:AssumeRole",
+        Effect: "Allow",
+        Principal: {
+          Service: "vpc-flow-logs.amazonaws.com",
+        },
       },
-    },
-  ],
-  Version: "2012-10-17",
-});
+    ],
+    Version: "2012-10-17",
+  }),
+  identity
+);
 
 const reaperRolePolicyDocument = (logGroupArn: pulumi.Output<string>): pulumi.Output<string> =>
   logGroupArn.apply((arn) =>
-    JSON.stringify({
-      Statement: [
-        {
-          Action: "ec2:DescribeInstances",
-          Effect: "Allow",
-          Resource: "*",
-          Sid: "DescribeFleet",
-        },
-        {
-          Action: "ec2:TerminateInstances",
-          Condition: {
-            StringEquals: {
-              [`ec2:ResourceTag/${ciRunnersRunnerTagKey}`]: ciRunnersRunnerTagValue,
-            },
+    Result.getOrThrowWith(
+      S.encodeUnknownResult(UnknownJson)({
+        Statement: [
+          {
+            Action: "ec2:DescribeInstances",
+            Effect: "Allow",
+            Resource: "*",
+            Sid: "DescribeFleet",
           },
-          Effect: "Allow",
-          Resource: "*",
-          Sid: "TerminateTaggedRunnersOnly",
-        },
-        {
-          Action: ["logs:CreateLogStream", "logs:PutLogEvents"],
-          Effect: "Allow",
-          Resource: `${arn}:*`,
-          Sid: "WriteOwnLogs",
-        },
-      ],
-      Version: "2012-10-17",
-    })
+          {
+            Action: "ec2:TerminateInstances",
+            Condition: {
+              StringEquals: {
+                [`ec2:ResourceTag/${ciRunnersRunnerTagKey}`]: ciRunnersRunnerTagValue,
+              },
+            },
+            Effect: "Allow",
+            Resource: "*",
+            Sid: "TerminateTaggedRunnersOnly",
+          },
+          {
+            Action: ["logs:CreateLogStream", "logs:PutLogEvents"],
+            Effect: "Allow",
+            Resource: `${arn}:*`,
+            Sid: "WriteOwnLogs",
+          },
+        ],
+        Version: "2012-10-17",
+      }),
+      identity
+    )
   );
 
 const flowLogsRolePolicyDocument = (logGroupArn: pulumi.Output<string>): pulumi.Output<string> =>
   logGroupArn.apply((arn) =>
-    JSON.stringify({
-      Statement: [
-        {
-          Action: ["logs:CreateLogStream", "logs:DescribeLogGroups", "logs:DescribeLogStreams", "logs:PutLogEvents"],
-          Effect: "Allow",
-          Resource: [arn, `${arn}:*`],
-          Sid: "DeliverFlowLogs",
-        },
-      ],
-      Version: "2012-10-17",
-    })
+    Result.getOrThrowWith(
+      S.encodeUnknownResult(UnknownJson)({
+        Statement: [
+          {
+            Action: ["logs:CreateLogStream", "logs:DescribeLogGroups", "logs:DescribeLogStreams", "logs:PutLogEvents"],
+            Effect: "Allow",
+            Resource: [arn, `${arn}:*`],
+            Sid: "DeliverFlowLogs",
+          },
+        ],
+        Version: "2012-10-17",
+      }),
+      identity
+    )
   );
 
 /**

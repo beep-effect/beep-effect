@@ -17,7 +17,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -64,7 +65,8 @@ describe("repository property floor", () => {
     ([wire]) =>
       Effect.gen(function* () {
         const value = yield* S.decodeEffect(Repository.FromValue)(wire);
-        assert.deepStrictEqual(yield* S.encodeEffect(Repository.FromValue)(value), wire);
+        const value2 = yield* S.encodeEffect(Repository.FromValue)(value);
+        assert.deepStrictEqual(value2, wire);
       }),
     runs
   );
@@ -74,7 +76,8 @@ describe("repository property floor", () => {
     ([wire]) =>
       Effect.gen(function* () {
         const value = yield* S.decodeEffect(Bugs.FromValue)(wire);
-        assert.deepStrictEqual(yield* S.encodeEffect(Bugs.FromValue)(value), wire);
+        const value3 = yield* S.encodeEffect(Bugs.FromValue)(value);
+        assert.deepStrictEqual(value3, wire);
       }),
     runs
   );

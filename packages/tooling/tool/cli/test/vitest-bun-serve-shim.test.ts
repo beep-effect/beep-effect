@@ -17,7 +17,17 @@ import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+
+class VitestBunServeShimTestOperationError extends S.TaggedError<
+  VitestBunServeShimTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "VitestBunServeShimTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in vitest-bun-serve-shim.test.ts." }
+) {}
 
 // These cases exercise the Bun.serve shim that vitest.setup.ts installs for Node runs, which names
 // its port lock directory on the Bun global; real Bun binds port 0 itself and has no such property.
@@ -63,22 +73,32 @@ const shimPortCount = 12_000;
 const exitedPid = 2_147_483_647;
 
 const lockPath = (port: number) => `${lockDirectory}/${port}.lock`;
-const readLock = (port: number) => Effect.tryPromise(() => Bun.file(lockPath(port)).text());
+const readLock = (port: number) =>
+  Effect.tryPromise({
+    try: () => Bun.file(lockPath(port)).text(),
+    catch: (cause) => VitestBunServeShimTestOperationError.make({ cause }),
+  });
 // Publish a fully written marker exclusively. A fixture may retire only its own live marker;
 // cooperative allocators cannot replace that marker while this process is still alive.
 const writeLock = Effect.fnUntraced(function* (port: number, owner: number, retireOwned?: boolean) {
   const fs = yield* nativeFileSystem;
-  if (retireOwned === true) assert.strictEqual(yield* readLock(port), `${process.pid}`);
-  yield* Effect.try(() => {
-    const directory = fs.mkdtempSync(`${lockDirectory}/fixture-`);
-    const staging = `${directory}/owner`;
-    try {
-      fs.writeFileSync(staging, `${owner}`, { flag: "wx" });
-      if (retireOwned === true) fs.renameSync(staging, lockPath(port));
-      else fs.linkSync(staging, lockPath(port));
-    } finally {
-      fs.rmSync(directory, { force: true, recursive: true });
-    }
+  if (retireOwned === true) {
+    const readLock2 = yield* readLock(port);
+    assert.strictEqual(readLock2, `${process.pid}`);
+  }
+  yield* Effect.try({
+    try: () => {
+      const directory = fs.mkdtempSync(`${lockDirectory}/fixture-`);
+      const staging = `${directory}/owner`;
+      try {
+        fs.writeFileSync(staging, `${owner}`, { flag: "wx" });
+        if (retireOwned === true) fs.renameSync(staging, lockPath(port));
+        else fs.linkSync(staging, lockPath(port));
+      } finally {
+        fs.rmSync(directory, { force: true, recursive: true });
+      }
+    },
+    catch: (cause) => VitestBunServeShimTestOperationError.make({ cause }),
   });
 });
 const followingPort = (port: number, offset = 1) => shimPortFloor + ((port - shimPortFloor + offset) % shimPortCount);
@@ -150,7 +170,8 @@ it.layer(FetchHttpClient.layer)("vitest Bun.serve shim", (it) => {
         for (const port of ports) {
           assert.isAtLeast(port, shimPortFloor);
           assert.isBelow(port, ephemeralPortFloor);
-          assert.strictEqual(yield* readLock(port), `${process.pid}`);
+          const readLock1 = yield* readLock(port);
+          assert.strictEqual(readLock1, `${process.pid}`);
         }
         const replies = yield* Effect.forEach(ports, fetchText, { concurrency: "unbounded" });
         assert.deepStrictEqual(replies, names);
@@ -165,7 +186,8 @@ it.layer(FetchHttpClient.layer)("vitest Bun.serve shim", (it) => {
     () =>
       Effect.gen(function* () {
         const net = yield* foreignNet;
-        const occupied = followingPort(yield* servedPort("before-foreign-listener"));
+        const servedPort2 = yield* servedPort("before-foreign-listener");
+        const occupied = followingPort(servedPort2);
         const foreign = net.createServer((socket) => socket.end("HTTP/1.1 404 Not Found\r\n\r\nforeign"));
         yield* Effect.callback<void, Error>((resume) => {
           foreign.once("error", (error) => resume(Effect.fail(error)));
@@ -175,7 +197,8 @@ it.layer(FetchHttpClient.layer)("vitest Bun.serve shim", (it) => {
           const server = yield* serveText("shim-owned");
           yield* Effect.gen(function* () {
             assert.notStrictEqual(portOf(server), occupied);
-            assert.strictEqual(yield* fetchText(portOf(server)), "shim-owned");
+            const fetchText3 = yield* fetchText(portOf(server));
+            assert.strictEqual(fetchText3, "shim-owned");
           }).pipe(Effect.ensuring(stop(server)));
         }).pipe(Effect.ensuring(Effect.callback<void>((resume) => foreign.close(() => resume(Effect.void)))));
       })
@@ -200,7 +223,8 @@ it.layer(FetchHttpClient.layer)("vitest Bun.serve shim", (it) => {
       });
       NodeModule.syncBuiltinESMExports();
       yield* Effect.gen(function* () {
-        servers.push(yield* serveText("reclaimer"));
+        const serveText4 = yield* serveText("reclaimer");
+        servers.push(serveText4);
         removal.mockRestore();
         NodeModule.syncBuiltinESMExports();
         assert.isTrue(interleaved);
@@ -232,7 +256,8 @@ it.layer(FetchHttpClient.layer)("vitest Bun.serve shim", (it) => {
         fs.linkSync(lockPath(abandoned), intent);
       });
       yield* Effect.gen(function* () {
-        assert.strictEqual(yield* servedPort("after-abandoned-links"), abandoned);
+        const servedPort5 = yield* servedPort("after-abandoned-links");
+        assert.strictEqual(servedPort5, abandoned);
         assert.isFalse(fs.existsSync(staging));
         assert.isFalse(fs.existsSync(intent));
       }).pipe(
@@ -256,7 +281,8 @@ it.layer(FetchHttpClient.layer)("vitest Bun.serve shim", (it) => {
       yield* Effect.gen(function* () {
         const port = yield* servedPort("after-live-reclaimer");
         assert.notStrictEqual(port, abandoned);
-        assert.strictEqual(yield* readLock(abandoned), `${exitedPid}`);
+        const readLock6 = yield* readLock(abandoned);
+        assert.strictEqual(readLock6, `${exitedPid}`);
         assert.isTrue(fs.existsSync(intent));
       }).pipe(Effect.ensuring(Effect.sync(() => fs.rmSync(intent, { force: true }))));
     })
@@ -269,7 +295,8 @@ it.layer(FetchHttpClient.layer)("vitest Bun.serve shim", (it) => {
       yield* Effect.gen(function* () {
         const occupied = yield* Effect.flip(writeLock(reserved, exitedPid));
         assert.propertyVal(occupied.cause, "code", "EEXIST");
-        assert.strictEqual(yield* readLock(reserved), `${process.pid}`);
+        const readLock7 = yield* readLock(reserved);
+        assert.strictEqual(readLock7, `${process.pid}`);
       }).pipe(Effect.ensuring(writeLock(reserved, exitedPid, true).pipe(Effect.orDie)));
     })
   );
@@ -302,10 +329,8 @@ it.layer(NodeServices.layer, { excludeTestServices: true })("vitest Bun.serve Un
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* fs.makeTempDirectoryScoped({ directory: "/tmp", prefix: "bun-uds-" });
       const socket = `${directory}/server.sock`;
-      const client = Context.get(
-        yield* Layer.build(NodeHttpClient.layerNodeHttpOptions({ socketPath: socket })),
-        HttpClient.HttpClient
-      );
+      const build8 = yield* Layer.build(NodeHttpClient.layerNodeHttpOptions({ socketPath: socket }));
+      const client = Context.get(build8, HttpClient.HttpClient);
       const get = client.get("http://localhost/").pipe(Effect.flatMap((response) => response.text));
       const serve = Effect.fnUntraced(function* (text: string) {
         const context = yield* Layer.build(BunHttpServer.layer({ unix: socket }));
@@ -313,7 +338,8 @@ it.layer(NodeServices.layer, { excludeTestServices: true })("vitest Bun.serve Un
         assert.strictEqual(server.address._tag, "UnixPathAddress");
         yield* server.serve(Effect.succeed(HttpServerResponse.text(text)));
         assert.strictEqual((yield* fs.stat(socket)).type, "Socket");
-        assert.strictEqual(yield* get, text);
+        const got = yield* get;
+        assert.strictEqual(got, text);
         yield* server.serve(
           Effect.gen(function* () {
             const request = yield* HttpServerRequest.HttpServerRequest;
@@ -329,7 +355,8 @@ it.layer(NodeServices.layer, { excludeTestServices: true })("vitest Bun.serve Un
             );
           })
         );
-        assert.strictEqual(yield* get, `${text}-reloaded`);
+        const got9 = yield* get;
+        assert.strictEqual(got9, `${text}-reloaded`);
         const posted = yield* HttpClientRequest.post("http://localhost/").pipe(
           HttpClientRequest.bodyText("synthetic-post"),
           client.execute,
@@ -338,9 +365,11 @@ it.layer(NodeServices.layer, { excludeTestServices: true })("vitest Bun.serve Un
         assert.strictEqual(posted, "synthetic-post");
       });
       yield* Effect.scoped(serve("first"));
-      assert.strictEqual(yield* fs.exists(socket), false);
+      const exists10 = yield* fs.exists(socket);
+      assert.strictEqual(exists10, false);
       yield* Effect.scoped(serve("rebound"));
-      assert.strictEqual(yield* fs.exists(socket), false);
+      const exists11 = yield* fs.exists(socket);
+      assert.strictEqual(exists11, false);
     })
   );
   it.effect("refuses an occupied Unix socket without replacing its owner", () =>
@@ -348,21 +377,21 @@ it.layer(NodeServices.layer, { excludeTestServices: true })("vitest Bun.serve Un
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* fs.makeTempDirectoryScoped({ directory: "/tmp", prefix: "bun-uds-owned-" });
       const socket = `${directory}/server.sock`;
-      const first = Context.get(yield* Layer.build(BunHttpServer.layer({ unix: socket })), HttpServer.HttpServer);
+      const build12 = yield* Layer.build(BunHttpServer.layer({ unix: socket }));
+      const first = Context.get(build12, HttpServer.HttpServer);
       yield* first.serve(Effect.succeed(HttpServerResponse.text("owner")));
       const original = yield* fs.stat(socket);
       const duplicate = yield* Effect.gen(function* () {
-        const second = Context.get(yield* Layer.build(BunHttpServer.layer({ unix: socket })), HttpServer.HttpServer);
+        const build13 = yield* Layer.build(BunHttpServer.layer({ unix: socket }));
+        const second = Context.get(build13, HttpServer.HttpServer);
         // Node reports listen failures asynchronously; reload surfaces the retained bind error.
         yield* Effect.sleep("50 millis");
         yield* second.serve(Effect.succeed(HttpServerResponse.text("replacement")));
       }).pipe(Effect.scoped, Effect.exit);
       assert.strictEqual(duplicate._tag, "Failure");
       assert.deepStrictEqual((yield* fs.stat(socket)).ino, original.ino);
-      const client = Context.get(
-        yield* Layer.build(NodeHttpClient.layerNodeHttpOptions({ socketPath: socket })),
-        HttpClient.HttpClient
-      );
+      const build14 = yield* Layer.build(NodeHttpClient.layerNodeHttpOptions({ socketPath: socket }));
+      const client = Context.get(build14, HttpClient.HttpClient);
       const response = yield* client.get("http://localhost/").pipe(Effect.flatMap((response) => response.text));
       assert.strictEqual(response, "owner");
     })

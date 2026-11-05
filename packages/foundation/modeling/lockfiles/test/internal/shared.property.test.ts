@@ -40,7 +40,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -81,7 +82,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(LockfileFields)(value);
       const decoded = yield* S.decodeEffect(LockfileFields)(encoded);
       assertTrue(S.toEquivalence(LockfileFields)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(LockfileFields)(decoded), encoded);
+      const value2 = yield* S.encodeEffect(LockfileFields)(decoded);
+      assert.deepStrictEqual(value2, encoded);
     }),
   runs
 );
@@ -124,7 +126,8 @@ it.effect.prop(
       const codec = S.fromJsonString(Sections);
       const text = yield* S.encodeEffect(codec)(sections);
       const read = yield* S.decodeEffect(codec)(text);
-      assert.strictEqual(yield* S.encodeEffect(codec)(read), text);
+      const value3 = yield* S.encodeEffect(codec)(read);
+      assert.strictEqual(value3, text);
       const dependencies = importerDependencies(sections, (specifier) => ({ specifier }));
       assert.deepStrictEqual(
         importerDependencies(read, (specifier) => ({ specifier })),

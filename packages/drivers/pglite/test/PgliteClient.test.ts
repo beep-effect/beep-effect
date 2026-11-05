@@ -15,6 +15,15 @@ import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as SqlClient from "effect/sql/SqlClient";
 
+class PgliteClientTestOperationError extends S.TaggedError<
+  PgliteClientTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "PgliteClientTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in PgliteClient.test.ts." }
+) {}
+
 const PgliteErrorArbitrary = Arbitrary.schema(PgliteError).pipe(Arbitrary.filter((error) => O.isNone(error.cause)));
 // Generate the declared fields from the production schema, then constrain the
 // opaque payload to a native Error with stable, explicitly retained fields.
@@ -61,10 +70,12 @@ describe("PgliteError", () => {
       Effect.gen(function* () {
         const encoded = yield* encodePgliteErrorEffect(error);
         const decoded = yield* decodePgliteErrorEffect(encoded);
-        expect(yield* encodePgliteErrorEffect(decoded)).toEqual(encoded);
+        const encodedPgliteErrorEffect = yield* encodePgliteErrorEffect(decoded);
+        expect(encodedPgliteErrorEffect).toEqual(encoded);
         expect(decoded.operation).toBe(error.operation);
         expect(decoded.message).toEqual(error.message);
-        const cause = yield* decodeErrorInstance(yield* Effect.fromOption(decoded.cause));
+        const fromOption1 = yield* Effect.fromOption(decoded.cause);
+        const cause = yield* decodeErrorInstance(fromOption1);
         expect(cause.name).toBe("PgliteNativeError");
         expect(cause.message).toBe(error.operation);
         expect(cause.stack).toBe("PGlite native stack");
@@ -89,7 +100,12 @@ describe("PgliteClient layer lifecycle", () => {
       yield* Scope.close(scope, Exit.void);
 
       yield* Effect.log("PGlite phase: verify query failure after close");
-      const queryAfterClose = yield* Effect.exit(Effect.tryPromise(() => client.pglite.query("SELECT 1")));
+      const queryAfterClose = yield* Effect.exit(
+        Effect.tryPromise({
+          try: () => client.pglite.query("SELECT 1"),
+          catch: (cause) => PgliteClientTestOperationError.make({ cause }),
+        })
+      );
       expect(queryAfterClose._tag).toBe("Failure");
     }),
     { timeout: 90_000 }

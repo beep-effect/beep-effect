@@ -814,7 +814,8 @@ const writeRendered = Effect.fnUntraced(function* <E>(context: ReconcileContext<
 /** One read-render-compare-write pass over the document. */
 const reconcileOnce = Effect.fn("CheckDocument.reconcile")(function* <E>(context: ReconcileContext<E>) {
   // Plain registry state: the snapshot schema is admitted once per pass.
-  const checks = CheckDocumentSnapshot.make(yield* Ref.get(context.checksRef));
+  const got = yield* Ref.get(context.checksRef);
+  const checks = CheckDocumentSnapshot.make(got);
   const current = yield* readCurrent(context);
   const document = yield* ManagedDocument.parse({
     namespace: context.options.namespace,

@@ -46,21 +46,26 @@ describe("Atom-owned workbench theme", { concurrent: false }, () => {
         registry.mount(workbenchThemeModeAtom);
 
         expect(registry.get(workbenchThemeModeAtom)).toBe(ThemeMode.Enum.dark);
-        expect(localStorage.getItem(NEW_THEME_KEY)).toBe(yield* encodeThemeMode(ThemeMode.Enum.dark));
+        const expectation = expect(localStorage.getItem(NEW_THEME_KEY));
+        const encodedThemeMode2 = yield* encodeThemeMode(ThemeMode.Enum.dark);
+        expectation.toBe(encodedThemeMode2);
       })
     );
 
     it.effect(
       "keeps new-format state authoritative over a legacy value",
       Effect.fnUntraced(function* () {
-        localStorage.setItem(NEW_THEME_KEY, yield* encodeThemeMode(ThemeMode.Enum.light));
+        const encodedThemeMode = yield* encodeThemeMode(ThemeMode.Enum.light);
+        localStorage.setItem(NEW_THEME_KEY, encodedThemeMode);
         localStorage.setItem(LEGACY_THEME_KEY, ThemeMode.Enum.dark);
         yield* migrateTheme;
         const registry = yield* makeRegistry;
         registry.mount(workbenchThemeModeAtom);
 
         expect(registry.get(workbenchThemeModeAtom)).toBe(ThemeMode.Enum.light);
-        expect(localStorage.getItem(NEW_THEME_KEY)).toBe(yield* encodeThemeMode(ThemeMode.Enum.light));
+        const expectation1 = expect(localStorage.getItem(NEW_THEME_KEY));
+        const encodedThemeMode3 = yield* encodeThemeMode(ThemeMode.Enum.light);
+        expectation1.toBe(encodedThemeMode3);
       })
     );
 
@@ -73,7 +78,9 @@ describe("Atom-owned workbench theme", { concurrent: false }, () => {
         registry.mount(workbenchThemeModeAtom);
 
         expect(registry.get(workbenchThemeModeAtom)).toBe(ThemeMode.Enum.system);
-        expect(localStorage.getItem(NEW_THEME_KEY)).toBe(yield* encodeThemeMode(ThemeMode.Enum.system));
+        const expectation2 = expect(localStorage.getItem(NEW_THEME_KEY));
+        const encodedThemeMode4 = yield* encodeThemeMode(ThemeMode.Enum.system);
+        expectation2.toBe(encodedThemeMode4);
       })
     );
 
@@ -97,14 +104,17 @@ describe("Atom-owned workbench theme", { concurrent: false }, () => {
         );
 
         expect(getByTestId("theme-child")).toBe(child);
-        expect(localStorage.getItem(NEW_THEME_KEY)).toBe(yield* encodeThemeMode(ThemeMode.Enum.dark));
+        const expectation3 = expect(localStorage.getItem(NEW_THEME_KEY));
+        const encodedThemeMode5 = yield* encodeThemeMode(ThemeMode.Enum.dark);
+        expectation3.toBe(encodedThemeMode5);
       })
     );
 
     it.effect(
       "replaces the pre-paint root class when the live mode toggles",
       Effect.fnUntraced(function* () {
-        localStorage.setItem(NEW_THEME_KEY, yield* encodeThemeMode(ThemeMode.Enum.dark));
+        const encodedThemeMode1 = yield* encodeThemeMode(ThemeMode.Enum.dark);
+        localStorage.setItem(NEW_THEME_KEY, encodedThemeMode1);
         document.documentElement.classList.add("dark");
         const { getByLabelText } = render(
           <RegistryProvider>

@@ -13,15 +13,18 @@ import * as Bool from "effect/Boolean";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual, pipe } from "effect/Function";
+import { dual, identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { AbsolutePath } from "./Absolute.ts";
 import { NativeDirs } from "./NativeDirs.ts";
 import { currentPlatform, Xdg } from "./Xdg.ts";
 import type { XdgPaths, XdgPlatform } from "./Xdg.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $XdgId.create("AppDirs");
 
@@ -204,7 +207,7 @@ export class AppDirsOverrideError extends S.TaggedError<AppDirsOverrideError, { 
    * @since 0.0.0
    */
   override get message(): string {
-    return `AppDirs.layer: the ${this.directory} override must be an absolute path, received ${JSON.stringify(this.path)}`;
+    return `AppDirs.layer: the ${this.directory} override must be an absolute path, received ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(this.path), identity)}`;
   }
 }
 
@@ -554,7 +557,7 @@ const badNamespace = (namespace: string): AppDirsNamespaceError | undefined => {
   }
   if (!isNamespaceComponent(namespace)) {
     return AppDirsNamespaceError.make({
-      message: `AppDirs.layer: \`namespace\` must be a single path component, received ${JSON.stringify(namespace)}`,
+      message: `AppDirs.layer: \`namespace\` must be a single path component, received ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(namespace), identity)}`,
     });
   }
   return undefined;

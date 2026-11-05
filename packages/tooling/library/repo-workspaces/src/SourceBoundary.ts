@@ -831,7 +831,8 @@ const sourceFiles = Effect.fnUntraced(function* (root: string, extensions: Reado
 const compileWaivers = Effect.fnUntraced(function* (allowRules: Readonly<Record<string, ReadonlyArray<string>>>) {
   const waivers = MutableHashMap.empty<string, GlobSet>();
   for (const [rule, patterns] of R.toEntries(allowRules)) {
-    MutableHashMap.set(waivers, rule, yield* GlobSet.compile(patterns));
+    const compile1 = yield* GlobSet.compile(patterns);
+    MutableHashMap.set(waivers, rule, compile1);
   }
   return waivers;
 });
@@ -1316,16 +1317,16 @@ export class SourceBoundary {
     const allow = yield* GlobSet.compile(options.allow ?? []);
     const waivers = yield* compileWaivers(options.allowRules ?? {});
     const relative = (full: string): string => A.join(Str.split(path.sep)(path.relative(options.root, full)), "/");
-    const files = A.map(yield* sourceFiles(options.root, options.extensions ?? DEFAULT_EXTENSIONS), (full) => ({
+    const sourceFiles2 = yield* sourceFiles(options.root, options.extensions ?? DEFAULT_EXTENSIONS);
+    const files = A.map(sourceFiles2, (full) => ({
       full,
       file: relative(full),
     }));
     const checked = A.filter(files, ({ file }) => !allow.matches(file));
-    const found = A.flatten(
-      yield* Effect.forEach(checked, ({ full, file }) =>
-        Effect.map(fs.readFileString(full), (text) => SourceBoundary.check(file, text, options.rules, options))
-      )
+    const forEach3 = yield* Effect.forEach(checked, ({ full, file }) =>
+      Effect.map(fs.readFileString(full), (text) => SourceBoundary.check(file, text, options.rules, options))
     );
+    const found = A.flatten(forEach3);
     const isWaived = (offence: Offence): boolean =>
       O.exists(MutableHashMap.get(waivers, offence.rule), (globs) => globs.matches(offence.file));
     return SourceScan.make({

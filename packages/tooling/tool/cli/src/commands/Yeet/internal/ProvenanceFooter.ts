@@ -737,7 +737,8 @@ export const recordCurrentPrSession = Effect.fn("ProvenanceFooter.recordCurrentS
         const path = yield* Path.Path;
         const mirror = yield* runArtifactPathForContext(context, "provenance.json");
         yield* fs.makeDirectory(path.dirname(mirror), { recursive: true, mode: 0o700 });
-        yield* writeContainedFileString(path.dirname(mirror), mirror, yield* encodeRecord(record));
+        const encodedRecord = yield* encodeRecord(record);
+        yield* writeContainedFileString(path.dirname(mirror), mirror, encodedRecord);
       })
     );
   }).pipe(

@@ -100,12 +100,16 @@ describe("DPAPI token cache", () => {
       Effect.gen(function* () {
         const path = yield* Path.Path;
         const fs = yield* FileSystem.FileSystem;
-        const file = path.join(yield* tempDataDir, ...M365_TOKEN_CACHE_SEGMENTS);
+        const tempDataDir1 = yield* tempDataDir;
+        const file = path.join(tempDataDir1, ...M365_TOKEN_CACHE_SEGMENTS);
         const cache = yield* makeDpapiTokenCache(file);
-        assertNone(yield* cache.load);
+        const loaded = yield* cache.load;
+        assertNone(loaded);
         yield* cache.save('{"Account":{}}');
-        assertSome(yield* cache.load, '{"Account":{}}');
-        expect(yield* fs.exists(`${file}.tmp`)).toBe(false);
+        const loaded2 = yield* cache.load;
+        assertSome(loaded2, '{"Account":{}}');
+        const exists3 = yield* fs.exists(`${file}.tmp`);
+        expect(exists3).toBe(false);
       })
     );
   });
@@ -157,7 +161,8 @@ describe("M365SignIn", () => {
         const connection = yield* M365SignIn.use((signIn) => signIn.connection);
         expect(connection.config.clientId).toBe("client-1");
         expect(connection.config.tenantId).toBe("organizations");
-        assertNone(yield* connection.tokenCache.load);
+        const loaded4 = yield* connection.tokenCache.load;
+        assertNone(loaded4);
       })
     );
   });

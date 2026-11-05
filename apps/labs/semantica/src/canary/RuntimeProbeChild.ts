@@ -77,7 +77,8 @@ const makeProvideServices = (ledgerRoot: string, runtimeMode: typeof RuntimeMode
 type ProvideServices = ReturnType<typeof makeProvideServices>;
 
 const crashProbe = Effect.fn("crashProbe")(function* (provideServices: ProvideServices, inputPath: string) {
-  const input = yield* decodeCrashProjectionInput(yield* Effect.promise(() => Bun.file(inputPath).text()));
+  const promise1 = yield* Effect.promise(() => Bun.file(inputPath).text());
+  const input = yield* decodeCrashProjectionInput(promise1);
   yield* provideServices(
     Ledger.pipe(
       Effect.flatMap((ledger) =>

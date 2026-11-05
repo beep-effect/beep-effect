@@ -3,6 +3,9 @@ import * as NodeURL from "node:url";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
+import { identity } from "effect/Function";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { sha256TextSync } from "@/schema/Digest";
 import type { RdfsRuleId } from "@/schema/Reasoning";
@@ -103,8 +106,8 @@ const generatedCases = A.map(cases, (testCase) => {
   };
 });
 
-const generated = JSON.stringify(
-  {
+const generated = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))({
     cases: generatedCases,
     oracle: {
       engine: "EYE",
@@ -115,9 +118,8 @@ const generated = JSON.stringify(
     },
     rulesSha256: sha256TextSync(await Bun.file(rulesPath).text()),
     schemaVersion: "g-entailment-rdfs/v1",
-  },
-  undefined,
-  2
+  }),
+  identity
 );
 
 if (A.contains(process.argv, "--write")) {

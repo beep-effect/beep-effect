@@ -109,7 +109,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
       const encoded = yield* encodeSummary(summary);
       const decoded = yield* decodeSummary(encoded);
       expect(summaryEquivalent(decoded, summary)).toBe(true);
-      expect(yield* encodeSummary(decoded)).toBe(encoded);
+      const encodedSummary = yield* encodeSummary(decoded);
+      expect(encodedSummary).toBe(encoded);
     }),
     { arbitrary: fcRuns(25) }
   );
@@ -119,10 +120,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
     Effect.fnUntraced(function* () {
       const root = yield* findRepoRoot();
       const fs = yield* FileSystem.FileSystem;
-      const config = yield* decodeConfiguration(yield* fs.readFileString(`${root}/turbo.json`));
+      const readFileString1 = yield* fs.readFileString(`${root}/turbo.json`);
+      const config = yield* decodeConfiguration(readFileString1);
       expect(config.tasks["lint:laws"].cache).toBe(true);
       expect(config.tasks["lint:laws"].outputs).toEqual([]);
-      const manifest = yield* decodeScripts(yield* fs.readFileString(`${root}/package.json`));
+      const readFileString2 = yield* fs.readFileString(`${root}/package.json`);
+      const manifest = yield* decodeScripts(readFileString2);
       expect(manifest.scripts["lint:native-runtime:roots"]).toBe(
         "beep-cli laws native-runtime --check --include-prefix scratchpad,packages/_internal/db-admin/effect-ontology"
       );
@@ -135,7 +138,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
-      const config = yield* decodeConfiguration(yield* fs.readFileString(`${repoRoot}/turbo.json`));
+      const readFileString3 = yield* fs.readFileString(`${repoRoot}/turbo.json`);
+      const config = yield* decodeConfiguration(readFileString3);
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "laws-turbo-" });
       const binary = path.join(repoRoot, "node_modules", ".bin", "turbo");
       yield* writeJson(root, "package.json", {
@@ -215,7 +219,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
           );
         });
         yield* writeFile(root, file, original);
-        expect(yield* lawHashes(root, binary)).toEqual(baseline);
+        const lawHashes4 = yield* lawHashes(root, binary);
+        expect(lawHashes4).toEqual(baseline);
       });
       yield* Effect.forEach(
         [
@@ -252,9 +257,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
       for (const directory of ["dist", "build", ".turbo", "coverage", "node_modules"]) {
         const file = `packages/consumer/${directory}/generated.ts`;
         yield* writeFile(root, file, "export const generated = 1;\n");
-        expect(yield* lawHashes(root, binary), file).toEqual(baseline);
+        const lawHashes5 = yield* lawHashes(root, binary);
+        expect(lawHashes5, file).toEqual(baseline);
         yield* writeFile(root, file, "export const generated = 2;\n");
-        expect(yield* lawHashes(root, binary), `${file}: changed artifact`).toEqual(baseline);
+        const lawHashes6 = yield* lawHashes(root, binary);
+        expect(lawHashes6, `${file}: changed artifact`).toEqual(baseline);
       }
       for (const directory of [
         "node_modules",
@@ -268,9 +275,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
       ]) {
         const manifest = `packages/unrelated/${directory}/nested/package.json`;
         yield* writeJson(root, manifest, { name: "generated-artifact" });
-        expect(yield* lawHashes(root, binary), manifest).toEqual(baseline);
+        const lawHashes7 = yield* lawHashes(root, binary);
+        expect(lawHashes7, manifest).toEqual(baseline);
         yield* writeJson(root, manifest, { name: "changed-generated-artifact" });
-        expect(yield* lawHashes(root, binary), `${manifest}: changed artifact`).toEqual(baseline);
+        const lawHashes8 = yield* lawHashes(root, binary);
+        expect(lawHashes8, `${manifest}: changed artifact`).toEqual(baseline);
       }
       for (const directory of ["docs", ".beep"]) {
         const file = `packages/consumer/${directory}/consumed.ts`;
@@ -280,7 +289,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
         expect(changed[1]).toEqual(baseline[1]);
         expect(changed[2]).toEqual(baseline[2]);
         yield* fs.remove(path.join(root, file));
-        expect(yield* lawHashes(root, binary), `${file}: removed`).toEqual(baseline);
+        const lawHashes9 = yield* lawHashes(root, binary);
+        expect(lawHashes9, `${file}: removed`).toEqual(baseline);
       }
       yield* Effect.forEach(
         ["packages/upstream/src/index.ts", "packages/unrelated/src/index.ts", "scripts/unrelated.ts"],

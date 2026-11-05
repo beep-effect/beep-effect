@@ -21,7 +21,8 @@ it.layer(platformWith({ "/repo/src/a.ts": "" }, { unresolvable: { "/repo": "Perm
   );
   it.effect("skip returns no matches when the cycle guard cannot seed its base", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* descend(pattern, { cwd: "/repo", followSymlinks: true, onUnreadable: "skip" }), []);
+      const descend1 = yield* descend(pattern, { cwd: "/repo", followSymlinks: true, onUnreadable: "skip" });
+      assert.deepStrictEqual(descend1, []);
     })
   );
   it.effect("record preserves the unresolved base and original filesystem reason", () =>
@@ -42,10 +43,8 @@ it.layer(platformWith({ "/repo/src/a.ts": "" }, { unresolvable: { "/repo": "NotF
   (it) => {
     it.effect("a vanished base remains a benign race even in record mode", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(
-          yield* descend(pattern, { cwd: "/repo", followSymlinks: true, onUnreadable: "record" }),
-          DescendResult.make({ matches: [], unreadable: [] })
-        );
+        const descend2 = yield* descend(pattern, { cwd: "/repo", followSymlinks: true, onUnreadable: "record" });
+        assert.deepStrictEqual(descend2, DescendResult.make({ matches: [], unreadable: [] }));
       })
     );
   }

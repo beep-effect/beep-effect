@@ -9,9 +9,9 @@ import {
   SupportFacts,
 } from "@beep/party-domain/Admission";
 import { ClaimVersion, ReviewState } from "@beep/party-domain/Claim";
-import { CommunicationEvent, isDelegated, voiceOf } from "@beep/party-domain/Communication";
-import { assessOperational, divergences } from "@beep/party-domain/Hierarchy";
-import { AccountId, ActivityId, AssertionId, ClaimVersionId } from "@beep/party-domain/Ids";
+import { CommunicationEvent, isDelegated, Voice, voiceOf } from "@beep/party-domain/Communication";
+import { AttributedEvent, assessOperational, divergences } from "@beep/party-domain/Hierarchy";
+import { AccountId, ActivityId, AssertionId, ClaimVersionId, EventId } from "@beep/party-domain/Ids";
 import {
   attributeEvents,
   chainOfCommand,
@@ -111,6 +111,8 @@ describe("party model competency questions", () => {
         const fx = yield* AcmeFixture;
         expect(isDelegated(voiceOf(fx.eventNo(2)))).toBe(true);
         expect(isDelegated(voiceOf(fx.eventNo(1)))).toBe(false);
+        const delegated = voiceOf(fx.eventNo(2));
+        expect(isDelegated(Voice.make({ ...delegated, representing: O.none() }))).toBe(true);
         expect(voiceOf(fx.eventNo(4)).id).toBe(voiceOf(fx.eventNo(6)).id);
         const view = identityView({ ledger: fx.ledger, scope: scope() });
         const attributed = attributeEvents({ events: [fx.eventNo(2)], observations: fx.observations, view });
@@ -218,6 +220,65 @@ describe("party model competency questions", () => {
         expect(
           HashMap.size(selectorReach({ selectors: selectorGraph(fx.events), seed: email("riley"), hops: 2 }))
         ).toBeGreaterThan(0);
+      })
+    );
+
+    it.effect("retains repeated approval evidence, ignores self-approval and confirms a declared manager", () =>
+      Effect.gen(function* () {
+        const fx = yield* AcmeFixture;
+        const view = identityView({ ledger: fx.ledger, scope: scope() });
+        const custodians = HashSet.make(ids.sam, ids.dana);
+        const events = A.map(["first", "second"], (id) =>
+          AttributedEvent.make({
+            event: EventId.make(`party-evt:${id}`),
+            author: O.some(ids.dana),
+            to: [ids.dana, ids.sam],
+            cc: [],
+            acts: ["grants-approval"],
+          })
+        );
+        const operational = assessOperational({
+          events,
+          producedBy: ActivityId.make("party-act:assessor"),
+          custodians,
+        });
+        expect(operational).toHaveLength(1);
+        const assessment = O.getOrThrow(A.head(operational));
+        expect(assessment.actor).toBe(ids.dana);
+        expect(assessment.counterparty).toBe(ids.sam);
+        expect(assessment.supportingEvents).toEqual(["party-evt:first", "party-evt:second"]);
+        const leads = divergences({
+          declared: declaredLines({ ledger: fx.ledger, scope: scope(), view }),
+          operational,
+          custodians,
+          shadowGateMinimum: 2,
+        });
+        expect(A.some(leads, (row) => row._tag === "PhantomManager")).toBe(false);
+      })
+    );
+
+    it.effect("projects organizational membership without creating reporting authority", () =>
+      Effect.gen(function* () {
+        const fx = yield* AcmeFixture;
+        const proposition = Proposition.cases.Membership.make({
+          member: ids.maya,
+          organization: ids.acme,
+          role: O.none(),
+          title: O.none(),
+        });
+        const membership = ClaimVersion.make({
+          ...fx.averyAuthorship,
+          proposition,
+          logicalKey: logicalKey(proposition),
+        });
+        const ledger = [membership];
+        const view = identityView({ ledger, scope: scope() });
+        expect(view.representative(ids.pat)).toBe(ids.pat);
+        const org = orgGraph({ ledger, scope: scope(), view });
+        expect(Graph.nodeCount(org.graph)).toBe(2);
+        expect(Graph.edgeCount(org.graph)).toBe(1);
+        expect(orgMermaid({ org, label: (party) => `Party ${party}` })).toContain("member-of");
+        expect(chainOfCommand({ org, party: ids.maya })).toEqual([]);
       })
     );
 

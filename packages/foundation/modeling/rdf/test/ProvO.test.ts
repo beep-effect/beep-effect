@@ -106,14 +106,13 @@ describe("ProvO", () => {
 
   it.effect("decodes stable record variants and timestamp adjuncts", () =>
     Effect.gen(function* () {
-      expect(
-        yield* decodeEntity({
-          generatedAtTime: "2026-03-08T12:00:00Z",
-          id: "thing:alice",
-          provType: "Entity",
-          wasGeneratedBy: ["activity:ingest"],
-        })
-      ).toBeDefined();
+      const decodedEntity = yield* decodeEntity({
+        generatedAtTime: "2026-03-08T12:00:00Z",
+        id: "thing:alice",
+        provType: "Entity",
+        wasGeneratedBy: ["activity:ingest"],
+      });
+      expect(decodedEntity).toBeDefined();
 
       const activity = yield* decodeActivity({
         endedAtTime: "2026-03-08T12:00:00Z",
@@ -125,98 +124,117 @@ describe("ProvO", () => {
 
       pipe(activity.startedAtTime, O.isSome, assertTrue);
       pipe(activity.endedAtTime, O.isSome, assertTrue);
-      expect(yield* decodeProvDateTime("2026-03-08T12:00:00Z")).toBeDefined();
+      const decodedProvDateTime = yield* decodeProvDateTime("2026-03-08T12:00:00Z");
+      expect(decodedProvDateTime).toBeDefined();
     })
   );
 
   it.effect("decodes extension-tier records that remain on the public semantic-web surface", () =>
     Effect.gen(function* () {
-      expect(yield* decodePlan({ id: "plan:1", name: "Normalize bundle", provType: "Plan" })).toBeDefined();
-      expect(
-        yield* decodeCollection({ hadMember: ["thing:alice"], id: "collection:1", provType: "Collection" })
-      ).toBeDefined();
-      expect(yield* decodePerson({ id: "person:ada", name: "Ada", provType: "Person" })).toBeDefined();
-      expect(yield* decodeOrganization({ id: "org:beep", name: "Beep", provType: "Organization" })).toBeDefined();
-      expect(yield* decodeSoftwareAgent({ id: "agent:bot", name: "Bot", provType: "SoftwareAgent" })).toBeDefined();
+      const decodedPlan = yield* decodePlan({ id: "plan:1", name: "Normalize bundle", provType: "Plan" });
+      expect(decodedPlan).toBeDefined();
+      const decodedCollection = yield* decodeCollection({
+        hadMember: ["thing:alice"],
+        id: "collection:1",
+        provType: "Collection",
+      });
+      expect(decodedCollection).toBeDefined();
+      const decodedPerson = yield* decodePerson({ id: "person:ada", name: "Ada", provType: "Person" });
+      expect(decodedPerson).toBeDefined();
+      const decodedOrganization = yield* decodeOrganization({ id: "org:beep", name: "Beep", provType: "Organization" });
+      expect(decodedOrganization).toBeDefined();
+      const decodedSoftwareAgent = yield* decodeSoftwareAgent({
+        id: "agent:bot",
+        name: "Bot",
+        provType: "SoftwareAgent",
+      });
+      expect(decodedSoftwareAgent).toBeDefined();
     })
   );
 
   it.effect("decodes stable and extension-tier relations with object references", () =>
     Effect.gen(function* () {
-      expect(
-        yield* decodeUsage({
-          provType: "Usage",
-          activity: "activity:ingest",
-          atTime: "2026-03-08T11:30:00Z",
-          entity: "thing:alice",
-        })
-      ).toBeDefined();
+      const decodedUsage = yield* decodeUsage({
+        provType: "Usage",
+        activity: "activity:ingest",
+        atTime: "2026-03-08T11:30:00Z",
+        entity: "thing:alice",
+      });
+      expect(decodedUsage).toBeDefined();
 
-      expect(
-        yield* decodeGeneration({
-          provType: "Generation",
-          activity: "activity:ingest",
-          atTime: "2026-03-08T12:00:00Z",
-          entity: "thing:alice",
-        })
-      ).toBeDefined();
+      const decodedGeneration = yield* decodeGeneration({
+        provType: "Generation",
+        activity: "activity:ingest",
+        atTime: "2026-03-08T12:00:00Z",
+        entity: "thing:alice",
+      });
+      expect(decodedGeneration).toBeDefined();
 
-      expect(
-        yield* decodeAssociation({
-          provType: "Association",
-          activity: "activity:ingest",
-          agent: "agent:semantic-web",
-          hadPlan: "plan:1",
-        })
-      ).toBeDefined();
+      const decodedAssociation = yield* decodeAssociation({
+        provType: "Association",
+        activity: "activity:ingest",
+        agent: "agent:semantic-web",
+        hadPlan: "plan:1",
+      });
+      expect(decodedAssociation).toBeDefined();
 
-      expect(
-        yield* decodeAttribution({ provType: "Attribution", agent: "agent:semantic-web", entity: "thing:alice" })
-      ).toBeDefined();
-      expect(
-        yield* decodeDelegation({ provType: "Delegation", delegate: "agent:bot", responsible: "agent:semantic-web" })
-      ).toBeDefined();
-      expect(
-        yield* decodeDerivation({
-          provType: "Derivation",
-          generatedEntity: "thing:alice:v2",
-          usedEntity: "thing:alice:v1",
-        })
-      ).toBeDefined();
-      expect(
-        yield* decodePrimarySource({ provType: "PrimarySource", entity: "thing:alice", source: "source:1" })
-      ).toBeDefined();
-      expect(
-        yield* decodeQuotation({ provType: "Quotation", entity: "thing:alice", source: "source:2" })
-      ).toBeDefined();
-      expect(
-        yield* decodeRevision({ provType: "Revision", entity: "thing:alice:v2", source: "thing:alice:v1" })
-      ).toBeDefined();
-      expect(
-        yield* decodeStart({ provType: "Start", activity: "activity:ingest", trigger: "trigger:start" })
-      ).toBeDefined();
-      expect(yield* decodeEnd({ provType: "End", activity: "activity:ingest", trigger: "trigger:end" })).toBeDefined();
+      const decodedAttribution = yield* decodeAttribution({
+        provType: "Attribution",
+        agent: "agent:semantic-web",
+        entity: "thing:alice",
+      });
+      expect(decodedAttribution).toBeDefined();
+      const decodedDelegation = yield* decodeDelegation({
+        provType: "Delegation",
+        delegate: "agent:bot",
+        responsible: "agent:semantic-web",
+      });
+      expect(decodedDelegation).toBeDefined();
+      const decodedDerivation = yield* decodeDerivation({
+        provType: "Derivation",
+        generatedEntity: "thing:alice:v2",
+        usedEntity: "thing:alice:v1",
+      });
+      expect(decodedDerivation).toBeDefined();
+      const decodedPrimarySource = yield* decodePrimarySource({
+        provType: "PrimarySource",
+        entity: "thing:alice",
+        source: "source:1",
+      });
+      expect(decodedPrimarySource).toBeDefined();
+      const decodedQuotation = yield* decodeQuotation({
+        provType: "Quotation",
+        entity: "thing:alice",
+        source: "source:2",
+      });
+      expect(decodedQuotation).toBeDefined();
+      const decodedRevision = yield* decodeRevision({
+        provType: "Revision",
+        entity: "thing:alice:v2",
+        source: "thing:alice:v1",
+      });
+      expect(decodedRevision).toBeDefined();
+      const decodedStart = yield* decodeStart({
+        provType: "Start",
+        activity: "activity:ingest",
+        trigger: "trigger:start",
+      });
+      expect(decodedStart).toBeDefined();
+      const decodedEnd = yield* decodeEnd({ provType: "End", activity: "activity:ingest", trigger: "trigger:end" });
+      expect(decodedEnd).toBeDefined();
     })
   );
 
   it.effect("rejects invalid provenance values for the current schema surface", () =>
     Effect.gen(function* () {
-      assertExitFailure(
-        mapFailureTags(yield* Effect.exit(decodeProvO({ provType: "Bundle" }))),
-        Cause.fail("SchemaError")
-      );
-      assertExitFailure(
-        mapFailureTags(yield* Effect.exit(decodeCollection({ id: "collection:1", provType: "Collection" }))),
-        Cause.fail("SchemaError")
-      );
-      assertExitFailure(
-        mapFailureTags(yield* Effect.exit(decodeUsage({ provType: "Usage", activity: "activity:ingest" }))),
-        Cause.fail("SchemaError")
-      );
-      assertExitFailure(
-        mapFailureTags(yield* Effect.exit(decodeObjectRef("not valid whitespace ref"))),
-        Cause.fail("SchemaError")
-      );
+      const exit1 = yield* Effect.exit(decodeProvO({ provType: "Bundle" }));
+      assertExitFailure(mapFailureTags(exit1), Cause.fail("SchemaError"));
+      const exit2 = yield* Effect.exit(decodeCollection({ id: "collection:1", provType: "Collection" }));
+      assertExitFailure(mapFailureTags(exit2), Cause.fail("SchemaError"));
+      const exit3 = yield* Effect.exit(decodeUsage({ provType: "Usage", activity: "activity:ingest" }));
+      assertExitFailure(mapFailureTags(exit3), Cause.fail("SchemaError"));
+      const exit4 = yield* Effect.exit(decodeObjectRef("not valid whitespace ref"));
+      assertExitFailure(mapFailureTags(exit4), Cause.fail("SchemaError"));
     })
   );
 

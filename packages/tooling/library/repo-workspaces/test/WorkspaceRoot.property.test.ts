@@ -15,7 +15,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -28,11 +29,13 @@ describe("WorkspaceRoot schema fidelity", () => {
 
 it.effect("root options do not validate depth or materialize lazy defaults", () =>
   Effect.gen(function* () {
-    assert.deepStrictEqual(yield* S.decodeEffect(FindWorkspaceRootOptions)({}), FindWorkspaceRootOptions.make({}));
+    const value2 = yield* S.decodeEffect(FindWorkspaceRootOptions)({});
+    assert.deepStrictEqual(value2, FindWorkspaceRootOptions.make({}));
     for (const maxDepth of [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
       const options = FindWorkspaceRootOptions.make({ maxDepth });
       const encoded = yield* S.encodeEffect(FindWorkspaceRootOptions)(options);
-      assert.deepStrictEqual(yield* S.decodeEffect(FindWorkspaceRootOptions)(encoded), options);
+      const value3 = yield* S.decodeEffect(FindWorkspaceRootOptions)(encoded);
+      assert.deepStrictEqual(value3, options);
     }
   })
 );

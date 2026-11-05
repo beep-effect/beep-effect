@@ -21,7 +21,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* encode(value);
         const decoded = yield* decode(encoded);
         assertTrue(equivalent(decoded, value));
-        assert.deepStrictEqual(yield* encode(decoded), encoded);
+        const encoded1 = yield* encode(decoded);
+        assert.deepStrictEqual(encoded1, encoded);
       }),
     runs
   );
@@ -47,7 +48,8 @@ it.effect.prop(
       assert.strictEqual(formatted, bytes);
       const reparsed = yield* S.decodeEffect(json)(formatted);
       assert.deepStrictEqual(reparsed, parsed);
-      assert.strictEqual(yield* S.encodeEffect(json)(reparsed), formatted);
+      const value2 = yield* S.encodeEffect(json)(reparsed);
+      assert.strictEqual(value2, formatted);
     }),
   runs
 );

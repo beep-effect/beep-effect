@@ -57,7 +57,8 @@ const assertRoundTrip = Effect.fn("assertRoundTrip")(function* <
 });
 
 const assertDecodeFailure = Effect.fn("assertDecodeFailure")(function* <A, E>(decode: Effect.Effect<A, E>) {
-  pipe(yield* Effect.exit(decode), Exit.isFailure, assertTrue);
+  const exit1 = yield* Effect.exit(decode);
+  pipe(exit1, Exit.isFailure, assertTrue);
 });
 
 describe("Tool validation", () => {
@@ -83,7 +84,11 @@ describe("Tool validation", () => {
 
   it.effect("defaults Tversky parameters at the schema boundary", () =>
     Effect.gen(function* () {
-      expect(yield* decodeTverskySimilarityParameters({ text1: "alpha", text2: "beta" })).toEqual({
+      const decodedTverskySimilarityParameters = yield* decodeTverskySimilarityParameters({
+        text1: "alpha",
+        text2: "beta",
+      });
+      expect(decodedTverskySimilarityParameters).toEqual({
         alpha: 0.5,
         beta: 0.5,
         text1: "alpha",
@@ -172,24 +177,30 @@ describe("Tool validation", () => {
       expect(Schema.is(EntityGroupName)(entityGroupName)).toBe(true);
       expect(Schema.is(InstanceId)(instanceId)).toBe(true);
       expect(Schema.is(WinkError)(winkError)).toBe(true);
-      expect(yield* encodeEntityGroupName(entityGroupName)).toBe("ProductName");
-      expect(yield* encodeInstanceId(instanceId)).toBe("wink-engine-example-4");
-      expect(yield* encodeCustomEntityExample(customEntityExample)).toEqual({
+      const encodedEntityGroupName = yield* encodeEntityGroupName(entityGroupName);
+      expect(encodedEntityGroupName).toBe("ProductName");
+      const encodedInstanceId = yield* encodeInstanceId(instanceId);
+      expect(encodedInstanceId).toBe("wink-engine-example-4");
+      const encodedCustomEntityExample = yield* encodeCustomEntityExample(customEntityExample);
+      expect(encodedCustomEntityExample).toEqual({
         name: "SKU",
         patterns: ["[PROPN]"],
       });
-      expect(yield* encodeSentenceSpanFailure(sentenceSpanFailure)).toEqual({
+      const encodedSentenceSpanFailure = yield* encodeSentenceSpanFailure(sentenceSpanFailure);
+      expect(encodedSentenceSpanFailure).toEqual({
         _tag: "SentenceSpanFailure",
         reason: "Unable to derive a stable sentence token span.",
         sentenceIndex: 0,
         sentenceText: "Hello world.",
       });
-      expect(yield* encodeCorpusManagerError(corpusManagerError)).toEqual({
+      const encodedCorpusManagerError = yield* encodeCorpusManagerError(corpusManagerError);
+      expect(encodedCorpusManagerError).toEqual({
         _tag: "CorpusManagerError",
         corpusId: "support-docs",
         message: "Corpus does not exist",
       });
-      expect(yield* encodeVectorizerError(vectorizerError)).toEqual({
+      const encodedVectorizerError = yield* encodeVectorizerError(vectorizerError);
+      expect(encodedVectorizerError).toEqual({
         _tag: "VectorizerError",
         message: "Document index is out of range",
         operation: "tf",

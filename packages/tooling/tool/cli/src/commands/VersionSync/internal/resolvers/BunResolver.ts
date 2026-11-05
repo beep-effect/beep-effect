@@ -280,7 +280,8 @@ export const resolveBunVersions: {
       .readFileString(pkgJsonPath)
       .pipe(VersionSyncError.mapError("Failed to read package.json", "package.json"));
 
-    const packageManagerField = extractPackageManagerVersion(yield* readPackageManagerField(pkgJsonContent));
+    const readPackageManagerField1 = yield* readPackageManagerField(pkgJsonContent);
+    const packageManagerField = extractPackageManagerVersion(readPackageManagerField1);
 
     const vercelJsonPath = path.join(repoRoot, "apps", "oip-web", "vercel.json");
     const vercelDocument = yield* fs.exists(vercelJsonPath).pipe(

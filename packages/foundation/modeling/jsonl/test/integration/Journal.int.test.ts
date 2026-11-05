@@ -75,7 +75,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("Journal integration", (
   it.effect("appends land on a real file and read back", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const dir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped();
+      const dir = yield* fs.realPath(madeTempDirectoryScoped);
       yield* withJournal(dir, (journal, path) =>
         Effect.gen(function* () {
           yield* journal.append("started", { round: 1, phase: "a" });
@@ -91,7 +92,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("Journal integration", (
   it.effect("concurrent appends through one journal interleave no bytes", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const dir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const madeTempDirectoryScoped1 = yield* fs.makeTempDirectoryScoped();
+      const dir = yield* fs.realPath(madeTempDirectoryScoped1);
       yield* withJournal(dir, (journal, path) =>
         Effect.gen(function* () {
           // Payloads large enough that an unserialized writer would visibly
@@ -130,7 +132,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("Journal integration", (
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const dir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const madeTempDirectoryScoped2 = yield* fs.makeTempDirectoryScoped();
+      const dir = yield* fs.realPath(madeTempDirectoryScoped2);
       const file = path.join(dir, "two-writers.jsonl");
       const layer = TmpJournal.layer({ path: file });
       const scope = yield* Scope.make();
@@ -181,7 +184,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("Journal integration", (
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const dir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const madeTempDirectoryScoped3 = yield* fs.makeTempDirectoryScoped();
+      const dir = yield* fs.realPath(madeTempDirectoryScoped3);
       const file = path.join(dir, "journal.jsonl");
 
       const first = TmpJournal.layer({ path: file });
@@ -209,7 +213,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("Journal integration", (
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const dir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const madeTempDirectoryScoped4 = yield* fs.makeTempDirectoryScoped();
+      const dir = yield* fs.realPath(madeTempDirectoryScoped4);
       const file = path.join(dir, "bom.jsonl");
       const line = `${yield* S.encodeEffect(ForeignJson)({
         at: "2026-01-01T00:00:00.000Z",
@@ -247,7 +252,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("Journal integration", (
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const dir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+        const madeTempDirectoryScoped5 = yield* fs.makeTempDirectoryScoped();
+        const dir = yield* fs.realPath(madeTempDirectoryScoped5);
         const file = path.join(dir, "shared.jsonl");
 
         // Two independently-built layers over the same path — the stand-in for

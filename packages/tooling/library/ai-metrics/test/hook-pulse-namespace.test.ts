@@ -53,22 +53,20 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
   describe("hookPulseNamespaceProjectionPath", () => {
     it.effect("defaults to the XDG cache home and honours the explicit override", () =>
       Effect.gen(function* () {
-        assertSome(
-          yield* withEnv({ HOME: "/home/ada" }, hookPulseNamespaceProjectionPath),
-          "/home/ada/.cache/beep/telemetry/namespace-projection.json"
+        const withEnv1 = yield* withEnv({ HOME: "/home/ada" }, hookPulseNamespaceProjectionPath);
+        assertSome(withEnv1, "/home/ada/.cache/beep/telemetry/namespace-projection.json");
+        const withEnv2 = yield* withEnv(
+          { HOME: "/home/ada", XDG_CACHE_HOME: "/var/cache/ada" },
+          hookPulseNamespaceProjectionPath
         );
-        assertSome(
-          yield* withEnv({ HOME: "/home/ada", XDG_CACHE_HOME: "/var/cache/ada" }, hookPulseNamespaceProjectionPath),
-          "/var/cache/ada/beep/telemetry/namespace-projection.json"
+        assertSome(withEnv2, "/var/cache/ada/beep/telemetry/namespace-projection.json");
+        const withEnv3 = yield* withEnv(
+          { HOME: "/home/ada", BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: "/fixtures/p.json" },
+          hookPulseNamespaceProjectionPath
         );
-        assertSome(
-          yield* withEnv(
-            { HOME: "/home/ada", BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: "/fixtures/p.json" },
-            hookPulseNamespaceProjectionPath
-          ),
-          "/fixtures/p.json"
-        );
-        assertNone(yield* withEnv({}, hookPulseNamespaceProjectionPath));
+        assertSome(withEnv3, "/fixtures/p.json");
+        const withEnv4 = yield* withEnv({}, hookPulseNamespaceProjectionPath);
+        assertNone(withEnv4);
       })
     );
   });
@@ -87,7 +85,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
 
     it.effect("reads the projection and joins under both regimes", () =>
       Effect.gen(function* () {
-        const { file } = yield* writeProjection(yield* projectionJson());
+        const projectionJson5 = yield* projectionJson();
+        const { file } = yield* writeProjection(projectionJson5);
         const namespace = yield* withEnv(
           { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file, BEEP_AI_METRICS_HASH_SALT: "repo-wide" },
           hookPulseNamespace
@@ -101,15 +100,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
         expect(resolveAiMetricsHashSaltValue(A.getUnsafe(salts, 1).hashSalt)).toBe(AI_METRICS_LOCAL_INSECURE_HASH_SALT);
         assertSome(hookPulseNamespaceCutoverMillis(namespace), DateTime.toEpochMillis(DateTime.makeUnsafe(CUTOVER)));
         // The previous-regime digest is the one an unconfigured writer produced.
-        expect(yield* hashPrivateIdentifier("value", A.getUnsafe(salts, 1).hashSalt)).toBe(
-          yield* hashPrivateIdentifier("value", O.none())
-        );
+        const hashPrivateIdentifier6 = yield* hashPrivateIdentifier("value", A.getUnsafe(salts, 1).hashSalt);
+        const expectation = expect(hashPrivateIdentifier6);
+        const hashPrivateIdentifier1 = yield* hashPrivateIdentifier("value", O.none());
+        expectation.toBe(hashPrivateIdentifier1);
       })
     );
 
     it.effect("keeps the instrument override above the projection and the projection above the repo-wide salt", () =>
       Effect.gen(function* () {
-        const { file } = yield* writeProjection(yield* projectionJson());
+        const projectionJson7 = yield* projectionJson();
+        const { file } = yield* writeProjection(projectionJson7);
         const overridden = yield* withEnv(
           { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file, BEEP_HOOK_PULSE_HASH_SALT: "instrument" },
           hookPulseNamespace
@@ -139,20 +140,23 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
         ).pipe(Effect.flip);
         expect(malformedExit._tag).toBe("HookPulseNamespaceError");
 
-        const blank = yield* writeProjection(yield* projectionJson({ hashSalt: "  " }));
+        const projectionJson8 = yield* projectionJson({ hashSalt: "  " });
+        const blank = yield* writeProjection(projectionJson8);
         const blankExit = yield* withEnv({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: blank.file }, hookPulseNamespace).pipe(
           Effect.flip
         );
         expect(blankExit._tag).toBe("HookPulseNamespaceError");
 
-        const wrongVersion = yield* writeProjection(yield* projectionJson({ version: 2 }));
+        const projectionJson9 = yield* projectionJson({ version: 2 });
+        const wrongVersion = yield* writeProjection(projectionJson9);
         const versionExit = yield* withEnv(
           { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: wrongVersion.file },
           hookPulseNamespace
         ).pipe(Effect.flip);
         expect(versionExit._tag).toBe("HookPulseNamespaceError");
 
-        const linked = yield* writeProjection(yield* projectionJson());
+        const projectionJson10 = yield* projectionJson();
+        const linked = yield* writeProjection(projectionJson10);
         const link = path.join(linked.dir, "link.json");
         yield* fs.symlink(linked.file, link);
         const linkExit = yield* withEnv({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: link }, hookPulseNamespace).pipe(
@@ -165,9 +169,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
 
     it.effect("deduplicates the effective default and bypasses an invalid projection with an explicit override", () =>
       Effect.gen(function* () {
-        const { file } = yield* writeProjection(
-          yield* projectionJson({ hashSalt: AI_METRICS_LOCAL_INSECURE_HASH_SALT })
-        );
+        const projectionJson11 = yield* projectionJson({ hashSalt: AI_METRICS_LOCAL_INSECURE_HASH_SALT });
+        const { file } = yield* writeProjection(projectionJson11);
         const namespace = yield* withEnv({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file }, hookPulseNamespace);
         expect(hookPulseNamespaceSalts(namespace)).toHaveLength(1);
         const malformed = yield* writeProjection("{invalid");
@@ -186,7 +189,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
     it.effect("renders safe diagnostics and rejects control characters in environment salts", () =>
       Effect.gen(function* () {
         const privateMarker = "private-projection-salt-marker";
-        const { file } = yield* writeProjection(yield* projectionJson({ hashSalt: `${privateMarker}\n` }));
+        const projectionJson12 = yield* projectionJson({ hashSalt: `${privateMarker}\n` });
+        const { file } = yield* writeProjection(projectionJson12);
         const cause = yield* withEnv({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file }, hookPulseNamespace).pipe(
           Effect.sandbox,
           Effect.flip
@@ -205,12 +209,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
 
     it.effect("round-trips the projection document", () =>
       Effect.gen(function* () {
-        const decoded = yield* HookPulseNamespaceProjection.decodeJsonEffect(yield* projectionJson());
+        const projectionJson13 = yield* projectionJson();
+        const decoded = yield* HookPulseNamespaceProjection.decodeJsonEffect(projectionJson13);
         expect(decoded.version).toBe(1);
         expect(decoded.hashSalt).toBe(PROJECTION_SALT);
         expect(decoded.previousRegime).toBe("library-default");
         const encoded = yield* HookPulseNamespaceProjection.encodeJsonEffect(decoded);
-        expect(yield* decodeJson(encoded)).toEqual(projectionDocument());
+        const decodedJson = yield* decodeJson(encoded);
+        expect(decodedJson).toEqual(projectionDocument());
       })
     );
   });

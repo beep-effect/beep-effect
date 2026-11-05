@@ -1727,8 +1727,9 @@ export const compileSkillsLockMigration = Effect.fn("SkillsLock.compileSkillsLoc
 ): Effect.fn.Return<SkillsLockMigrationArtifacts, SkillsCommandError, ProvenanceRequirements> {
   const lock = yield* readSkillsLock(repoRoot);
   const resolutions = yield* ratifiedResolutions(lock.vendored);
+  const plannedSkills1 = yield* plannedSkills(repoRoot, lock);
   const planned = yield* Effect.forEach(
-    yield* plannedSkills(repoRoot, lock),
+    plannedSkills1,
     ([skill, sourceType]) => migrateSkill(repoRoot, skill, sourceType, resolutions),
     { concurrency: 1 }
   );

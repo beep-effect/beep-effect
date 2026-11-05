@@ -337,8 +337,10 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet guards", (it) 
       yield* validateMonitorBranch(contextAt("/repo"));
       const head = yield* Effect.flip(validateMonitorBranch(contextAt("/repo", "HEAD")));
       expect(head.exitCode).toBe(1);
-      assertNone(yield* validateRequiredMessage(defaultYeetRunOptions({ message: "   " })));
-      assertSome(yield* validateRequiredMessage(defaultYeetRunOptions({ message: " fix: x " })), "fix: x");
+      const blankMessage = yield* validateRequiredMessage(defaultYeetRunOptions({ message: "   " }));
+      assertNone(blankMessage);
+      const trimmedMessage = yield* validateRequiredMessage(defaultYeetRunOptions({ message: " fix: x " }));
+      assertSome(trimmedMessage, "fix: x");
     })
   );
 
@@ -354,7 +356,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet guards", (it) 
       yield* validateCommitMessage(context, "feat(repo-cli): accepted").pipe(
         withProcesses([["commitlint --edit", 0, ""]], commands)
       );
-      expect(yield* fs.readFileString(messagePath)).toBe("feat(repo-cli): accepted\n");
+      const messageText = yield* fs.readFileString(messagePath);
+      expect(messageText).toBe("feat(repo-cli): accepted\n");
       expect(commandLines(commands)).toEqual([`commitlint --edit ${messagePath}`]);
 
       const rejected = yield* validateCommitMessage(context, "nope").pipe(
@@ -435,14 +438,19 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         const found = (replies: ReadonlyArray<Reply>) =>
           findOpenPullRequest(context).pipe(withProcesses(replies, commands));
 
+        const openPr = yield* found([["gh pr view", 0, prView()]]);
         assertSome(
-          O.map(yield* found([["gh pr view", 0, prView()]]), (view) => view.number),
+          O.map(openPr, (view) => view.number),
           7
         );
-        assertNone(yield* found([["gh pr view", 0, prView({ state: "MERGED" })]]));
-        assertNone(yield* found([["gh pr view", 0, prView({ headRefName: "feat/other" })]]));
-        assertNone(yield* found([["gh pr view", 1, "no pull requests found"]]));
-        assertNone(yield* found([["gh pr view", 0, pipe("x", Str.repeat(600 * 1024))]]));
+        const mergedPr = yield* found([["gh pr view", 0, prView({ state: "MERGED" })]]);
+        assertNone(mergedPr);
+        const otherBranchPr = yield* found([["gh pr view", 0, prView({ headRefName: "feat/other" })]]);
+        assertNone(otherBranchPr);
+        const missingPr = yield* found([["gh pr view", 1, "no pull requests found"]]);
+        assertNone(missingPr);
+        const oversizedPr = yield* found([["gh pr view", 0, pipe("x", Str.repeat(600 * 1024))]]);
+        assertNone(oversizedPr);
 
         const unspawnable = yield* Effect.flip(found([["gh pr view", -1, "gh is not installed"]]));
         expect(unspawnable.message).toBe("Failed to inspect current branch pull request.");
@@ -513,7 +521,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
               commands
             )
           );
-        assertNone(yield* absent(0, "[]"));
+        const absentPr = yield* absent(0, "[]");
+        assertNone(absentPr);
         const failed = yield* Effect.flip(absent(1, "GitHub REST unavailable"));
         expect(failed.message).toContain("Failed to inspect current branch pull request through GitHub REST: ");
         expect(failed.message).toContain("GitHub REST unavailable");
@@ -580,9 +589,11 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         const current = ProvenanceStampOutcome.make({ status: "current", message: "provenance footer current" });
         yield* recordPrCreateLane(recorder, O.none(), PR_URL);
         yield* recordPrProvenanceStampLane(recorder, O.none(), O.some(7), current);
-        expect(yield* Ref.get(recorder)).toEqual([]);
+        const recorderValue10 = yield* Ref.get(recorder);
+        expect(recorderValue10).toEqual([]);
         yield* recordPrCreateLane(recorder, O.some(createStep), PR_URL);
-        expect(laneRows(yield* Ref.get(recorder))).toEqual([[createStep.id, undefined, 0, PR_URL]]);
+        const recorderValue11 = yield* Ref.get(recorder);
+        expect(laneRows(recorderValue11)).toEqual([[createStep.id, undefined, 0, PR_URL]]);
       })
     );
   });
@@ -621,7 +632,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         );
         expect(O.exists(create, Str.endsWith("draft=false"))).toBe(true);
         expect(A.some(commandLines(commands), Str.startsWith("gh pr create"))).toBe(false);
-        expect(laneRows(yield* Ref.get(recorder))).toEqual([
+        const recorderValue12 = yield* Ref.get(recorder);
+        expect(laneRows(recorderValue12)).toEqual([
           [createStep.id, undefined, 0, PR_URL],
           [
             stampStep.id,
@@ -655,7 +667,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         );
         assertSome(pullRequest.url, PR_URL);
         expect(A.some(commandLines(commands), Str.includes("draft=true"))).toBe(true);
-        expect(laneRows(yield* Ref.get(recorder))).toEqual([[draftCreateStep.id, undefined, 0, PR_URL]]);
+        const recorderValue13 = yield* Ref.get(recorder);
+        expect(laneRows(recorderValue13)).toEqual([[draftCreateStep.id, undefined, 0, PR_URL]]);
       })
     );
 
@@ -829,7 +842,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         expect(error.message).toContain("GitHub REST pull request creation failed:\n");
         expect(error.message).toContain("a pull request for this branch already exists");
         expect(error.exitCode).toBe(1);
-        expect(yield* Ref.get(recorder)).toEqual([]);
+        const recorderValue14 = yield* Ref.get(recorder);
+        expect(recorderValue14).toEqual([]);
       })
     );
 
@@ -842,7 +856,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         );
         expect(pullRequest.created).toBe(false);
         assertSome(pullRequest.url, PR_URL);
-        expect(laneRows(yield* Ref.get(recorder))).toEqual([
+        const recorderValue15 = yield* Ref.get(recorder);
+        expect(laneRows(recorderValue15)).toEqual([
           [createStep.id, undefined, 0, "skipped: open pull request #7 already exists"],
         ]);
         expect(A.some(commandLines(commands), Str.startsWith("gh pr create"))).toBe(false);
@@ -924,7 +939,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         expect(error.message).toContain("no non-merge commit in HEAD");
         expect(error.message).toContain('pass --message "<conventional subject>"');
         expect(A.some(commandLines(commands), Str.includes("-X POST"))).toBe(false);
-        expect(yield* Ref.get(recorder)).toEqual([]);
+        const recorderValue16 = yield* Ref.get(recorder);
+        expect(recorderValue16).toEqual([]);
       })
     );
 
@@ -952,7 +968,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         expect(commandLines(commands)).toContain(
           "gh api -X PATCH repos/{owner}/{repo}/pulls/7 title=feat(repo-cli): ship"
         );
-        expect(laneRows(yield* Ref.get(recorder))).toEqual([
+        const recorderValue17 = yield* Ref.get(recorder);
+        expect(laneRows(recorderValue17)).toEqual([
           [
             createStep.id,
             undefined,
@@ -996,7 +1013,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           O.some("feat(repo-cli): a newer message")
         ).pipe(withProcesses([["gh pr view", 0, prView({ title: "feat(repo-cli): merge strategy" })]], commands));
         expect(A.some(commandLines(commands), Str.includes("--title"))).toBe(false);
-        expect(laneRows(yield* Ref.get(recorder))).toEqual([
+        const recorderValue18 = yield* Ref.get(recorder);
+        expect(laneRows(recorderValue18)).toEqual([
           [createStep.id, undefined, 0, "skipped: open pull request #7 already exists"],
         ]);
       })
@@ -1018,7 +1036,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         );
         expect(commandLines(commands)).toContain("gh api -X PATCH repos/{owner}/{repo}/pulls/7 title=fix: x");
         expect(A.some(commandLines(commands), Str.startsWith("gh pr edit"))).toBe(false);
-        expect(laneRows(yield* Ref.get(recorder))).toEqual([
+        const recorderValue19 = yield* Ref.get(recorder);
+        expect(laneRows(recorderValue19)).toEqual([
           [
             createStep.id,
             undefined,
@@ -1050,7 +1069,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           )
         );
         expect(pullRequest.number).toBe(7);
-        const rows = laneRows(yield* Ref.get(recorder));
+        const recorderValue20 = yield* Ref.get(recorder);
+        const rows = laneRows(recorderValue20);
         expect(rows).toHaveLength(1);
         expect(rows[0]?.[3]).toContain("could not replace the merge-commit subject on pull request #7");
         expect(rows[0]?.[3]).toContain("review and edit its title in GitHub");
@@ -1109,7 +1129,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           { discard: true }
         ).pipe(withProcesses([], commands));
         expect(commandLines(commands)).toEqual([]);
-        expect(laneRows(yield* Ref.get(recorder))).toEqual([
+        const recorderValue21 = yield* Ref.get(recorder);
+        expect(laneRows(recorderValue21)).toEqual([
           [labelStep.id, "skipped", 0, "skipped: pull request #7 already existed and keeps its labels"],
           [labelStep.id, "skipped", 0, "skipped: docs-only diff needs no heavy matrix"],
         ]);
@@ -1134,9 +1155,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           )
         );
         assertSome(A.last(commandLines(commands)), labelCommand);
-        expect(laneRows(yield* Ref.get(recorder))).toEqual([
-          [labelStep.id, "passed", 0, "ready-for-heavy,documentation"],
-        ]);
+        const recorderValue22 = yield* Ref.get(recorder);
+        expect(laneRows(recorderValue22)).toEqual([[labelStep.id, "passed", 0, "ready-for-heavy,documentation"]]);
       })
     );
 
@@ -1148,7 +1168,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           changedPaths: () => Effect.succeed([]),
         }).pipe(withProcesses([[labelCommand, 1, "label not found"]], commands));
         expect(commandLines(commands)).toEqual([labelCommand]);
-        const rows = laneRows(yield* Ref.get(recorder));
+        const recorderValue23 = yield* Ref.get(recorder);
+        const rows = laneRows(recorderValue23);
         expect(A.map(rows, A.take(3))).toEqual([[labelStep.id, "failed", 1]]);
         expect(rows[0]?.[3]).toContain("label not found");
       })
@@ -1525,7 +1546,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
       expect(decision).toMatchObject({ _tag: "flip", prNumber: 7 });
       const ran = commandLines(commands);
       expect(A.length(A.filter(ran, Str.startsWith("gh pr view --json id,number")))).toBe(3);
-      expect(yield* Ref.get(flips)).toEqual([7]);
+      const flipsValue24 = yield* Ref.get(flips);
+      expect(flipsValue24).toEqual([7]);
     })
   );
 
@@ -1591,7 +1613,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
         read: () => Effect.succeed(readOf(remoteOf())),
       });
       expect(decision._tag).toBe("flip");
-      expect(yield* Ref.get(asked)).toEqual([7]);
+      const askedValue25 = yield* Ref.get(asked);
+      expect(askedValue25).toEqual([7]);
     })
   );
 
@@ -1606,11 +1629,13 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
         }).pipe(Effect.flip);
         return error.message;
       });
-      expect(yield* refusal(readOf(remoteOf()), readOf(remoteOf({ isDraft: false })))).toContain(
+      const draftRefusal = yield* refusal(readOf(remoteOf()), readOf(remoteOf({ isDraft: false })));
+      expect(draftRefusal).toContain(
         "the pull request changed between the gate read and the flip; it is already ready for review."
       );
       // Without a head on either read the gate cannot prove they match.
-      expect(yield* refusal(headless, headless)).toContain("the head moved (gate unknown, live unknown)");
+      const headlessRefusal = yield* refusal(headless, headless);
+      expect(headlessRefusal).toContain("the head moved (gate unknown, live unknown)");
     })
   );
 });

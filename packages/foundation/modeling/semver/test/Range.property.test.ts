@@ -20,7 +20,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(value, decoded));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -61,9 +62,13 @@ describe("Range property floor", () => {
         assert.strictEqual(inspect(parsed), canonical);
         const again = yield* Range.parse(canonical);
         assert.strictEqual(again.toString(), canonical);
-        assert.deepStrictEqual(yield* S.encodeEffect(Range)(again), yield* S.encodeEffect(Range)(parsed));
+        const value2 = yield* S.encodeEffect(Range)(again);
+        const value4 = yield* S.encodeEffect(Range)(parsed);
+        assert.deepStrictEqual(value2, value4);
         const result = yield* Effect.fromResult(Range.parseResult(canonical));
-        assert.deepStrictEqual(yield* S.encodeEffect(Range)(result), yield* S.encodeEffect(Range)(parsed));
+        const value3 = yield* S.encodeEffect(Range)(result);
+        const value5 = yield* S.encodeEffect(Range)(parsed);
+        assert.deepStrictEqual(value3, value5);
       }),
     runs
   );

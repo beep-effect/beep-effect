@@ -128,9 +128,12 @@ describe("Jsonc", () => {
 
     it.effect("ignores comments and allows trailing commas by default", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* Jsonc.parse('{ "port": 3000 // dev\n /* block */ }'), { port: 3000 });
-        assert.deepStrictEqual(yield* Jsonc.parse('{ "a": 1, }'), { a: 1 });
-        assert.deepStrictEqual(yield* Jsonc.parse("[1, 2, ]"), [1, 2]);
+        const parsed1 = yield* Jsonc.parse('{ "port": 3000 // dev\n /* block */ }');
+        assert.deepStrictEqual(parsed1, { port: 3000 });
+        const parsed2 = yield* Jsonc.parse('{ "a": 1, }');
+        assert.deepStrictEqual(parsed2, { a: 1 });
+        const parsed3 = yield* Jsonc.parse("[1, 2, ]");
+        assert.deepStrictEqual(parsed3, [1, 2]);
       })
     );
 
@@ -229,7 +232,9 @@ describe("Jsonc", () => {
   describe("parse delegates to parseResult", () => {
     it.effect("succeeds and fails identically to the Result variant", () =>
       Effect.gen(function* () {
-        assertSuccess(Jsonc.parseResult('{ "a": [1, 2], }'), yield* Jsonc.parse('{ "a": [1, 2], }'));
+        const argument = Jsonc.parseResult('{ "a": [1, 2], }');
+        const parsed4 = yield* Jsonc.parse('{ "a": [1, 2], }');
+        assertSuccess(argument, parsed4);
         const effectError = yield* failureOf(Jsonc.parse("{ bad }"));
         assert.deepStrictEqual(effectError, failure(Jsonc.parseResult("{ bad }")));
       })
@@ -239,7 +244,8 @@ describe("Jsonc", () => {
   describe("parseTree", () => {
     it.effect("builds a JsoncNode AST", () =>
       Effect.gen(function* () {
-        const root = O.getOrThrow(yield* Jsonc.parseTree('{ "a": [1, 2] }'));
+        const parsedTree = yield* Jsonc.parseTree('{ "a": [1, 2] }');
+        const root = O.getOrThrow(parsedTree);
         assert.instanceOf(root, JsoncNode);
         assert.strictEqual(root.type, "object");
         assert.strictEqual(root.children?.length, 1);
@@ -249,7 +255,8 @@ describe("Jsonc", () => {
 
     it.effect("returns O.none() for empty input with allowEmptyContent", () =>
       Effect.gen(function* () {
-        assertNone(yield* Jsonc.parseTree("", JsoncParseOptions.make({ allowEmptyContent: true })));
+        const parsedTree4 = yield* Jsonc.parseTree("", JsoncParseOptions.make({ allowEmptyContent: true }));
+        assertNone(parsedTree4);
       })
     );
 
@@ -259,7 +266,8 @@ describe("Jsonc", () => {
     it.effect("parses deep nesting under the depth cap in linear time", () =>
       Effect.gen(function* () {
         const depth = 250;
-        let node = O.getOrThrow(yield* Jsonc.parseTree(`${Str.repeat(depth)("[")}1${Str.repeat(depth)("]")}`));
+        const parsedTree5 = yield* Jsonc.parseTree(`${Str.repeat(depth)("[")}1${Str.repeat(depth)("]")}`);
+        let node = O.getOrThrow(parsedTree5);
         let levels = 0;
         while (node.type === "array" && node.children?.length === 1) {
           const child = node.children[0];
@@ -274,14 +282,13 @@ describe("Jsonc", () => {
 
     it.effect("parses wide documents in time linear in node count", () =>
       Effect.gen(function* () {
-        const root = O.getOrThrow(
-          yield* Jsonc.parseTree(
-            `[${A.join(
-              Array.from({ length: 10_000 }, (_, i) => `${i}`),
-              ","
-            )}]`
-          )
+        const parsedTree6 = yield* Jsonc.parseTree(
+          `[${A.join(
+            Array.from({ length: 10_000 }, (_, i) => `${i}`),
+            ","
+          )}]`
         );
+        const root = O.getOrThrow(parsedTree6);
         assert.strictEqual(root.children?.length, 10_000);
         assert.strictEqual(root.children?.[9_999]?.value, 9_999);
       })
@@ -289,7 +296,8 @@ describe("Jsonc", () => {
 
     it.effect("parser-built nodes are structurally equal to JsoncNode.make-built ones", () =>
       Effect.gen(function* () {
-        const parsed = O.getOrThrow(yield* Jsonc.parseTree('{"a": [1]}'));
+        const parsedTree7 = yield* Jsonc.parseTree('{"a": [1]}');
+        const parsed = O.getOrThrow(parsedTree7);
         const handBuilt = JsoncNode.make({
           type: "object",
           offset: 0,
@@ -534,7 +542,8 @@ describe("Jsonc", () => {
   describe("stringify delegates to stringifyResult", () => {
     it.effect("succeeds and fails identically to the Result variant", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* Jsonc.stringify({ a: 1 }), '{\n  "a": 1\n}');
+        const stringify8 = yield* Jsonc.stringify({ a: 1 });
+        assert.strictEqual(stringify8, '{\n  "a": 1\n}');
         const error = yield* failureOf(Jsonc.stringify(1n));
         assert.instanceOf(error, JsoncStringifyError);
         assert.strictEqual(error.code, "BigIntValue");
@@ -612,7 +621,8 @@ describe("Jsonc", () => {
         assert(P.isObject(value), "parse yields a plain object");
         assert.isTrue(R.has(value, "__proto__"));
         assert.isFalse("polluted" in {});
-        const fromTree = O.getOrThrow(yield* Jsonc.parseTree(text)).toValue();
+        const parsedTree9 = yield* Jsonc.parseTree(text);
+        const fromTree = O.getOrThrow(parsedTree9).toValue();
         assert.strictEqual(Object.getPrototypeOf(fromTree), Object.prototype);
         assert(P.isObject(fromTree), "toValue yields a plain object");
         assert.isTrue(R.has(fromTree, "__proto__"));
@@ -628,14 +638,17 @@ describe("Jsonc", () => {
 
     it.effect("survives documents with tens of thousands of consecutive line breaks", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* Jsonc.parse(`[1,${Str.repeat(50000)("\n")}2]`), [1, 2]);
+        const parsed10 = yield* Jsonc.parse(`[1,${Str.repeat(50000)("\n")}2]`);
+        assert.deepStrictEqual(parsed10, [1, 2]);
       })
     );
 
     it.effect("deeply nested input fails typed in both parse modes, never as a defect", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(codes(yield* failureOf(Jsonc.parse(deeplyNested))), ["NestingDepthExceeded"]);
-        assert.deepStrictEqual(codes(yield* failureOf(Jsonc.parseTree(deeplyNested))), ["NestingDepthExceeded"]);
+        const failureOf11 = yield* failureOf(Jsonc.parse(deeplyNested));
+        assert.deepStrictEqual(codes(failureOf11), ["NestingDepthExceeded"]);
+        const failureOf12 = yield* failureOf(Jsonc.parseTree(deeplyNested));
+        assert.deepStrictEqual(codes(failureOf12), ["NestingDepthExceeded"]);
         // The whole cause is one typed failure: no defect rides along with it.
         const exit = yield* Effect.exit(Jsonc.parse(deeplyNested));
         const error = exit.pipe(Exit.findErrorOption, O.getOrThrow);
@@ -668,8 +681,10 @@ describe("Jsonc", () => {
 
     it.effect("JsoncFromString decodes commented input to unknown and encodes back to JSON", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* S.decodeEffect(Jsonc.JsoncFromString)('{ "k": 42 // c\n}'), { k: 42 });
-        assert.strictEqual(yield* S.encodeUnknownEffect(Jsonc.JsoncFromString)({ a: 1 }), '{\n  "a": 1\n}');
+        const value13 = yield* S.decodeEffect(Jsonc.JsoncFromString)('{ "k": 42 // c\n}');
+        assert.deepStrictEqual(value13, { k: 42 });
+        const value14 = yield* S.encodeUnknownEffect(Jsonc.JsoncFromString)({ a: 1 });
+        assert.strictEqual(value14, '{\n  "a": 1\n}');
       })
     );
 
@@ -714,14 +729,17 @@ describe("Jsonc", () => {
 
     it.effect("decodes, encodes and round-trips through the composed schema", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* config.decode('{ "name": "app", "version": 1 /* v1 */ }'), {
+        const decoded15 = yield* config.decode('{ "name": "app", "version": 1 /* v1 */ }');
+        assert.deepStrictEqual(decoded15, {
           name: "app",
           version: 1,
         });
         const text = yield* config.encode({ name: "app", version: 1 });
         assert.strictEqual(text, '{\n  "name": "app",\n  "version": 1\n}');
-        assert.deepStrictEqual(yield* config.decode(text), { name: "app", version: 1 });
-        assert.deepStrictEqual(yield* S.decodeEffect(config.schema)('{ "name": "app", "version": 2, }'), {
+        const decoded16 = yield* config.decode(text);
+        assert.deepStrictEqual(decoded16, { name: "app", version: 1 });
+        const value17 = yield* S.decodeEffect(config.schema)('{ "name": "app", "version": 2, }');
+        assert.deepStrictEqual(value17, {
           name: "app",
           version: 2,
         });
@@ -742,7 +760,8 @@ describe("Jsonc", () => {
           '{ "name": "app" /* c */, "version": 1 }'
         );
         assert.strictEqual(viaSchema.name, "app");
-        assert.strictEqual(yield* manifest.encode(decoded), '{\n  "name": "app",\n  "version": 1\n}');
+        const encoded18 = yield* manifest.encode(decoded);
+        assert.strictEqual(encoded18, '{\n  "name": "app",\n  "version": 1\n}');
       })
     );
 
@@ -773,15 +792,18 @@ describe("Jsonc", () => {
       Effect.gen(function* () {
         const json = yield* encodeSample(value);
         const commented = `${Str.slice(0, -1)(json)} /* trailing */ }`;
-        assert.deepStrictEqual(yield* decodeSample(Jsonc.stripComments(commented)), value);
-        assert.deepStrictEqual(yield* Jsonc.parse(commented), value);
+        const decodedSample = yield* decodeSample(Jsonc.stripComments(commented));
+        assert.deepStrictEqual(decodedSample, value);
+        const parsed19 = yield* Jsonc.parse(commented);
+        assert.deepStrictEqual(parsed19, value);
       })
     );
 
     it.effect.prop("JsoncFromString round-trips decode(encode(v)) back to the original value", [Sample], ([value]) =>
       Effect.gen(function* () {
         const encoded = yield* S.encodeUnknownEffect(Jsonc.JsoncFromString)(value);
-        assert.deepStrictEqual(yield* S.decodeEffect(Jsonc.JsoncFromString)(encoded), value);
+        const value20 = yield* S.decodeEffect(Jsonc.JsoncFromString)(encoded);
+        assert.deepStrictEqual(value20, value);
       })
     );
   });

@@ -16,7 +16,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(LockfileFormat)(value);
       const decoded = yield* S.decodeEffect(LockfileFormat)(encoded);
       assertTrue(S.toEquivalence(LockfileFormat)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(LockfileFormat)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(LockfileFormat)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );

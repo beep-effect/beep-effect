@@ -60,7 +60,8 @@ describe("Xml", () => {
         textNodeName: "#text",
       }).build(document);
 
-      expect(yield* decodeXmlTextToUnknown(xml)).toEqual(document);
+      const decodedXmlTextToUnknown = yield* decodeXmlTextToUnknown(xml);
+      expect(decodedXmlTextToUnknown).toEqual(document);
     })
   );
 

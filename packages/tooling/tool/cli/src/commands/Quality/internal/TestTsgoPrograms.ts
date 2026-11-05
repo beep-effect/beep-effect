@@ -83,7 +83,8 @@ const findOwningPackageDir = Effect.fn("QualityScriptCommands.findOwningPackageD
   const path = yield* Path.Path;
   // Segment-aware containment: a bare prefix test would let `/repo` claim `/repo-worktrees/...`.
   const isInsideRepo = (dir: string) => dir === repoRoot || Str.startsWith(`${repoRoot}${path.sep}`)(dir);
-  const dirs = A.takeWhile(yield* Walker.ascend(path.dirname(filePath), { stopAt: repoRoot }), isInsideRepo);
+  const ascend1 = yield* Walker.ascend(path.dirname(filePath), { stopAt: repoRoot });
+  const dirs = A.takeWhile(ascend1, isInsideRepo);
   const manifest = yield* Walker.findUpward(dirs, (dir) => [path.join(dir, "package.json")]);
 
   return O.match(manifest, { onNone: () => repoRoot, onSome: path.dirname });
@@ -152,11 +153,12 @@ const collectTestTsgoPackageGroups = Effect.fn("QualityScriptCommands.collectTes
   return yield* Effect.forEach(
     packageDirs,
     Effect.fnUntraced(function* (packageDir) {
-      const packageManifest = yield* decodeTestTsgoPackageManifest(
-        yield* fs
-          .readFileString(path.join(packageDir, "package.json"))
-          .pipe(QualityScriptCommandError.mapError(`Failed to read ${path.join(packageDir, "package.json")}.`))
-      ).pipe(QualityScriptCommandError.mapError(`Failed to decode ${path.join(packageDir, "package.json")}.`));
+      const pipe2 = yield* fs
+        .readFileString(path.join(packageDir, "package.json"))
+        .pipe(QualityScriptCommandError.mapError(`Failed to read ${path.join(packageDir, "package.json")}.`));
+      const packageManifest = yield* decodeTestTsgoPackageManifest(pipe2).pipe(
+        QualityScriptCommandError.mapError(`Failed to decode ${path.join(packageDir, "package.json")}.`)
+      );
       const tsconfigPath = yield* resolveTestTsconfigPath(packageDir);
       const files = pipe(
         fileEntries,
@@ -186,8 +188,9 @@ const discover = Effect.fn("TestTsgoPrograms.discover")(function* (repoRoot: str
   return yield* collectTestTsgoPackageGroups(repoRoot, files);
 });
 const uncovered = Effect.fn("TestTsgoPrograms.uncovered")(function* (repoRoot: string) {
+  const discover3 = yield* discover(repoRoot);
   return yield* Effect.filter(
-    yield* discover(repoRoot),
+    discover3,
     (group) =>
       checkScriptTestTypecheckCoverage(group.packageDir, group.scripts, group.files).pipe(
         Effect.map((result) => !result.covered)

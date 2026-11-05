@@ -66,7 +66,8 @@ it.layer(ManagedSection.layer.pipe(Layer.provide(fs.layer)), { timeout: "30 seco
         assert.strictEqual((yield* service.sync(path, section))._tag, "Unchanged");
         assert.strictEqual(writes, initialWrites + 1);
         assert.strictEqual(fs.volume.text(path), written);
-        const recovered = yield* Effect.fromOption(yield* service.read(path, id));
+        const read1 = yield* service.read(path, id);
+        const recovered = yield* Effect.fromOption(read1);
         assert.isTrue(S.toEquivalence(Section)(recovered, section));
       }),
     runs

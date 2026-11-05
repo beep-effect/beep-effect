@@ -1114,7 +1114,8 @@ describe("editor contract hardening", { concurrent: false }, () => {
     [Arbitrary.schema(ComposerFeatures)],
     Effect.fnUntraced(function* ([features]) {
       const encoded = yield* encodeComposerFeatures(features);
-      expect(yield* decodeComposerFeatures(encoded)).toEqual(features);
+      const decodedComposerFeatures = yield* decodeComposerFeatures(encoded);
+      expect(decodedComposerFeatures).toEqual(features);
       expect(["enter", "modifierEnter"]).toContain(features.sendOn);
     }),
     { arbitrary: fcRuns(100) }
@@ -1297,7 +1298,8 @@ describe("editor contract hardening", { concurrent: false }, () => {
           }),
         ],
       });
-      const lexicalProjection = editorStateToDocument(yield* documentToEditorState(legacy));
+      const documentToEditorState1 = yield* documentToEditorState(legacy);
+      const lexicalProjection = editorStateToDocument(documentToEditorState1);
 
       expect(documentSafetyIssues(lexicalProjection)).toEqual([]);
       const gate = O.getOrThrow(prepareComposerDocumentSafetyGate(legacy));
@@ -1337,7 +1339,9 @@ describe("editor contract hardening", { concurrent: false }, () => {
       const initialGate = O.getOrThrow(registry.get(gateAtom));
       expect(initialGate.message).toMatch(/link or embedded URL outside the safe destination policy/u);
 
-      registry.get(changeHandlerAtom)(yield* documentToEditorState(corrected));
+      const argument = registry.get(changeHandlerAtom);
+      const documentToEditorState2 = yield* documentToEditorState(corrected);
+      argument(documentToEditorState2);
       yield* Effect.promise(() => waitFor(() => assertNone(registry.get(gateAtom))));
       registry.dispose();
     })

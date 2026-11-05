@@ -210,7 +210,8 @@ describe("VaultSyncEngine port", () => {
         });
 
         assertNone(decoded.cursorPosition);
-        expect(yield* encodeVaultSyncStatus(decoded)).toStrictEqual({
+        const encodedVaultSyncStatus = yield* encodeVaultSyncStatus(decoded);
+        expect(encodedVaultSyncStatus).toStrictEqual({
           conflictItems: 0,
           connected: false,
           cursorPosition: null,

@@ -40,10 +40,10 @@ describe("memfs pipeable helpers", () => {
       assert.strictEqual(pipe(port, withFaults<typeof port>(undefined, "port")), port);
       assert.strictEqual(pipe(port, withFaults<typeof port>(faults, "port")).read(), "fault");
       assert.strictEqual(pipe(port, withFaults<typeof port>(faults, "port", false)).read(), "fault");
-      assert.strictEqual(
-        yield* Effect.promise(() => Promise.resolve(pipe(port, withFaults<typeof port>(faults, "port", true)).read())),
-        "fault"
+      const promise1 = yield* Effect.promise(() =>
+        Promise.resolve(pipe(port, withFaults<typeof port>(faults, "port", true)).read())
       );
+      assert.strictEqual(promise1, "fault");
       pipe(faults, assertKnownFaultKeys(port, "port"));
       assert.strictEqual(
         thrown(() => pipe({ missing: () => undefined }, assertKnownFaultKeys(port, "port"))).message,

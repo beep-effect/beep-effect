@@ -74,8 +74,10 @@ describe("composeGatedLayers (hard gate)", () => {
         const server = yield* McpServer.McpServer;
         assert.isFalse(A.some(server.tools, ({ tool }) => tool.name === "hard_source_tool"));
         const result = yield* callHardTool;
-        assert.strictEqual(yield* Ref.get(absent.acquisitions), 0);
-        assert.strictEqual(yield* Ref.get(absent.executions), 0);
+        const got = yield* Ref.get(absent.acquisitions);
+        assert.strictEqual(got, 0);
+        const got1 = yield* Ref.get(absent.executions);
+        assert.strictEqual(got1, 0);
         assertFailure(
           Result.mapError(result, (error) => ({ code: error.code, message: error.message })),
           { code: McpSchema.INVALID_PARAMS_ERROR_CODE, message: "Tool 'hard_source_tool' not found" }
@@ -90,10 +92,13 @@ describe("composeGatedLayers (hard gate)", () => {
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         assert.isTrue(A.some(server.tools, ({ tool }) => tool.name === "hard_source_tool"));
-        assert.strictEqual(yield* Ref.get(present.acquisitions), 1);
-        assert.strictEqual(yield* Ref.get(present.executions), 0);
+        const got2 = yield* Ref.get(present.acquisitions);
+        assert.strictEqual(got2, 1);
+        const got3 = yield* Ref.get(present.executions);
+        assert.strictEqual(got3, 0);
         const result = yield* callHardTool;
-        assert.strictEqual(yield* Ref.get(present.executions), 1);
+        const got4 = yield* Ref.get(present.executions);
+        assert.strictEqual(got4, 1);
         assertSuccess(
           Result.map(result, (value) => value.isError),
           false

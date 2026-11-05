@@ -48,11 +48,12 @@ describe("blockquote parser property floor", () => {
         const first = yield* Markdown.parse(sourceOf(sample), options);
         const emitted = yield* Markdown.stringify(first);
         const second = yield* Markdown.parse(emitted, options);
-        assert.deepStrictEqual(
-          withoutPositions(yield* S.encodeEffect(Root)(second)),
-          withoutPositions(yield* S.encodeEffect(Root)(first))
-        );
-        assert.strictEqual(yield* Markdown.stringify(second), emitted);
+        const value1 = yield* S.encodeEffect(Root)(second);
+        const argument = withoutPositions(value1);
+        const value2 = yield* S.encodeEffect(Root)(first);
+        assert.deepStrictEqual(argument, withoutPositions(value2));
+        const stringify2 = yield* Markdown.stringify(second);
+        assert.strictEqual(stringify2, emitted);
       }),
     runs
   );
@@ -75,10 +76,10 @@ describe("blockquote parser property floor", () => {
         const tree = yield* Markdown.parse(source, options);
         const emitted = yield* Markdown.stringify(tree);
         const again = yield* Markdown.parse(emitted, options);
-        assert.deepStrictEqual(
-          withoutPositions(yield* S.encodeEffect(Root)(again)),
-          withoutPositions(yield* S.encodeEffect(Root)(tree))
-        );
+        const value3 = yield* S.encodeEffect(Root)(again);
+        const argument1 = withoutPositions(value3);
+        const value4 = yield* S.encodeEffect(Root)(tree);
+        assert.deepStrictEqual(argument1, withoutPositions(value4));
         assert.strictEqual(again.children[0]?.type, "blockquote");
         assert.strictEqual(Str.startsWith("> text ")(emitted), true);
       }),

@@ -33,7 +33,8 @@ describe("case-insensitive facade", () => {
       const promises = MemoryFileSystem.promisesFileSystem(volume);
       const text = yield* Effect.promise(() => promises.readFile("/repo/DOCS.json", "utf8"));
       assert.strictEqual(text, "{}");
-      assert.deepStrictEqual(yield* Effect.promise(() => promises.readdir("/REPO")), ["Docs.json"]);
+      const promise1 = yield* Effect.promise(() => promises.readdir("/REPO"));
+      assert.deepStrictEqual(promise1, ["Docs.json"]);
       assert.isTrue((yield* Effect.promise(() => promises.stat("/rEpO"))).isDirectory());
       const [dirent] = yield* Effect.promise(() => promises.readdir("/REPO", { withFileTypes: true }));
       assert.strictEqual(dirent?.name, "Docs.json");

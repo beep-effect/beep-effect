@@ -307,7 +307,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
           "Mailed January 8, 2030. A response is due within three months"
         );
         assertTrue(O.exists(A.head(prompts), mentions("FIX-0001")));
-        expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([
+        const got = yield* Ref.get(scripted.answerFields);
+        expect(got).toStrictEqual([
           [
             "citedText",
             "isDocketItem",
@@ -319,7 +320,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
             "title",
           ],
         ]);
-        expect(yield* Ref.get(scripted.answerDefinitions)).toStrictEqual([0]);
+        const got1 = yield* Ref.get(scripted.answerDefinitions);
+        expect(got1).toStrictEqual([0]);
         expect(A.flatMap(prompts, fileParts)).toStrictEqual([]);
       })
     );
@@ -451,7 +453,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         yield* scripted.respondWith(json({ ...secretaryWire(), dueDate: "2030-04-08", statedDueDate: "2030-04-08" }));
 
         const review = yield* secretary.review({ documents: [pdf], entry: paralegalEntry, message });
-        const prompt = A.last(yield* scripted.prompts);
+        const prompts2 = yield* scripted.prompts;
+        const prompt = A.last(prompts2);
         const files = pipe(prompt, O.map(fileParts), O.getOrElse(A.empty<Prompt.FilePart>));
 
         expect(review.isDocketItem).toBe(true);
@@ -463,8 +466,10 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         );
         // The schema the provider answers in takes a due date the source states and has nowhere to
         // put a computed one.
-        expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([SECRETARY_FIELDS]);
-        expect(yield* Ref.get(scripted.answerDefinitions)).toStrictEqual([0]);
+        const got3 = yield* Ref.get(scripted.answerFields);
+        expect(got3).toStrictEqual([SECRETARY_FIELDS]);
+        const got4 = yield* Ref.get(scripted.answerDefinitions);
+        expect(got4).toStrictEqual([0]);
         expect(R.keys(review)).not.toContain("dueDate");
         assertSome(iso(review.statedDueDate), "2030-04-08");
         assertSome(review.citedText, "Mailed January 8, 2030. A response is due within three months");
@@ -486,7 +491,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         yield* scripted.respondWith(json(secretaryWire({ citedText: " ", mailDate: "", responsePeriod: null })));
 
         const review = yield* secretary.review({ documents: [], entry: paralegalEntry, message });
-        const prompt = A.last(yield* scripted.prompts);
+        const prompts5 = yield* scripted.prompts;
+        const prompt = A.last(prompts5);
 
         expect(review.readFromSourceDocument).toBe(false);
         assertNone(review.mailDate);
@@ -519,7 +525,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         );
 
         const review = yield* secretary.review({ documents: [], entry: dismissedEntry, message: bareMessage });
-        const prompt = A.last(yield* scripted.prompts);
+        const prompts6 = yield* scripted.prompts;
+        const prompt = A.last(prompts6);
 
         expect(review.isDocketItem).toBe(false);
         expect(review.matterReferences).toStrictEqual([]);
@@ -573,7 +580,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
           O.map(asDocketEntry(entry), (entered) => entered.title),
           "Fixture response due"
         );
-        expect(yield* scripted.prompts).toHaveLength(2);
+        const prompts7 = yield* scripted.prompts;
+        expect(prompts7).toHaveLength(2);
       })
     );
   });
@@ -592,7 +600,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
           O.map(failure, (error) => [error.stage, error.cause]),
           ["enter", "model:RateLimitError"]
         );
-        expect(yield* scripted.prompts).toHaveLength(4);
+        const prompts8 = yield* scripted.prompts;
+        expect(prompts8).toHaveLength(4);
       })
     );
   });
@@ -611,7 +620,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
           O.map(failure, (error) => [error.stage, error.cause]),
           ["review", "model:InvalidRequestError"]
         );
-        expect(yield* scripted.prompts).toHaveLength(1);
+        const prompts9 = yield* scripted.prompts;
+        expect(prompts9).toHaveLength(1);
       })
     );
   });
@@ -650,7 +660,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
           O.map(failure, (error) => [error.stage, error.cause]),
           ["review", "model:InvalidRequestError"]
         );
-        expect(yield* scripted.prompts).toHaveLength(2);
+        const prompts10 = yield* scripted.prompts;
+        expect(prompts10).toHaveLength(2);
       })
     );
   });
@@ -663,7 +674,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         yield* scripted.respondWith(json(revisionWire()));
 
         const revision = yield* paralegal.revise({ disputes, message, previous: datedEntry });
-        const prompt = A.last(yield* scripted.prompts);
+        const prompts11 = yield* scripted.prompts;
+        const prompt = A.last(prompts11);
         const revised = asDocketEntry(revision.entry);
 
         assertSome(
@@ -693,7 +705,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
           assertTrue(O.exists(prompt, mentions(fragment)));
         }
         expect(pipe(prompt, O.map(fileParts), O.getOrElse(A.empty<Prompt.FilePart>))).toStrictEqual([]);
-        expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([
+        const got12 = yield* Ref.get(scripted.answerFields);
+        expect(got12).toStrictEqual([
           [
             "citedText",
             "isDocketItem",
@@ -707,7 +720,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
             "responses",
           ],
         ]);
-        expect(yield* Ref.get(scripted.answerDefinitions)).toStrictEqual([0]);
+        const got13 = yield* Ref.get(scripted.answerDefinitions);
+        expect(got13).toStrictEqual([0]);
       })
     );
   });
@@ -772,7 +786,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         );
 
         const findings = yield* secretary.critique({ documents: [pdf], entry: paralegalEntry, message });
-        const prompt = A.last(yield* scripted.prompts);
+        const prompts14 = yield* scripted.prompts;
+        const prompt = A.last(prompts14);
 
         expect(A.map(findings, (finding) => [finding.severity, finding.field, finding.reason])).toStrictEqual([
           ["P1", "matter-references", "Names a matter the message does not mention."],
@@ -782,8 +797,10 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         assertTrue(O.exists(prompt, mentions("1 source document(s) are attached to this request.")));
         assertTrue(!O.exists(prompt, mentions("2031-07-19")));
         expect(A.length(pipe(prompt, O.map(fileParts), O.getOrElse(A.empty<Prompt.FilePart>)))).toBe(1);
-        expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([["findings"]]);
-        expect(yield* Ref.get(scripted.answerDefinitions)).toStrictEqual([0]);
+        const got15 = yield* Ref.get(scripted.answerFields);
+        expect(got15).toStrictEqual([["findings"]]);
+        const got16 = yield* Ref.get(scripted.answerDefinitions);
+        expect(got16).toStrictEqual([0]);
       })
     );
   });
@@ -799,10 +816,12 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         const none = yield* secretary.critique({ documents: [], entry: dismissedEntry, message: bareMessage });
         yield* scripted.respondWith(json({ findings: [{ field: "title", reason: "", severity: "P2" }] }));
         const unexplained = yield* failureOf(secretary.critique({ documents: [], entry: paralegalEntry, message }));
-        const before = A.length(yield* scripted.prompts);
+        const prompts17 = yield* scripted.prompts;
+        const before = A.length(prompts17);
         yield* scripted.respondInTurn([rejected, json({ findings: [] })]);
         const retried = yield* secretary.critique({ documents: [pdf], entry: paralegalEntry, message });
-        const prompts = A.drop(yield* scripted.prompts, before);
+        const prompts18 = yield* scripted.prompts;
+        const prompts = A.drop(prompts18, before);
 
         expect(none).toStrictEqual([]);
         assertSome(
@@ -833,7 +852,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         );
 
         const reading = yield* secretary.reread(rereadInput([pdf]));
-        const prompt = A.last(yield* scripted.prompts);
+        const prompts19 = yield* scripted.prompts;
+        const prompt = A.last(prompts19);
 
         expect(reading.readFromSourceDocument).toBe(true);
         assertSome(iso(reading.mailDate), "2030-01-08");
@@ -856,7 +876,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         assertTrue(!O.exists(prompt, mentions("relies on")));
         expect(A.length(pipe(prompt, O.map(fileParts), O.getOrElse(A.empty<Prompt.FilePart>)))).toBe(1);
         // The same answer shape as the first reading.
-        expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([SECRETARY_FIELDS]);
+        const got20 = yield* Ref.get(scripted.answerFields);
+        expect(got20).toStrictEqual([SECRETARY_FIELDS]);
         assertSome(iso(reading.statedDueDate), "2030-04-15");
       })
     );
@@ -874,7 +895,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         const prompts = yield* scripted.prompts;
         yield* scripted.respondWith(json(secretaryWire({ mailDate: "early January" })));
         const badDate = yield* failureOf(secretary.reread(rereadInput([], [])));
-        const noFindings = A.last(yield* scripted.prompts);
+        const prompts21 = yield* scripted.prompts;
+        const noFindings = A.last(prompts21);
 
         assertTrue(O.exists(noFindings, mentions("- none; the two readings differed or a check failed")));
         // With nothing attached, the reading cannot have come from a source document.
@@ -903,7 +925,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         const findings = yield* secretary.critique({ documents: [], entry: paralegalEntry, message });
         yield* scripted.respondInTurn([rateLimited, json(secretaryWire())]);
         const reading = yield* secretary.reread(rereadInput([]));
-        const asked = A.length(yield* scripted.prompts);
+        const prompts22 = yield* scripted.prompts;
+        const asked = A.length(prompts22);
         yield* scripted.respondWith(rejected);
         const failures = [
           yield* failureOf(paralegal.revise({ disputes, message, previous: datedEntry })),

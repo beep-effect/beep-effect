@@ -171,9 +171,8 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
       [PacketTraceEntryArbitrary],
       Effect.fnUntraced(function* ([entry]) {
         const encoded = yield* encodeUnknownPacketTraceEntryEffect(entry);
-        const reencoded = yield* encodeUnknownPacketTraceEntryEffect(
-          yield* decodeUnknownPacketTraceEntryEffect(encoded)
-        );
+        const decodedUnknownPacketTraceEntryEffect = yield* decodeUnknownPacketTraceEntryEffect(encoded);
+        const reencoded = yield* encodeUnknownPacketTraceEntryEffect(decodedUnknownPacketTraceEntryEffect);
         expect(canonicalJsonText(reencoded) === canonicalJsonText(encoded)).toBe(true);
       }),
       { arbitrary: fcRuns(50) }
@@ -632,9 +631,8 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
           const listing = yield* store.list(
             PacketStreamLocator.make({ packet: "forked", root: "goals", packetPath: FORKED_PATH })
           );
-          const plan = O.getOrUndefined(
-            yield* planForkRepair({ packet: "forked", root: "goals", events: listing.events })
-          );
+          const planForkRepair1 = yield* planForkRepair({ packet: "forked", root: "goals", events: listing.events });
+          const plan = O.getOrUndefined(planForkRepair1);
           expect(plan).toBeDefined();
           if (plan === undefined) {
             return;
@@ -699,7 +697,8 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             const id = yield* packetEventDigest(event);
             events = A.append(events, StoredPacketEvent.make({ id, fileName: packetEventFileName(event, id), event }));
           }
-          const plan = O.getOrUndefined(yield* planForkRepair({ packet: "demo", root: "goals", events }));
+          const planForkRepair2 = yield* planForkRepair({ packet: "demo", root: "goals", events });
+          const plan = O.getOrUndefined(planForkRepair2);
           expect(plan).toBeDefined();
           if (plan === undefined) {
             return;
@@ -809,7 +808,8 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
           const outerFork = before.forks[0];
           expect(outerFork?.parentSeq).toBe(2);
 
-          const plan = O.getOrUndefined(yield* planForkRepair({ packet: "demo", root: "goals", events: all }));
+          const planForkRepair3 = yield* planForkRepair({ packet: "demo", root: "goals", events: all });
+          const plan = O.getOrUndefined(planForkRepair3);
           expect(plan).toBeDefined();
           if (plan === undefined || outerFork === undefined) {
             return;

@@ -206,11 +206,10 @@ describe("YamlFormat.modify under %YAML 1.1", () => {
 
   it.effect("keeps today's output under %YAML 1.2 and without a directive", () =>
     Effect.gen(function* () {
-      strictEqual(
-        yield* YamlFormat.modifyToString("%YAML 1.2\n---\na: 1\n", ["b"], "on"),
-        "%YAML 1.2\n---\na: 1\nb: on\n"
-      );
-      strictEqual(yield* YamlFormat.modifyToString("a: x\n", ["a"], "1:30"), "a: 1:30\n");
+      const modifyToString1 = yield* YamlFormat.modifyToString("%YAML 1.2\n---\na: 1\n", ["b"], "on");
+      strictEqual(modifyToString1, "%YAML 1.2\n---\na: 1\nb: on\n");
+      const modifyToString2 = yield* YamlFormat.modifyToString("a: x\n", ["a"], "1:30");
+      strictEqual(modifyToString2, "a: 1:30\n");
     })
   );
 

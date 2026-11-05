@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "signature-key-source-binding-repair/v1",
+  "recordedAt": "2026-11-03T18:48:15.731357+00:00",
+  "sourceBaseRevision": "31e2ac20f34a1c699a35be55f67881dbf0d8ffd0",
+  "authority": "Current source-binding repair and metadata-only regression evidence. Historical native semantics, qualification and activation are separate.",
+  "sourceBindings": [
+    {
+      "path": "native-signature-key-controls.py",
+      "sha256": "2afde39e782ed441b181ce400ac14280a4ce8a1a2c8281a0e86a9fbb80e05b78"
+    },
+    {
+      "path": "signature-key-source-binding-controls.py",
+      "sha256": "f70233f2d8c22930c6eb8aa1d8548a06ee7f4940ec48c9836b7f43e61ed60538"
+    },
+    {
+      "path": "signature-key-source-binding-controls.json",
+      "sha256": "de438c98c50d5ad00c68065dca38339c6c7ac37f66f8a5b8230ff5aa35b12189"
+    }
+  ],
+  "controlCases": 13,
+  "currentSourceMovementRefusals": 6,
+  "currentExternalPinRefusals": 1,
+  "legacyFalseBindingCounterexamples": 4,
+  "unchangedInputControls": 2,
+  "versionProbeMode": "stubbed; zero real subprocesses",
+  "nativeInvocations": 0,
+  "taskExecutions": 0,
+  "capturedInputs": [
+    "driver",
+    "pins manifest",
+    "shared bounded harness",
+    ".bun-version"
+  ],
+  "preNativeAndPostExperimentSourceGuards": true,
+  "historicalEvidencePreserved": [
+    {
+      "path": "native-signature-key-controls.json",
+      "sha256": "295dee52c2f80d3e19fe4b0bf11f1d9d219bff217ea2c7f2e7c00786cb58d6e4"
+    },
+    {
+      "path": "signature-key-feature-observation.json",
+      "sha256": "34cc8c7a4c19af6a32cc0e681150e633ec86d7551dfb71e682057926fbacfba2"
+    }
+  ],
+  "historical168CaseResultReboundToCurrentDriver": false,
+  "featureAcceptanceStatus": "pending",
+  "taskQualificationGranted": false,
+  "productionChanged": false,
+  "remaining": [
+    "Current repaired-harness native semantic replay through the approved execution route",
+    "Signed artifact transport, missing-key policy, protected producer provenance and complete rollout qualifications"
+  ]
+}

@@ -179,14 +179,16 @@ describe("@beep/law-practice-server QuestionCalendar", () => {
               category: "Docket - unverified",
             })
           );
-          assertSome(yield* stored(store, "evt-docket-1"), {
+          const stored1 = yield* stored(store, "evt-docket-1");
+          assertSome(stored1, {
             date: O.some("2026-11-02"),
             subject: O.some("Response due (moved)"),
             categories: O.some(["M: 90001", "Docket - unverified"]),
           });
 
           yield* calendar.restore(AppliedWrite.make({ proposal, eventId: result.eventId, prior: result.prior }));
-          assertSome(yield* stored(store, "evt-docket-1"), {
+          const stored2 = yield* stored(store, "evt-docket-1");
+          assertSome(stored2, {
             date: O.some("2026-10-02"),
             subject: O.some("Response due"),
             categories: O.some(["M: 90001", "Docket - unverified"]),
@@ -212,14 +214,17 @@ describe("@beep/law-practice-server QuestionCalendar", () => {
           second.prior,
           CalendarPrior.make({ date: day(10, 20), title: "Check with the client", category: "Docket - unverified" })
         );
-        expect(HashMap.size(yield* Ref.get(store))).toBe(1);
+        const got = yield* Ref.get(store);
+        expect(HashMap.size(got)).toBe(1);
+        const stored3 = yield* stored(store, first.eventId);
         assertSome(
-          O.flatMap(yield* stored(store, first.eventId), ({ categories }) => categories),
+          O.flatMap(stored3, ({ categories }) => categories),
           ["Docket - unverified"]
         );
 
         yield* calendar.restore(AppliedWrite.make({ proposal, eventId: first.eventId }));
-        expect(HashMap.size(yield* Ref.get(store))).toBe(0);
+        const got4 = yield* Ref.get(store);
+        expect(HashMap.size(got4)).toBe(0);
       })
     );
   });
@@ -237,7 +242,8 @@ describe("@beep/law-practice-server QuestionCalendar", () => {
           );
 
           expect(error.reason).toBe("event-verified");
-          expect(yield* Ref.get(store)).toStrictEqual(before);
+          const got5 = yield* Ref.get(store);
+          expect(got5).toStrictEqual(before);
         })
       );
     }
@@ -267,7 +273,8 @@ describe("@beep/law-practice-server QuestionCalendar", () => {
             subject: O.some("Response due (moved)"),
             categories: O.some(["M: 90001", "Docket - unverified"]),
           });
-          assertSome(yield* stored(store, KEYED_EVENT), {
+          const stored6 = yield* stored(store, KEYED_EVENT);
+          assertSome(stored6, {
             date: O.some("2026-10-02"),
             subject: O.some("Response due"),
             categories: O.some(["M: 90001", "Docket - needs review"]),

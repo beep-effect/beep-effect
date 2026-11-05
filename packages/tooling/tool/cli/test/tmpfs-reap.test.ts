@@ -311,36 +311,33 @@ describe("tmpfs reap", () => {
           const home = path.join(root, "home");
           const tmp = path.join(root, "tmp");
 
-          expect(yield* resolveBeepCacheRoot(override)).toBe(path.resolve(override));
-          expect(
-            yield* resolveBeepCacheRoot().pipe(
-              Effect.provideService(
-                ConfigProvider.ConfigProvider,
-                ConfigProvider.fromUnknown({ XDG_CACHE_HOME: xdgCache })
-              )
+          const resolvedBeepCacheRoot = yield* resolveBeepCacheRoot(override);
+          expect(resolvedBeepCacheRoot).toBe(path.resolve(override));
+          const pipe1 = yield* resolveBeepCacheRoot().pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ XDG_CACHE_HOME: xdgCache })
             )
-          ).toBe(path.resolve(xdgCache));
-          expect(
-            yield* resolveBeepCacheRoot().pipe(
-              Effect.provideService(
-                ConfigProvider.ConfigProvider,
-                ConfigProvider.fromUnknown({ XDG_CACHE_HOME: "", HOME: home })
-              )
+          );
+          expect(pipe1).toBe(path.resolve(xdgCache));
+          const pipe2 = yield* resolveBeepCacheRoot().pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ XDG_CACHE_HOME: "", HOME: home })
             )
-          ).toBe(path.join(path.resolve(home), ".cache"));
-          expect(
-            yield* resolveBeepCacheRoot().pipe(
-              Effect.provideService(
-                ConfigProvider.ConfigProvider,
-                ConfigProvider.fromUnknown({ XDG_CACHE_HOME: "", HOME: "", TMPDIR: tmp })
-              )
+          );
+          expect(pipe2).toBe(path.join(path.resolve(home), ".cache"));
+          const pipe3 = yield* resolveBeepCacheRoot().pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ XDG_CACHE_HOME: "", HOME: "", TMPDIR: tmp })
             )
-          ).toBe(path.resolve(tmp));
-          expect(
-            yield* resolveBeepCacheRoot().pipe(
-              Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}))
-            )
-          ).toBe(path.resolve("/tmp"));
+          );
+          expect(pipe3).toBe(path.resolve(tmp));
+          const pipe4 = yield* resolveBeepCacheRoot().pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}))
+          );
+          expect(pipe4).toBe(path.resolve("/tmp"));
 
           const missingCacheReport = yield* runTmpfsReap({
             cacheRoot: path.join(root, "missing-cache"),
@@ -450,67 +447,81 @@ describe("tmpfs reap", () => {
             expect(vitestEligible.root).toBe(fixture.tmpRoot);
             expect(vitestEligible.reapClass).toBe("vitest-forks-tmp");
             expect(vitestEligible.action).toBe("remove-dir");
-            expect(yield* fs.exists(fixture.vitestEligible)).toBe(false);
+            const exists5 = yield* fs.exists(fixture.vitestEligible);
+            expect(exists5).toBe(false);
 
             const vitestYoung = candidateByPath(report, fixture.vitestYoung);
             expect(vitestYoung.action).toBe("skip");
             expect(vitestYoung.skipReason).toBe("too-young");
-            expect(yield* fs.exists(fixture.vitestYoung)).toBe(true);
+            const exists6 = yield* fs.exists(fixture.vitestYoung);
+            expect(exists6).toBe(true);
 
             const vitestLive = candidateByPath(report, fixture.vitestLive);
             expect(vitestLive.refCount).toBeGreaterThan(0);
             expect(vitestLive.skipReason).toBe("live-cwd-ref");
-            expect(yield* fs.exists(fixture.vitestLive)).toBe(true);
+            const exists7 = yield* fs.exists(fixture.vitestLive);
+            expect(exists7).toBe(true);
 
             const vitestWrongShape = candidateByPath(report, fixture.vitestWrongShape);
             expect(vitestWrongShape.action).toBe("skip");
             expect(vitestWrongShape.reapClass).toBe("git-worktree");
             expect(vitestWrongShape.skipReason).toBe("dirty-worktree");
-            expect(yield* fs.exists(fixture.vitestWrongShape)).toBe(true);
+            const exists8 = yield* fs.exists(fixture.vitestWrongShape);
+            expect(exists8).toBe(true);
 
             const stubEligible = candidateByPath(report, fixture.stubEligible);
             expect(stubEligible.root).toBe(fixture.tmpRoot);
             expect(stubEligible.reapClass).toBe("dangling-worktree-stub");
             expect(stubEligible.action).toBe("remove-dir");
-            expect(yield* fs.exists(fixture.stubEligible)).toBe(false);
+            const exists9 = yield* fs.exists(fixture.stubEligible);
+            expect(exists9).toBe(false);
 
             const stubYoung = candidateByPath(report, fixture.stubYoung);
             expect(stubYoung.skipReason).toBe("too-young");
-            expect(yield* fs.exists(fixture.stubYoung)).toBe(true);
+            const exists10 = yield* fs.exists(fixture.stubYoung);
+            expect(exists10).toBe(true);
 
             const stubLive = candidateByPath(report, fixture.stubLive);
             expect(stubLive.refCount).toBeGreaterThan(0);
             expect(stubLive.skipReason).toBe("live-cwd-ref");
-            expect(yield* fs.exists(fixture.stubLive)).toBe(true);
+            const exists11 = yield* fs.exists(fixture.stubLive);
+            expect(exists11).toBe(true);
 
             const stubWrongShape = candidateByPath(report, fixture.stubWrongShape);
             expect(stubWrongShape.skipReason).toBe("wrong-shape");
-            expect(yield* fs.exists(fixture.stubWrongShape)).toBe(true);
+            const exists12 = yield* fs.exists(fixture.stubWrongShape);
+            expect(exists12).toBe(true);
 
             expect(candidateByPath(report, fixture.stubMalformedGitFile).skipReason).toBe("wrong-shape");
             expect(candidateByPath(report, fixture.stubSymlinkGitFile).skipReason).toBe("wrong-shape");
             expect(candidateByPath(report, fixture.stubOversizedGitFile).skipReason).toBe("wrong-shape");
-            expect(yield* fs.exists(fixture.stubSymlinkGitFile)).toBe(true);
-            expect(yield* fs.exists(fixture.stubOversizedGitFile)).toBe(true);
+            const exists13 = yield* fs.exists(fixture.stubSymlinkGitFile);
+            expect(exists13).toBe(true);
+            const exists14 = yield* fs.exists(fixture.stubOversizedGitFile);
+            expect(exists14).toBe(true);
 
             const stubRelativeGitDir = candidateByPath(report, fixture.stubRelativeGitDir);
             expect(stubRelativeGitDir.action).toBe("remove-dir");
-            expect(yield* fs.exists(fixture.stubRelativeGitDir)).toBe(false);
+            const exists15 = yield* fs.exists(fixture.stubRelativeGitDir);
+            expect(exists15).toBe(false);
 
             const stubExistingTarget = candidateByPath(report, fixture.stubExistingTarget);
             expect(stubExistingTarget.skipReason).toBe("gitdir-target-exists");
             expect(stubExistingTarget.bytes).toBeUndefined();
-            expect(yield* fs.exists(fixture.stubExistingTarget)).toBe(true);
+            const exists16 = yield* fs.exists(fixture.stubExistingTarget);
+            expect(exists16).toBe(true);
 
             const stubParentPresent = candidateByPath(report, fixture.stubParentPresent);
             expect(stubParentPresent.skipReason).toBe("parent-repo-present");
             expect(stubParentPresent.bytes).toBeUndefined();
-            expect(yield* fs.exists(fixture.stubParentPresent)).toBe(true);
+            const exists17 = yield* fs.exists(fixture.stubParentPresent);
+            expect(exists17).toBe(true);
 
             const stubContentsPresent = candidateByPath(report, fixture.stubContentsPresent);
             expect(stubContentsPresent.skipReason).toBe("contents-present");
             expect(stubContentsPresent.bytes).toBeUndefined();
-            expect(yield* fs.exists(fixture.stubContentsPresent)).toBe(true);
+            const exists18 = yield* fs.exists(fixture.stubContentsPresent);
+            expect(exists18).toBe(true);
 
             for (const preserved of [
               fixture.stubTrackedContent,
@@ -521,13 +532,15 @@ describe("tmpfs reap", () => {
               const candidate = candidateByPath(report, preserved);
               expect(candidate.skipReason).toBe("contents-present");
               expect(candidate.bytes).toBeUndefined();
-              expect(yield* fs.exists(preserved)).toBe(true);
+              const exists19 = yield* fs.exists(preserved);
+              expect(exists19).toBe(true);
             }
 
             expect(candidateByPath(report, fixture.unclassifiedWorktree).skipReason).toBe("unclassified");
 
             expect(candidateByPath(report, fixture.stubSoleEligible).action).toBe("remove-dir");
-            expect(yield* fs.exists(fixture.stubSoleEligible)).toBe(false);
+            const exists20 = yield* fs.exists(fixture.stubSoleEligible);
+            expect(exists20).toBe(false);
             expect(report.reapedCount).toBe(4);
           })
         )
@@ -594,7 +607,8 @@ describe("tmpfs reap", () => {
 
           expect(readLinkCount).toBe(2);
           expect(candidateByPath(report, fixture.stubEligible).skipReason).toBe("contents-present");
-          expect(yield* fs.exists(fixture.stubEligible)).toBe(true);
+          const exists21 = yield* fs.exists(fixture.stubEligible);
+          expect(exists21).toBe(true);
         })
       )
     );
@@ -626,7 +640,8 @@ describe("tmpfs reap", () => {
           }).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem));
 
           expect(gitFileStatCount).toBe(3);
-          expect(yield* fs.exists(fixture.stubEligible)).toBe(true);
+          const exists22 = yield* fs.exists(fixture.stubEligible);
+          expect(exists22).toBe(true);
           expect(report.warnings).toContain(
             `Skipped ${fixture.stubEligible}: dangling-stub eligibility changed before removal.`
           );
@@ -669,8 +684,10 @@ describe("tmpfs reap", () => {
 
           expect(report.warnings).toContain(`Failed to remove ${gitFile}.`);
           expect(report.warnings).toContain(`Failed to remove ${scopedCandidate}.`);
-          expect(yield* fs.exists(fixture.stubSoleEligible)).toBe(true);
-          expect(yield* fs.exists(scopedCandidate)).toBe(true);
+          const exists23 = yield* fs.exists(fixture.stubSoleEligible);
+          expect(exists23).toBe(true);
+          const exists24 = yield* fs.exists(scopedCandidate);
+          expect(exists24).toBe(true);
         })
       )
     );
@@ -696,7 +713,8 @@ describe("tmpfs reap", () => {
             tmpRoot: fixture.tmpRoot,
           }).pipe(provideSpawner(failingSpawner));
 
-          expect(yield* fs.exists(fixture.stubSoleEligible)).toBe(true);
+          const exists25 = yield* fs.exists(fixture.stubSoleEligible);
+          expect(exists25).toBe(true);
           expect(report.warnings).toContain(
             `Preserved raced contents under ${fixture.stubSoleEligible}; directory was not empty.`
           );
@@ -735,7 +753,8 @@ describe("tmpfs reap", () => {
           }).pipe(Effect.provideService(FileSystem.FileSystem, missingParentFileSystem));
 
           expect(report.reapedCount).toBe(1);
-          expect(yield* fs.exists(fixture.fakeWorktree)).toBe(false);
+          const exists26 = yield* fs.exists(fixture.fakeWorktree);
+          expect(exists26).toBe(false);
         })
       )
     );
@@ -771,8 +790,10 @@ describe("tmpfs reap", () => {
           }).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem));
 
           expect(candidateByPath(report, fixture.stubSoleEligible).action).toBe("remove-dir");
-          expect(yield* fs.exists(fixture.stubSoleEligible)).toBe(false);
-          expect(yield* fs.exists(racedChild)).toBe(true);
+          const exists27 = yield* fs.exists(fixture.stubSoleEligible);
+          expect(exists27).toBe(false);
+          const exists28 = yield* fs.exists(racedChild);
+          expect(exists28).toBe(true);
           expect(A.some(report.warnings, Str.includes(fixture.soleWorktreesRoot))).toBe(false);
         })
       )
@@ -814,9 +835,11 @@ describe("tmpfs reap", () => {
           const candidate = candidateByPath(report, fixture.stubEligible);
           expect(candidate.action).toBe("skip");
           expect(candidate.skipReason).toBe("contents-present");
-          expect(yield* fs.exists(fixture.stubEligible)).toBe(true);
+          const exists29 = yield* fs.exists(fixture.stubEligible);
+          expect(exists29).toBe(true);
           expect(gitFileStatCount).toBe(2);
-          expect(yield* fs.exists(fixture.stubRelativeGitDir)).toBe(true);
+          const exists30 = yield* fs.exists(fixture.stubRelativeGitDir);
+          expect(exists30).toBe(true);
           expect(report.warnings).toContain(
             `Preserved raced contents under ${fixture.stubRelativeGitDir}; directory was not empty.`
           );
@@ -852,7 +875,8 @@ describe("tmpfs reap", () => {
           const candidate = candidateByPath(report, candidatePath);
           expect(candidate.skipReason).toBe("live-runner");
           expect(candidate.action).toBe("skip");
-          expect(yield* fs.exists(candidatePath)).toBe(true);
+          const exists31 = yield* fs.exists(candidatePath);
+          expect(exists31).toBe(true);
         })
       )
     );
@@ -980,8 +1004,10 @@ describe("tmpfs reap", () => {
           const escapedChild = candidateByPath(report, escapedChildTarget);
           expect(escapedChild.skipReason).toBe("wrong-shape");
           expect(candidateByPath(report, escapedRootTarget).skipReason).toBe("wrong-shape");
-          expect(yield* fs.exists(escapedChildTarget)).toBe(true);
-          expect(yield* fs.exists(escapedRootTarget)).toBe(true);
+          const exists32 = yield* fs.exists(escapedChildTarget);
+          expect(exists32).toBe(true);
+          const exists33 = yield* fs.exists(escapedRootTarget);
+          expect(exists33).toBe(true);
           expect(report.candidates).toHaveLength(2);
         })
       )
@@ -1167,7 +1193,8 @@ describe("tmpfs reap", () => {
             Effect.provideService(ConfigProvider.ConfigProvider, configProvider)
           );
           expect(cacheRoot).toBe(path.join(homeRoot, ".cache"));
-          expect(yield* fs.exists(cacheRoot)).toBe(false);
+          const exists34 = yield* fs.exists(cacheRoot);
+          expect(exists34).toBe(false);
 
           const report = yield* runTmpfsReap({
             classes: ["head-install"],
@@ -1243,14 +1270,22 @@ describe("tmpfs reap", () => {
           expect(report.applied).toBe(true);
           expect(report.reapedCount).toBe(4);
           expect(report.reclaimedBytes).toBeGreaterThan(0);
-          expect(yield* fs.exists(fixture.fakeWorktree)).toBe(false);
-          expect(yield* fs.exists(fixture.fallow)).toBe(false);
-          expect(yield* fs.exists(fixture.fallowSiblingLastUsed)).toBe(false);
-          expect(yield* fs.exists(fixture.headInstall)).toBe(false);
-          expect(yield* fs.exists(fixture.oldSemanticDelta)).toBe(false);
-          expect(yield* fs.exists(fixture.youngScoped)).toBe(true);
-          expect(yield* fs.exists(fixture.dirtyWorktree)).toBe(true);
-          expect(yield* fs.exists(path.join(fixture.dirtyWorktree, "uncommitted.txt"))).toBe(true);
+          const exists35 = yield* fs.exists(fixture.fakeWorktree);
+          expect(exists35).toBe(false);
+          const exists36 = yield* fs.exists(fixture.fallow);
+          expect(exists36).toBe(false);
+          const exists37 = yield* fs.exists(fixture.fallowSiblingLastUsed);
+          expect(exists37).toBe(false);
+          const exists38 = yield* fs.exists(fixture.headInstall);
+          expect(exists38).toBe(false);
+          const exists39 = yield* fs.exists(fixture.oldSemanticDelta);
+          expect(exists39).toBe(false);
+          const exists40 = yield* fs.exists(fixture.youngScoped);
+          expect(exists40).toBe(true);
+          const exists41 = yield* fs.exists(fixture.dirtyWorktree);
+          expect(exists41).toBe(true);
+          const exists42 = yield* fs.exists(path.join(fixture.dirtyWorktree, "uncommitted.txt"));
+          expect(exists42).toBe(true);
         })
       )
     );
@@ -1296,8 +1331,10 @@ describe("tmpfs reap", () => {
           });
 
           expect(report.reapedCount).toBe(2);
-          expect(yield* fs.exists(releasedInstall)).toBe(false);
-          expect(yield* fs.exists(lockedInstall)).toBe(false);
+          const exists43 = yield* fs.exists(releasedInstall);
+          expect(exists43).toBe(false);
+          const exists44 = yield* fs.exists(lockedInstall);
+          expect(exists44).toBe(false);
           expect(A.some(report.warnings, Str.includes(`Nested head-install checkout ${lockedCheckout}`))).toBe(true);
         })
       )
@@ -1340,8 +1377,10 @@ describe("tmpfs reap", () => {
           });
 
           expect(report.reapedCount).toBe(1);
-          expect(yield* fs.exists(install)).toBe(false);
-          expect(yield* fs.readFileString(path.join(outsideWorktree, "preserve.txt"))).toBe("do not delete\n");
+          const exists45 = yield* fs.exists(install);
+          expect(exists45).toBe(false);
+          const readFileString46 = yield* fs.readFileString(path.join(outsideWorktree, "preserve.txt"));
+          expect(readFileString46).toBe("do not delete\n");
           expect(A.some(report.warnings, Str.includes(`Skipped unsafe nested head-install checkout ${checkout}`))).toBe(
             true
           );
@@ -1386,7 +1425,8 @@ describe("tmpfs reap", () => {
           expect(candidate.action).toBe("worktree-remove");
           expect(candidate.parentRepo).toBe(repo);
           expect(report.reapedCount).toBe(1);
-          expect(yield* fs.exists(worktree)).toBe(false);
+          const exists47 = yield* fs.exists(worktree);
+          expect(exists47).toBe(false);
           const worktreeList = yield* runCommand("git", ["worktree", "list", "--porcelain"], repo);
           expect(Str.includes(worktree)(worktreeList)).toBe(false);
         })
@@ -1439,8 +1479,10 @@ describe("tmpfs reap", () => {
           expect(A.some(explicitReport.candidates, (candidate) => candidate.path === linkedEntry)).toBe(false);
           expect(discoveredReport.reapedCount).toBe(0);
           expect(explicitReport.reapedCount).toBe(0);
-          expect(yield* fs.exists(outsideWorktree)).toBe(true);
-          expect(yield* fs.readFileString(path.join(outsideWorktree, "preserve.txt"))).toBe("do not delete\n");
+          const exists48 = yield* fs.exists(outsideWorktree);
+          expect(exists48).toBe(true);
+          const readFileString49 = yield* fs.readFileString(path.join(outsideWorktree, "preserve.txt"));
+          expect(readFileString49).toBe("do not delete\n");
           const worktreeList = yield* runCommand("git", ["worktree", "list", "--porcelain"], repo);
           expect(Str.includes(outsideWorktree)(worktreeList)).toBe(true);
         })
@@ -1486,7 +1528,8 @@ describe("tmpfs reap", () => {
           expect(
             A.some(report.warnings, Str.includes(`${candidate}: path changed or escaped its discovery root`))
           ).toBe(true);
-          expect(yield* fs.readFileString(path.join(outside, "preserve.txt"))).toBe("do not delete\n");
+          const readFileString50 = yield* fs.readFileString(path.join(outside, "preserve.txt"));
+          expect(readFileString50).toBe("do not delete\n");
         })
       )
     );
@@ -1517,7 +1560,8 @@ describe("tmpfs reap", () => {
           });
           expect(report.candidates).toStrictEqual([]);
           expect(report.reapedCount).toBe(0);
-          expect(yield* fs.readFileString(path.join(outsideInstall, "preserve.txt"))).toBe("do not delete\n");
+          const readFileString51 = yield* fs.readFileString(path.join(outsideInstall, "preserve.txt"));
+          expect(readFileString51).toBe("do not delete\n");
         })
       )
     );
@@ -1572,7 +1616,8 @@ describe("tmpfs reap", () => {
           });
           expect(candidateByPath(discoveredReport, fallow).action).toBe("remove-dir");
           expect(explicitReport.candidates).toStrictEqual([]);
-          expect(yield* fs.readFileString(explicitFile)).toBe("not a directory\n");
+          const readFileString52 = yield* fs.readFileString(explicitFile);
+          expect(readFileString52).toBe("not a directory\n");
         })
       )
     );
@@ -1619,12 +1664,18 @@ describe("tmpfs reap", () => {
             const aged = yield* runTmpfsReap({ apply: true, cacheRoot, nowMillis: FIXTURE_NOW_MILLIS, tmpRoot });
             expect(candidateByPath(aged, held).action).toBe("remove-dir");
             expect(aged.reapedCount).toBe(2);
-            expect(yield* fs.exists(abandoned)).toBe(false);
-            expect(yield* fs.exists(`${abandoned}.last-used`)).toBe(false);
-            expect(yield* fs.exists(`${abandoned}.lock`)).toBe(false);
-            expect(yield* fs.exists(`${abandoned}.sha`)).toBe(false);
-            expect(yield* fs.exists(held)).toBe(false);
-            expect(yield* fs.exists(liveOwner)).toBe(true);
+            const exists53 = yield* fs.exists(abandoned);
+            expect(exists53).toBe(false);
+            const exists54 = yield* fs.exists(`${abandoned}.last-used`);
+            expect(exists54).toBe(false);
+            const exists55 = yield* fs.exists(`${abandoned}.lock`);
+            expect(exists55).toBe(false);
+            const exists56 = yield* fs.exists(`${abandoned}.sha`);
+            expect(exists56).toBe(false);
+            const exists57 = yield* fs.exists(held);
+            expect(exists57).toBe(false);
+            const exists58 = yield* fs.exists(liveOwner);
+            expect(exists58).toBe(true);
           })
         )
     );
@@ -1658,7 +1709,8 @@ describe("tmpfs reap", () => {
 
           const outcome = yield* runTmpfsWorktreesStep(repo, tmpRoot);
           expect(outcome.status === "skipped" ? outcome.reason : "executed").toBe("executed");
-          expect(yield* fs.exists(worktree)).toBe(false);
+          const exists59 = yield* fs.exists(worktree);
+          expect(exists59).toBe(false);
           const worktreeList = yield* runCommand("git", ["worktree", "list", "--porcelain"], repo);
           expect(Str.includes(worktree)(worktreeList)).toBe(false);
         })
@@ -1686,7 +1738,8 @@ describe("tmpfs reap", () => {
 
           const outcome = yield* runTmpfsWorktreesStep(repo, tmpRoot);
           expect(outcome.status).toBe("skipped");
-          expect(yield* fs.exists(diskWorktree)).toBe(true);
+          const exists60 = yield* fs.exists(diskWorktree);
+          expect(exists60).toBe(true);
         })
       )
     );
@@ -1704,7 +1757,8 @@ describe("tmpfs reap", () => {
         expect(A.length(decoded.candidates)).toBe(A.length(report.candidates));
         // JSON drops the sign of -0, so the codec law is encode-stability
         // rather than Object.is identity on numeric fields.
-        expect(yield* encodeTmpfsReapReportJsonEffect(decoded)).toBe(encoded);
+        const encodedTmpfsReapReportJsonEffect = yield* encodeTmpfsReapReportJsonEffect(decoded);
+        expect(encodedTmpfsReapReportJsonEffect).toBe(encoded);
       }),
       { arbitrary: fcRuns(32) }
     );

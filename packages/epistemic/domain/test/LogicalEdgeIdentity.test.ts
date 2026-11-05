@@ -39,19 +39,24 @@ const keyOf = (overrides: Partial<LogicalEdgeIdentityInput> = {}) => Effect.map(
 describe("LogicalEdgeIdentity (logical key digest)", () => {
   it.effect("pins the canonical encoding the digest is taken over", () =>
     Effect.gen(function* () {
-      expect(encodeLogicalEdgeIdentity(yield* identityOf())).toBe("v1|supports|claim:1|claim:2|org-1|<none>|<none>|");
+      const identityOf1 = yield* identityOf();
+      expect(encodeLogicalEdgeIdentity(identityOf1)).toBe("v1|supports|claim:1|claim:2|org-1|<none>|<none>|");
     })
   );
 
   it.effect("produces a lowercase 64-character hex digest", () =>
     Effect.gen(function* () {
-      expect(isLogicalEdgeKey(yield* keyOf())).toBe(true);
+      const keyOf2 = yield* keyOf();
+      expect(isLogicalEdgeKey(keyOf2)).toBe(true);
     })
   );
 
   it.effect("is deterministic for identical identities", () =>
     Effect.gen(function* () {
-      expect(yield* keyOf()).toEqual(yield* keyOf());
+      const keyOf3 = yield* keyOf();
+      const expectation = expect(keyOf3);
+      const keyOf1 = yield* keyOf();
+      expectation.toEqual(keyOf1);
     })
   );
 
@@ -66,7 +71,10 @@ describe("LogicalEdgeIdentity (logical key digest)", () => {
 
   it.effect("keeps the two orderings of an asymmetric relation distinct", () =>
     Effect.gen(function* () {
-      expect(yield* keyOf()).not.toEqual(yield* keyOf({ source: claimB, target: claimA }));
+      const keyOf4 = yield* keyOf();
+      const argument = expect(keyOf4).not;
+      const keyOf7 = yield* keyOf({ source: claimB, target: claimA });
+      argument.toEqual(keyOf7);
     })
   );
 
@@ -101,7 +109,10 @@ describe("LogicalEdgeIdentity (logical key digest)", () => {
 
   it.effect("partitions evidence scope apart", () =>
     Effect.gen(function* () {
-      expect(yield* keyOf({ evidenceScope: "evidence-set-1" })).not.toEqual(yield* keyOf());
+      const keyOf5 = yield* keyOf({ evidenceScope: "evidence-set-1" });
+      const argument1 = expect(keyOf5).not;
+      const keyOf9 = yield* keyOf();
+      argument1.toEqual(keyOf9);
     })
   );
 
@@ -110,14 +121,21 @@ describe("LogicalEdgeIdentity (logical key digest)", () => {
       const otherRelation = yield* keyOf({ relation: "refutes" });
       const entityTarget = yield* keyOf({ target: { entityRef: "2", kind: "entity" } });
 
-      expect(otherRelation).not.toEqual(yield* keyOf());
-      expect(entityTarget).not.toEqual(yield* keyOf());
+      const argument2 = expect(otherRelation).not;
+      const keyOf10 = yield* keyOf();
+      argument2.toEqual(keyOf10);
+      const argument3 = expect(entityTarget).not;
+      const keyOf11 = yield* keyOf();
+      argument3.toEqual(keyOf11);
     })
   );
 
   it.effect("never lets a scope value collide with the absent-scope marker", () =>
     Effect.gen(function* () {
-      expect(yield* keyOf({ matterScope: "<none>" })).not.toEqual(yield* keyOf());
+      const keyOf6 = yield* keyOf({ matterScope: "<none>" });
+      const argument4 = expect(keyOf6).not;
+      const keyOf12 = yield* keyOf();
+      argument4.toEqual(keyOf12);
     })
   );
 
@@ -141,8 +159,12 @@ describe("LogicalEdgeIdentity (logical key digest)", () => {
       // A literal pipe must never read as a component boundary, and the escaped
       // form of one value must never collide with a value that already looks
       // escaped (`%` escapes first, so `a|b` and `a%7Cb` stay distinct).
-      expect(encodeLogicalEdgeIdentity(yield* identityOf({ matterScope: "a|b" }))).toContain("some:a%7Cb");
-      expect(yield* keyOf({ matterScope: "a|b" })).not.toEqual(yield* keyOf({ matterScope: "a%7Cb" }));
+      const identityOf7 = yield* identityOf({ matterScope: "a|b" });
+      expect(encodeLogicalEdgeIdentity(identityOf7)).toContain("some:a%7Cb");
+      const keyOf8 = yield* keyOf({ matterScope: "a|b" });
+      const argument5 = expect(keyOf8).not;
+      const keyOf13 = yield* keyOf({ matterScope: "a%7Cb" });
+      argument5.toEqual(keyOf13);
     })
   );
 
@@ -151,9 +173,9 @@ describe("LogicalEdgeIdentity (logical key digest)", () => {
       const piped = yield* identityOf({ target: { entityRef: "ref|claim:9", kind: "entity" } });
 
       expect(encodeLogicalEdgeIdentity(piped)).toContain("entity:ref%7Cclaim:9");
-      expect(logicalEdgeKey(piped)).not.toEqual(
-        yield* keyOf({ target: { entityRef: "ref%7Cclaim:9", kind: "entity" } })
-      );
+      const argument6 = expect(logicalEdgeKey(piped)).not;
+      const keyOf14 = yield* keyOf({ target: { entityRef: "ref%7Cclaim:9", kind: "entity" } });
+      argument6.toEqual(keyOf14);
     })
   );
 });

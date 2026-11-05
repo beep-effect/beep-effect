@@ -145,7 +145,8 @@ const MailboxCalendarLayer = Layer.mergeAll(
           return written(entry.key);
         }),
         findByKey: Effect.fn("FakeCalendar.findByKey")(function* (key) {
-          return O.map(HashMap.get(yield* Ref.get(harness.entries), key), () => written(key));
+          const got = yield* Ref.get(harness.entries);
+          return O.map(HashMap.get(got, key), () => written(key));
         }),
       });
     })

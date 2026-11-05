@@ -449,7 +449,8 @@ describe("JsoncFingerprint", () => {
         const error = yield* Effect.flip(JsoncFingerprint.canonicalize({ a: undefined }));
         assert.deepStrictEqual(error, failure({ a: undefined }));
         assert.include(error.message, 'UnrepresentableValue at "/a"');
-        assert.strictEqual(yield* JsoncFingerprint.canonicalize([1, "x", true]), '[1,"x",true]');
+        const canonicalize1 = yield* JsoncFingerprint.canonicalize([1, "x", true]);
+        assert.strictEqual(canonicalize1, '[1,"x",true]');
       })
     );
   });
@@ -465,25 +466,22 @@ describe("JsoncFingerprint", () => {
   it.layer(CryptoTest)("hash and hashText with a Crypto layer", (it) => {
     it.effect("hashText matches the known-answer SHA-256 vectors", () =>
       Effect.gen(function* () {
-        assert.strictEqual(
-          yield* JsoncFingerprint.hashText(""),
-          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        );
-        assert.strictEqual(
-          yield* JsoncFingerprint.hashText("abc"),
-          "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
-        );
+        const hashText2 = yield* JsoncFingerprint.hashText("");
+        assert.strictEqual(hashText2, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        const hashText3 = yield* JsoncFingerprint.hashText("abc");
+        assert.strictEqual(hashText3, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
       })
     );
 
     it.effect("hashText hashes the bytes verbatim unless normalizeEol is set", () =>
       Effect.gen(function* () {
-        assert.notStrictEqual(yield* JsoncFingerprint.hashText("a\r\nb"), yield* JsoncFingerprint.hashText("a\nb"));
+        const hashText4 = yield* JsoncFingerprint.hashText("a\r\nb");
+        const hashText7 = yield* JsoncFingerprint.hashText("a\nb");
+        assert.notStrictEqual(hashText4, hashText7);
         const options = JsoncTextHashOptions.make({ normalizeEol: true });
-        assert.strictEqual(
-          yield* JsoncFingerprint.hashText("a\r\nb\rc", options),
-          yield* JsoncFingerprint.hashText("a\nb\nc", options)
-        );
+        const hashText5 = yield* JsoncFingerprint.hashText("a\r\nb\rc", options);
+        const hashText8 = yield* JsoncFingerprint.hashText("a\nb\nc", options);
+        assert.strictEqual(hashText5, hashText8);
       })
     );
 
@@ -493,10 +491,9 @@ describe("JsoncFingerprint", () => {
         const b = yield* JsoncFingerprint.hash({ a: [1, { x: 0, y: 0 }], b: 2 });
         assert.strictEqual(a, b);
         assert.match(a, SHA256_HEX);
-        assert.strictEqual(
-          yield* JsoncFingerprint.hash({ b: 2, a: 1 }),
-          yield* JsoncFingerprint.hashText('{"a":1,"b":2}')
-        );
+        const hash6 = yield* JsoncFingerprint.hash({ b: 2, a: 1 });
+        const hashText9 = yield* JsoncFingerprint.hashText('{"a":1,"b":2}');
+        assert.strictEqual(hash6, hashText9);
       })
     );
 
@@ -510,14 +507,17 @@ describe("JsoncFingerprint", () => {
     it.effect("the synchronous twins agree with the Effect forms byte for byte", () =>
       Effect.gen(function* () {
         const value = { b: 2, a: [1, { y: 0, x: "€" }], c: null };
-        assertSuccess(JsoncFingerprint.hashResult(value, syncDigest), yield* JsoncFingerprint.hash(value));
+        const argument = JsoncFingerprint.hashResult(value, syncDigest);
+        const hash1 = yield* JsoncFingerprint.hash(value);
+        assertSuccess(argument, hash1);
         const options = JsoncTextHashOptions.make({ normalizeEol: true });
         const text = "line one\r\nline two\rline three";
-        assertSuccess(JsoncFingerprint.hashTextResult(text, syncDigest), yield* JsoncFingerprint.hashText(text));
-        assertSuccess(
-          JsoncFingerprint.hashTextResult(text, syncDigest, options),
-          yield* JsoncFingerprint.hashText(text, options)
-        );
+        const argument1 = JsoncFingerprint.hashTextResult(text, syncDigest);
+        const hashText6 = yield* JsoncFingerprint.hashText(text);
+        assertSuccess(argument1, hashText6);
+        const argument2 = JsoncFingerprint.hashTextResult(text, syncDigest, options);
+        const hashText10 = yield* JsoncFingerprint.hashText(text, options);
+        assertSuccess(argument2, hashText10);
         assert.notStrictEqual(
           Result.getOrThrow(JsoncFingerprint.hashTextResult(text, syncDigest)),
           Result.getOrThrow(JsoncFingerprint.hashTextResult(text, syncDigest, options))

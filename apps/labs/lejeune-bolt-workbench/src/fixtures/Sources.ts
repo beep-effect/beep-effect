@@ -30,6 +30,12 @@ import { PROVIDER_RECORDING_SOURCE_TEXT, SourceDocument } from "@/domain/Bundle"
 import { EntityId } from "@/domain/Ontology";
 import type { Sha256Hex } from "@beep/schema";
 
+class SourcesOperationError extends S.TaggedError<SourcesOperationError, { readonly brand: unique symbol }>()(
+  "SourcesOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in Sources.ts." }
+) {}
+
 const $I = $LejeuneBoltWorkbenchId.create("fixtures/Sources");
 
 /**
@@ -176,22 +182,37 @@ const makeXlsxBytes = Effect.fn("LeJeuneFixtures.makeXlsxBytes")(() =>
 
 const makePdfBytes = Effect.fn("LeJeuneFixtures.makePdfBytes")(
   function* () {
-    const document = yield* Effect.tryPromise(() => PDFDocument.create());
-    yield* Effect.try(() => {
-      document.setAuthor("beep synthetic fixture generator");
-      document.setCreationDate(FIXED_PDF_DATE);
-      document.setCreator("@beep/lejeune-bolt-workbench");
-      document.setModificationDate(FIXED_PDF_DATE);
-      document.setProducer("@beep/lejeune-bolt-workbench");
-      document.setSubject("SYNTHETIC RFQ B schedule");
-      document.setTitle("SYNTHETIC RFQ B schedule");
+    const document = yield* Effect.tryPromise({
+      try: () => PDFDocument.create(),
+      catch: (cause) => SourcesOperationError.make({ cause }),
     });
-    const font = yield* Effect.tryPromise(() => document.embedFont(StandardFonts.Helvetica));
-    yield* Effect.try(() => {
-      const page = document.addPage([1_200, 300]);
-      page.drawText(PDF_SCHEDULE_TEXT, { font, size: 11, x: 24, y: 220 });
+    yield* Effect.try({
+      try: () => {
+        document.setAuthor("beep synthetic fixture generator");
+        document.setCreationDate(FIXED_PDF_DATE);
+        document.setCreator("@beep/lejeune-bolt-workbench");
+        document.setModificationDate(FIXED_PDF_DATE);
+        document.setProducer("@beep/lejeune-bolt-workbench");
+        document.setSubject("SYNTHETIC RFQ B schedule");
+        document.setTitle("SYNTHETIC RFQ B schedule");
+      },
+      catch: (cause) => SourcesOperationError.make({ cause }),
     });
-    return yield* Effect.tryPromise(() => document.save({ addDefaultPage: false, useObjectStreams: false }));
+    const font = yield* Effect.tryPromise({
+      try: () => document.embedFont(StandardFonts.Helvetica),
+      catch: (cause) => SourcesOperationError.make({ cause }),
+    });
+    yield* Effect.try({
+      try: () => {
+        const page = document.addPage([1_200, 300]);
+        page.drawText(PDF_SCHEDULE_TEXT, { font, size: 11, x: 24, y: 220 });
+      },
+      catch: (cause) => SourcesOperationError.make({ cause }),
+    });
+    return yield* Effect.tryPromise({
+      try: () => document.save({ addDefaultPage: false, useObjectStreams: false }),
+      catch: (cause) => SourcesOperationError.make({ cause }),
+    });
   },
   Effect.mapError((cause) =>
     fixtureErrorWithCause("pdf-generate", "Failed to generate the deterministic synthetic PDF fixture.", cause.cause)

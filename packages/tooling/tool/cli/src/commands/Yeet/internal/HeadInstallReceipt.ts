@@ -364,7 +364,8 @@ export const recordHeadInstallReceipt = Effect.fn("Yeet.recordHeadInstallReceipt
  */
 export const clearHeadInstallReceipt = Effect.fn("Yeet.clearHeadInstallReceipt")(function* (context: RepoRunContext) {
   const fs = yield* FileSystem.FileSystem;
-  yield* fs.remove(yield* receiptPathForContext(context), { force: true }).pipe(Effect.ignore);
+  const receiptPathForContext1 = yield* receiptPathForContext(context);
+  yield* fs.remove(receiptPathForContext1, { force: true }).pipe(Effect.ignore);
 });
 
 /**
@@ -381,7 +382,8 @@ export const loadHeadInstallReceipt = Effect.fn("Yeet.loadHeadInstallReceipt")(f
   commitSha: string
 ): Effect.fn.Return<O.Option<HeadInstallReceipt>, YeetCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
-  const text = yield* fs.readFileString(yield* receiptPathForContext(context)).pipe(Effect.option);
+  const receiptPathForContext2 = yield* receiptPathForContext(context);
+  const text = yield* fs.readFileString(receiptPathForContext2).pipe(Effect.option);
   return pipe(
     text,
     O.flatMap(HeadInstallReceiptJson.decodeOption),

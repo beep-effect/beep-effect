@@ -88,7 +88,8 @@ it.layer(testServices, { concurrent: false, timeout: "10 seconds" })("ai-metrics
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* temporaryDirectory;
       const input = `${directory}/inventory.json`;
-      yield* fs.writeFileString(input, yield* encodeJsonValue(manifest));
+      const encodedJsonValue = yield* encodeJsonValue(manifest);
+      yield* fs.writeFileString(input, encodedJsonValue);
       yield* run(["inventory", "report", "--input", input, "--json"]);
       const output = yield* logged;
       const report = yield* decodeObservationInventoryReportJson(output);
@@ -105,7 +106,8 @@ it.layer(testServices, { concurrent: false, timeout: "10 seconds" })("ai-metrics
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* temporaryDirectory;
       const input = `${directory}/inventory.json`;
-      yield* fs.writeFileString(input, yield* encodeJsonValue(manifest));
+      const encodedJsonValue1 = yield* encodeJsonValue(manifest);
+      yield* fs.writeFileString(input, encodedJsonValue1);
       yield* run(["inventory", "report", "--input", input]);
       const output = yield* logged;
       expect(output).toContain("Population window: [2026-10-27T11:00:00.000Z, 2026-10-27T12:00:00.000Z)");
@@ -123,10 +125,13 @@ it.layer(testServices, { concurrent: false, timeout: "10 seconds" })("ai-metrics
       const directory = yield* temporaryDirectory;
       const input = `${directory}/private-inventory.json`;
       yield* fs.writeFileString(input, Str.repeat(4_194_305)("x"));
-      expect(yield* failureText(input)).toContain("exceeds its byte limit");
+      const failureText2 = yield* failureText(input);
+      expect(failureText2).toContain("exceeds its byte limit");
       yield* fs.writeFile(input, new Uint8Array([0xff, 0xfe]));
-      expect(yield* failureText(input)).toContain("Invalid observation inventory encoding");
-      yield* fs.writeFileString(input, yield* encodeJsonValue({ ...manifest, secret: "synthetic-private-content" }));
+      const failureText3 = yield* failureText(input);
+      expect(failureText3).toContain("Invalid observation inventory encoding");
+      const encodedJsonValue4 = yield* encodeJsonValue({ ...manifest, secret: "synthetic-private-content" });
+      yield* fs.writeFileString(input, encodedJsonValue4);
       const rejected = yield* failureText(input);
       expect(rejected).toContain("Invalid observation inventory");
       expect(rejected).not.toContain("synthetic-private-content");
@@ -147,16 +152,14 @@ it.layer(testServices, { concurrent: false, timeout: "10 seconds" })("ai-metrics
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* temporaryDirectory;
       const input = `${directory}/private-declaration.json`;
-      yield* fs.writeFileString(
-        input,
-        yield* encodeJsonValue({
-          schemaVersion: "agent-observation-root-declaration/v1",
-          hostKey: "synthetic-private-host",
-          populationWindowStart: "1970-01-01T00:00:00Z",
-          populationWindowEnd: "1970-01-01T00:00:01Z",
-          roots: [{ path: `${directory}/retired-root`, state: "retired" }],
-        })
-      );
+      const encodedJsonValue5 = yield* encodeJsonValue({
+        schemaVersion: "agent-observation-root-declaration/v1",
+        hostKey: "synthetic-private-host",
+        populationWindowStart: "1970-01-01T00:00:00Z",
+        populationWindowEnd: "1970-01-01T00:00:01Z",
+        roots: [{ path: `${directory}/retired-root`, state: "retired" }],
+      });
+      yield* fs.writeFileString(input, encodedJsonValue5);
       yield* run(["inventory", "probe-roots", "--input", input, "--json"]).pipe(
         Effect.provideService(
           ConfigProvider.ConfigProvider,
@@ -178,16 +181,14 @@ it.layer(testServices, { concurrent: false, timeout: "10 seconds" })("ai-metrics
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* temporaryDirectory;
       const input = `${directory}/private-declaration.json`;
-      yield* fs.writeFileString(
-        input,
-        yield* encodeJsonValue({
-          schemaVersion: "agent-observation-root-declaration/v1",
-          hostKey: "synthetic-private-host",
-          populationWindowStart: "1970-01-01T00:00:00Z",
-          populationWindowEnd: "1970-01-01T00:00:01Z",
-          roots: [],
-        })
-      );
+      const encodedJsonValue6 = yield* encodeJsonValue({
+        schemaVersion: "agent-observation-root-declaration/v1",
+        hostKey: "synthetic-private-host",
+        populationWindowStart: "1970-01-01T00:00:00Z",
+        populationWindowEnd: "1970-01-01T00:00:01Z",
+        roots: [],
+      });
+      yield* fs.writeFileString(input, encodedJsonValue6);
       const output = yield* run(["inventory", "probe-roots", "--input", input]).pipe(
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
         Effect.matchCause({ onFailure: Cause.pretty, onSuccess: () => "unexpected success" })
@@ -221,7 +222,8 @@ it.layer(testServices, { concurrent: false, timeout: "10 seconds" })("ai-metrics
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* temporaryDirectory;
       const input = `${directory}/coverage.json`;
-      yield* fs.writeFileString(input, yield* encodeJsonValue(evidence));
+      const encodedJsonValue7 = yield* encodeJsonValue(evidence);
+      yield* fs.writeFileString(input, encodedJsonValue7);
       yield* run(["inventory", "coverage", "--input", input]);
       const output = yield* logged;
       expect(output).toContain("acceptedEvents: 1 observed; denominator unknown; snapshot partial");
@@ -239,7 +241,8 @@ it.layer(testServices, { concurrent: false, timeout: "10 seconds" })("ai-metrics
         { ...evidence, boundaryEvidenceId: id("0") },
         { ...evidence, secret: "synthetic-coverage-private" },
       ]) {
-        yield* fs.writeFileString(input, yield* encodeJsonValue(invalid));
+        const encodedJsonValue8 = yield* encodeJsonValue(invalid);
+        yield* fs.writeFileString(input, encodedJsonValue8);
         const result = yield* run(["inventory", "coverage", "--input", input, "--json"]).pipe(
           Effect.matchCause({ onFailure: Cause.pretty, onSuccess: () => "unexpected success" })
         );

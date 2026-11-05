@@ -18,7 +18,8 @@ describe("architecture lab proof app", () => {
         const result = yield* runArchitectureLabProof;
         expect(result.created.status).toBe("open");
         expect(result.summary.visibleActions).toContain("assign");
-        expect(yield* encodeArchitectureLabProofResult(result)).toEqual({
+        const encodedArchitectureLabProofResult = yield* encodeArchitectureLabProofResult(result);
+        expect(encodedArchitectureLabProofResult).toEqual({
           created: {
             id: "architecture-lab-proof-1",
             title: "Prove canonical slice topology",

@@ -147,13 +147,11 @@ const swapStoreDuringMetadata = Effect.fn("PrivateProducerObjectTest.swapStore")
     workflowRevision: CacheProducerBinding.fields.workflowRevision.make(Str.repeat(40)("f")),
   });
   yield* initializeCacheProducerIssuer(replacement, binding, fixture.contract);
-  yield* fixture.fs.writeFileString(
-    fixture.path.join(replacement, "runtime.json"),
-    yield* encodeProfile(fixture.profile),
-    {
-      mode: 0o600,
-    }
-  );
+  const argument = fixture.path.join(replacement, "runtime.json");
+  const encodedProfile1 = yield* encodeProfile(fixture.profile);
+  yield* fixture.fs.writeFileString(argument, encodedProfile1, {
+    mode: 0o600,
+  });
   const swap = fixture.fs
     .rename(fixture.directory, fixture.path.join(parent, "original"))
     .pipe(Effect.andThen(fixture.fs.rename(replacement, fixture.directory)), Effect.orDie);
@@ -269,7 +267,8 @@ it.layer(
       const fs = yield* FileSystem.FileSystem;
       const file = fixture.path.join(fixture.directory, "observation.json");
       yield* fs.writeFileString(file, fixture.text, { mode: 0o600 });
-      expect(yield* readCacheProducerPrivateObservation(file)).toEqual(fixture.observation);
+      const readCacheProducerPrivateObservation1 = yield* readCacheProducerPrivateObservation(file);
+      expect(readCacheProducerPrivateObservation1).toEqual(fixture.observation);
       const alias = fixture.path.join(fixture.directory, "alias.json");
       yield* fs.symlink(file, alias);
       expect((yield* readCacheProducerPrivateObservation(alias).pipe(Effect.flip)).message).toBe(
@@ -285,7 +284,8 @@ it.layer(
       yield* fixture.fs.writeFileString(file, contents, { mode: 0o600 });
       const error = yield* readCacheProducerPrivateObservation(file).pipe(Effect.flip);
       expect(error.message).toBe("Private producer object GET failed (payload-rejected).");
-      expect(yield* fixture.fs.readFileString(file)).toBe(contents);
+      const readFileString2 = yield* fixture.fs.readFileString(file);
+      expect(readFileString2).toBe(contents);
     })
   );
 
@@ -367,7 +367,8 @@ it.layer(
         ...fixture.profile,
         target: CacheConformanceTarget.make({ ...fixture.profile.target, storage: O.none() }),
       });
-      yield* fixture.fs.writeFileString(fixture.file, yield* encodeProfile(profile));
+      const encodedProfile = yield* encodeProfile(profile);
+      yield* fixture.fs.writeFileString(fixture.file, encodedProfile);
       const storageError = yield* loadCacheProducerStorageRuntime(fixture.directory).pipe(
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord({})),
         Effect.flip
@@ -592,7 +593,8 @@ it.layer(
         Effect.provideService(FetchHttpClient.Fetch, fetch)
       );
       expect(requests).toBe(1);
-      expect(yield* fs.readFileString(file)).toBe(fixture.text);
+      const readFileString3 = yield* fs.readFileString(file);
+      expect(readFileString3).toBe(fixture.text);
     })
   );
 
@@ -623,7 +625,8 @@ it.layer(
       );
       expect(failed._tag).toBe("CliReportedExit");
       expect(requests).toBe(1);
-      expect(yield* fs.readFileString(file)).toBe(fixture.text);
+      const readFileString4 = yield* fs.readFileString(file);
+      expect(readFileString4).toBe(fixture.text);
     })
   );
 
@@ -640,7 +643,8 @@ it.layer(
         Effect.flip
       );
       expect(failed._tag).toBe("CliReportedExit");
-      expect(yield* fs.readFileString(file)).toBe("private-sentinel");
+      const readFileString5 = yield* fs.readFileString(file);
+      expect(readFileString5).toBe("private-sentinel");
     })
   );
   it.effect("rejects unsafe modes, hard links, invalid UTF-8 and oversized private files", () =>
@@ -857,7 +861,8 @@ it.layer(
                 ...fixture.profile,
                 adapterExecutable: "/fixture/changed-adapter",
               });
-              yield* fixture.fs.writeFileString(fixture.file, yield* encodeProfile(profile));
+              const encodedProfile6 = yield* encodeProfile(profile);
+              yield* fixture.fs.writeFileString(fixture.file, encodedProfile6);
             })
           ),
           Match.orElse(() =>
@@ -866,10 +871,9 @@ it.layer(
                 ...fixture.published.approval,
                 workflowSha256: Sha256Hex.make(Str.repeat(64)("e")),
               });
-              yield* fixture.fs.writeFileString(
-                fixture.path.join(fixture.directory, "publication.json"),
-                yield* encodeApproval(approval)
-              );
+              const argument1 = fixture.path.join(fixture.directory, "publication.json");
+              const encodedApproval = yield* encodeApproval(approval);
+              yield* fixture.fs.writeFileString(argument1, encodedApproval);
             })
           )
         );
@@ -956,10 +960,9 @@ it.layer(
                   workflowRevision: CacheProducerBinding.fields.workflowRevision.make(Str.repeat(40)("e")),
                 }),
               });
-              yield* fixture.fs.writeFileString(
-                fixture.path.join(fixture.directory, "publication.json"),
-                yield* encodeApproval(approval)
-              );
+              const argument2 = fixture.path.join(fixture.directory, "publication.json");
+              const encodedApproval2 = yield* encodeApproval(approval);
+              yield* fixture.fs.writeFileString(argument2, encodedApproval2);
             })
           ),
           Match.orElse(() =>
@@ -974,7 +977,8 @@ it.layer(
                   })),
                 }),
               });
-              yield* fixture.fs.writeFileString(fixture.file, yield* encodeProfile(profile));
+              const encodedProfile7 = yield* encodeProfile(profile);
+              yield* fixture.fs.writeFileString(fixture.file, encodedProfile7);
             })
           )
         );
@@ -1004,7 +1008,8 @@ it.layer(
         attempt: complete.attempt,
         uploads: complete.uploads,
       });
-      const republished = yield* republishedReport(fixture, yield* encodeReport(legacy));
+      const encodedReport = yield* encodeReport(legacy);
+      const republished = yield* republishedReport(fixture, encodedReport);
       const { calls, fetch } = countingFetch(() => new Response(fixture.text));
       const error = yield* downloadCacheProducerPrivateObservation(
         fixture.directory,
@@ -1030,7 +1035,8 @@ it.layer(
         ...complete,
         observationSha256: yield* hashBytes(new TextEncoder().encode(nonCanonical)),
       });
-      const republished = yield* republishedReport(fixture, yield* encodeCompleteReport(report));
+      const encodedCompleteReport = yield* encodeCompleteReport(report);
+      const republished = yield* republishedReport(fixture, encodedCompleteReport);
       const { calls, fetch } = countingFetch(() => new Response(nonCanonical));
       const error = yield* downloadCacheProducerPrivateObservation(
         fixture.directory,

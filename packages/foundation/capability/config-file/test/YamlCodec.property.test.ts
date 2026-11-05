@@ -22,7 +22,9 @@ describe("YamlCodec property floor", () => {
     ([value]) =>
       Effect.gen(function* () {
         const encoded = yield* YamlCodec.stringify(value);
-        const decoded = yield* S.decodeUnknownEffect(Document)(yield* YamlCodec.parse(encoded));
+        const argument = S.decodeUnknownEffect(Document);
+        const parsed1 = yield* YamlCodec.parse(encoded);
+        const decoded = yield* argument(parsed1);
         assert.isTrue(equivalent(decoded, value));
       }),
     runs
@@ -38,8 +40,10 @@ describe("YamlCodec property floor", () => {
         const formatted = yield* YamlCodec.stringify(parsed);
         const reparsed = yield* YamlCodec.parse(formatted);
         assert.deepStrictEqual(reparsed, parsed);
-        assert.strictEqual(yield* YamlCodec.stringify(reparsed), formatted);
-        assert.isTrue(equivalent(yield* S.decodeUnknownEffect(Document)(reparsed), value));
+        const stringify1 = yield* YamlCodec.stringify(reparsed);
+        assert.strictEqual(stringify1, formatted);
+        const value2 = yield* S.decodeUnknownEffect(Document)(reparsed);
+        assert.isTrue(equivalent(value2, value));
       }),
     runs
   );

@@ -9,12 +9,10 @@ describe("Comparator coverage boundaries", () => {
   it.effect("reports position-free errors and rejects invalid codec input", () =>
     Effect.gen(function* () {
       assert.strictEqual(InvalidComparatorError.make({ input: "bad" }).message, 'Invalid comparator: "bad"');
-      assertFailure(
-        yield* Effect.result(
-          S.decodeEffect(Comparator.FromString)(">=bad").pipe(Effect.mapError((error) => error._tag))
-        ),
-        "SchemaError"
+      const result1 = yield* Effect.result(
+        S.decodeEffect(Comparator.FromString)(">=bad").pipe(Effect.mapError((error) => error._tag))
       );
+      assertFailure(result1, "SchemaError");
       const comparator = yield* Comparator.parse(">=1.2.3");
       assert.strictEqual(inspect(comparator), ">=1.2.3");
     })

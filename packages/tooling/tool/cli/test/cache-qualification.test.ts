@@ -74,12 +74,11 @@ const fixture = Effect.fn("CacheQualificationTest.fixture")(function* () {
   });
   const text = yield* encodeCachePolicyBaselineJson(baseline);
   yield* fs.writeFileString(path.join(root, "standards/cache-qualification-baseline.json"), text);
-  yield* fs.writeFileString(
-    path.join(root, "standards/cache-qualification.json"),
-    yield* encodeCacheQualificationStoreJson(
-      CacheQualificationStore.make({ revision: S.Natural.make(0), entries: [], history: [] })
-    )
+  const argument = path.join(root, "standards/cache-qualification.json");
+  const encodedCacheQualificationStoreJson1 = yield* encodeCacheQualificationStoreJson(
+    CacheQualificationStore.make({ revision: S.Natural.make(0), entries: [], history: [] })
   );
+  yield* fs.writeFileString(argument, encodedCacheQualificationStoreJson1);
   const entry = CacheQualificationEntry.make({ key, status: { state: "excluded", review } });
   const request = CacheTransitionRequest.make({ expectedRevision: S.Natural.make(0), entry });
   return { root, fs, path, request, entry, review };
@@ -137,17 +136,16 @@ it.layer(testLayer, { timeout: "30 seconds" })("Cache qualification writer", (it
         .transition(root, CacheTransitionRequest.make({ expectedRevision: 2, entry: qualified }))
         .pipe(Effect.result);
       promoted.pipe(R.isFailure, assertTrue);
-      expect(yield* fs.readFileString(target)).toBe(prior);
-      yield* fs.writeFileString(
-        target,
-        yield* encodeCacheQualificationStoreJson(
-          CacheQualificationStore.make({
-            revision: 3,
-            entries: [qualified],
-            history: [...history, CacheQualificationEvent.make({ revision: PosInt.make(3), entry: qualified })],
-          })
-        )
+      const readFileString1 = yield* fs.readFileString(target);
+      expect(readFileString1).toBe(prior);
+      const encodedCacheQualificationStoreJson = yield* encodeCacheQualificationStoreJson(
+        CacheQualificationStore.make({
+          revision: 3,
+          entries: [qualified],
+          history: [...history, CacheQualificationEvent.make({ revision: PosInt.make(3), entry: qualified })],
+        })
       );
+      yield* fs.writeFileString(target, encodedCacheQualificationStoreJson);
       const audited = yield* cache.audit(root).pipe(Effect.result);
       audited.pipe(R.isFailure, assertTrue);
       if (R.isFailure(audited)) expect(audited.failure.message).toContain("independently configured trust");
@@ -164,12 +162,16 @@ it.layer(testLayer, { timeout: "30 seconds" })("Cache qualification writer", (it
       expect(result.history).toEqual([
         CacheQualificationEvent.make({ revision: PosInt.make(1), entry: request.entry }),
       ]);
-      expect(yield* cache.inspect(root)).toEqual(result);
+      const inspect2 = yield* cache.inspect(root);
+      expect(inspect2).toEqual(result);
       const target = path.join(root, "standards/cache-qualification.json");
       const before = yield* fs.readFileString(target);
-      expect(yield* cache.transition(root, request).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* fs.readFileString(target)).toBe(before);
-      expect(yield* fs.exists(path.join(root, ".beep/cache/qualification.writer"))).toBe(false);
+      const pipe3 = yield* cache.transition(root, request).pipe(Effect.isFailure);
+      expect(pipe3).toBe(true);
+      const readFileString4 = yield* fs.readFileString(target);
+      expect(readFileString4).toBe(before);
+      const exists5 = yield* fs.exists(path.join(root, ".beep/cache/qualification.writer"));
+      expect(exists5).toBe(false);
     })
   );
 
@@ -200,14 +202,17 @@ it.layer(testLayer, { timeout: "30 seconds" })("Cache qualification writer", (it
           key: CacheQualificationKey.make({ ...key, profile: "other" }),
         }),
       });
-      expect(yield* cache.transition(root, otherProfile).pipe(Effect.isFailure)).toBe(true);
+      const pipe6 = yield* cache.transition(root, otherProfile).pipe(Effect.isFailure);
+      expect(pipe6).toBe(true);
       const unassessed = CacheTransitionRequest.make({
         ...request,
         entry: CacheQualificationEntry.make({ key, status: { state: "unassessed", reason: "erase review" } }),
       });
-      expect(yield* cache.transition(root, unassessed).pipe(Effect.isFailure)).toBe(true);
+      const pipe7 = yield* cache.transition(root, unassessed).pipe(Effect.isFailure);
+      expect(pipe7).toBe(true);
       yield* fs.writeFileString(path.join(root, "review.md"), "changed review");
-      expect(yield* cache.transition(root, request).pipe(Effect.isFailure)).toBe(true);
+      const pipe8 = yield* cache.transition(root, request).pipe(Effect.isFailure);
+      expect(pipe8).toBe(true);
       expect((yield* cache.inspect(root)).revision).toBe(0);
     })
   );
@@ -219,12 +224,15 @@ it.layer(testLayer, { timeout: "30 seconds" })("Cache qualification writer", (it
       const cache = yield* CacheQualificationService;
       yield* fs.rename(path.join(root, "review.md"), path.join(root, "source.md"));
       yield* fs.symlink(path.join(root, "source.md"), path.join(root, "review.md"));
-      expect(yield* cache.transition(root, request).pipe(Effect.isFailure)).toBe(true);
+      const pipe9 = yield* cache.transition(root, request).pipe(Effect.isFailure);
+      expect(pipe9).toBe(true);
       yield* fs.remove(path.join(root, "review.md"));
       yield* fs.rename(path.join(root, "source.md"), path.join(root, "review.md"));
       yield* fs.makeDirectory(path.join(root, ".beep/cache/qualification.writer"));
-      expect(yield* cache.transition(root, request).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* fs.exists(path.join(root, ".beep/cache/qualification.writer"))).toBe(true);
+      const pipe10 = yield* cache.transition(root, request).pipe(Effect.isFailure);
+      expect(pipe10).toBe(true);
+      const exists11 = yield* fs.exists(path.join(root, ".beep/cache/qualification.writer"));
+      expect(exists11).toBe(true);
       expect((yield* cache.inspect(root)).entries).toEqual([]);
     })
   );
@@ -236,16 +244,20 @@ it.layer(testLayer, { timeout: "30 seconds" })("Cache qualification writer", (it
       const cache = yield* CacheQualificationService;
       const target = path.join(root, "standards/cache-qualification.json");
       yield* fs.remove(target);
-      expect(yield* cache.inspect(root).pipe(Effect.isFailure)).toBe(true);
+      const pipe12 = yield* cache.inspect(root).pipe(Effect.isFailure);
+      expect(pipe12).toBe(true);
       yield* fs.writeFileString(target, "{}");
-      expect(yield* cache.inspect(root).pipe(Effect.isFailure)).toBe(true);
+      const pipe13 = yield* cache.inspect(root).pipe(Effect.isFailure);
+      expect(pipe13).toBe(true);
       const duplicate = CacheQualificationStore.make({
         revision: S.Natural.make(2),
         entries: [entry, entry],
         history: [],
       });
-      yield* fs.writeFileString(target, yield* encodeCacheQualificationStoreJson(duplicate));
-      expect(yield* cache.inspect(root).pipe(Effect.isFailure)).toBe(true);
+      const encodedCacheQualificationStoreJson14 = yield* encodeCacheQualificationStoreJson(duplicate);
+      yield* fs.writeFileString(target, encodedCacheQualificationStoreJson14);
+      const pipe15 = yield* cache.inspect(root).pipe(Effect.isFailure);
+      expect(pipe15).toBe(true);
     })
   );
 });
@@ -261,16 +273,17 @@ it.layer(testLayer, { timeout: "30 seconds" })("bounded qualification evidence",
       yield* fs.writeFile(target, bytes);
       const read = yield* readContainedFileBytesNoFollow(root, "bytes.bin", S.Natural.make(4));
       expect(O.getOrThrow(read.contents)).toEqual(bytes);
-      expect(yield* readContainedFileBytesNoFollow(root, "bytes.bin", S.Natural.make(3)).pipe(Effect.isFailure)).toBe(
-        true
-      );
+      const pipe16 = yield* readContainedFileBytesNoFollow(root, "bytes.bin", S.Natural.make(3)).pipe(Effect.isFailure);
+      expect(pipe16).toBe(true);
       yield* fs.symlink(target, path.join(root, "linked.bin"));
-      expect(yield* readContainedFileBytesNoFollow(root, "linked.bin", S.Natural.make(4)).pipe(Effect.isFailure)).toBe(
-        true
+      const pipe17 = yield* readContainedFileBytesNoFollow(root, "linked.bin", S.Natural.make(4)).pipe(
+        Effect.isFailure
       );
-      expect(
-        yield* readContainedFileBytesNoFollow(root, "../outside.bin", S.Natural.make(4)).pipe(Effect.isFailure)
-      ).toBe(true);
+      expect(pipe17).toBe(true);
+      const pipe18 = yield* readContainedFileBytesNoFollow(root, "../outside.bin", S.Natural.make(4)).pipe(
+        Effect.isFailure
+      );
+      expect(pipe18).toBe(true);
       yield* fs.writeFile(target, new Uint8Array(0));
       const empty = yield* readContainedFileBytesNoFollow(root, "bytes.bin", S.Natural.make(0));
       expect(O.getOrThrow(empty.contents).byteLength).toBe(0);
@@ -288,9 +301,11 @@ it.layer(testLayer, { timeout: "30 seconds" })("bounded qualification evidence",
       const cache = yield* CacheQualificationService;
       const target = path.join(root, "standards/cache-qualification.json");
       yield* fs.writeFile(target, new Uint8Array([255]));
-      expect(yield* cache.inspect(root).pipe(Effect.isFailure)).toBe(true);
+      const pipe19 = yield* cache.inspect(root).pipe(Effect.isFailure);
+      expect(pipe19).toBe(true);
       yield* fs.writeFile(target, new Uint8Array(8 * 1024 * 1024 + 1));
-      expect(yield* cache.inspect(root).pipe(Effect.isFailure)).toBe(true);
+      const pipe20 = yield* cache.inspect(root).pipe(Effect.isFailure);
+      expect(pipe20).toBe(true);
     })
   );
 });

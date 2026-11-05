@@ -751,11 +751,10 @@ const durationMillis = Effect.fn("Yeet.jobDuration")(function* (text: string) {
 const jobRoot = () => findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate job checkout.")));
 const renderJob = Effect.fn("Yeet.renderJob")(function* (record: ProofJobRecord, json: boolean) {
   if (json) {
-    yield* Console.log(
-      yield* encodeProofJobRecordJson(record).pipe(
-        Effect.mapError(YeetCommandError.new("Failed to encode job record."))
-      )
+    const pipe1 = yield* encodeProofJobRecordJson(record).pipe(
+      Effect.mapError(YeetCommandError.new("Failed to encode job record."))
     );
+    yield* Console.log(pipe1);
     return;
   }
   yield* Console.log(
@@ -824,13 +823,17 @@ const jobListCommand = Command.make(
   "list",
   { json: jsonFlag },
   Effect.fn("Yeet.jobList")(function* (options) {
-    const launcher = yield* ProofJobLauncher.make(yield* jobRoot());
+    const jobRoot2 = yield* jobRoot();
+    const launcher = yield* ProofJobLauncher.make(jobRoot2);
     const records = yield* launcher.list;
     if (options.json) {
-      yield* Console.log(
-        yield* encodeProofJobListJson(records).pipe(Effect.mapError(YeetCommandError.new("Failed to encode jobs.")))
+      const pipe3 = yield* encodeProofJobListJson(records).pipe(
+        Effect.mapError(YeetCommandError.new("Failed to encode jobs."))
       );
-    } else for (const record of records) yield* renderJob(record, false);
+      yield* Console.log(pipe3);
+    } else {
+      for (const record of records) yield* renderJob(record, false);
+    }
   })
 );
 const jobStatusCommand = Command.make(
@@ -854,11 +857,10 @@ const jobStatusCommand = Command.make(
           })
         );
     if (options.json) {
-      yield* Console.log(
-        yield* encodeProofJobStatusJson({ record, telemetry: O.getOrNull(live) }).pipe(
-          Effect.mapError(YeetCommandError.new("Failed to encode job status."))
-        )
+      const pipe4 = yield* encodeProofJobStatusJson({ record, telemetry: O.getOrNull(live) }).pipe(
+        Effect.mapError(YeetCommandError.new("Failed to encode job status."))
       );
+      yield* Console.log(pipe4);
     } else {
       yield* renderJob(record, false);
       if (!isTerminalProofJobPhase(record.phase)) yield* Console.log(O.getOrElse(live, () => "unit not loaded"));
@@ -879,8 +881,11 @@ const jobWaitCommand = Command.make(
   "wait",
   { jobId: jobIdArgument, json: jsonFlag, timeout: Flag.String("timeout").pipe(Flag.withDefault("")) },
   Effect.fn("Yeet.jobWait")(function* (options) {
-    const launcher = yield* ProofJobLauncher.make(yield* jobRoot());
-    const timeoutMs = Str.isEmpty(options.timeout) ? O.none<number>() : O.some(yield* durationMillis(options.timeout));
+    const jobRoot5 = yield* jobRoot();
+    const launcher = yield* ProofJobLauncher.make(jobRoot5);
+    const timeoutMs = Str.isEmpty(options.timeout)
+      ? O.none<number>()
+      : yield* Effect.asSome(durationMillis(options.timeout));
     const result = yield* launcher.wait(options.jobId, ProofJobWaitOptions.make({ timeoutMs }));
     yield* renderJob(result.record, options.json);
     const outcome = ProofJobWaitResult.match(result, {
@@ -892,7 +897,8 @@ const jobWaitCommand = Command.make(
         return (options.json ? Console.error(line) : Console.log(line)).pipe(Effect.as(ProofJobWaitOutcome.Enum.wave));
       },
     });
-    const exit = proofJobWaitExitFor(yield* outcome);
+    const outcome6 = yield* outcome;
+    const exit = proofJobWaitExitFor(outcome6);
     if (exit.exitCode !== 0)
       return yield* YeetCommandError.make({
         message: `Proof job ${result.record.jobId}: ${exit.summary}.`,
@@ -906,7 +912,8 @@ const jobLogsCommand = Command.make(
   Effect.fn("Yeet.jobLogs")(function* (options) {
     if (options.tail < 0) return yield* YeetCommandError.make({ message: "--tail must be nonnegative." });
     const root = yield* jobRoot();
-    const record = yield* requireJob(yield* ProofJobLauncher.make(root), options.jobId);
+    const made = yield* ProofJobLauncher.make(root);
+    const record = yield* requireJob(made, options.jobId);
     const read = yield* readContainedFileStringNoFollow(root, record.unit.logPath).pipe(
       Effect.mapError(YeetCommandError.new("Failed to read job log."))
     );
@@ -919,7 +926,8 @@ const jobCancelCommand = Command.make(
   "cancel",
   { jobId: jobIdArgument },
   Effect.fn("Yeet.jobCancel")(function* (options) {
-    const launcher = yield* ProofJobLauncher.make(yield* jobRoot());
+    const jobRoot7 = yield* jobRoot();
+    const launcher = yield* ProofJobLauncher.make(jobRoot7);
     const outcome = yield* launcher.cancel(options.jobId);
     yield* Console.log(outcome);
     if (outcome === "stop-failed")
@@ -938,10 +946,13 @@ const jobFinalizeCommand = Command.make(
       ["BEEP_YEET_JOB_ID", options.jobId],
       ["BEEP_YEET_JOB_UNIT", proofJobUnitName(options.jobId)],
     ] as const) {
-      if (!O.contains(yield* configStringOption(name), expected))
+      const configStringOption8 = yield* configStringOption(name);
+      if (!O.contains(configStringOption8, expected)) {
         return yield* YeetCommandError.make({ message: `${name} does not match the proof job.` });
+      }
     }
-    const launcher = yield* ProofJobLauncher.make(yield* jobRoot());
+    const jobRoot9 = yield* jobRoot();
+    const launcher = yield* ProofJobLauncher.make(jobRoot9);
     const record = yield* requireJob(launcher, options.jobId);
     const invocationId = yield* configStringOption("INVOCATION_ID");
     if (
@@ -1069,8 +1080,12 @@ export const yeetMonitorCommandRoute = SelectYeetMonitorCommandRoute.implementSy
 // The porcelain monitor loops write no run verdict, so inside a detached job they record their
 // own outcome; the classic monitor records it through the run verdict like verify does.
 const reportDetachedMonitor = Effect.fnUntraced(function* <A, E, R>(self: Effect.Effect<A, E, R>) {
-  if (O.isNone(yield* configStringOption("BEEP_YEET_JOB_ID"))) return yield* self;
-  return yield* reportProofJobCommand(yield* jobRoot(), self);
+  const configStringOption10 = yield* configStringOption("BEEP_YEET_JOB_ID");
+  if (O.isNone(configStringOption10)) {
+    return yield* self;
+  }
+  const jobRoot11 = yield* jobRoot();
+  return yield* reportProofJobCommand(jobRoot11, self);
 });
 
 const yeetMonitorCommand = Command.make(
@@ -1090,44 +1105,51 @@ const yeetMonitorCommand = Command.make(
       return yield* YeetCommandError.make({ message: "--poll-interval requires --until-ready or --until-merged." });
     const interval = Str.isEmpty(pollInterval)
       ? undefined
-      : Duration.millis(
-          yield* durationMillis(pollInterval).pipe(
-            Effect.mapError(YeetCommandError.new("--poll-interval requires a positive finite duration."))
-          )
-        );
-    if (options.detach) return yield* provideYeetStateRoot(runYeetMode("monitor", options), stateRoot);
-    const route = yeetMonitorCommandRoute({
-      plan: options.plan,
-      settleTimeout,
-      untilEvent,
-      untilMerged,
-      untilReady,
-      watch,
-    });
-    const settleTimeoutMs = yield* yeetMonitorDurationMillis(settleTimeout);
-    return yield* provideYeetStateRoot(
-      {
-        "invalid-settle-timeout": Effect.fail(
-          YeetCommandError.make({
-            message: "--settle-timeout requires --until-merged, --until-ready, or --watch.",
-            exitCode: 1,
+      : yield* durationMillis(pollInterval).pipe(
+          Effect.mapBoth({
+            onFailure: YeetCommandError.new("--poll-interval requires a positive finite duration."),
+            onSuccess: Duration.millis,
           })
-        ),
-        classic: runYeetMode("monitor", options),
-        "invalid-until-event": rejectYeetUntilEventPairing,
-        "invalid-until-ready": rejectYeetUntilReadyPairing,
-        "ready-loop": reportDetachedMonitor(
-          runYeetMergeLoop(options, {
-            pollInterval: interval,
-            policy: YeetUntilReadyPolicy.make({ settleTimeoutMs }),
-          }).pipe(Effect.asVoid)
-        ),
-        "merge-loop": reportDetachedMonitor(
-          runYeetMergeLoop(options, { pollInterval: interval, settleTimeoutMs }).pipe(Effect.asVoid)
-        ),
-        watch: reportDetachedMonitor(runYeetWatchLoop(options, untilEvent, { settleTimeoutMs })),
-      }[route],
-      stateRoot
+        );
+    return yield* Match.value(options.detach).pipe(
+      Match.when(true, () => provideYeetStateRoot(runYeetMode("monitor", options), stateRoot)),
+      Match.orElse(
+        Effect.fnUntraced(function* () {
+          const route = yeetMonitorCommandRoute({
+            plan: options.plan,
+            settleTimeout,
+            untilEvent,
+            untilMerged,
+            untilReady,
+            watch,
+          });
+          const settleTimeoutMs = yield* yeetMonitorDurationMillis(settleTimeout);
+          return yield* provideYeetStateRoot(
+            {
+              "invalid-settle-timeout": Effect.fail(
+                YeetCommandError.make({
+                  message: "--settle-timeout requires --until-merged, --until-ready, or --watch.",
+                  exitCode: 1,
+                })
+              ),
+              classic: runYeetMode("monitor", options),
+              "invalid-until-event": rejectYeetUntilEventPairing,
+              "invalid-until-ready": rejectYeetUntilReadyPairing,
+              "ready-loop": reportDetachedMonitor(
+                runYeetMergeLoop(options, {
+                  pollInterval: interval,
+                  policy: YeetUntilReadyPolicy.make({ settleTimeoutMs }),
+                }).pipe(Effect.asVoid)
+              ),
+              "merge-loop": reportDetachedMonitor(
+                runYeetMergeLoop(options, { pollInterval: interval, settleTimeoutMs }).pipe(Effect.asVoid)
+              ),
+              watch: reportDetachedMonitor(runYeetWatchLoop(options, untilEvent, { settleTimeoutMs })),
+            }[route],
+            stateRoot
+          );
+        })
+      )
     );
   })
 ).pipe(Command.withDescription("Monitor hosted PR checks for the current branch"));

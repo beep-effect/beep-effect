@@ -147,7 +147,8 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
         const inventory = offline ? emptyInventory : yield* (yield* online()).inventory;
         const journals = offline ? [] : yield* state.journals;
         const result = planContacts(source.contacts, source.unidentifiable, inventory, journals);
-        const report = reportPlan(yield* runId(), result.rows, result.untrackedTagged);
+        const resultId = yield* runId();
+        const report = reportPlan(resultId, result.rows, result.untrackedTagged);
         return { ...result, report, inventory, journals, census: source.census };
       });
       const failUntracked = (count: number) =>
@@ -376,7 +377,10 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
             return yield* ContactsError.make({ reason: "unsafe-export" });
           let ancestor = path.dirname(target);
           while (!(yield* fs.exists(ancestor))) ancestor = path.dirname(ancestor);
-          if (inside(yield* fs.realPath(ancestor))) return yield* ContactsError.make({ reason: "unsafe-export" });
+          const realPath1 = yield* fs.realPath(ancestor);
+          if (inside(realPath1)) {
+            return yield* ContactsError.make({ reason: "unsafe-export" });
+          }
           const contacts = (yield* (yield* online()).inventory).contacts;
           const lines = yield* Effect.forEach(
             contacts,
@@ -393,9 +397,11 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
           yield* fs.makeDirectory(path.dirname(target), { recursive: true, mode: 0o700 });
           yield* fs.chmod(path.dirname(target), 0o700);
           yield* fs.writeFileString(target, text, { flag: "wx", mode: 0o600 });
+          const argument = A.length(contacts);
+          const readFile1 = yield* fs.readFile(target);
           return {
-            count: A.length(contacts),
-            sha256: yield* checksum(yield* fs.readFile(target)).pipe(Effect.provideService(Digest.Digest, digest)),
+            count: argument,
+            sha256: yield* checksum(readFile1).pipe(Effect.provideService(Digest.Digest, digest)),
           };
         }),
       });

@@ -215,7 +215,8 @@ export const replaceNodeVersionWithFile: {
 
         // Add node-version-file: .nvmrc at the same level
         const withPath = A.dropRight(loc.yamlPath, 1);
-        const withNode = valueAtPath(yield* parseYamlFile(filePath, updated), withPath);
+        const parsedYamlFile = yield* parseYamlFile(filePath, updated);
+        const withNode = valueAtPath(parsedYamlFile, withPath);
 
         if (O.isSome(withNode) && P.isObject(withNode.value) && !A.isArray(withNode.value)) {
           // Set node-version-file on the `with:` block

@@ -47,6 +47,22 @@ const survivors = (versions: ReadonlyArray<ClaimVersion>, at = 10) =>
   A.map(resolveParties(versions, scope(at)).representatives, (row) => [row.party, row.survivor]);
 
 describe("cannot-link-first resolution", () => {
+  it.effect("ignores redundant merge edges and applies reversed veto endpoints", () =>
+    Effect.gen(function* () {
+      const rows = yield* Effect.all([
+        claim("a", pair("SameParty", 1, 2)),
+        claim("b", pair("SameParty", 2, 1)),
+        claim("c", pair("SameParty", 1, 3)),
+        claim("d", pair("DistinctParty", 3, 2)),
+      ]);
+      expect(survivors(rows)).toEqual([
+        [1, 1],
+        [2, 1],
+        [3, 3],
+      ]);
+      expect(resolveParties(rows, scope(10)).reviewCases).toHaveLength(1);
+    })
+  );
   it.effect("a late veto splits a prior merge only from its knowledge time", () =>
     Effect.gen(function* () {
       const rows = yield* Effect.all([

@@ -165,7 +165,8 @@ describe("Artifact", () => {
         { retentionDays: -1, compressionLevel: 12 },
       ]) {
         const plain: UploadOptions.Encoded = options;
-        assert.deepStrictEqual(yield* S.decodeEffect(UploadOptions)(plain), plain);
+        const value1 = yield* S.decodeEffect(UploadOptions)(plain);
+        assert.deepStrictEqual(value1, plain);
       }
       // Exact optional keys (EF-40): an optional key is omitted, never undefined.
       assert.isFalse(S.is(UploadOptions)({ retentionDays: undefined }));
@@ -173,10 +174,12 @@ describe("Artifact", () => {
       assert.isFalse(S.is(DownloadOptions)({ path: undefined }));
       for (const options of [{}, { path: "/out" }]) {
         const plain: DownloadOptions.Encoded = options;
-        assert.deepStrictEqual(yield* S.decodeEffect(DownloadOptions)(plain), plain);
+        const value2 = yield* S.decodeEffect(DownloadOptions)(plain);
+        assert.deepStrictEqual(value2, plain);
       }
       const result: DownloadResult.Encoded = { downloadPath: "/out" };
-      assert.deepStrictEqual(yield* S.decodeEffect(DownloadResult)(result), result);
+      const value3 = yield* S.decodeEffect(DownloadResult)(result);
+      assert.deepStrictEqual(value3, result);
       assert.isFalse(S.is(UploadOptions)({ retentionDays: Number.POSITIVE_INFINITY }));
       assert.isFalse(S.is(UploadOptions)({ compressionLevel: Number.NaN }));
       assert.isFalse(S.is(DownloadOptions)({ path: 1 }));
@@ -320,11 +323,10 @@ describe("Artifact", () => {
       it.effect("preserves missing-id defaults at finalize and delete boundaries", () =>
         Effect.gen(function* () {
           const artifacts = yield* Artifact;
-          assert.deepStrictEqual(
-            yield* artifacts.upload("logs", ["/work/a.txt"], "/work"),
-            UploadResult.make({ id: 0, size: 13 })
-          );
-          assert.deepStrictEqual(yield* artifacts.delete("logs"), ArtifactRef.make({ id: 11 }));
+          const upload4 = yield* artifacts.upload("logs", ["/work/a.txt"], "/work");
+          assert.deepStrictEqual(upload4, UploadResult.make({ id: 0, size: 13 }));
+          const delete5 = yield* artifacts.delete("logs");
+          assert.deepStrictEqual(delete5, ArtifactRef.make({ id: 11 }));
         })
       );
     });
@@ -361,10 +363,9 @@ describe("Artifact", () => {
           const finalize = O.getOrUndefined(A.findFirst(calls, (call) => call.method === "FinalizeArtifact"));
           // The digest is over the STORED zip. Hashing anything else produces a
           // finalize the backend accepts and an artifact it later refuses to serve.
-          assert.strictEqual(
-            finalize?.body.hash,
-            `sha256:${Buffer.from(yield* (yield* Digest.Digest).digest(Digest.sha256, uploaded ?? new Uint8Array())).toString("hex")}`
-          );
+          const argument = finalize?.body.hash;
+          const digest1 = yield* (yield* Digest.Digest).digest(Digest.sha256, uploaded ?? new Uint8Array());
+          assert.strictEqual(argument, `sha256:${Buffer.from(digest1).toString("hex")}`);
           assert.strictEqual(finalize?.body.size, String(uploaded?.byteLength));
           assert.strictEqual(result.id, 4242);
           assert.strictEqual(result.size, uploaded?.byteLength);
@@ -398,7 +399,8 @@ describe("Artifact", () => {
           // Absolute paths in the zip would extract into a tree named after the
           // runner that produced them — the file would be somewhere under
           // `out/private/var/folders/…` rather than where the caller asked.
-          assert.strictEqual(yield* fs.readFileString(join(destination, "src", "deep", "file.txt")), "contents");
+          const readFileString6 = yield* fs.readFileString(join(destination, "src", "deep", "file.txt"));
+          assert.strictEqual(readFileString6, "contents");
         })
       );
     });
@@ -512,7 +514,8 @@ describe("Artifact", () => {
             7
           );
           // Absent is an answer, not a failure — the same convention as a cache miss.
-          assertNone(yield* Effect.flatMap(Artifact, (artifacts) => artifacts.get("other")));
+          const flatMap7 = yield* Effect.flatMap(Artifact, (artifacts) => artifacts.get("other"));
+          assertNone(flatMap7);
         })
       );
     });
@@ -615,10 +618,12 @@ describe("Artifact", () => {
             if ("args" in command) {
               const script = commandArgs(command)[3] ?? "";
               const manifestPath = /ReadAllLines\('([^']*)'\)/.exec(script)?.[1] ?? "";
+              const argument1 = [...commandArgs(command)];
+              const readFile2 = yield* fs.readFile(manifestPath);
               spawns.push({
                 command: command.command,
-                args: [...commandArgs(command)],
-                manifest: Buffer.from(yield* fs.readFile(manifestPath)),
+                args: argument1,
+                manifest: Buffer.from(readFile2),
               });
             }
             const bytes = new TextEncoder().encode("System.IO.IOException: disk full");
@@ -711,7 +716,9 @@ describe("Artifact", () => {
           const expiry = O.getOrUndefined(A.findFirst(calls, (call) => call.method === "FinalizeArtifact"))?.body
             .expiresAt;
           assert.isString(expiry);
-          assert.isAbove(Date.parse(String(expiry)), yield* Clock.currentTimeMillis);
+          const argument2 = Date.parse(String(expiry));
+          const currentTimeMillis3 = yield* Clock.currentTimeMillis;
+          assert.isAbove(argument2, currentTimeMillis3);
         })
       );
     });
@@ -809,10 +816,10 @@ describe("DownloadResult codec property", () => {
     [Arbitrary.schema(DownloadResult)],
     ([value]) =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(
-          yield* S.decodeEffect(DownloadResult)(yield* S.encodeEffect(DownloadResult)(value)),
-          value
-        );
+        const argument3 = S.decodeEffect(DownloadResult);
+        const value4 = yield* S.encodeEffect(DownloadResult)(value);
+        const value8 = yield* argument3(value4);
+        assert.deepStrictEqual(value8, value);
       }),
     { arbitrary: fcRuns(100) }
   );

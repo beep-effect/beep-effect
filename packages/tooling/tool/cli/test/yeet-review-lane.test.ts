@@ -137,7 +137,8 @@ const rowsEquivalent = S.toEquivalence(ReviewLaneRow);
 describe("review lane ledger rows", () => {
   it.effect.prop("round-trips every generated row through the ledger line codec", [ReviewLaneRow], ([row]) =>
     Effect.gen(function* () {
-      const decoded = yield* ReviewLaneRowJson.decode(yield* ReviewLaneRowJson.encode(row));
+      const encoded = yield* ReviewLaneRowJson.encode(row);
+      const decoded = yield* ReviewLaneRowJson.decode(encoded);
       assertTrue(rowsEquivalent(decoded, row));
     })
   );
@@ -610,10 +611,12 @@ it.layer(Layer.mergeAll(Platform, TestConsole.layer), { timeout: "30 seconds" })
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* tempRoot("review-lane-empty-");
-      expect(yield* recordYeetReviewLaneRows(root, [])).toBe(0);
+      const recordYeetReviewLaneRows1 = yield* recordYeetReviewLaneRows(root, []);
+      expect(recordYeetReviewLaneRows1).toBe(0);
       const loaded = yield* readYeetReviewLaneLedger(root);
       expect(loaded.rows).toEqual([]);
-      expect(yield* fs.exists(loaded.ledgerPath)).toBe(false);
+      const exists2 = yield* fs.exists(loaded.ledgerPath);
+      expect(exists2).toBe(false);
     })
   );
 
@@ -621,17 +624,19 @@ it.layer(Layer.mergeAll(Platform, TestConsole.layer), { timeout: "30 seconds" })
     Effect.gen(function* () {
       const root = yield* tempRoot("review-lane-append-");
       const service = yield* YeetReviewLaneLedger.make(root);
-      expect(yield* service.appendNew([flip(5), review(2, 6, O.some(SHA_A))])).toBe(2);
-      expect(
-        yield* service.appendNew([
-          review(2, 6, O.some(SHA_A)),
-          review(3, 7, O.some(SHA_A), GREPTILE),
-          review(3, 7, O.some(SHA_A), GREPTILE),
-          disposition("PRRT_1", "fixed"),
-        ])
-      ).toBe(2);
-      expect(yield* service.appendNew([disposition("PRRT_1", "rejected")])).toBe(1);
-      expect(yield* service.appendNew([])).toBe(0);
+      const appendNew3 = yield* service.appendNew([flip(5), review(2, 6, O.some(SHA_A))]);
+      expect(appendNew3).toBe(2);
+      const appendNew4 = yield* service.appendNew([
+        review(2, 6, O.some(SHA_A)),
+        review(3, 7, O.some(SHA_A), GREPTILE),
+        review(3, 7, O.some(SHA_A), GREPTILE),
+        disposition("PRRT_1", "fixed"),
+      ]);
+      expect(appendNew4).toBe(2);
+      const appendNew5 = yield* service.appendNew([disposition("PRRT_1", "rejected")]);
+      expect(appendNew5).toBe(1);
+      const appendNew6 = yield* service.appendNew([]);
+      expect(appendNew6).toBe(0);
       const loaded = yield* service.load;
       expect(loaded.ledgerPath).toBe(`${root}/.beep/yeet/${YEET_REVIEW_LANE_LEDGER_FILE_NAME}`);
       expect(loaded.malformedRows).toBe(0);
@@ -680,8 +685,10 @@ it.layer(Layer.mergeAll(Platform, TestConsole.layer), { timeout: "30 seconds" })
         const unreadable = yield* readYeetReviewLaneLedger(root);
         expect(unreadable.unreadable).toBe(true);
         expect(unreadable.rows).toEqual([]);
-        expect(yield* recordYeetReviewLaneRows(root, [flip(5)])).toBe(0);
-        const warned = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+        const recordYeetReviewLaneRows7 = yield* recordYeetReviewLaneRows(root, [flip(5)]);
+        expect(recordYeetReviewLaneRows7).toBe(0);
+        const errorLines8 = yield* TestConsole.errorLines;
+        const warned = A.join(A.map(errorLines8, String), "\n");
         expect(warned).toContain("review lane ledger not updated");
       })
   );

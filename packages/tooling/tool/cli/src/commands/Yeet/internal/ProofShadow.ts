@@ -1415,7 +1415,8 @@ export const runYeetProofReport = Effect.fn("Yeet.runProofReportCommand")(functi
   options: YeetProofReportOptions,
   repoRoot: Effect.Effect<string, YeetCommandError, FileSystem.FileSystem> = locateRepoRoot
 ): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  const report = yield* loadProofShadowReport(yield* repoRoot, options.since);
+  const repoRoot1 = yield* repoRoot;
+  const report = yield* loadProofShadowReport(repoRoot1, options.since);
   if (options.json) {
     const json = yield* ProofShadowReportJson.encode(report).pipe(
       Effect.mapError(YeetCommandError.new("Failed to encode the proof shadow report."))

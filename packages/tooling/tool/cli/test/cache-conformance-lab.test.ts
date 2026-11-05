@@ -170,10 +170,14 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
         HttpClient.execute,
         Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status)))
       );
-      expect(yield* put).toBe(200);
-      expect(yield* put).toBe(200);
-      expect(yield* put).toBe(503);
-      expect(yield* put).toBe(503);
+      const put1 = yield* put;
+      expect(put1).toBe(200);
+      const put2 = yield* put;
+      expect(put2).toBe(200);
+      const put3 = yield* put;
+      expect(put3).toBe(503);
+      const put4 = yield* put;
+      expect(put4).toBe(503);
       expect((yield* server.tags).length).toBe(2);
       (yield* proxy.events.pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
@@ -198,7 +202,8 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
         HttpClient.execute
       );
       expect(response.status).toBe(413);
-      expect(yield* server.tags).toEqual([]);
+      const tags5 = yield* server.tags;
+      expect(tags5).toEqual([]);
       (yield* proxy.events.pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
@@ -222,9 +227,12 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
         HttpClient.execute,
         Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status)))
       );
-      expect(yield* put).toBe(200);
-      expect(yield* put).toBe(200);
-      expect(yield* put).toBe(503);
+      const put6 = yield* put;
+      expect(put6).toBe(200);
+      const put7 = yield* put;
+      expect(put7).toBe(200);
+      const put8 = yield* put;
+      expect(put8).toBe(503);
       expect((yield* server.tags).length).toBe(2);
       (yield* proxy.events.pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
@@ -290,7 +298,8 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
       yield* Deferred.succeed(release, undefined);
       yield* Fiber.join(upload);
       yield* Deferred.await(completed).pipe(Effect.timeout("5 seconds"));
-      expect(yield* server.tags).toEqual([]);
+      const tags9 = yield* server.tags;
+      expect(tags9).toEqual([]);
       (yield* Fiber.join(pendingReceipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
@@ -429,7 +438,8 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
         yield* HttpClient.get(url, { headers: { authorization: `Bearer ${secrets.reader}` } }).pipe(
           Effect.flatMap((reply) => reply.arrayBuffer)
         );
-        const encoded = yield* encodeProxyEvents(yield* proxy.events);
+        const events10 = yield* proxy.events;
+        const encoded = yield* encodeProxyEvents(events10);
         for (const secret of [secrets.reader, privatePath, canary]) expect(encoded).not.toContain(secret);
       }
     })
@@ -475,11 +485,14 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
       assertTrue(replied(plain, (reply) => reply.status === 200));
       assertSome(tagOf(plain), "Atag-value");
       (yield* read("missing-tag")).pipe(tagOf, assertNone);
-      assertSome(tagOf(yield* read("tampered-tag")), "Btag-value");
+      const read11 = yield* read("tampered-tag");
+      assertSome(tagOf(read11), "Btag-value");
       const tampered = yield* read("tampered-body");
       assertTrue(replied(tampered, (reply) => reply.body.byteLength === body.byteLength && reply.body[0] !== body[0]));
-      assertTrue(replied(yield* read("status-429"), (reply) => reply.status === 429));
-      assertTrue(replied(yield* read("status-503"), (reply) => reply.status === 503));
+      const read12 = yield* read("status-429");
+      assertTrue(replied(read12, (reply) => reply.status === 429));
+      const read13 = yield* read("status-503");
+      assertTrue(replied(read13, (reply) => reply.status === 503));
       const held = yield* read("timeout");
       assertTrue(Result.isSuccess(held) && O.isNone(held.success));
       (yield* read("reset")).pipe(abortedOrShimCompleted, assertTrue);
@@ -512,7 +525,8 @@ it.layer(Services, { timeout: "120 seconds", excludeTestServices: true })("cache
   it.effect("separates every proxied fault class and measures the envelopes", () =>
     Effect.gen(function* () {
       const server = yield* makeConformanceServer(goodMode);
-      const corpus = yield* buildCacheConformanceCorpus(yield* repoRoot);
+      const repoRoot14 = yield* repoRoot;
+      const corpus = yield* buildCacheConformanceCorpus(repoRoot14);
       const report = yield* runCacheConformanceLab(corpus, targetFor({ url: server.url }), bearers, envelope);
       expect(report.executors).toEqual(["lab"]);
       expect(report.representative).toBe(false);
@@ -536,14 +550,18 @@ it.layer(Services, { timeout: "120 seconds", excludeTestServices: true })("cache
       expect(caseOf(report, "RC-002").verdicts["strict-openapi"].verdict).toBe("not-executed");
       const encoded = yield* S.encodeEffect(RunJson)(report);
       for (const secret of R.values(secrets)) expect(encoded).not.toContain(secret);
-      expect(yield* S.encodeEffect(RunJson)(yield* S.decodeEffect(RunJson)(encoded))).toBe(encoded);
+      const argument = S.encodeEffect(RunJson);
+      const value1 = yield* S.decodeEffect(RunJson)(encoded);
+      const value15 = yield* argument(value1);
+      expect(value15).toBe(encoded);
     })
   );
 
   it.effect("labels only a disposable-deployment run representative", () =>
     Effect.gen(function* () {
       const server = yield* makeConformanceServer(goodMode);
-      const corpus = yield* buildCacheConformanceCorpus(yield* repoRoot);
+      const repoRoot16 = yield* repoRoot;
+      const corpus = yield* buildCacheConformanceCorpus(repoRoot16);
       const deployed = CacheConformanceTarget.make({
         ...targetFor({ url: server.url }),
         profile: "disposable-deployment",
@@ -596,9 +614,12 @@ const makeNativeClient = (
 ) => {
   const restore = Effect.fnUntraced(function* (run: SimulatedRun) {
     const response = yield* client.get(run.url, { headers: run.headers });
-    const stored = new Uint8Array(yield* response.arrayBuffer);
+    const arrayBuffer17 = yield* response.arrayBuffer;
+    const stored = new Uint8Array(arrayBuffer17);
     const tag = Headers.get(response.headers, "x-artifact-tag");
-    const verified = response.status === 200 && O.contains(tag, yield* sign(run.key, run.team, stored));
+    const verified =
+      response.status === 200 &&
+      (yield* Effect.map(sign(run.key, run.team, stored), (value) => O.contains(tag, value)));
     return { verified, stored };
   });
   const writeOutput = Effect.fnUntraced(function* (run: SimulatedRun, bytes: Uint8Array) {
@@ -618,20 +639,19 @@ const makeNativeClient = (
   });
   const writeSummary = Effect.fnUntraced(function* (run: SimulatedRun, verified: boolean, exitCode: number) {
     yield* fs.makeDirectory(path.join(run.work, ".turbo/runs"), { recursive: true });
-    yield* fs.writeFileString(
-      path.join(run.work, ".turbo/runs/run.json"),
-      yield* encodeSummaryJson({
-        turboVersion: "2.11.10",
-        tasks: [
-          {
-            taskId: "build",
-            hash: taskHash,
-            cache: verified ? { status: "HIT", source: "REMOTE" } : { status: "MISS" },
-            execution: { exitCode },
-          },
-        ],
-      })
-    );
+    const argument1 = path.join(run.work, ".turbo/runs/run.json");
+    const encodedSummaryJson = yield* encodeSummaryJson({
+      turboVersion: "2.11.10",
+      tasks: [
+        {
+          taskId: "build",
+          hash: taskHash,
+          cache: verified ? { status: "HIT", source: "REMOTE" } : { status: "MISS" },
+          execution: { exitCode },
+        },
+      ],
+    });
+    yield* fs.writeFileString(argument1, encodedSummaryJson);
   });
   return Effect.fn("ConformanceNativeTest.process")(
     function* (options: Parameters<typeof CacheRuntimeProcess.runCapturedStreams>[0]) {
@@ -641,8 +661,12 @@ const makeNativeClient = (
       const run = simulatedRun(options);
       const { verified, stored } = yield* restore(run);
       // Restored from a verified remote hit, executed when allowed, or denied (exit 42).
-      if (verified) yield* writeOutput(run, stored);
-      if (!verified && !run.deny) yield* writeOutput(run, simulatedOutput).pipe(Effect.andThen(upload(run)));
+      if (verified) {
+        yield* writeOutput(run, stored);
+      }
+      if (!verified && !run.deny) {
+        yield* writeOutput(run, simulatedOutput).pipe(Effect.andThen(upload(run)));
+      }
       const exitCode = verified || !run.deny ? 0 : 42;
       yield* writeSummary(run, verified, exitCode);
       return CacheRuntimeProcess.CapturedStreams.make({ exitCode, stdout: "", stderr: "", truncated: false });
@@ -663,12 +687,15 @@ const pin = CacheConformanceClientPin.make({
 const runNativeAgainst = Effect.fn("ConformanceNativeTest.run")(function* (mode: ServerMode) {
   const fs = yield* FileSystem.FileSystem;
   vi.spyOn(Evidence, "hashCacheExperimentExecutable").mockImplementation(() => Effect.succeed(pin.executableSha256));
-  vi.spyOn(CacheRuntimeProcess, "runCapturedStreams").mockImplementation(
-    makeNativeClient(fs, yield* Path.Path, yield* HttpClient.HttpClient, yield* Digest.Digest)
-  );
+  const argument2 = vi.spyOn(CacheRuntimeProcess, "runCapturedStreams");
+  const argument3 = yield* Path.Path;
+  const argument4 = yield* HttpClient.HttpClient;
+  const Digest2 = yield* Digest.Digest;
+  argument2.mockImplementation(makeNativeClient(fs, argument3, argument4, Digest2));
   const server = yield* makeConformanceServer({ ...mode, bindTenant: false });
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-conformance-native-" });
-  const corpus = yield* buildCacheConformanceCorpus(yield* repoRoot);
+  const repoRoot18 = yield* repoRoot;
+  const corpus = yield* buildCacheConformanceCorpus(repoRoot18);
   const target = targetFor({ url: server.url, tenantBinding: false });
   return {
     corpus,
@@ -716,7 +743,8 @@ it.layer(Services, { timeout: "180 seconds", excludeTestServices: true })("cache
       expect(caseOf(merged, "RC-017").verdicts["published-stable-client"].verdict).toBe("pass");
       expect(caseOf(merged, "RC-023").verdicts.observability.verdict).toBe(abortsConnections ? "pass" : "fail");
       const incumbent = CacheConformanceRun.make({ ...wire, topology: "beep-incumbent" });
-      const comparison = yield* compareCacheConformanceRuns(yield* repoRoot, [wire, native, lab, incumbent]);
+      const repoRoot19 = yield* repoRoot;
+      const comparison = yield* compareCacheConformanceRuns(repoRoot19, [wire, native, lab, incumbent]);
       expect(comparison.verdict).toContain("No eligible replacement");
       expect(comparison.eligibleReplacements).toEqual([]);
       const candidate = A.findFirst(comparison.targets, (entry) => entry.topology === "owned-fixture").pipe(
@@ -733,28 +761,34 @@ it.layer(Services, { timeout: "180 seconds", excludeTestServices: true })("cache
       const markdown = renderCacheConformanceComparison(comparison);
       expect(markdown).toContain("No eligible replacement");
       const encoded = yield* S.encodeEffect(ComparisonJson)(comparison);
-      expect(yield* S.encodeEffect(ComparisonJson)(yield* S.decodeEffect(ComparisonJson)(encoded))).toBe(encoded);
+      const argument5 = S.encodeEffect(ComparisonJson);
+      const value3 = yield* S.decodeEffect(ComparisonJson)(encoded);
+      const value20 = yield* argument5(value3);
+      expect(value20).toBe(encoded);
     })
   );
 
   it.effect("refuses to compare targets scored against different corpora", () =>
     Effect.gen(function* () {
       const server = yield* makeConformanceServer(goodMode);
-      const corpus = yield* buildCacheConformanceCorpus(yield* repoRoot);
+      const repoRoot21 = yield* repoRoot;
+      const corpus = yield* buildCacheConformanceCorpus(repoRoot21);
       const wire = yield* runCacheConformance(corpus, targetFor({ url: server.url }), bearers);
       const regenerated = CacheConformanceRun.make({
         ...wire,
         topology: "beep-incumbent",
         corpus: { ...wire.corpus, specSha256: Sha256Hex.make(Str.repeat(64)("b")) },
       });
-      const outcome = yield* compareCacheConformanceRuns(yield* repoRoot, [wire, regenerated]).pipe(Effect.result);
+      const repoRoot22 = yield* repoRoot;
+      const outcome = yield* compareCacheConformanceRuns(repoRoot22, [wire, regenerated]).pipe(Effect.result);
       outcome.pipe(Result.isFailure, assertTrue);
     })
   );
 
   it.effect("never compares a candidate with another profile's incumbent", () =>
     Effect.gen(function* () {
-      const corpus = yield* buildCacheConformanceCorpus(yield* repoRoot);
+      const repoRoot23 = yield* repoRoot;
+      const corpus = yield* buildCacheConformanceCorpus(repoRoot23);
       const good = yield* makeConformanceServer(goodMode);
       const weak = yield* makeConformanceServer({ ...goodMode, bindTenant: false });
       const candidate = yield* runCacheConformance(corpus, targetFor({ url: good.url }), bearers);
@@ -766,7 +800,8 @@ it.layer(Services, { timeout: "180 seconds", excludeTestServices: true })("cache
         profile: "disposable-deployment",
         topology: "beep-incumbent",
       });
-      const comparison = yield* compareCacheConformanceRuns(yield* repoRoot, [candidate, otherProfileIncumbent]);
+      const repoRoot24 = yield* repoRoot;
+      const comparison = yield* compareCacheConformanceRuns(repoRoot24, [candidate, otherProfileIncumbent]);
       const target = A.findFirst(comparison.targets, (entry) => entry.topology === "owned-fixture").pipe(O.getOrThrow);
       expect(target.blockersRemoved).toEqual([]);
       expect(target.regressions).toEqual([]);
@@ -776,7 +811,8 @@ it.layer(Services, { timeout: "180 seconds", excludeTestServices: true })("cache
   it.effect("lets executed external evidence and pinned licenses settle gates", () =>
     Effect.gen(function* () {
       const server = yield* makeConformanceServer(goodMode);
-      const corpus = yield* buildCacheConformanceCorpus(yield* repoRoot);
+      const repoRoot25 = yield* repoRoot;
+      const corpus = yield* buildCacheConformanceCorpus(repoRoot25);
       const wire = yield* runCacheConformance(corpus, targetFor({ url: server.url }), bearers);
       const pinned = CacheConformanceRun.make({
         ...wire,
@@ -812,7 +848,8 @@ it.layer(Services, { timeout: "180 seconds", excludeTestServices: true })("cache
           }),
         ],
       });
-      const comparison = yield* compareCacheConformanceRuns(yield* repoRoot, [pinned], [document]);
+      const repoRoot26 = yield* repoRoot;
+      const comparison = yield* compareCacheConformanceRuns(repoRoot26, [pinned], [document]);
       const target = A.head(comparison.targets).pipe(O.getOrThrow);
       const status = (gate: number) =>
         A.findFirst(target.gates, (result) => result.gate === gate).pipe(
@@ -823,7 +860,8 @@ it.layer(Services, { timeout: "180 seconds", excludeTestServices: true })("cache
       expect(comparison.evidenceSources).toEqual(["test/deployed-evidence"]);
       const gate9 = A.findFirst(target.gates, (result) => result.gate === 9).pipe(O.getOrThrow);
       expect(gate9.reason).toContain("demand is censored");
-      const bare = yield* compareCacheConformanceRuns(yield* repoRoot, [wire]);
+      const repoRoot27 = yield* repoRoot;
+      const bare = yield* compareCacheConformanceRuns(repoRoot27, [wire]);
       const unpinned = A.findFirst(A.head(bare.targets).pipe(O.getOrThrow).gates, (result) => result.gate === 12).pipe(
         O.getOrThrow
       );
@@ -864,7 +902,9 @@ it.effect.prop(
   ({ event }) =>
     Effect.gen(function* () {
       const encoded = yield* encodeProxyEvent(CacheConformanceProxyEvent.make(event));
-      expect(yield* encodeProxyEvent(yield* decodeProxyEvent(encoded))).toBe(encoded);
+      const decodedProxyEvent = yield* decodeProxyEvent(encoded);
+      const encodedProxyEvent = yield* encodeProxyEvent(decodedProxyEvent);
+      expect(encodedProxyEvent).toBe(encoded);
     }),
   { arbitrary: { runs: 50 } }
 );

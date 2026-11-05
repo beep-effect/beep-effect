@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "claim-performance-rejected-candidate/v1",
+  "sourceFreeze": "research/implementation-lexical-dependency-001.json",
+  "resultSha256": "dd98057188895089d5cb9a6052c1f24ac06d996556e53512fcbbac2296c20112",
+  "hypothesis": "Reuse unique modified/count/alias antecedent identity for immediate-parent body dependency",
+  "strictMatches": 33,
+  "selectedClaims": 538,
+  "newStrictMatches": 0,
+  "lostOriginalPasses": [
+    "13070851-root-1:5",
+    "13070851-root-1:6",
+    "13822885-root-1:9",
+    "15752303-root-1:6"
+  ],
+  "focusedTestsPassed": 21,
+  "independentCodeReviewRequiredFindings": 0,
+  "accepted": false,
+  "runtimeRepairReverted": true,
+  "retainedProductionStrictMatches": 37,
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "goalComplete": false
+}

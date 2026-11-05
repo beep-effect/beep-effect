@@ -104,9 +104,12 @@ describe("ProofLedger", () => {
           Effect.gen(function* () {
             const decision = yield* ledger.lookup(input(), NOW);
             expect(decision).toStrictEqual(ProofReuseMiss.make({ key: "proof-key", reason: "no-fact" }));
-            expect(yield* ledger.malformedRows).toBe(0);
-            expect(yield* ledger.expire(NOW)).toBe(0);
-            expect(yield* ledger.disagreements).toStrictEqual([]);
+            const malformedRows1 = yield* ledger.malformedRows;
+            expect(malformedRows1).toBe(0);
+            const expire2 = yield* ledger.expire(NOW);
+            expect(expire2).toBe(0);
+            const disagreements3 = yield* ledger.disagreements;
+            expect(disagreements3).toStrictEqual([]);
           })
         )
       )
@@ -144,9 +147,8 @@ describe("ProofLedger", () => {
             yield* ledger.record(fact());
             yield* ledger.record(fact({ outcome: "failed", recordedAt: "2026-09-03T12:10:00.000Z" }));
 
-            expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
-              ProofReuseMiss.make({ key: "proof-key", reason: "prior-failed" })
-            );
+            const lookup4 = yield* ledger.lookup(input(), NOW);
+            expect(lookup4).toStrictEqual(ProofReuseMiss.make({ key: "proof-key", reason: "prior-failed" }));
           })
         )
       )
@@ -159,13 +161,13 @@ describe("ProofLedger", () => {
         withLedger(root, (ledger) =>
           Effect.gen(function* () {
             yield* ledger.record(fact({ expiresAt: "2026-09-03T12:15:00.000Z" }));
-            expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
-              ProofReuseMiss.make({ key: "proof-key", reason: "expired" })
-            );
+            const lookup5 = yield* ledger.lookup(input(), NOW);
+            expect(lookup5).toStrictEqual(ProofReuseMiss.make({ key: "proof-key", reason: "expired" }));
 
             yield* ledger.record(fact({ key: input({ key: "invalid-expiry" }), expiresAt: "not-a-date" }));
             yield* ledger.record(fact({ key: input({ key: "active" }), expiresAt: "2026-09-03T13:00:00.000Z" }));
-            expect(yield* ledger.expire(NOW)).toBe(2);
+            const expire6 = yield* ledger.expire(NOW);
+            expect(expire6).toBe(2);
           })
         )
       )
@@ -179,27 +181,22 @@ describe("ProofLedger", () => {
           Effect.gen(function* () {
             yield* ledger.record(fact());
 
-            expect(yield* ledger.lookup(input({ key: "epoch-key", epochDigest: "epoch-2" }), NOW)).toStrictEqual(
-              ProofReuseMiss.make({ key: "epoch-key", reason: "epoch-changed" })
-            );
-            expect(yield* ledger.lookup(input({ key: "profile-key", envProfile: "pr-posture" }), NOW)).toStrictEqual(
-              ProofReuseMiss.make({ key: "profile-key", reason: "profile-mismatch" })
-            );
-            expect(yield* ledger.lookup(input({ key: "inconsistent-key" }), NOW)).toStrictEqual(
-              ProofReuseMiss.make({ key: "inconsistent-key", reason: "no-fact" })
-            );
-            expect(yield* ledger.lookup(input({ key: "new-input", inputDigest: "changed-input" }), NOW)).toStrictEqual(
-              ProofReuseMiss.make({ key: "new-input", reason: "no-fact" })
-            );
+            const lookup7 = yield* ledger.lookup(input({ key: "epoch-key", epochDigest: "epoch-2" }), NOW);
+            expect(lookup7).toStrictEqual(ProofReuseMiss.make({ key: "epoch-key", reason: "epoch-changed" }));
+            const lookup8 = yield* ledger.lookup(input({ key: "profile-key", envProfile: "pr-posture" }), NOW);
+            expect(lookup8).toStrictEqual(ProofReuseMiss.make({ key: "profile-key", reason: "profile-mismatch" }));
+            const lookup9 = yield* ledger.lookup(input({ key: "inconsistent-key" }), NOW);
+            expect(lookup9).toStrictEqual(ProofReuseMiss.make({ key: "inconsistent-key", reason: "no-fact" }));
+            const lookup10 = yield* ledger.lookup(input({ key: "new-input", inputDigest: "changed-input" }), NOW);
+            expect(lookup10).toStrictEqual(ProofReuseMiss.make({ key: "new-input", reason: "no-fact" }));
 
             yield* ledger.record(
               fact({
                 key: input({ commandDigest: "corrupt-command", key: "colliding-key" }),
               })
             );
-            expect(yield* ledger.lookup(input({ key: "colliding-key" }), NOW)).toStrictEqual(
-              ProofReuseMiss.make({ key: "colliding-key", reason: "no-fact" })
-            );
+            const lookup11 = yield* ledger.lookup(input({ key: "colliding-key" }), NOW);
+            expect(lookup11).toStrictEqual(ProofReuseMiss.make({ key: "colliding-key", reason: "no-fact" }));
 
             yield* ledger.record(
               fact({
@@ -207,18 +204,19 @@ describe("ProofLedger", () => {
                 key: input({ epochDigest: "different-epoch", key: "inconsistent-epoch" }),
               })
             );
-            expect(
-              yield* ledger.lookup(input({ epochDigest: "different-epoch", key: "inconsistent-epoch" }), NOW)
-            ).toStrictEqual(ProofReuseMiss.make({ key: "inconsistent-epoch", reason: "no-fact" }));
+            const lookup12 = yield* ledger.lookup(
+              input({ epochDigest: "different-epoch", key: "inconsistent-epoch" }),
+              NOW
+            );
+            expect(lookup12).toStrictEqual(ProofReuseMiss.make({ key: "inconsistent-epoch", reason: "no-fact" }));
 
             yield* ledger.record(
               fact({
                 key: input({ inputSource: "undeclared", key: "undeclared-fact" }),
               })
             );
-            expect(yield* ledger.lookup(input({ key: "undeclared-fact" }), NOW)).toStrictEqual(
-              ProofReuseMiss.make({ key: "undeclared-fact", reason: "no-fact" })
-            );
+            const lookup13 = yield* ledger.lookup(input({ key: "undeclared-fact" }), NOW);
+            expect(lookup13).toStrictEqual(ProofReuseMiss.make({ key: "undeclared-fact", reason: "no-fact" }));
           })
         )
       )
@@ -231,16 +229,16 @@ describe("ProofLedger", () => {
         Effect.gen(function* () {
           yield* withLedger(root, (ledger) =>
             Effect.gen(function* () {
-              expect(yield* ledger.lookup(input({ inputSource: "undeclared" }), NOW)).toStrictEqual(
-                ProofReuseMiss.make({ key: "proof-key", reason: "undeclared-inputs" })
-              );
+              const lookup14 = yield* ledger.lookup(input({ inputSource: "undeclared" }), NOW);
+              expect(lookup14).toStrictEqual(ProofReuseMiss.make({ key: "proof-key", reason: "undeclared-inputs" }));
             })
           );
           yield* withLedger(
             root,
             (ledger) =>
               Effect.gen(function* () {
-                expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
+                const lookup15 = yield* ledger.lookup(input(), NOW);
+                expect(lookup15).toStrictEqual(
                   ProofReuseMiss.make({ key: "proof-key", reason: "changed-package-tripwire" })
                 );
               }),
@@ -264,7 +262,8 @@ describe("ProofLedger", () => {
                 fact: fact({ key: input({ laneId: "quality:check", key: "check-key" }), outcome: "failed" }),
               }),
             ]);
-            const contents = yield* fs.readFileString(yield* proofLedgerPathForCheckout(root));
+            const proofLedgerPathForCheckout16 = yield* proofLedgerPathForCheckout(root);
+            const contents = yield* fs.readFileString(proofLedgerPathForCheckout16);
             expect(A.length(A.filter(Str.split(contents, "\n"), Str.isNonEmpty))).toBe(2);
 
             const decisions = yield* ledger.lookupAll(
@@ -282,7 +281,8 @@ describe("ProofLedger", () => {
               ProofReuseMiss.make({ key: "labs-key", reason: "undeclared-inputs" }),
               ProofReuseMiss.make({ key: "lint-key", reason: "no-fact" }),
             ]);
-            expect(yield* ledger.lookupAll([], NOW)).toStrictEqual([]);
+            const lookupAll17 = yield* ledger.lookupAll([], NOW);
+            expect(lookupAll17).toStrictEqual([]);
             const snapshot = yield* ledger.snapshot(NOW);
             expect(snapshot).toMatchObject({ facts: 2, expiredFacts: 0, malformedRows: 0 });
             expect(snapshot.shadowRows).toStrictEqual([]);
@@ -293,7 +293,8 @@ describe("ProofLedger", () => {
               ProofReuseMiss.make({ key: "proof-key", reason: "changed-package-tripwire" }),
             ]);
             yield* ledger.appendAll([]);
-            expect(yield* ledger.facts).toBe(2);
+            const facts18 = yield* ledger.facts;
+            expect(facts18).toBe(2);
           })
         )
       )
@@ -350,7 +351,8 @@ describe("ProofLedger", () => {
               })
             );
 
-            expect(yield* ledger.disagreements).toStrictEqual([disagreement]);
+            const disagreements19 = yield* ledger.disagreements;
+            expect(disagreements19).toStrictEqual([disagreement]);
           })
         )
       )
@@ -368,8 +370,10 @@ describe("ProofLedger", () => {
             yield* fs.writeFileString(ledgerPath, "malformed\n", { flag: "a" });
             yield* fs.writeFileString(ledgerPath, '{"kind":"shadow"', { flag: "a" });
 
-            expect(yield* ledger.malformedRows).toBe(1);
-            expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
+            const malformedRows20 = yield* ledger.malformedRows;
+            expect(malformedRows20).toBe(1);
+            const lookup21 = yield* ledger.lookup(input(), NOW);
+            expect(lookup21).toStrictEqual(
               ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" })
             );
 
@@ -378,10 +382,12 @@ describe("ProofLedger", () => {
               recordedAt: "2026-09-03T12:40:00.000Z",
             });
             yield* ledger.record(recoveredFact);
-            expect(yield* ledger.lookup(input({ key: "recovered-key" }), NOW)).toStrictEqual(
+            const lookup22 = yield* ledger.lookup(input({ key: "recovered-key" }), NOW);
+            expect(lookup22).toStrictEqual(
               ProofReuseHit.make({ key: "recovered-key", factRecordedAt: "2026-09-03T12:40:00.000Z" })
             );
-            expect(yield* ledger.malformedRows).toBe(2);
+            const malformedRows23 = yield* ledger.malformedRows;
+            expect(malformedRows23).toBe(2);
           })
         )
       )
@@ -395,15 +401,16 @@ describe("ProofLedger", () => {
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const ledgerPath = yield* proofLedgerPathForCheckout(root);
-            yield* fs.makeDirectory(yield* Effect.map(Path.Path, (path) => path.dirname(ledgerPath)), {
+            const map24 = yield* Effect.map(Path.Path, (path) => path.dirname(ledgerPath));
+            yield* fs.makeDirectory(map24, {
               recursive: true,
             });
             yield* fs.writeFileString(ledgerPath, '{"kind":"fact"');
 
-            expect(yield* ledger.malformedRows).toBe(0);
-            expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
-              ProofReuseMiss.make({ key: "proof-key", reason: "no-fact" })
-            );
+            const malformedRows25 = yield* ledger.malformedRows;
+            expect(malformedRows25).toBe(0);
+            const lookup26 = yield* ledger.lookup(input(), NOW);
+            expect(lookup26).toStrictEqual(ProofReuseMiss.make({ key: "proof-key", reason: "no-fact" }));
           })
         )
       )
@@ -490,11 +497,13 @@ describe("ProofLedger", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const { clone, ledgerPath } = yield* cloneWithLanes([], false);
-        expect(yield* resolveProofLedgerLocation(clone)).toStrictEqual(
+        const resolvedProofLedgerLocation = yield* resolveProofLedgerLocation(clone);
+        expect(resolvedProofLedgerLocation).toStrictEqual(
           ProofLedgerLocation.make({ originRoot: clone, ledgerRoot: clone, ledgerPath })
         );
         const bare = yield* fs.makeTempDirectoryScoped({ prefix: "proof-ledger-bare-" });
-        expect(yield* proofLedgerPathForCheckout(bare)).toBe(path.join(bare, ".beep", "yeet", "proof-ledger.ndjson"));
+        const proofLedgerPathForCheckout27 = yield* proofLedgerPathForCheckout(bare);
+        expect(proofLedgerPathForCheckout27).toBe(path.join(bare, ".beep", "yeet", "proof-ledger.ndjson"));
       })
     );
 
@@ -503,13 +512,15 @@ describe("ProofLedger", () => {
       Effect.fnUntraced(function* () {
         const absolute = yield* cloneWithLanes(["lane-a"], false);
         const laneA = A.getUnsafe(absolute.lanes, 0);
-        expect(yield* resolveProofLedgerLocation(laneA)).toStrictEqual(
+        const resolvedProofLedgerLocation28 = yield* resolveProofLedgerLocation(laneA);
+        expect(resolvedProofLedgerLocation28).toStrictEqual(
           ProofLedgerLocation.make({ originRoot: laneA, ledgerRoot: absolute.clone, ledgerPath: absolute.ledgerPath })
         );
         // `git worktree add` with `worktree.useRelativePaths` writes a relative gitdir,
         // which resolves against the worktree itself.
         const relative = yield* cloneWithLanes(["lane-r"], true);
-        expect(yield* proofLedgerPathForCheckout(A.getUnsafe(relative.lanes, 0))).toBe(relative.ledgerPath);
+        const proofLedgerPathForCheckout29 = yield* proofLedgerPathForCheckout(A.getUnsafe(relative.lanes, 0));
+        expect(proofLedgerPathForCheckout29).toBe(relative.ledgerPath);
       })
     );
 
@@ -527,7 +538,8 @@ describe("ProofLedger", () => {
         yield* fs.makeDirectory(lane, { recursive: true });
         yield* fs.writeFileString(path.join(gitDir, "commondir"), "../..\n");
         yield* fs.writeFileString(path.join(lane, ".git"), `gitdir: ${gitDir}\n`);
-        expect(yield* resolveProofLedgerLocation(lane)).toStrictEqual(
+        const resolvedProofLedgerLocation30 = yield* resolveProofLedgerLocation(lane);
+        expect(resolvedProofLedgerLocation30).toStrictEqual(
           ProofLedgerLocation.make({
             originRoot: lane,
             ledgerRoot: common,
@@ -550,7 +562,8 @@ describe("ProofLedger", () => {
         yield* fs.makeDirectory(gitDir, { recursive: true });
         yield* fs.makeDirectory(checkout, { recursive: true });
         yield* fs.writeFileString(path.join(checkout, ".git"), "gitdir: ../store/repo.git\n");
-        expect(yield* resolveProofLedgerLocation(checkout)).toStrictEqual(
+        const resolvedProofLedgerLocation31 = yield* resolveProofLedgerLocation(checkout);
+        expect(resolvedProofLedgerLocation31).toStrictEqual(
           ProofLedgerLocation.make({
             originRoot: checkout,
             ledgerRoot: gitDir,
@@ -585,7 +598,8 @@ describe("ProofLedger", () => {
         yield* fs.makeDirectory(gitDir);
         yield* fs.writeFileString(path.join(checkout, ".git"), "gitdir: ../metadata.git\n");
 
-        expect(yield* resolveProofLedgerLocation(checkout)).toStrictEqual(
+        const resolvedProofLedgerLocation32 = yield* resolveProofLedgerLocation(checkout);
+        expect(resolvedProofLedgerLocation32).toStrictEqual(
           ProofLedgerLocation.make({
             originRoot: checkout,
             ledgerRoot: gitDir,
@@ -607,13 +621,19 @@ describe("ProofLedger", () => {
         yield* fromA.record(fact({ provenance: ProofProvenance.make({ ...fact().provenance, originKey: laneA }) }));
 
         const hit = ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" });
-        expect(yield* (yield* ProofLedger.make(laneB)).lookup(input(), NOW)).toStrictEqual(hit);
-        expect(yield* (yield* ProofLedger.make(clone)).lookup(input(), NOW)).toStrictEqual(hit);
+        const lookup33 = yield* (yield* ProofLedger.make(laneB)).lookup(input(), NOW);
+        expect(lookup33).toStrictEqual(hit);
+        const lookup34 = yield* (yield* ProofLedger.make(clone)).lookup(input(), NOW);
+        expect(lookup34).toStrictEqual(hit);
         // The row lands in the clone, carries the lane that ran as its origin, and no lane
         // keeps a private ledger that `yeet sweep --retire` would delete.
-        expect(Str.includes(`"originKey":"${laneA}"`)(yield* fs.readFileString(ledgerPath))).toBe(true);
-        expect(yield* fs.exists(path.join(laneA, ".beep"))).toBe(false);
-        expect(yield* fs.exists(path.join(laneB, ".beep"))).toBe(false);
+        const argument = Str.includes(`"originKey":"${laneA}"`);
+        const readFileString1 = yield* fs.readFileString(ledgerPath);
+        expect(argument(readFileString1)).toBe(true);
+        const exists35 = yield* fs.exists(path.join(laneA, ".beep"));
+        expect(exists35).toBe(false);
+        const exists36 = yield* fs.exists(path.join(laneB, ".beep"));
+        expect(exists36).toBe(false);
       })
     );
   });

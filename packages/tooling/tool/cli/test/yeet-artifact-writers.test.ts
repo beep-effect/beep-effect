@@ -221,7 +221,8 @@ it.layer(platformLayer, { timeout: "30 seconds" })("writeRunVerdict", (it) => {
         "threads-resolved"
       );
 
-      const journalText = yield* fs.readFileString(yield* attemptJournalPath(context));
+      const attemptJournalPath1 = yield* attemptJournalPath(context);
+      const journalText = yield* fs.readFileString(attemptJournalPath1);
       const journalEvents = yield* Effect.forEach(
         pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)),
         (line) => decodeYeetAttemptJournalEvent(line)
@@ -263,7 +264,8 @@ it.layer(platformLayer, { timeout: "30 seconds" })("writeRunVerdict", (it) => {
 
       const decoded = yield* YeetVerdictJson.decode(text);
       assertNone(decoded.mergeReady);
-      const journalText = yield* fs.readFileString(yield* attemptJournalPath(context));
+      const attemptJournalPath2 = yield* attemptJournalPath(context);
+      const journalText = yield* fs.readFileString(attemptJournalPath2);
       const events = yield* Effect.forEach(pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
         decodeYeetAttemptJournalEvent(line)
       );
@@ -284,7 +286,8 @@ it.layer(platformLayer, { timeout: "30 seconds" })("writeRunVerdict", (it) => {
       yield* ensureAttemptTerminatedForTesting(context, attempt, terminalWritten, Exit.interrupt());
       yield* ensureAttemptTerminatedForTesting(context, attempt, terminalWritten, Exit.interrupt());
 
-      const journalText = yield* fs.readFileString(yield* attemptJournalPath(context));
+      const attemptJournalPath3 = yield* attemptJournalPath(context);
+      const journalText = yield* fs.readFileString(attemptJournalPath3);
       const events = yield* Effect.forEach(pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
         decodeYeetAttemptJournalEvent(line)
       );
@@ -325,7 +328,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const context = contextForRoot(tmpDir);
 
         const reportPath = yield* writePrCloseoutReportForTesting(context, closeoutReportWith(O.some(reviewedSha)));
-        expect(reportPath).toBe(yield* runArtifactPathForContext(context, "pr-closeout.json"));
+        const expectation = expect(reportPath);
+        const resultArtifactPathForContext = yield* runArtifactPathForContext(context, "pr-closeout.json");
+        expectation.toBe(resultArtifactPathForContext);
 
         const text = yield* fs.readFileString(reportPath);
         expect(text).not.toContain('"_id":"Option"');

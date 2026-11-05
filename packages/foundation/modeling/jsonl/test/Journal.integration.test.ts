@@ -81,7 +81,8 @@ it.layer(MemoryFileSystem.layer, { excludeTestServices: true, timeout: "10 secon
       assertSome((yield* SubscriptionRef.get(first.latest)).pipe(O.map((row) => row.line.offset)), 0);
       const appended = yield* first.append("noted", { round: 2, label: "second" });
       const second = yield* open(fs, { path });
-      assertSome(yield* SubscriptionRef.get(second.latest), appended);
+      const got = yield* SubscriptionRef.get(second.latest);
+      assertSome(got, appended);
     })
   );
   // Filesystem notifications need the live clock for a useful timeout. No sleep
@@ -98,8 +99,9 @@ it.layer(MemoryFileSystem.layer, { excludeTestServices: true, timeout: "10 secon
           .changes({ events: ["noted"] })
           .pipe(Stream.take(1), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
         yield* writer.append("noted", { round: 1, label: "writer" });
+        const join1 = yield* Fiber.join(observing);
         assert.deepStrictEqual(
-          A.map(yield* Fiber.join(observing), (row) => row.data),
+          A.map(join1, (row) => row.data),
           [{ round: 1, label: "writer" }]
         );
       }).pipe(Effect.timeout(Duration.seconds(10))),

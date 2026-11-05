@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-03T11:22:17.459Z",
+  "generatedAt": "2026-11-03T10:41:25.168Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -581196,8 +581196,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Yeet/Yeet.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
-          "line": 506,
-          "anchor": "packages-tooling-tool-cli-src-commands-yeet-yeet-command-ts-506-yeetmonitordurationmillis",
+          "line": 502,
+          "anchor": "packages-tooling-tool-cli-src-commands-yeet-yeet-command-ts-502-yeetmonitordurationmillis",
           "currentTags": [
             "@param",
             "@returns",
@@ -581220,8 +581220,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Yeet/Yeet.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
-          "line": 1049,
-          "anchor": "packages-tooling-tool-cli-src-commands-yeet-yeet-command-ts-1049-yeetmonitorcommandroute",
+          "line": 1040,
+          "anchor": "packages-tooling-tool-cli-src-commands-yeet-yeet-command-ts-1040-yeetmonitorcommandroute",
           "currentTags": [
             "@param",
             "@returns",
@@ -581244,8 +581244,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Yeet/Yeet.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
-          "line": 1399,
-          "anchor": "packages-tooling-tool-cli-src-commands-yeet-yeet-command-ts-1399-yeetcommand",
+          "line": 1390,
+          "anchor": "packages-tooling-tool-cli-src-commands-yeet-yeet-command-ts-1390-yeetcommand",
           "currentTags": [
             "@category",
             "@since"

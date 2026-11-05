@@ -65,10 +65,8 @@ it.effect.prop(
         A.map(specifierLiterals(lex(canonical)), (literal) => literal.value),
         parsed
       );
-      assert.strictEqual(
-        yield* render(A.map(specifierLiterals(lex(canonical)), (literal) => literal.value)),
-        canonical
-      );
+      const render1 = yield* render(A.map(specifierLiterals(lex(canonical)), (literal) => literal.value));
+      assert.strictEqual(render1, canonical);
     }),
   runs
 );

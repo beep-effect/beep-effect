@@ -65,8 +65,10 @@ const RunScopesDisabled = ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" }).p
 );
 
 const consoleText = Effect.fn("QualityCommandDispatchTest.consoleText")(function* () {
-  const logs = A.filter(yield* TestConsole.logLines, P.isString);
-  const errors = A.filter(yield* TestConsole.errorLines, P.isString);
+  const logLines1 = yield* TestConsole.logLines;
+  const logs = A.filter(logLines1, P.isString);
+  const errorLines2 = yield* TestConsole.errorLines;
+  const errors = A.filter(errorLines2, P.isString);
   return A.join(A.appendAll(logs, errors), "\n");
 });
 
@@ -79,7 +81,8 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
       const repoRoot = yield* fs.makeTempDirectoryScoped({ directory: originalCwd, prefix: "tsgo-smoke-test-" });
       const tempRoot = path.join(repoRoot, "node_modules", ".tmp");
       yield* fs.writeFileString(path.join(repoRoot, "bun.lock"), "");
-      expect(yield* fs.exists(tempRoot)).toBe(false);
+      const exists3 = yield* fs.exists(tempRoot);
+      expect(exists3).toBe(false);
       yield* Effect.acquireRelease(
         Effect.sync(() => process.chdir(repoRoot)),
         () => Effect.sync(() => process.chdir(originalCwd))
@@ -91,8 +94,10 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
       expect(spawnedLines(spawner)).toEqual([
         expect.stringContaining(path.join(repoRoot, "node_modules", ".bin", "effect-tsgo")),
       ]);
-      expect(yield* fs.exists(tempRoot)).toBe(true);
-      expect(yield* fs.readDirectory(tempRoot)).toEqual([]);
+      const exists4 = yield* fs.exists(tempRoot);
+      expect(exists4).toBe(true);
+      const readDirectory5 = yield* fs.readDirectory(tempRoot);
+      expect(readDirectory5).toEqual([]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -122,7 +127,8 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
     Effect.gen(function* () {
       yield* runQualityCommand(["catalog-usage"]);
 
-      expect(yield* consoleText()).toMatch(/\[catalog-usage\] catalog_entries=\d+ .*findings=0/);
+      const consoleText6 = yield* consoleText();
+      expect(consoleText6).toMatch(/\[catalog-usage\] catalog_entries=\d+ .*findings=0/);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -180,7 +186,8 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
     return Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const out = path.join(yield* fs.makeTempDirectoryScoped({ prefix: "fallow-tool-failed-" }), "health.json");
+      const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({ prefix: "fallow-tool-failed-" });
+      const out = path.join(madeTempDirectoryScoped, "health.json");
 
       const exit = yield* runQualityCommand(["fallow", "health", "--advisory", "--base", "HEAD", "--out", out]).pipe(
         Effect.exit
@@ -188,7 +195,8 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
 
       exit.pipe(Exit.isFailure, assertTrue);
       expect(A.some(spawnedLines(spawner), isFallowHealth)).toBe(true);
-      const envelope = yield* decodeEnvelopeStatus(yield* fs.readFileString(out));
+      const readFileString7 = yield* fs.readFileString(out);
+      const envelope = yield* decodeEnvelopeStatus(readFileString7);
       expect(envelope).toEqual({ advisory: true, status: "tool-failed", exitStatus: 2 });
     }).pipe(provideSpawner(spawner), Effect.provideServiceEffect(Console.Console, TestConsole.make));
   });

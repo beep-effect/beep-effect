@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // Unit coverage for the GFM table block construct.
 //
 // Semantics authority is cmark-gfm 0.29.0.gfm.13 — `extensions/table.c` and
@@ -14,9 +15,13 @@ import { assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { lastOffsetOf, offsetOf } from "./support/offsets.ts";
 import type { PhrasingContent, Table, TableAlign } from "@beep/markdown/MarkdownNode";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 /** The first block of a source parsed under a dialect. */
 const firstBlock = (source: string, dialect: "commonmark" | "gfm" = "gfm") =>
@@ -41,11 +46,11 @@ const sketchInline = (nodes: ReadonlyArray<PhrasingContent>): string =>
     A.map(nodes, (node) => {
       switch (node.type) {
         case "text":
-          return JSON.stringify(node.value);
+          return Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(node.value), identity);
         case "inlineCode":
-          return `code${JSON.stringify(node.value)}`;
+          return `code${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(node.value), identity)}`;
         case "html":
-          return `html${JSON.stringify(node.value)}`;
+          return `html${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(node.value), identity)}`;
         case "link":
           return `link(${node.url})[${sketchInline(node.children)}]`;
         case "linkReference":

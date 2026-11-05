@@ -124,12 +124,14 @@ const writeJsonFile = Effect.fn(function* (filePath: string, value: unknown) {
 
 const readJsonFile = Effect.fn(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* decodeUnknownJson(yield* fs.readFileString(filePath));
+  const readFileString1 = yield* fs.readFileString(filePath);
+  return yield* decodeUnknownJson(readFileString1);
 });
 
 const readJsoncFile = Effect.fn(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* Jsonc.parse(yield* fs.readFileString(filePath));
+  const readFileString2 = yield* fs.readFileString(filePath);
+  return yield* Jsonc.parse(readFileString2);
 });
 
 const markerIndex =
@@ -360,10 +362,12 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
       [LabTsconfigArbitrary, LabCheckTsconfigArbitrary],
       flow(
         Effect.fnUntraced(function* ([labTsconfig, labCheckTsconfig]) {
-          expect(yield* decodeAppTsconfig(yield* encodeAppTsconfigEffect(labTsconfig))).toEqual(labTsconfig);
-          expect(yield* decodeLabCheckTsconfig(yield* encodeLabCheckTsconfigEffect(labCheckTsconfig))).toEqual(
-            labCheckTsconfig
-          );
+          const encodedAppTsconfigEffect = yield* encodeAppTsconfigEffect(labTsconfig);
+          const decodedAppTsconfig = yield* decodeAppTsconfig(encodedAppTsconfigEffect);
+          expect(decodedAppTsconfig).toEqual(labTsconfig);
+          const encodedLabCheckTsconfigEffect = yield* encodeLabCheckTsconfigEffect(labCheckTsconfig);
+          const decodedLabCheckTsconfig = yield* decodeLabCheckTsconfig(encodedLabCheckTsconfigEffect);
+          expect(decodedLabCheckTsconfig).toEqual(labCheckTsconfig);
         }),
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
       ),
@@ -398,15 +402,14 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
           Effect.fnUntraced(function* ([encoded]) {
             const json = yield* encodePrettyJson(encoded);
             const decoded = yield* decodeUnknownLabManifestFromJsonStringEffect(json);
-            expect(
-              manifestEquivalence(
-                yield* decodeUnknownLabManifestFromJsonStringEffect(
-                  yield* encodeLabManifestFromJsonStringEffect(decoded)
-                ),
-                decoded
-              )
-            ).toBe(true);
-            expect(yield* decodeUnknownJson(yield* encodeLabManifestFromJsonStringEffect(decoded))).toEqual(encoded);
+            const encodedLabManifestFromJsonStringEffect = yield* encodeLabManifestFromJsonStringEffect(decoded);
+            const decodedUnknownLabManifestFromJsonStringEffect = yield* decodeUnknownLabManifestFromJsonStringEffect(
+              encodedLabManifestFromJsonStringEffect
+            );
+            expect(manifestEquivalence(decodedUnknownLabManifestFromJsonStringEffect, decoded)).toBe(true);
+            const encodedLabManifestFromJsonStringEffect33 = yield* encodeLabManifestFromJsonStringEffect(decoded);
+            const decodedUnknownJson = yield* decodeUnknownJson(encodedLabManifestFromJsonStringEffect33);
+            expect(decodedUnknownJson).toEqual(encoded);
           }),
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -437,8 +440,11 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
               disposition: "active",
               postgresSchema: "lab_a0_end_",
             };
-            const decoded = yield* decodeUnknownLabManifestFromJsonStringEffect(yield* encodePrettyJson(encoded));
-            expect(yield* decodeUnknownJson(yield* encodeLabManifestFromJsonStringEffect(decoded))).toEqual(encoded);
+            const encodedPrettyJson = yield* encodePrettyJson(encoded);
+            const decoded = yield* decodeUnknownLabManifestFromJsonStringEffect(encodedPrettyJson);
+            const encodedLabManifestFromJsonStringEffect34 = yield* encodeLabManifestFromJsonStringEffect(decoded);
+            const decodedUnknownJson3 = yield* decodeUnknownJson(encodedLabManifestFromJsonStringEffect34);
+            expect(decodedUnknownJson3).toEqual(encoded);
           }),
           { discard: true }
         );
@@ -451,14 +457,13 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             { created: "2024-04-31", message: "Expected string" },
           ],
           Effect.fnUntraced(function* ({ created, message }) {
-            const result = yield* decodeUnknownLabManifestFromJsonStringEffect(
-              yield* encodePrettyJson({
-                schemaVersion: "lab-manifest/v1",
-                purpose: "invalid calendar boundary",
-                created,
-                disposition: "active",
-              })
-            ).pipe(
+            const encodedPrettyJson4 = yield* encodePrettyJson({
+              schemaVersion: "lab-manifest/v1",
+              purpose: "invalid calendar boundary",
+              created,
+              disposition: "active",
+            });
+            const result = yield* decodeUnknownLabManifestFromJsonStringEffect(encodedPrettyJson4).pipe(
               Effect.mapError((error) => formatSchemaIssues(error.issue)),
               Effect.result
             );
@@ -488,9 +493,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             ]);
 
             const packageDir = path.join(rootDir, "apps", "labs", "web-lab");
-            const manifest = yield* decodeGeneratedPackageManifest(
-              yield* readJsonFile(path.join(packageDir, "package.json"))
-            );
+            const readJsonFile5 = yield* readJsonFile(path.join(packageDir, "package.json"));
+            const manifest = yield* decodeGeneratedPackageManifest(readJsonFile5);
             expect(manifest.scripts.dev).toBe("portless web-lab.labs.beep next dev --turbopack");
             expectNoPackageCeremony(manifest);
             // Exactly what the emitted templates import: @beep/repo-configs in
@@ -513,35 +517,38 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             expect(labManifest.disposition).toBe("active");
             expect(labManifest.created.toISOString()).toBe(today().toISOString());
 
-            expect(yield* fs.exists(path.join(packageDir, "tsconfig.next.json"))).toBe(true);
-            expect(yield* fs.exists(path.join(packageDir, "tsconfig.check.json"))).toBe(true);
-            expect(yield* fs.exists(path.join(packageDir, "postcss.config.mjs"))).toBe(true);
-            const labCheckTsconfig = yield* decodeLabCheckTsconfig(
-              yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"))
-            );
+            const exists6 = yield* fs.exists(path.join(packageDir, "tsconfig.next.json"));
+            expect(exists6).toBe(true);
+            const exists7 = yield* fs.exists(path.join(packageDir, "tsconfig.check.json"));
+            expect(exists7).toBe(true);
+            const exists8 = yield* fs.exists(path.join(packageDir, "postcss.config.mjs"));
+            expect(exists8).toBe(true);
+            const readJsoncFile9 = yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"));
+            const labCheckTsconfig = yield* decodeLabCheckTsconfig(readJsoncFile9);
             expect(labCheckTsconfig.extends).toBe("./tsconfig.json");
             expect(labCheckTsconfig.compilerOptions.noEmit).toBe(true);
             // The overlay mirrors the canonical references exactly and adds no
             // module overrides (quality-lane audit D3).
-            const canonicalLabTsconfig = yield* decodeTsconfigOptionalReferences(
-              yield* readJsoncFile(path.join(packageDir, "tsconfig.json"))
-            );
-            const labOverlay = yield* decodeTsconfigOptionalReferences(
-              yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"))
-            );
+            const readJsoncFile10 = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
+            const canonicalLabTsconfig = yield* decodeTsconfigOptionalReferences(readJsoncFile10);
+            const readJsoncFile11 = yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"));
+            const labOverlay = yield* decodeTsconfigOptionalReferences(readJsoncFile11);
             expect(referencePathsOf(labOverlay)).toEqual(referencePathsOf(canonicalLabTsconfig));
             expect(labOverlay.compilerOptions).not.toHaveProperty("module");
             expect(labOverlay.compilerOptions).not.toHaveProperty("moduleResolution");
-            expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(false);
+            const exists12 = yield* fs.exists(path.join(packageDir, "docgen.json"));
+            expect(exists12).toBe(false);
             const nextConfig = yield* fs.readFileString(path.join(packageDir, "next.config.ts"));
             expect(nextConfig).toContain("defineBeepNextConfig");
             expect(nextConfig).toContain("web-lab.labs.beep.localhost");
             const globalsCss = yield* fs.readFileString(path.join(packageDir, "src", "app", "globals.css"));
             expect(globalsCss).toContain('@import "@beep/ui/styles/globals.css";');
-            const appTsconfig = yield* decodeAppTsconfig(yield* readJsoncFile(path.join(packageDir, "tsconfig.json")));
+            const readJsoncFile13 = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
+            const appTsconfig = yield* decodeAppTsconfig(readJsoncFile13);
             expect(appTsconfig.compilerOptions.rootDir).toBe("../../..");
 
-            const rootPackage = yield* decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+            const readJsonFile14 = yield* readJsonFile(path.join(rootDir, "package.json"));
+            const rootPackage = yield* decodeRootPackage(readJsonFile14);
             expect(rootPackage.workspaces).toEqual(["packages/foundation/*/*", "apps/labs/*"]);
 
             const registry = yield* readIdentityRegistry(context);
@@ -577,9 +584,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             ]);
 
             const packageDir = path.join(rootDir, "apps", "labs", "graph-lab");
-            const manifest = yield* decodeGeneratedPackageManifest(
-              yield* readJsonFile(path.join(packageDir, "package.json"))
-            );
+            const readJsonFile15 = yield* readJsonFile(path.join(packageDir, "package.json"));
+            const manifest = yield* decodeGeneratedPackageManifest(readJsonFile15);
             expect(manifest.scripts.dev).toBe(
               "portless graph-lab.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'"
             );
@@ -596,12 +602,15 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             const labManifest = yield* decodeManifestAt(context, "graph-lab");
             expect(labManifest.purpose).toBe("Vite lab probe");
 
-            expect(yield* fs.exists(path.join(packageDir, "index.html"))).toBe(true);
-            expect(yield* fs.exists(path.join(packageDir, "postcss.config.mjs"))).toBe(true);
+            const exists16 = yield* fs.exists(path.join(packageDir, "index.html"));
+            expect(exists16).toBe(true);
+            const exists17 = yield* fs.exists(path.join(packageDir, "postcss.config.mjs"));
+            expect(exists17).toBe(true);
             const globalsCss = yield* fs.readFileString(path.join(packageDir, "src", "styles", "globals.css"));
             expect(globalsCss).toContain('@import "@beep/ui/styles/globals.css";');
             expect(globalsCss).not.toContain(":root");
-            const appTsconfig = yield* decodeAppTsconfig(yield* readJsoncFile(path.join(packageDir, "tsconfig.json")));
+            const readJsoncFile18 = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
+            const appTsconfig = yield* decodeAppTsconfig(readJsoncFile18);
             expect(appTsconfig.compilerOptions.rootDir).toBe("../../..");
 
             const registry = yield* readIdentityRegistry(context);
@@ -631,9 +640,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             ]);
 
             const packageDir = path.join(rootDir, "apps", "labs", "probe-svc");
-            const manifest = yield* decodeGeneratedPackageManifest(
-              yield* readJsonFile(path.join(packageDir, "package.json"))
-            );
+            const readJsonFile19 = yield* readJsonFile(path.join(packageDir, "package.json"));
+            const manifest = yield* decodeGeneratedPackageManifest(readJsonFile19);
             expect(manifest.scripts.dev).toBe("portless probe-svc.labs.beep sh -c 'bun --watch src/main.ts'");
             expectNoPackageCeremony(manifest);
             // src/Api.ts imports the identity accessor; main.ts imports
@@ -652,9 +660,12 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             const labManifest = yield* decodeManifestAt(context, "probe-svc");
             expect(labManifest.disposition).toBe("active");
 
-            expect(yield* fs.exists(path.join(packageDir, "src", "Api.ts"))).toBe(true);
-            expect(yield* fs.exists(path.join(packageDir, "src", "main.ts"))).toBe(true);
-            expect(yield* fs.exists(path.join(packageDir, "src", "runtime", "Layer.ts"))).toBe(true);
+            const exists20 = yield* fs.exists(path.join(packageDir, "src", "Api.ts"));
+            expect(exists20).toBe(true);
+            const exists21 = yield* fs.exists(path.join(packageDir, "src", "main.ts"));
+            expect(exists21).toBe(true);
+            const exists22 = yield* fs.exists(path.join(packageDir, "src", "runtime", "Layer.ts"));
+            expect(exists22).toBe(true);
             const api = yield* fs.readFileString(path.join(packageDir, "src", "Api.ts"));
             expect(api).toContain('import { $ProbeSvcId } from "@beep/identity/packages";');
             expect(api).toContain('$ProbeSvcId.create("Api")');
@@ -704,9 +715,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             ]);
 
             const packageDir = path.join(rootDir, "apps", "labs", "probe-tauri");
-            const manifest = yield* decodeGeneratedPackageManifest(
-              yield* readJsonFile(path.join(packageDir, "package.json"))
-            );
+            const readJsonFile23 = yield* readJsonFile(path.join(packageDir, "package.json"));
+            const manifest = yield* decodeGeneratedPackageManifest(readJsonFile23);
             expect(manifest.scripts.dev).toBe(
               "portless probe-tauri.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'"
             );
@@ -793,38 +803,34 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
                 })
               );
 
-            expect(yield* runRefusal(["probe-lab", "--lab", "--description", "x"])).toContain(
-              "--lab is only valid with --type app"
-            );
-            expect(
-              yield* runRefusal([
-                "probe-lab",
-                "--type",
-                "app",
-                "--app-kind",
-                "runtime-proof",
-                "--lab",
-                "--description",
-                "x",
-              ])
-            ).toContain("--lab --app-kind runtime-proof is not supported");
-            expect(
-              yield* runRefusal([
-                "probe-lab",
-                "--type",
-                "app",
-                "--app-kind",
-                "vite",
-                "--lab",
-                "--parent-dir",
-                "apps",
-                "--description",
-                "x",
-              ])
-            ).toContain("omit --parent-dir");
-            expect(yield* runRefusal(["probe-lab", "--type", "app", "--app-kind", "vite", "--lab"])).toContain(
-              "non-empty --description"
-            );
+            const resultRefusal = yield* runRefusal(["probe-lab", "--lab", "--description", "x"]);
+            expect(resultRefusal).toContain("--lab is only valid with --type app");
+            const resultRefusal24 = yield* runRefusal([
+              "probe-lab",
+              "--type",
+              "app",
+              "--app-kind",
+              "runtime-proof",
+              "--lab",
+              "--description",
+              "x",
+            ]);
+            expect(resultRefusal24).toContain("--lab --app-kind runtime-proof is not supported");
+            const resultRefusal25 = yield* runRefusal([
+              "probe-lab",
+              "--type",
+              "app",
+              "--app-kind",
+              "vite",
+              "--lab",
+              "--parent-dir",
+              "apps",
+              "--description",
+              "x",
+            ]);
+            expect(resultRefusal25).toContain("omit --parent-dir");
+            const resultRefusal26 = yield* runRefusal(["probe-lab", "--type", "app", "--app-kind", "vite", "--lab"]);
+            expect(resultRefusal26).toContain("non-empty --description");
           })
         ).pipe(
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -856,7 +862,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             );
 
             expect(result).toContain('missing the "apps/labs/*" glob');
-            expect(yield* fs.exists(path.join(rootDir, "apps", "labs", "probe-lab"))).toBe(false);
+            const exists27 = yield* fs.exists(path.join(rootDir, "apps", "labs", "probe-lab"));
+            expect(exists27).toBe(false);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       CreatePackageLabTestTimeoutMs
@@ -890,7 +897,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
 
             expect(result).toContain(`is inside the ${LABS_WORKSPACE_ROOT} root`);
             expect(result).toContain("--lab");
-            expect(yield* fs.exists(path.join(rootDir, "apps", "labs", "sneaky-lab"))).toBe(false);
+            const exists28 = yield* fs.exists(path.join(rootDir, "apps", "labs", "sneaky-lab"));
+            expect(exists28).toBe(false);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       CreatePackageLabTestTimeoutMs
@@ -934,7 +942,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
               "--dry-run",
               "--reuse-retired-name",
             ]);
-            const dryRunOutput = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+            const logLines29 = yield* TestConsole.logLines;
+            const dryRunOutput = A.join(A.map(logLines29, String), "\n");
             expect(dryRunOutput).toContain('[dry-run] Retired name: reusing "@beep/probe" (--reuse-retired-name)');
 
             // A dry run must not mutate the registry.
@@ -942,16 +951,18 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             expect(afterDryRun).toContain("@beep/probe");
 
             yield* runCreatePackageCommand(["probe", "--description", "Recreated probe", "--reuse-retired-name"]);
-            expect(
-              yield* fs.exists(path.join(rootDir, "packages", "tooling", "library", "probe", "package.json"))
-            ).toBe(true);
+            const exists30 = yield* fs.exists(
+              path.join(rootDir, "packages", "tooling", "library", "probe", "package.json")
+            );
+            expect(exists30).toBe(true);
 
             // Sanctioned reuse restores the name's provenance: leaving the entry
             // would leave the registry claiming a live package is retired, and
             // would wedge the later delete-package retirement of that name.
             const registryAfterCreate = yield* fs.readFileString(path.join(rootDir, RETIRED_REGISTRY_PATH));
             expect(registryAfterCreate).not.toContain("@beep/probe");
-            const createOutput = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+            const logLines31 = yield* TestConsole.logLines;
+            const createOutput = A.join(A.map(logLines31, String), "\n");
             expect(createOutput).toContain(`${RETIRED_REGISTRY_PATH}: removed the retired entry for "@beep/probe"`);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
@@ -977,7 +988,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             const removed = yield* RetiredNameRegistry.removeRetiredPackageName(rootDir, "@beep/absent");
 
             expect(removed).toBe(false);
-            expect(yield* fs.readFileString(registryPath)).toBe(before);
+            const readFileString32 = yield* fs.readFileString(registryPath);
+            expect(readFileString32).toBe(before);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       CreatePackageLabTestTimeoutMs

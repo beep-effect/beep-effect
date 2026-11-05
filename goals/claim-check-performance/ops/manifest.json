@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "claim-check-performance",
+    "packetId": "goal-packet/v1:68b07801068fb5da2893f634809961475b3587061eb72f38872eaf61f8e5a3cd",
+    "title": "Claim Checker Measurable Usefulness",
+    "status": "active",
+    "created": "2026-11-03",
+    "updated": "2026-11-03",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/claim-check-performance",
+  "lifecycle": "active",
+  "mission": "Deliver useful deterministic claim checking with frozen precision, recall, coverage and structural-recovery gates while preserving all original evidence.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/claim-check-performance/README.md",
+    "goals/claim-check-performance/SPEC.md",
+    "goals/claim-check-performance/PLAN.md",
+    "goals/claim-check-performance/GOAL.md",
+    "goals/claim-check-performance/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/claim-check-performance/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Freeze gates, baseline and evaluation integrity",
+      "status": "in-progress"
+    },
+    {
+      "id": "P1",
+      "name": "General structural and advisory accuracy repairs",
+      "status": "in-progress"
+    },
+    {
+      "id": "P2",
+      "name": "Independent usefulness verification",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/claim-check-performance/GOAL.md)\" -le 4000",
+    "jq . goals/claim-check-performance/ops/manifest.json",
+    "rg -n \"claim-check-performance|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/claim-check-performance",
+    "git diff --check -- goals/claim-check-performance",
+    "bun run beep lint reflection-artifacts",
+    "python goals/claim-check-performance/research/verify-preservation.py",
+    "python -m unittest discover -s goals/claim-check-performance/research -p \"test_*.py\""
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Active performance follow-up: product39/538, parsed537/538, abstained455/538; all60families delivered in62pages under1MiB, original37 and prior39 retained. PR2685 supporting increment remains under hosted quality review. Sealed development candidates are not accepted metric truth. Every usefulness and final delivery gate remains required."
+}

@@ -428,7 +428,8 @@ it.effect("encodes TextOffsetRange through its generation link", () =>
     const codec = S.make<S.Codec<TextOffsetRange, unknown>>(
       SchemaAST.decodeTo(S.Unknown.ast, SchemaAST.toType(TextOffsetRange.ast), link.transformation)
     );
-    expect(yield* S.encodeEffect(codec)(value)).toEqual(value);
+    const value1 = yield* S.encodeEffect(codec)(value);
+    expect(value1).toEqual(value);
   })
 );
 
@@ -445,6 +446,7 @@ it.effect("encodes Utf16TextRange through its generation link", () =>
     const codec = S.make<S.Codec<Utf16TextRange, unknown>>(
       SchemaAST.decodeTo(S.Unknown.ast, SchemaAST.toType(Utf16TextRange.ast), link.transformation)
     );
-    expect(yield* S.encodeEffect(codec)(value)).toEqual(value);
+    const value2 = yield* S.encodeEffect(codec)(value);
+    expect(value2).toEqual(value);
   })
 );

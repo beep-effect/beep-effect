@@ -14,11 +14,13 @@ import * as Eq from "effect/Equal";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { decodeAdmissionPolicyParams } from "@/projection/AboxPolicy";
@@ -47,6 +49,8 @@ import {
 import { emitScheduleAbox } from "@/projection/Turtle";
 import type { CiOpsProjectionShape } from "@/projection/CiOpsProjection";
 import type { AdmissionPolicyParams, AdmissionWorkKind } from "@/projection/Schemas";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
@@ -89,20 +93,31 @@ const normalizePending = (
   );
 
 const admittedLine = (nonce: string, kind: AdmissionWorkKind, weightTokens: number, admittedAtMillis: number): string =>
-  JSON.stringify({
-    schemaVersion: "yeet-admission-journal/v1",
-    _tag: "admission-admitted",
-    nonce,
-    kind,
-    weightTokens,
-    priority: "verify",
-    originKey: "origin-test",
-    enqueuedAtMillis: admittedAtMillis - 1,
-    admittedAtMillis,
-  });
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({
+      schemaVersion: "yeet-admission-journal/v1",
+      _tag: "admission-admitted",
+      nonce,
+      kind,
+      weightTokens,
+      priority: "verify",
+      originKey: "origin-test",
+      enqueuedAtMillis: admittedAtMillis - 1,
+      admittedAtMillis,
+    }),
+    identity
+  );
 
 const releasedLine = (nonce: string, releasedAtMillis: number): string =>
-  JSON.stringify({ schemaVersion: "yeet-admission-journal/v1", _tag: "admission-released", nonce, releasedAtMillis });
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({
+      schemaVersion: "yeet-admission-journal/v1",
+      _tag: "admission-released",
+      nonce,
+      releasedAtMillis,
+    }),
+    identity
+  );
 
 const projectionInstantFor = (pending: ReadonlyArray<PendingRequest>): number =>
   A.reduce(pending, 0, (latest, request) => N.max(latest, request.enqueuedAtMillis));
@@ -650,7 +665,8 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
       Effect.gen(function* () {
         const policy = yield* TestPolicy;
         const service: CiOpsProjectionShape = yield* CiOpsProjection;
-        assertNone(yield* service.currentProposal);
+        const currentProposal1 = yield* service.currentProposal;
+        assertNone(currentProposal1);
 
         const waiting = yield* Effect.forkChild(service.awaitCurrentProposal);
         const projected = yield* service.projectCurrent(inputFor(policy, []));
@@ -671,7 +687,9 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
         expect(plan.planId).toBe(`lane-plan-${planInput.handoff.sha256}`);
         expect(plan.episodeId).toBe("episode-1");
         expect(plan.laneSteps.length).toBeGreaterThan(0);
-        expect(Eq.equals(O.some(projected), yield* service.currentProposal)).toBe(true);
+        const argument = O.some(projected);
+        const currentProposal2 = yield* service.currentProposal;
+        expect(Eq.equals(argument, currentProposal2)).toBe(true);
       })
     );
   });

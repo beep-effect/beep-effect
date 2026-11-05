@@ -54,8 +54,9 @@ export const notionPullImpl = Effect.fn("Research.notionPullImpl")(function* (
       ? yield* readLinksFile(options.linksFile)
       : options.pageId !== undefined
         ? yield* queryPageLinks(options.pageId)
-        : yield* querySavedLinks(yield* findDatabaseId(options.database));
-  const capturedAt = DateTime.formatIso(yield* DateTime.now);
+        : yield* yield* Effect.map(findDatabaseId(options.database), querySavedLinks);
+  const now1 = yield* DateTime.now;
+  const capturedAt = DateTime.formatIso(now1);
 
   const cards: Array<CardPersistRow> = [];
   let skippedSeen = 0;

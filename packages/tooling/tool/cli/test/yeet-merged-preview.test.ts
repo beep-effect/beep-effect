@@ -233,7 +233,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("yeet merged tier guards", (i
 const scratchGit = Effect.fn("YeetMergedPreviewTest.scratchGit")(function* (cwd: string, args: ReadonlyArray<string>) {
   const handle = yield* ChildProcess.make("git", [...args], { cwd, stdin: "ignore", stdout: "pipe", stderr: "ignore" });
   const output = yield* handle.stdout.pipe(Stream.decodeText(), Stream.mkString);
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode1 = yield* handle.exitCode;
+  expect(exitCode1).toBe(0);
   return Str.trim(output);
 });
 
@@ -343,15 +344,20 @@ it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCr
       expect(preview.baseSha).toBe(first.baseSha);
       expect(preview.headSha).toBe(first.headSha);
       expect(preview.worktreePath).toBe(first.worktreePath);
-      expect(yield* fs.exists(path.join(preview.worktreePath, "leftover-only.txt"))).toBe(false);
-      expect(yield* fs.exists(path.join(preview.worktreePath, "feature.md"))).toBe(true);
-      expect(yield* fs.exists(path.join(preview.worktreePath, "main.md"))).toBe(true);
-      expect(yield* scratchGit(preview.worktreePath, ["rev-parse", "HEAD"])).toBe(preview.commitSha);
-      expect(yield* scratchGit(preview.worktreePath, ["rev-parse", "HEAD^{tree}"])).toBe(preview.treeSha);
-      expect(yield* scratchGit(preview.worktreePath, ["show", "--no-patch", "--format=%P", "HEAD"])).toBe(
-        `${preview.baseSha} ${preview.headSha}`
-      );
-      expect(yield* scratchGit(preview.worktreePath, ["rev-parse", "--abbrev-ref", "HEAD"])).toBe("HEAD");
+      const exists2 = yield* fs.exists(path.join(preview.worktreePath, "leftover-only.txt"));
+      expect(exists2).toBe(false);
+      const exists3 = yield* fs.exists(path.join(preview.worktreePath, "feature.md"));
+      expect(exists3).toBe(true);
+      const exists4 = yield* fs.exists(path.join(preview.worktreePath, "main.md"));
+      expect(exists4).toBe(true);
+      const scratchGit5 = yield* scratchGit(preview.worktreePath, ["rev-parse", "HEAD"]);
+      expect(scratchGit5).toBe(preview.commitSha);
+      const scratchGit6 = yield* scratchGit(preview.worktreePath, ["rev-parse", "HEAD^{tree}"]);
+      expect(scratchGit6).toBe(preview.treeSha);
+      const scratchGit7 = yield* scratchGit(preview.worktreePath, ["show", "--no-patch", "--format=%P", "HEAD"]);
+      expect(scratchGit7).toBe(`${preview.baseSha} ${preview.headSha}`);
+      const scratchGit8 = yield* scratchGit(preview.worktreePath, ["rev-parse", "--abbrev-ref", "HEAD"]);
+      expect(scratchGit8).toBe("HEAD");
     })
   );
 

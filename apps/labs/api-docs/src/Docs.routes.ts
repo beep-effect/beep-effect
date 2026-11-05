@@ -21,6 +21,12 @@ import { ApiAudience } from "./Catalog.models.ts";
 import { Catalog, resolveCatalogSpecPath } from "./Catalog.ts";
 import type { CatalogEntry, CatalogSlug, CatalogSource, SpecFormat } from "./Catalog.models.ts";
 
+class DocsRoutesOperationError extends S.TaggedError<DocsRoutesOperationError, { readonly brand: unique symbol }>()(
+  "DocsRoutesOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in Docs.routes.ts." }
+) {}
+
 const apiBasePath = (slug: CatalogSlug): `/${string}` => `/apis/${slug}`;
 const docsPath = (slug: CatalogSlug): `/${string}` => `${apiBasePath(slug)}/docs`;
 const SCALAR_SCRIPT_PATH = "/assets/scalar-api-reference-1.43.5.js";
@@ -130,9 +136,10 @@ const readSpecResponse = Effect.fn("ApiDocs.readSpecResponse")(function* (
 });
 
 const readScalarScriptResponse = Effect.fn("ApiDocs.readScalarScriptResponse")(function* () {
-  const scalarScriptModule = yield* Effect.tryPromise(() => import(ScalarScriptModuleUrl.href)).pipe(
-    Effect.flatMap(decodeScalarScriptModule)
-  );
+  const scalarScriptModule = yield* Effect.tryPromise({
+    try: () => import(ScalarScriptModuleUrl.href),
+    catch: (cause) => DocsRoutesOperationError.make({ cause }),
+  }).pipe(Effect.flatMap(decodeScalarScriptModule));
   return HttpServerResponse.text(scalarScriptModule.javascript, {
     contentType: "text/javascript; charset=utf-8",
     headers: {

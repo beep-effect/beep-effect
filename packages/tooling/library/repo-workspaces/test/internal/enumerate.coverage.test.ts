@@ -34,7 +34,8 @@ it.layer(layer, { timeout: "30 seconds" })((it) => {
   it.effect("excluded, missing, and failed literal probes do not fabricate packages", () =>
     Effect.gen(function* () {
       const globs = yield* GlobSet.compile(["a", "missing", "faulty", "!a"]);
-      assert.deepStrictEqual(yield* enumerate(globs)("/repo"), []);
+      const value = yield* enumerate(globs)("/repo");
+      assert.deepStrictEqual(value, []);
     })
   );
   it.effect("a missing root reports its absolute path", () =>
@@ -47,15 +48,19 @@ it.layer(layer, { timeout: "30 seconds" })((it) => {
   );
   it.effect("vanished directories are benign while unreadable descendants fail closed", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* enumerate("/repo", yield* GlobSet.compile(["a/**"])), []);
-      const failure = yield* Effect.flip(enumerate("/repo", yield* GlobSet.compile(["b/**"])));
+      const compile6 = yield* GlobSet.compile(["a/**"]);
+      const enumerate1 = yield* enumerate("/repo", compile6);
+      assert.deepStrictEqual(enumerate1, []);
+      const compile2 = yield* GlobSet.compile(["b/**"]);
+      const failure = yield* Effect.flip(enumerate("/repo", compile2));
       assert.strictEqual(failure.kind, "unreadableDirectory");
       assert.strictEqual(failure.detail, "b");
     })
   );
   it.effect("the root itself is named when its listing fails", () =>
     Effect.gen(function* () {
-      const failure = yield* Effect.flip(enumerate("/repo/b", yield* GlobSet.compile(["**"])));
+      const compile3 = yield* GlobSet.compile(["**"]);
+      const failure = yield* Effect.flip(enumerate("/repo/b", compile3));
       assert.strictEqual(failure.detail, "/repo/b");
     })
   );
@@ -69,7 +74,8 @@ it.layer(layer, { timeout: "30 seconds" })((it) => {
         ),
         (spy) => Effect.sync(() => spy.mockRestore())
       );
-      const failure = yield* Effect.flip(enumerate("/repo", yield* GlobSet.compile(["*"])));
+      const compile4 = yield* GlobSet.compile(["*"]);
+      const failure = yield* Effect.flip(enumerate("/repo", compile4));
       assert.deepStrictEqual(failure, { kind: "budgetExceeded", detail: "visited directory limit", pattern: "*" });
     })
   );
@@ -101,7 +107,8 @@ const listing = Layer.merge(
 it.layer(listing, { timeout: "30 seconds" })((it) => {
   it.effect("defaults skip nothing but the unconditional prune", () =>
     Effect.gen(function* () {
-      const directories = yield* enumerate("/repo", yield* GlobSet.compile(["packages/*"]));
+      const compile5 = yield* GlobSet.compile(["packages/*"]);
+      const directories = yield* enumerate("/repo", compile5);
       assert.deepStrictEqual(
         A.map(directories, (directory) => directory.relativePath),
         ["packages/alpha", "packages/beta", "packages/dist"]

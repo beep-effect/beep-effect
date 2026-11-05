@@ -17,13 +17,18 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
 
 const PlatformLayer = Git.layer.pipe(
   Layer.provideMerge(NodeChildProcessSpawner.layer),
@@ -45,8 +50,8 @@ const runGit = (cwd: string, args: ReadonlyArray<string>) => spawnGit(cwd, args)
 const runGitStatus = (cwd: string) => spawnGit(cwd, ["status", "--porcelain"]).pipe(Effect.map(Str.trim));
 
 const goalManifest = (slug: string): string =>
-  JSON.stringify(
-    {
+  Result.getOrThrowWith(
+    encodePrettyJson({
       schemaVersion: "initiative-manifest/v2",
       initiative: { id: slug, title: `Packet ${slug}`, status: "active", updated: "2026-08-16" },
       mission: `Mission for ${slug}.`,
@@ -57,9 +62,8 @@ const goalManifest = (slug: string): string =>
         statement: "Merged through yeet.",
         grandfathered: false,
       },
-    },
-    undefined,
-    2
+    }),
+    identity
   );
 
 const temporaryDirectory = Effect.gen(function* () {
@@ -122,7 +126,8 @@ const portfolioRepoAndOutside = Effect.gen(function* () {
   const outsideRoot = path.join(tempRoot, "outside");
   yield* fs.makeDirectory(repoRoot);
   yield* fs.makeDirectory(outsideRoot);
-  return Tuple.make(yield* initPortfolioRepo(repoRoot, ["alpha-packet", "beta-packet"]), outsideRoot);
+  const initPortfolioRepo1 = yield* initPortfolioRepo(repoRoot, ["alpha-packet", "beta-packet"]);
+  return Tuple.make(initPortfolioRepo1, outsideRoot);
 });
 
 it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
@@ -223,7 +228,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
           );
 
           expect(disposition).toBe("absent");
-          expect(yield* fs.exists(path.join(tmpDir, PORTFOLIO_INDEX_PATH))).toBe(false);
+          const exists2 = yield* fs.exists(path.join(tmpDir, PORTFOLIO_INDEX_PATH));
+          expect(exists2).toBe(false);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -239,8 +245,12 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
           );
 
           expect(disposition).toBe("regenerated");
-          expect(yield* fs.readFileString(indexPath)).toBe(yield* buildPortfolioIndexContent(tmpDir));
-          expect(yield* runGitStatus(tmpDir)).toBe(`?? ${PORTFOLIO_INDEX_PATH}`);
+          const readFileString3 = yield* fs.readFileString(indexPath);
+          const expectation = expect(readFileString3);
+          const buildPortfolioIndexContent1 = yield* buildPortfolioIndexContent(tmpDir);
+          expectation.toBe(buildPortfolioIndexContent1);
+          const resultGitStatus = yield* runGitStatus(tmpDir);
+          expect(resultGitStatus).toBe(`?? ${PORTFOLIO_INDEX_PATH}`);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -258,7 +268,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
           );
 
           expect(disposition).toBe("current");
-          expect(yield* fs.readFileString(indexPath)).toBe(current);
+          const readFileString4 = yield* fs.readFileString(indexPath);
+          expect(readFileString4).toBe(current);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -277,9 +288,14 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
           );
 
           expect(disposition).toBe("regenerated");
-          expect(yield* fs.readFileString(indexPath)).toBe(yield* buildPortfolioIndexContent(tmpDir));
-          expect(yield* runGitStatus(tmpDir)).toBe(`M ${PORTFOLIO_INDEX_PATH}`);
-          expect(Str.trim(yield* spawnGit(tmpDir, ["diff", "--cached", "--name-only"]))).toBe("");
+          const readFileString5 = yield* fs.readFileString(indexPath);
+          const expectation1 = expect(readFileString5);
+          const buildPortfolioIndexContent2 = yield* buildPortfolioIndexContent(tmpDir);
+          expectation1.toBe(buildPortfolioIndexContent2);
+          const resultGitStatus6 = yield* runGitStatus(tmpDir);
+          expect(resultGitStatus6).toBe(`M ${PORTFOLIO_INDEX_PATH}`);
+          const spawnGit7 = yield* spawnGit(tmpDir, ["diff", "--cached", "--name-only"]);
+          expect(Str.trim(spawnGit7)).toBe("");
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -300,8 +316,10 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
           ).pipe(Effect.flip);
 
           expect(failure._tag).toBe("YeetCommandError");
-          expect(yield* fs.readFileString(outsideIndex)).toBe(sentinel);
-          expect(Str.trim(yield* spawnGit(tmpDir, ["diff", "--cached", "--name-only"]))).toBe("");
+          const readFileString8 = yield* fs.readFileString(outsideIndex);
+          expect(readFileString8).toBe(sentinel);
+          const spawnGit9 = yield* spawnGit(tmpDir, ["diff", "--cached", "--name-only"]);
+          expect(Str.trim(spawnGit9)).toBe("");
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -325,8 +343,10 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
           ).pipe(Effect.flip);
 
           expect(failure._tag).toBe("YeetCommandError");
-          expect(yield* fs.readFileString(outsideIndex)).toBe(sentinel);
-          expect(Str.trim(yield* spawnGit(tmpDir, ["diff", "--cached", "--name-only"]))).toBe("");
+          const readFileString10 = yield* fs.readFileString(outsideIndex);
+          expect(readFileString10).toBe(sentinel);
+          const spawnGit11 = yield* spawnGit(tmpDir, ["diff", "--cached", "--name-only"]);
+          expect(Str.trim(spawnGit11)).toBe("");
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -335,7 +355,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
       Effect.flatMap(portfolioRepo(), ({ indexPath, tempContext, tmpDir }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          yield* fs.writeFileString(indexPath, yield* buildPortfolioIndexContent(tmpDir));
+          const buildPortfolioIndexContent12 = yield* buildPortfolioIndexContent(tmpDir);
+          yield* fs.writeFileString(indexPath, buildPortfolioIndexContent12);
           yield* runGit(tmpDir, ["add", PORTFOLIO_INDEX_PATH]);
 
           const failure = yield* enforcePortfolioIndexPublishIntent(
@@ -344,7 +365,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
           ).pipe(Effect.flip);
 
           expect(failure.message).toContain("must never enter a commit");
-          expect(yield* runGitStatus(tmpDir)).toContain(`A  ${PORTFOLIO_INDEX_PATH}`);
+          const resultGitStatus13 = yield* runGitStatus(tmpDir);
+          expect(resultGitStatus13).toContain(`A  ${PORTFOLIO_INDEX_PATH}`);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -353,7 +375,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
       Effect.flatMap(portfolioRepo(), ({ indexPath, tempContext, tmpDir }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          yield* fs.writeFileString(indexPath, yield* buildPortfolioIndexContent(tmpDir));
+          const buildPortfolioIndexContent14 = yield* buildPortfolioIndexContent(tmpDir);
+          yield* fs.writeFileString(indexPath, buildPortfolioIndexContent14);
           yield* runGit(tmpDir, ["add", PORTFOLIO_INDEX_PATH]);
           yield* runGit(tmpDir, ["commit", "-m", "track legacy index"]);
           yield* fs.remove(indexPath);
@@ -365,10 +388,12 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
           );
 
           expect(disposition).toBe("regenerated");
-          expect(yield* fs.readFileString(indexPath)).toBe(yield* buildPortfolioIndexContent(tmpDir));
-          expect(Str.trim(yield* spawnGit(tmpDir, ["diff", "--cached", "--diff-filter=D", "--name-only"]))).toBe(
-            PORTFOLIO_INDEX_PATH
-          );
+          const readFileString15 = yield* fs.readFileString(indexPath);
+          const expectation2 = expect(readFileString15);
+          const buildPortfolioIndexContent3 = yield* buildPortfolioIndexContent(tmpDir);
+          expectation2.toBe(buildPortfolioIndexContent3);
+          const spawnGit16 = yield* spawnGit(tmpDir, ["diff", "--cached", "--diff-filter=D", "--name-only"]);
+          expect(Str.trim(spawnGit16)).toBe(PORTFOLIO_INDEX_PATH);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -389,7 +414,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
           expect(failure.message).toContain(PORTFOLIO_INDEX_PATH);
           expect(failure.message).toContain(PORTFOLIO_INDEX_WRITE_COMMAND);
           // The refusal must never silently replace the agent's staged copy.
-          expect(yield* fs.readFileString(indexPath)).toBe(handEdited);
+          const readFileString17 = yield* fs.readFileString(indexPath);
+          expect(readFileString17).toBe(handEdited);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );

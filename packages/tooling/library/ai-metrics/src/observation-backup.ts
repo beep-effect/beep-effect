@@ -115,7 +115,8 @@ const safe = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(Effect.mapError((error) => (S.is(ObservationBackupError)(error) ? error : failure("storage"))));
 const digest = Effect.fn("ObservationBackup.digest")(function* (bytes: Uint8Array) {
   const digest = yield* Digest.Digest;
-  return Sha256Hex.make(Hex.encode(yield* digest.digest(Digest.sha256, bytes)));
+  const digest1 = yield* digest.digest(Digest.sha256, bytes);
+  return Sha256Hex.make(Hex.encode(digest1));
 });
 const readBounded = Effect.fn("ObservationBackup.readBounded")(function* (file: string, limit: number) {
   const fs = yield* FileSystem.FileSystem;
@@ -282,7 +283,9 @@ export const captureObservationBackup = Effect.fn("AiMetrics.captureObservationB
         bytes: bytes.length,
         createdAt: yield* Clock.currentTimeMillis,
       });
-      const encoded = new TextEncoder().encode(yield* encodeObservationBackupManifestJson(manifest));
+      const argument = new TextEncoder();
+      const encodedObservationBackupManifestJson = yield* encodeObservationBackupManifestJson(manifest);
+      const encoded = argument.encode(encodedObservationBackupManifestJson);
       yield* writeSynced(`${directory}/manifest.partial`, encoded);
       yield* fs.rename(`${directory}/manifest.partial`, `${directory}/manifest.json`);
       yield* syncDirectory(directory);
@@ -335,7 +338,9 @@ export const restoreObservationBackup = Effect.fn("AiMetrics.restoreObservationB
       yield* inspectSnapshot(connection, file, manifest.configDigest, manifest.hostId, manifest.namespaceId).pipe(
         Effect.mapError(() => failure("integrity"))
       );
-      const marker = new TextEncoder().encode(yield* encodeObservationBackupReceiptJson(receipt));
+      const argument1 = new TextEncoder();
+      const encodedObservationBackupReceiptJson = yield* encodeObservationBackupReceiptJson(receipt);
+      const marker = argument1.encode(encodedObservationBackupReceiptJson);
       yield* writeSynced(`${directory}/restore.partial`, marker);
       yield* fs.rename(`${directory}/restore.partial`, `${directory}/restore.json`);
       yield* syncDirectory(directory);

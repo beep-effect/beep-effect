@@ -85,7 +85,8 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
     it.effect("round-trips a value through JSON text", () =>
       Effect.gen(function* () {
         const text = yield* codec.encode({ x: 1, y: 2 });
-        expect(yield* codec.decode(text)).toEqual({ x: 1, y: 2 });
+        const resolved1 = yield* codec.decode(text);
+        expect(resolved1).toEqual({ x: 1, y: 2 });
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
@@ -99,7 +100,8 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         const decode = decodeOrFail(Point, (error) => SharedInternalsTestError.make({ message: `bad: ${error._tag}` }));
         const exit = yield* Effect.exit(decode("not json"));
         expect(exit._tag).toBe("Failure");
-        expect(yield* decode('{"x":3,"y":4}')).toEqual({ x: 3, y: 4 });
+        const resolved2 = yield* decode('{"x":3,"y":4}');
+        expect(resolved2).toEqual({ x: 3, y: 4 });
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });
@@ -172,8 +174,10 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
             ConfigProvider.ConfigProvider,
             ConfigProvider.fromUnknown({ TOKEN: value })
           )(readOptionalConfigString("TOKEN"));
-        assertSome(yield* withProvider("first"), "first");
-        assertSome(yield* withProvider("second"), "second");
+        const resolved3 = yield* withProvider("first");
+        assertSome(resolved3, "first");
+        const resolved4 = yield* withProvider("second");
+        assertSome(resolved4, "second");
         const missing = Effect.provideService(
           ConfigProvider.ConfigProvider,
           ConfigProvider.fromUnknown({})
@@ -227,9 +231,12 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
 
     it.effect("returns nothing for a non-turbo command", () =>
       Effect.gen(function* () {
-        expect(yield* overridesFor({}, "git", ["status"])).toEqual({});
-        expect(yield* overridesFor({}, "bunx", ["vitest", "run"])).toEqual({});
-        expect(yield* overridesFor({}, "op", ["run", "--", "bun", "run", "build"])).toEqual({});
+        const resolved5 = yield* overridesFor({}, "git", ["status"]);
+        expect(resolved5).toEqual({});
+        const resolved6 = yield* overridesFor({}, "bunx", ["vitest", "run"]);
+        expect(resolved6).toEqual({});
+        const resolved7 = yield* overridesFor({}, "op", ["run", "--", "bun", "run", "build"]);
+        expect(resolved7).toEqual({});
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
@@ -246,25 +253,23 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
 
     it.effect("guards the TUI on a direct turbo spawn with resolved credentials", () =>
       Effect.gen(function* () {
-        expect(
-          yield* overridesFor({ TURBO_TOKEN: "resolved", TURBO_TEAM: "beep", TURBO_CACHE: REMOTE_READ }, "bunx", [
-            "turbo",
-            "run",
-            "check",
-          ])
-        ).toEqual({ TURBO_UI: "false" });
+        const resolved8 = yield* overridesFor(
+          { TURBO_TOKEN: "resolved", TURBO_TEAM: "beep", TURBO_CACHE: REMOTE_READ },
+          "bunx",
+          ["turbo", "run", "check"]
+        );
+        expect(resolved8).toEqual({ TURBO_UI: "false" });
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
     it.effect("scrubs unresolved references and pins the cache posture on a direct spawn", () =>
       Effect.gen(function* () {
-        expect(
-          yield* overridesFor(
-            { TURBO_API: OP_REFERENCE, TURBO_TOKEN: OP_REFERENCE, TURBO_TEAM: OP_REFERENCE, TURBO_CACHE: REMOTE_READ },
-            "bunx",
-            ["turbo", "run", "check"]
-          )
-        ).toStrictEqual({
+        const resolved9 = yield* overridesFor(
+          { TURBO_API: OP_REFERENCE, TURBO_TOKEN: OP_REFERENCE, TURBO_TEAM: OP_REFERENCE, TURBO_CACHE: REMOTE_READ },
+          "bunx",
+          ["turbo", "run", "check"]
+        );
+        expect(resolved9).toStrictEqual({
           TURBO_UI: "false",
           TURBO_API: undefined,
           TURBO_TOKEN: undefined,
@@ -276,21 +281,20 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
 
     it.effect("unsets unrelated unresolved references on a direct spawn and keeps literals", () =>
       Effect.gen(function* () {
-        expect(
-          yield* overridesFor(
-            {
-              PATH: "/fixture/bin",
-              SAFE_LITERAL: "fixture-value",
-              TURBO_TOKEN: "resolved",
-              TURBO_TEAM: "beep",
-              TURBO_CACHE: REMOTE_READ,
-              UNRELATED_SECRET: "op://fixture-vault/unrelated/secret",
-              UNRELATED_DATABASE_URL: "postgres://user:op://fixture-vault/database/password@db.test/database",
-            },
-            "bunx",
-            ["turbo", "run", "build"]
-          )
-        ).toStrictEqual({
+        const resolved10 = yield* overridesFor(
+          {
+            PATH: "/fixture/bin",
+            SAFE_LITERAL: "fixture-value",
+            TURBO_TOKEN: "resolved",
+            TURBO_TEAM: "beep",
+            TURBO_CACHE: REMOTE_READ,
+            UNRELATED_SECRET: "op://fixture-vault/unrelated/secret",
+            UNRELATED_DATABASE_URL: "postgres://user:op://fixture-vault/database/password@db.test/database",
+          },
+          "bunx",
+          ["turbo", "run", "build"]
+        );
+        expect(resolved10).toStrictEqual({
           UNRELATED_SECRET: undefined,
           UNRELATED_DATABASE_URL: undefined,
           TURBO_UI: "false",
@@ -321,7 +325,8 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         const args = opRunArgs(["run", "check"]);
 
         expect(turboCacheSecretSessionEnvironment(environment)).toStrictEqual(sanitized);
-        expect(yield* overridesFor(environment, "op", args)).toStrictEqual({ ...sanitized, TURBO_UI: "false" });
+        const resolved11 = yield* overridesFor(environment, "op", args);
+        expect(resolved11).toStrictEqual({ ...sanitized, TURBO_UI: "false" });
         expect(turboEnvExtendsAmbient("op", args)).toBe(false);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -330,7 +335,8 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
       Effect.gen(function* () {
         const args = opRunArgs(["run", "coverage", "--", "--maxWorkers=1"]);
 
-        expect(yield* overridesFor({}, "op", args)).toEqual({ TURBO_UI: "false" });
+        const resolved12 = yield* overridesFor({}, "op", args);
+        expect(resolved12).toEqual({ TURBO_UI: "false" });
         expect(turboEnvExtendsAmbient("op", args)).toBe(false);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -468,14 +474,13 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
             cwd: "/repo",
           }),
         ]) {
-          expect(
-            yield* resolveTurboCacheStep(step, {
-              TURBO_API: "https://cache.example.test",
-              TURBO_TOKEN: "fixture-literal",
-              TURBO_TEAM: "fixture",
-              TURBO_CACHE: "local:rw,remote:r",
-            }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner))
-          ).toBe(step);
+          const resolved13 = yield* resolveTurboCacheStep(step, {
+            TURBO_API: "https://cache.example.test",
+            TURBO_TOKEN: "fixture-literal",
+            TURBO_TEAM: "fixture",
+            TURBO_CACHE: "local:rw,remote:r",
+          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+          expect(resolved13).toBe(step);
         }
       })
     );
@@ -488,15 +493,18 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           ConfigProvider.ConfigProvider,
           ConfigProvider.fromUnknown({})
         )(canUseTurboCacheSecretSession("/repo/cache-once")).pipe(provideSpawner(spawner));
-        expect(yield* probe).toBe(true);
-        expect(yield* probe).toBe(true);
+        const resolved14 = yield* probe;
+        expect(resolved14).toBe(true);
+        const resolved15 = yield* probe;
+        expect(resolved15).toBe(true);
         expect(spawner.spawns.length).toBe(1);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
     it.effect("refuses a session under CI without probing the op CLI", () =>
       Effect.gen(function* () {
-        expect(yield* sessionWith({ CI: "true" }, [{}])).toEqual({
+        const resolved16 = yield* sessionWith({ CI: "true" }, [{}]);
+        expect(resolved16).toEqual({
           usable: false,
           spawned: 0,
         });
@@ -505,15 +513,18 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
 
     it.effect("requires the cache references to resolve", () =>
       Effect.gen(function* () {
-        expect(yield* sessionWith({}, [{}])).toEqual({
+        const resolved17 = yield* sessionWith({}, [{}]);
+        expect(resolved17).toEqual({
           usable: true,
           spawned: 1,
         });
-        expect(yield* sessionWith({}, [{ exit: 1 }])).toEqual({
+        const resolved18 = yield* sessionWith({}, [{ exit: 1 }]);
+        expect(resolved18).toEqual({
           usable: false,
           spawned: 1,
         });
-        expect(yield* sessionWith({ CI: "false" }, [{ exit: 1 }])).toEqual({
+        const resolved19 = yield* sessionWith({ CI: "false" }, [{ exit: 1 }]);
+        expect(resolved19).toEqual({
           usable: false,
           spawned: 1,
         });
@@ -522,7 +533,8 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           method: "spawn",
           description: "reference probe failed",
         });
-        expect(yield* sessionWith({}, [probeFailure])).toEqual({
+        const resolved20 = yield* sessionWith({}, [probeFailure]);
+        expect(resolved20).toEqual({
           usable: false,
           spawned: 1,
         });
@@ -708,7 +720,8 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
     it.effect("treats a spawn failure as an unavailable op CLI", () =>
       Effect.gen(function* () {
         const failure = PlatformError.badArgument({ module: "ChildProcess", method: "spawn", description: "ENOENT" });
-        expect(yield* sessionWith({}, [failure])).toEqual({ usable: false, spawned: 1 });
+        const resolved21 = yield* sessionWith({}, [failure]);
+        expect(resolved21).toEqual({ usable: false, spawned: 1 });
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });

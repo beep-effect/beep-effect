@@ -53,13 +53,16 @@ it.layer(Services, { timeout: "20 seconds", excludeTestServices: true })((it) =>
             const address = Redacted.value(proxy.address);
             expect((yield* fs.stat(address.path)).mode & 0o777).toBe(0o600);
             expect((yield* fs.stat(path.dirname(address.path))).mode & 0o777).toBe(0o700);
-            expect(yield* proxy.events).toEqual([]);
+            const events1 = yield* proxy.events;
+            expect(events1).toEqual([]);
             expect(make).toHaveBeenCalledWith({ unix: address.path, maxRequestBodySize: 64 * 1024 * 1024 });
             return address;
           })
         );
-        expect(yield* fs.exists(address.path)).toBe(false);
-        expect(yield* fs.exists(path.dirname(address.path))).toBe(false);
+        const exists2 = yield* fs.exists(address.path);
+        expect(exists2).toBe(false);
+        const exists3 = yield* fs.exists(path.dirname(address.path));
+        expect(exists3).toBe(false);
       })
   );
 
@@ -86,7 +89,9 @@ it.layer(Services, { timeout: "20 seconds", excludeTestServices: true })((it) =>
       );
       const error = yield* cache.serveCachePrivateSocket(emptyResponse, 1024).pipe(Effect.flip, Effect.scoped);
       expect(error.message).toBe("Private cache server did not bind a Unix socket.");
-      expect(yield* fs.exists(O.getOrThrow(yield* Ref.get(directory)))).toBe(false);
+      const got = yield* Ref.get(directory);
+      const exists4 = yield* fs.exists(O.getOrThrow(got));
+      expect(exists4).toBe(false);
     })
   );
 
@@ -107,7 +112,9 @@ it.layer(Services, { timeout: "20 seconds", excludeTestServices: true })((it) =>
       const error = yield* cache.serveCachePrivateSocket(emptyResponse, 1024).pipe(Effect.flip, Effect.scoped);
       expect(error.message).toBe("Cannot run the private cache socket server.");
       expect(error.cause).toMatchObject({ cause: "synthetic private socket bind" });
-      expect(yield* fs.exists(O.getOrThrow(yield* Ref.get(directory)))).toBe(false);
+      const got6 = yield* Ref.get(directory);
+      const exists5 = yield* fs.exists(O.getOrThrow(got6));
+      expect(exists5).toBe(false);
     })
   );
 });

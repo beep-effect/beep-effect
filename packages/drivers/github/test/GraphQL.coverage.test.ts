@@ -240,7 +240,8 @@ describe("GraphQLDocument coverage", () => {
       assert.strictEqual(document.document, "query { count }");
       assert.strictEqual(document.encodeVariables(variables), variables);
       assert.strictEqual(document.encodeVariables, identity);
-      assert.deepStrictEqual(yield* document.decode({ count: "42" }), { count: 42 });
+      const decoded = yield* document.decode({ count: "42" });
+      assert.deepStrictEqual(decoded, { count: 42 });
       const invalid = yield* document
         .decode({ count: "invalid" })
         .pipe(Effect.mapError(S.isSchemaError), Effect.result);
@@ -254,7 +255,8 @@ describe("GraphQLDocument coverage", () => {
         owner: string;
       }>((variables) => ({ login: variables.owner }));
       assert.deepStrictEqual(document.encodeVariables({ owner: "octocat" }), { login: "octocat" });
-      assert.strictEqual(yield* document.decode("response"), "response");
+      const decoded1 = yield* document.decode("response");
+      assert.strictEqual(decoded1, "response");
     })
   );
 

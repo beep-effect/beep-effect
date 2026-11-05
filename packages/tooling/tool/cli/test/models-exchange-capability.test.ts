@@ -129,15 +129,21 @@ layer(ModelsAtomicExchangeLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServic
       expect(first.directory).toBe(root);
       expect((yield* capability.qualify(sibling)).capability._tag).toBe("supported");
       expect(counter.probes).toBe(1);
-      expect(A.filter(yield* fs.readDirectory(root), (entry) => Str.startsWith(probePrefix)(entry))).toEqual([]);
+      const readDirectory1 = yield* fs.readDirectory(root);
+      expect(A.filter(readDirectory1, (entry) => Str.startsWith(probePrefix)(entry))).toEqual([]);
       const writer = yield* writerWith(capability);
-      const journal = O.getOrThrow(yield* writer.apply(file, [topLevel], "write", backups));
-      expect(yield* fs.readFileString(journal.backup)).toBe(native);
-      expect(yield* fs.readFileString(file)).toContain('"gpt-6.1-sol"');
+      const apply2 = yield* writer.apply(file, [topLevel], "write", backups);
+      const journal = O.getOrThrow(apply2);
+      const readFileString3 = yield* fs.readFileString(journal.backup);
+      expect(readFileString3).toBe(native);
+      const readFileString4 = yield* fs.readFileString(file);
+      expect(readFileString4).toContain('"gpt-6.1-sol"');
       yield* writer.restore(path.join(backups, `${journal.id}.json`), backups);
-      expect(yield* fs.readFileString(file)).toBe(native);
+      const readFileString5 = yield* fs.readFileString(file);
+      expect(readFileString5).toBe(native);
       expect(counter.probes).toBe(3);
-      expect(A.filter(yield* fs.readDirectory(root), (entry) => Str.startsWith(probePrefix)(entry))).toEqual([]);
+      const readDirectory6 = yield* fs.readDirectory(root);
+      expect(A.filter(readDirectory6, (entry) => Str.startsWith(probePrefix)(entry))).toEqual([]);
     })
   );
 
@@ -167,16 +173,20 @@ layer(ModelsAtomicExchangeLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServic
         const fs = yield* FileSystem.FileSystem;
         const { backups, file, root } = yield* fixture(`exchange-${errno}-`);
         const { counter, system } = yield* countingSystem({ refuse: errno });
-        const writer = yield* writerWith(yield* makeModelsAtomicExchange(system));
+        const madeModelsAtomicExchange = yield* makeModelsAtomicExchange(system);
+        const writer = yield* writerWith(madeModelsAtomicExchange);
         for (const _attempt of [0, 1]) {
           const error = yield* Effect.flip(writer.apply(file, [topLevel], "write", backups));
           expect(error._tag).toBe("ModelsLocatorError");
           expect(error.reason).toBe("exchange-unsupported");
           expect(error.message).toContain(`Atomic exchange unsupported on the target filesystem (${errno}:`);
           expect(error.message).not.toContain("Journal:");
-          expect(yield* fs.exists(backups)).toBe(false);
-          expect(yield* fs.readFileString(file)).toBe(native);
-          expect(yield* fs.readDirectory(root)).toEqual(["config.toml"]);
+          const exists7 = yield* fs.exists(backups);
+          expect(exists7).toBe(false);
+          const readFileString8 = yield* fs.readFileString(file);
+          expect(readFileString8).toBe(native);
+          const readDirectory9 = yield* fs.readDirectory(root);
+          expect(readDirectory9).toEqual(["config.toml"]);
         }
         expect(counter.probes).toBe(1);
       })
@@ -189,28 +199,24 @@ layer(ModelsAtomicExchangeLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServic
       const path = yield* Path.Path;
       const { backups, file, root } = yield* fixture("exchange-restore-");
       const supported = yield* countingSystem({});
-      const journal = O.getOrThrow(
-        yield* (yield* writerWith(yield* makeModelsAtomicExchange(supported.system))).apply(
-          file,
-          [topLevel],
-          "write",
-          backups
-        )
-      );
+      const madeModelsAtomicExchange29 = yield* makeModelsAtomicExchange(supported.system);
+      const apply10 = yield* (yield* writerWith(madeModelsAtomicExchange29)).apply(file, [topLevel], "write", backups);
+      const journal = O.getOrThrow(apply10);
       const applied = yield* fs.readFileString(file);
       const refusing = yield* countingSystem({ refuse: "einval" });
-      const writer = yield* writerWith(yield* makeModelsAtomicExchange(refusing.system));
+      const madeModelsAtomicExchange11 = yield* makeModelsAtomicExchange(refusing.system);
+      const writer = yield* writerWith(madeModelsAtomicExchange11);
       const error = yield* Effect.flip(writer.restore(path.join(backups, `${journal.id}.json`), backups));
       expect(error.reason).toBe("exchange-unsupported");
       expect(error.message).toContain(`Journal: ${journal.id}`);
-      expect(yield* fs.readFileString(file)).toBe(applied);
+      const readFileString12 = yield* fs.readFileString(file);
+      expect(readFileString12).toBe(applied);
+      const readDirectory13 = yield* fs.readDirectory(root);
       expect(
-        A.filter(
-          yield* fs.readDirectory(root),
-          (entry) => Str.endsWith(".preimage")(entry) || Str.endsWith(".tmp")(entry)
-        )
+        A.filter(readDirectory13, (entry) => Str.endsWith(".preimage")(entry) || Str.endsWith(".tmp")(entry))
       ).toEqual([]);
-      expect(yield* fs.readFileString(journal.backup)).toBe(native);
+      const readFileString14 = yield* fs.readFileString(journal.backup);
+      expect(readFileString14).toBe(native);
     })
   );
 
@@ -227,9 +233,12 @@ layer(ModelsAtomicExchangeLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServic
       expect(error.reason).toBe("exchange-unsupported");
       expect(error.message).toContain("(exdev: Target is on mount 99");
       expect(error.message).not.toContain("Journal:");
-      expect(yield* fs.exists(backups)).toBe(false);
-      expect(yield* fs.readFileString(file)).toBe(native);
-      expect(yield* fs.readDirectory(root)).toEqual(["config.toml"]);
+      const exists15 = yield* fs.exists(backups);
+      expect(exists15).toBe(false);
+      const readFileString16 = yield* fs.readFileString(file);
+      expect(readFileString16).toBe(native);
+      const readDirectory17 = yield* fs.readDirectory(root);
+      expect(readDirectory17).toEqual(["config.toml"]);
       expect(counter.probes).toBe(0);
     })
   );
@@ -244,15 +253,20 @@ layer(ModelsAtomicExchangeLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServic
       const error = yield* Effect.flip(writer.apply(file, [topLevel], "write", backups));
       expect(error.reason).toBe("exchange-probe-failed");
       expect(error.message).toContain("no host verdict: simulated spawn EAGAIN");
-      expect(yield* fs.exists(backups)).toBe(false);
-      expect(yield* fs.readFileString(file)).toBe(native);
-      expect(A.filter(yield* fs.readDirectory(root), (entry) => Str.startsWith(probePrefix)(entry))).toEqual([]);
+      const exists18 = yield* fs.exists(backups);
+      expect(exists18).toBe(false);
+      const readFileString19 = yield* fs.readFileString(file);
+      expect(readFileString19).toBe(native);
+      const readDirectory20 = yield* fs.readDirectory(root);
+      expect(A.filter(readDirectory20, (entry) => Str.startsWith(probePrefix)(entry))).toEqual([]);
       // Not cached: the next qualification probes again and the host verdict is supported.
       expect((yield* capability.qualify(file)).capability._tag).toBe("supported");
       expect(counter.launches).toBe(2);
       expect(counter.probes).toBe(1);
-      const journal = O.getOrThrow(yield* writer.apply(file, [topLevel], "write", backups));
-      expect(yield* fs.readFileString(journal.backup)).toBe(native);
+      const apply21 = yield* writer.apply(file, [topLevel], "write", backups);
+      const journal = O.getOrThrow(apply21);
+      const readFileString22 = yield* fs.readFileString(journal.backup);
+      expect(readFileString22).toBe(native);
       expect(counter.probes).toBe(2);
       // A launch failure during publication keeps the retain-artifacts boundary.
       const publishing = yield* makeModelsAtomicExchange({
@@ -271,7 +285,8 @@ layer(ModelsAtomicExchangeLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServic
       const { system } = yield* countingSystem({ noop: true });
       const { capability } = yield* (yield* makeModelsAtomicExchange(system)).qualify(file);
       expect(capability).toMatchObject({ _tag: "unsupported", reason: "unknown" });
-      expect(A.filter(yield* fs.readDirectory(root), (entry) => Str.startsWith(probePrefix)(entry))).toEqual([]);
+      const readDirectory23 = yield* fs.readDirectory(root);
+      expect(A.filter(readDirectory23, (entry) => Str.startsWith(probePrefix)(entry))).toEqual([]);
     })
   );
 
@@ -288,8 +303,10 @@ layer(ModelsAtomicExchangeLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServic
       expect(probeError._tag).toBe("ModelsExchangeProbeError");
       const error = yield* Effect.flip((yield* writerWith(capability)).apply(file, [topLevel], "write", backups));
       expect(error.reason).toBe("exchange-probe-failed");
-      expect(yield* fs.exists(backups)).toBe(false);
-      expect(yield* fs.readFileString(file)).toBe(native);
+      const exists24 = yield* fs.exists(backups);
+      expect(exists24).toBe(false);
+      const readFileString25 = yield* fs.readFileString(file);
+      expect(readFileString25).toBe(native);
       expect(counter.probes).toBe(0);
       const missing = yield* Effect.flip(capability.qualify(`${file}.absent`));
       expect(missing._tag).toBe("ModelsExchangeProbeError");
@@ -304,14 +321,17 @@ layer(ModelsAtomicExchangeLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServic
       const qualification = yield* live.qualify(file);
       expect(["supported", "unsupported"]).toContain(qualification.capability._tag);
       expect(qualification.identity.device).toBe((yield* fs.stat(root)).dev);
-      expect(yield* fs.readFileString(file)).toBe(native);
-      expect(yield* fs.readDirectory(root)).toEqual(["config.toml"]);
+      const readFileString26 = yield* fs.readFileString(file);
+      expect(readFileString26).toBe(native);
+      const readDirectory27 = yield* fs.readDirectory(root);
+      expect(readDirectory27).toEqual(["config.toml"]);
       const left = `${file}.left`;
       yield* fs.writeFileString(left, "left");
       const exchanged = yield* live.exchange(left, file).pipe(Effect.result);
       if (qualification.capability._tag === "supported") {
         expect(exchanged._tag).toBe("Success");
-        expect(yield* fs.readFileString(file)).toBe("left");
+        const readFileString28 = yield* fs.readFileString(file);
+        expect(readFileString28).toBe("left");
       }
       const refused = yield* Effect.flip(live.exchange(`${file}.absent`, file));
       expect(refused.message).toContain("Atomic exchange failed; retain recovery artifacts.");

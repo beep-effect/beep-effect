@@ -440,7 +440,9 @@ const decideCiParityReuse = Effect.fn("Yeet.decideCiParityReuse")(function* (
 ) {
   const parity = yield* collectProofEnvironment(step.id, previewRoot, effectiveStepEnvironment(step), previewBaseSha);
   yield* recordProofEnvironment(context, parity);
-  const proven = provenLanesForAttempt(yield* readInnerLaneReports(context), yield* readProofEnvironments(context));
+  const innerLaneReports = yield* readInnerLaneReports(context);
+  const proofEnvironments = yield* readProofEnvironments(context);
+  const proven = provenLanesForAttempt(innerLaneReports, proofEnvironments);
   const decisions = yield* decideParityLaneReuse(
     ciParityLaneCandidates(
       previewRoot,
@@ -1516,7 +1518,8 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
     extras,
     reusableSkipCommit
   );
-  const committedAttempt = attemptAtCommittedHead(attempt, yield* Ref.get(extras));
+  const committedExtras = yield* Ref.get(extras);
+  const committedAttempt = attemptAtCommittedHead(attempt, committedExtras);
 
   if (!options.pr) {
     yield* Console.error(
@@ -2128,7 +2131,8 @@ const runPublishPushPhase = Effect.fn("Yeet.runPublishPushPhase")(function* (
   const verifyHead = O.match(before, {
     onNone: () => Effect.void,
     onSome: Effect.fn("Yeet.verifyPublishedHead")(function* (expected) {
-      if (!S.toEquivalence(GitObjectId)(yield* readPublishedHead(context), expected))
+      const publishedHead = yield* readPublishedHead(context);
+      if (!S.toEquivalence(GitObjectId)(publishedHead, expected))
         return yield* YeetCommandError.make({
           message:
             "The checkout head changed during publication; the pushed commit is unproven. Inspect the remote before retrying.",
@@ -2247,9 +2251,10 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   // changed-package tripwire (rulings 69, 70); it never fails.
   const changedPackages = yield* changedPackagesForAttempt(plan.context);
   yield* Console.log(`[yeet] ${renderProofChangedPackages(changedPackages)}`);
-  const environmentDigests = proofEnvironmentDigests(
-    yield* readProofEnvironments(plan.context).pipe(Effect.orElseSucceed(A.empty<ProofEnvironment>))
+  const proofEnvironments = yield* readProofEnvironments(plan.context).pipe(
+    Effect.orElseSucceed(A.empty<ProofEnvironment>)
   );
+  const environmentDigests = proofEnvironmentDigests(proofEnvironments);
   yield* recordProofShadowForAttempt(
     plan.context.repoRoot,
     proofShadowAttemptFacts(reached),

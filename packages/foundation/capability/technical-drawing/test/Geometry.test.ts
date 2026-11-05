@@ -87,11 +87,14 @@ describe("Geometry.schemas primitive line style", () => {
       const keys = yield* decodePrimitiveKeys(encoded);
       expect(A.flatMap(keys.parts, (part) => A.filter(part.add, (primitive) => "lineStyle" in primitive))).toEqual([]);
       // the key-less spec reads back to an equal spec, and a styled one keeps its style through JSON
-      expect(yield* decodeSpec(encoded)).toEqual(plain);
+      const decodedSpec = yield* decodeSpec(encoded);
+      expect(decodedSpec).toEqual(plain);
       const styled = yield* decodeSpec(flapInput);
       const text = yield* encodeSpecJson(styled);
-      expect(yield* decodeSpecJson(text)).toEqual(styled);
-      const styledKeys = yield* decodePrimitiveKeys(yield* decodeJson(text));
+      const decodedSpecJson = yield* decodeSpecJson(text);
+      expect(decodedSpecJson).toEqual(styled);
+      const decodedJson = yield* decodeJson(text);
+      const styledKeys = yield* decodePrimitiveKeys(decodedJson);
       expect(A.map(styledKeys.parts[0]?.add ?? [], (primitive) => primitive.lineStyle)).toEqual([
         undefined,
         "broken",
@@ -104,7 +107,9 @@ describe("Geometry.schemas primitive line style", () => {
     "round-trips any box, its line style included, through its encoded form",
     [Arbitrary.schema(Box)],
     Effect.fnUntraced(function* ([box]) {
-      expect(yield* decodeBox(yield* encodeBox(box))).toEqual(box);
+      const encodedBox = yield* encodeBox(box);
+      const decodedBox = yield* decodeBox(encodedBox);
+      expect(decodedBox).toEqual(box);
     }),
     { arbitrary: { runs: 50 } }
   );

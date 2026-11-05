@@ -11,6 +11,7 @@ import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { constant, flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -19,6 +20,12 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PosInt } from "../../internal/PosInt.ts";
 import {
+  ClaimInputContextIssue,
+  ClaimInputNormalization,
+  ClaimInputQualification,
+  ClaimInputRecord,
+} from "../ClaimElement/ClaimElement.input.model.ts";
+import {
   PatentApplicationDocument,
   PatentApplicationSection,
   PatentClaim,
@@ -26,6 +33,7 @@ import {
   PatentClaimTransition,
 } from "./PatentDocument.model.ts";
 import type { Block, Document } from "@beep/md";
+import type { ClaimInputCollection } from "../ClaimElement/ClaimElement.input.model.ts";
 import type { PatentApplicationSectionRole } from "./PatentDocument.model.ts";
 
 const decodeUnknownPatentApplicationDocument = S.decodeUnknownEffect(PatentApplicationDocument);
@@ -37,6 +45,14 @@ const transitionPattern =
   /\b(consisting essentially of|consisting of|comprising|comprises|comprised of|including|includes|having|wherein|where|(?:(?:is|being)\s+)?characteri[sz]ed (?:in that|by(?: the fact that| the steps of)?)|in which(?: method)?)\b/giu;
 const claimReferenceMarkerPattern = /\bclaims?\b/iu;
 const claimReferencePattern = /(\d+)(?:\s*(?:-|–|—|through|thru|to)\s*(\d+))?/giu;
+// Only the contiguous claim-number expression belongs to the dependency list.
+// Later component identifiers in a defining clause are source text, not parents.
+const parentClaimExpressionPattern =
+  /^\s*\d+(?:\s*(?:-|–|—|through|thru|to)\s*\d+)?(?:\s*(?:,\s*(?:(?:and|or)\s+)?|(?:and\s*\/\s*or|as\s+well\s+as|and|or|claims?)\s+|&\s*)(?:claims?\s+)?\d+(?:\s*(?:-|–|—|through|thru|to)\s*\d+)?)*\b/iu;
+// A successful prefix is insufficient: unconsumed list syntax must not hide
+// a self/forward parent. Require an explicit descriptive boundary or the end.
+const parentClaimBoundaryPattern =
+  /^(?:\s*(?:above\b\s*)?[,;:]?\s*(?:and\s+)?(?:(?:wherein|where|in\s+which|(?:(?:is|being)\s+)?characteri[sz]ed|comprising|comprises|comprised|including|includes|having)\b|(?:for|in)\b(?!\s+(?:claims?\b|\d))|(?:said|the)\s+(?!claims?\b)[\p{L}])|\s*(?:above\b\s*)?(?:[,;:]?\s*and\b\s*)?[.,;:]?\s*$)/iu;
 const ambiguousLexicalTransition = LiteralKit(["including", "having"]);
 const isAmbiguousLexicalTransition = S.is(ambiguousLexicalTransition);
 const isOrderedList = S.is(Ol);
@@ -425,6 +441,26 @@ const claimReferencesFromMatch = (
     )
   );
 
+const parentReferenceExpression = (value: string): O.Option<string> =>
+  pipe(
+    Str.match(parentClaimExpressionPattern)(value),
+    O.map((match) => match[0]),
+    O.filter((expression) => {
+      const remainder = Str.slice(Str.length(expression))(value);
+      const descriptiveClause = Str.search(transitionPattern)(remainder);
+      const beforeClause = O.match(descriptiveClause, {
+        onNone: () => remainder,
+        onSome: (index) => Str.slice(0, index)(remainder),
+      });
+      // A subject/purpose boundary cannot hide another explicit parent
+      // before the descriptive clause: "and the above claim 24" is a list.
+      return (
+        O.isSome(Str.match(parentClaimBoundaryPattern)(remainder)) &&
+        O.isNone(Str.match(claimReferenceMarkerPattern)(beforeClause))
+      );
+    })
+  );
+
 const parentClaimNumbers = (preamble: string, currentClaimNumber: PosInt): O.Option<ReadonlyArray<PosInt>> =>
   pipe(
     Str.match(claimReferenceMarkerPattern)(preamble),
@@ -433,18 +469,18 @@ const parentClaimNumbers = (preamble: string, currentClaimNumber: PosInt): O.Opt
       onSome: (marker) => {
         const markerIndex = pipe(O.fromUndefinedOr(marker.index), O.getOrThrow);
         const value = Str.slice(Num.sum(markerIndex, Str.length(marker[0])))(preamble);
+        const expression = parentReferenceExpression(value);
+        if (O.isNone(expression)) return O.none();
         let expanded: ReadonlyArray<PosInt> = A.empty();
         let expandedCount = 0;
-        let matched = false;
-        for (const match of Str.matchAll(claimReferencePattern)(value)) {
-          matched = true;
+        for (const match of Str.matchAll(claimReferencePattern)(expression.value)) {
           const references = claimReferencesFromMatch(match, currentClaimNumber);
           if (O.isNone(references)) return O.none();
           expandedCount = Num.sum(expandedCount, A.length(references.value));
           if (expandedCount > MAX_PARENT_CLAIM_RANGE_CARDINALITY) return O.none();
           expanded = A.appendAll(expanded, references.value);
         }
-        return matched ? O.some(A.dedupe(expanded)) : O.none();
+        return O.some(A.dedupe(expanded));
       },
     })
   );
@@ -502,6 +538,136 @@ const parseClaim = Effect.fn("PatentDocument.parseClaim")(function* (
         transition,
       })
     : PatentClaim.cases.independent.make({ body, claimNumber, claimText, preamble, transition });
+});
+
+/**
+ * Normalize every preserved record independently through the strict claim parser.
+ *
+ * **Details**
+ * A malformed sibling cannot erase valid text. This result is deliberately not
+ * PatentClaims: duplicate numbers and missing ancestors still need separate
+ * context qualification before any check. No source number is inferred.
+ *
+ * **Example** (Inspect the normalization operation)
+ *
+ * ```ts
+ * import { normalizeClaimInput } from "@beep/law-practice-domain/values/PatentDocument"
+ * console.log(typeof normalizeClaimInput) // function
+ * ```
+ *
+ * @category normalization
+ * @since 0.0.0
+ */
+export const normalizeClaimInput = Effect.fn("PatentDocument.normalizeClaimInput")(function* (
+  input: ClaimInputCollection
+): Effect.fn.Return<ReadonlyArray<ClaimInputNormalization>> {
+  return yield* Effect.forEach(input.records, (record) =>
+    ClaimInputRecord.match(record, {
+      unavailable: (record) => Effect.succeed(ClaimInputNormalization.cases["extraction-failed"].make({ record })),
+      text: (record) =>
+        O.match(record.numberText, {
+          onNone: () =>
+            Effect.succeed(
+              ClaimInputNormalization.cases["normalization-failed"].make({
+                record,
+                message: "The source record has no claim number; its source position is not a replacement number.",
+              })
+            ),
+          onSome: (numberText) =>
+            parseClaim(numberText, record.canonicalText).pipe(
+              Effect.map((claim) => ClaimInputNormalization.cases.normalized.make({ record, claim })),
+              Effect.catchTag("PatentDocumentNormalizationError", ({ message }) =>
+                Effect.succeed(ClaimInputNormalization.cases["normalization-failed"].make({ record, message }))
+              )
+            ),
+        }),
+    })
+  );
+});
+
+/**
+ * Qualify every source record without treating unavailable ancestors as absent terms.
+ *
+ * **Details**
+ * All alternative parents and their transitive ancestry must be ready. A
+ * duplicate literal number blocks every record with that number, including
+ * when only one duplicate normalized. Independent siblings remain eligible
+ * for decomposition; global outside-chain completeness is a separate concern.
+ *
+ * **Example** (Inspect the qualification operation)
+ *
+ * ```ts
+ * import { qualifyClaimInput } from "@beep/law-practice-domain/values/PatentDocument"
+ * console.log(typeof qualifyClaimInput) // function
+ * ```
+ *
+ * @category normalization
+ * @since 0.0.0
+ */
+export const qualifyClaimInput = Effect.fn("PatentDocument.qualifyClaimInput")(function* (
+  input: ClaimInputCollection
+): Effect.fn.Return<ReadonlyArray<ClaimInputQualification>> {
+  const outcomes = yield* normalizeClaimInput(input);
+  const numberedRecords = A.getSomes(
+    A.map(input.records, (record) =>
+      O.map(O.flatMap(record.numberText, parseClaimNumber), (claimNumber) => ({ claimNumber, record }))
+    )
+  );
+  const normalized = A.filter(outcomes, ClaimInputNormalization.guards.normalized);
+  let qualified = HashMap.empty<number, ClaimInputQualification>();
+  for (const outcome of A.sort(
+    normalized,
+    Order.mapInput(
+      Num.Order,
+      (outcome: typeof ClaimInputNormalization.cases.normalized.Type) => outcome.claim.claimNumber
+    )
+  )) {
+    const { claim, record } = outcome;
+    const duplicates = A.filter(numberedRecords, (known) => Num.Equivalence(known.claimNumber, claim.claimNumber));
+    const issues: ReadonlyArray<ClaimInputContextIssue> =
+      A.length(duplicates) > 1
+        ? [ClaimInputContextIssue.cases["duplicate-number"].make({ claimNumber: claim.claimNumber })]
+        : PatentClaim.match(claim, {
+            independent: () => [],
+            dependent: ({ claimReferences }) =>
+              A.getSomes(
+                A.map(claimReferences, (parentClaimNumber) => {
+                  const source = A.filter(numberedRecords, (known) =>
+                    Num.Equivalence(known.claimNumber, parentClaimNumber)
+                  );
+                  if (A.isReadonlyArrayEmpty(source))
+                    return O.some(ClaimInputContextIssue.cases["missing-parent"].make({ parentClaimNumber }));
+                  const parent = A.findFirst(normalized, (known) =>
+                    Num.Equivalence(known.claim.claimNumber, parentClaimNumber)
+                  );
+                  if (O.isNone(parent))
+                    return O.some(ClaimInputContextIssue.cases["unnormalized-parent"].make({ parentClaimNumber }));
+                  const ready = O.exists(
+                    HashMap.get(qualified, parent.value.record.sourceOrdinal),
+                    ClaimInputQualification.guards["context-ready"]
+                  );
+                  return ready
+                    ? O.none()
+                    : O.some(ClaimInputContextIssue.cases["affected-ancestor"].make({ parentClaimNumber }));
+                })
+              ),
+          });
+    qualified = HashMap.set(
+      qualified,
+      record.sourceOrdinal,
+      A.isReadonlyArrayNonEmpty(issues)
+        ? ClaimInputQualification.cases["context-unavailable"].make({ record, claim, issues })
+        : ClaimInputQualification.cases["context-ready"].make({ record, claim })
+    );
+  }
+  return A.map(outcomes, (outcome) =>
+    ClaimInputNormalization.match(outcome, {
+      normalized: ({ record }) => O.getOrThrow(HashMap.get(qualified, record.sourceOrdinal)),
+      "extraction-failed": ({ record }) => ClaimInputQualification.cases["extraction-failed"].make({ record }),
+      "normalization-failed": ({ record, message }) =>
+        ClaimInputQualification.cases["normalization-failed"].make({ record, message }),
+    })
+  );
 });
 
 /**

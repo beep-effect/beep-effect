@@ -92,10 +92,8 @@ const seedPendingCard = Effect.fn("ResearchDailyTest.seedPendingCard")(function*
   const path = yield* Path.Path;
   const linksRoot = yield* fs.makeTempDirectoryScoped({ prefix: "research-links-" });
   const linksFile = path.join(linksRoot, "links.json");
-  yield* fs.writeFileString(
-    linksFile,
-    yield* encodeLinksFile([{ title: "Pending Card", url: "https://example.com/pending" }])
-  );
+  const encodedLinksFile = yield* encodeLinksFile([{ title: "Pending Card", url: "https://example.com/pending" }]);
+  yield* fs.writeFileString(linksFile, encodedLinksFile);
   const summary = yield* pullResearchNotionLinks(
     ResearchNotionPullOptions.make({ database: "Reading List", linksFile, vaultRoot })
   );
@@ -149,11 +147,13 @@ layer(testLayer, { timeout: "30 seconds" })("research daily commit", (it) => {
       const subject = yield* git(vaultRoot, ["log", "-1", "--format=%s"]);
       expect(Str.startsWith("capture ")(subject)).toBe(true);
       // Machine captures are committed unsigned; a signing attempt would have failed above.
-      expect(yield* git(vaultRoot, ["log", "-1", "--format=%G?"])).toBe("N");
+      const git1 = yield* git(vaultRoot, ["log", "-1", "--format=%G?"]);
+      expect(git1).toBe("N");
 
       // A second run finds the vault clean and adds no commit.
       yield* commitVault(vaultRoot);
-      expect(yield* git(vaultRoot, ["rev-list", "--count", "HEAD"])).toBe("1");
+      const git2 = yield* git(vaultRoot, ["rev-list", "--count", "HEAD"]);
+      expect(git2).toBe("1");
     })
   );
 
@@ -166,7 +166,8 @@ layer(testLayer, { timeout: "30 seconds" })("research daily commit", (it) => {
       const tracked = yield* git(vaultRoot, ["ls-files"]);
       expect(tracked).toContain(NOTE_FILE);
       expect(tracked).not.toContain(VAULT_DIRS.state);
-      expect(yield* git(vaultRoot, ["rev-list", "--count", "HEAD"])).toBe("1");
+      const git3 = yield* git(vaultRoot, ["rev-list", "--count", "HEAD"]);
+      expect(git3).toBe("1");
       // The state directory stays untracked on disk rather than being deleted or staged.
       const status = yield* git(vaultRoot, ["status", "--porcelain"]);
       expect(status).toContain(`?? ${VAULT_DIRS.state}/`);

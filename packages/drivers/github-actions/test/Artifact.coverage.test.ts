@@ -124,7 +124,8 @@ const failed = <A>(
   it.layer(fixture(options), { timeout: "30 seconds" })((it) => {
     it.effect(name, () =>
       Effect.gen(function* () {
-        const error = yield* Effect.flip(operation(yield* Artifact));
+        const Artifact1 = yield* Artifact;
+        const error = yield* Effect.flip(operation(Artifact1));
         assert.strictEqual(error.reason, reason);
         if (detail !== undefined) assert.include(error.message, detail);
       })
@@ -244,8 +245,10 @@ describe("Artifact uncovered protocol outcomes", () => {
       Effect.gen(function* () {
         const artifact = yield* Artifact;
         assert.strictEqual((yield* upload(artifact)).id, 0);
-        assert.deepStrictEqual(yield* artifact.delete("logs"), ArtifactRef.make({ id: 7 }));
-        assertNone(yield* artifact.get("absent"));
+        const delete2 = yield* artifact.delete("logs");
+        assert.deepStrictEqual(delete2, ArtifactRef.make({ id: 7 }));
+        const got = yield* artifact.get("absent");
+        assertNone(got);
         const downloaded = yield* artifact.download(7);
         assert.include(downloaded.downloadPath, "effected-artifact-download-");
       })
@@ -265,14 +268,13 @@ describe("Artifact uncovered protocol outcomes", () => {
     it.effect("positive retention and explicit compression upload and explicit paths download", () =>
       Effect.gen(function* () {
         const artifact = yield* Artifact;
-        assert.deepStrictEqual(
-          yield* artifact.upload("logs", ["/work/a.txt"], "/work", { retentionDays: 7, compressionLevel: 3 }),
-          UploadResult.make({ id: 7, size: 13 })
-        );
-        assert.deepStrictEqual(
-          yield* artifact.download(7, { path: "/out" }),
-          DownloadResult.make({ downloadPath: "/out" })
-        );
+        const upload3 = yield* artifact.upload("logs", ["/work/a.txt"], "/work", {
+          retentionDays: 7,
+          compressionLevel: 3,
+        });
+        assert.deepStrictEqual(upload3, UploadResult.make({ id: 7, size: 13 }));
+        const download4 = yield* artifact.download(7, { path: "/out" });
+        assert.deepStrictEqual(download4, DownloadResult.make({ downloadPath: "/out" }));
       })
     );
   });
@@ -320,7 +322,8 @@ it.effect("unstubbed artifact members die and supplied members take precedence",
       const exit = yield* Effect.exit(effect);
       assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : assert.fail("expected defect"));
     }
-    assert.deepStrictEqual(yield* Artifact.makeTest({ list: Effect.succeed([]) }).list, []);
+    const list5 = yield* Artifact.makeTest({ list: Effect.succeed([]) }).list;
+    assert.deepStrictEqual(list5, []);
   })
 );
 

@@ -419,8 +419,9 @@ export const makeEvidenceRetention = Effect.fn("AiMetrics.makeEvidenceRetention"
               .withTransaction(
                 Effect.gen(function* () {
                   yield* S.decodeEffect(Sha256Hex)(expectedRetirementDigest);
+                  const evidenceWindow1 = yield* base.evidenceWindow;
                   return yield* recovery
-                    .restore(expectedRetirementDigest, yield* base.evidenceWindow)
+                    .restore(expectedRetirementDigest, evidenceWindow1)
                     .pipe(Effect.mapError(recoveryFailure));
                 })
               )
