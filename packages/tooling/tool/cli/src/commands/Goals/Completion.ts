@@ -1258,6 +1258,14 @@ const readRefreshManifest = Effect.fn("Goals.Completion.refreshManifest")(functi
     Effect.mapError(() => YeetCommandError.make({ message: "Requested goal manifest cannot decode" }))
   );
 });
+// Verification is proof, not closeout: the packet finishes only when its
+// committed closeout record merges, so name that step at the moment it opens.
+const adoptionHint = (slug: string, manifest: GoalManifest, receipt: GoalCompletionReceipt) =>
+  receipt.outcome === "verified" && manifest.proposedCloseout !== undefined
+    ? Console.log(
+        `[goals:completion] next: bun run beep goals set-status ${slug} ${manifest.proposedCloseout.status}, then merge that packet-state PR`
+      )
+    : Effect.void;
 const refreshRecord = Effect.fn("Goals.Completion.refreshRecord")(function* (
   root: string,
   record: GoalPacketRecord,
@@ -1290,14 +1298,7 @@ const refreshRecord = Effect.fn("Goals.Completion.refreshRecord")(function* (
   }
   yield* write(receipt);
   yield* Console.log(`[goals:completion] ${record.slug} #${final.value.number}: ${receipt.outcome}`);
-  // Verification is proof, not closeout: the packet finishes only when its
-  // committed closeout record merges, so name that step at the moment it opens.
-  const proposal = manifest.value.proposedCloseout;
-  if (receipt.outcome === "verified" && proposal !== undefined) {
-    yield* Console.log(
-      `[goals:completion] next: bun run beep goals set-status ${record.slug} ${proposal.status}, then merge that packet-state PR`
-    );
-  }
+  yield* adoptionHint(record.slug, manifest.value, receipt);
 });
 const refresh = Effect.fn("Goals.Completion.refresh")(function* (
   slug: O.Option<string>,
