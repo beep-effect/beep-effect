@@ -1,7 +1,7 @@
 # Alchemy Domain Adoption — Sources & Provenance
 
-- **Cluster / origin:** operator capture 2026-11-03 (`CAPTURE.md`) plus three research lanes run 2026-11-03 from the headless proxy: `gpt-6-astra` medium (source analysis of the alchemy checkout and the beep domain packages), `muse-wonder-1.0` xhigh deep-research, `grok-4.7` xhigh deep-research with native x_search. Prompts, briefs and logs: `~/.cache/beep/alchemy-domain-research/`.
-- **Provenance:** `research/01-astra-source-analysis.md`, `research/02-muse-deep-research.md`, `research/03-grok-deep-research.md`; `/teach` lesson workspace `~/YeeBois/teach/local-first-sync/` (R1–R9 in its `RESOURCES.md`).
+- **Cluster / origin:** operator capture 2026-11-03 (`explorations/alchemy-domain-adoption/CAPTURE.md`) plus three research lanes run 2026-11-03 from the headless proxy: `gpt-6-astra` medium (source analysis of the alchemy checkout and the beep domain packages), `muse-wonder-1.0` xhigh deep-research, `grok-4.7` xhigh deep-research with native x_search. Prompts, briefs and logs: `~/.cache/beep/alchemy-domain-research/`.
+- **Provenance:** `explorations/alchemy-domain-adoption/research/01-astra-source-analysis.md`, `explorations/alchemy-domain-adoption/research/02-muse-deep-research.md`, `explorations/alchemy-domain-adoption/research/03-grok-deep-research.md`; `/teach` lesson workspace `~/YeeBois/teach/local-first-sync/` (R1–R9 in its `RESOURCES.md`).
 
 ## 1. Mined source corpus
 
@@ -65,6 +65,6 @@ Local-first and MCP:
 
 ## 5. Cross-links & provenance
 
-- Packet: `CAPTURE.md`, `DECISIONS.md` (D0–D8), `research/01-03-*.md`.
+- Packet: `explorations/alchemy-domain-adoption/CAPTURE.md`, `explorations/alchemy-domain-adoption/DECISIONS.md` (D0–D17), the three lane reports under `explorations/alchemy-domain-adoption/research/`.
 - Related: `goals/beep-effect-web-alchemy` (closed 2026-11-02; first alchemy core usage in the repo), standards `ARCHITECTURE.md` / `DECISIONS.md` / `GLOSSARY.md` (amendments pending, open question).
 - Teaching: `~/YeeBois/teach/local-first-sync/` and artifact https://claude.ai/artifact/GG7dSXrmLj6zWTpH8rfVLg.
