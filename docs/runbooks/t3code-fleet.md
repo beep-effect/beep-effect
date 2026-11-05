@@ -31,10 +31,11 @@ exist on beep-worker and dankserver.
 # from the beep-effect checkout, <wrapper> = ssh-beep-worker | ssh-dankserver-worker
 ops=goals/t3code-fleet-rollout/ops
 tar -C "$ops" -cf - t3code-fork-pull.sh t3code-fork-pull.service t3code-fork-pull.timer \
-  | <wrapper> 'mkdir -p ~/.local/bin ~/.config/systemd/user ~/.config/t3code-fork && tar -C /tmp -xf - \
-    && install -m755 /tmp/t3code-fork-pull.sh ~/.local/bin/t3code-fork-pull \
-    && install -m644 /tmp/t3code-fork-pull.service /tmp/t3code-fork-pull.timer ~/.config/systemd/user/ \
-    && rm /tmp/t3code-fork-pull.*'
+  | <wrapper> 'd=$(mktemp -d) && tar -C "$d" -xf - \
+    && mkdir -p ~/.local/bin ~/.config/systemd/user ~/.config/t3code-fork \
+    && install -m755 "$d/t3code-fork-pull.sh" ~/.local/bin/t3code-fork-pull \
+    && install -m644 "$d/t3code-fork-pull.service" "$d/t3code-fork-pull.timer" ~/.config/systemd/user/ \
+    && rm -rf "$d"'
 # write pull.env by hand on the host (mode 600) with the mirror URL, then:
 <wrapper> 'systemctl --user daemon-reload && systemctl --user enable --now t3code-fork-pull.timer \
   && systemctl --user start t3code-fork-pull.service && cat ~/.t3/runtime/fork-current'
