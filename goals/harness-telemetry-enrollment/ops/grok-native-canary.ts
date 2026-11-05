@@ -596,15 +596,16 @@ const pinRuntime = Effect.fn("GrokCanary.pinRuntime")(function* (request: GrokNa
       throw new Error("profile-drift");
     const mcp = `${request.workspace}/.mcp.json`;
     const info = await Fs.lstat(mcp);
-    const mcpBytes = await Fs.readFile(mcp, "utf8");
     if (
       !info.isFile() ||
       info.isSymbolicLink() ||
       info.uid !== process.getuid?.() ||
       (info.mode & 0o022) !== 0 ||
-      info.size > 128 ||
-      (mcpBytes !== grokCanaryProjectMcp && mcpBytes !== grokCanaryProjectMcpFormatted)
+      info.size > 128
     )
+      throw new Error("pilot-mcp-required");
+    const mcpBytes = await Fs.readFile(mcp, "utf8");
+    if (mcpBytes !== grokCanaryProjectMcp && mcpBytes !== grokCanaryProjectMcpFormatted)
       throw new Error("pilot-mcp-required");
     return mcpBytes;
   });

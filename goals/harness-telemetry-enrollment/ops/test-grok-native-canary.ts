@@ -445,3 +445,22 @@ for (const projectMcp of [
     })
   );
 }
+
+it.live("a nonregular MCP FIFO refuses before any read can block", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture();
+    try {
+      const filename = Path.join(f.request.workspace, ".mcp.json");
+      await Fs.unlink(filename);
+      await compile("/usr/bin/mkfifo", [filename], { timeout: 3000 });
+      // A FIFO read with no writer would block. A completed typed refusal before
+      // this outer timeout demonstrates that metadata rejects it before opening.
+      const result = await Effect.runPromise(f.run.pipe(Effect.result, Effect.timeout("2 seconds")));
+      expect(result._tag).toBe("Failure");
+      expect(await f.count("inspect-count")).toBe(0);
+      expect(await f.count("source-count")).toBe(0);
+    } finally {
+      await f.close();
+    }
+  })
+);
