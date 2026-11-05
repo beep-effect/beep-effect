@@ -67,6 +67,37 @@ const SourceFreeze = S.Struct({
 const ImplementationFreeze = S.Struct({
   implementationDigest: S.String,
   files: S.Array(S.Struct({ path: S.String, sha256: S.String })),
+  runtimeClosure: S.OptionFromOptionalKey(S.Struct({ bunVersion: S.String, bunExecutableSha256: S.String })),
+});
+const verifyRuntimeIdentity = Effect.fn("InspectionEvaluation.verifyRuntimeIdentity")(function* (
+  runtime: (typeof ImplementationFreeze.Type)["runtimeClosure"]
+) {
+  if (O.isNone(runtime)) return;
+  if (runtime.value.bunVersion !== Bun.version) {
+    return yield* StructuralEvaluationError.make({ message: "Frozen Bun runtime version mismatch" });
+  }
+  const fs = yield* FileSystem.FileSystem;
+  const digest = yield* Digest.Digest;
+  const nativeBytes = yield* fs.readFile(process.execPath);
+  const nativeHash = yield* digest.digest(Digest.sha256, nativeBytes);
+  if (Hex.encode(nativeHash) !== runtime.value.bunExecutableSha256) {
+    return yield* StructuralEvaluationError.make({ message: "Frozen Bun executable hash mismatch" });
+  }
+});
+const verifyImplementation = Effect.fn("InspectionEvaluation.verifyImplementation")(function* (
+  implementation: typeof ImplementationFreeze.Type
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const digest = yield* Digest.Digest;
+  yield* verifyRuntimeIdentity(implementation.runtimeClosure);
+  // Runtime closure inputs may be binary; hash their actual bytes before any prediction.
+  for (const file of implementation.files) {
+    const bytes = yield* fs.readFile(file.path);
+    const actual = yield* digest.digest(Digest.sha256, bytes);
+    if (Hex.encode(actual) !== file.sha256) {
+      return yield* StructuralEvaluationError.make({ message: `Frozen file hash mismatch: ${file.path}` });
+    }
+  }
 });
 const Canonical = S.Struct({ claims: S.Array(S.Struct({ claimNumber: S.Int, claimText: S.String })) });
 const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
@@ -276,6 +307,7 @@ const program = Effect.gen(function* () {
   const argument2 = S.decodeEffect(implementationFreezeJson);
   const readFileString3 = yield* fs.readFileString(implementationFile);
   const implementation = yield* argument2(readFileString3);
+  yield* verifyImplementation(implementation);
   const verifiedText = Effect.fn("PositiveEvaluation.verifiedText")(function* (path: string, expected: string) {
     const text = yield* fs.readFileString(path);
     const digest1 = yield* digest.digest(Digest.sha256, new TextEncoder().encode(text));
@@ -284,10 +316,6 @@ const program = Effect.gen(function* () {
     }
     return text;
   });
-  // Verify the entire baseline before any prediction, not just the next family.
-  for (const file of implementation.files) {
-    yield* verifiedText(file.path, file.sha256);
-  }
   const inputs = yield* Effect.forEach(reference.families, (family) =>
     Effect.gen(function* () {
       const source = yield* Effect.fromOption(
