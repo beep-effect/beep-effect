@@ -1,0 +1,32 @@
+/*************************************************************************
+ *
+ * $Id$
+ *
+ * Copyright (C) 2001 Bjorn Reese <breese@users.sourceforge.net>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE AUTHORS AND
+ * CONTRIBUTORS ACCEPT NO RESPONSIBILITY IN ANY CONCEIVABLE MANNER.
+ *
+ ************************************************************************
+ *
+ * Functions to handle special quantities in floating-point numbers
+ * (that is, NaNs and infinity). They provide the capability to detect
+ * and fabricate special quantities.
+ *
+ * Although written to be as portable as possible, it can never be
+ * guaranteed to work on all platforms, as not all hardware supports
+ * special quantities.
+ *
+ * The approach used here (approximately) is to:
+ *
+ *   1. Use C99 functionality when available.
+ *   2. Use IEEE 754 bit-patterns if possible.
+ *   3. Use platform-specific techniques.
+ *
+ ************************************************************************/

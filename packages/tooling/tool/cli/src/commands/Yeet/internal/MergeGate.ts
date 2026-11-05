@@ -68,7 +68,12 @@ import { GithubRest } from "../../../internal/github/index.ts";
 import { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import { enforceReviewerGate, withReviewerOperatorClient } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { parseYeetInheritedRedsRecord, provideYeetGhLogin, yeetGithubFailure } from "./GhOps.ts";
+import {
+  parseYeetInheritedRedsRecord,
+  provideYeetGhLogin,
+  reassertProvenanceFooterAsGhLogin,
+  yeetGithubFailure,
+} from "./GhOps.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { MergeGateCheckRun } from "./MergeGate.schemas.ts";
 import { readYeetReviewWindow, renderYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
@@ -1523,6 +1528,34 @@ export class MergeGateCommandOptions extends S.Opaque<MergeGateCommandOptions, {
   )
 ) {}
 
+// The last Yeet touch before the merge puts back a provenance footer that a
+// body rewrite dropped. It records no session row (this checkout may not own the
+// pull request), and a dry run writes nothing.
+const provenanceFooterBeforeMerge = <E, R>({
+  dryRun,
+  reassert,
+}: {
+  readonly dryRun: boolean;
+  readonly reassert: Effect.Effect<unknown, E, R>;
+}): Effect.Effect<void, E, R> => (dryRun ? Effect.void : Effect.asVoid(reassert));
+
+/**
+ * Run the merge gate's provenance re-assert unless the run is a dry run.
+ *
+ * **Example** (Skip the re-assert on a dry run)
+ *
+ * ```ts
+ * import { provenanceFooterBeforeMergeForTesting } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * Effect.runSync(provenanceFooterBeforeMergeForTesting({ dryRun: true, reassert: Effect.die("not run") }))
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const provenanceFooterBeforeMergeForTesting = provenanceFooterBeforeMerge;
+
 /**
  * Run `yeet merge-gate`: decode the tolerances, resolve the repo root, gate, and merge.
  *
@@ -1531,7 +1564,9 @@ export class MergeGateCommandOptions extends S.Opaque<MergeGateCommandOptions, {
  * Unlike `yeet merge`, which merges the current branch's pull request and
  * sweeps the clone, this takes any pull request number and never sweeps: the
  * owning session retires its own lane after the orchestrator reports the
- * merge. A malformed `--tolerate` is refused before anything is read.
+ * merge. A malformed `--tolerate` is refused before anything is read. Outside
+ * `--dry-run` it first re-asserts the pull request's provenance footer from the
+ * local registry rows, which only warns when it cannot.
  *
  * **Example** (Build the command effect)
  *
@@ -1549,6 +1584,10 @@ export class MergeGateCommandOptions extends S.Opaque<MergeGateCommandOptions, {
 export const runYeetMergeGate = Effect.fn("Yeet.runMergeGateCommand")(function* (options: MergeGateCommandOptions) {
   const tolerate = yield* decodeAttributedCheckFlags("tolerate", options.tolerate, parseMergeGateTolerance);
   const context = yield* hydrateYeetReadOnlyContext(options);
+  yield* provenanceFooterBeforeMerge({
+    dryRun: options.dryRun,
+    reassert: reassertProvenanceFooterAsGhLogin(context, options.pr),
+  });
   yield* runMergeGate(
     context,
     MergeGateRunOptions.make({

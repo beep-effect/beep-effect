@@ -1,0 +1,9 @@
+
+ RUN  v5.0.5 ~/YeeBois/projects/beep-effect-worktrees/citation-extraction-engine/packages/foundation/capability/langextract
+
+
+ Test Files  2 passed (2)
+      Tests  37 passed (37)
+   Start at  03:29:19
+   Duration  2.59s (transform 69%, import 16%, setup 9%, tests 6%)
+
