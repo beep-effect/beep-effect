@@ -1,15 +1,15 @@
 # Host profiles
 
 These are routing records, not live health attestations. Last reconciled:
-2026-11-02 (T3 routes added; tom-pc-1 stub). The canonical Beep packet is `goals/cloud-agent-readiness` at the
+2026-11-05 (fork T3 build on beep-worker and dankserver; tom-pc-1 stub). The canonical Beep packet is `goals/cloud-agent-readiness` at the
 repository containing this skill's real path. Read `SPEC.md` before changing a
 boundary. Host-specific receipts are under that packet's `history/` directory.
 
 | Target | T3 route | Ordinary workstation connection | Readiness and boundary |
 | --- | --- | --- | --- |
-| `beep-worker` | `environmentId: <beep-worker>` once linked (not yet) | `ssh-beep-worker-yubi` | Existing headless development worker; default wrapper disables forwarding. Recheck current provider and workload readiness. |
+| `beep-worker` | `environmentId: <beep-worker>` once linked (not yet; paired on the client plane only) | `ssh-beep-worker-yubi` | Existing headless development worker; default wrapper disables forwarding. Runs the fork T3 build as `t3code.service` (pulled from the DankStation mirror by `t3code-fork-pull.timer`; `docs/runbooks/t3code-fleet.md`). Recheck current provider and workload readiness. |
 | `tbk-worker` | `environmentId: <tbk-worker>` once linked (gated on the protective-stop latch release) | `ssh-tbk-worker` | Separate KVM guest, account `worker`, no sudo; initial serialized development verified. Only DankStation has admitted inbound SSH. |
-| `dankserver` | `environmentId: <dankserver>` once linked (not yet) | `ssh-dankserver-worker` | Dedicated bare-metal account `worker`; initial serialized development verified. Codex/Claude/Grok are available; Cursor/Muse have recorded quota holds. |
+| `dankserver` | `environmentId: <dankserver>` once linked (not yet) | `ssh-dankserver-worker` | Dedicated bare-metal account `worker`; initial serialized development verified. Runs the fork T3 build as `t3code.service` on loopback only (same pull timer); exposing it on the tailnet is an open decision. Codex/Claude/Grok are available; Cursor/Muse have recorded quota holds. |
 | `tom-pc-1` | `environmentId: <tom-pc-1>` once linked (not yet) | none yet (a dedicated WSL distro; see below) | Stub: no agent work until `goals/t3code-fleet-rollout` provisions the distro and links it. |
 | `grok-bot-box-1` | out of scope | none | Not a T3 host (exploration ruling 2026-11-01): no operator SSH, no repo record of what runs there, no local credentials allowed. |
 
