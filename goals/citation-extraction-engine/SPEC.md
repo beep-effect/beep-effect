@@ -1451,3 +1451,13 @@ publishes both stages together. Law/journal share source-authenticated pattern
 snapshots, owned context/captures, string/year processors, admission, deadlines,
 fresh native scopes and invocation budgets. Returned methods require no caller
 services. Untouched inherited metadata fields stay outside the journal patch.
+
+### Pre-case metadata (2026-11-05)
+
+The private pre-case stage preserves source guard order before word decoding,
+uses backward strings-only context and the authenticated PRE_FULL pattern, and
+publishes only the source antecedent/pin/start patch. No raw pin retains the
+prior pin-span start. Negative source starts remain unverified model state.
+The existing shared metadata operation owns timing, admission, fresh Scope,
+native captures and invocation budgets; no new transport or scheduler is added.
+Complete case composition and post-case helpers remain separate obligations.

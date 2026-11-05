@@ -63,6 +63,30 @@ const trimPin = Effect.fn("Citation.trimPinCiteBoundary")(function* (
   }
   return index;
 });
+const installStrings = Effect.fn("Citation.installMetadataStrings")(function* (policy: unknown) {
+  const limits = yield* decodeCitationRegexPolicy(policy, () =>
+    CitationMetadataStringsFailure.make({ reason: "invalid-policy" })
+  );
+  const timing = yield* makeCitationRegexTiming(limits, true);
+  const input = yield* makeCitationRegexInput(limits, "source");
+  return { limits, timing, input };
+});
+/** Capture the shared native pincite boundary cleaner without a year matcher.
+ * @internal @category operations @since 0.0.0
+ */
+export const makeCitationPinCiteCleaner = Effect.fn("Citation.makePinCiteCleaner")(function* (policy: unknown) {
+  const { limits, timing, input } = yield* installStrings(policy);
+  const cleanPinCite = Effect.fn("Citation.cleanPinCite")(function* (raw: unknown) {
+    if (raw === null) return null;
+    const source = yield* input.prepareUnicode(raw, () => Effect.void);
+    const start = yield* trimPin(source.value, 0, source.value.pythonLength, 1);
+    const last = yield* trimPin(source.value, source.value.pythonLength - 1, start - 1, -1);
+    return yield* source.slice({ start, end: last + 1 }, (layout) =>
+      source.value.utf16Units + layout.utf16Units > limits.producedTextUtf16 ? Effect.fail(exhausted()) : Effect.void
+    );
+  }, timing.timed);
+  return { cleanPinCite };
+});
 /** Capture the independently source-bound YEAR_REGEX and existing worker.
  * Raw requests contain only native text/null. Calls have R = never and preserve
  * the source's early closing-parenthesis return before year-prefix filtering.
@@ -75,21 +99,9 @@ export const makeCitationMetadataStrings = Effect.fn("Citation.makeMetadataStrin
   yearPattern: unknown,
   bindings: unknown
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () =>
-    CitationMetadataStringsFailure.make({ reason: "invalid-policy" })
-  );
-  const timing = yield* makeCitationRegexTiming(limits, true);
-  const input = yield* makeCitationRegexInput(limits, "source");
+  const { limits, timing, input } = yield* installStrings(policy);
   const year = yield* makeCitationContextMatcher(limits, runtime, yearPattern, 64, bindings);
-  const cleanPinCite = Effect.fn("Citation.cleanPinCite")(function* (raw: unknown) {
-    if (raw === null) return null;
-    const source = yield* input.prepareUnicode(raw, () => Effect.void);
-    const start = yield* trimPin(source.value, 0, source.value.pythonLength, 1);
-    const last = yield* trimPin(source.value, source.value.pythonLength - 1, start - 1, -1);
-    return yield* source.slice({ start, end: last + 1 }, (layout) =>
-      source.value.utf16Units + layout.utf16Units > limits.producedTextUtf16 ? Effect.fail(exhausted()) : Effect.void
-    );
-  }, timing.timed);
+  const { cleanPinCite } = yield* makeCitationPinCiteCleaner(limits);
   const parenthetical = Effect.fn("Citation.processParenthetical")(function* (raw: unknown) {
     if (raw === null) return null;
     const source = yield* input.prepareUnicode(raw, () => Effect.void);

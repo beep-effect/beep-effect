@@ -19,7 +19,6 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
@@ -27,6 +26,7 @@ import * as Str from "effect/String";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import {
   assertCitationWorkerCapturedDeadline,
+  assertCitationWorkerClosedLifetime,
   assertCitationWorkerCompositionReleased,
   makeCitationMetadataTestContext,
   setupCitationRegexRuntime,
@@ -185,11 +185,7 @@ export const assertCitationJournalMetadataLifetime = Effect.fn("JournalMetadataT
   const closed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, scope));
   const input = A.getUnsafe(closed.corpus.inputs, 11);
   const raw = { ...input.request, ...A.getUnsafe(closed.corpus.controls, 0) };
-  yield* Scope.close(scope, Exit.void);
-  const failure = yield* closed.metadata.apply(raw).pipe(Effect.flip);
-  expect(failure).toMatchObject({ reason: "closed" });
-  const none = yield* closed.observed.snapshot;
-  expect(none).toEqual({ spawned: 0, confirmed: 0 });
+  yield* assertCitationWorkerClosedLifetime(scope, closed.metadata.apply(raw), closed.observed.snapshot);
   const timed = yield* install("bun", undefined, false, true);
   yield* assertCitationWorkerCapturedDeadline(
     timed.metadata.apply({

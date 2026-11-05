@@ -17,13 +17,13 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import {
   assertCitationWorkerCapturedDeadline,
+  assertCitationWorkerClosedLifetime,
   assertCitationWorkerCompositionReleased,
   setupCitationRegexRuntime,
 } from "./CitationRegexWorker.fixtures.ts";
@@ -165,11 +165,7 @@ export const assertCitationLawMetadataLifetime = Effect.fn("LawMetadataTest.life
   expect(invalid).toMatchObject({ reason: "invalid-configuration" });
   const scope = yield* Scope.make();
   const closed = yield* install("bun", corpus.configuration).pipe(Effect.provideService(Scope.Scope, scope));
-  yield* Scope.close(scope, Exit.void);
-  const failure = yield* closed.metadata.apply(row.request).pipe(Effect.flip);
-  expect(failure).toMatchObject({ reason: "closed" });
-  const observed = yield* closed.observed.snapshot;
-  expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+  yield* assertCitationWorkerClosedLifetime(scope, closed.metadata.apply(row.request), closed.observed.snapshot);
   const timed = yield* install("bun", corpus.configuration, undefined, false, true);
   yield* assertCitationWorkerCapturedDeadline(
     timed.metadata.apply({

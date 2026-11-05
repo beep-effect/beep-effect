@@ -24,8 +24,10 @@ it.effect.prop("preserves exact coherent bytes for both artifact alternatives", 
     const tokenizer = yield* S.decodeEffect(TokenizerExtractorsArtifact)(tokenizerWire);
     expect(model.payload.raw).toBe(modelRaw);
     expect(tokenizer.payload.raw).toBe(tokenizerRaw);
-    expect(yield* S.encodeEffect(CitationOracleArtifact)(model)).toEqual(modelWire);
-    expect(yield* S.encodeEffect(CitationOracleArtifact)(tokenizer)).toEqual(tokenizerWire);
+    const encodedModel = yield* S.encodeEffect(CitationOracleArtifact)(model);
+    const encodedTokenizer = yield* S.encodeEffect(CitationOracleArtifact)(tokenizer);
+    expect(encodedModel).toEqual(modelWire);
+    expect(encodedTokenizer).toEqual(tokenizerWire);
   })
 );
 

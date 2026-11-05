@@ -17,6 +17,7 @@ import {
   CitationMetadataStringConfiguration,
   CitationMetadataStringFields,
   CitationPublicationMetadataConfiguration,
+  citationMetadataContext,
   makeCitationMetadataOperation,
   matchCitationMetadataContext,
   prepareCitationPublicationMetadata,
@@ -158,7 +159,7 @@ const preparePatch = Effect.fn("Citation.prepareLawMetadataPatch")(function* (
       pattern: config.lawPattern,
       bindings: config.lawBindings,
     }),
-    request,
+    citationMetadataContext({ ...request, forward: true }),
     () => fail("missing-capture")
   );
   if (O.isNone(owned)) return O.none<CitationLawMetadataPatch>();

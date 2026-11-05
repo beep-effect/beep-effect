@@ -69,6 +69,11 @@ Approved 2026-11-02: publish ready work in one ongoing draft PR without waiting
 for full verification or local compute. Record passed/pending checks, use
 hosted CI, and continue the full goal there. Publication timing only.
 
+Superseded by the operator's later instruction: keep PR #2511 ready for review
+and push ready changes while continuing this goal. Draft status is not an
+acceptance gate. Readiness for review does not claim completion or authorize
+merging; all accounting, parity, safety and closeout requirements still apply.
+
 Stop without weakening scope on incompatible prerequisites, unprovable
 exhaustive parity, unrecorded safety/fidelity divergence, or loss of one-PR
 reviewability.

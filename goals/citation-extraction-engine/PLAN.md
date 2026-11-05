@@ -937,3 +937,10 @@ accounting checker.
   below the existing formatter ceiling; canonical oracle cases/editions are
   unchanged. Focused gates pass; fresh hosted coverage/quality remains pending.
   See history/evidence/2026-11-05-hosted-repairs.md.
+
+- 2026-11-05: private pre-case metadata preserves early name guards, backward
+  matching, native pin cleanup and unverified negative source starts. Shared
+  metadata owners serve law, journal and pre-case stages. Source corpus has
+  540 observations; both actual runtimes compare 230 smoke rows with fourteen
+  confirmed exits each. Full hosted replay and remaining case composition stay
+  open. See history/evidence/2026-11-05-pre-case-metadata.md.

@@ -300,3 +300,13 @@ history/evidence/2026-11-03-edition-inference.md.
   checks also omitted an old negative assertion test for newly supported
   lookahead and the global single-field tag rule; focused existing regression
   suites and exact policy checks should accompany grammar/fixture changes.
+
+- 2026-11-05 pre-case composition: a schema import initially used only as a type
+  became a runtime dependency after sharing the context builder; a stale
+  type-only import caused ReferenceError in the focused regression suite. The
+  runtime import is restored and all nineteen tests pass. An initial allocation
+  estimate also missed the antecedent pattern consuming a space before the pin;
+  actual source capture spans establish the exact 99-unit bound. Derive budgets
+  from source spans and replay consumers after shared schema refactors. Fallow
+  duplication was removed through existing metadata/test owners, without
+  suppressions or reduced floors.

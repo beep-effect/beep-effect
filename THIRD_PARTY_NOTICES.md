@@ -843,3 +843,9 @@ JournalMetadata.ts, shared publication metadata processing and the journal
 metadata corpus derive from eyecite 2.7.6 FullJournalCitation.add_metadata,
 add_journal_metadata and the shared source helper behavior at the pinned
 revision above (Free Law Project, BSD-2-Clause).
+
+PreCaseMetadata.ts, shared backward metadata composition and
+pre-case-metadata.json derive from eyecite 2.7.6 helpers.add_pre_citation and
+PRE_FULL_CITATION_REGEX at the pinned revision above (Free Law Project,
+BSD-2-Clause). Existing CPython/regex profile attribution applies to the source
+pattern observations; no additional regex runtime is distributed.

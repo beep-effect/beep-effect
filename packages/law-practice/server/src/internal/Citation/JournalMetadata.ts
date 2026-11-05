@@ -13,6 +13,7 @@ import { CitationFullLawMetadataInput, CitationLawMetadataPatch, CitationLawMeta
 import {
   CitationMetadataStringConfiguration,
   CitationMetadataStringFields,
+  citationMetadataContext,
   makeCitationMetadataOperation,
   matchCitationMetadataContext,
   prepareCitationPublicationMetadata,
@@ -113,7 +114,13 @@ const preparePatch = Effect.fn("Citation.prepareJournalMetadataPatch")(function*
   config: CitationPublicationMetadataConfiguration,
   request: CitationJournalMetadataInput
 ) {
-  const owned = yield* matchCitationMetadataContext(limits, runtime, config, request, () => fail("missing-capture"));
+  const owned = yield* matchCitationMetadataContext(
+    limits,
+    runtime,
+    config,
+    citationMetadataContext({ ...request, forward: true }),
+    () => fail("missing-capture")
+  );
   if (O.isNone(owned)) return O.none<CitationJournalMetadataPatch>();
   const pinCite = yield* owned.value.capture("pin_cite");
   const parenthetical = yield* owned.value.capture("parenthetical");

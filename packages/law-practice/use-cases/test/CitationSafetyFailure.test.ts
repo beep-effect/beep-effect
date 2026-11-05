@@ -18,7 +18,8 @@ it.effect("citation safety budget names remain closed and cover the unchanged po
     expect(S.is(CitationSafetyBudget)("arbitrary-native-message")).toBe(false);
     const failure = CitationSafetyLimitExceeded.make({ operation: "clean", limit: "nativeHtmlParserResource" });
     const codec = S.fromJsonString(CitationSafetyLimitExceeded);
-    const restored = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(failure));
+    const encoded = yield* S.encodeEffect(codec)(failure);
+    const restored = yield* S.decodeEffect(codec)(encoded);
     expect(restored._tag).toBe("CitationSafetyLimitExceeded");
     expect(restored.limit).toBe("nativeHtmlParserResource");
   })

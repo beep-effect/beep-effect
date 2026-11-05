@@ -14,9 +14,11 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
+import * as Scope from "effect/Scope";
 import {
   makeCitationNativeManualClock,
   makeCitationNativeSleepClock,
@@ -106,4 +108,17 @@ export const makeCitationMetadataTestContext = Effect.fn("RegexWorkerTest.metada
     operation,
     context: context.pipe(Context.add(Clock.Clock, clock), Context.add(CitationOperationAdmission, operation)),
   };
+});
+
+/** Close the captured installation scope and prove rejection before any child. */
+export const assertCitationWorkerClosedLifetime = Effect.fn("RegexWorkerTest.closedLifetime")(function* <Value, E>(
+  scope: Scope.Closeable,
+  body: Effect.Effect<Value, E>,
+  observed: Effect.Effect<CitationNativeExitCounts>
+) {
+  yield* Scope.close(scope, Exit.void);
+  const failure = yield* body.pipe(Effect.flip);
+  expect(failure).toMatchObject({ reason: "closed" });
+  const counts = yield* observed;
+  expect(counts).toEqual({ spawned: 0, confirmed: 0 });
 });

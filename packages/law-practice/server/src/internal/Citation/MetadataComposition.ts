@@ -26,10 +26,10 @@ import { CitationRegexPatternDescriptor, copyCitationRegexDescriptor } from "./R
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationTextBudget, makeCitationTextBudget } from "./TextBudget.ts";
+import { CitationTokenContextInput } from "./TokenContext.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type * as Scope from "effect/Scope";
 import type { CitationContextMatch } from "./ContextMatcher.ts";
-import type { CitationLawMetadataInput } from "./LawMetadata.ts";
 import type { CitationPreparedRegexInput } from "./RegexInput.ts";
 
 /** Read one native source capture through its existing prepared context owner.
@@ -235,31 +235,46 @@ export const prepareCitationPublicationMetadata = Effect.fn("Citation.preparePub
   };
 });
 
+const ContextOrigin = S.Struct({
+  words: CitationTokenContextInput.fields.words,
+  index: S.Int,
+  forward: S.Boolean,
+}).pipe(
+  $I.annoteSchema("ContextOrigin", {
+    description: "Trusted source metadata scan origin and direction before context construction.",
+  })
+);
 const empty = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array() });
+/** Construct the source helper's data-only scan request with an empty prefix.
+ * @internal @category operations @since 0.0.0
+ */
+export const citationMetadataContext = (origin: typeof ContextOrigin.Type) =>
+  CitationTokenContextInput.make({
+    words: origin.words,
+    prefix: empty,
+    startIndex: origin.index + (origin.forward ? 1 : -1),
+    forward: origin.forward,
+    stringsOnly: true,
+  });
 /** Match and prepare one owned context for source law/journal field capture.
  * @internal @category operations @since 0.0.0
  */
 export const matchCitationMetadataContext = Effect.fn("Citation.matchMetadataContext")(function* <E>(
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationPublicationMetadataConfiguration,
-  request: Pick<CitationLawMetadataInput, "words" | "index">,
+  config: Pick<CitationPublicationMetadataConfiguration, "pattern" | "bindings">,
+  request: CitationTokenContextInput,
   missing: () => E
 ) {
   const matcher = yield* makeCitationContextMatcher(limits, runtime, config.pattern, 64, config.bindings);
-  const matched = yield* matcher.search({
-    words: request.words,
-    prefix: empty,
-    startIndex: request.index + 1,
-    forward: true,
-    stringsOnly: true,
-  });
+  const matched = yield* matcher.search(request);
   if (matched.match === null) return O.none();
   const whole = yield* Effect.fromOption(A.head(matched.match.captures), missing);
   if (whole._tag === "Unmatched") return yield* Effect.fail(missing());
   const input = yield* makeCitationRegexInput(limits);
   const source = yield* input.prepareUnicode(matched.context, () => Effect.void);
   return O.some({
+    start: whole.start,
     end: whole.end,
     capture: Effect.fn("Citation.captureOwnedMetadata")((name: string) =>
       captureCitationMetadataValue(matched, source, name, missing)

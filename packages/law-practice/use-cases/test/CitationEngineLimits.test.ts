@@ -61,9 +61,12 @@ describe("schema-owned citation safety budgets", () => {
       for (const [key, maximum] of R.toEntries(CitationEngineAbsoluteMaxima)) {
         if (Str.endsWith("Millis")(key)) continue;
         yield* S.decodeEffect(CitationEngineLimits)({ ...encoded, [key]: maximum });
-        expect(yield* rejects({ ...encoded, [key]: maximum + 1 })).toBe(true);
-        for (const invalid of [0, -1, 1.5, Number.POSITIVE_INFINITY, Number.NaN])
-          expect(yield* rejects({ ...encoded, [key]: invalid })).toBe(true);
+        const aboveMaximum = yield* rejects({ ...encoded, [key]: maximum + 1 });
+        expect(aboveMaximum).toBe(true);
+        for (const invalid of [0, -1, 1.5, Number.POSITIVE_INFINITY, Number.NaN]) {
+          const rejected = yield* rejects({ ...encoded, [key]: invalid });
+          expect(rejected).toBe(true);
+        }
       }
     })
   );
@@ -86,8 +89,10 @@ describe("schema-owned citation safety budgets", () => {
         const maximum = CitationEngineAbsoluteMaxima[`${key}Millis`];
         const atMaximum = yield* S.decodeEffect(CitationEngineLimits)({ ...encoded, [key]: maximum });
         expect(Duration.toMillis(atMaximum[key])).toBe(maximum);
-        for (const invalid of [0, -1, 0.5, maximum + 1, Number.POSITIVE_INFINITY, Number.NaN])
-          expect(yield* rejects({ ...encoded, [key]: invalid })).toBe(true);
+        for (const invalid of [0, -1, 0.5, maximum + 1, Number.POSITIVE_INFINITY, Number.NaN]) {
+          const rejected = yield* rejects({ ...encoded, [key]: invalid });
+          expect(rejected).toBe(true);
+        }
         for (const invalid of [Duration.infinity, Duration.negativeInfinity, Duration.nanos(1n)]) {
           const result = yield* S.encodeUnknownEffect(CitationEngineLimits)({ ...policy.limits, [key]: invalid }).pipe(
             Effect.exit
