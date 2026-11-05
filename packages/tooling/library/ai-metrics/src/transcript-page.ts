@@ -473,9 +473,7 @@ const parseRecord = (text: string) => {
  */
 export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(function* (input: TranscriptPageInput) {
   const salt = Redacted.value(input.hashSalt);
-  if (Str.trim(salt) === "") {
-    return yield* failure("missing-salt");
-  }
+  if (Str.trim(salt) === "") return yield* failure("missing-salt");
   const program = Effect.scoped(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -586,23 +584,19 @@ export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(func
           (previous.value.pathHash !== pathHash ||
             previous.value.namespaceId !== namespaceId ||
             previous.value.source !== input.source)
-        ) {
+        )
           return yield* failure("invalid-cursor");
-        }
       });
       yield* requireSourceBinding();
       const openPinnedSource = Effect.fnUntraced(function* () {
         // Refuse obvious special files before open; noFollow closes the final
         // symlink race on supported platforms. The owning worker still needs a
         // hard wall-clock limit for uninterruptible platform I/O.
-        if ((yield* fs.stat(resolvedPath)).type !== "File") {
-          return yield* failure("identity-unavailable");
-        }
+        if ((yield* fs.stat(resolvedPath)).type !== "File") return yield* failure("identity-unavailable");
         const handle = yield* fs.open(resolvedPath, { flag: "r", noFollow: true });
         const info = yield* handle.stat;
-        if (info.type !== "File" || O.isNone(info.ino) || info.size > BigInt(Number.MAX_SAFE_INTEGER)) {
+        if (info.type !== "File" || O.isNone(info.ino) || info.size > BigInt(Number.MAX_SAFE_INTEGER))
           return yield* failure("identity-unavailable");
-        }
         const fileIdentity = yield* hash(
           `${info.dev}:${info.ino.value}:${O.match(info.birthtime, { onNone: () => "unknown", onSome: (time) => time.getTime().toString() })}`
         );
@@ -616,9 +610,7 @@ export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(func
         let used = 0;
         while (used < length) {
           const amount = yield* handle.read(buffer.subarray(used), { position: BigInt(offset + used) });
-          if (amount === 0) {
-            return yield* failure("unstable");
-          }
+          if (amount === 0) return yield* failure("unstable");
           used += amount;
           bytesRead += amount;
         }
@@ -643,9 +635,7 @@ export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(func
       const requireLineBoundary = Effect.fnUntraced(function* () {
         if (O.isNone(resumed)) return;
         if (resumed.value.discarding || resumed.value.offset === 0) return;
-        if ((yield* readAt(resumed.value.offset - 1, 1))[0] !== 10) {
-          return yield* failure("invalid-cursor");
-        }
+        if ((yield* readAt(resumed.value.offset - 1, 1))[0] !== 10) return yield* failure("invalid-cursor");
       });
       yield* requireLineBoundary();
       const prefixLength = Math.min(256, size);

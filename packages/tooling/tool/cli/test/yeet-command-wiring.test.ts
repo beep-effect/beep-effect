@@ -323,6 +323,7 @@ describe("yeet merge-loop command wiring", () => {
             ["repair", "--plan"],
             ["status", "--plan"],
             ["sweep", "--plan"],
+            ["sweep"],
           ],
           Effect.fnUntraced(function* (args) {
             const logLines7 = yield* TestConsole.logLines;
@@ -333,7 +334,7 @@ describe("yeet merge-loop command wiring", () => {
             expect(
               A.some(
                 lines,
-                (line) => line === "yeet plan" || (S.is(S.String)(line) && Str.startsWith("[yeet] sweep plan")(line))
+                (line) => line === "yeet plan" || (S.is(S.String)(line) && Str.startsWith("[yeet] sweep ")(line))
               )
             ).toBe(true);
           }),
