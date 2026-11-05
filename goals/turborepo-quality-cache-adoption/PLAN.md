@@ -869,6 +869,143 @@ bindings and zero mismatches. Its raw catalogue digests equal the original
 captures. Historical observations retain their original source envelope; this
 is no task execution or qualification grant.
 
+### Signature-key observation source-binding repair
+
+The signature driver had the same split read: pins and the shared collector
+were parsed before later reads supplied their reported hashes. Thirteen
+metadata-only prefix controls reproduce four legacy false bindings, prove six
+early source-movement refusals plus external-pin confinement, and retain two
+unchanged-input controls. Bun version probes are stubbed; no native client,
+task or local quality suite executes. The driver now hashes its captured inputs
+and rechecks them before native selection and after the experiment.
+
+The registered checkpoint is `research/signature-key-source-binding-repair.json`.
+Its new source/control digests do not rebind the original 168-case observation.
+Current-harness semantic replay, production signing and tuple qualification
+remain pending; every whole-goal acceptance criterion stays unfinished.
+
+
+### Repaired-driver native semantics replayed, 2026-11-03
+
+The new [source-bound replay checkpoint](research/signature-key-sourcebound-native-replay.json)
+records 168 actual offline native cases on the same stable/canary pins. The
+162 fixture task executions and six early length refusals match historical
+semantics. One existing admission token was released after the 3.809-second
+run; all 336 raw capture digests and bounds match. Historical reports remain
+unchanged. The earlier thirteen metadata-only controls retain their separate
+zero-native/task scope.
+
+This closes only the repaired driver's synthetic semantic replay gap. Actual
+signed artifact reuse, protected producer provenance, role-policy controls,
+feature/tuple qualification and complete-goal windows remain pending. No local
+repository quality suite, verify, publish or package-verify ran. Hosted CI is
+the PR quality proof; this replay does not activate signing or change a cache.
+
+
+### Related bootstrap and descriptor containment repairs, 2026-11-03
+
+[The repair checkpoint](research/native-source-family-repair.json) binds thirteen
+changed drivers/shared inputs. Actual-reader prefix controls cover ten drivers
+in 208 cases:80 source-change refusals before probes,20 leaf/parent symlink
+replacement refusals before external bytes are read, eight external-pin
+refusals and historical contrasts. Twenty legacy replacement cases read
+synthetic external bytes. Twenty unchanged prefixes complete. All real
+subprocesses are blocked. A separate thirteen-case binding contrast stubs the
+filesystem-reader seam explicitly; it does not supply descriptor proof.
+
+The shared bounded-reader owner verifies the opened descriptor's actual path
+and regular-file type before a bounded read, with no-follow/nonblocking flags.
+Capture and revalidation use that reader. Existing collectors/oracles remain
+unchanged; the permission driver's digest seam now also uses the reader.
+The two log reports use exclusive mode-0600 creation.
+
+Historical native reports remain byte-identical under their original sources.
+The earlier 168-case signature replay predates this containment repair and is
+not current-driver proof. All affected-driver native replays remain pending.
+Feature dispositions stay eleven scoped decisions and 25 pending. No task
+qualification, signing, cache configuration, rollout or local repository quality
+suite changes; hosted CI is the PR quality authority.
+
+
+### Repaired native drivers replayed, 2026-11-03
+
+[The current replay checkpoint](research/native-source-family-replay-2026-11-03.json)
+records thirteen successful sequential experiments in 13.690 seconds under one
+existing token, with 27 ms admission wait and a 301,891,584-byte recorded peak.
+All thirteen drivers still match their pushed source at 0fa82e5, all 53 reported
+source bindings match, and 800 retained signature/permission/selection raw
+capture digests and bounds match. The future-availability raw JSON digest also
+matches. Compact reports remain below the 16 MiB publication cap.
+
+The signature matrix has 168 cases (162 actual fixture task executions and six
+early refusals), selection has 44 asserted cases/88 dry-and-execution invocations,
+permission modes have 132 dry runs, and the checkpoint preserves each other
+experiment's distinct observation unit. Other fixtures also execute tiny task
+bodies; this is not a zero-task dry-run batch. No real repository quality task,
+production cache traffic, key, epoch, cohort or cache setting changes.
+
+This completes the repaired-driver native replay gap, not any feature/tuple or
+whole-goal acceptance. Missing-key role policy, actual signed transport and
+protected producer evidence, real consumer reviews, portability/concurrency
+qualification and representative observation windows remain open.
+
+
+### Native boundary-checker semantics, 2026-11-03
+
+`research/boundaries-native-checkpoint-2026-11-03.json` binds twelve fixture
+shapes on stable 2.11.10 and canary 2.11.11-canary.1: ten allowed outcomes and
+fourteen specific rejections across 24 native checks. Declared/undeclared
+imports, relative escapes, tag direction/allow/deny, package-name rules and
+transitive denials preserve fixture inputs and execute no tasks. The existing
+one-token admission was released; all 120 retained stream digests were joined.
+
+The new driver was uncommitted during execution; its captured digest binds the
+exact bytes published with the report. The execution base does not claim the
+new file already existed there. Prior narrower observations remain private.
+No live boundary setting or CI job is enabled. Real package-graph applicability,
+value and profile qualification remain open; all goal criteria remain unproven.
+
+
+### Local Git worktree sharing and counterexamples, 2026-11-03
+
+`research/worktree-native-checkpoint-2026-11-03.json` binds 36 actual tiny
+fixture invocations on the refreshed exact stable/canary pair. Twenty-four
+portable controls verify sharing in both directions, input invalidation,
+explicit-cache-directory isolation and own-worktree replay. Fourteen invocations
+HIT and 22 task bodies actually execute; all 36 summaries join retained output
+file bytes, modes and complete task logs. No Beep quality task runs.
+
+Each client also reproduces two counterexamples against forced fresh execution:
+shared output keeps the producer's absolute path, and an executable set to 0755
+returns 0700 under private umask 0077. Content/log equality does not erase that
+metadata mismatch. These synthetic tasks are not qualification candidates;
+real consumers need portability and permission-sensitive review before reuse.
+The existing one-token admission was released after 5.403 seconds; wrapper 5.783 seconds
+is experiment duration, not time saved. Prior refused fixture sources/raw output
+remain private; only the complete final source-bound matrix is registered.
+
+The new driver was uncommitted during execution and is bound by captured bytes.
+No live cache setting, global umask, key, epoch, remote transport or deployment
+changes. Feature decisions remain 11 scoped / 25 pending and all whole-goal criteria,
+real computation adoption, independent-clone/remote-box proof and observation
+windows remain unfinished.
+
+
+### Guarded native-driver review repair, 2026-11-03
+
+Both new drivers now use unconditional Linux/assertion startup checks. Twelve
+actual optimized/environment/simulated-platform refusals create no output or
+raw-evidence parents and execute no native client or fixture body. A fresh
+24-case boundary matrix and 36-invocation worktree matrix pass under the updated
+captured sources. The latter still reproduces absolute-path and permission-mode
+counterexamples; 22 tiny fixture bodies execute only in that normal replay. One
+existing admission token covers the shared batch and is released afterward.
+
+See `research/guarded-native-replay-checkpoint-2026-11-03.json`. Earlier reports
+remain unchanged under their original bytes. The simulated platform cases test
+startup branching, not native operation on Darwin. No real task/profile, feature
+acceptance, production reuse or timing benefit is established.
+
 ### Deployment and boundary caller review, 2026-11-04 UTC
 
 A tracked-source discovery inspected 13,142 regular text source/configuration

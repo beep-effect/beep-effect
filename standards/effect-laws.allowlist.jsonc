@@ -4,6 +4,62 @@
   "entries": [
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "packages/law-practice/server/src/internal/Citation/CallbackObservations.ts",
+      "kind": "weak-collection",
+      "reason": "Default-branch observations are capabilities bound to the exact callback result object. Weak issuer membership rejects copied or structurally forged results without retaining every result and its encoded observation for the lifetime of the module. Effect collections cannot provide weak keys or identity-only issuance.",
+      "owner": "@beep/law-practice-server",
+      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/law-practice/server/src/internal/Citation/CallbackSession.ts",
+      "kind": "weak-collection",
+      "reason": "Issued session snapshots retain native verified anchors only while the exact outward capability remains reachable. Per-operation weak maps also bind detached semantic objects and callback list handles to their actual identities, without retaining abandoned foreign objects merely for membership. Structural equality or a strong Effect collection changes forgery rejection or garbage-collection behavior.",
+      "owner": "@beep/law-practice-server",
+      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/law-practice/server/src/internal/Citation/CleanerPipeline.ts",
+      "kind": "weak-collection",
+      "reason": "Cleaner reservations are closure-issued runtime capabilities. The weak map binds the exact charge handle to its reserved amount, rejects copied handles, and permits abandoned handles to be collected while the owning operation remains alive. Effect collections do not provide weak-key identity membership.",
+      "owner": "@beep/law-practice-server",
+      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/law-practice/server/src/internal/Citation/CleanerValues.ts",
+      "kind": "weak-collection",
+      "reason": "The scoped cleaner arena binds exact issued object identities to retained host/text/byte payloads. Weak keys prevent the arena from retaining every intermediate result; only the explicitly bounded empty/space caches retain handles strongly. Replacing the weak map at Scope closure drops all arena-held payloads. Effect collections provide no weak-key equivalent.",
+      "owner": "@beep/law-practice-server",
+      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/law-practice/server/src/internal/Citation/ResourceObjects.ts",
+      "kind": "weak-collection",
+      "reason": "Resource handles are operation-owned capabilities whose slot fields alone cannot authenticate membership. Weak-key lookup rejects copied handles without retaining all external handle objects for the operation lifetime. Slot-to-reference state is separately bounded and cleared by the owner. An Effect collection cannot supply weak identity semantics.",
+      "owner": "@beep/law-practice-server",
+      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/law-practice/server/src/internal/Citation/CleanerValues.ts",
+      "kind": "object-method",
+      "reason": "Object.freeze seals the issued cleaner handle before it reaches injected code. This protects its slot property against replacement, including substituted getters, while the private weak map authenticates identity. The native property descriptor read validates a data slot without invoking foreign getters. Schema readonly typing alone does not freeze a JavaScript object at this capability boundary.",
+      "owner": "@beep/law-practice-server",
+      "issue": "CITATION-EXTRACTION-ENGINE-IMMUTABLE-HANDLES"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.limits.ts",
+      "kind": "object-method",
+      "reason": "The exported absolute resource ceilings cross a JavaScript consumer boundary. Object.freeze prevents runtime consumers from mutating the authoritative limits after schema filters and operation owners import them; TypeScript readonly types cannot enforce that runtime safety invariant. All fields are primitive numeric ceilings, so a shallow freeze seals the complete table.",
+      "owner": "@beep/law-practice-use-cases",
+      "issue": "CITATION-EXTRACTION-ENGINE-IMMUTABLE-CEILINGS"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/capability/observability/src/server/DevTools.ts",
       "kind": "new-map-set",
       "reason": "Effect DevToolsSchema.Span types attributes as ReadonlyMap at the protocol boundary, and Tracer.Span exposes the live span's mutable attribute map. Copying into a native Map snapshots the attributes at publish time, the same copy upstream effect/devtools DevToolsClient makes; no Effect collection satisfies the ReadonlyMap wire type.",

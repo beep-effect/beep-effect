@@ -38,10 +38,10 @@ Verify: `npx tsgo -b tsconfig.json` clean; `npx vitest run` 58/58 (6 files); `tu
 
 | qualifiedName | file:line | diagnostic | disposition | reason / evidence |
 |---|---|---|---|---|
-| `Span.resolveOriginal` | `src/values/Span/Span.model.ts:128` | missing-dual (2 params) | **fixed** | `span` (the coordinate pair being resolved) is the natural self, `map` the context: `dual(2, (span, map) => ...)`. Zero real call sites outside this file (only the internal call from `Span.fromGroupIndex`, which is data-first and unaffected). |
-| `Span.fromGroupIndex` | `src/values/Span/Span.model.ts:89` | missing-dual (3 params) | **fixed** (was `detector-bug?`, driver verdict-challenge overturned it) | Driver confirmed it IS a constructor factory (builds a brand-new `Span`), but it was tagged `@category statics` rather than `@category constructors`, so the detector's `isLegitimateConstructorFactory` exclusion (which requires the `constructors` category) never fired. Retagged `@category constructors` — semantically correct, honors the existing carve-out; no other code changed. |
+| `Span.resolveOriginal` | [pre-retirement Span source](https://github.com/beep-effect/beep-effect/blob/453364b0af8f2646a97eb4c550cc323a90d97575/packages/law-practice/domain/src/values/Span/Span.model.ts) | missing-dual (2 params) | **fixed** | `span` (the coordinate pair being resolved) is the natural self, `map` the context: `dual(2, (span, map) => ...)`. Zero real call sites outside this file (only the internal call from `Span.fromGroupIndex`, which is data-first and unaffected). |
+| `Span.fromGroupIndex` | [pre-retirement Span source](https://github.com/beep-effect/beep-effect/blob/453364b0af8f2646a97eb4c550cc323a90d97575/packages/law-practice/domain/src/values/Span/Span.model.ts) | missing-dual (3 params) | **fixed** (was `detector-bug?`, driver verdict-challenge overturned it) | Driver confirmed it IS a constructor factory (builds a brand-new `Span`), but it was tagged `@category statics` rather than `@category constructors`, so the detector's `isLegitimateConstructorFactory` exclusion (which requires the `constructors` category) never fired. Retagged `@category constructors` — semantically correct, honors the existing carve-out; no other code changed. |
 
-Files touched: `src/values/Span/Span.model.ts`.
+Files touched: [pre-retirement Span source](https://github.com/beep-effect/beep-effect/blob/453364b0af8f2646a97eb4c550cc323a90d97575/packages/law-practice/domain/src/values/Span/Span.model.ts).
 Verify: `npx tsgo -b tsconfig.json` clean; `npx vitest run` 14/14; `turbo run build check test docgen --filter=@beep/law-practice-domain` — 31/31 tasks green, docgen 82 examples typechecked.
 
 ## 5. `packages/tooling/library/ai-metrics` (2 entries)
@@ -95,7 +95,7 @@ Verify: `npx tsgo -b tsconfig.json` clean; `npx vitest run` 32/32 (unit, exclude
 The driver's verdict-challenge (D-C) overturned both initial `detector-bug?` calls and directed code fixes, applied in this same session:
 
 - **`diagnosticsFor`** (`packages/drivers/box/src/internal/Box.runtime.ts`): reordered `(event, error)` → `(error, event)` and wrapped `dual(2, ...)`; swept the sole call site in `logDriverFailure`. `npx tsgo -b` clean, `npx vitest run` 18/18, `turbo run build check test docgen --filter=@beep/box` 19/19 tasks green.
-- **`Span.fromGroupIndex`** (`packages/law-practice/domain/src/values/Span/Span.model.ts`): retagged `@category statics` → `@category constructors` (no other code changed) so the detector's existing constructor-factory exclusion fires as designed. `npx tsgo -b` clean, `npx vitest run` 14/14, `turbo run docgen --filter=@beep/law-practice-domain` clean (82 examples typechecked).
+- **`Span.fromGroupIndex`** ([pre-retirement Span source snapshot](https://github.com/beep-effect/beep-effect/blob/453364b0af8f2646a97eb4c550cc323a90d97575/packages/law-practice/domain/src/values/Span/Span.model.ts)): retagged `@category statics` → `@category constructors` (no other code changed) so the detector's existing constructor-factory exclusion fires as designed. `npx tsgo -b` clean, `npx vitest run` 14/14, `turbo run docgen --filter=@beep/law-practice-domain` clean (82 examples typechecked).
 
 `git diff --stat` for the two packages after the follow-up:
 

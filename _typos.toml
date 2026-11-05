@@ -171,6 +171,24 @@ extend-exclude = [
   "packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/*.jsonl",
   "**/internal/data/**",
   "packages/law-practice/domain/src/internal/generated/free-law-project/**",
+  # Exact pinned oracle text includes legal abbreviations and upstream typos.
+  # Its schema, hashes, coordinates and source accounting have a separate gate.
+  "packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/html-bytes.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-identities.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/unicode-dictionary.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/python-hashes.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-unicode.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/assertion-cases.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/source-inventory.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/canonical-cases.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/regex-inventory.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/typescript-extensions.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/vocabulary-mapping.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/frozen-editions.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/canonical-tokenizer.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/regex-adversarial-corpus.json",
   "**/src-tauri/gen/**",
   "**/src-tauri/target/**",
   # Vendored, version-pinned WHATWG/webref spec data for @beep/html (see data/SOURCES.md).
@@ -187,3 +205,39 @@ extend-exclude = [
 [type.harness-ledger]
 extend-glob = ["*.jsonl"]
 extend-ignore-re = ['"(?:ref|repoRevision)":"[0-9a-f]{7,40}"']
+
+# Preserve the Dutch institution's legal name in the verbatim CPython license.
+# This is a proper-name allowlist, not an exclusion of the notice's prose.
+[type.cpython-notice]
+extend-glob = ["THIRD_PARTY_NOTICES.md"]
+
+[type.cpython-notice.extend-words]
+Stichting = "Stichting"
+Mathematisch = "Mathematisch"
+
+# Preserve libxml2's exact diagnostic enum in source-audit evidence only.
+[type.citation-html-audit]
+extend-glob = ["html-cleaner-audit.json", "html-kernel-cases.json"]
+
+[type.citation-html-audit.extend-words]
+STRUCURE = "STRUCURE"
+
+# Immutable upstream musl notice: retain author names and original spelling.
+[type.citation-musl-notice]
+extend-glob = ["wasi-libc-libc-top-half-musl-COPYRIGHT"]
+
+[type.citation-musl-notice.extend-words]
+Wich = "Wich"
+TRE = "TRE"
+contibutors = "contibutors"
+
+# Native source words are hex data, not prose. Keep the rest of the fixture checked.
+[type.citation-metadata-strings]
+extend-glob = ["metadata-strings.json"]
+extend-ignore-re = ['"bytes": "[0-9a-f]*"']
+
+# Authenticated upstream court IDs and every truncated prefix are source data.
+# Keep headers/provenance checked; do not correct or globally allow their words.
+[type.citation-court-data]
+extend-glob = ["court-table.json", "court-lookup.json", "post-case-metadata.json"]
+extend-ignore-re = ['"(?:payload|keys|cases|courtTable)": "(?:\\.|[^"\\])*"']

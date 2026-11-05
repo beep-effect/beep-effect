@@ -1,0 +1,4077 @@
+{
+  "schemaVersion": "citation-live-resources/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "python": "3.11.15",
+  "pythonHashSeed": "0",
+  "versions": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22"
+  },
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "producerSha256": "53f23d3e1ccf644ad47941c83662001a9ae6e6431cdf4720c5e491c58b5bab9d",
+  "normalizerSha256": "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8",
+  "sources": {
+    "models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a",
+    "utils.py": "8e27eb1207f6c0fdb695530e3677a3e9f039986b2baf68461ba680ee2bff902e",
+    "tokenizers.py": "de2d345fe0211aa4f48d633035567ec941f113e48c41990b0b036db63d984a01"
+  },
+  "scope": "Mixed actual Resource/table composition and actual frozen abbreviation ties; null-page identity is controlled, full callback dispatch remains open.",
+  "cases": [
+    {
+      "name": "mixed-live-fields",
+      "identityMode": "content",
+      "initial": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "missingPageIdentityHash": null
+        },
+        {
+          "citation": {
+            "type": "law",
+            "components": {
+              "title": "35",
+              "reporter": "U.S.C.",
+              "section": "101"
+            },
+            "publication": {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            }
+          },
+          "missingPageIdentityHash": null
+        },
+        {
+          "citation": {
+            "type": "journal",
+            "components": {
+              "volume": "93",
+              "reporter": "Harv. L. Rev.",
+              "page": "518"
+            },
+            "publication": {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null
+            }
+          },
+          "missingPageIdentityHash": null
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 0
+          },
+          "outcome": 0,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 1
+          },
+          "outcome": 1,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 2
+          },
+          "outcome": 2,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 0
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 1,
+            "value": 1
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 2,
+            "value": 2
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "change",
+            "reference": 0,
+            "field": "page",
+            "value": "20"
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 0
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 3
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 3
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "change",
+            "reference": 1,
+            "field": "section",
+            "value": "102"
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 3
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 1
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 3
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 1,
+            "value": 4
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 3
+            },
+            {
+              "objectId": 1,
+              "value": 4
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "change",
+            "reference": 2,
+            "field": "page",
+            "value": "520"
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 3
+            },
+            {
+              "objectId": 1,
+              "value": 4
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 2
+          },
+          "outcome": 2,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 3
+            },
+            {
+              "objectId": 1,
+              "value": 4
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 2,
+            "value": 5
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 5
+            },
+            {
+              "objectId": 0,
+              "value": 3
+            },
+            {
+              "objectId": 1,
+              "value": 4
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "equal",
+            "left": 0,
+            "right": 1
+          },
+          "outcome": false,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 5
+            },
+            {
+              "objectId": 0,
+              "value": 3
+            },
+            {
+              "objectId": 1,
+              "value": 4
+            }
+          ],
+          "comparisons": [[0, 1]],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "remove",
+            "resource": 0
+          },
+          "outcome": 3,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 5
+            },
+            {
+              "objectId": 1,
+              "value": 4
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "clear"
+          },
+          "outcome": null,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 1,
+            "value": 6
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 6
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 1
+          },
+          "outcome": 6,
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 6
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "distinct-equal-all-families",
+      "identityMode": "content",
+      "initial": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "missingPageIdentityHash": null
+        },
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "missingPageIdentityHash": null
+        },
+        {
+          "citation": {
+            "type": "law",
+            "components": {
+              "title": "35",
+              "reporter": "U.S.C.",
+              "section": "101"
+            },
+            "publication": {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            }
+          },
+          "missingPageIdentityHash": null
+        },
+        {
+          "citation": {
+            "type": "law",
+            "components": {
+              "title": "35",
+              "reporter": "U.S.C.",
+              "section": "101"
+            },
+            "publication": {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            }
+          },
+          "missingPageIdentityHash": null
+        },
+        {
+          "citation": {
+            "type": "journal",
+            "components": {
+              "volume": "93",
+              "reporter": "Harv. L. Rev.",
+              "page": "518"
+            },
+            "publication": {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null
+            }
+          },
+          "missingPageIdentityHash": null
+        },
+        {
+          "citation": {
+            "type": "journal",
+            "components": {
+              "volume": "93",
+              "reporter": "Harv. L. Rev.",
+              "page": "518"
+            },
+            "publication": {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null
+            }
+          },
+          "missingPageIdentityHash": null
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 0
+          },
+          "outcome": 0,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 1
+          },
+          "outcome": 1,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 2
+          },
+          "outcome": 2,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 3
+          },
+          "outcome": 3,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 4
+          },
+          "outcome": 4,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 5
+          },
+          "outcome": 5,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 0
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 1,
+            "value": 1
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            }
+          ],
+          "comparisons": [[0, 1]],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 2,
+            "value": 2
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 3,
+            "value": 3
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 3
+            }
+          ],
+          "comparisons": [[2, 3]],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 4,
+            "value": 4
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 5,
+            "value": 5
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 5
+            }
+          ],
+          "comparisons": [[4, 5]],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 0
+          },
+          "outcome": 1,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 5
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 1
+          },
+          "outcome": 1,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 5
+            }
+          ],
+          "comparisons": [[0, 1]],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 2
+          },
+          "outcome": 3,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 5
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 3
+          },
+          "outcome": 3,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 5
+            }
+          ],
+          "comparisons": [[2, 3]],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 4
+          },
+          "outcome": 5,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 5
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 5
+          },
+          "outcome": 5,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 5
+            }
+          ],
+          "comparisons": [[4, 5]],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "equal",
+            "left": 0,
+            "right": 1
+          },
+          "outcome": true,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 5
+            }
+          ],
+          "comparisons": [[0, 1]],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "equal",
+            "left": 2,
+            "right": 3
+          },
+          "outcome": true,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 5
+            }
+          ],
+          "comparisons": [[2, 3]],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "equal",
+            "left": 4,
+            "right": 5
+          },
+          "outcome": true,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 5
+            }
+          ],
+          "comparisons": [[4, 5]],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "actual-law-edition-ties",
+      "identityMode": "content",
+      "initial": [
+        {
+          "citation": {
+            "type": "law",
+            "components": {
+              "title": "35",
+              "reporter": "U.S.C.",
+              "section": "101"
+            },
+            "publication": {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            }
+          },
+          "missingPageIdentityHash": null
+        },
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "missingPageIdentityHash": null
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 0
+          },
+          "outcome": 0,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 0
+          },
+          "outcome": 1,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 1
+          },
+          "outcome": 2,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 2,
+            "value": 2
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 2
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "editions",
+            "reference": 0,
+            "values": [
+              "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63",
+              "32ed3b0b227be406de3bd987a2fa2a2ac838fe9d946c24fdfcb7cd149272af62"
+            ]
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 2
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63",
+                "32ed3b0b227be406de3bd987a2fa2a2ac838fe9d946c24fdfcb7cd149272af62"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 0
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63",
+                "32ed3b0b227be406de3bd987a2fa2a2ac838fe9d946c24fdfcb7cd149272af62"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "hash",
+            "resource": 0
+          },
+          "outcome": "1350038462333559363",
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63",
+                "32ed3b0b227be406de3bd987a2fa2a2ac838fe9d946c24fdfcb7cd149272af62"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "editions",
+            "reference": 0,
+            "values": [
+              "32ed3b0b227be406de3bd987a2fa2a2ac838fe9d946c24fdfcb7cd149272af62",
+              "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63"
+            ]
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "32ed3b0b227be406de3bd987a2fa2a2ac838fe9d946c24fdfcb7cd149272af62",
+                "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "hash",
+            "resource": 0
+          },
+          "outcome": "418362191979755020",
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "32ed3b0b227be406de3bd987a2fa2a2ac838fe9d946c24fdfcb7cd149272af62",
+                "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 0
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "32ed3b0b227be406de3bd987a2fa2a2ac838fe9d946c24fdfcb7cd149272af62",
+                "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 1
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 0,
+              "value": 1
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "32ed3b0b227be406de3bd987a2fa2a2ac838fe9d946c24fdfcb7cd149272af62",
+                "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 1
+          },
+          "outcome": 1,
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 0,
+              "value": 1
+            }
+          ],
+          "comparisons": [[0, 1]],
+          "publications": [
+            {
+              "editions": [
+                "32ed3b0b227be406de3bd987a2fa2a2ac838fe9d946c24fdfcb7cd149272af62",
+                "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "editions",
+            "reference": 0,
+            "values": [
+              "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63",
+              "32ed3b0b227be406de3bd987a2fa2a2ac838fe9d946c24fdfcb7cd149272af62",
+              "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63"
+            ]
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 0,
+              "value": 1
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63",
+                "32ed3b0b227be406de3bd987a2fa2a2ac838fe9d946c24fdfcb7cd149272af62",
+                "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 1,
+            "value": 3
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 1,
+              "value": 3
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63",
+                "32ed3b0b227be406de3bd987a2fa2a2ac838fe9d946c24fdfcb7cd149272af62",
+                "01d04be279bf77e789a17684796c1fcd46653da4226049d4dc5db891686e0e63"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "editions",
+            "reference": 0,
+            "values": []
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 1,
+              "value": 3
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 4
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 0,
+              "value": 1
+            },
+            {
+              "objectId": 1,
+              "value": 3
+            },
+            {
+              "objectId": 0,
+              "value": 4
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "actual-journal-edition-ties",
+      "identityMode": "content",
+      "initial": [
+        {
+          "citation": {
+            "type": "journal",
+            "components": {
+              "volume": "93",
+              "reporter": "Harv. L. Rev.",
+              "page": "518"
+            },
+            "publication": {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null
+            }
+          },
+          "missingPageIdentityHash": null
+        },
+        {
+          "citation": {
+            "type": "law",
+            "components": {
+              "chapter": "37",
+              "reporter": "C.F.R.",
+              "section": "1.56"
+            },
+            "publication": {
+              "editions": [
+                "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+              ],
+              "selectedEdition": "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            }
+          },
+          "missingPageIdentityHash": null
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 0
+          },
+          "outcome": 0,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+              ],
+              "selectedEdition": "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 1
+          },
+          "outcome": 1,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+              ],
+              "selectedEdition": "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 1,
+            "value": 1
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+              ],
+              "selectedEdition": "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "editions",
+            "reference": 0,
+            "values": [
+              "2638f729745789e434b0afc9477510ec7504ff757768c4398b66e3382a209a96",
+              "b89c87476b82c179bf7115a5ba41d60b8327c2f205ef7863673f1eb02c8e3b08"
+            ]
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "2638f729745789e434b0afc9477510ec7504ff757768c4398b66e3382a209a96",
+                "b89c87476b82c179bf7115a5ba41d60b8327c2f205ef7863673f1eb02c8e3b08"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+              ],
+              "selectedEdition": "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 0
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "2638f729745789e434b0afc9477510ec7504ff757768c4398b66e3382a209a96",
+                "b89c87476b82c179bf7115a5ba41d60b8327c2f205ef7863673f1eb02c8e3b08"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+              ],
+              "selectedEdition": "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "hash",
+            "resource": 0
+          },
+          "outcome": "1290329969722259344",
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "2638f729745789e434b0afc9477510ec7504ff757768c4398b66e3382a209a96",
+                "b89c87476b82c179bf7115a5ba41d60b8327c2f205ef7863673f1eb02c8e3b08"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+              ],
+              "selectedEdition": "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "editions",
+            "reference": 0,
+            "values": [
+              "b89c87476b82c179bf7115a5ba41d60b8327c2f205ef7863673f1eb02c8e3b08",
+              "2638f729745789e434b0afc9477510ec7504ff757768c4398b66e3382a209a96"
+            ]
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "b89c87476b82c179bf7115a5ba41d60b8327c2f205ef7863673f1eb02c8e3b08",
+                "2638f729745789e434b0afc9477510ec7504ff757768c4398b66e3382a209a96"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+              ],
+              "selectedEdition": "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "hash",
+            "resource": 0
+          },
+          "outcome": "928901355473534368",
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "b89c87476b82c179bf7115a5ba41d60b8327c2f205ef7863673f1eb02c8e3b08",
+                "2638f729745789e434b0afc9477510ec7504ff757768c4398b66e3382a209a96"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+              ],
+              "selectedEdition": "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 0
+          },
+          "outcome": 0,
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "b89c87476b82c179bf7115a5ba41d60b8327c2f205ef7863673f1eb02c8e3b08",
+                "2638f729745789e434b0afc9477510ec7504ff757768c4398b66e3382a209a96"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+              ],
+              "selectedEdition": "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 2
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 0,
+              "value": 2
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "b89c87476b82c179bf7115a5ba41d60b8327c2f205ef7863673f1eb02c8e3b08",
+                "2638f729745789e434b0afc9477510ec7504ff757768c4398b66e3382a209a96"
+              ],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+              ],
+              "selectedEdition": "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "editions",
+            "reference": 0,
+            "values": []
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 0,
+              "value": 2
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+              ],
+              "selectedEdition": "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 0
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 0,
+              "value": 2
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+              ],
+              "selectedEdition": "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 3
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 0,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 3
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [],
+              "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            },
+            {
+              "editions": [
+                "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+              ],
+              "selectedEdition": "b6293de3e161f1a649d897f5d5a099841074c14ebeee8e2996e7d2c172eefe4c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "case-independent-selection",
+      "identityMode": "content",
+      "initial": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "missingPageIdentityHash": null
+        },
+        {
+          "citation": {
+            "type": "law",
+            "components": {
+              "title": "35",
+              "reporter": "U.S.C.",
+              "section": "101"
+            },
+            "publication": {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            }
+          },
+          "missingPageIdentityHash": null
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 0
+          },
+          "outcome": 0,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 1
+          },
+          "outcome": 1,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 0
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 1,
+            "value": 1
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "editions",
+            "reference": 0,
+            "values": []
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "hash",
+            "resource": 0
+          },
+          "outcome": "1986750081022884797",
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 0
+          },
+          "outcome": 0,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "editions",
+            "reference": 0,
+            "values": [
+              "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            ]
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "hash",
+            "resource": 0
+          },
+          "outcome": "1986750081022884797",
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 0
+          },
+          "outcome": 0,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "controlled-null-page-lazy-artifact",
+      "identityMode": "controlled-source-id-hook",
+      "initial": [
+        {
+          "citation": {
+            "type": "case",
+            "components": {
+              "page": null
+            },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "selectedEdition": "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa",
+              "editions": [
+                {
+                  "edition": "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ]
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "court": {
+                "status": "unmapped",
+                "value": "scotus"
+              },
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "missingPageIdentityHash": "4294967296"
+        },
+        {
+          "citation": {
+            "type": "law",
+            "components": {
+              "title": "35",
+              "reporter": "U.S.C.",
+              "section": "101"
+            },
+            "publication": {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            }
+          },
+          "missingPageIdentityHash": null
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 0
+          },
+          "outcome": 0,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+              ],
+              "selectedEdition": "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 0
+          },
+          "outcome": 1,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+              ],
+              "selectedEdition": "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 1
+          },
+          "outcome": 2,
+          "entries": [],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+              ],
+              "selectedEdition": "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 0
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+              ],
+              "selectedEdition": "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 2,
+            "value": 1
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 2,
+              "value": 1
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+              ],
+              "selectedEdition": "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 1
+          },
+          "outcome": 0,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 2,
+              "value": 1
+            }
+          ],
+          "comparisons": [[0, 1]],
+          "publications": [
+            {
+              "editions": [
+                "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+              ],
+              "selectedEdition": "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "equal",
+            "left": 0,
+            "right": 1
+          },
+          "outcome": true,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 2,
+              "value": 1
+            }
+          ],
+          "comparisons": [[0, 1]],
+          "publications": [
+            {
+              "editions": [
+                "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+              ],
+              "selectedEdition": "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "hash",
+            "resource": 0
+          },
+          "outcome": "725453319809313587",
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 2,
+              "value": 1
+            }
+          ],
+          "comparisons": [],
+          "publications": [
+            {
+              "editions": [
+                "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+              ],
+              "selectedEdition": "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 1,
+            "value": 2
+          },
+          "outcome": null,
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 2
+            },
+            {
+              "objectId": 2,
+              "value": 1
+            }
+          ],
+          "comparisons": [[0, 1]],
+          "publications": [
+            {
+              "editions": [
+                "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+              ],
+              "selectedEdition": "2de5e5997e68bf8d493540bc38786126850b736607a2ed92e7829e665bc9b8aa"
+            },
+            {
+              "editions": [
+                "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+              ],
+              "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

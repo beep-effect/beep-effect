@@ -867,6 +867,182 @@ pruning candidates, so retain their app-specific comparison gates instead of
 calling pruning inapplicable from its current absence. No cloud call or deploy
 was made by this repair.
 
+### 2026-11-03 — extend captured-byte joins to signature observations
+
+- While hosted CI was queued, source review found the signature-key driver
+  parsed pins and the shared collector before later reads supplied their
+  hashes. Four metadata-only legacy controls reproduce a false source binding.
+- Reuse the existing captured-byte pattern, include the Bun version pin, reject
+  external pin files before reading, and refuse movement before selecting a
+  native client. Six source-movement and one external-path refusal controls
+  pass; two unchanged controls still complete their metadata prefix.
+- All version probes are stubs and every real subprocess is refused. The
+  initial ten-case source/report pair is retained privately before extending
+  the controls to thirteen. The original 168 native cases remain unchanged and
+  retain their original source digest. A new driver digest needs a new actual
+  semantic replay; this repair grants no feature, tuple or rollout acceptance.
+
+
+### 2026-11-03 — retain experiment scope after a source repair
+
+- A source-binding repair alone did not replay the earlier 168 native cases.
+  The new admitted offline experiment now runs the repaired driver and records
+  its actual source/client pins, while preserving both historical reports.
+- Check every raw stdout/stderr digest and the admission/release receipt. The
+  replay executed 162 tiny fixture tasks; six cases refused before execution.
+  Do not copy the separate metadata controls' zero-task statement onto it.
+- Matching synthetic semantics is not signed artifact transport, a protected
+  producer result, feature adoption or full-goal acceptance. Keep those gates
+  explicit rather than renaming this bounded experiment as qualification.
+
+
+### 2026-11-03 — repair related evidence joins in one wave
+
+- Source review after the signature repair found split reads in the setup,
+  prune, base-ref, global and log probes, a later Bun-pin read in filter
+  composition, and a late guard in selection. The observability snapshot was
+  already parsed consistently but lacked the early pre-probe refusal.
+- Capture source bytes once, parse those bytes, hash those bytes and guard them
+  before probes. Reuse the captured-byte pattern and existing bounded
+  collectors. Preserve all function ASTs, budgets and historical reports; do
+  not copy old semantic results onto changed driver digests.
+- The generalized metadata-prefix fixture initially omitted its synthetic
+  canary file. Preserve that failed calibration and its source. The corrected
+  151-case run executes no native client/task and checks seven external-pin
+  refusals. It is separate from native experiments and hosted quality.
+- The two log probes used check-then-overwrite report publication. Create
+  their reports exclusively with mode0600 so a concurrent writer cannot be
+  silently overwritten or a temporarily world-readable report exposed.
+
+
+### 2026-11-03 — verify the opened pin descriptor
+
+- Review #2689 found a real gap between resolving/checking a pin pathname and
+  opening it. Leaf or parent replacement could supply external bytes while a
+  later pathname digest comparison still matched.
+- Reuse the bounded-reader owner: check the opened descriptor's actual path
+  and file type before reading, reject leaf symlinks, bound bytes, and apply
+  the same rule to revalidation. Twenty legacy replacement controls read
+  synthetic external bytes; twenty repaired controls read none.
+- The 208-case actual-reader prefix controls and thirteen stubbed-reader binding
+  contrasts execute no native clients/tasks. Earlier151-case metadata receipts
+  and their unpublished source envelopes are retained privately. The native
+  signature replay predates this repair; preserve its source binding and
+  require a fresh replay rather than claiming it is current.
+
+
+- A post-push source inspection caught an introduced overreach: applying the
+  pin-manifest descriptor fence to fixed dependency docs rejects this lane's
+  approved shared installation. The actual schema/docs resolve outside the
+  lane. Restrict containment to pin manifests, preserve other captured-byte
+  checks, and include a shared external-doc symlink in the208-case fixture.
+  No native execution was needed to expose or correct that layout mismatch.
+
+
+### 2026-11-03 — validate fresh captures without repeating experiments
+
+- The existing admitted runner completed all thirteen repaired native drivers.
+  Keep case counts, invocations, task-result observations and fixture task
+  executions distinct; summing heterogeneous report rows would misstate scope.
+- A raw-file validator initially assumed numbering restarted per client. The
+  signature driver actually uses its global observation index. Inspect that
+  source and correct the join; preserve all native reports and do not rerun a
+  successful experiment merely to repair a metadata check.
+- Validate admission release against the actual launched process, current
+  source/client digests and retained raw captures before publication. The
+ 13.690-second experiment runtime is not a measurement of cache time saved.
+
+
+- Ordinary commit formatting changed whitespace in fresh JSON files, including
+  replay reports. Preserve raw experiment bytes privately, compare every
+  decoded JSON object, and record separate raw/public digests in the checkpoint.
+  Do not disable formatting, claim byte-identical public copies, or rerun a
+  native experiment to repair publication metadata. The exact changed-report
+  count comes from byte comparisons, not the hook's total formatted-file count.
+
+
+### 2026-11-03 — require specific negative diagnostics and final tool joins
+
+- Boundary fixture calibration initially checked the expected exit and package
+  witnesses. Preserve that observation, then require the specific undeclared
+  import, package escape, denylist or allowlist diagnostic for each negative.
+  A generic error must not satisfy a semantic refusal control.
+- Add final native/Bun/sandbox hash checks and owned-fixture cleanup checks
+  before publishing. Each driver change received a fresh bounded replay;
+  earlier reports were neither overwritten nor rebound to the later source.
+  The final 24-case replay passed in 6.251 seconds, with 13,808 retained stream
+  bytes, one released admission token and zero task executions.
+- Captured native daemon-option deprecation warnings remain explicit. The
+  experiment does not enable a checker over Beep or justify another CI job.
+
+
+### 2026-11-03 — require an actual offline fixture lock before native worktree controls
+
+The first worktree experiment stopped before any task because a dependency-free
+Bun fixture produced no `bun.lock`. Treat successful lockfile-only exit as
+insufficient: include one local workspace and assert the lock exists before
+initializing the disposable Git worktrees. The original driver and bounded raw
+prerequisite output are retained privately; a fresh source-bound observation
+is required. This is fixture setup friction, not a cache correctness result.
+
+
+### 2026-11-03 — retain restored tree metadata before checking cache-hit correctness
+
+The first actual linked-worktree HIT failed the complete output-tree/mode
+assertion. Its native streams and cold outputs survive, but the failed tree
+metadata was computed only in memory before fixture cleanup. Retain the task
+summary, restored bytes/logs and modes before asserting equivalence. A cache
+HIT alone is insufficient proof. Preserve the original failed source envelope;
+the next diagnostic observation keeps the strict assertion unchanged.
+
+
+### 2026-11-03 — permission-sensitive outputs need a real replay control
+
+Pinned stable 2.11.10 reports a shared-worktree HIT with identical content and
+logs, but an explicitly chmodded executable changes from 0755 to 0700 when
+restored under the fixture's private umask 0077. The two actual output manifests,
+source bytes and native summaries are retained. Treat this as a failed metadata
+equivalence control, not a portable task or a production R2 result. Extend the
+exact-client matrix with this expected counterexample and a fresh-execution
+control, alongside owner-only portable outputs. No global umask or cache
+setting should be weakened to make the experiment pass.
+
+
+### 2026-11-03 — forced execution preserves the native task-log comparison
+
+The partial worktree matrix passed twelve portable/isolation observations and
+the absolute-path cold/shared pair. Its fresh cache-disabled control executed
+but produced no persistent task log, so the full-log assertion stopped it. Use
+documented `--force` with local caching retained for fresh controls requiring
+log comparison. Preserve the partial matrix as setup evidence, not a complete
+client-pair result; no repository quality task or cache setting changes.
+
+
+The exact native CLI additionally rejects combining `--cache` and `--force`;
+the attempted fresh control therefore did not execute. Use `--force` alone
+inside the same credential-free, network-isolated fixture. The default local
+cache remains available; remote access remains impossible. Its refusal and
+original source bytes stay with the partial evidence.
+
+
+### 2026-11-03 — assertions cannot protect assertion-dependent evidence
+
+Review found that the two new drivers used an assertion to refuse optimized
+Python. Under optimization, both that guard and the source/result assertions
+disappear, permitting unsupported claims. Replace the startup guard with an
+unconditional check before any fixture/source/tool/report work. Preserve old
+reports; twelve actual early refusals and fresh source-bound native replays
+validate the repair. Keep the existing experiment limits and qualification holds.
+
+
+### 2026-11-03 — distinguish captured and published JSON byte digests
+
+Review found that the startup-refusal checkpoint used an ambiguous `sha256`
+field for captured bytes while the staged formatter reflowed the committed
+report. Parsed content matched, but the committed-byte digest did not. Keep
+separate captured and published digests/byte counts, plus decoded equality, and
+check the committed files after Git hooks. No executed driver bytes changed,
+so replaying native experiments would add no proof for this metadata correction.
 ### 2026-11-03 — keep the adoption queue aligned with accepted packages
 
 - Accepted main added 36 executable computations after the published population.

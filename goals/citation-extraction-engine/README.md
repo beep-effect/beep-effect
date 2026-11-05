@@ -4,11 +4,200 @@
 
 Lifecycle: `active`
 
+Approved safety exception (2026-10-29): native HTML parser resource exhaustion
+returns CitationSafetyLimitExceeded without a partial value. The
+[recorded human authorization](./ops/html-safety-exception.json) clears the
+[previous hold](./history/evidence/2026-10-29-html-safety-hold.md). Other HTML
+behavior retains its parity obligations. The completion guard is implemented;
+full engine qualification remains open.
+Bounded [Unicode input preparation](./history/evidence/2026-10-31-html-input-preparation.md)
+now matches 1,075 source decisions, including exact buffer bytes and declaration
+rejection, with captured limits, Clock and cooperative interruption.
+The [private native core](./history/evidence/2026-10-31-html-kernel.md) now matches
+1,097 complete source outcomes under the approved safety exception. Two clean
+builds are identical. The [owned worker](./history/evidence/2026-10-31-owned-html-worker.md)
+now bounds complete transport frames, queueing and execution, confirms child
+retirement and quarantines unacknowledged cleanup. Global engine admission,
+composed stage budgets, source maps and the live Layer remain open.
+The [worker corpus qualification](./history/evidence/2026-10-31-html-worker-qualification.md)
+now checks all 1,097 frozen outcomes through actual children, plus the absolute
+source ceiling and exact request/reply boundaries.
+The [cleaner sequence source corpus](./history/evidence/2026-10-31-cleaner-pipeline-source.md)
+adds 1,155 cases and 51 custom scenes, including lazy steps, live registry
+mutation and non-string callback values. The portable audit now has eleven
+components; target cleaner contracts and composition remain open.
+[Direct dictionary comparison mutation](./history/evidence/2026-10-31-dictionary-reentrancy.md)
+now matches thirteen additional source histories without deadlocking or using
+stale comparison results; Unicode tables and composed cleaner ownership remain
+open.
+The [private lazy execution seam](./history/evidence/2026-10-31-cleaner-execution-core.md)
+now captures runtime/Clock, preserves host values and shares nested text
+reservations. All 440 primitive text vectors pass through reserved literal
+stages. The [exclusive output allowance](./history/evidence/2026-10-31-cleaner-capacity.md)
+now serializes native-sized production against ordinary reservations, including
+zero-capacity empty output and cleanup on cancellation. The
+[native HTML stage](./history/evidence/2026-10-31-html-cleaner-stage.md) now uses
+that allowance, accepts intermediate text and preflights complete framing before
+payload allocation. The [byte stage and pinned GNU converter](./history/evidence/2026-10-31-html-byte-stage.md)
+now preserve byte encoding detection and source decode failures, with complete
+source/relink material. Global admission and full host/registry replay remain open.
+
+The [captured value owner and builtin invocation](./history/evidence/2026-10-31-cleaner-value-ownership.md)
+now preserve 340 text identity/subclass observations and all 45 input-kind
+controls, with no coercion and original stage production charges. Full live
+registry/cursor ownership and all 1,155 sequence cases remain open.
+
+The [combined Unicode dictionary backend](./history/evidence/2026-10-31-unicode-dictionary.md)
+now matches thirteen histories and forty outcomes, including conversion and
+equality mutation. Retained tables use per-call probe guards with captured
+aggregate accounting; production hashes and live cleaner ownership remain open.
+
+The [frozen Python primitive hash service](./history/evidence/2026-10-31-python-hashes.md)
+now matches 1,056 full vectors, preserving explicit source Unicode storage and
+paired-surrogate distinctions with bounded streaming and captured timing. Full
+source value ownership, object protocols and live registry replay remain open.
+
+The [exact Unicode composition evidence](./history/evidence/2026-11-02-cleaner-unicode.md)
+now retains 2,016 source histories and 6,412 native-storage/identity snapshots.
+The portable audit checks this twelfth component. Source width and surrogate
+identity expose an open string-only owner gap; this is not target parity.
+
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
-P0 source acquisition is evidenced. Capability-case accounting, regex review,
-and dependency compatibility remain open; production contract work is blocked
-by the verified-span and public reporter-vocabulary goals.
+P0 source acquisition and public prerequisite compatibility are evidenced. The
+2026-10-28 run passed the pinned official and authorized donor baselines; 66
+static assertion declarations produced 1,583 runtime assertion events with
+none unobserved. Those events now retain normalized operands and producer
+context alongside 8,488 traced iterations and 241 complete literal-loop runs.
+The public-operation corpus retains 826 observations and 2,811 coordinate
+records. Donor accounting now binds 197 exports and 5,285 runtime cases to
+5,674 explicit disposition obligations. Thirteen supplemental extraction/
+resolution probes add 57 coordinate slices. Another 26 cleaning/annotation
+probes retain three expected failures and 23 coordinate records, including
+zero-width points. Five coverage families remain open. The 29-field limit
+policy and process-isolation mechanism are evidenced. Limited P1 identity work
+now overlaps P0's unfinished proof bindings after the explicit
+prerequisite/limits holdpoints pass. Occurrence/authority token schemas and a
+private verified-anchor occurrence digest producer are implemented. Canonical
+FullLawCitation replaces the provisional statute/regulation shapes in the
+existing union. The canonical case, short/named reference, unknown and journal
+forms now have semantic schemas. Remaining mixed citation contracts and
+provisional extension stubs are retired. Verified mention composition and
+explicit receipt restoration now pass local package gates. A private ca1
+authority-key producer matches focused oracle equality and protocol vectors.
+Stable-ID document/resolution schemas now validate graph coherence and
+structural receipt round-trips. Private whole-document projection/restoration
+now checks occurrence/default authority keys and shares one source verification.
+Private resolver text helpers now preserve frozen Unicode/punctuation and
+arbitrary-precision Id. pin behavior. A private default resolver now matches
+46 focused scenes and all 30 committed default resolution observations across
+all canonical semantic families. Semantic-context coverage totals 76 contexts
+and 210 mentions; original-source span/extraction proof stays separate.
+Authority representatives now refer to any resolved mention. Private
+persistence accepts exact expected membership from trusted canonical/external
+resource descriptors. A private callback session now matches 18 focused source
+contexts and all 53 callback events through captured custom adapters and
+production defaults. Production default callbacks also pass all 76 default
+contexts with shared, operation-local work accounting. General host/alias/model
+mutation and final document/service integration remain open. Sixteen new
+mutation observations expose provisional graph/alias restrictions; ten final
+group-value cases match the session, while identity/detached proof stays open.
+Exhaustive resolver/custom-resource proof, live artifact integration, Bluebook codecs,
+extension adoption/schema proof, runtime enforcement and family safety remain
+unfinished.
+
+Current evidence:
+
+- [Literal cleaner primitives](./history/evidence/2026-10-29-literal-cleaners.md)
+
+- [Default branch observations](./history/evidence/2026-10-29-default-branch-observations.md)
+
+- [Registered default resolution](./history/evidence/2026-10-29-registered-default-resolution.md)
+
+- [Canonical session descriptors](./history/evidence/2026-10-29-canonical-session-descriptors.md)
+
+- [Callback mutation shapes](./history/evidence/2026-10-28-callback-mutation-shapes.md)
+
+- [Production default callbacks](./history/evidence/2026-10-28-production-default-callbacks.md)
+
+- [Private callback session](./history/evidence/2026-10-28-callback-session.md)
+
+- [Trusted resource identity bindings](./history/evidence/2026-10-28-resource-identity-bindings.md)
+
+- [General authority representatives](./history/evidence/2026-10-28-authority-representatives.md)
+
+- [Custom resolver contract gap](./history/evidence/2026-10-28-custom-resolution-contract.md)
+
+- [Prerequisite compatibility](./history/evidence/prerequisite-compatibility.md)
+- [Source baselines/discovery](./history/evidence/2026-10-28-source-baselines.md)
+- [Operation corpus](./history/evidence/2026-10-28-operation-corpus.md)
+- [Assertion corpus](./history/evidence/2026-10-28-assertion-corpus.md)
+- [Source/case/regex ledgers](./history/evidence/2026-10-28-source-case-ledgers.md)
+- [Donor accounting](./history/evidence/2026-10-28-typescript-donor-accounting.md)
+- [Vocabulary mapping](./history/evidence/2026-10-28-vocabulary-version-mapping.md)
+- [Limits/isolation](./history/evidence/2026-10-28-limits-isolation-contract.md)
+- [Evidence presence](./history/evidence/2026-10-28-evidence-presence-audit.md)
+- [Portable command integration](./history/evidence/2026-10-28-portable-parity-command.md)
+- [Supplemental extraction probes](./history/evidence/2026-10-28-supplemental-extraction.md)
+- [Cleaning/annotation probes](./history/evidence/2026-10-28-supplemental-text.md)
+- [Warning coverage and P0 audit](./history/evidence/2026-10-28-warning-and-p0-audit.md)
+- [Divergence ledger](./history/evidence/2026-10-28-divergence-ledger.md)
+- [Regex benchmark contract](./history/evidence/2026-10-28-regex-benchmark-contract.md)
+- [Identity foundations](./history/evidence/2026-10-28-identity-foundations.md)
+- [Verified occurrence IDs](./history/evidence/2026-10-28-mention-identity-producer.md)
+- [Canonical law schema](./history/evidence/2026-10-28-law-schema.md)
+- [Canonical model schemas](./history/evidence/2026-10-28-canonical-models.md)
+- [Retirement](./history/evidence/2026-10-28-provisional-retirement.md)
+- [Verified mentions](./history/evidence/2026-10-28-verified-mentions.md)
+- [Authority identity](./history/evidence/2026-10-28-authority-identity.md)
+- [Document relationships](./history/evidence/2026-10-28-document-relationships.md)
+- [Document persistence](./history/evidence/2026-10-28-document-persistence.md)
+- [Resolver text](./history/evidence/2026-10-28-resolver-text.md)
+- [Default resolution](./history/evidence/2026-10-28-default-resolution.md)
+- [Operation context coverage](./history/evidence/2026-10-28-resolution-operation-contexts.md)
+
+The [shared operation admission](./history/evidence/2026-11-02-operation-admission.md)
+now bounds top-level work and queues across cleaner instances, with captured
+Clock/policy, cancellation cleanup and scope shutdown. Nested plans reuse their
+outer permit and ledger. Public engine composition and full parity remain open.
+
+The [admitted named-cleaner replay](./history/evidence/2026-11-02-admitted-named-cleaners.md)
+now matches all 600 non-HTML named/official outcomes in the original 1,155-case
+cleaner corpus, including 599 result/identity observations and the invalid-name
+failure. Full host traces, 504 HTML cases and 51 custom scenes remain separate
+proof obligations; this does not promote a canonical completion row.
+
+The [controlled callback replay](./history/evidence/2026-11-02-controlled-cleaner-replay.md)
+now matches 24 scenes, 25 runs and 59 exact callback input/return observations,
+including non-text values, mutable lists, subclasses, retained state and registry
+mutation. Final outputs/identity, closed failure reasons and operation cleanup
+are checked through the admitted live cleaner. The other 27 controlled scenes,
+504 HTML cases and full event/final-registry proof remain open.
+
+The [iteration and dispatch replay](./history/evidence/2026-11-02-cleaner-protocol-replay.md)
+now extends controlled coverage to 40 scenes, 42 runs and 104 exact observable
+callback/iterator/hash/equality/dispatch events. It preserves live step mutation,
+separate membership/get hashes and lookup failure after key deletion. Eleven
+native HTML/builtin-function scenes and the remaining full event/registry proof
+remain open; canonical parity rows are not promoted by this focused evidence.
+
+The [native controlled cleaner wiring and registry inspection](./history/evidence/2026-11-02-native-controlled-cleaners.md)
+now account for all 51 custom scenes across unit and hosted partitions. Unit
+proof covers 40 protocol scenes plus the actual builtin-function registry key;
+all final registry snapshots are checked through bounded, identity-preserving
+inspection. The eleven-scene hosted replay requires twelve runs, 59 selected
+target events, one already-approved resource divergence and ten confirmed child
+exits. It is wired/type-checked and pending hosted execution, not target parity.
+
+[Hosted native receipts](./history/evidence/2026-11-02-hosted-native-qualification.md)
+now prove actual Unicode-history execution at 54d61ce7a2 and both Unicode/native
+controlled execution at d738c948ba. Executed merge trees equal their PR heads.
+The [named HTML qualification](./history/evidence/2026-11-02-named-html-qualification.md)
+adds the remaining 504 named/official cases to hosted integration and strengthens
+builtin value/failure-category, final-registry and OS exit checks. The new checks
+are pending their own hosted result; prior green results are not reused as proof
+of changed bytes. Unit named outcomes remain 600 cases, now with 3,200 exact
+builtin observations. Canonical engine completion stays open.
 
 ## Mission
 
@@ -70,3 +259,102 @@ The current forms remain the first internal vertical slice. The goal stays open
 until canonical parity, accepted extensions, schema transforms, corpus proof,
 and closeout all land in one implementation PR. Full Bluebook-manual compliance
 and later upstream drift are separate follow-ups.
+
+The current document model preserves ordered/repeated members, empty groups,
+shared list references and detached semantic objects separately from resolution
+decisions. See [ordered document membership evidence](
+./history/evidence/2026-10-29-ordered-document-membership.md). Structural codec
+proof covers all sixteen mutation snapshots. The private session now matches
+all sixteen dictionary/list/detached scenes and their thirty-eight events; see
+[callback dictionary evidence](
+./history/evidence/2026-10-29-callback-dictionary.md) and
+[detached execution evidence](
+./history/evidence/2026-10-29-detached-callback-objects.md). Eight further
+[retained prior-full list/pair scenes](
+./history/evidence/2026-10-29-retained-prior-fulls.md) match all thirty-one events
+and final context/groups. Eight further stable-resource
+[semantic mutation scenes](
+./history/evidence/2026-10-29-semantic-model-mutations.md) match complete events
+and semantic snapshots without changing verified anchors or mention IDs. The
+[registered callback dictionary](
+./history/evidence/2026-10-29-registered-callback-dictionary.md) now executes all
+three mutable default-key scenes. General host/model behavior, unconditional
+Layer cutover and final session projection remain open. The new
+[runtime dictionary backend](
+./history/evidence/2026-10-29-runtime-dictionary.md) matches eight frozen histories
+and sixty-two events. The private
+[case/resource hash helper](
+./history/evidence/2026-10-29-case-resource-hashes.md) matches twenty-four source
+observations, including controlled null-page identities. Null-page identity
+allocation remains open; registered callback execution is recorded below.
+
+The [live case-resource composition](
+./history/evidence/2026-10-29-live-case-resources.md) connects current semantic
+owner reads/writes, resource object identity, exact hashes and the runtime
+table across five source histories and thirty-eight events. Registered callback
+owner integration is recorded below; final public projection remains open.
+
+The [law/journal hash evidence](
+./history/evidence/2026-10-29-publication-resource-hashes.md) matches twenty-two
+source observations and qualifies candidate-bag normalization: tied edition
+abbreviations can make relative order observable through resource hashes.
+Final production asset loading and unconditional Layer cutover remain open.
+
+The [frozen edition adapter](
+./history/evidence/2026-10-29-frozen-edition-adapter.md) validates all 2,430
+reporter and 2,533 edition content identities and complete runtime payloads.
+Its lookups preserve order/multiplicity and reject modified artifacts. Final
+production asset loading and unconditional Layer cutover remain open.
+
+The [generalized live-resource composition](
+./history/evidence/2026-10-29-mixed-resource-objects.md) matches six mixed
+case/law/journal histories and eighty-nine events in one table. Actual frozen
+law/journal abbreviation ties and independently retained edition selections
+are preserved. Unconditional production Layer integration remains open.
+
+The [registered callback-owner integration](
+./history/evidence/2026-10-29-registered-callback-dictionary.md) preserves live
+resource identity, table insertion entries and owned list handles through full
+callback dispatch. All three mutable default-key scenes match complete source
+events and final groups. The registered port rejects unregistered
+host keys and accepts an explicitly captured adapter as described below. The
+legacy adapter remains during migration. Complete host-key
+support, Layer cutover and final document projection are still required.
+
+The [captured host-resource protocol](
+./history/evidence/2026-10-29-host-resource-protocol.md) matches eight controlled
+mixed-key histories, forty-eight operations and three full/default-Id callback
+scenes, including exact bool/hash/equality traces. Host and canonical resources
+share one table while retaining their own object identities and current views.
+Automatic Python value normalization, reentrant mutation,
+Layer cutover and final document projection remain open.
+
+The [candidate-set proof](
+./history/evidence/2026-10-29-candidate-runtime-set.md) matches eight source
+histories with seventy-one operations and twelve default short/supra/reference
+scenes. Registered callbacks now construct source-equivalent resource sets;
+short-form resolution avoids a redundant uniqueness pass. Native-value handling,
+reentrant comparison, unconditional Layer integration and final projection
+remain open.
+
+The [insertion-entry receipt correction](
+./history/evidence/2026-10-29-insertion-entry-receipts.md) introduces explicit
+cg1 entry IDs and receipt v3. Multiple entries may reference the same authority
+without collapsing their lists. All three actual mutable-key callback scenes
+now roundtrip their final group/list graphs through trusted bindings and source
+restoration. Automatic final session identity/binding production remains open.
+
+The [dispatch-history capture](
+./history/evidence/2026-10-29-dispatch-decision-capture.md) preserves actual
+callback returns and selected append destinations independently of surviving
+groups. Eight source histories and nineteen decisions match exact hook traces,
+including falsy results, removed entries and equal-but-distinct returned keys.
+Final identity/binding production and public resolution translation remain open.
+
+The [issued-session document producer](
+./history/evidence/2026-10-29-issued-session-document-producer.md) builds document
+relationships and exact bindings from sealed execution history plus a captured
+trusted descriptor port. Eight source histories and all three mutable-key scenes
+now restore automatically produced receipts. Copies cannot authorize production;
+view edits do not alter issued history. Default registered descriptors, detailed
+diagnostics and production Layer integration remain open.

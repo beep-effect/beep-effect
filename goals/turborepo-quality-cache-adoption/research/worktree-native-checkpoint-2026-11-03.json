@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "worktree-native-checkpoint/v1",
+  "recordedAt": "2026-11-03T21:41:05.225197+00:00",
+  "authority": "Synthetic local Git worktree semantics only. No real Beep computation/profile, independent-clone/remote-box or R2 qualification; no feature adoption, rollout, production timing or savings claim.",
+  "executionBaseHead": "37a7866504de6a67ceb74ab804c7dd46d66f40e5",
+  "newDriverWasCommittedAtExecution": false,
+  "sourceBindingExplanation": "The new driver was uncommitted during execution. Its captured digest binds the exact published bytes; the execution base does not claim this new file existed there.",
+  "driver": "native-worktree-controls.py",
+  "driverSha256": "c96c54848712b8edf565cf5e1c06122c05e58565da631a8a4caf9d1ec42986ae",
+  "report": "native-worktree-controls-2026-11-03.json",
+  "sourceReportSha256": "9a5bb0346353b47f206f96e042d135ef1eb3999f18d6c7afcca4c248e6e0a547",
+  "sourceReportBytes": 92727,
+  "publicReportDecodedJsonEqualsNativeReport": true,
+  "clients": {
+    "stable": {
+      "version": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "version": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+    }
+  },
+  "counts": {
+    "taskInvocations": 36,
+    "hits": 14,
+    "fixtureTaskExecutions": 22,
+    "gitPrerequisites": 32,
+    "rawBytes": 130371
+  },
+  "positiveCases": "Twenty-four portable local-sharing, isolation, replay and invalidation invocations; both directions and full output bytes/modes/task logs checked.",
+  "counterexamples": [
+    {
+      "kind": "absolute-output-path",
+      "clients": ["stable", "canary"],
+      "invocations": 6,
+      "result": "Shared replay retains producer path; forced fresh consumer output differs."
+    },
+    {
+      "kind": "executable-mode-under-private-umask",
+      "clients": ["stable", "canary"],
+      "invocations": 6,
+      "umask": "0077",
+      "producerMode": "0755",
+      "sharedReplayMode": "0700",
+      "forcedFreshMode": "0755",
+      "result": "Content and task logs agree, executable mode differs; not full metadata equivalence."
+    }
+  ],
+  "rawValidation": {
+    "retainedFiles": 284,
+    "bytes": 130371,
+    "allReferencedDigestsChecked": true,
+    "summariesJoined": 36,
+    "sourceBindingsChecked": 5
+  },
+  "admission": {
+    "existingTokens": 1,
+    "waitMs": 26,
+    "runtimeMs": 5403,
+    "peakMemoryBytes": 141320192,
+    "released": true,
+    "wrapperElapsedSeconds": 5.783
+  },
+  "publishedPairRecheck": {
+    "at": "2026-11-03T21:29:39.948479+00:00",
+    "source": "https://registry.npmjs.org/-/package/turbo/dist-tags",
+    "latest": "2.11.10",
+    "canary": "2.11.11-canary.1"
+  },
+  "sourceAndToolsUnchanged": true,
+  "networkIsolated": true,
+  "ownedFixturesRemoved": true,
+  "remaining": [
+    "Real computation/profile and clone/remote portability qualification",
+    "Permission-sensitive output policy or remediation",
+    "Live feature applicability and value decision",
+    "Current hosted CI and independent review",
+    "Whole-goal cohort windows, adoption, rollout and final closeout"
+  ]
+}

@@ -13,3 +13,7 @@ apps/professional-desktop/src/runtime/Migrations.gen.ts merge=regenerate
 # goals/*/SPEC.md is not union-merged: its tables edit and delete rows, and a union merge
 # cannot express a deletion (it resurrects removed rows and keeps both sides of an edited one).
 goals/*/research/OPPORTUNITIES.md merge=union
+
+# Preserve final blank lines in these immutable upstream notice texts.
+packages/law-practice/server/assets/citation-html/licenses/wasi-libc-LICENSE-APACHE-LLVM whitespace=-blank-at-eof
+packages/law-practice/server/assets/citation-html/licenses/wasi-libc-dlmalloc-src-malloc.txt whitespace=-blank-at-eof

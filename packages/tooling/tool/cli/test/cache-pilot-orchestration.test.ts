@@ -131,11 +131,39 @@ const faultDomain = LiteralKit([
   "source-write",
   "dependency-source-write",
   "dependency-link-write",
+  "source-mode-write",
+  "dependency-source-mode-write",
+  "source-directory-mode-write",
+  "dependency-directory-mode-write",
+  "source-root-mode-write",
+  "dependency-root-mode-write",
+  "source-empty-directory-write",
+  "dependency-empty-directory-write",
+  "source-directory-overflow",
   "missing-selected",
   "library-mismatch",
   "version-mismatch",
   "private-storage-alias",
   "owned-upload-failure",
+]);
+const modeFaultDomain = faultDomain.pick([
+  "source-mode-write",
+  "dependency-source-mode-write",
+  "source-directory-mode-write",
+  "dependency-directory-mode-write",
+  "source-root-mode-write",
+  "dependency-root-mode-write",
+]);
+const emptyDirectoryFaultDomain = faultDomain.pick([
+  "source-empty-directory-write",
+  "dependency-empty-directory-write",
+]);
+const sourceTreeFaultDomain = faultDomain.pick([
+  "source-write",
+  "dependency-source-write",
+  "dependency-link-write",
+  ...modeFaultDomain.literals,
+  ...emptyDirectoryFaultDomain.literals,
 ]);
 const encodePreview = S.encodeEffect(S.fromJsonString(CacheActivationPreview));
 const encodeDependencies = S.encodeEffect(S.fromJsonString(CacheDependencyMaterialization));
@@ -572,6 +600,58 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                       yield* fs.remove(link);
                       yield* fs.symlink("./AGENTS.md", link);
                     }
+                    yield* Match.value(fault).pipe(
+                      Match.when(
+                        S.is(modeFaultDomain),
+                        Effect.fn("PilotOrchestrationTest.corruptSourceMode")(function* (
+                          modeFault: typeof modeFaultDomain.Type
+                        ) {
+                          const sourceRoot = Match.value(modeFault).pipe(
+                            Match.whenOr(
+                              "source-mode-write",
+                              "source-directory-mode-write",
+                              "source-root-mode-write",
+                              () => identity
+                            ),
+                            Match.orElse(() => mounted(`${guest}/packages/tooling/test-kit/test-runner`))
+                          );
+                          const target = Match.value(modeFault).pipe(
+                            Match.whenOr("source-mode-write", "dependency-source-mode-write", () =>
+                              path.join(sourceRoot, "src/index.ts")
+                            ),
+                            Match.whenOr("source-directory-mode-write", "dependency-directory-mode-write", () =>
+                              path.join(sourceRoot, "src")
+                            ),
+                            Match.orElse(() => sourceRoot)
+                          );
+                          const info = yield* fs.stat(target);
+                          yield* fs.chmod(target, (info.mode & 0o777) ^ 0o020);
+                        })
+                      ),
+                      Match.when(
+                        S.is(emptyDirectoryFaultDomain),
+                        Effect.fn("PilotOrchestrationTest.addEmptyDirectory")(function* (
+                          directoryFault: typeof emptyDirectoryFaultDomain.Type
+                        ) {
+                          const sourceRoot =
+                            directoryFault === "source-empty-directory-write"
+                              ? identity
+                              : mounted(`${guest}/packages/tooling/test-kit/test-runner`);
+                          yield* fs.makeDirectory(path.join(sourceRoot, "src/unexpected-empty"));
+                        })
+                      ),
+                      Match.when(
+                        "source-directory-overflow",
+                        Effect.fn("PilotOrchestrationTest.exceedSourceEntryBound")(function* () {
+                          yield* Effect.forEach(
+                            A.range(1, 5000),
+                            (index) => fs.makeDirectory(path.join(identity, "src", `overflow-${index}`)),
+                            { concurrency: 16, discard: true }
+                          );
+                        })
+                      ),
+                      Match.orElse(() => Effect.void)
+                    );
                   });
                   const writeObservation = Effect.fn("PilotOrchestrationTest.writeObservation")(function* () {
                     const selected = nativeTask(task, taskHash, hit, exitCode);
@@ -1149,6 +1229,9 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
     "source-write",
     "dependency-source-write",
     "dependency-link-write",
+    ...modeFaultDomain.literals,
+    ...emptyDirectoryFaultDomain.literals,
+    "source-directory-overflow",
     "missing-selected",
     "library-mismatch",
     "version-mismatch",
@@ -1158,8 +1241,10 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       Effect.fnUntraced(function* () {
         const { root, fs, path, run, privateDirectories } = yield* fixture(fault);
         const failure = yield* run().pipe(Effect.flip);
-        if (fault === "dependency-link-write")
+        if (S.is(sourceTreeFaultDomain)(fault))
           expect(failure.message).toBe("Read-only pilot package source changed during execution.");
+        if (fault === "source-directory-overflow")
+          expect(failure.message).toBe("Pilot source tree exceeded its traversal bound.");
         if (fault === "initial-divergence") {
           expect(failure.message).toContain("absolute-root-equivalence");
           expect(failure.message).toContain("alternate-absolute-root");
