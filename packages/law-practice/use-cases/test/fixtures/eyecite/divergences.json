@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "221529e953e9735552cd86ed0331a3144fdf1770a8823b1aaa7752ec4b5b2963",
+  "planSha256": "1c7513f8502746ce2c92075d92c446e79f117cd3deb8dc83347feec92f872f4d",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -229,6 +229,34 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-post-case-metadata.md",
           "sha256": "11364ac049639395a6716f5a0d6a34f5defa695b5950f22f0748baf3ed005e90"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-case-name-predicates.py",
+          "sha256": "a33d0f75a9b5c367d66dfbf4388fc9b6947b752e18b5a606e58659bfc32bb584"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/PythonCharacterData.ts",
+          "sha256": "442645d1168fa14606e7fa7121bfcb08c97c49bd1b21f327661611431c6877b5"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/PythonCharacters.ts",
+          "sha256": "e4322c83e9d212b62073b37fcbc2a1da47d16912984595b4ec1f0a17250b1669"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/CaseNamePredicates.ts",
+          "sha256": "074a3feeb8e2e4fffe9996b69c5d3663c2a96b06277a98ec77a2af5d93a4c1bd"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationCaseNamePredicates.test.ts",
+          "sha256": "30a714d34fab7582065119ddbb62d88062e9c4fe3bf69e66b303f404927c60e3"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/case-name-predicates.json",
+          "sha256": "6477311fbd6e280de43ce8368d1f36826319b808ff8640a536b0f11a0b800259"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-predicates.md",
+          "sha256": "10de571730400380ef2d058828b7f6549ea6c6bcd7b44d02a8ce96643f55e3d4"
         }
       ],
       "workflowState": "audit",

@@ -410,6 +410,10 @@
     {
       "path": "ops/probe-post-case-metadata.py",
       "purpose": "Execute original full-case post-citation field processing, preserve all prior/conditional/native outputs and count exact source regex calls; record frozen native whitespace observations."
+    },
+    {
+      "path": "ops/probe-case-name-predicates.py",
+      "purpose": "Observe every Python upper/lower/alpha code point and execute all three original case-name boundary predicates with exact native words, short circuits and source errors."
     }
   ]
 }
