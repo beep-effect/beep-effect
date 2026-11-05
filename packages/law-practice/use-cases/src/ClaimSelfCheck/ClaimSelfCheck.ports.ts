@@ -10,7 +10,7 @@ import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
 import type { UsptoClaimsError } from "./ClaimSelfCheck.errors.ts";
-import type { UsptoClaimSet, UsptoClaimSource } from "./ClaimSelfCheck.schemas.ts";
+import type { UsptoClaimInputSet, UsptoClaimSet, UsptoClaimSource } from "./ClaimSelfCheck.schemas.ts";
 
 const $I = $LawPracticeUseCasesId.create("ClaimSelfCheck/ClaimSelfCheck.ports");
 
@@ -58,3 +58,44 @@ export interface UsptoClaimsShape {
  * @since 0.0.0
  */
 export class UsptoClaims extends Context.Service<UsptoClaims, UsptoClaimsShape>()($I`UsptoClaims`) {}
+
+/**
+ * Separate acquisition capability for failure-preserving source inspection.
+ *
+ * **Example** (Name the input method)
+ *
+ * ```ts
+ * import type { UsptoClaimInputsShape } from "@beep/law-practice-use-cases/ClaimSelfCheck"
+ * const method: keyof UsptoClaimInputsShape = "inputs"
+ * console.log(method) // inputs
+ * ```
+ *
+ * @category ports
+ * @since 0.0.0
+ */
+export interface UsptoClaimInputsShape {
+  /** Acquire all XML source records without interpreting a failed record as absent. */
+  readonly inputs: (source: UsptoClaimSource) => Effect.Effect<UsptoClaimInputSet, UsptoClaimsError>;
+}
+
+/**
+ * Read-only public source acquisition port for per-record inspection.
+ *
+ * **Details**
+ * Acquisition and document-level format failures remain typed errors. Individual
+ * record failures remain in the returned input ledger, including all-unusable
+ * input. The existing strict UsptoClaims port retains its contract.
+ *
+ * **Example** (Reference the source-input port)
+ *
+ * ```ts
+ * import { UsptoClaimInputs } from "@beep/law-practice-use-cases/ClaimSelfCheck"
+ * console.log(UsptoClaimInputs.key)
+ * ```
+ *
+ * @category ports
+ * @since 0.0.0
+ */
+export class UsptoClaimInputs extends Context.Service<UsptoClaimInputs, UsptoClaimInputsShape>()(
+  $I`UsptoClaimInputs`
+) {}

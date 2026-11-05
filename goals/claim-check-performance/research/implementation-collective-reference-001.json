@@ -1,0 +1,189 @@
+{
+  "schemaVersion": "claim-performance-source-freeze/v1",
+  "purpose": "Preserve collective noun plurality in referring lexical heads; numeric quantifier convention unchanged; same538product-pathscorer",
+  "baselineCommit": "a9857cd72954d3cc5729c49c6b73105f4f8cfa5d",
+  "workingTreeSourceCaptured": true,
+  "files": [
+    {
+      "path": ".bun-version",
+      "sha256": "d03d8b268b4171328ac2458ce8ca82d69a1fde38469d4e4faae4f8fa8d8a5e35"
+    },
+    {
+      "path": "bun.lock",
+      "sha256": "d5061d1b46d36ed75ec185c7fca6583048d6084c22c30ebb4a262df568dea89c"
+    },
+    {
+      "path": "goals/claim-check-performance/research/evaluate-gates.py",
+      "sha256": "f538a971c14cefc4b1fb3477a14e398f585efd9ceb8d66bb542fa7d6af1f655f"
+    },
+    {
+      "path": "goals/claim-check-performance/research/preservation-freeze.json",
+      "sha256": "030f05dd0561cdc493b4b60b0b8b3970a84ada36f5e9d5149281b156627216dc"
+    },
+    {
+      "path": "goals/claim-check-performance/research/preservation-location-addendum.json",
+      "sha256": "e2d34b95219944018752ead10fc4b474fad7cf0ebfbd68fca754ba51219dae13"
+    },
+    {
+      "path": "goals/claim-check-performance/research/usefulness-gates.json",
+      "sha256": "1a8853d20008a90bb01e6270d5a02a5750eb4e21b0d229e7c68eb402b0a161c1"
+    },
+    {
+      "path": "goals/claim-check-performance/research/usefulness.py",
+      "sha256": "ebcb64447d223796fb83f18bae2e5c09d629409f5f07af00c711c08c0b63f3b3"
+    },
+    {
+      "path": "package.json",
+      "sha256": "9e2d3038445730ff066327641c19ff6c2d27a87028ab718ec4d64f18cacbdd6a"
+    },
+    {
+      "path": "packages/drivers/uspto/package.json",
+      "sha256": "6373382e6488a71eb2ac3609357112aeb81805ec4b87db880950629f41714abb"
+    },
+    {
+      "path": "packages/drivers/uspto/src/Uspto.models.ts",
+      "sha256": "b28cf8437c21e316c3823ff2af4e46743806e74b50e9bca8f6ef3912913768ef"
+    },
+    {
+      "path": "packages/drivers/uspto/src/Uspto.service.ts",
+      "sha256": "2c49c231b07688a3b88feafb280aab5e879558aa4387cc4be5cebda019e49470"
+    },
+    {
+      "path": "packages/law-practice/domain/package.json",
+      "sha256": "50fcdb4044a4e4d0157414805264eb626d33a4556a18e70aa761ade3c674e126"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/Antecedent.policy.ts",
+      "sha256": "e7ffd4eaea7479ecefd4582b42b63edd10a77aa69246b4dd99c57bf490f9b410"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/AntecedentFinding.model.ts",
+      "sha256": "29400ec4b0bed3f8f02e511f6ffe0cd8fa2f53b6eaf8e20226bacb8886f17e54"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts",
+      "sha256": "dd8f9c767e7a53e630e908fd06f2bbf50d175eab09a9c72574ed6ed2659ce23b"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.edge.model.ts",
+      "sha256": "7a3ad126fbeaf384971268b9dd75c1ff3ae520451232f1ade13a47755be1a550"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.errors.ts",
+      "sha256": "ba708a78c744ad6f7723b547962552b1c4417620c61cdf9fb9708ecd27602290"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.input.model.ts",
+      "sha256": "35631e993f128e91f50193c247cbf03f268eeb3413563147168b628177365c31"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.inspection.model.ts",
+      "sha256": "6b3c176dec48e12cbe2ef10f8f6eb816699155c5aa11e1bb074fb292185fa850"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.model.ts",
+      "sha256": "71a1c5c72b55dd973effeb277d4eda5f80ce349961440080fdac25d4beef9101"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts",
+      "sha256": "4f2935d1f082ff5ab3082755d1de914bceb0e65afbee1dfbd9d73df61612973d"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimTerm.compatibility.ts",
+      "sha256": "aa28583b24a284f37eb6166558e9c29fde0e92967358335e516e88181b899b78"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/index.ts",
+      "sha256": "624e24685c5dafe9741a1dd519c49e6ed1e8105515a2c5e2ae33b2e55bcb0d96"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.model.ts",
+      "sha256": "7c900fee01dd099d456c6d5803a6eb9a0521c18f7b89d6c9c43dbb3a779ba820"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
+      "sha256": "446c06e9a7e6271387c9bafc5ee0882618913830a467ea9c874be494d1fb6f85"
+    },
+    {
+      "path": "packages/law-practice/server/package.json",
+      "sha256": "6b379b128da7744a792dba6931fae1f7c7074c10d45b7dc2257647003d95028b"
+    },
+    {
+      "path": "packages/law-practice/server/src/PracticeKg.tool-handlers.ts",
+      "sha256": "14e33e1a28d356847e765c627682fbd6a204f76a4921bb7721e3f2c9b608384c"
+    },
+    {
+      "path": "packages/law-practice/server/src/UsptoClaims/UsptoClaims.layer.ts",
+      "sha256": "3fc51b18384babb959396345c65a4a36d88b4c18f4431f04a24c00a7c7d30ddb"
+    },
+    {
+      "path": "packages/law-practice/server/src/UsptoClaims/index.ts",
+      "sha256": "369d810dc182a216fa7739825d72b2fa1e730bd5bf2ea7a2a81a27bc7ea7c0d9"
+    },
+    {
+      "path": "packages/law-practice/server/test/evaluation/Structural.ts",
+      "sha256": "58752a25ae716697906fa27b7db3c59da6d6ed288f2e48f36cbb22e52a94b07e"
+    },
+    {
+      "path": "packages/law-practice/server/test/evaluation/inspection.main.ts",
+      "sha256": "12f947a04ec9df566cbd1b485655172d266668cf23fa9163f5917003a1247d5d"
+    },
+    {
+      "path": "packages/law-practice/tables/package.json",
+      "sha256": "fbd0cf18f6ae67317a40eca04106557a6946a3a566f2244d913e5bc9e3b0e3f2"
+    },
+    {
+      "path": "packages/law-practice/use-cases/package.json",
+      "sha256": "d09343f8968323414930e1de52886965429b74df6d9112dc545af8cc9660c3d3"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimInspection.tools.ts",
+      "sha256": "06ba0e86821c8936384f3be2d3249ce982e81969f52cf878ebc8cce82c6226b8"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
+      "sha256": "d4d30ab01c652e1c1eda34111ec7726c46c5aa4b5fcaa000dd003a6856ed72e4"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimInspection.errors.ts",
+      "sha256": "ded23a32914f908eb0060326f92a6e35014d617ffb3baccbb155c6d109bff291"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimInspection.schemas.ts",
+      "sha256": "4ac8062e1636247e206163cfc3dfa1a487f9a2b0049e0be9b1600e728759dfa3"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimInspection.service.ts",
+      "sha256": "4f0f989006d9c79c8d6bd4fa9b889d08240e45cc4c503370d1e5d4815bc800c0"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.errors.ts",
+      "sha256": "8d35a5d586a38fd373cd563b813155d22a71adb9358ce35b011f6a452ecca7c7"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.ports.ts",
+      "sha256": "925624a70ece1c998e592d9a50661d9d9a5ddbe067ac8f1052e0af4023d59a18"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.schemas.ts",
+      "sha256": "6ec83a4983ee08bd739014b1d6152bcada4079ac0951f892d7aeb0434ee0f38c"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.service.ts",
+      "sha256": "65d174fefbcc03e7bafd0b60437193625a69b09fbe0ad556ff85c4522de53ad0"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimSelfCheck/index.ts",
+      "sha256": "00a016b862b1d897a6aa03f392cd975fdb9e3870444006448a36b24cb4631a79"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/Tools.ts",
+      "sha256": "4755dae8752539b54dc249d8e7ef52988b72f2ebf4c44c8ace4314a1523ea8fd"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/server.ts",
+      "sha256": "47887f5dbdc0cb3e4de875339faedcd8186a819c0306b812108961656e611255"
+    }
+  ],
+  "implementationDigest": "7c1201bb660bc5a0838f3613149254e2c5c36b37415825ab42c826209ac579d3"
+}

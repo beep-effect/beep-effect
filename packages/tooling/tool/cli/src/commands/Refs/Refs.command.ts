@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { resolveOperatorPath, resolveUnitBunPath } from "@beep/repo-cli-kit/systemd/index";
 import { findRepoRoot } from "@beep/repo-utils";
-import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -35,8 +35,7 @@ const planCommand = Command.make(
     const home = yield* homeConfig;
     const workspace = yield* ReferenceWorkspace;
     const resolved = yield* workspace.resolveRoot(home, root);
-    const plan1 = yield* workspace.plan(home, resolved);
-    yield* Console.log(A.join(plan1, "\n"));
+    yield* workspace.plan(home, resolved).pipe(Effect.flatMap(printLines));
   })
 ).pipe(
   Command.withDescription("Print the clone and link plan without writing"),
@@ -56,8 +55,7 @@ const provisionCommand = Command.make(
       onNone: () => owner,
       onSome: (value) => resolveOperatorPath(value, home, path.resolve),
     });
-    const provision2 = yield* workspace.provision(home, target, resolved);
-    yield* Console.log(A.join(provision2, "\n"));
+    yield* workspace.provision(home, target, resolved).pipe(Effect.flatMap(printLines));
   })
 ).pipe(
   Command.withDescription("Clone missing members, preserve existing checkouts, and link references"),
@@ -80,8 +78,7 @@ const refreshCommand = Command.make(
     const workspace = yield* ReferenceWorkspace;
     const resolved = yield* workspace.resolveRoot(home, root);
     const status = yield* workspace.refresh(home, resolved);
-    const encodedJson = yield* RefsRefreshStatus.encodeJson(status);
-    yield* Console.log(encodedJson);
+    yield* RefsRefreshStatus.encodeJson(status).pipe(Effect.flatMap(Console.log));
   })
 ).pipe(
   Command.withDescription("Fast-forward clean members on their configured branches (operator only)"),
@@ -100,29 +97,22 @@ const timerCommand = Command.make(
   Effect.fn("Refs.installTimer")(function* (options) {
     const home = yield* homeConfig;
     const workspace = yield* ReferenceWorkspace;
-    if (options.refresh && options.uninstall) {
+    if (options.refresh && options.uninstall)
       return yield* ReferenceWorkspaceError.make({ path: home, message: "Choose --refresh or --uninstall, not both." });
-    }
-    if (options.uninstall) {
-      const uninstallTimer1 = yield* workspace.uninstallTimer(home);
-      return yield* Console.log(A.join(uninstallTimer1, "\n"));
-    }
+    if (options.uninstall) return yield* workspace.uninstallTimer(home).pipe(Effect.flatMap(printLines));
     if (options.refresh) {
-      if (O.isSome(options.owner) || O.isSome(options.onCalendar)) {
+      if (O.isSome(options.owner) || O.isSome(options.onCalendar))
         return yield* ReferenceWorkspaceError.make({
           path: home,
           message: "--refresh reuses the installed owner and calendar; omit --owner and --on-calendar.",
         });
-      }
-      const refreshTimer3 = yield* workspace.refreshTimer(home, options.bunPath);
-      return yield* Console.log(A.join(refreshTimer3, "\n"));
+      return yield* workspace.refreshTimer(home, options.bunPath).pipe(Effect.flatMap(printLines));
     }
-    if (O.isNone(options.owner)) {
+    if (O.isNone(options.owner))
       return yield* ReferenceWorkspaceError.make({
         path: home,
         message: "--owner is required for a fresh timer installation.",
       });
-    }
     const path = yield* Path.Path;
     const owner = resolveOperatorPath(options.owner.value, home, path.resolve);
     const bunPath = yield* resolveUnitBunPath({ home, pinned: options.bunPath });
@@ -137,11 +127,11 @@ const timerCommand = Command.make(
         );
       })
     );
-    const pipe4 = yield* Layer.build(referenceWorkspaceLayer(owner)).pipe(
+    yield* Layer.build(referenceWorkspaceLayer(owner)).pipe(
       Effect.flatMap((context) => install.pipe(Effect.provide(context))),
-      Effect.scoped
+      Effect.scoped,
+      Effect.flatMap(printLines)
     );
-    yield* Console.log(A.join(pipe4, "\n"));
   })
 ).pipe(
   Command.withDescription("Install, re-render, or uninstall beep-refs-refresh user units"),
