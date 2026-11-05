@@ -1229,6 +1229,7 @@
     {"name":"EffectImports.discoverEffectImportSourceFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EffectImports.discoverFilesWithGlob","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EffectImports.foundationMappingsForFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"EffectImports.listGitVisiblePaths","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EffectImports.runEffectImportRules","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EffectResolver.fetchEffectReleaseCommit","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EffectResolver.withEffectReleaseCommit","owner":"@beep/repo-cli","family":"tooling","conforms":true},
