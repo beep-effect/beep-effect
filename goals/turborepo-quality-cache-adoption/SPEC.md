@@ -773,3 +773,73 @@ read. Keep its query arguments, fallback, cache, report and gate rules. All
 fourteen fixed labels and their 564-byte bound remain; no per-document output
 or new quality operation is introduced. Reverse by moving this cached read
 back while retaining the review finding and unresolved timeout evidence.
+
+### Refresh the accepted population without carrying stale grants, 2026-11-03
+
+Use Cache's source-bound census at accepted main `31e2ac20f3`. Retain the prior
+population byte-identically before replacing the current review queue. Check
+every prior literal keep-fresh operation against its current manifest and
+effective configuration; review the three new package fixers explicitly. Keep
+all pure counterparts and other computations pending, preserve the original
+qualification records and leave every runtime flag unchanged.
+
+Consume the CI lane economics owner's preview with its source and measurement
+limits. The window-4 preview used the old layout before the listed repairs and
+measures no speed-up from those repairs or Turbo. The missing final full-week
+verdict is not an implied pass. Reverse this
+registration through Git to the retained population and reports. Historical
+receipts and qualification evidence keep their original source and authority.
+
+
+### Explicit service, fixer and live-audit boundaries, 2026-11-03
+
+- Keep `@beep/beep-effect-web#dev` fresh: its portless Vite process is a
+  persistent service. Cached completion cannot restore the running server.
+- Keep `@beep/beep-effect-web#lint:fix` fresh: its literal alias reaches
+  `biome check . --write`, whose source mutation must execute.
+- Keep `//#repo-sanity:bun-audit` fresh: its existing owner reads current time
+  for ignore expiry and invokes the live vulnerability audit. Source identity
+  cannot establish that the external advisory set is unchanged. The lane-proof
+  owner already explicitly excludes this lane from reuse.
+- Existing effective caching is disabled for all three. Review and qualify
+  their named pure prerequisites independently; these whole-task decisions
+  confer no prerequisite or hosted-status authority. The source-bound review
+  records the six-file accepted-Git comparison and unchanged qualification ledger.
+- Reverse only these three population decisions using the report's prior Git
+  revision. No runtime setting or trust boundary needs reversal.
+
+
+### Refresh the installed fleet scanner, 2026-11-03
+
+- The workstation scanner still used the original enrollment source after
+  accepted #2669 moved policy code to `@beep/repo-cli-kit`. Its read-only plan
+  incorrectly classified four current checkouts as legacy. Apply the existing
+  accepted scanner source, preserving compatibility with both policy locations.
+- Bound this maintenance to one installed source file on this workstation,
+  under 64 KiB combined source bytes, with zero service restarts, cloud or
+  artifact requests. Retain and verify the original source backup before the
+  atomic replacement. Client/backend configuration and the ordinary adapter
+  remain unchanged; no enrollment, signing or qualification is activated.
+- Actual read-only discovery changes 5 legacy / 33 planned checkouts to
+  1 legacy / 37 planned. Source-capable read-write entries increase from 22
+  to 26. These counts establish recognition, not an artifact read/write result.
+- Reverse only the installed scanner using the verified backup or named prior
+  accepted Git source, with mode 0700. The receipt retains numeric bounds,
+  source identities, current local adapter observations and remote evidence gaps.
+
+
+### Enumerate nested script entrypoints without inventing executions, 2026-11-03
+
+The configured dry-run graph is not the whole manifest-script population.
+Keep its 2,436 executable rows and 2,092 graph-only nodes unchanged, and join
+both pinned clients' complete query catalogue to all 4,235 manifest scripts.
+Explicitly retain the additional 1,799 script-only entrypoints for semantic,
+caller and pure-boundary review. A literal `bun run <script>` invocation edge
+does not grant semantic equivalence, execution, qualification or cache reuse.
+
+Bound this metadata observation to one process at a time, twelve seconds and
+one MiB stdout per query, sixty-four KiB stderr, thirty seconds aggregate and
+zero repository task bodies. Verify the 458 census source bindings before and
+after capture. Keep raw bounded captures private, preserve refusals and publish
+only source identities and the complete normalized inventory. Reversal removes
+this supplementary inventory projection; runtime and qualification are unchanged.
