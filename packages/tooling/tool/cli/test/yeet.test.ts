@@ -1175,6 +1175,42 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
       expect(findStep(plan.steps, "publish:git:push").args).toEqual(["push", "-u", "origin", "HEAD"]);
     });
 
+    it("plans yeet open as the push and the pull-request tail with no local gate", () => {
+      const open = buildYeetRunPlanForTesting({
+        context,
+        message: O.none(),
+        mode: "publish",
+        pr: true,
+        hostedProof: true,
+      });
+      expect(A.map(open.steps, (step) => step.label)).toEqual([
+        "publish:git:push",
+        "publish:pr-create",
+        "publish:pr-ready-for-heavy-label",
+        "publish:pr-provenance-stamp",
+        "monitor:until-ready:submit",
+      ]);
+      expect(A.some(open.steps, (step) => step.phase === "full" || step.phase === "commit")).toBe(false);
+      expect(findStep(open.steps, "publish:git:push").env).toBeUndefined();
+
+      const attached = buildYeetRunPlanForTesting({
+        context,
+        message: O.none(),
+        mode: "publish",
+        monitor: true,
+        pr: true,
+        hostedProof: true,
+      });
+      expect(A.map(attached.steps, (step) => step.label)).toEqual([
+        "publish:git:push",
+        "publish:pr-create",
+        "publish:pr-ready-for-heavy-label",
+        "publish:pr-provenance-stamp",
+        "monitor:pr-context",
+        "monitor:pr-checks:watch",
+      ]);
+    });
+
     it("plans the opposite optional publish branches explicitly", () => {
       const pushOnlyPr = buildYeetRunPlanForTesting({
         context,
@@ -1304,6 +1340,26 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
 
         expect(error.message).toContain("yeet publish --push-only --reuse-verified refuses staged changes.");
         expect(error.message).toContain("  - tracked.txt");
+      })
+    );
+
+    it.effect("lets yeet open skip the commit only on a clean committed HEAD", () =>
+      Effect.gen(function* () {
+        const { filePath, tempContext, tmpDir } = yield* trackedFileRepository;
+        const fs = yield* FileSystem.FileSystem;
+        const open = defaultYeetRunOptions({ hostedProof: true });
+        const clean = yield* shouldSkipCommitForReusablePublishForTesting(tempContext, open);
+        expect(clean).toBe(true);
+
+        yield* fs.writeFileString(filePath, "pending tracked edit\n");
+        const dirty = yield* shouldSkipCommitForReusablePublishForTesting(tempContext, open).pipe(Effect.flip);
+        expect(dirty.message).toContain("yeet open found uncommitted or untracked changes");
+        expect(dirty.message).toContain("tracked.txt");
+
+        yield* runGit(tmpDir, ["add", "tracked.txt"]);
+        const staged = yield* shouldSkipCommitForReusablePublishForTesting(tempContext, open).pipe(Effect.flip);
+        expect(staged.message).toContain("yeet open refuses staged changes");
+        expect(staged.message).toContain("  - tracked.txt");
       })
     );
 

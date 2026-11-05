@@ -12,6 +12,7 @@ its own budget. Use `bun run beep yeet gh <command>` instead of those `gh pr` co
 | Gate view: draft, head, required checks, review window | `yeet gh pr status <n> [--threads]` | REST (`--threads`: guarded GraphQL) |
 | Label | `yeet gh pr label add\|remove <n> <label>` | REST |
 | Comment | `yeet gh pr comment <n> --body <text>` | REST |
+| Replace the body, keeping the Yeet provenance footer | `yeet gh pr body <n> --body-file <md>` | REST |
 | Draft → ready | `yeet gh pr ready <n> [--no-wait]` | guarded GraphQL (no REST equivalent) |
 | Re-run failed / cancel queued runs on the head | `yeet gh checks rerun-failed\|cancel-queued <n>` | REST |
 | Merge at a pinned head | `yeet gh merge <n> --sha <sha10> [--tolerate <check>] [--force-window] [--dry-run]` | REST + guarded GraphQL thread read |
