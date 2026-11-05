@@ -2,6 +2,12 @@
 
 Captured: 2026-07-29
 
+Revalidated: [2026-10-28 source baseline receipt](../history/evidence/2026-10-28-source-baselines.md).
+The historical failed donor attempts below are superseded by authorized,
+isolated frozen-lockfile runs. Official: 52 methods pass. eyecite-js: 423 tests
+pass. eyecite-ts: 4,844 tests pass, 10 skip, 8 todo after isolating incompatible
+npm user configuration. These counts do not establish target parity.
+
 ## Normative source
 
 - Repository: `https://github.com/freelawproject/eyecite`
@@ -107,11 +113,14 @@ requires an explicit baseline decision.
   `domhandler` is not installed. This is not a green or meaningful red source
   baseline.
 
-Neither port is normative merely because it has more tests or features. No
-dependencies were installed during this packet pass.
+Neither port is normative merely because it has more tests or features. The
+attempts above describe the earlier packet pass. Authorized frozen installs
+and green suites supersede their environment holds; see the
+[donor accounting receipt](../history/evidence/2026-10-28-typescript-donor-accounting.md).
 
-P0 must pause for explicit user authorization before installing donor
-dependencies. After authorization, use the exact frozen-lockfile commands:
+Explicit authorization for both donor installs/suites was received in this
+goal chat and remains recorded in the source baseline receipt. For a fresh
+authorized copy, preserve the exact frozen-lockfile commands:
 
 ```sh
 (cd "$EYECITE_TS_ROOT" && pnpm install --frozen-lockfile && pnpm test -- --run)

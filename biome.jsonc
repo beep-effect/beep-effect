@@ -69,6 +69,32 @@
       // Only the CI knowledge mint writes the sealed baseline bytes.
       "!goals/knowledge-doctor.baseline.jsonc",
       "!**/fixtures/f1/documents",
+      // Canonical Python payload bytes are hash-bound and deliberately retain
+      // upstream text. ops/check-operations.ts validates this generated corpus.
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
+      // Complete source traces; ops/check-cleaner-pipeline.ts seals their bytes.
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json",
+      // Complete byte-source outcomes sealed by ops/verify-html-bytes.py.
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/html-bytes.json",
+      // Complete source identity relations sealed by ops/verify-cleaner-identities.py.
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-identities.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/unicode-dictionary.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/python-hashes.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-unicode.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/assertion-cases.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/source-inventory.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/canonical-cases.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/regex-inventory.json",
+      // Python-owned descriptor bytes; the fixed native qualifier authenticates
+      // the file and every source instance binding. Preserve producer formatting.
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/regex-program-facts.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/regex-match-witnesses.json",
+      // Keep one authenticated source dispatch vector per line for review.
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/token-dispatch.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/token-context.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/typescript-extensions.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/vocabulary-mapping.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/regex-adversarial-corpus.json",
       "!scratchpad",
       // beep-ci-operational-ontology §4b: digest-locked run evidence. The
       // adapter engine bytes are pinned by a sha256 sidecar and the archived

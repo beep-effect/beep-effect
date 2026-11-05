@@ -7,6 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { YeetProofTier } from "../../internal/repo-run/QualityScheduler.schemas.ts";
 import { DEFAULT_YEET_PACKET_DIR, YeetRunMode } from "./internal/Planner.schemas.ts";
@@ -334,6 +335,14 @@ export class QualityIssueIndex extends S.Opaque<QualityIssueIndex, { readonly br
 /**
  * Runtime options accepted by the yeet handler.
  *
+ * **Details**
+ *
+ * `hostedProof` is the `yeet open` route: publish pushes the committed HEAD and
+ * opens or reuses its draft pull request without running any local gate, so
+ * hosted CI is the only proof. `bodyFile` names Markdown that replaces the
+ * generated commit-log summary of a pull request the run creates; an existing
+ * pull request keeps its body. Both default when omitted.
+ *
  * **Example** (Construct run options)
  *
  * ```ts
@@ -382,10 +391,12 @@ export class YeetRunOptions extends S.Opaque<YeetRunOptions, { readonly brand: u
     allowStaleBase: S.Boolean,
     amend: S.Boolean,
     base: S.String,
+    bodyFile: S.String.pipe(S.withConstructorDefault(Effect.succeed(""))),
     bots: S.String,
     ciParity: S.Boolean,
     collectAll: S.Boolean,
     head: S.String,
+    hostedProof: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     json: S.Boolean,
     merged: S.Boolean,
     message: S.String,

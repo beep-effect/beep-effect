@@ -324,7 +324,7 @@ class TurboQuerySelection extends S.Opaque<TurboQuerySelection, { readonly brand
 class TurboDrySelection extends S.Opaque<TurboDrySelection, { readonly brand: unique symbol }>()(
   S.Struct({
     tasks: S.Array(UnknownStringRecord),
-    packages: S.OptionFromOptionalKey(S.Array(S.Unknown)),
+    packages: S.Unknown.pipe(S.Array, S.OptionFromOptionalKey),
   }).pipe(
     $I.annoteSchema("TurboDrySelection", {
       description: "Native dry-run envelope with an explicit task array and optional package inventory.",

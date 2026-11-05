@@ -1,0 +1,344 @@
+{
+  "schemaVersion": "citation-supplemental-extraction/v3",
+  "scope": "Focused extraction/resolution/cleaning/annotation projections; not exhaustive supplemental or target parity proof.",
+  "commit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "python": "3.11.15",
+  "hashSeed": "0",
+  "clockDate": "2026-10-28",
+  "dependencies": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22",
+    "regex": "2023.12.25",
+    "lxml": "5.1.0",
+    "fast-diff-match-patch": "2.0.1",
+    "pyahocorasick": "2.0.0"
+  },
+  "exporterSha256": "0956031da431202af17e180ede316a647b5d5720846cc850332bf8b16ad10377",
+  "planSha256": "ca1f99d044650f7e6313290110048dd7e656598ff395f3e42e9344f6b55f454b",
+  "textPlanSha256": "f6d00d66e033e8d60145940ee1310dd699a9e74e5141f54cc5451cd133ec3640",
+  "observerSha256": "c1f6eed4d3e94c6b363875953c7058573b9c4d900d56a0ff64a1d5c8cfd26728",
+  "sourceHashes": {
+    "eyecite/find.py": "64415ffe6a5fc39713a1ad1d6585ae673fb175b32c53820185237a174416dd3d",
+    "eyecite/models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a",
+    "eyecite/helpers.py": "3d3431db232be2f3d7320125528975d57797372a9c4c21d524927fc1ccf0a297",
+    "eyecite/resolve.py": "651ede8c2a2d5df9ec9c9f1145530a6de7fca15304d1816b7f620a81ab3f2044",
+    "eyecite/clean.py": "b2a1f8484c84f3d704d2e7fe5e0a1fdb36a8bb07d2e56880701a831d5e1a12db",
+    "eyecite/annotate.py": "974bcabb0e7d608540732c42a5f3bf40b2616110bd1aca3d8bc7f09ed044af91",
+    "eyecite/utils.py": "8e27eb1207f6c0fdb695530e3677a3e9f039986b2baf68461ba680ee2bff902e"
+  },
+  "cases": [
+    {
+      "id": "cit-merger",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0],[1]],\"citations\":[{\"correctedCitation\":\"1 C.I.T. 1\",\"correctedFullCitation\":\"1 C.I.T. 1\",\"correctedReporter\":\"C.I.T.\",\"groups\":{\"page\":\"1\",\"reporter\":\"C.I.T.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,10],\"text\":\"1 C.I.T. 1\",\"utf16\":[0,10]},\"span\":{\"python\":[0,10],\"text\":\"1 C.I.T. 1\",\"utf16\":[0,10]},\"spanWithPincite\":{\"python\":[0,10],\"text\":\"1 C.I.T. 1\",\"utf16\":[0,10]}}},{\"correctedCitation\":\"1 Ct. Int'l Trade 1\",\"correctedFullCitation\":\"1 Ct. Int'l Trade 1\",\"correctedReporter\":\"Ct. Int'l Trade\",\"groups\":{\"page\":\"1\",\"reporter\":\"Ct. Int'l Trade\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[12,31],\"text\":\"1 Ct. Int'l Trade 1\",\"utf16\":[12,31]},\"span\":{\"python\":[12,31],\"text\":\"1 Ct. Int'l Trade 1\",\"utf16\":[12,31]},\"spanWithPincite\":{\"python\":[12,31],\"text\":\"1 Ct. Int'l Trade 1\",\"utf16\":[12,31]}}}],\"equality\":[[true,false],[false,true]],\"text\":\"1 C.I.T. 1. 1 Ct. Int'l Trade 1.\"}",
+      "normalizedSha256": "9d178cdaabdb12b351c0640bddc94b14bbd8e3f45c08acd65d44e1a0e0eaf0a0"
+    },
+    {
+      "id": "astral-prefix",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"😀, 1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,10],\"text\":\"😀 1 U.S. 1\",\"utf16\":[0,11]},\"span\":{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[3,11]},\"spanWithPincite\":{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[3,11]}}}],\"equality\":[[true]],\"text\":\"😀 1 U.S. 1.\"}",
+      "normalizedSha256": "a62d9ea11b2c3485f99af91abd8be3ef603737dd3164a3fd7fb94885ee467f5e"
+    },
+    {
+      "id": "combining-prefix",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[3,11],\"text\":\"1 U.S. 1\",\"utf16\":[3,11]},\"span\":{\"python\":[3,11],\"text\":\"1 U.S. 1\",\"utf16\":[3,11]},\"spanWithPincite\":{\"python\":[3,11],\"text\":\"1 U.S. 1\",\"utf16\":[3,11]}}}],\"equality\":[[true]],\"text\":\"é 1 U.S. 1.\"}",
+      "normalizedSha256": "b863f5a4bd19cf3d46d77e2afb4c89e493e4e7b6993512a676efecde66232d6b"
+    },
+    {
+      "id": "usc-law",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0]],\"citations\":[{\"correctedCitation\":\"35 U.S.C. § 101\",\"correctedFullCitation\":\"35 U.S.C. § 101 (2018)\",\"correctedReporter\":\"U.S.C.\",\"groups\":{\"reporter\":\"U.S.C.\",\"section\":\"101\",\"title\":\"35\"},\"kind\":\"FullLawCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,22],\"text\":\"35 U.S.C. § 101 (2018)\",\"utf16\":[0,22]},\"span\":{\"python\":[0,15],\"text\":\"35 U.S.C. § 101\",\"utf16\":[0,15]},\"spanWithPincite\":{\"python\":[0,15],\"text\":\"35 U.S.C. § 101\",\"utf16\":[0,15]}}}],\"equality\":[[true]],\"text\":\"35 U.S.C. § 101 (2018)\"}",
+      "normalizedSha256": "868aaf974533578ad8974fc56e4686db28ff070dc1e40f7e9a317c6d4adc12a4"
+    },
+    {
+      "id": "cfr-law",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0]],\"citations\":[{\"correctedCitation\":\"37 C.F.R. § 1.56\",\"correctedFullCitation\":\"37 C.F.R. § 1.56 (2020)\",\"correctedReporter\":\"C.F.R.\",\"groups\":{\"chapter\":\"37\",\"reporter\":\"C.F.R.\",\"section\":\"1.56\"},\"kind\":\"FullLawCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,23],\"text\":\"37 C.F.R. § 1.56 (2020)\",\"utf16\":[0,23]},\"span\":{\"python\":[0,16],\"text\":\"37 C.F.R. § 1.56\",\"utf16\":[0,16]},\"spanWithPincite\":{\"python\":[0,16],\"text\":\"37 C.F.R. § 1.56\",\"utf16\":[0,16]}}}],\"equality\":[[true]],\"text\":\"37 C.F.R. § 1.56 (2020)\"}",
+      "normalizedSha256": "07adae52f4edfe2815c9f91491897eba57252782e3054c071b0909a2bfd974c6"
+    },
+    {
+      "id": "unresolved-id",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[],\"citations\":[{\"correctedCitation\":\"Id.\",\"correctedFullCitation\":\"Id.\",\"correctedReporter\":null,\"groups\":{},\"kind\":\"IdCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,8],\"text\":\"Id. at 2\",\"utf16\":[0,8]},\"span\":{\"python\":[0,8],\"text\":\"Id. at 2\",\"utf16\":[0,8]},\"spanWithPincite\":{\"python\":[0,8],\"text\":\"Id. at 2\",\"utf16\":[0,8]}}}],\"equality\":[[true]],\"text\":\"Id. at 2.\"}",
+      "normalizedSha256": "4d60c9d26ab44cbef594b88ce26acd8798844c22015a6389e08a801dea53a504"
+    },
+    {
+      "id": "resolved-id",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0,1]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"span\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"spanWithPincite\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}}},{\"correctedCitation\":\"Id.\",\"correctedFullCitation\":\"Id.\",\"correctedReporter\":null,\"groups\":{},\"kind\":\"IdCitation\",\"spans\":{\"fullSpan\":{\"python\":[10,18],\"text\":\"Id. at 2\",\"utf16\":[10,18]},\"span\":{\"python\":[10,18],\"text\":\"Id. at 2\",\"utf16\":[10,18]},\"spanWithPincite\":{\"python\":[10,18],\"text\":\"Id. at 2\",\"utf16\":[10,18]}}}],\"equality\":[[true,false],[false,true]],\"text\":\"1 U.S. 1. Id. at 2.\"}",
+      "normalizedSha256": "7b190545a521ee7ce3f84aaf07c950508728c3231efa3f121d77737e3382acc2"
+    },
+    {
+      "id": "nearest-id",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0],[1,2]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"span\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"spanWithPincite\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}}},{\"correctedCitation\":\"2 U.S. 2\",\"correctedFullCitation\":\"2 U.S. 2 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"2\",\"reporter\":\"U.S.\",\"volume\":\"2\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[10,18],\"text\":\"2 U.S. 2\",\"utf16\":[10,18]},\"span\":{\"python\":[10,18],\"text\":\"2 U.S. 2\",\"utf16\":[10,18]},\"spanWithPincite\":{\"python\":[10,18],\"text\":\"2 U.S. 2\",\"utf16\":[10,18]}}},{\"correctedCitation\":\"Id.\",\"correctedFullCitation\":\"Id.\",\"correctedReporter\":null,\"groups\":{},\"kind\":\"IdCitation\",\"spans\":{\"fullSpan\":{\"python\":[20,28],\"text\":\"Id. at 3\",\"utf16\":[20,28]},\"span\":{\"python\":[20,28],\"text\":\"Id. at 3\",\"utf16\":[20,28]},\"spanWithPincite\":{\"python\":[20,28],\"text\":\"Id. at 3\",\"utf16\":[20,28]}}}],\"equality\":[[true,false,false],[false,true,false],[false,false,true]],\"text\":\"1 U.S. 1. 2 U.S. 2. Id. at 3.\"}",
+      "normalizedSha256": "16de12da7443e3ae05121f040468a34fb1737dd98e8c37e73a8197f092c7ea6c"
+    },
+    {
+      "id": "repeated-authority",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0,1]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"span\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"spanWithPincite\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}}},{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[10,18],\"text\":\"1 U.S. 1\",\"utf16\":[10,18]},\"span\":{\"python\":[10,18],\"text\":\"1 U.S. 1\",\"utf16\":[10,18]},\"spanWithPincite\":{\"python\":[10,18],\"text\":\"1 U.S. 1\",\"utf16\":[10,18]}}}],\"equality\":[[true,true],[true,true]],\"text\":\"1 U.S. 1. 1 U.S. 1.\"}",
+      "normalizedSha256": "ac295aae646e5978f3b6c4f20af15a7db1ae037faaecb3b7ed43fd78c2b5e91f"
+    },
+    {
+      "id": "reporter-spelling",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U. S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,9],\"text\":\"1 U. S. 1\",\"utf16\":[0,9]},\"span\":{\"python\":[0,9],\"text\":\"1 U. S. 1\",\"utf16\":[0,9]},\"spanWithPincite\":{\"python\":[0,9],\"text\":\"1 U. S. 1\",\"utf16\":[0,9]}}}],\"equality\":[[true]],\"text\":\"1 U. S. 1.\"}",
+      "normalizedSha256": "9bfc3b9a64ddedaf3717bb11cfdac5b0c44447c6881e15db7d3c377c548a748e"
+    },
+    {
+      "id": "no-citations",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[],\"citations\":[],\"equality\":[],\"text\":\"Text without a citation.\"}",
+      "normalizedSha256": "241e24ca851db6201f01e58e5a465466131633ca3d02cc34f802b85ecf400f85"
+    },
+    {
+      "id": "crlf-context",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0,1]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"span\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"spanWithPincite\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}}},{\"correctedCitation\":\"Id.\",\"correctedFullCitation\":\"Id.\",\"correctedReporter\":null,\"groups\":{},\"kind\":\"IdCitation\",\"spans\":{\"fullSpan\":{\"python\":[11,19],\"text\":\"Id. at 2\",\"utf16\":[11,19]},\"span\":{\"python\":[11,19],\"text\":\"Id. at 2\",\"utf16\":[11,19]},\"spanWithPincite\":{\"python\":[11,19],\"text\":\"Id. at 2\",\"utf16\":[11,19]}}}],\"equality\":[[true,false],[false,true]],\"text\":\"1 U.S. 1.\\r\\nId. at 2.\"}",
+      "normalizedSha256": "1312467f87d661dba9c352d5ed65da704acf33c3e327156fb67267f7a4045883"
+    },
+    {
+      "id": "astral-context",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0,1]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"span\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"spanWithPincite\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}}},{\"correctedCitation\":\"Id.\",\"correctedFullCitation\":\"Id.\",\"correctedReporter\":null,\"groups\":{},\"kind\":\"IdCitation\",\"spans\":{\"fullSpan\":{\"python\":[12,20],\"text\":\"Id. at 2\",\"utf16\":[13,21]},\"span\":{\"python\":[12,20],\"text\":\"Id. at 2\",\"utf16\":[13,21]},\"spanWithPincite\":{\"python\":[12,20],\"text\":\"Id. at 2\",\"utf16\":[13,21]}}}],\"equality\":[[true,false],[false,true]],\"text\":\"1 U.S. 1. 😀 Id. at 2.\"}",
+      "normalizedSha256": "7ba641c1f98a65e92074dff03935cb071546a3889ad0d64cc123dbbc62de5585"
+    }
+  ],
+  "textCases": [
+    {
+      "id": "clean-none",
+      "operation": "clean_text",
+      "payload": "{\"input\":{\"steps\":[],\"text\":\" \\tfoo\\r\\nbar​ \"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\" \\tfoo\\r\\nbar​ \"},\"warnings\":[]}",
+      "normalizedSha256": "21da1051d2b3a8102917ecf7c5907cba01c2b3734b2543dbe1154f33ec9f8b3c",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "clean-inline",
+      "operation": "clean_text",
+      "payload": "{\"input\":{\"steps\":[\"inline_whitespace\"],\"text\":\" \\tfoo\\r\\nbar​ \"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\" foo\\r\\nbar​ \"},\"warnings\":[]}",
+      "normalizedSha256": "e426d295a3d6008c9daa39431153a337123f4c70b43bc24a0e2559ca79bfa36f",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "clean-all",
+      "operation": "clean_text",
+      "payload": "{\"input\":{\"steps\":[\"all_whitespace\"],\"text\":\" \\tfoo\\r\\nbar​ \"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\" foo bar \"},\"warnings\":[]}",
+      "normalizedSha256": "2be09a78c03d1efbf49a14fbcd6cb66445b408efdeedb9c6d507af3cbe239d80",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "clean-underscores",
+      "operation": "clean_text",
+      "payload": "{\"input\":{\"steps\":[\"underscores\"],\"text\":\"a__b_c___\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"ab_c\"},\"warnings\":[]}",
+      "normalizedSha256": "98162759c2a4be308694984d5f61dc46f7d5d2b8c3bd447c8896b94329168319",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "clean-xml-html",
+      "operation": "clean_text",
+      "payload": "{\"input\":{\"steps\":[\"xml\",\"html\",\"all_whitespace\"],\"text\":\"<?xml version=\\\"1.0\\\"?><html><head><style>hidden</style></head><body><p>1 <b>U.S.</b> 1.</p><script>hidden</script><page-number>9</page-number><span class=\\\"star-pagination\\\">*2</span></body></html>\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"1 U.S. 1.\"},\"warnings\":[]}",
+      "normalizedSha256": "575d9d37c883c05061b08096a3e1b90140b3bda4475c5ed09ceed2eb379ce51d",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "clean-html-entities",
+      "operation": "clean_text",
+      "payload": "{\"input\":{\"steps\":[\"html\"],\"text\":\"<p>a&nbsp;<b>b</b>&amp;c</p>\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"a  b &c\"},\"warnings\":[]}",
+      "normalizedSha256": "b23c83386a962e2e228111f2c2cc63743f685f17a95ca6cf60e07c478e609789",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "clean-empty-html",
+      "operation": "clean_text",
+      "payload": "{\"input\":{\"steps\":[\"html\"],\"text\":\"\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"failure\",\"message\":\"Document is empty\",\"type\":\"lxml.etree.ParserError\"},\"warnings\":[]}",
+      "normalizedSha256": "cf5b6c7d2a0fb8f16ec0ad7b22e241380f3d0f5f80049f94cdeb92dd3136fb60",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "clean-unknown",
+      "operation": "clean_text",
+      "payload": "{\"input\":{\"steps\":[\"bogus\"],\"text\":\"text\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"failure\",\"message\":\"clean_text steps must be callable or one of ['html', 'inline_whitespace', 'all_whitespace', 'underscores', 'xml']\",\"type\":\"builtins.ValueError\"},\"warnings\":[]}",
+      "normalizedSha256": "5ae1ff0c2bac6f6a1017ce87ce2154247d46ecf178c5be59d99ce8a28595d744",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "clean-order-a",
+      "operation": "clean_text",
+      "payload": "{\"input\":{\"steps\":[\"underscores\",\"all_whitespace\"],\"text\":\"a __ b\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"a b\"},\"warnings\":[]}",
+      "normalizedSha256": "487570cded974a2a16502defcf5d08c1b6e922353ce02f7ad97fb775d3837d3a",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "clean-order-b",
+      "operation": "clean_text",
+      "payload": "{\"input\":{\"steps\":[\"all_whitespace\",\"underscores\"],\"text\":\"a __ b\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"a  b\"},\"warnings\":[]}",
+      "normalizedSha256": "873b369dafa5a7f558598d0c8e94061030a8bfca1366417eb2e28db9f11027df",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-identity",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"x 1 U.S. 1.\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[2,10]}],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"x <a>1 U.S. 1</a>.\"},\"warnings\":[]}",
+      "normalizedSha256": "3838977973a9fb9306b40db4b382259b797efb97821346b57cb50a82d0d72679",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-astral",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"😀 1 U.S. 1.\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[3,11]}],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"😀 <a>1 U.S. 1</a>.\"},\"warnings\":[]}",
+      "normalizedSha256": "38111747ca5aa73b5be698882c3b6106c6164dfbc0f70044f3cdfac0fce8b396",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-markup",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"x 1 U.S. 1.\",\"source_text\":\"x <i>1 U.S.</i> 1.\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[2,10]}],\"mappedSpans\":[{\"python\":[5,17],\"text\":\"1 U.S.</i> 1\",\"utf16\":[5,17]}],\"mappingUpdates\":[{\"offset\":2,\"result\":5,\"side\":\"bisect_right\"},{\"offset\":10,\"result\":17,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"x <i><a>1 U.S.</i> 1</a>.\"},\"warnings\":[]}",
+      "normalizedSha256": "8669288e1121cd8d490e9ce98cc87c1b6662836b0a172d21809451e0477e41c4",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-unbalanced-unchecked",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"x 1 U.S. 1.\",\"source_text\":\"x 1 U.S. <span>1 tail</span>\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[2,10]}],\"mappedSpans\":[{\"python\":[2,16],\"text\":\"1 U.S. <span>1\",\"utf16\":[2,16]}],\"mappingUpdates\":[{\"offset\":2,\"result\":2,\"side\":\"bisect_right\"},{\"offset\":10,\"result\":16,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"x <a>1 U.S. <span>1</a> tail</span>\"},\"warnings\":[]}",
+      "normalizedSha256": "f86319a4fdc44fa6a1b628c9012b76e73cdd805f14711cea527667c73af10e7b",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-unbalanced-skip",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"x 1 U.S. 1.\",\"source_text\":\"x 1 U.S. <span>1 tail</span>\",\"unbalanced_tags\":\"skip\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[2,10]}],\"mappedSpans\":[{\"python\":[2,16],\"text\":\"1 U.S. <span>1\",\"utf16\":[2,16]}],\"mappingUpdates\":[{\"offset\":2,\"result\":2,\"side\":\"bisect_right\"},{\"offset\":10,\"result\":16,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"x 1 U.S. <span>1 tail</span>\"},\"warnings\":[{\"arguments\":[\"1 U.S. <span>1\"],\"level\":\"WARNING\",\"logger\":\"eyecite.annotate\",\"messageTemplate\":\"Citation was not annotated due to unbalanced tags %s\"}]}",
+      "normalizedSha256": "1bf77ee30fc84c3168d3d9c5870e17af6225516706786b7987ab48ba2fa32ecb",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-unbalanced-wrap",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"x 1 U.S. 1.\",\"source_text\":\"x 1 U.S. <span>1 tail</span>\",\"unbalanced_tags\":\"wrap\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[2,10]}],\"mappedSpans\":[{\"python\":[2,16],\"text\":\"1 U.S. <span>1\",\"utf16\":[2,16]}],\"mappingUpdates\":[{\"offset\":2,\"result\":2,\"side\":\"bisect_right\"},{\"offset\":10,\"result\":16,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"x <a>1 U.S. </a><span><a>1</a> tail</span>\"},\"warnings\":[]}",
+      "normalizedSha256": "6c1fd903c7947fdbd2549dae362f2be2dffdeab6714efd9417a39e7585ddd974",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-repeat-insert",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[[[0,8],\"<a>\",\"</a>\"]],\"plain_text\":\"1 U.S. 1.\",\"source_text\":\"1 U.S. 1. 1 U.S. 1.\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}],\"mappedSpans\":[{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}],\"mappingUpdates\":[{\"offset\":0,\"result\":0,\"side\":\"bisect_right\"},{\"offset\":8,\"result\":8,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"<a>1 U.S. 1</a>. 1 U.S. 1.\"},\"warnings\":[]}",
+      "normalizedSha256": "fbf2517b3338e6ebdb516d6dda3639c5b2744416a9b01cb1f7c83a3b55bec61f",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-repeat-insert-builtin",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[[[0,8],\"<a>\",\"</a>\"]],\"plain_text\":\"1 U.S. 1.\",\"source_text\":\"1 U.S. 1. 1 U.S. 1.\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":false},\"inputSpans\":[{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}],\"mappedSpans\":[{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}],\"mappingUpdates\":[{\"offset\":0,\"result\":0,\"side\":\"bisect_right\"},{\"offset\":8,\"result\":8,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"<a>1 U.S. 1</a>. 1 U.S. 1.\"},\"warnings\":[]}",
+      "normalizedSha256": "3ed7c816ea875dd7e5ceaaf1e24620a91ccd7b8d052a6612589705cf591e82f7",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-repeat-delete",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[[[10,18],\"<a>\",\"</a>\"]],\"plain_text\":\"1 U.S. 1. 1 U.S. 1.\",\"source_text\":\"1 U.S. 1.\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[10,18],\"text\":\"1 U.S. 1\",\"utf16\":[10,18]}],\"mappedSpans\":[{\"python\":[9,9],\"text\":\"\",\"utf16\":[9,9]}],\"mappingUpdates\":[{\"offset\":10,\"result\":9,\"side\":\"bisect_right\"},{\"offset\":18,\"result\":9,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"1 U.S. 1.<a></a>\"},\"warnings\":[]}",
+      "normalizedSha256": "17cf4ccbf580b07e0568e614ec55e2783bd9fa739c1e6281e6d8220aef5c1f7e",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-repeat-delete-builtin",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[[[10,18],\"<a>\",\"</a>\"]],\"plain_text\":\"1 U.S. 1. 1 U.S. 1.\",\"source_text\":\"1 U.S. 1.\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":false},\"inputSpans\":[{\"python\":[10,18],\"text\":\"1 U.S. 1\",\"utf16\":[10,18]}],\"mappedSpans\":[{\"python\":[9,9],\"text\":\"\",\"utf16\":[9,9]}],\"mappingUpdates\":[{\"offset\":10,\"result\":9,\"side\":\"bisect_right\"},{\"offset\":18,\"result\":9,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"1 U.S. 1.<a></a>\"},\"warnings\":[]}",
+      "normalizedSha256": "d84d744571bb217fa49a11dc6e6ca4f6f9af6f004cfca98ed3010f8891eb8993",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-overlap",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[[[0,4],\"<a>\",\"</a>\"],[[2,6],\"<b>\",\"</b>\"]],\"plain_text\":\"abcdef\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[0,4],\"text\":\"abcd\",\"utf16\":[0,4]},{\"python\":[2,6],\"text\":\"cdef\",\"utf16\":[2,6]}],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"<a>abcd</a><b>ef</b>\"},\"warnings\":[]}",
+      "normalizedSha256": "7c88df67e2427fb006d6b03b598d9028f9da80daaa0f98f0f6d83c6e9c2625ba",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-duplicate",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[[[0,4],\"<a>\",\"</a>\"],[[0,4],\"<b>\",\"</b>\"]],\"plain_text\":\"abcdef\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[0,4],\"text\":\"abcd\",\"utf16\":[0,4]},{\"python\":[0,4],\"text\":\"abcd\",\"utf16\":[0,4]}],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"<a>abcd</a>ef\"},\"warnings\":[]}",
+      "normalizedSha256": "a590f8006188d5d85f1cfef08216b2fd5871b3e9e8a10a6602ac34dad93989b3",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-zero-width",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[[[2,2],\"<a>\",\"</a>\"]],\"plain_text\":\"abcdef\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,2],\"text\":\"\",\"utf16\":[2,2]}],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"ab<a></a>cdef\"},\"warnings\":[]}",
+      "normalizedSha256": "19907facb3f3b3aec3c825d9f3c9d3c430d8f58f2b71c31d9c419d3068e454f0",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-invalid-mode",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[],\"plain_text\":\"abcdef\",\"source_text\":\"\",\"unbalanced_tags\":\"bogus\",\"use_dmp\":true},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"failure\",\"message\":\"Unknown option 'bogus\",\"type\":\"builtins.ValueError\"},\"warnings\":[]}",
+      "normalizedSha256": "804203a12f636b437b247db99a08185f1ef02d2ebac553d5e5b899ac81532aa3",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-empty",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[],\"plain_text\":\"\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"\"},\"warnings\":[]}",
+      "normalizedSha256": "4a83d59fb4e6eadc3bf064d26c53863df61aee6a69cef870175d2c686556c145",
+      "workflowState": "audit",
+      "targetProof": null
+    },
+    {
+      "id": "annotation-no-spans-source",
+      "operation": "annotate_citations",
+      "payload": "{\"input\":{\"annotations\":[],\"plain_text\":\"abc\",\"source_text\":\"Xabc\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"Xabc\"},\"warnings\":[]}",
+      "normalizedSha256": "ea4a692cbb62c0ae75c7be1db81d5e34c864cdbf02937417bc68d85a80e74123",
+      "workflowState": "audit",
+      "targetProof": null
+    }
+  ],
+  "remainingCoverage": [
+    "cleaning-and-markup-mapping",
+    "annotation-diff-and-ambiguity",
+    "tokenizer-and-callback-injection",
+    "hash-and-model-identity",
+    "malformed-and-adversarial-inputs"
+  ]
+}

@@ -1,0 +1,6525 @@
+{
+  "helpersSha256": "3d3431db232be2f3d7320125528975d57797372a9c4c21d524927fc1ccf0a297",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "patterns": [
+    {
+      "bindings": [
+        {
+          "flags": 0,
+          "patternSha256": "c6b8c8149468954631d3a16eee492bac9cac802c4b4366ceb6a12e2987987e10",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 1,
+            "names": {
+              "value": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        {
+          "flags": 0,
+          "patternSha256": "118bbdad4b67aef2757a9d261d06c7cad9336f85ba29aa4b1fd08e713663f649",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 1,
+            "names": {
+              "value": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      ],
+      "cases": [
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 3,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 3,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "value": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 5,
+                  "start": 2
+                },
+                {
+                  "_tag": "Range",
+                  "end": 5,
+                  "start": 2
+                }
+              ],
+              "names": {
+                "value": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "6162",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "62",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": null,
+                "kind": "Token"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "61624e6f6e65",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "78",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 3,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 3,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "value": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "0a0a",
+                  "width": 1
+                },
+                "kind": "ParagraphToken"
+              },
+              {
+                "data": {
+                  "bytes": "32303230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 4,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 4,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "value": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "202857657374203230323029",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "ced70100",
+                  "width": 4
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "ced70100",
+              "width": 4
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 1,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 1,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "value": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "35d8cedf",
+                  "width": 2
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "35d8cedf",
+              "width": 2
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 300,
+                  "start": 297
+                },
+                {
+                  "_tag": "Range",
+                  "end": 300,
+                  "start": 297
+                }
+              ],
+              "names": {
+                "value": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "3230",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "3230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 4,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 4,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "value": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": "IndexError",
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": -2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": null
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "match": null
+          }
+        }
+      ],
+      "flags": 0,
+      "id": 0,
+      "pattern": {
+        "bytes": "283f503c76616c75653e5c642b29",
+        "width": 1
+      }
+    },
+    {
+      "bindings": [
+        {
+          "flags": 0,
+          "patternSha256": "a6fa28c783e5aa5c4cf121dc0917b298d64281685138ab0fb5206a8938866431",
+          "profile": {
+            "groups": 2,
+            "minimumWidthFloor": 1,
+            "names": {
+              "head": 1,
+              "tail": 2
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        {
+          "flags": 0,
+          "patternSha256": "54731ec9f8233d4d0d1ea407cfa48b90662a4078b42c91ab5637cadf39353005",
+          "profile": {
+            "groups": 2,
+            "minimumWidthFloor": 1,
+            "names": {
+              "head": 1,
+              "tail": 2
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      ],
+      "cases": [
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "6162",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 2,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 1,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 2,
+                  "start": 1
+                }
+              ],
+              "names": {
+                "head": 1,
+                "tail": 2
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "62",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 1,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Range",
+                  "end": 1,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "head": 1,
+                "tail": 2
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": null,
+                "kind": "Token"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "61624e6f6e65",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 2,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 1,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 2,
+                  "start": 1
+                }
+              ],
+              "names": {
+                "head": 1,
+                "tail": 2
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "78",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "0a0a",
+                  "width": 1
+                },
+                "kind": "ParagraphToken"
+              },
+              {
+                "data": {
+                  "bytes": "32303230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "202857657374203230323029",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "ced70100",
+                  "width": 4
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "ced70100",
+              "width": 4
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "35d8cedf",
+                  "width": 2
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "35d8cedf",
+              "width": 2
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "3230",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "3230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": "IndexError",
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": -2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": null
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "match": null
+          }
+        }
+      ],
+      "flags": 0,
+      "id": 1,
+      "pattern": {
+        "bytes": "283f503c686561643e61293f283f503c7461696c3e6229",
+        "width": 1
+      }
+    },
+    {
+      "bindings": [
+        {
+          "flags": 0,
+          "patternSha256": "52fb609e8e0809f8d94b587b0a8f922e32b2dc78aed5a6198a15b0a3b64b9fcd",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 0,
+            "names": {
+              "empty": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        {
+          "flags": 0,
+          "patternSha256": "389d8b751a4846e26e5d653eeed6f485e9a1065f2d2bbef0443d0812fb894edf",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 0,
+            "names": {
+              "empty": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      ],
+      "cases": [
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 5,
+                  "start": 5
+                },
+                {
+                  "_tag": "Range",
+                  "end": 5,
+                  "start": 5
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "6162",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "62",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": null,
+                "kind": "Token"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "61624e6f6e65",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "78",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 3,
+                  "start": 3
+                },
+                {
+                  "_tag": "Range",
+                  "end": 3,
+                  "start": 3
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "0a0a",
+                  "width": 1
+                },
+                "kind": "ParagraphToken"
+              },
+              {
+                "data": {
+                  "bytes": "32303230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 4,
+                  "start": 4
+                },
+                {
+                  "_tag": "Range",
+                  "end": 4,
+                  "start": 4
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "202857657374203230323029",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "ced70100",
+                  "width": 4
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "ced70100",
+              "width": 4
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "35d8cedf",
+                  "width": 2
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "35d8cedf",
+              "width": 2
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 300,
+                  "start": 300
+                },
+                {
+                  "_tag": "Range",
+                  "end": 300,
+                  "start": 300
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "3230",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "3230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": "IndexError",
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": -2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": null
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "empty": 1
+              }
+            }
+          }
+        }
+      ],
+      "flags": 0,
+      "id": 2,
+      "pattern": {
+        "bytes": "283f503c656d7074793e29",
+        "width": 1
+      }
+    },
+    {
+      "bindings": [
+        {
+          "flags": 64,
+          "patternSha256": "d43101be707427f11b4d2f7a2a4807c6fed459289296b89c5f1765556a44df96",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 2,
+            "names": {
+              "word": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        {
+          "flags": 64,
+          "patternSha256": "530f2e16b257028bc840486fa1ed9fd2b315cefb29de1e6c9476c83b671dc705",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 2,
+            "names": {
+              "word": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      ],
+      "cases": [
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "6162",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 2,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 2,
+                  "start": 1
+                }
+              ],
+              "names": {
+                "word": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "62",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": null,
+                "kind": "Token"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "61624e6f6e65",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 6,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 6,
+                  "start": 1
+                }
+              ],
+              "names": {
+                "word": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "78",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "0a0a",
+                  "width": 1
+                },
+                "kind": "ParagraphToken"
+              },
+              {
+                "data": {
+                  "bytes": "32303230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "202857657374203230323029",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "ced70100",
+                  "width": 4
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "ced70100",
+              "width": 4
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "35d8cedf",
+                  "width": 2
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "35d8cedf",
+              "width": 2
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "3230",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "3230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": "IndexError",
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": -2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": null
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "match": null
+          }
+        }
+      ],
+      "flags": 64,
+      "id": 3,
+      "pattern": {
+        "bytes": "20612023636f6d6d656e740a20283f503c776f72643e5c772b2920",
+        "width": 1
+      }
+    },
+    {
+      "bindings": [
+        {
+          "flags": 64,
+          "patternSha256": "f5ca4dc7bcbddd92f285153afc729057f8685da8871039adc4ed9ba93babc11e",
+          "profile": {
+            "groups": 6,
+            "minimumWidthFloor": 0,
+            "names": {
+              "day": 4,
+              "month": 3,
+              "parenthetical": 6,
+              "pin_cite": 1,
+              "publisher": 2,
+              "year": 5
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        {
+          "flags": 64,
+          "patternSha256": "64281dfa923bfaa728294ce902d332708da29db32fba05204677a9b71a793107",
+          "profile": {
+            "groups": 6,
+            "minimumWidthFloor": 0,
+            "names": {
+              "day": 4,
+              "month": 3,
+              "parenthetical": 6,
+              "pin_cite": 1,
+              "publisher": 2,
+              "year": 5
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      ],
+      "cases": [
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 5,
+                  "start": 5
+                },
+                {
+                  "_tag": "Range",
+                  "end": 5,
+                  "start": 5
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "6162",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "62",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": null,
+                "kind": "Token"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "61624e6f6e65",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "78",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 3,
+                  "start": 3
+                },
+                {
+                  "_tag": "Range",
+                  "end": 3,
+                  "start": 3
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "0a0a",
+                  "width": 1
+                },
+                "kind": "ParagraphToken"
+              },
+              {
+                "data": {
+                  "bytes": "32303230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 4,
+                  "start": 4
+                },
+                {
+                  "_tag": "Range",
+                  "end": 4,
+                  "start": 4
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "202857657374203230323029",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 12,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 6,
+                  "start": 2
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Range",
+                  "end": 11,
+                  "start": 7
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "ced70100",
+                  "width": 4
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "ced70100",
+              "width": 4
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "35d8cedf",
+                  "width": 2
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "35d8cedf",
+              "width": 2
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 300,
+                  "start": 300
+                },
+                {
+                  "_tag": "Range",
+                  "end": 300,
+                  "start": 300
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "3230",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "3230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        },
+        {
+          "failure": "IndexError",
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": -2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": null
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "day": 4,
+                "month": 3,
+                "parenthetical": 6,
+                "pin_cite": 1,
+                "publisher": 2,
+                "year": 5
+              }
+            }
+          }
+        }
+      ],
+      "flags": 64,
+      "id": 4,
+      "pattern": {
+        "bytes": "0a202020200a20202020283f503c70696e5f636974653e0a2020202020202020232073756273656374696f6e206c696b65202861292831292878696969293a0a20202020202020200a20202020283f3a0a20202020202020205c285b302d39612d7a412d5a5d7b312c347d5c290a20202020290a2a0a2020202020202020283f3a5c20616e645c200a20202020283f3a0a20202020202020205c285b302d39612d7a412d5a5d7b312c347d5c290a20202020290a2b293f0a2020202020202020283f3a5c2065745c207365715c2e293f0a20202020290a3f0a202020205c203f0a20202020283f3a5c280a20202020202020202320436f6e736f6c2e2c204d634b696e6e65792c2044656572696e672c20576573742c204c657869734e657869732c206574632e0a2020202020202020283f503c7075626c69736865723e0a2020202020202020202020205b412d5a5d5b612d7a5d2b5c2e3f0a202020202020202020202020283f3a5c20537570705c2e293f0a2020202020202020293f0a20202020202020205c203f0a202020202020202023206d6f6e74680a2020202020202020283f3a0a20202020283f503c6d6f6e74683e0a20202020202020204a616e756172797c4a616e5c2e7c0a202020202020202046656272756172797c4665625c2e7c0a20202020202020204d617263687c4d61725c2e7c0a2020202020202020417072696c7c4170725c2e7c0a20202020202020204d61797c0a20202020202020204a756e657c4a756e5c2e7c0a20202020202020204a756c797c4a756c5c2e7c0a20202020202020204175677573747c4175675c2e7c0a202020202020202053657074656d6265727c536570743f5c2e7c0a20202020202020204f63746f6265727c4f63745c2e7c0a20202020202020204e6f76656d6265727c4e6f765c2e7c0a2020202020202020446563656d6265727c4465635c2e0a20202020290a5c20293f0a202020202020202023206461790a2020202020202020283f503c6461793e5c647b312c327d293f2c3f5c203f0a20202020202020202320666f75722d646967697420796561720a20202020202020200a20202020283f3a0a2020202020202020283f503c796561723e0a2020202020202020202020205c647b347d0a2020202020202020290a2020202020202020232059656172206973206f63636173696f6e616c6c7920612072616e67652c206c696b652022313939332d393422206f722022323030352d3036222e0a20202020202020202320466f72206e6f772077652069676e6f72652074686520656e64206f66207468652072616e67653a0a2020202020202020283f3a2d5c647b327d293f0a20202020290a3f0a202020205c29293f0a202020205c203f0a202020202320706172656e746865746963616c0a202020200a20202020283f3a0a202020202020202023206f7074696f6e616c2073706163652c206f70656e696e6720706172656e0a20202020202020205c203f5c280a20202020202020202020202023206361707475726520756e74696c206c61737420656e6420706172656e2c207765276c6c207472696d206f666620657874726120616674657277617264730a202020202020202020202020283f503c706172656e746865746963616c3e2e2a290a20202020202020202020205c290a20202020293f0a0a",
+        "width": 1
+      }
+    },
+    {
+      "bindings": [
+        {
+          "flags": 64,
+          "patternSha256": "25f29e5046f9dddf7cf8437e8d5b78400da886e7add78806521be4329942a802",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 4,
+            "names": {
+              "year": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        {
+          "flags": 64,
+          "patternSha256": "973a15abde966b49d78ac7bbd0f873b7242fef48f5c8bc96bb3768e84a2898e0",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 4,
+            "names": {
+              "year": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      ],
+      "cases": [
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "6162",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "62",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": null,
+                "kind": "Token"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "61624e6f6e65",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "78",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "0a0a",
+                  "width": 1
+                },
+                "kind": "ParagraphToken"
+              },
+              {
+                "data": {
+                  "bytes": "32303230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 4,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 4,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "year": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "202857657374203230323029",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "ced70100",
+                  "width": 4
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "ced70100",
+              "width": 4
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "35d8cedf",
+                  "width": 2
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "35d8cedf",
+              "width": 2
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878313233",
+              "width": 1
+            },
+            "match": null
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "3230",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "3230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 4,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 4,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "year": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": "IndexError",
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": -2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": null
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "match": null
+          }
+        }
+      ],
+      "flags": 64,
+      "id": 5,
+      "pattern": {
+        "bytes": "0a20202020283f3a0a2020202020202020283f503c796561723e0a2020202020202020202020205c647b347d0a2020202020202020290a2020202020202020232059656172206973206f63636173696f6e616c6c7920612072616e67652c206c696b652022313939332d393422206f722022323030352d3036222e0a20202020202020202320466f72206e6f772077652069676e6f72652074686520656e64206f66207468652072616e67653a0a2020202020202020283f3a2d5c647b327d293f0a20202020290a",
+        "width": 1
+      }
+    },
+    {
+      "bindings": [
+        {
+          "flags": 0,
+          "patternSha256": "78c41a563abc93ee5004d35dc83ebf989b6f6fb15f8f452e5e7b1c18bee503f0",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 0,
+            "names": {
+              "optional": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        {
+          "flags": 0,
+          "patternSha256": "37998f19fdccb86722e1a72956bb453c9c833cc6accb984b4f02957177a0e408",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 0,
+            "names": {
+              "optional": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      ],
+      "cases": [
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 5,
+                  "start": 5
+                },
+                {
+                  "_tag": "Range",
+                  "end": 5,
+                  "start": 5
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "6162",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 1,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 1,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "62",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": null,
+                "kind": "Token"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "61624e6f6e65",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 1,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 1,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "78",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 3,
+                  "start": 3
+                },
+                {
+                  "_tag": "Range",
+                  "end": 3,
+                  "start": 3
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "0a0a",
+                  "width": 1
+                },
+                "kind": "ParagraphToken"
+              },
+              {
+                "data": {
+                  "bytes": "32303230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 4,
+                  "start": 4
+                },
+                {
+                  "_tag": "Range",
+                  "end": 4,
+                  "start": 4
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "202857657374203230323029",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "ced70100",
+                  "width": 4
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "ced70100",
+              "width": 4
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "35d8cedf",
+                  "width": 2
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "35d8cedf",
+              "width": 2
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 300,
+                  "start": 300
+                },
+                {
+                  "_tag": "Range",
+                  "end": 300,
+                  "start": 300
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "3230",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "3230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": "IndexError",
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": -2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": null
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        }
+      ],
+      "flags": 0,
+      "id": 6,
+      "pattern": {
+        "bytes": "283f503c6f7074696f6e616c3e613f293f",
+        "width": 1
+      }
+    },
+    {
+      "bindings": [
+        {
+          "flags": 0,
+          "patternSha256": "a28b6472a2669cc4227f02c868658a034c5b9950ffcffa713e2c5dd2072d711c",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 0,
+            "names": {
+              "optional": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        {
+          "flags": 0,
+          "patternSha256": "0110eb2b744f0b6daf80b1e01981ee53fbeba0e12c10541933140c863d3b3631",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 0,
+            "names": {
+              "optional": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      ],
+      "cases": [
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 5,
+                  "start": 5
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7820",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "7820313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "6162",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "62",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "61",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "62",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": null,
+                "kind": "Token"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "61624e6f6e65",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "78",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "49642e",
+                  "width": 1
+                },
+                "kind": "IdToken"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 3,
+                  "start": 3
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 2,
+            "stringsOnly": false,
+            "words": [
+              {
+                "data": {
+                  "bytes": "78",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "0a0a",
+                  "width": 1
+                },
+                "kind": "ParagraphToken"
+              },
+              {
+                "data": {
+                  "bytes": "32303230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 4,
+                  "start": 4
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "202857657374203230323029",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "2c20a720322028537570702e2032303230292028616d656e64656429",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "ced70100",
+                  "width": 4
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "ced70100",
+              "width": 4
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "35d8cedf",
+                  "width": 2
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "35d8cedf",
+              "width": 2
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": false,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": 1,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "7878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878",
+                  "width": 1
+                },
+                "kind": "Text"
+              },
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878313233",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 300,
+                  "start": 300
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "3230",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "3230",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": {
+            "context": {
+              "bytes": "32303230",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        },
+        {
+          "failure": "IndexError",
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "",
+              "width": 1
+            },
+            "startIndex": -2,
+            "stringsOnly": true,
+            "words": [
+              {
+                "data": {
+                  "bytes": "313233",
+                  "width": 1
+                },
+                "kind": "Text"
+              }
+            ]
+          },
+          "result": null
+        },
+        {
+          "failure": null,
+          "request": {
+            "forward": true,
+            "prefix": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "startIndex": 0,
+            "stringsOnly": true,
+            "words": []
+          },
+          "result": {
+            "context": {
+              "bytes": "70707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070",
+              "width": 1
+            },
+            "match": {
+              "captures": [
+                {
+                  "_tag": "Range",
+                  "end": 0,
+                  "start": 0
+                },
+                {
+                  "_tag": "Unmatched"
+                }
+              ],
+              "names": {
+                "optional": 1
+              }
+            }
+          }
+        }
+      ],
+      "flags": 0,
+      "id": 7,
+      "pattern": {
+        "bytes": "283f503c6f7074696f6e616c3e613f293f3f",
+        "width": 1
+      }
+    }
+  ],
+  "producerSha256": "2ab68a752308b5b4a0a1fa8b01ff066223b7f335705ca8b40b866e31c39d0980",
+  "python": "3.11.15",
+  "regex": "2023.12.25",
+  "schemaVersion": "citation-context-matches/v1"
+}

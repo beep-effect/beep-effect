@@ -603,6 +603,7 @@ describe("signed root projection", () => {
       expect(value).toEqual({
         tasks: { lint: { cache: false } },
         remoteCache: { enabled: true, signature: true, timeout: 42 },
+        futureFlags: { longerSignatureKey: true },
       });
       const projectCacheSignedRoot10 = yield* projectCacheSignedRoot(projected);
       expect(projectCacheSignedRoot10).toBe(projected);
@@ -611,12 +612,42 @@ describe("signed root projection", () => {
       const global = yield* projectCacheSignedRoot(globalSource);
       const value11 = yield* S.decodeEffect(CensusJsonObject)(global);
       expect(value11).toEqual({
-        futureFlags: { globalConfiguration: true },
+        futureFlags: { globalConfiguration: true, longerSignatureKey: true },
         tasks: { lint: { cache: false } },
         global: { env: ["KEEP"], remoteCache: { timeout: 42, enabled: true, signature: true } },
       });
       const projectCacheSignedRoot12 = yield* projectCacheSignedRoot(global);
       expect(projectCacheSignedRoot12).toBe(global);
+    })
+  );
+  it.effect("enforces the native key floor while preserving unrelated future flags", () =>
+    Effect.gen(function* () {
+      for (const { globalConfiguration, longerSignatureKey } of [
+        { globalConfiguration: false, longerSignatureKey: false },
+        { globalConfiguration: false, longerSignatureKey: true },
+        { globalConfiguration: true, longerSignatureKey: false },
+        { globalConfiguration: true, longerSignatureKey: true },
+      ]) {
+        const remoteCache = { enabled: false, signature: false, timeout: 42 };
+        const configuration = globalConfiguration ? { global: { remoteCache } } : { remoteCache };
+        const source = yield* encodeJsonObjectJson({
+          ...configuration,
+          tasks: { lint: { cache: false } },
+          futureFlags: { globalConfiguration, longerSignatureKey, filterUsingTasks: false },
+        });
+        const projected = yield* projectCacheSignedRoot(source);
+        const decoded = yield* S.decodeEffect(CensusJsonObject)(projected);
+        const signedRemoteCache = { enabled: true, signature: true, timeout: 42 };
+        expect(decoded).toEqual({
+          ...(globalConfiguration
+            ? { global: { remoteCache: signedRemoteCache } }
+            : { remoteCache: signedRemoteCache }),
+          tasks: { lint: { cache: false } },
+          futureFlags: { globalConfiguration, longerSignatureKey: true, filterUsingTasks: false },
+        });
+        const repeated = yield* projectCacheSignedRoot(projected);
+        expect(repeated).toBe(projected);
+      }
     })
   );
   it.effect("rejects malformed containers before producing an overlay", () =>
@@ -678,7 +709,10 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
       expect(signed.configurationDigest).not.toBe(source.configurationDigest);
       expect(signed.configurationDigest).not.toBe(activated.configurationDigest);
       expect(signed.toolchainDigest).toBe(source.toolchainDigest);
-      expect(signed.configuration.globalConfiguration).toEqual({ remoteCache: { enabled: true, signature: true } });
+      expect(signed.configuration.globalConfiguration).toEqual({
+        remoteCache: { enabled: true, signature: true },
+        futureFlags: { longerSignatureKey: true },
+      });
       expect(signed.configuration.nodes).toEqual(activated.configuration.nodes);
       const projectedCensus = CacheCensusReport.make({
         ...census,
@@ -695,9 +729,16 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
       });
       const fingerprintCacheComputation13 = yield* fingerprintCacheComputation(key, projectedCensus, toolchain);
       expect(fingerprintCacheComputation13).toEqual(signed);
+      const signedDocument = yield* S.decodeEffect(CensusJsonObject)(rootSigned);
+      const omittedKeyFloor = yield* encodeJsonObjectJson(R.remove(signedDocument, "futureFlags"));
+      const disabledKeyFloor = yield* encodeJsonObjectJson(
+        R.set(signedDocument, "futureFlags", { longerSignatureKey: false })
+      );
       for (const altered of [
         `${rootSigned}\n`,
         '{"remoteCache":{"enabled":true,"signature":true},"tasks":{"lint":{"outputs":["dist/**"]}}}',
+        omittedKeyFloor,
+        disabledKeyFloor,
       ]) {
         const pipe11 = yield* projectCacheSignedActivation(
           key,

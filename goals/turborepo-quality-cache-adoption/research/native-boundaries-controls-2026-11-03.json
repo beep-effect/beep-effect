@@ -1,0 +1,924 @@
+{
+  "schemaVersion": "native-boundaries-controls/v1",
+  "recordedAt": "2026-11-03T20:51:33.688876+00:00",
+  "sourceRevision": "f92e090e024ed312e47407568cb382531e9cbf2e",
+  "sourceBindings": [
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-boundaries-controls.py",
+      "sha256": "340cae9ba91c5e01d7360386afd01cdd44183ac37421281a81afdcafdeac1ba9"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py",
+      "sha256": "ab4a4f6be9e7c1ed5f132b9600c90d63ff45223f2af59efe58a7b12bf93e7ad2"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/current-client-pins.json",
+      "sha256": "b3d507054f6e67ae8de5b235f05ae6786aed2f3f4361da20ec49a50d67cacecd"
+    },
+    {
+      "path": ".bun-version",
+      "sha256": "d03d8b268b4171328ac2458ce8ca82d69a1fde38469d4e4faae4f8fa8d8a5e35"
+    },
+    {
+      "path": "node_modules/turbo/docs/reference/boundaries.mdx",
+      "sha256": "2abbea2b157fef9e517cc1975a3cc68cab99a56730846ed2c0c033ab23dfb380"
+    }
+  ],
+  "clients": {
+    "stable": {
+      "version": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "version": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+    }
+  },
+  "toolHashes": {
+    "bun": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235",
+    "bwrap": "54e8408bd5b325c17926dd2c2420e6f28086286fd5bf99b397f9b681be3dada0"
+  },
+  "rows": [
+    {
+      "case": "declared-import",
+      "channel": "stable",
+      "version": "2.11.10",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "diagnosticWitnesses": {},
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "stable-declared-import.stdout",
+          "bytes": 68,
+          "sha256": "66026cd586786f69e3e50ebc340e329b41b69858c483cb3602657bd503a9a5bf"
+        },
+        "stderr": {
+          "file": "stable-declared-import.stderr",
+          "bytes": 140,
+          "sha256": "1e5266ce107075b51a1b2a46a81af74638eb6dd6ae5cded9f99b052c60568951"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "stable-declared-import-version.stdout",
+          "bytes": 8,
+          "sha256": "759b5ce1324d3d54081cbca12840305a3decbd1f0faba2358b050578a6a75c17"
+        },
+        "stderr": {
+          "file": "stable-declared-import-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "declared-import",
+      "channel": "canary",
+      "version": "2.11.11-canary.1",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "diagnosticWitnesses": {},
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "canary-declared-import.stdout",
+          "bytes": 68,
+          "sha256": "66026cd586786f69e3e50ebc340e329b41b69858c483cb3602657bd503a9a5bf"
+        },
+        "stderr": {
+          "file": "canary-declared-import.stderr",
+          "bytes": 140,
+          "sha256": "1e5266ce107075b51a1b2a46a81af74638eb6dd6ae5cded9f99b052c60568951"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "canary-declared-import-version.stdout",
+          "bytes": 17,
+          "sha256": "a470b2ebbe7fed1abc5d68836278463cccd0650104a771dff1ce5ca13d4c3a36"
+        },
+        "stderr": {
+          "file": "canary-declared-import-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "undeclared-import",
+      "channel": "stable",
+      "version": "2.11.10",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "diagnosticWitnesses": {
+        "@beep-boundary/unused": true,
+        "src/index.ts": true,
+        "cannot import package": true
+      },
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "stable-undeclared-import.stdout",
+          "bytes": 66,
+          "sha256": "5fe4e8ceeb73f3d5bea263905fa1f82e441681173276cd25f8bcc43eebd62b72"
+        },
+        "stderr": {
+          "file": "stable-undeclared-import.stderr",
+          "bytes": 481,
+          "sha256": "17a5e1c4d500c6fb5a606aa659c452a0582b63f7871b4bc80de59033483f72e8"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "stable-undeclared-import-version.stdout",
+          "bytes": 8,
+          "sha256": "759b5ce1324d3d54081cbca12840305a3decbd1f0faba2358b050578a6a75c17"
+        },
+        "stderr": {
+          "file": "stable-undeclared-import-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "undeclared-import",
+      "channel": "canary",
+      "version": "2.11.11-canary.1",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "diagnosticWitnesses": {
+        "@beep-boundary/unused": true,
+        "src/index.ts": true,
+        "cannot import package": true
+      },
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "canary-undeclared-import.stdout",
+          "bytes": 66,
+          "sha256": "5fe4e8ceeb73f3d5bea263905fa1f82e441681173276cd25f8bcc43eebd62b72"
+        },
+        "stderr": {
+          "file": "canary-undeclared-import.stderr",
+          "bytes": 481,
+          "sha256": "17a5e1c4d500c6fb5a606aa659c452a0582b63f7871b4bc80de59033483f72e8"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "canary-undeclared-import-version.stdout",
+          "bytes": 17,
+          "sha256": "a470b2ebbe7fed1abc5d68836278463cccd0650104a771dff1ce5ca13d4c3a36"
+        },
+        "stderr": {
+          "file": "canary-undeclared-import-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "relative-package-escape",
+      "channel": "stable",
+      "version": "2.11.10",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "diagnosticWitnesses": {
+        "src/index.ts": true,
+        "leaves the package": true
+      },
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "stable-relative-package-escape.stdout",
+          "bytes": 66,
+          "sha256": "5fe4e8ceeb73f3d5bea263905fa1f82e441681173276cd25f8bcc43eebd62b72"
+        },
+        "stderr": {
+          "file": "stable-relative-package-escape.stderr",
+          "bytes": 598,
+          "sha256": "f647ec4cc062514a28565a30563fcb5b34ca2155c6c265d120d4a24f70345edf"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "stable-relative-package-escape-version.stdout",
+          "bytes": 8,
+          "sha256": "759b5ce1324d3d54081cbca12840305a3decbd1f0faba2358b050578a6a75c17"
+        },
+        "stderr": {
+          "file": "stable-relative-package-escape-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "relative-package-escape",
+      "channel": "canary",
+      "version": "2.11.11-canary.1",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "diagnosticWitnesses": {
+        "src/index.ts": true,
+        "leaves the package": true
+      },
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "canary-relative-package-escape.stdout",
+          "bytes": 66,
+          "sha256": "5fe4e8ceeb73f3d5bea263905fa1f82e441681173276cd25f8bcc43eebd62b72"
+        },
+        "stderr": {
+          "file": "canary-relative-package-escape.stderr",
+          "bytes": 598,
+          "sha256": "f647ec4cc062514a28565a30563fcb5b34ca2155c6c265d120d4a24f70345edf"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "canary-relative-package-escape-version.stdout",
+          "bytes": 17,
+          "sha256": "a470b2ebbe7fed1abc5d68836278463cccd0650104a771dff1ce5ca13d4c3a36"
+        },
+        "stderr": {
+          "file": "canary-relative-package-escape-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "relative-in-package",
+      "channel": "stable",
+      "version": "2.11.10",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "diagnosticWitnesses": {},
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "stable-relative-in-package.stdout",
+          "bytes": 68,
+          "sha256": "66026cd586786f69e3e50ebc340e329b41b69858c483cb3602657bd503a9a5bf"
+        },
+        "stderr": {
+          "file": "stable-relative-in-package.stderr",
+          "bytes": 140,
+          "sha256": "1e5266ce107075b51a1b2a46a81af74638eb6dd6ae5cded9f99b052c60568951"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "stable-relative-in-package-version.stdout",
+          "bytes": 8,
+          "sha256": "759b5ce1324d3d54081cbca12840305a3decbd1f0faba2358b050578a6a75c17"
+        },
+        "stderr": {
+          "file": "stable-relative-in-package-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "relative-in-package",
+      "channel": "canary",
+      "version": "2.11.11-canary.1",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "diagnosticWitnesses": {},
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "canary-relative-in-package.stdout",
+          "bytes": 68,
+          "sha256": "66026cd586786f69e3e50ebc340e329b41b69858c483cb3602657bd503a9a5bf"
+        },
+        "stderr": {
+          "file": "canary-relative-in-package.stderr",
+          "bytes": 140,
+          "sha256": "1e5266ce107075b51a1b2a46a81af74638eb6dd6ae5cded9f99b052c60568951"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "canary-relative-in-package-version.stdout",
+          "bytes": 17,
+          "sha256": "a470b2ebbe7fed1abc5d68836278463cccd0650104a771dff1ce5ca13d4c3a36"
+        },
+        "stderr": {
+          "file": "canary-relative-in-package-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "dependency-tag-deny",
+      "channel": "stable",
+      "version": "2.11.10",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "diagnosticWitnesses": {
+        "public": true,
+        "private": true,
+        "denylist": true
+      },
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "stable-dependency-tag-deny.stdout",
+          "bytes": 66,
+          "sha256": "5fe4e8ceeb73f3d5bea263905fa1f82e441681173276cd25f8bcc43eebd62b72"
+        },
+        "stderr": {
+          "file": "stable-dependency-tag-deny.stderr",
+          "bytes": 688,
+          "sha256": "f69f0a8330a14cea6be62681139d1682dd57486650cb15d57b058c3f19d5416a"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "stable-dependency-tag-deny-version.stdout",
+          "bytes": 8,
+          "sha256": "759b5ce1324d3d54081cbca12840305a3decbd1f0faba2358b050578a6a75c17"
+        },
+        "stderr": {
+          "file": "stable-dependency-tag-deny-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "dependency-tag-deny",
+      "channel": "canary",
+      "version": "2.11.11-canary.1",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "diagnosticWitnesses": {
+        "public": true,
+        "private": true,
+        "denylist": true
+      },
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "canary-dependency-tag-deny.stdout",
+          "bytes": 66,
+          "sha256": "5fe4e8ceeb73f3d5bea263905fa1f82e441681173276cd25f8bcc43eebd62b72"
+        },
+        "stderr": {
+          "file": "canary-dependency-tag-deny.stderr",
+          "bytes": 688,
+          "sha256": "f69f0a8330a14cea6be62681139d1682dd57486650cb15d57b058c3f19d5416a"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "canary-dependency-tag-deny-version.stdout",
+          "bytes": 17,
+          "sha256": "a470b2ebbe7fed1abc5d68836278463cccd0650104a771dff1ce5ca13d4c3a36"
+        },
+        "stderr": {
+          "file": "canary-dependency-tag-deny-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "dependency-tag-allow",
+      "channel": "stable",
+      "version": "2.11.10",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "diagnosticWitnesses": {},
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "stable-dependency-tag-allow.stdout",
+          "bytes": 68,
+          "sha256": "66026cd586786f69e3e50ebc340e329b41b69858c483cb3602657bd503a9a5bf"
+        },
+        "stderr": {
+          "file": "stable-dependency-tag-allow.stderr",
+          "bytes": 140,
+          "sha256": "1e5266ce107075b51a1b2a46a81af74638eb6dd6ae5cded9f99b052c60568951"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "stable-dependency-tag-allow-version.stdout",
+          "bytes": 8,
+          "sha256": "759b5ce1324d3d54081cbca12840305a3decbd1f0faba2358b050578a6a75c17"
+        },
+        "stderr": {
+          "file": "stable-dependency-tag-allow-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "dependency-tag-allow",
+      "channel": "canary",
+      "version": "2.11.11-canary.1",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "diagnosticWitnesses": {},
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "canary-dependency-tag-allow.stdout",
+          "bytes": 68,
+          "sha256": "66026cd586786f69e3e50ebc340e329b41b69858c483cb3602657bd503a9a5bf"
+        },
+        "stderr": {
+          "file": "canary-dependency-tag-allow.stderr",
+          "bytes": 140,
+          "sha256": "1e5266ce107075b51a1b2a46a81af74638eb6dd6ae5cded9f99b052c60568951"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "canary-dependency-tag-allow-version.stdout",
+          "bytes": 17,
+          "sha256": "a470b2ebbe7fed1abc5d68836278463cccd0650104a771dff1ce5ca13d4c3a36"
+        },
+        "stderr": {
+          "file": "canary-dependency-tag-allow-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "dependency-tag-allow-mismatch",
+      "channel": "stable",
+      "version": "2.11.10",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "diagnosticWitnesses": {
+        "public": true,
+        "private": true,
+        "allowlist": true
+      },
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "stable-dependency-tag-allow-mismatch.stdout",
+          "bytes": 66,
+          "sha256": "5fe4e8ceeb73f3d5bea263905fa1f82e441681173276cd25f8bcc43eebd62b72"
+        },
+        "stderr": {
+          "file": "stable-dependency-tag-allow-mismatch.stderr",
+          "bytes": 722,
+          "sha256": "ba9820159dc6c90559b2eec83c7bd9af1697a780d59763bab52cd680d0c53fef"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "stable-dependency-tag-allow-mismatch-version.stdout",
+          "bytes": 8,
+          "sha256": "759b5ce1324d3d54081cbca12840305a3decbd1f0faba2358b050578a6a75c17"
+        },
+        "stderr": {
+          "file": "stable-dependency-tag-allow-mismatch-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "dependency-tag-allow-mismatch",
+      "channel": "canary",
+      "version": "2.11.11-canary.1",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "diagnosticWitnesses": {
+        "public": true,
+        "private": true,
+        "allowlist": true
+      },
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "canary-dependency-tag-allow-mismatch.stdout",
+          "bytes": 66,
+          "sha256": "5fe4e8ceeb73f3d5bea263905fa1f82e441681173276cd25f8bcc43eebd62b72"
+        },
+        "stderr": {
+          "file": "canary-dependency-tag-allow-mismatch.stderr",
+          "bytes": 722,
+          "sha256": "ba9820159dc6c90559b2eec83c7bd9af1697a780d59763bab52cd680d0c53fef"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "canary-dependency-tag-allow-mismatch-version.stdout",
+          "bytes": 17,
+          "sha256": "a470b2ebbe7fed1abc5d68836278463cccd0650104a771dff1ce5ca13d4c3a36"
+        },
+        "stderr": {
+          "file": "canary-dependency-tag-allow-mismatch-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "dependent-tag-deny",
+      "channel": "stable",
+      "version": "2.11.10",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "diagnosticWitnesses": {
+        "public": true,
+        "private": true,
+        "denylist": true
+      },
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "stable-dependent-tag-deny.stdout",
+          "bytes": 66,
+          "sha256": "5fe4e8ceeb73f3d5bea263905fa1f82e441681173276cd25f8bcc43eebd62b72"
+        },
+        "stderr": {
+          "file": "stable-dependent-tag-deny.stderr",
+          "bytes": 681,
+          "sha256": "4589296fff628fb8961ed1fba2db14d69f13d546e19cce28eec71ad88d406173"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "stable-dependent-tag-deny-version.stdout",
+          "bytes": 8,
+          "sha256": "759b5ce1324d3d54081cbca12840305a3decbd1f0faba2358b050578a6a75c17"
+        },
+        "stderr": {
+          "file": "stable-dependent-tag-deny-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "dependent-tag-deny",
+      "channel": "canary",
+      "version": "2.11.11-canary.1",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "diagnosticWitnesses": {
+        "public": true,
+        "private": true,
+        "denylist": true
+      },
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "canary-dependent-tag-deny.stdout",
+          "bytes": 66,
+          "sha256": "5fe4e8ceeb73f3d5bea263905fa1f82e441681173276cd25f8bcc43eebd62b72"
+        },
+        "stderr": {
+          "file": "canary-dependent-tag-deny.stderr",
+          "bytes": 681,
+          "sha256": "4589296fff628fb8961ed1fba2db14d69f13d546e19cce28eec71ad88d406173"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "canary-dependent-tag-deny-version.stdout",
+          "bytes": 17,
+          "sha256": "a470b2ebbe7fed1abc5d68836278463cccd0650104a771dff1ce5ca13d4c3a36"
+        },
+        "stderr": {
+          "file": "canary-dependent-tag-deny-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "dependent-tag-allow",
+      "channel": "stable",
+      "version": "2.11.10",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "diagnosticWitnesses": {},
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "stable-dependent-tag-allow.stdout",
+          "bytes": 68,
+          "sha256": "66026cd586786f69e3e50ebc340e329b41b69858c483cb3602657bd503a9a5bf"
+        },
+        "stderr": {
+          "file": "stable-dependent-tag-allow.stderr",
+          "bytes": 140,
+          "sha256": "1e5266ce107075b51a1b2a46a81af74638eb6dd6ae5cded9f99b052c60568951"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "stable-dependent-tag-allow-version.stdout",
+          "bytes": 8,
+          "sha256": "759b5ce1324d3d54081cbca12840305a3decbd1f0faba2358b050578a6a75c17"
+        },
+        "stderr": {
+          "file": "stable-dependent-tag-allow-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "dependent-tag-allow",
+      "channel": "canary",
+      "version": "2.11.11-canary.1",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "diagnosticWitnesses": {},
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "canary-dependent-tag-allow.stdout",
+          "bytes": 68,
+          "sha256": "66026cd586786f69e3e50ebc340e329b41b69858c483cb3602657bd503a9a5bf"
+        },
+        "stderr": {
+          "file": "canary-dependent-tag-allow.stderr",
+          "bytes": 140,
+          "sha256": "1e5266ce107075b51a1b2a46a81af74638eb6dd6ae5cded9f99b052c60568951"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "canary-dependent-tag-allow-version.stdout",
+          "bytes": 17,
+          "sha256": "a470b2ebbe7fed1abc5d68836278463cccd0650104a771dff1ce5ca13d4c3a36"
+        },
+        "stderr": {
+          "file": "canary-dependent-tag-allow-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "dependency-name-deny",
+      "channel": "stable",
+      "version": "2.11.10",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "diagnosticWitnesses": {
+        "public": true,
+        "private": true,
+        "denylist": true
+      },
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "stable-dependency-name-deny.stdout",
+          "bytes": 66,
+          "sha256": "5fe4e8ceeb73f3d5bea263905fa1f82e441681173276cd25f8bcc43eebd62b72"
+        },
+        "stderr": {
+          "file": "stable-dependency-name-deny.stderr",
+          "bytes": 890,
+          "sha256": "947b140fc4412656bf83795d88067f68359f8a15bf92a6a85ed5c684c83272a9"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "stable-dependency-name-deny-version.stdout",
+          "bytes": 8,
+          "sha256": "759b5ce1324d3d54081cbca12840305a3decbd1f0faba2358b050578a6a75c17"
+        },
+        "stderr": {
+          "file": "stable-dependency-name-deny-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "dependency-name-deny",
+      "channel": "canary",
+      "version": "2.11.11-canary.1",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "diagnosticWitnesses": {
+        "public": true,
+        "private": true,
+        "denylist": true
+      },
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "canary-dependency-name-deny.stdout",
+          "bytes": 66,
+          "sha256": "5fe4e8ceeb73f3d5bea263905fa1f82e441681173276cd25f8bcc43eebd62b72"
+        },
+        "stderr": {
+          "file": "canary-dependency-name-deny.stderr",
+          "bytes": 890,
+          "sha256": "947b140fc4412656bf83795d88067f68359f8a15bf92a6a85ed5c684c83272a9"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "canary-dependency-name-deny-version.stdout",
+          "bytes": 17,
+          "sha256": "a470b2ebbe7fed1abc5d68836278463cccd0650104a771dff1ce5ca13d4c3a36"
+        },
+        "stderr": {
+          "file": "canary-dependency-name-deny-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "transitive-dependency-deny",
+      "channel": "stable",
+      "version": "2.11.10",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "diagnosticWitnesses": {
+        "public": true,
+        "private": true,
+        "denylist": true
+      },
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "stable-transitive-dependency-deny.stdout",
+          "bytes": 66,
+          "sha256": "5fe4e8ceeb73f3d5bea263905fa1f82e441681173276cd25f8bcc43eebd62b72"
+        },
+        "stderr": {
+          "file": "stable-transitive-dependency-deny.stderr",
+          "bytes": 688,
+          "sha256": "f69f0a8330a14cea6be62681139d1682dd57486650cb15d57b058c3f19d5416a"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "stable-transitive-dependency-deny-version.stdout",
+          "bytes": 8,
+          "sha256": "759b5ce1324d3d54081cbca12840305a3decbd1f0faba2358b050578a6a75c17"
+        },
+        "stderr": {
+          "file": "stable-transitive-dependency-deny-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "transitive-dependency-deny",
+      "channel": "canary",
+      "version": "2.11.11-canary.1",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "diagnosticWitnesses": {
+        "public": true,
+        "private": true,
+        "denylist": true
+      },
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "canary-transitive-dependency-deny.stdout",
+          "bytes": 66,
+          "sha256": "5fe4e8ceeb73f3d5bea263905fa1f82e441681173276cd25f8bcc43eebd62b72"
+        },
+        "stderr": {
+          "file": "canary-transitive-dependency-deny.stderr",
+          "bytes": 688,
+          "sha256": "f69f0a8330a14cea6be62681139d1682dd57486650cb15d57b058c3f19d5416a"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "canary-transitive-dependency-deny-version.stdout",
+          "bytes": 17,
+          "sha256": "a470b2ebbe7fed1abc5d68836278463cccd0650104a771dff1ce5ca13d4c3a36"
+        },
+        "stderr": {
+          "file": "canary-transitive-dependency-deny-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "unrelated-denial",
+      "channel": "stable",
+      "version": "2.11.10",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "diagnosticWitnesses": {},
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "stable-unrelated-denial.stdout",
+          "bytes": 68,
+          "sha256": "66026cd586786f69e3e50ebc340e329b41b69858c483cb3602657bd503a9a5bf"
+        },
+        "stderr": {
+          "file": "stable-unrelated-denial.stderr",
+          "bytes": 140,
+          "sha256": "1e5266ce107075b51a1b2a46a81af74638eb6dd6ae5cded9f99b052c60568951"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "stable-unrelated-denial-version.stdout",
+          "bytes": 8,
+          "sha256": "759b5ce1324d3d54081cbca12840305a3decbd1f0faba2358b050578a6a75c17"
+        },
+        "stderr": {
+          "file": "stable-unrelated-denial-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "case": "unrelated-denial",
+      "channel": "canary",
+      "version": "2.11.11-canary.1",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "diagnosticWitnesses": {},
+      "fixtureSourcesUnchanged": true,
+      "fixtureTaskExecutions": 0,
+      "streams": {
+        "stdout": {
+          "file": "canary-unrelated-denial.stdout",
+          "bytes": 68,
+          "sha256": "66026cd586786f69e3e50ebc340e329b41b69858c483cb3602657bd503a9a5bf"
+        },
+        "stderr": {
+          "file": "canary-unrelated-denial.stderr",
+          "bytes": 140,
+          "sha256": "1e5266ce107075b51a1b2a46a81af74638eb6dd6ae5cded9f99b052c60568951"
+        }
+      },
+      "versionStreams": {
+        "stdout": {
+          "file": "canary-unrelated-denial-version.stdout",
+          "bytes": 17,
+          "sha256": "a470b2ebbe7fed1abc5d68836278463cccd0650104a771dff1ce5ca13d4c3a36"
+        },
+        "stderr": {
+          "file": "canary-unrelated-denial-version.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    }
+  ],
+  "counts": {
+    "cases": 24,
+    "positive": 10,
+    "negative": 14,
+    "fixtureTaskExecutions": 0,
+    "rawBytes": 13808
+  },
+  "sourceAndToolsUnchanged": true,
+  "networkIsolated": true,
+  "ownedFixturesRemoved": true,
+  "scope": "Actual offline synthetic boundary checks only; no Beep scan, quality suite, task execution, feature activation or tuple qualification."
+}
