@@ -320,9 +320,12 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("yeet git exec over a 
       const { origin, work, c0, commit } = yield* fixture();
       const c1 = yield* commit(work, "one.txt");
       yield* commit(origin, "base-only.txt");
-      expect(yield* resolveYeetRev(work, "HEAD")).toBe(c1);
-      expect(yield* resolveYeetMergeBase(work, "origin/main", "HEAD")).toBe(c0);
-      expect(yield* countYeetRevisions(work, "origin/main..HEAD")).toBe(1);
+      const head = yield* resolveYeetRev(work, "HEAD");
+      expect(head).toBe(c1);
+      const mergeBase = yield* resolveYeetMergeBase(work, "origin/main", "HEAD");
+      expect(mergeBase).toBe(c0);
+      const count = yield* countYeetRevisions(work, "origin/main..HEAD");
+      expect(count).toBe(1);
       const unknown = yield* Effect.flip(resolveYeetRev(work, "nope"));
       expect(unknown.message).toBe("git rev-parse --verify nope failed with exit code 128.");
       const uncounted = yield* Effect.flip(countYeetRevisions(work, "nope..HEAD"));
@@ -338,13 +341,15 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("yeet git exec over a 
       yield* git(work, "rm", "--quiet", "base.txt");
       yield* git(work, "commit", "--quiet", "--no-verify", "-m", "drop base");
       const pair = YeetChangedPathsQuery.make({ base: "origin/main", head: "HEAD" });
-      expect(yield* changedYeetPaths(work, pair)).toEqual(["a.txt", "b.txt", "base.txt"]);
-      expect(
-        yield* changedYeetPaths(work, YeetChangedPathsQuery.make({ ...pair, mergeBaseRange: true, diffFilter: "d" }))
-      ).toEqual(["a.txt", "b.txt"]);
-      expect(yield* changedYeetPaths(work, YeetChangedPathsQuery.make({ ...pair, pathspec: ["b.txt"] }))).toEqual([
-        "b.txt",
-      ]);
+      const pairPaths = yield* changedYeetPaths(work, pair);
+      expect(pairPaths).toEqual(["a.txt", "b.txt", "base.txt"]);
+      const rangePaths = yield* changedYeetPaths(
+        work,
+        YeetChangedPathsQuery.make({ ...pair, mergeBaseRange: true, diffFilter: "d" })
+      );
+      expect(rangePaths).toEqual(["a.txt", "b.txt"]);
+      const pathspecPaths = yield* changedYeetPaths(work, YeetChangedPathsQuery.make({ ...pair, pathspec: ["b.txt"] }));
+      expect(pathspecPaths).toEqual(["b.txt"]);
       const error = yield* Effect.flip(changedYeetPaths(work, YeetChangedPathsQuery.make({ ...pair, base: "nope" })));
       assertInclude(error.message, "git diff --name-only -z --no-relative nope HEAD failed with exit code 128.");
     })
@@ -355,11 +360,13 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("yeet git exec over a 
       const { work, context, git } = yield* fixture();
       // `switch -c feature origin/main` tracks origin/main, not the origin/feature Yeet pushes.
       yield* warnOnMismatchedPublishUpstream(context);
-      assertInclude(A.join(A.filter(yield* TestConsole.errorLines, P.isString), "\n"), "origin/main");
+      const trackedLines = yield* TestConsole.errorLines;
+      assertInclude(A.join(A.filter(trackedLines, P.isString), "\n"), "origin/main");
       yield* git(work, "branch", "--quiet", "--unset-upstream");
       yield* git(work, "switch", "--quiet", "--detach");
       yield* warnOnMismatchedPublishUpstream(context);
-      expect(A.filter(yield* TestConsole.errorLines, P.isString)).toHaveLength(1);
+      const detachedLines = yield* TestConsole.errorLines;
+      expect(A.filter(detachedLines, P.isString)).toHaveLength(1);
     })
   );
 
@@ -393,7 +400,8 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("yeet git exec over a 
             })
           )
         );
-        assertInclude(A.join(A.filter(yield* TestConsole.errorLines, P.isString), "\n"), "main");
+        const warned = yield* TestConsole.errorLines;
+        assertInclude(A.join(A.filter(warned, P.isString), "\n"), "main");
       })
   );
 

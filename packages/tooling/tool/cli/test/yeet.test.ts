@@ -1689,21 +1689,21 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           false
         );
 
-        expect(yield* runGitStatus(tmpDir)).toBe("M  vendor/lib.txt");
+        const stagedStatus = yield* runGitStatus(tmpDir);
+        expect(stagedStatus).toBe("M  vendor/lib.txt");
         const candidates = ["vendor/lib.txt", ".gitignore"];
         const ignoredByKit = yield* Effect.flatMap(Git, (git) =>
           git.checkIgnore(tmpDir, candidates, { noIndex: true })
         );
-        expect(ignoredByKit).toEqual(
-          yield* runGitOutputLines(tmpDir, [
-            "ls-files",
-            "--cached",
-            "--ignored",
-            "--exclude-standard",
-            "--",
-            ...candidates,
-          ])
-        );
+        const ignoredByGit = yield* runGitOutputLines(tmpDir, [
+          "ls-files",
+          "--cached",
+          "--ignored",
+          "--exclude-standard",
+          "--",
+          ...candidates,
+        ]);
+        expect(ignoredByKit).toEqual(ignoredByGit);
         expect(ignoredByKit).toEqual(["vendor/lib.txt"]);
       })
     );

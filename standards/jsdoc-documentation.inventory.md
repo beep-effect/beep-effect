@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-03T10:41:25.168Z
+Generated: 2026-11-05T23:31:36.356Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 170 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
-| publicModules | 3716 |
-| publicExports | 26271 |
+| publicModules | 3723 |
+| publicExports | 26322 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -84,7 +84,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 26 | `@beep/schema-org` | `packages/foundation/modeling/schema-org` | clean | 13 | 57 | 0 | 0 |
 | 27 | `@beep/semver` | `packages/foundation/modeling/semver` | clean | 6 | 23 | 0 | 0 |
 | 28 | `@beep/technical-drawing` | `packages/foundation/capability/technical-drawing` | clean | 19 | 224 | 0 | 0 |
-| 29 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 15 | 54 | 1 | 0 |
+| 29 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 15 | 56 | 1 | 0 |
 | 30 | `@beep/todox` | `apps/todox` | clean | 16 | 57 | 0 | 0 |
 | 31 | `@beep/toml` | `packages/foundation/modeling/toml` | clean | 9 | 68 | 0 | 0 |
 | 32 | `@beep/windows-secrets` | `packages/drivers/windows-secrets` | clean | 4 | 13 | 0 | 0 |
@@ -193,7 +193,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 135 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
 | 136 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 81 | 0 | 0 |
 | 137 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 54 | 262 | 0 | 0 |
-| 138 | `@beep/law-practice-domain` | `packages/law-practice/domain` | clean | 253 | 954 | 0 | 0 |
+| 138 | `@beep/law-practice-domain` | `packages/law-practice/domain` | clean | 255 | 982 | 0 | 0 |
 | 139 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
 | 140 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
 | 141 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
@@ -223,14 +223,14 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 165 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 35 | 123 | 2 | 0 |
 | 166 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
 | 167 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 28 | 62 | 0 | 0 |
-| 168 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 104 | 657 | 0 | 0 |
+| 168 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 109 | 677 | 0 | 0 |
 | 169 | `@beep/party-server` | `packages/party/server` | clean | 26 | 116 | 0 | 0 |
 | 170 | `@beep/workspace-server` | `packages/workspace/server` | clean | 12 | 31 | 0 | 0 |
 | 171 | `@beep/agents-client` | `packages/agents/client` | clean | 6 | 39 | 0 | 0 |
 | 172 | `@beep/agents-server` | `packages/agents/server` | clean | 11 | 42 | 0 | 0 |
 | 173 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
 | 174 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
-| 175 | `@beep/law-practice-server` | `packages/law-practice/server` | clean | 75 | 356 | 0 | 0 |
+| 175 | `@beep/law-practice-server` | `packages/law-practice/server` | clean | 75 | 357 | 0 | 0 |
 | 176 | `@beep/scratchpad` | `scratchpad` | clean | 1 | 5 | 0 | 0 |
 | 177 | `@beep/docket-intake` | `apps/docket-intake` | clean | 12 | 34 | 0 | 0 |
 | 178 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 92 | 0 | 0 |
@@ -404,20 +404,20 @@ Export findings:
 - `src/OpenClaw.ts:836` `OpenClawBackupConfig` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:908` `OpenClawGeneration` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:1270` `makeOpenClawGeneration` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1356` `renderOpenClawUnit` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1429` `renderOpenClawRunScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1531` `renderOpenClawGenerationTree` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1599` `renderOpenClawPreflightScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1734` `renderOpenClawStageScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1865` `renderOpenClawApplyScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1986` `renderOpenClawRollbackScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2139` `renderOpenClawDriftAuditScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2197` `renderOpenClawProbeScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2271` `renderOpenClawLiveAcceptanceScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2373` `renderOpenClawBackupShipScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2437` `OpenClawStackArgs` (class) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2524` `makeOpenClawStackArgsFromConfigValues` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2727` `OpenClawStack` (class) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1358` `renderOpenClawUnit` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1431` `renderOpenClawRunScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1533` `renderOpenClawGenerationTree` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1601` `renderOpenClawPreflightScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1736` `renderOpenClawStageScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1867` `renderOpenClawApplyScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1988` `renderOpenClawRollbackScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2141` `renderOpenClawDriftAuditScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2199` `renderOpenClawProbeScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2273` `renderOpenClawLiveAcceptanceScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2375` `renderOpenClawBackupShipScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2439` `OpenClawStackArgs` (class) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2526` `makeOpenClawStackArgsFromConfigValues` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2729` `OpenClawStack` (class) - 1 documentation section/link violation(s)
 
 ### @beep/repo-cli
 
@@ -471,8 +471,8 @@ Module findings:
 - `src/index.ts:1` (packageDocumentation) - 2 documentation section/link violation(s)
 
 Export findings:
-- `src/commands/Cache/Cache.command.ts:341` `runCacheWarm` (const) - 1 example import violation(s)
-- `src/commands/Cache/Cache.command.ts:539` `buildCacheDashboard` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:342` `runCacheWarm` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:540` `buildCacheDashboard` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.service.ts:112` `encodeCachePolicyBaselineText` (const) - 1 example import violation(s)
 - `src/commands/Ci/CiLane.ts:413` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
 - `src/commands/Ci/CiLane.ts:1570` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
@@ -481,16 +481,16 @@ Export findings:
 - `src/commands/Drawings/Drawings.intake.schemas.ts:304` `MessageFacts` (class) - 1 example import violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:354` `IntakeRecord` (class) - 1 example import violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:405` `IntakeResult` (class) - 1 example import violation(s)
-- `src/commands/Drawings/Drawings.intake.ts:627` `renderIntakeSummary` (const) - 1 example import violation(s)
+- `src/commands/Drawings/Drawings.intake.ts:629` `renderIntakeSummary` (const) - 1 example import violation(s)
 - `src/commands/Drawings/Drawings.measurements.schemas.ts:431` `CriticMeasurements` (class) - 1 example import violation(s)
-- `src/commands/Drawings/Drawings.measurements.ts:910` `measurementsMarkdown` (const) - 1 example import violation(s)
-- `src/commands/Explore/Atlas.ts:787` `explorationProjectionDriftPaths` (const) - 1 example import violation(s)
+- `src/commands/Drawings/Drawings.measurements.ts:914` `measurementsMarkdown` (const) - 1 example import violation(s)
+- `src/commands/Explore/Atlas.ts:788` `explorationProjectionDriftPaths` (const) - 1 example import violation(s)
 - `src/commands/Laws/FrozenGrantSet.ts:328` `runFrozenGrantSetRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/NoNativeRuntime.ts:628` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgeCheck.ts:606` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:628` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:732` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:1121` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:1124` `runBunAudit` (const) - 1 documentation section/link violation(s)
 - `src/commands/Runners/Runners.schemas.ts:120` `BakeConfig` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:167` `BakeReport` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:276` `BakePlan` (class) - 1 example import violation(s)

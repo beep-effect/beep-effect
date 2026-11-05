@@ -1818,13 +1818,14 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
       yield* detach(["verify", "--detach", "--json", "--job-max-runtime", "1h"]);
       yield* detach(["verify", "--detach"], Git.makeTest({ ...jobGitStubs, currentBranch: () => Effect.succeedNone }));
       process.argv = [process.execPath, "/repo/cli.ts", "wrong"];
-      expect(yield* detach(["verify", "--detach"]).pipe(Effect.flip)).toMatchObject({
-        message: "Cannot detach: original argv must begin with yeet.",
-      });
+      const wrongArgv = yield* detach(["verify", "--detach"]).pipe(Effect.flip);
+      expect(wrongArgv).toMatchObject({ message: "Cannot detach: original argv must begin with yeet." });
       process.argv = [process.execPath, "/repo/cli.ts"];
-      expect((yield* detach(["verify", "--detach"]).pipe(Effect.flip))._tag).toBe("YeetCommandError");
+      const shortArgv = yield* detach(["verify", "--detach"]).pipe(Effect.flip);
+      expect(shortArgv._tag).toBe("YeetCommandError");
       process.argv = [];
-      expect((yield* detach(["verify", "--detach"]).pipe(Effect.flip))._tag).toBe("YeetCommandError");
+      const emptyArgv = yield* detach(["verify", "--detach"]).pipe(Effect.flip);
+      expect(emptyArgv._tag).toBe("YeetCommandError");
       const refused = GitCommandError.make({
         kind: "failed",
         args: ["rev-parse", "--verify", "HEAD"],
@@ -1832,19 +1833,17 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
         exitCode: 1,
         stderr: "bad git coordinates\n",
       });
-      expect(
-        yield* detach(
-          ["verify", "--detach"],
-          Git.makeTest({ ...jobGitStubs, revParse: () => Effect.fail(refused) })
-        ).pipe(Effect.flip)
-      ).toMatchObject({ message: "bad git coordinates" });
+      const refusedRead = yield* detach(
+        ["verify", "--detach"],
+        Git.makeTest({ ...jobGitStubs, revParse: () => Effect.fail(refused) })
+      ).pipe(Effect.flip);
+      expect(refusedRead).toMatchObject({ message: "bad git coordinates" });
       const unreachable = GitCommandError.make({ kind: "failed", args: ["rev-parse"], cwd: "/repo", stderr: "" });
-      expect(
-        yield* detach(
-          ["verify", "--detach"],
-          Git.makeTest({ ...jobGitStubs, currentBranch: () => Effect.fail(unreachable) })
-        ).pipe(Effect.flip)
-      ).toMatchObject({ message: "Failed to read detached job git coordinates." });
+      const unreachableRead = yield* detach(
+        ["verify", "--detach"],
+        Git.makeTest({ ...jobGitStubs, currentBranch: () => Effect.fail(unreachable) })
+      ).pipe(Effect.flip);
+      expect(unreachableRead).toMatchObject({ message: "Failed to read detached job git coordinates." });
     })
   );
   it.effect(
@@ -1856,9 +1855,8 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
       const argv = ["monitor", "--until-ready", "--poll-interval", "60s", "--detach"];
       process.argv = [process.execPath, "/repo/cli.ts", "--", "yeet", ...argv];
       yield* runJobCommand(argv).pipe(Effect.provideService(Git, jobGit));
-      const record = O.getOrThrow(
-        A.findFirst(yield* launcher.list, (record) => A.contains(record.request.argv, "--poll-interval"))
-      );
+      const records = yield* launcher.list;
+      const record = O.getOrThrow(A.findFirst(records, (record) => A.contains(record.request.argv, "--poll-interval")));
       expect(record.request.argv).toEqual(["monitor", "--until-ready", "--poll-interval", "60s"]);
       const readFileString70 = yield* fs.readFileString(`${root}/launch.argv`);
       expect(readFileString70).toContain("monitor\n--until-ready\n--poll-interval\n60s");
