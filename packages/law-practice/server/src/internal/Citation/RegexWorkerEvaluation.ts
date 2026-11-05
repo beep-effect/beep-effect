@@ -3,6 +3,7 @@
  */
 
 import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as RegExp from "effect/RegExp";
@@ -13,10 +14,24 @@ import { makeCitationRegexProgram } from "./RegexProgram.ts";
 import { makeCitationRegexResult } from "./RegexResult.ts";
 import { CitationRegexWorkerFailure } from "./RegexWorkerProtocol.ts";
 import { CitationRegexEvaluationFailure } from "./RegexWorkerRpc.ts";
+import type { CitationRegexCapturePlan } from "./RegexProgram.ts";
 import type { CitationRegexWorkerJob } from "./RegexWorkerProtocol.ts";
 import type { CitationRegexWorkerStartup } from "./RegexWorkerRpc.ts";
 
 const nativeFailure = () => CitationRegexEvaluationFailure.make({ reason: "native-failed" });
+const projectNativeCaptures = Effect.fn("Citation.projectNativeCaptures")(function* (
+  plan: CitationRegexCapturePlan,
+  indices: ReadonlyArray<readonly [number, number] | undefined>
+) {
+  if (indices.length !== plan.physicalGroups + 1) return yield* nativeFailure();
+  const projected = A.replicate<readonly [number, number] | undefined>(undefined, plan.logicalGroups + 1);
+  projected[0] = indices[0];
+  for (const [physical, logical] of plan.closingOrder) {
+    const span = indices[physical];
+    if (span !== undefined) projected[logical] = span;
+  }
+  return projected;
+});
 /** Rebind exact native words/profile and collect a complete bounded result.
  * Parent process ownership supplies the hard deadline for synchronous RegExp.
  * This profile admits non-repeated captures; nullable programs are restricted
@@ -54,6 +69,7 @@ export const makeCitationRegexEvaluation = Effect.fn("Citation.makeRegexEvaluati
         );
       const encoded = yield* alphabet.prepare(program.sets, source.value.storage);
       const pattern = yield* compiler.render(program, encoded);
+      const captures = yield* compiler.capturePlan(program);
       const result = yield* makeCitationRegexResult(limits, program.groups, source.layout.pythonLength);
       const native = yield* Effect.try({
         try: () => new RegExp.RegExp(pattern, job.mode === "match" ? `${encoded.flags}y` : encoded.flags),
@@ -71,7 +87,8 @@ export const makeCitationRegexEvaluation = Effect.fn("Citation.makeRegexEvaluati
         );
         const whole = yield* Effect.fromOption(O.fromUndefinedOr(indices[0])).pipe(Effect.mapError(nativeFailure));
         if (whole[0] > whole[1] || (whole[0] === whole[1] && job.mode === "finditer")) return yield* nativeFailure();
-        return O.some(indices);
+        const projected = yield* projectNativeCaptures(captures, indices);
+        return O.some(projected);
       });
       const frame = yield* result.collect(pull, job.maxMatches);
       return frame.subarray(0, -1);

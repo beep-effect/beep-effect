@@ -869,3 +869,10 @@ from eyecite 2.7.6 helpers.extract_pin_cite, clean_pin_cite and
 POST_SHORT_CITATION_REGEX at the pinned revision above (Free Law Project,
 BSD-2-Clause). Existing CPython/regex parsing and native Unicode attributions
 apply to the profile observations and string operations.
+
+Logical capture reuse in RegexProgram.ts/RegexWorkerEvaluation.ts and
+regex-capture-reuse.json adapts regex 2023.12.25 V0's named-group identity and
+Info.private_groups behavior from regex/_regex_core.py. Its existing complete
+Apache-2.0/CNRI notices apply. CPython parser control observations retain the
+existing PSF attribution. Full-case/supra pattern observations derive from
+eyecite 2.7.6 regexes.py at the pinned revision (Free Law Project, BSD-2-Clause).

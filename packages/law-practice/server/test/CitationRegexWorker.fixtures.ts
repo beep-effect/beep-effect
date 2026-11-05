@@ -39,12 +39,14 @@ import type { CitationNativeExitCounts } from "./CitationNativeSpawner.fixtures.
 /** Shared actual runtime, controlled execution Clock and real cleanup observations. */
 export const setupCitationRegexRuntime = Effect.fn("RegexWorkerTest.runtime")(function* (
   kind: CitationNativeRuntimeKind = "bun",
-  producedTextUtf16?: number
+  producedTextUtf16?: number,
+  patternUtf16?: number
 ) {
   const defaults = (yield* defaultCitationEnginePolicy).limits;
   const limits = {
     ...defaults,
     producedTextUtf16: producedTextUtf16 ?? defaults.producedTextUtf16,
+    patternUtf16: patternUtf16 ?? defaults.patternUtf16,
     regexDeadline: Duration.millis(997),
   };
   const timer = yield* makeCitationNativeManualClock(limits.regexDeadline);
@@ -111,9 +113,14 @@ export const citationMetadataDeadlineText = () =>
 export const setupCitationRegexWorker = Effect.fn("RegexWorkerTest.setup")(function* (
   bindings: unknown,
   kind: CitationNativeRuntimeKind = "bun",
-  engineInput: unknown = "python-re"
+  engineInput: unknown = "python-re",
+  patternUtf16?: number
 ) {
-  const { limits, admission, observed, runtime, context } = yield* setupCitationRegexRuntime(kind);
+  const { limits, admission, observed, runtime, context } = yield* setupCitationRegexRuntime(
+    kind,
+    undefined,
+    patternUtf16
+  );
 
   const worker = yield* makeCitationRegexWorker(limits, runtime, bindings, engineInput).pipe(
     Effect.provideContext(context)
@@ -134,6 +141,17 @@ export const assertCitationWorkerCompositionReleased = Effect.fn("RegexWorkerTes
   expect(operations).toMatchObject({ active: 0, queued: 0 });
   const native = yield* admission.snapshot;
   expect(native).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+});
+/** Observe both independent native exit acknowledgement and released capacity. */
+export const assertCitationRegexRuntimeReleased = Effect.fn("RegexWorkerTest.runtimeReleased")(function* (
+  admission: CitationNativeProcessAdmission["Service"],
+  observed: Effect.Effect<CitationNativeExitCounts>,
+  calls: number
+) {
+  yield* observed.pipe(Effect.map((counts) => expect(counts).toEqual({ spawned: calls, confirmed: calls })));
+  yield* admission.snapshot.pipe(
+    Effect.map((state) => expect(state).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 }))
+  );
 });
 /** Budget refusal must still independently retire the expected native children. */
 export const assertCitationMetadataRefusal = Effect.fn("RegexWorkerTest.metadataRefusal")(function* <Value, E>(

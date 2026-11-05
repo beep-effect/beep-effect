@@ -337,3 +337,12 @@ history/evidence/2026-11-03-edition-inference.md.
   shared installer now derives that bound from the existing schema's encoded
   side. Strict boolean conditions use explicit comparisons, retaining formatter
   rules without type assertions, suppressions or policy-floor changes.
+
+- 2026-11-05 capture reuse: V0's nested alias parse nodes use negative private
+  group IDs, while the public group map reuses a positive logical ID. Reading
+  the actual pinned Info.private_groups mapping made the independent plan
+  oracle precise. Group-closing order is required for nested aliases; choosing
+  the highest physical index would select the inner value incorrectly. Fallow
+  flagged compound capture validation/projection and repeated release assertions;
+  separate source checks and a shared real-exit/capacity assertion retain proof
+  without suppressions or changed floors.

@@ -13,7 +13,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
-import { setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
+import { assertCitationRegexRuntimeReleased, setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationMetadataStrings");
@@ -86,11 +86,8 @@ export const replayCitationMetadataStrings = Effect.fn("MetadataStringsTest.repl
     expect(actual, `source row ${row.id}`).toEqual(row.parenthetical);
   }
   expect(A.filter(selected, (row) => row.yearSearch)).toHaveLength(full ? 989 : 25);
-  const observed = yield* setup.observed.snapshot;
   const calls = full ? 989 : 25;
-  expect(observed).toEqual({ spawned: calls, confirmed: calls });
-  const admission = yield* setup.admission.snapshot;
-  expect(admission).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+  yield* assertCitationRegexRuntimeReleased(setup.admission, setup.observed.snapshot, calls);
 });
 const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
 /** Additional retained copy refusal precedes matching; early source return is distinct. */

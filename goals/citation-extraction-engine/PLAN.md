@@ -963,3 +963,11 @@ accounting checker.
   Shared publication/string/test owners retain prior metadata behavior. Full
   hosted replay and remaining case helpers stay open; see the pin-extraction
   evidence receipt.
+
+- 2026-11-05: V0 named capture reuse now retains logical groups through a
+  bounded closing-order projection in the existing worker. Source corpus:
+  27 patterns and 1215 observations; each actual runtime confirms 73 smoke/
+  refusal exits. Full-case and supra patterns qualify under an explicit existing
+  8192-unit policy; the default 4096-unit refusal remains. Repeated captures,
+  full metadata composition and broader acceptance stay open. See the logical
+  capture-reuse evidence receipt.

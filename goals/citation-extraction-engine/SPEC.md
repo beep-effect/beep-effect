@@ -1490,3 +1490,13 @@ unverified model state. Source string-token errors follow parenthetical cleanup.
 Existing admitted metadata composition, native string processing, worker Scope,
 captured deadlines and invocation budgets own the operation. Full-case V0
 repeated-name patterns and final service integration remain separate duties.
+
+### V0 logical capture reuse (2026-11-05)
+
+Source logical group identities remain distinct from physical JavaScript
+capture occurrences. The compiler derives their bounded closing-order mapping;
+the worker applies it before the existing logical-result codec. Only the
+admitted non-repeated capture profile is qualified. Source bytes, fingerprints,
+group limits, timing and retirement remain owned by existing stages. Full-case
+pattern qualification uses an explicitly supplied existing 8192-unit policy;
+the default refusal and all absolute ceilings remain unchanged.

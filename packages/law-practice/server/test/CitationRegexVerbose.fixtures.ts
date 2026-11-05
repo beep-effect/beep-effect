@@ -64,9 +64,11 @@ const loadCitationRegexVerbose = Effect.fn("VerboseTest.load")(function* () {
 });
 /** Compare original-source success/error/profile facts without native execution. */
 export const assertCitationRegexProgramProfiles = Effect.fn("RegexProgramTest.profiles")(function* (
-  patterns: ReadonlyArray<CitationRegexProbePattern>
+  patterns: ReadonlyArray<CitationRegexProbePattern>,
+  patternMaximum?: number
 ) {
-  const limits = (yield* defaultCitationEnginePolicy).limits;
+  const defaults = (yield* defaultCitationEnginePolicy).limits;
+  const limits = { ...defaults, patternUtf16: patternMaximum ?? defaults.patternUtf16 };
   for (const engine of CitationRegexEngine.literals) {
     const compiler = yield* makeCitationRegexProgram(limits, engine);
     for (const row of patterns) {

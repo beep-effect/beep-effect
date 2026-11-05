@@ -12,6 +12,8 @@ import * as Effect from "effect/Effect";
 import { constVoid } from "effect/Function";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as MutableList from "effect/MutableList";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -173,18 +175,18 @@ class GrammarState extends S.Opaque<GrammarState, { readonly brand: unique symbo
     })
   )
 ) {}
+const sequentialCapture = (state: GrammarState, token: CitationRegexProgramToken) =>
+  token.value === 0 || token.value === state.groups + 1 || (token.value <= state.groups && Str.isNonEmpty(token.name));
 const openGrammar = (
   state: GrammarState,
   token: CitationRegexProgramToken,
   names: typeof ProgramShape.Type.names
 ): O.Option<GrammarState> => {
-  const groups = token.value === 0 ? state.groups : state.groups + 1;
-  if (token.value !== 0 && token.value !== groups) return O.none();
-  let named = state.named;
-  if (Str.isNonEmpty(token.name)) {
-    if (!O.exists(R.get(names, token.name), (group) => group === token.value)) return O.none();
-    named++;
-  }
+  if (!sequentialCapture(state, token)) return O.none();
+  const hasName = Str.isNonEmpty(token.name);
+  if (hasName && !O.exists(R.get(names, token.name), (group) => group === token.value)) return O.none();
+  const named = token.value > state.groups && hasName ? state.named + 1 : state.named;
+  const groups = Num.max(state.groups, token.value);
   return O.some(GrammarState.make({ depth: state.depth + 1, groups, named, quantifiable: false }));
 };
 const newlineAtoms = (sets: CitationRegexAtomSets) => {
@@ -238,7 +240,7 @@ export class CitationRegexProgram extends S.Opaque<CitationRegexProgram, { reado
       validGrammar,
       $I.annote("ProgramGrammar", {
         description:
-          "Balanced groups, sequential capture identities, name bindings, atom references and LF predicates.",
+          "Balanced groups, sequential source capture identities, explicit named reuse, atom references and LF predicates.",
       })
     )
   ).pipe(
@@ -247,6 +249,40 @@ export class CitationRegexProgram extends S.Opaque<CitationRegexProgram, { reado
         "Data-only native-point grammar and profile; execution requires reviewed descriptor admission and containment.",
     })
   )
+) {}
+const CaptureGroup = S.Natural.check(S.isLessThanOrEqualTo(max.patternUtf16));
+const CaptureOccurrence = S.Tuple([CaptureGroup, CaptureGroup]);
+/** Source group projection in lexical closing order; no execution authority.
+ * @internal @category models @since 0.0.0
+ */
+export class CitationRegexCapturePlan extends S.Opaque<CitationRegexCapturePlan, { readonly brand: unique symbol }>()(
+  S.Struct({
+    physicalGroups: CaptureGroup,
+    logicalGroups: CaptureGroup,
+    closingOrder: S.Array(CaptureOccurrence).check(S.isMaxLength(max.patternUtf16)),
+  })
+    .check(
+      S.makeFilter(
+        (plan) =>
+          plan.closingOrder.length === plan.physicalGroups &&
+          plan.logicalGroups <= plan.physicalGroups &&
+          A.dedupe(A.map(plan.closingOrder, (row) => row[0])).length === plan.physicalGroups &&
+          A.every(
+            plan.closingOrder,
+            ([physical, logical]) =>
+              physical > 0 && physical <= plan.physicalGroups && logical > 0 && logical <= plan.logicalGroups
+          ),
+        $I.annote("CapturePlanCoherence", {
+          description:
+            "Every physical group occurs once and maps to a present source group; zero-group plans are empty.",
+        })
+      )
+    )
+    .pipe(
+      $I.annoteSchema("CitationRegexCapturePlan", {
+        description: "Bounded physical-to-source capture occurrences, visited when each group closes.",
+      })
+    )
 ) {}
 const ProgramType = S.toType(CitationRegexProgram);
 const AlphabetType = S.toType(CitationRegexAlphabetText);
@@ -282,9 +318,10 @@ type ParseFailure = CitationRegexTranslationFailure | CitationSafetyLimitExceede
 // A render plan measures variable output before constructing it. These closures
 // are local implementation values and never enter a worker request or program.
 const fixedRender = (text: string) => ({ units: Str.length(text), build: () => text });
-const openRender = (token: CitationRegexProgramToken) => {
+const openRender = (token: CitationRegexProgramToken, names: MutableHashSet.MutableHashSet<string>) => {
   if (token.value === 0) return fixedRender("(?:");
-  if (Str.isEmpty(token.name)) return fixedRender("(");
+  if (Str.isEmpty(token.name) || MutableHashSet.has(names, token.name)) return fixedRender("(");
+  MutableHashSet.add(names, token.name);
   return { units: 4 + Str.length(token.name), build: () => `(?<${token.name}>` };
 };
 const repeatRender = (token: CitationRegexProgramToken) => {
@@ -303,10 +340,14 @@ const endRender = (atom: string) => {
   const suffix = "?(?![\\s\\S]))";
   return { units: 3 + Str.length(atom) + Str.length(suffix), build: () => `(?=${atom}${suffix}` };
 };
-const renderToken = (alphabet: CitationRegexAlphabetText, token: CitationRegexProgramToken) =>
+const renderToken = (
+  alphabet: CitationRegexAlphabetText,
+  token: CitationRegexProgramToken,
+  names: MutableHashSet.MutableHashSet<string>
+) =>
   Match.value(token.kind).pipe(
     Match.when("atom", () => renderAtom(alphabet, token).pipe(Effect.map(fixedRender))),
-    Match.when("open", () => Effect.succeed(openRender(token))),
+    Match.when("open", () => Effect.succeed(openRender(token, names))),
     Match.when("lookahead", () => Effect.succeed(fixedRender("(?="))),
     Match.when("close", () => Effect.succeed(fixedRender(")"))),
     Match.when("alternative", () => Effect.succeed(fixedRender("|"))),
@@ -599,7 +640,8 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
         index++;
         yield* skipNested();
       }
-      if (Str.isEmpty(name) || R.has(names, name)) return yield* unsupported();
+      if (Str.isEmpty(name) || (categories.engine !== "python-regex-v0" && R.has(names, name)))
+        return yield* unsupported();
       index++;
       return name;
     });
@@ -624,7 +666,7 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       yield* skipNested();
       if (peek() !== 60) return yield* unsupported();
       const name = yield* captureName();
-      const group = ++groups;
+      const group = O.getOrElse(R.get(names, name), () => ++groups);
       names = R.set(names, name, group);
       return { group, name, assertion: false };
     });
@@ -732,6 +774,34 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       nullableMultiRepeat: profile.nullableMultiRepeat,
     });
   }, timed);
+  const capturePlan = Effect.fn("Citation.planRegexCaptures")(function* (program: CitationRegexProgram) {
+    yield* S.decodeEffect(ProgramType, { onExcessProperty: "error" })(program).pipe(Effect.mapError(unsupported));
+    const stack = MutableList.make<typeof CaptureOccurrence.Type>();
+    const closing = MutableList.make<typeof CaptureOccurrence.Type>();
+    let physicalGroups = 0;
+    const open = Effect.fn("Citation.openPhysicalCapture")(function* (token: CitationRegexProgramToken) {
+      const physical = token.value === 0 ? 0 : ++physicalGroups;
+      if (physicalGroups > limits.patternUtf16) return yield* budget();
+      MutableList.prepend(stack, [physical, token.value]);
+    });
+    const close = Effect.fn("Citation.closePhysicalCapture")(function* () {
+      const occurrence = MutableList.take(stack);
+      if (occurrence === MutableList.Empty) return yield* unsupported();
+      if (occurrence[0] > 0) MutableList.append(closing, occurrence);
+    });
+    for (const token of program.tokens) {
+      yield* Match.value(token.kind).pipe(
+        Match.whenOr("open", "lookahead", () => open(token)),
+        Match.when("close", close),
+        Match.orElse(() => Effect.void)
+      );
+    }
+    return CitationRegexCapturePlan.make({
+      physicalGroups,
+      logicalGroups: program.groups,
+      closingOrder: MutableList.takeAll(closing),
+    });
+  }, timed);
   const render = Effect.fn("Citation.renderRegexProgram")(function* (
     program: CitationRegexProgram,
     alphabet: CitationRegexAlphabetText
@@ -741,13 +811,14 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
     if (!sameSets(program.sets, alphabet.sourceSets)) return yield* unsupported();
     let pattern = "";
     let index = 0;
+    const names = MutableHashSet.empty<string>();
     for (const token of program.tokens) {
       if (index++ % 128 === 0) yield* Effect.yieldNow;
-      const fragment = yield* renderToken(alphabet, token);
+      const fragment = yield* renderToken(alphabet, token, names);
       if (fragment.units > limits.patternUtf16 - Str.length(pattern)) return yield* budget();
       pattern += fragment.build();
     }
     return pattern;
   }, timed);
-  return { engine: categories.engine, compile, render };
+  return { engine: categories.engine, compile, render, capturePlan };
 });
