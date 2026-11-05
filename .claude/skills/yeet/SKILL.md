@@ -458,20 +458,20 @@ comments exist). Deep review is on-demand:
 
 `yeet publish` is push-first by default (push-first-publish, 2026-10-05):
 
-- Gate before the push: cheap-gates tier + head-install preflight. The schema-catalog
-  scan holds weighted admission for its measured memory cost. If admission or
-  local gates wait ten minutes, use the hosted escape in AGENTS.md.
-- After the push: `gh pr create --draft`, `ready-for-heavy` label (skipped on
-  docs-only diffs and on PRs that already existed), provenance stamp, then
-  `monitor --until-ready --detach` is submitted and publish exits with the PR
-  URL and job id. `--monitor` stays attached instead (opt-in).
+- Gate before the push: cheap-gates + head-install preflight (the schema-catalog
+  scan holds weighted admission). Admission or gates waiting ten minutes: stop and
+  run `yeet open` on the committed HEAD (same push and PR tail, no local gate).
+- After the push: draft PR (REST create; `--body-file <md>` replaces the commit-log
+  summary), `ready-for-heavy` label (skipped on docs-only diffs and on PRs that
+  already existed), provenance stamp, then `monitor --until-ready --detach` is
+  submitted and publish exits with the PR URL and job id. `--monitor` stays
+  attached. Never `gh pr create` or `gh pr edit --body*` (footer lost): use
+  `yeet open`, `--body-file`, or `yeet gh pr body <n> --body-file <md>`.
 - `--no-pr` pushes without a PR and warns: `check.yml` runs only on
   `pull_request`, so no hosted checks run until a PR exists.
-- `--prove-first` restores the previous proof order (full proof + CI parity
-  before the push). It is the only way to put the full proof on the publish
-  path. `--push-only` still pushes an already-proven commit. Both share the
-  same draft, label, and detached-monitor tail as the default. `--fast` and
-  `--start-pr-early` no longer exist.
+- `--prove-first` (full proof + CI parity before the push) is the only way to
+  put the full proof on the publish path; `--push-only` pushes an
+  already-proven commit. Both share the default's draft, label and monitor tail.
 - `bun run audit:github pre-push` remains the named full local fallback for
   secrets, security, SAST, Nix, and any lane that must be proven outside Yeet.
 

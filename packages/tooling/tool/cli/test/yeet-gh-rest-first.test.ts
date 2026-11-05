@@ -32,6 +32,7 @@ import {
   latestCheckRunsByName,
   provideYeetGhLogin,
   recordInheritedRedsWithRest,
+  replacePullRequestBodyWithRest,
   spliceYeetInheritedRedsSection,
   YeetGhGateFacts,
   YeetReadyInheritedRed,
@@ -353,6 +354,35 @@ const pr = (overrides: Partial<Parameters<typeof GithubPullRequestRecord.make>[0
     updatedAt: DateTime.makeUnsafe("2026-10-06T16:00:00Z"),
     ...overrides,
   });
+
+describe("yeet gh pr body", () => {
+  const footer = "<!-- yeet-provenance:start -->\nfooter\n<!-- yeet-provenance:end -->\n";
+  const fakeRest = (body: string, writes: Ref.Ref<ReadonlyArray<string>>) => ({
+    pullRequest: () => Effect.succeed(pr({ body })),
+    updatePullRequest: (_number: number, update: { readonly body?: string | undefined }) =>
+      Ref.update(writes, A.append(update.body ?? "")).pipe(Effect.as(pr({ body: update.body ?? "" }))),
+  });
+
+  it.effect("writes the new body with the live footer kept", () =>
+    Effect.gen(function* () {
+      const writes = yield* Ref.make<ReadonlyArray<string>>([]);
+      const kept = yield* replacePullRequestBodyWithRest(fakeRest(`Old\n\n${footer}`, writes), 1501, "New summary");
+      expect(kept).toBe(true);
+      const got = yield* Ref.get(writes);
+      expect(got).toEqual([`New summary\n\n${footer}`]);
+    })
+  );
+
+  it.effect("reports a body that had no footer to keep", () =>
+    Effect.gen(function* () {
+      const writes = yield* Ref.make<ReadonlyArray<string>>([]);
+      const kept = yield* replacePullRequestBodyWithRest(fakeRest("Old", writes), 1501, "New summary\n");
+      expect(kept).toBe(false);
+      const got = yield* Ref.get(writes);
+      expect(got).toEqual(["New summary"]);
+    })
+  );
+});
 
 describe("inherited-red body reconciliation", () => {
   const entries = [YeetReadyInheritedRed.make({ check: "Lint", attribution: "inherited from main" })];

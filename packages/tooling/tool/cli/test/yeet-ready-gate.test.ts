@@ -22,6 +22,7 @@ import {
   ProofJobUnit,
   parseYeetReadyInheritedRed,
   RepoRunContext,
+  readPullRequestForReadyStampingFooterForTesting,
   readYeetReviewLaneLedger,
   recordInheritedRedsWithRest,
   reviewerRequestPushable,
@@ -324,6 +325,39 @@ describe("yeet ready --inherited decision (S11)", () => {
     assertNone(parseYeetReadyInheritedRed("Lint"));
     assertNone(parseYeetReadyInheritedRed("=red on main"));
   });
+});
+
+describe("yeet ready provenance stamp", () => {
+  it.effect("records the session and re-asserts the footer once across the gate's two reads", () =>
+    Effect.gen(function* () {
+      const stamped = yield* Ref.make(false);
+      const stamps = yield* Ref.make<ReadonlyArray<number>>([]);
+      const read = readPullRequestForReadyStampingFooterForTesting({
+        read: () => Effect.succeed(prView()),
+        stamp: (_context, prNumber) => Ref.update(stamps, A.append(prNumber)),
+        stamped,
+      });
+      yield* read(context);
+      yield* read(context);
+      const got = yield* Ref.get(stamps);
+      expect(got).toEqual([42]);
+    })
+  );
+
+  it.effect("stamps nothing when the branch has no pull request", () =>
+    Effect.gen(function* () {
+      const stamps = yield* Ref.make(0);
+      const read = readPullRequestForReadyStampingFooterForTesting({
+        read: () => Effect.succeed(noPullRequest),
+        stamp: () => Ref.update(stamps, (n) => n + 1),
+        stamped: yield* Ref.make(false),
+      });
+      const value = yield* read(context);
+      expect(value).toBe(noPullRequest);
+      const got = yield* Ref.get(stamps);
+      expect(got).toBe(0);
+    })
+  );
 });
 
 describe("spliceYeetInheritedRedsSection", () => {
