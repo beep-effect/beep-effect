@@ -17,7 +17,7 @@ import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
-import { expect } from "@effect/vitest";
+import { expect, vi } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -237,6 +237,31 @@ const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (fraction = "0
   const reconcile = () => reader.reconcile(selection, event.eventId);
   return { sql, sender, selection, reconcile, reader, event, mode, reads, intake, config, policy, backend, client };
 });
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("refuses to verify visibility when the original wire metadata cannot be decoded", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      yield* f.sender.send(f.selection);
+      const cause = NativeReadbackTestOperationError.make({ cause: "unreadable native wire metadata" });
+      const decode = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          vi.spyOn(Protobuf.Reader.prototype, "bytes").mockImplementationOnce(() => {
+            throw cause;
+          })
+        ),
+        (spy) => Effect.sync(() => spy.mockRestore())
+      );
+      const error = yield* f.reconcile().pipe(Effect.flip);
+      expect(error.reason).toBe("encoding");
+      expect(decode).toHaveBeenCalledTimes(1);
+      const reads = yield* Ref.get(f.reads);
+      expect(reads).toBe(0);
+      const state = yield* f.sender.ledger.state(f.event.eventId);
+      expect(state).toMatchObject({ value: { state: "accepted-unverified" } });
+    })
+  )
+);
+
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect(
     "verifies the original wire metadata before persisting visible and does not downgrade historical proof",

@@ -1,5 +1,22 @@
 # Friction and opportunities
 
+## Captured output lost at timeout, 2026-11-03
+
+Heavy / Lint Policy on #2686 timed out in `knowledge doctor ci` after its
+unchanged 900,000 ms budget. The timeout branch discarded all accumulated
+output, unlike the late-exit branch that already prints a bounded tail. The
+completed log identifies neither the last doctor phase nor the cause; the
+runner's host-wide samples show no swapping and ample available memory, which
+does not establish a per-command cause. A comparable successful run completed
+the doctor step in about 380 seconds.
+
+Preserve at most 2,000 trailing characters before interruption, even after a
+normal capture prefix fills. Add real subprocess regressions for stdout past
+the capture limit and stderr at timeout. Keep deadline failure and cleanup
+semantics unchanged. The source omission is established by inspection; hosted
+proof of the repair and the underlying doctor timeout diagnosis remain pending.
+No local verify, publish or package suite was run, per the operator's instruction.
+
 ## Global-input exclusion control, 2026-11-02
 
 The first native configuration experiment expected a child task to reuse after
@@ -857,3 +874,126 @@ look like useful zero-work evidence. Replace the fallback traversal with
 required schema-first envelopes, keep explicit empty arrays valid, and test
 malformed metadata plus synthetic payload redaction through typed failures.
 This belongs in the existing source-range repair PR, before acceptance.
+
+### 2026-11-03 — keep the adoption queue aligned with accepted packages
+
+- Accepted main added 36 executable computations after the published population.
+  A configured cache flag and an old workspace-wide script-map digest cannot
+  decide whether those computations are safe to reuse.
+- Consume the existing Cache census, retain the prior reviewed population, and
+  recheck literal wrappers and effective configuration. Three new source-writing
+  fixers remain fresh; their pure lint counterparts still need qualification.
+- Consume the existing economics report rather than attributing its lint/test
+  repairs to cache hits. Keep preview measurements separate from the absent
+  final full-week verdict and from any new cache-specific before/after proof.
+
+
+### 2026-11-03 — distinguish the preview from later repair effects
+
+- Review #2683 found that the consumer incorrectly described the window-4
+  preview as including later lint and unit-layout repairs. The owning plan
+  states that the census used the old layout.
+- Bind attribution to the measurement window and repair timing before writing
+  a benefit claim. This preview measures no repair or Turbo speed-up; the
+  Test Unit re-bin gain remains unobserved. Correct the plan, receipt and PR
+  description together, retaining the owning source hashes and measurements.
+
+
+### 2026-11-03 — Explicit wrappers left in the disposition queue
+
+The accepted-source inventory still listed the website dev server, its fixer
+and the live Bun audit as pending even though their literal commands and
+existing disabled-cache configuration support whole-task freshness. A changed
+workspace script-map digest is not a semantic task review. The new explicit
+freshness report resolves these three aliases against their implementations,
+effective configuration and accepted source bytes. During each population
+reconciliation, enumerate remaining service/fixer/audit candidates and follow
+the actual command before carrying a disposition forward. Their pure
+prerequisites still need qualification; this review changes no runtime setting.
+
+
+### 2026-11-03 — Installed fleet scanner lagged the CLI-kit move
+
+A deployed-boundary refresh found the workstation's installed `fleet.py` still
+looking only at the retired repo-cli policy path after accepted #2669. It
+reported four current checkouts as legacy. The accepted source already handles
+both paths; a backed-up atomic refresh corrected read-only discovery without
+restarting the adapter or applying enrollment. Include installed helper source
+parity in package-layout migration handoffs. Refresh the needed helper
+independently so maintenance does not activate a later opt-in signing extension.
+The receipt preserves the source hashes and the 38-checkout before/after plan.
+
+
+### 2026-11-03 — Configured task graphs omit script-only entrypoints
+
+The real `turbo query` catalogue on both pinned clients exposes 1,799 script
+entrypoints outside the requested configured graph. All match manifest names
+and literal command bytes. The earlier 2,436-executable projection remained a
+useful graph census, but the nested-command obligation needed an explicit
+complete inventory. The new receipt names every additional entrypoint and
+1,309 literal wrapper-call relationships without inventing execution or
+equivalence. Use the manifest/query join during future census refreshes, and
+retain the remaining role and dynamic-caller reviews as unfinished work.
+The first query selected unnecessary fields and reached its one-MiB bound;
+reducing fields preserved the budget and captured the complete needed catalogue.
+
+
+### 2026-11-03 — Record capture guard phases explicitly
+
+Review [#2683](https://github.com/beep-effect/beep-effect/pull/2683#discussion_r4457136459)
+found that the committed catalogue reported aggregate binding checks without
+separate pre/post receipts. A bounded metadata replay now emits each census
+digest, observed binding digest, count and timestamp, plus the private receipt's
+digest and retention reference. Successful assertions should emit their phase
+identity and observed values when they are part of an auditable capture contract.
+The original captures and refusal remain retained; no historical phase was invented.
+### 2026-11-03 — distinguish doctor timeout phases from mint context
+
+- Hosted policy retry job 126142873504 preserved the new timeout tail, but its
+  last output was the normal non-mint gate-selection message. It then exceeded
+  900,000 ms. That message does not establish an authentication failure, and
+  the timed-out operation remains unknown. The same command in successful
+  policy job 125996929042 took about 380.5 seconds; equivalent doctor code and
+  nearly equal tracked corpus sizes do not establish the cause of the spread.
+- Emit fourteen fixed phase labels to CI stderr from the live check. The bounded
+  timeout tail can then distinguish archive, scan and comparison work without
+  logging paths, refs, document contents, findings or credentials. Preserve
+  the deadline and fail-closed baseline/mint rules; instrumentation is not a
+  timeout fix or hosted-green proof. Local quality runs remain operator-skipped.
+
+
+### 2026-11-03 — assert warnings emitted by the current operation
+
+- Hosted repo-cli-2 job 126178598812 caught a console-isolation assumption
+  after the CI phase diagnostic change: the lease-warning case expected two
+  errors but read 35, including earlier live-doctor progress messages retained
+  by the shared test console. This is a newly triggered test failure, not an
+  infrastructure failure or a passing result.
+- Capture the preceding console length and assert only the lines emitted by
+  this case. Preserve the exact count of two, both failure-message checks and
+  process-capture restoration. Do not filter away unexpected new messages or
+  increase the expected count to match the diagnostic implementation. Push the
+  correction for fresh hosted proof; no local suite was started.
+
+
+### 2026-11-03 — label the first cached history read
+
+- Review discussion 4460122302 found that `scanKnowledgeDoctorTree` already
+  reads `tree.pathRemovals`; a later progress label described only a cached
+  second read. A history stall would incorrectly appear as `scan-tree`.
+- Resolve the same cached history effect under `read-removals` before calling
+  the scan, then reuse its value for baseline comparison. Preserve its Git
+  arguments, optional-evidence fallback, cache and gate semantics. This repairs
+  the diagnostic attribution; it does not establish the timeout root cause.
+
+
+### 2026-11-03 — map captured console output before the assertion helper
+
+- Hosted Check job 126192712570 found one introduced `yieldInCallArgument`
+  diagnostic in the warning-test correction. The behavioral shard passed,
+  but its helper call yielded the console effect directly as an argument.
+- Map `TestConsole.errorLines` through the existing curried `A.drop` helper.
+  Keep the preceding snapshot, exact two-warning count, message checks and
+  spy restoration. This fixes the Effect diagnostic without changing the
+  tested behavior. Push for fresh hosted Check; do not infer compile proof
+  from the earlier passing runtime tests or run a competing local suite.

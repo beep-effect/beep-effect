@@ -768,6 +768,107 @@ legacy prefixes do not. Original reports and the prior checkpoint remain retaine
 under their exact published source head. No local quality suite or qualification
 ran; the feature stays disabled and pending.
 
+
+### Accepted-source population and economics checkpoint, 2026-11-03
+
+[The census checkpoint](research/accepted31e-population-checkpoint-2026-11-03.json)
+binds accepted main `31e2ac20f3`, 194 workspaces and 2,436 executable
+computations. All 458 source bindings match. The prior population is retained
+byte-identically, and the source review checks the literal wrappers, fixer
+implementations and effective disabled-cache configuration again. The three
+new package fixers bring whole-task keep-fresh decisions to 201; 2,235 reviews,
+two entrypoint obligations and all pure counterpart qualifications remain open.
+No task body executed or runtime setting changed.
+
+[The economics consumer receipt](research/ci-economics-consumer-checkpoint-2026-11-03.json)
+uses the existing CI lane owner. Its window-4 preview measured the old shard
+layout, before lint scan removal, test re-binning and two-wide package producers.
+It measures no speed-up from those repairs or from Turbo; the Test Unit gain
+from re-binning remains unobserved. The accepted source has no final full-week
+window-4 verdict. Consume that owner report and the real post-repair window
+before claiming measured value or warming benefits. No competing census ran.
+
+
+### Three explicit freshness boundaries: 2026-11-03
+
+The [source review](research/explicit-fresh-boundaries-review-2026-11-03.json)
+resolves three more current whole-task boundaries. The website's portless Vite
+server must remain a running service; its Biome `--write` fixer must perform
+source mutation; the Bun vulnerability audit needs current advisory data and
+ignore-expiry evaluation. Each already has effective caching disabled. The
+review rechecks the census's 458 source bindings and compares six relevant
+files with accepted Git source. No task body or security query ran.
+
+There are now 204 source-reviewed keep-fresh dispositions and 2,232 pending
+computations out of 2,436. The website build/lint and audit policy fingerprint
+remain separate pending qualification candidates. The 201-row checkpoint is
+historical; its report remains unchanged and the new report names the prior
+population's exact Git revision and hash. No task qualification, cache setting,
+feature decision or whole-goal acceptance changed.
+
+
+### Installed scanner compatibility refresh: 2026-11-03
+
+The [maintenance receipt](research/installed-fleet-scanner-refresh-2026-11-03.json)
+records an installed-copy gap after the accepted CLI-kit move. The workstation's
+scanner now uses the already-accepted dual-path policy lookup. Four of the
+38 registered checkouts become correctly recognized in read-only discovery;
+no checkout enrollment or task execution ran. The live ordinary adapter remains
+the pinned binary on its owned loopback listener with unchanged service identity
+and reference-only configuration. Its child environment contains no forwarded
+SSH or 1Password variables; this is environment hygiene, not same-user secret
+isolation. Fresh remote observations remain unverified after the hardware-backed
+SSH route refused three authentication attempts. The protected stop and skipped
+host remain untouched. Qualification and every whole-goal criterion stay open.
+
+
+### Complete script entrypoint catalogue: 2026-11-03
+
+The [native catalogue join](research/nested-entrypoint-inventory-2026-11-03.json)
+compares the real root on stable 2.11.10 and canary 2.11.11-canary.1. Both
+clients agree on all 6,327 catalogue nodes and all 4,235 manifest script
+names and literal commands. The configured graph projection remains 4,528
+nodes, with 2,436 executable computations and 2,092 graph-only nodes. It is
+not the full script entrypoint inventory.
+
+The additional 1,799 script-only entrypoints now have explicit rows and an
+owner. For 1,309 of them, a configured wrapper's complete command literally
+invokes that script; 490 lack that specific simple caller form. These are
+source invocation edges, not execution counts or equivalence grants. Dynamic
+and composite callers still need review. All additional rows retain pending
+semantic review and no final disposition. The existing 204 keep-fresh decisions,
+2,232 pending configured reviews and qualification ledger remain unchanged.
+
+Two native queries took 90 and 89 milliseconds and executed no task bodies.
+The initial wider query hit its output bound; the reduced field selection
+kept the original limits. Query feature acceptance, task qualification and
+every whole-goal acceptance criterion remain incomplete.
+
+
+### Nested mutation boundaries: 2026-11-03
+
+The [nested fixer source review](research/nested-source-fixer-review-2026-11-03.json)
+applies the existing whole-mutator rule to 190 additional script entrypoints.
+Every command explicitly uses Biome `--write`; every complete configured
+wrapper command is `bun run beep:lint:fix`, already source-reviewed with caching
+disabled. All 190 manifest files match accepted source independently, and all
+458 census source bindings still match. Source mutation must execute fresh.
+
+The inventory now records 190 keep-fresh source dispositions and 1,609 pending
+script-only reviews. Each named separate read-only lint counterpart remains
+pending qualification. The existing 204 configured keep-fresh dispositions and
+2,232 pending configured reviews are unchanged; entrypoint rows are not added
+to them as distinct semantic computations. No task body, cache setting or
+qualification transition ran. All whole-goal criteria remain incomplete.
+
+
+The query inventory now includes explicit before/after census digests, source
+binding manifest digests and counts for each client, with a digest-bound private
+collector receipt. A fresh metadata replay records all four phases at 458
+bindings and zero mismatches. Its raw catalogue digests equal the original
+captures. Historical observations retain their original source envelope; this
+is no task execution or qualification grant.
+
 ### Requested proof ref binding, 2026-11-04
 
 Current-source review found the query/dry-run comparison mismatch in the

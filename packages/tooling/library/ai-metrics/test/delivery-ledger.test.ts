@@ -87,6 +87,16 @@ const rejected = DeliveryOutcome.cases.Rejected.make({ status: 400 });
 const unknown = DeliveryOutcome.cases.Unknown.make({ reason: "timed-out" });
 
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
+  it.effect("refuses to read an outcome for an attempt that was never reserved", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const error = yield* f.ledger.readOutcome(id("f")).pipe(Effect.flip);
+      expect(error.reason).toBe("unknown-attempt");
+    })
+  )
+);
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("registers verified canonical native and transcript events while excluding malformed frames", () =>
     Effect.gen(function* () {
       const f = yield* fixture();

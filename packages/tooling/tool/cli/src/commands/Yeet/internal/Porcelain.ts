@@ -231,23 +231,25 @@ const renderSweepPlanStep = (planStep: SweepPlanStep): ReadonlyArray<string> =>
 const renderSweepPlan = (plan: SweepPlan): string =>
   A.join([`[yeet] sweep plan ${plan.branch} (dry run)`, ...A.flatMap(plan.steps, renderSweepPlanStep)], "\n");
 
-const renderPlanOutput = (json: boolean, plan: SweepPlan): Effect.Effect<string, YeetCommandError> =>
-  json ? encodeSweepPlan(plan) : Effect.succeed(renderSweepPlan(plan));
+const renderPlanOutput: {
+  (json: boolean): (plan: SweepPlan) => Effect.Effect<string, YeetCommandError>;
+  (plan: SweepPlan, json: boolean): Effect.Effect<string, YeetCommandError>;
+} = dual(2, (plan: SweepPlan, json: boolean) => (json ? encodeSweepPlan(plan) : Effect.succeed(renderSweepPlan(plan))));
 
-const renderReportOutput = (json: boolean, report: SweepReport): Effect.Effect<string, YeetCommandError> =>
-  json ? encodeSweepReport(report) : Effect.succeed(renderSweepReport(report));
+const renderReportOutput: {
+  (json: boolean): (report: SweepReport) => Effect.Effect<string, YeetCommandError>;
+  (report: SweepReport, json: boolean): Effect.Effect<string, YeetCommandError>;
+} = dual(2, (report: SweepReport, json: boolean) =>
+  json ? encodeSweepReport(report) : Effect.succeed(renderSweepReport(report))
+);
 
 // Plan or execute the sweep against `context`, whichever checkout that names.
 const sweepClone = Effect.fn("Yeet.sweepClone")(function* (options: YeetSweepOptions, context: RepoRunContext) {
   if (options.plan) {
-    const planSweep7 = yield* planSweep(context);
-    const renderPlanOutput1 = yield* renderPlanOutput(options.json, planSweep7);
-    yield* Console.log(renderPlanOutput1);
+    yield* planSweep(context).pipe(Effect.flatMap(renderPlanOutput(options.json)), Effect.flatMap(Console.log));
     return;
   }
-  const executeSweep8 = yield* executeSweep(context);
-  const renderReportOutput2 = yield* renderReportOutput(options.json, executeSweep8);
-  yield* Console.log(renderReportOutput2);
+  yield* executeSweep(context).pipe(Effect.flatMap(renderReportOutput(options.json)), Effect.flatMap(Console.log));
 });
 
 const encodeRetireSweepPlan = (document: YeetRetireSweepPlan): Effect.Effect<string, YeetCommandError> =>
@@ -440,8 +442,7 @@ export const runYeetMerge = Effect.fn("Yeet.runMergeCommand")(function* (
   YeetCommandError,
   SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
-  const hydrateYeetReadOnlyContext4 = yield* hydrateYeetReadOnlyContext(options);
-  const outcome = yield* mergePr(hydrateYeetReadOnlyContext4);
+  const outcome = yield* hydrateYeetReadOnlyContext(options).pipe(Effect.flatMap(mergePr));
   yield* Console.log(`[yeet] pull request #${outcome.pullRequestNumber} is ${outcome.state}`);
   yield* Console.log(renderSweepReport(outcome.sweep));
 });

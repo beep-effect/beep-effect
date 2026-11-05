@@ -323,9 +323,7 @@ const textAttribute = Effect.fnUntraced(function* (attributes: typeof Attributes
     )
   );
   const distinct = A.dedupe(decoded);
-  if (distinct.length > 1) {
-    return yield* failure("invalid-envelope");
-  }
+  if (distinct.length > 1) return yield* failure("invalid-envelope");
   return A.head(distinct);
 });
 const countAttribute = Effect.fnUntraced(function* (attributes: typeof Attributes.Type, key: string) {
@@ -338,9 +336,7 @@ const countAttribute = Effect.fnUntraced(function* (attributes: typeof Attribute
     )
   );
   const distinct = A.dedupe(decoded);
-  if (distinct.length > 1) {
-    return yield* failure("invalid-envelope");
-  }
+  if (distinct.length > 1) return yield* failure("invalid-envelope");
   return A.head(distinct);
 });
 const decodeRawEnvelopeJson = S.decodeEffect(S.fromJsonString(RawEnvelope));
@@ -365,9 +361,7 @@ const projectedKind = (kind: O.Option<string>, name: string | undefined, convent
 const sourceTiming = Effect.fnUntraced(function* (span: typeof RawSpan.Type) {
   const start = yield* time(span.startTimeUnixNano);
   const end = yield* time(span.endTimeUnixNano);
-  if (O.isSome(start) && O.isSome(end) && end.value < start.value) {
-    return yield* failure("invalid-envelope");
-  }
+  if (O.isSome(start) && O.isSome(end) && end.value < start.value) return yield* failure("invalid-envelope");
   return {
     startTimeUnixNano: O.map(start, (value) => value.toString()),
     endTimeUnixNano: O.map(end, (value) => value.toString()),
@@ -462,13 +456,9 @@ const projectSpan = Effect.fnUntraced(function* (
 export const projectNativeTraceRequest = Effect.fn("AiMetrics.projectNativeTraceRequest")(function* (
   input: NativeTraceRequest
 ) {
-  if (input.body.byteLength > 262144) {
-    return yield* failure("oversize");
-  }
+  if (input.body.byteLength > 262144) return yield* failure("oversize");
   const salt = Redacted.value(input.hashSalt);
-  if (Str.trim(salt) === "") {
-    return yield* failure("missing-salt");
-  }
+  if (Str.trim(salt) === "") return yield* failure("missing-salt");
   const hash = privateHash(salt);
   const protobuf = input.contentType === "application/x-protobuf";
   const decoded = protobuf
@@ -489,9 +479,7 @@ export const projectNativeTraceRequest = Effect.fn("AiMetrics.projectNativeTrace
       A.map(scope.spans ?? [], (span) => ({ span, resource: resource.resource?.attributes ?? [] }))
     )
   );
-  if (entries.length > 1024) {
-    return yield* failure("too-many-spans");
-  }
+  if (entries.length > 1024) return yield* failure("too-many-spans");
   const namespaceId = yield* hash("ai-metrics-hash-salt-namespace/v1");
   const results = yield* Effect.forEach(entries, (entry) =>
     Effect.result(projectSpan(entry, input, namespaceId, hash, protobuf))
@@ -502,9 +490,8 @@ export const projectNativeTraceRequest = Effect.fn("AiMetrics.projectNativeTrace
       (result) =>
         Result.isFailure(result) && S.is(NativeTraceError)(result.failure) && result.failure.reason === "hash-failure"
     )
-  ) {
+  )
     return yield* failure("hash-failure");
-  }
   return NativeTraceBatch.make({
     requestId: yield* hash(`native-request/v1:${input.routeId}:${Hex.encode(input.body)}`),
     namespaceId,
