@@ -75,6 +75,7 @@ const fixture = async (
     nativePolicySha256: nativePolicy.digest,
     socketPath: Path.join(directory, "o.sock"),
   });
+  const context = { evidenceEpoch: options.staleEpoch ? 3 : 2, accepting: true };
   const facts: Array<string> = [];
   const finishedOutcomes: Array<string> = [];
   const dispatchIntents: Array<boolean> = [];
@@ -89,8 +90,8 @@ const fixture = async (
             ObservationLaunchContext.make({
               hostId: request.hostId,
               namespaceId: request.namespaceId,
-              evidenceEpoch: options.staleEpoch ? 3 : 2,
-              accepting: true,
+              evidenceEpoch: context.evidenceEpoch,
+              accepting: context.accepting,
               routes: [{ routeId: request.identity.routeId, harness: "claude-code", surface: "cli" }],
             })
           )
@@ -219,18 +220,27 @@ const fixture = async (
     makeClaudeEnv: ({ baseEnv }) => baseEnv,
     resolveClaudeHome: () => request.nativeHome,
   });
-  const run = runClaudeNativeCanary(request).pipe(
-    Effect.provide(Layer.mergeAll(spawner.layer, NodeCrypto.layer, NodePath.layer)),
-    Effect.provideService(AiProviderCliHome, home)
-  );
+  const runFor = (admission: ClaudeNativeCanaryRequest) =>
+    runClaudeNativeCanary(admission).pipe(
+      Effect.provide(Layer.mergeAll(spawner.layer, NodeCrypto.layer, NodePath.layer)),
+      Effect.provideService(AiProviderCliHome, home)
+    );
+  const run = runFor(request);
   return {
     request,
     run,
+    runFor,
+    context,
     spawner,
     traces,
     facts,
     finishedOutcomes,
     dispatchIntents,
+    restartFixtureSocket: async () => {
+      await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+      await new Promise<void>((resolve) => server.listen(request.socketPath, resolve));
+      await Fs.chmod(request.socketPath, 0o600);
+    },
     close: async () => {
       await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
       await Fs.rm(directory, { recursive: true, force: true });
@@ -459,6 +469,111 @@ it.live("failed Finished delivery preserves original source refusal and a durabl
       expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
       expect(f.spawner.spawns).toHaveLength(2);
       expect(f.finishedOutcomes).toEqual(["failed"]);
+    } finally {
+      await f.close();
+    }
+  })
+);
+
+it.live("pause blocks retained source replay and same-epoch resume reuses immutable metadata only", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture({ rejectTraceOnce: true });
+    try {
+      expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+      const path = Path.join(f.request.attemptDirectory, "source.json");
+      const original = await Fs.readFile(path, "utf8");
+      const facts = f.facts.length;
+      f.context.accepting = false;
+      expect(await Effect.runPromise(f.run.pipe(Effect.result))).toMatchObject({
+        _tag: "Failure",
+        failure: { phase: "admission" },
+      });
+      expect(f.spawner.spawns).toHaveLength(2);
+      expect(f.traces).toHaveLength(1);
+      expect(f.facts).toHaveLength(facts);
+      f.context.accepting = true;
+      await Effect.runPromise(f.run);
+      expect(f.spawner.spawns).toHaveLength(2);
+      expect(f.traces).toHaveLength(2);
+      expect(f.traces[0]).toEqual(f.traces[1]);
+      expect(await Fs.readFile(path, "utf8")).toBe(original);
+    } finally {
+      await f.close();
+    }
+  })
+);
+it.live("new worker epoch refuses both stale admission and rewritten request without native replay", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture({ rejectTraceOnce: true });
+    try {
+      await Effect.runPromise(f.run.pipe(Effect.result));
+      const path = Path.join(f.request.attemptDirectory, "source.json");
+      const original = await Fs.readFile(path, "utf8");
+      const facts = f.facts.length;
+      f.context.evidenceEpoch = 3;
+      expect(await Effect.runPromise(f.run.pipe(Effect.result))).toMatchObject({
+        _tag: "Failure",
+        failure: { phase: "admission" },
+      });
+      const rebound = ClaudeNativeCanaryRequest.make({ ...f.request, evidenceEpoch: 3 });
+      expect(await Effect.runPromise(f.runFor(rebound).pipe(Effect.result))).toMatchObject({
+        _tag: "Failure",
+        failure: { phase: "attempted-unknown" },
+      });
+      expect(f.spawner.spawns).toHaveLength(2);
+      expect(f.traces).toHaveLength(1);
+      expect(f.facts).toHaveLength(facts);
+      expect(await Fs.readFile(path, "utf8")).toBe(original);
+    } finally {
+      await f.close();
+    }
+  })
+);
+for (const changed of ["ingress", "socket"] as const) {
+  it.live(`changed ${changed} refuses retained source without rebinding or native rerun`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ rejectTraceOnce: true });
+      try {
+        await Effect.runPromise(f.run.pipe(Effect.result));
+        const path = Path.join(f.request.attemptDirectory, "source.json");
+        const original = await Fs.readFile(path, "utf8");
+        const facts = f.facts.length;
+        const alternate = Path.join(Path.dirname(f.request.socketPath), "alternate.sock");
+        // An alternate name for the same owned fixture socket isolates request binding
+        // from reachability. This is not a real worker restart/launch-window proof.
+        if (changed === "socket") await Fs.link(f.request.socketPath, alternate);
+        const rebound = ClaudeNativeCanaryRequest.make({
+          ...f.request,
+          ...(changed === "socket" ? { socketPath: alternate } : { ingressRouteId: id("9") }),
+        });
+        expect(await Effect.runPromise(f.runFor(rebound).pipe(Effect.result))).toMatchObject({
+          _tag: "Failure",
+          failure: { phase: "attempted-unknown" },
+        });
+        expect(f.spawner.spawns).toHaveLength(2);
+        expect(f.traces).toHaveLength(1);
+        expect(f.facts).toHaveLength(facts);
+        expect(await Fs.readFile(path, "utf8")).toBe(original);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+
+it.live("new invocation re-pins a replaced same-path fixture socket but does not rerun source", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture({ rejectTraceOnce: true });
+    try {
+      await Effect.runPromise(f.run.pipe(Effect.result));
+      const path = Path.join(f.request.attemptDirectory, "source.json");
+      const original = await Fs.readFile(path, "utf8");
+      await f.restartFixtureSocket();
+      await Effect.runPromise(f.run);
+      expect(f.spawner.spawns).toHaveLength(2);
+      expect(f.traces).toHaveLength(2);
+      expect(f.traces[0]).toEqual(f.traces[1]);
+      expect(await Fs.readFile(path, "utf8")).toBe(original);
     } finally {
       await f.close();
     }
