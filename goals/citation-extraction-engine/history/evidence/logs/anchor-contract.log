@@ -1,0 +1,9 @@
+
+ RUN  v5.0.5 ~/YeeBois/projects/beep-effect-worktrees/citation-extraction-engine/packages/foundation/modeling/provenance
+
+
+ Test Files  2 passed (2)
+      Tests  21 passed (21)
+   Start at  03:29:07
+   Duration  2.71s (transform 72%, import 16%, setup 10%, tests 2%)
+

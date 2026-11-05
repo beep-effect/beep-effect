@@ -1,0 +1,2954 @@
+{
+  "schemaVersion": "citation-default-observations/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "producerSha256": "432d18e42a4adbe79cf52421ae308f8fa0a4d2f2d84105bc4fd00e063d2f2c6a",
+  "contextProducerSha256": "32b2550a76a2ef5341e198b83197eb1c80c809c5dfa75a47b7eda62a8ebfacaf",
+  "contextFixtureSha256": "89d86c6aefecc02a30e6d719af9277050d8023949d4fba69912e2b9295d20e05",
+  "sources": {
+    "resolve.py": "651ede8c2a2d5df9ec9c9f1145530a6de7fca15304d1816b7f620a81ab3f2044",
+    "models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a"
+  },
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "python": "3.11.15",
+  "pythonHashSeed": "0",
+  "cases": [
+    {
+      "name": "repeat-and-id",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        },
+        {
+          "index": 2,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1, 2]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__eq__",
+          "self": 0,
+          "other": 1
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__eq__",
+          "self": 0,
+          "other": 1
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__eq__",
+          "self": 0,
+          "other": 1
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "distinct-and-id",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        },
+        {
+          "index": 2,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0], [1, 2]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "invalid-id-resets",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Unresolved",
+          "reason": "invalid-pin-cite"
+        },
+        {
+          "index": 2,
+          "status": "Unresolved",
+          "reason": "no-previous-authority"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "id-before-full",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Unresolved",
+          "reason": "no-previous-authority"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "unknown-resets",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Unresolved",
+          "reason": "unsupported-citation"
+        },
+        {
+          "index": 2,
+          "status": "Unresolved",
+          "reason": "no-previous-authority"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "missing-page",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Unresolved",
+          "reason": "invalid-pin-cite"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "law-and-id",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "journal-and-id",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "short-unique",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        },
+        {
+          "index": 2,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1, 2]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "short-no-match",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Unresolved",
+          "reason": "no-matching-authority"
+        },
+        {
+          "index": 2,
+          "status": "Unresolved",
+          "reason": "no-previous-authority"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "short-ambiguous",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        },
+        {
+          "index": 2,
+          "status": "Ambiguous",
+          "distinctCount": 2,
+          "candidateIndices": [0, 1]
+        },
+        {
+          "index": 3,
+          "status": "Unresolved",
+          "reason": "no-previous-authority"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0], [1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "short-refined",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        },
+        {
+          "index": 2,
+          "status": "Ambiguous",
+          "distinctCount": 2,
+          "candidateIndices": [0, 1]
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0], [1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "supra-unique",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "supra-ambiguous",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        },
+        {
+          "index": 2,
+          "status": "Resolved"
+        },
+        {
+          "index": 3,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 2, 3], [1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "reference",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        },
+        {
+          "index": 2,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1, 2]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "cit-vintage",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        },
+        {
+          "index": 2,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0], [1, 2]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "same-resource-names",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        },
+        {
+          "index": 2,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1, 2]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__eq__",
+          "self": 0,
+          "other": 1
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "unicode-prefix",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "supra-no-name",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Unresolved",
+          "reason": "missing-antecedent"
+        },
+        {
+          "index": 2,
+          "status": "Unresolved",
+          "reason": "no-previous-authority"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "supra-punctuation-only",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "supra-case-sensitive",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Unresolved",
+          "reason": "no-matching-authority"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "supra-ignores-volume",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "short-unique-ignores-wrong-name",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "reference-exact-not-substring",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Unresolved",
+          "reason": "no-matching-authority"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "reference-uses-all-metadata",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "reference-law-publisher",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "reference-empty",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Unresolved",
+          "reason": "missing-antecedent"
+        },
+        {
+          "index": 2,
+          "status": "Unresolved",
+          "reason": "no-previous-authority"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "id-after-non-numeric-page",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "id-inclusive-boundary",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        },
+        {
+          "index": 2,
+          "status": "Unresolved",
+          "reason": "invalid-pin-cite"
+        },
+        {
+          "index": 3,
+          "status": "Unresolved",
+          "reason": "no-previous-authority"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "full-page-null-no-reporter",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Unresolved",
+          "reason": "invalid-pin-cite"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "full-page-null-lazy-reporter-error",
+      "decisions": [],
+      "outcome": {
+        "status": "error",
+        "kind": "KeyError"
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "full-missing-page-key",
+      "decisions": [],
+      "outcome": {
+        "status": "error",
+        "kind": "KeyError"
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "full-missing-reporter-key",
+      "decisions": [],
+      "outcome": {
+        "status": "error",
+        "kind": "KeyError"
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "short-no-full-lazy-reporter",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Unresolved",
+          "reason": "no-matching-authority"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": []
+      },
+      "nativeTrace": []
+    },
+    {
+      "name": "law-null-page-exception",
+      "decisions": [],
+      "outcome": {
+        "status": "error",
+        "kind": "AttributeError"
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "integer-conversion-exception",
+      "decisions": [],
+      "outcome": {
+        "status": "error",
+        "kind": "ValueError"
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "supra-resource-dedup",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        },
+        {
+          "index": 2,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1, 2]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__eq__",
+          "self": 0,
+          "other": 1
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__eq__",
+          "self": 0,
+          "other": 1
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "short-multiple-resets-id",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        },
+        {
+          "index": 2,
+          "status": "Ambiguous",
+          "distinctCount": 2,
+          "candidateIndices": [0, 1]
+        },
+        {
+          "index": 3,
+          "status": "Unresolved",
+          "reason": "no-previous-authority"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0], [1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "short-name-refinement",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        },
+        {
+          "index": 2,
+          "status": "Resolved"
+        },
+        {
+          "index": 3,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 2, 3], [1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "supra-multiple-resets-id",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        },
+        {
+          "index": 2,
+          "status": "Ambiguous",
+          "distinctCount": 2,
+          "candidateIndices": [1, 0]
+        },
+        {
+          "index": 3,
+          "status": "Unresolved",
+          "reason": "no-previous-authority"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0], [1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "reference-multiple-resets-id",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        },
+        {
+          "index": 2,
+          "status": "Ambiguous",
+          "distinctCount": 2,
+          "candidateIndices": [1, 0]
+        },
+        {
+          "index": 3,
+          "status": "Unresolved",
+          "reason": "no-previous-authority"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0], [1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 1,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 1,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "reference-court-metadata",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "unknown-between-id",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Unresolved",
+          "reason": "unsupported-citation"
+        },
+        {
+          "index": 2,
+          "status": "Unresolved",
+          "reason": "no-previous-authority"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "short-only-noncase-predecessor",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Unresolved",
+          "reason": "no-matching-authority"
+        },
+        {
+          "index": 2,
+          "status": "Unresolved",
+          "reason": "no-previous-authority"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "ResourceCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    },
+    {
+      "name": "empty",
+      "decisions": [],
+      "outcome": {
+        "status": "value",
+        "groups": []
+      },
+      "nativeTrace": []
+    },
+    {
+      "name": "selected-reporter-without-raw-field",
+      "decisions": [
+        {
+          "index": 0,
+          "status": "Resolved"
+        },
+        {
+          "index": 1,
+          "status": "Resolved"
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [[0, 1]]
+      },
+      "nativeTrace": [
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "Resource.__hash__",
+          "self": 0,
+          "other": null
+        },
+        {
+          "method": "CaseCitation.__hash__",
+          "self": 0,
+          "other": null
+        }
+      ]
+    }
+  ]
+}
