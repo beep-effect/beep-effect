@@ -35,8 +35,8 @@ const textRecord = (sourceOrdinal: number, numberText: O.Option<string>) =>
 describe("claim inspection source identity", () => {
   it.effect.prop(
     "roundtrips arbitrary source records without changing literal numbers or source fragments",
-    [Arbitrary.schema(ClaimInputRecord)],
-    ([record]) =>
+    { record: Arbitrary.schema(ClaimInputRecord) },
+    ({ record }) =>
       Effect.gen(function* () {
         const encoded = yield* S.encodeEffect(claimRecordJson)(record);
         const decoded = yield* S.decodeEffect(claimRecordJson)(encoded);

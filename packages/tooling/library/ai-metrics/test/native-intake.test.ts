@@ -28,6 +28,33 @@ const sqlLayer = makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDri
 const salt = "synthetic-native-intake-salt";
 const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
 
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
+  it.effect("rejects a batch from another namespace before recording any page", () =>
+    Effect.gen(function* () {
+      const { journal, batch } = yield* fixture();
+      const projected = yield* batch();
+      const foreign = NativeTraceBatch.make({ ...projected, namespaceId: Sha256Hex.make(Str.repeat(64)("f")) });
+      const error = yield* journal.acceptBatch(foreign).pipe(Effect.flip);
+      expect(error.reason).toBe("namespace");
+      const stats = yield* journal.stats;
+      expect(stats.pages).toBe(0);
+    })
+  )
+);
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
+  it.effect("returns no batch or event page for an unknown receipt", () =>
+    Effect.gen(function* () {
+      const { journal } = yield* fixture();
+      const missing = Sha256Hex.make(Str.repeat(64)("f"));
+      const batch = yield* journal.readBatch(missing);
+      const events = yield* journal.readNewEvents(missing);
+      assertNone(batch);
+      assertNone(events);
+    })
+  )
+);
+
 const fixture = Effect.fn("NativeIntakeTest.fixture")(function* (maxPages = 16) {
   const config = TranscriptIntakeConfig.make({
     hostId: Sha256Hex.make(Str.repeat(64)("a")),

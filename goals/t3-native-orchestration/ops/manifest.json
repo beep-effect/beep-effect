@@ -27,14 +27,14 @@
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_t3-native-orchestration-closeout-2-8bfccfc6e70f/verdict.json",
+        "ref": ".beep/yeet/runs/docs_t3-native-orchestration-closeout-4-5bda51e80b4c/verdict.json",
         "gating": true
       }
     ]
   },
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2671
+    "finalPullRequest": 2696
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
