@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
-import { ClaudeCanarySource, decodeClaudeCanaryOutput } from "./claude-print-wire.ts";
+import { ClaudeCanarySource, decodeClaudeCanaryOutput, inspectClaudeCanaryOutput } from "./claude-print-wire.ts";
 
 const salt = Redacted.make("synthetic-private-salt");
 const cwd = "/synthetic/workspace";
@@ -218,4 +218,32 @@ it.layer(NodeCrypto.layer)((it) => {
         expect(result._tag).toBe("Failure");
       })
     );
+});
+
+it.layer(NodeCrypto.layer)((it) => {
+  it.effect("accepts only bounded harmless trailing UI invalidations after one valid terminal", () =>
+    Effect.gen(function* () {
+      const source = yield* decode([
+        initial,
+        response,
+        final,
+        { type: "system", subtype: "ui_invalidate", private: "PRIVATE_UI" },
+      ]);
+      expect(source.observedRetryNotifications).toBe(0);
+    })
+  );
+  it.effect("projects refusal diagnostics without promoting unsupported native metadata or private text", () =>
+    Effect.gen(function* () {
+      const raw = output([initial, { type: "rate_limit_event", private: "PRIVATE_METADATA" }, response, final]);
+      const refused = yield* decodeClaudeCanaryOutput(raw, salt, cwd).pipe(Effect.result);
+      expect(refused._tag).toBe("Failure");
+      const meta = yield* inspectClaudeCanaryOutput(raw, cwd);
+      expect(meta.rateLimit).toBe(1);
+      expect(meta.init).toBe(1);
+      expect(meta.result).toBe(1);
+      expect(meta.initModelMatches).toEqual(O.some(true));
+      expect(JSON.stringify(meta)).not.toContain("PRIVATE_");
+      expect(JSON.stringify(meta)).not.toContain("ENROLLMENT_CANARY_OK");
+    })
+  );
 });

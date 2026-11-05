@@ -40,11 +40,23 @@ import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { ClaudePolicySnapshot, qualifyClaudeManagedPolicy } from "./claude-native-policy.ts";
-import { ClaudeCanarySource, decodeClaudeCanaryOutput } from "./claude-print-wire.ts";
+import {
+  ClaudeCanarySource,
+  ClaudeCanaryWireError,
+  decodeClaudeCanaryOutput,
+  inspectClaudeCanaryOutput,
+} from "./claude-print-wire.ts";
+import {
+  NativeAttemptDiagnostic as diagnostic,
+  NativeAttemptPhase,
+  writeNativeAttemptDiagnostic,
+} from "./native-attempt-diagnostic.ts";
+import type { ClaudeCanaryWireDiagnostics } from "./claude-print-wire.ts";
 
 const $I = $RepoCliId.create("goals/harness-telemetry-enrollment/ops/claude-native-canary");
 const absolute = S.String.check(S.isPattern(/^\/[^\u0000-\u001f"\\]*$/), S.isMaxLength(4096)).pipe(
@@ -102,7 +114,7 @@ export class ClaudeNativeCanaryError extends S.TaggedError<ClaudeNativeCanaryErr
   $I`ClaudeNativeCanaryError`
 )(
   "ClaudeNativeCanaryError",
-  { phase: S.Literals(["admission", "attempted-unknown", "source", "delivery"]) },
+  { phase: NativeAttemptPhase },
   $I.annote("ClaudeNativeCanaryError", { description: "Bounded canary failure; attempted never implies zero work." })
 ) {}
 const failed = (phase: ClaudeNativeCanaryError["phase"]) => ClaudeNativeCanaryError.make({ phase });
@@ -449,27 +461,65 @@ export const runClaudeNativeCanary = Effect.fn("HarnessEnrollment.claudeNativeCa
     });
     yield* pinExecutable();
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-    const version = yield* Effect.scoped(
+    let versionSpawned = O.none<boolean>();
+    let versionExit = O.none<number>();
+    let versionBytes = 0;
+    let versionOutputComplete = false;
+    const saveVersion = (
+      stage: (typeof diagnostic.Type)["stage"],
+      failurePhase = O.none<ClaudeNativeCanaryError["phase"]>()
+    ) =>
+      writeNativeAttemptDiagnostic(
+        request.attemptDirectory,
+        diagnostic.make({
+          requestBinding,
+          purpose: "version",
+          stage,
+          nativeSpawned: versionSpawned,
+          nativeExitStatus: versionExit,
+          observedStdoutBytes: versionBytes,
+          outputComplete: versionOutputComplete,
+          protocol: O.none(),
+          failurePhase,
+          protocolFailure: O.none(),
+        })
+      ).pipe(Effect.mapError(() => failed("diagnostic")));
+    yield* saveVersion("dispatch-intent");
+    const versionResult = yield* Effect.scoped(
       Effect.gen(function* () {
-        const child = yield* spawner.spawn(
-          ChildProcess.make(request.executable, ["--version"], {
-            cwd: request.workspace,
-            env,
-            extendEnv: false,
-            stdin: "ignore",
-            stderr: "ignore",
-            forceKillAfter: "3 seconds",
-          })
-        );
-        const text = yield* boundedText(child.stdout, 1024);
-        if (Number(yield* child.exitCode) !== 0) return yield* failed("admission");
-        return text;
+        const child = yield* spawner
+          .spawn(
+            ChildProcess.make(request.executable, ["--version"], {
+              cwd: request.workspace,
+              env,
+              extendEnv: false,
+              stdin: "ignore",
+              stderr: "ignore",
+              forceKillAfter: "3 seconds",
+            })
+          )
+          .pipe(Effect.mapError(() => failed("version-dispatch")));
+        versionSpawned = O.some(true);
+        yield* saveVersion("spawn-observed");
+        const text = yield* boundedText(child.stdout, 1024).pipe(Effect.mapError(() => failed("version-output")));
+        versionBytes = Buffer.byteLength(text);
+        versionOutputComplete = true;
+        const code = Number(yield* child.exitCode.pipe(Effect.mapError(() => failed("version-exit"))));
+        versionExit = O.some(code);
+        if (code !== 0) return yield* failed("version-exit");
+        if (Str.trim(text) !== "2.1.318 (Claude Code)") return yield* failed("version-mismatch");
       })
     ).pipe(
       Effect.timeout("15 seconds"),
-      Effect.mapError(() => failed("admission"))
+      Effect.catchTag("TimeoutError", () => failed("version-timeout")),
+      Effect.mapError((error) => (S.is(ClaudeNativeCanaryError)(error) ? error : failed("admission"))),
+      Effect.result
     );
-    if (Str.trim(version) !== "2.1.318 (Claude Code)") return yield* failed("admission");
+    yield* saveVersion(
+      Result.isSuccess(versionResult) ? "validated" : "failed",
+      Result.isFailure(versionResult) ? O.some(versionResult.failure.phase) : O.none()
+    );
+    yield* Effect.fromResult(versionResult);
     const isolation = yield* qualifyClaudeManagedPolicy(request.sharedClaudeConfigDirectory);
     if (isolation.digest !== request.nativePolicySha256) return yield* failed("admission");
     const qualificationJson = yield* encodeQualification(isolation);
@@ -478,30 +528,99 @@ export const runClaudeNativeCanary = Effect.fn("HarnessEnrollment.claudeNativeCa
     const immediatePolicy = yield* qualifyClaudeManagedPolicy(request.sharedClaudeConfigDirectory);
     if (immediatePolicy.digest !== isolation.digest) return yield* failed("admission");
     yield* pinExecutable();
-    evidence = yield* Effect.scoped(
+    let nativeSpawned = O.none<boolean>();
+    let nativeExit = O.none<number>();
+    let observedBytes = 0;
+    let outputComplete = false;
+    let boundedOutput = "";
+    let protocolFailure = O.none<ClaudeCanaryWireError["reason"]>();
+    let postPolicyDigest = O.none<Sha256Hex>();
+    let policyUnchanged = O.none<boolean>();
+    const saveSource = Effect.fn("ClaudeCanary.saveSourceDiagnostic")(function* (
+      stage: (typeof diagnostic.Type)["stage"],
+      failurePhase = O.none<ClaudeNativeCanaryError["phase"]>()
+    ) {
+      let protocol = O.none<ClaudeCanaryWireDiagnostics>();
+      if (stage !== "dispatch-intent" && stage !== "spawn-observed") {
+        const inspected = yield* inspectClaudeCanaryOutput(boundedOutput, request.workspace);
+        protocol = O.some(inspected);
+      }
+      yield* writeNativeAttemptDiagnostic(
+        request.attemptDirectory,
+        diagnostic.make({
+          requestBinding,
+          purpose: "source",
+          stage,
+          nativeSpawned,
+          nativeExitStatus: nativeExit,
+          observedStdoutBytes: observedBytes,
+          outputComplete,
+          protocol,
+          failurePhase,
+          protocolFailure,
+          prePolicyDigest: O.some(isolation.digest),
+          postPolicyDigest,
+          policyUnchanged,
+        })
+      ).pipe(Effect.mapError(() => failed("diagnostic")));
+    });
+    yield* saveSource("dispatch-intent");
+    const sourceResult = yield* Effect.scoped(
       Effect.gen(function* () {
         const start = yield* Clock.currentTimeMillis;
         const mono = yield* Clock.monotonicTimeNanos;
-        const child = yield* spawner.spawn(
-          ChildProcess.make(request.executable, args, {
-            cwd: request.workspace,
-            env,
-            extendEnv: false,
-            stdin: "ignore",
-            stderr: "ignore",
-            forceKillAfter: "3 seconds",
-          })
-        );
+        const child = yield* spawner
+          .spawn(
+            ChildProcess.make(request.executable, args, {
+              cwd: request.workspace,
+              env,
+              extendEnv: false,
+              stdin: "ignore",
+              stderr: "ignore",
+              forceKillAfter: "3 seconds",
+            })
+          )
+          .pipe(Effect.mapError(() => failed("source-dispatch")));
+        nativeSpawned = O.some(true);
+        yield* saveSource("spawn-observed");
         const processInstanceId = yield* hashPrivateIdentifier(
           `claude-canary-process/v1:${request.launchId}:${child.pid}:${start}`,
           O.some(Redacted.value(request.hashSalt))
         );
         yield* postFact(ObservationLaunchFact.cases.Started.make({ launchId: request.launchId, processInstanceId }));
-        const stdout = yield* boundedText(child.stdout, 262144);
-        if (Number(yield* child.exitCode) !== 0) return yield* failed("source");
-        const source = yield* decodeClaudeCanaryOutput(stdout, request.hashSalt, request.workspace);
-        const afterPolicy = yield* qualifyClaudeManagedPolicy(request.sharedClaudeConfigDirectory);
-        if (afterPolicy.digest !== isolation.digest) return yield* failed("source");
+        const stdout = yield* child.stdout.pipe(
+          Stream.mapError(() => failed("source-output")),
+          Stream.decodeText(),
+          Stream.runFoldEffect(
+            () => "",
+            (text, chunk) => {
+              observedBytes = Math.min(Number.MAX_SAFE_INTEGER, observedBytes + Buffer.byteLength(chunk));
+              if (Buffer.byteLength(text) + Buffer.byteLength(chunk) > 262144)
+                return Effect.fail(failed("source-output"));
+              boundedOutput = `${text}${chunk}`;
+              return Effect.succeed(boundedOutput);
+            }
+          )
+        );
+        outputComplete = true;
+        const code = Number(yield* child.exitCode.pipe(Effect.mapError(() => failed("source-exit"))));
+        nativeExit = O.some(code);
+        if (code !== 0) return yield* failed("source-exit");
+        const source = yield* decodeClaudeCanaryOutput(stdout, request.hashSalt, request.workspace).pipe(
+          Effect.mapError((error) => {
+            if (S.is(ClaudeCanaryWireError)(error)) {
+              protocolFailure = O.some(error.reason);
+              return failed("source-protocol");
+            }
+            return failed("source-identity");
+          })
+        );
+        const afterPolicy = yield* qualifyClaudeManagedPolicy(request.sharedClaudeConfigDirectory).pipe(
+          Effect.mapError(() => failed("source-policy"))
+        );
+        postPolicyDigest = O.some(afterPolicy.digest);
+        policyUnchanged = O.some(afterPolicy.digest === isolation.digest);
+        if (afterPolicy.digest !== isolation.digest) return yield* failed("source-policy");
         const end = yield* Clock.currentTimeMillis;
         const elapsed = (yield* Clock.monotonicTimeNanos) - mono;
         const sourceJson = yield* S.encodeEffect(S.fromJsonString(ClaudeCanarySource))(source);
@@ -523,11 +642,58 @@ export const runClaudeNativeCanary = Effect.fn("HarnessEnrollment.claudeNativeCa
         return ClaudeNativeCanaryEvidence.make({ requestBinding, observation, source, qualification: isolation });
       })
     ).pipe(
+      Effect.flatMap((value) =>
+        encodeEvidence(value).pipe(
+          Effect.flatMap((encoded) =>
+            io(() => durableCreate(request.attemptDirectory, "source.json", encoded), "source-receipt")
+          ),
+          Effect.as(value)
+        )
+      ),
       Effect.timeout("110 seconds"),
-      Effect.mapError(() => failed("source"))
+      Effect.catchTag("TimeoutError", () => failed("source-timeout")),
+      Effect.mapError((error) => (S.is(ClaudeNativeCanaryError)(error) ? error : failed("source"))),
+      Effect.result
     );
-    const encoded = yield* encodeEvidence(evidence);
-    yield* io(() => durableCreate(request.attemptDirectory, "source.json", encoded), "source");
+    const sourceDiagnostic = yield* saveSource(
+      Result.isSuccess(sourceResult) ? "validated" : "failed",
+      Result.isFailure(sourceResult) ? O.some(sourceResult.failure.phase) : O.none()
+    ).pipe(Effect.result);
+    if (Result.isFailure(sourceResult)) {
+      // Native process completion and collection refusal are different facts. Never infer task quality from exit0.
+      const outcome = O.isSome(nativeExit) && nativeExit.value !== 0 ? "failed" : "unknown";
+      const failurePhase = O.some(sourceResult.failure.phase);
+      const writeLifecycle = (stage: (typeof diagnostic.Type)["stage"], delivery: "pending" | "acknowledged") =>
+        writeNativeAttemptDiagnostic(
+          request.attemptDirectory,
+          diagnostic.make({
+            requestBinding,
+            purpose: "lifecycle",
+            stage,
+            nativeSpawned,
+            nativeExitStatus: nativeExit,
+            observedStdoutBytes: observedBytes,
+            outputComplete,
+            protocol: O.none(),
+            failurePhase,
+            protocolFailure,
+            lifecycleOutcome: O.some(outcome),
+            lifecycleDelivery: O.some(delivery),
+          })
+        );
+      // A durable pending intent survives a refused/uncertain fact delivery. Secondary failures cannot mask the source refusal.
+      yield* writeLifecycle("dispatch-intent", "pending").pipe(Effect.result);
+      const finish = yield* postFact(
+        ObservationLaunchFact.cases.Finished.make({ launchId: request.launchId, outcome })
+      ).pipe(Effect.result);
+      yield* writeLifecycle(
+        Result.isSuccess(finish) ? "validated" : "pending",
+        Result.isSuccess(finish) ? "acknowledged" : "pending"
+      ).pipe(Effect.result);
+      return yield* sourceResult.failure;
+    }
+    yield* Effect.fromResult(sourceDiagnostic);
+    evidence = sourceResult.success;
   }
   yield* postFact(prepared);
   yield* postFact(
