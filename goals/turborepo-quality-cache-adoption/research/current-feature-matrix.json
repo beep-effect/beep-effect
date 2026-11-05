@@ -65,6 +65,15 @@
           "sha256": "090b1851ddd0d330ffe0d72850d4fa3fe6bcb71d7531bb79042472763596bebc",
           "termObserved": true
         }
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": [
+          "native-source-replay-selection-2026-11-03.json",
+          "native-source-replay-filter-composition-2026-11-03.json"
+        ],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -128,6 +137,12 @@
           "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
           "termObserved": true
         }
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": ["native-source-replay-selection-2026-11-03.json"],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -169,6 +184,15 @@
           "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
           "termObserved": true
         }
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": [
+          "native-source-replay-filter-composition-2026-11-03.json",
+          "native-source-replay-base-ref-2026-11-03.json"
+        ],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -232,6 +256,15 @@
           "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
           "termObserved": true
         }
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": [
+          "native-source-replay-selection-2026-11-03.json",
+          "native-source-replay-filter-composition-2026-11-03.json"
+        ],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -278,6 +311,14 @@
           "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
           "termObserved": true
         }
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": [
+          "native-source-replay-global-configuration-2026-11-03.json"
+        ],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -324,6 +365,14 @@
           "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
           "termObserved": true
         }
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": [
+          "native-source-replay-global-configuration-2026-11-03.json"
+        ],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -370,6 +419,14 @@
           "sha256": "49ce6d27b0a6d30731a94c8cac3c683a797e6e08a8c3f0129cf9063542b3b959",
           "termObserved": true
         }
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": [
+          "native-source-replay-global-configuration-2026-11-03.json"
+        ],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -416,6 +473,21 @@
           "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e",
           "termObserved": true
         }
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": [
+          "native-source-replay-global-configuration-2026-11-03.json",
+          "native-source-replay-log-cache-2026-11-03.json"
+        ],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
+      },
+      "currentNativeWorktreeObservation": {
+        "checkpoint": "guarded-native-replay-checkpoint-2026-11-03.json",
+        "report": "native-worktree-controls-2026-11-03-guarded.json",
+        "scope": "Fresh guarded 36-invocation local-worktree matrix and 6 actual startup refusals; absolute-path and0755-to-0700 counterexamples retained.",
+        "authority": "Synthetic only; real task/profile acceptance stays pending."
       }
     },
     {
@@ -590,6 +662,12 @@
           "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e",
           "termObserved": true
         }
+      },
+      "currentNativeWorktreeObservation": {
+        "checkpoint": "guarded-native-replay-checkpoint-2026-11-03.json",
+        "report": "native-worktree-controls-2026-11-03-guarded.json",
+        "scope": "Fresh guarded 36-invocation local-worktree matrix and 6 actual startup refusals; absolute-path and0755-to-0700 counterexamples retained.",
+        "authority": "Synthetic only; real task/profile acceptance stays pending."
       }
     },
     {
@@ -718,6 +796,11 @@
           "sha256": "f566af0c9acd7ce4b32d891a9adccd2cfdee481e0882917bb844f903e7d26c65",
           "termObserved": true
         }
+      },
+      "currentRootCatalogueObservation": {
+        "report": "nested-entrypoint-inventory-2026-11-03.json",
+        "scope": "Both exact clients agree on all 6,327 catalogue nodes and 4,235 literal manifest scripts; the configured graph of 4,528 nodes and 2,436 commands is a strict subset. No task body executed.",
+        "remaining": "Actual execution reconciliation and final feature acceptance remain pending."
       }
     },
     {
@@ -764,6 +847,12 @@
           "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
           "termObserved": true
         }
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": ["native-source-replay-prune-global-2026-11-03.json"],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -805,6 +894,12 @@
           "sha256": "2abbea2b157fef9e517cc1975a3cc68cab99a56730846ed2c0c033ab23dfb380",
           "termObserved": true
         }
+      },
+      "currentNativeSemanticObservation": {
+        "checkpoint": "guarded-native-replay-checkpoint-2026-11-03.json",
+        "report": "native-boundaries-controls-2026-11-03-guarded.json",
+        "scope": "Fresh guarded 24-case native boundary matrix and 6 actual startup refusals; no fixture tasks.",
+        "authority": "Synthetic semantics only; acceptance stays pending."
       }
     },
     {
@@ -946,6 +1041,15 @@
         "stableVersion": "2.11.10",
         "canaryVersion": "2.11.11-canary.1",
         "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": [
+          "native-source-replay-selection-2026-11-03.json",
+          "native-source-replay-filter-composition-2026-11-03.json"
+        ],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -986,6 +1090,15 @@
         "stableVersion": "2.11.10",
         "canaryVersion": "2.11.11-canary.1",
         "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": [
+          "native-source-replay-log-presentation-2026-11-03.json",
+          "native-source-replay-log-cache-2026-11-03.json"
+        ],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -1108,6 +1221,12 @@
         "stableVersion": "2.11.10",
         "canaryVersion": "2.11.11-canary.1",
         "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": ["native-source-replay-observability-2026-11-03.json"],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -1191,6 +1310,12 @@
         "stableVersion": "2.11.10",
         "canaryVersion": "2.11.11-canary.1",
         "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": ["native-source-replay-setup-2026-11-03.json"],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -1225,6 +1350,15 @@
         "stableVersion": "2.11.10",
         "canaryVersion": "2.11.11-canary.1",
         "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": [
+          "native-source-replay-selection-2026-11-03.json",
+          "native-source-replay-filter-composition-2026-11-03.json"
+        ],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -1265,6 +1399,12 @@
         "stableVersion": "2.11.10",
         "canaryVersion": "2.11.11-canary.1",
         "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": ["native-source-replay-base-ref-2026-11-03.json"],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -1315,6 +1455,14 @@
         "stableVersion": "2.11.10",
         "canaryVersion": "2.11.11-canary.1",
         "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": [
+          "native-source-replay-global-configuration-2026-11-03.json"
+        ],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -1355,6 +1503,36 @@
         "stableVersion": "2.11.10",
         "canaryVersion": "2.11.11-canary.1",
         "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      },
+      "sourceBindingRepair": {
+        "checkpoint": "signature-key-source-binding-repair.json",
+        "metadataControls": "signature-key-source-binding-controls.json",
+        "nativeSemanticReplayForCurrentDriver": "observed-synthetic-only",
+        "historical168CaseObservationRetainsOriginalDriverBinding": true,
+        "currentNativeReplayCheckpoint": "native-source-family-replay-2026-11-03.json",
+        "descriptorRepairCheckpoint": "native-source-family-repair.json"
+      },
+      "preContainmentNativeSemanticObservation": {
+        "report": "signature-key-sourcebound-native-replay.json",
+        "nativeReport": "native-signature-key-sourcebound-controls-2026-11-03.json",
+        "cases": 168,
+        "sourceRevision": "105ea5acf1d800414e9f9ac4f35dd3fe2e76969d",
+        "driverSha256": "2afde39e782ed441b181ce400ac14280a4ce8a1a2c8281a0e86a9fbb80e05b78",
+        "scope": "Actual offline synthetic key-length semantics; 162 fixture tasks executed and six early key-length refusals. No signed transport, production qualification or rollout acceptance."
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": ["native-source-replay-signature-2026-11-03.json"],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
+      },
+      "currentNativeSemanticObservation": {
+        "report": "native-source-family-replay-2026-11-03.json",
+        "nativeReport": "native-source-replay-signature-2026-11-03.json",
+        "cases": 168,
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "driverSha256": "0f01addd1148b146e9fbe00ca55a08d1c108a876bf5e3ce099ab829ffef58326",
+        "scope": "Actual repaired-driver supplied-key UTF8 length controls, missing/local/signature-off controls; no signed transport or production qualification."
       }
     },
     {
@@ -1396,6 +1574,12 @@
         "stableVersion": "2.11.10",
         "canaryVersion": "2.11.11-canary.1",
         "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": ["native-source-replay-prune-global-2026-11-03.json"],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -1452,6 +1636,12 @@
         "stableVersion": "2.11.10",
         "canaryVersion": "2.11.11-canary.1",
         "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": ["native-source-replay-selection-2026-11-03.json"],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     },
     {
@@ -1531,6 +1721,15 @@
         ],
         "historicalReport": "native-permission-mode-controls-2026-11-03.json",
         "sourceCaptureRepair": "Six controlled changes refuse before native client selection; observation binds the repaired source bytes."
+      },
+      "currentSourceNativeReplay": {
+        "checkpoint": "native-source-family-replay-2026-11-03.json",
+        "reports": [
+          "native-source-replay-permission-availability-2026-11-03.json",
+          "native-source-replay-permission-mode-2026-11-03.json"
+        ],
+        "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
+        "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
       }
     }
   ],
@@ -1591,5 +1790,18 @@
     "sentinelsExecuted": 0,
     "featuresSemanticallyQualified": 0
   },
-  "currentClientPairScope": "The current pin manifest and availability observations use stable2.11.10/current published canary2.11.11-canary.1. Historical semantic and applicability reports retain their original exact source/client envelopes; no qualification or prior result is transplanted."
+  "currentClientPairScope": "The current pin manifest and availability observations use stable2.11.10/current published canary2.11.11-canary.1. Historical semantic and applicability reports retain their original exact source/client envelopes; no qualification or prior result is transplanted.",
+  "relatedNativeSourceIntegrityRepair": {
+    "checkpoint": "native-source-family-repair.json",
+    "metadataControls": "native-source-family-controls.json",
+    "affectedDrivers": 13,
+    "prefixDrivers": 10,
+    "prefixCases": 208,
+    "additionalSignaturePrefixCases": 13,
+    "nativeInvocations": 0,
+    "taskExecutions": 0,
+    "nativeSemanticReplaysForChangedDrivers": "observed-synthetic-only",
+    "historicalEvidenceBindingsRetained": true,
+    "currentNativeReplayCheckpoint": "native-source-family-replay-2026-11-03.json"
+  }
 }

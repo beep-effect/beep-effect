@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "claim-performance-property-proof/v1",
+  "schema": "ClaimInputRecord",
+  "property": "Original record content survives inspection and report JSON roundtrip",
+  "runs": 100,
+  "seed": "inspection-ledger-preservation-v1",
+  "focusedPolicyAndFiniteTestsPassed": 11,
+  "rootOxlintScoped": "passed",
+  "runtimeSourceChanged": false,
+  "strictMatchesUnchanged": 37,
+  "previousResultsChanged": false,
+  "goalComplete": false
+}

@@ -38,13 +38,28 @@ args = parser.parse_args()
 assert not args.output.exists(), "Existing reports are refused"
 repo = Path(__file__).resolve().parents[3]
 research = Path(__file__).resolve().parent
+source_reader = research / "native-future-flag-availability.py"
+source_reader_bytes = source_reader.read_bytes()
+source_reader_node = next(n for n in ast.parse(source_reader_bytes).body
+                          if isinstance(n, ast.FunctionDef) and n.name == "read_contained_source")
+source_reader_namespace = {"os": os}
+exec(compile(ast.Module(body=[source_reader_node], type_ignores=[]), str(source_reader), "exec"), source_reader_namespace)
+read_contained_source = source_reader_namespace["read_contained_source"]
 pins_path = (args.pins or research / "current-client-pins.json").resolve()
 try:
     pins_path.relative_to(repo)
 except ValueError:
     raise SystemExit("Pin manifest must be within the checkout.") from None
 harness = research / "native-future-flag-availability.py"
-harness_bytes = harness.read_bytes()
+source_paths = [Path(__file__).resolve(), pins_path, harness, repo / ".bun-version"]
+captured_sources = {path: (source_reader_bytes if path == source_reader else read_contained_source(path, repo) if path == pins_path else path.read_bytes()) for path in source_paths}
+harness_bytes = captured_sources[harness]
+pins_bytes = captured_sources[pins_path]
+pins = json.loads(pins_bytes)
+source_bindings = {
+    path.relative_to(repo).as_posix(): hashlib.sha256(data).hexdigest()
+    for path, data in captured_sources.items()
+}
 function = next(
     node for node in ast.parse(harness_bytes.decode("utf-8")).body
     if isinstance(node, ast.FunctionDef) and node.name == "run_bounded"
@@ -106,6 +121,7 @@ def invoke_bounded(command, cwd, environment):
     return result
 
 
+assert all((read_contained_source(path, repo) if path == pins_path else path.read_bytes()) == data for path, data in captured_sources.items()), "Observation sources changed before probes."
 bun_name = shutil.which("bun")
 assert bun_name, "Bun is required"
 bun = Path(
@@ -117,21 +133,7 @@ bun_digest = hashlib.sha256(bun.read_bytes()).hexdigest()
 bun_version = subprocess.check_output(
     [str(bun), "--version"], timeout=5, text=True
 ).strip()
-assert bun_version == (repo / ".bun-version").read_text().strip(), "Bun pin changed"
-pins_bytes = pins_path.read_bytes()
-pins = json.loads(pins_bytes)
-source_paths = [Path(__file__).resolve(), pins_path, harness, repo / ".bun-version"]
-captured_sources = {pins_path: pins_bytes, harness: harness_bytes}
-source_bindings = {
-    path.relative_to(repo).as_posix(): hashlib.sha256(
-        captured_sources[path] if path in captured_sources else path.read_bytes()
-    ).hexdigest()
-    for path in source_paths
-}
-assert all(
-    hashlib.sha256((repo / path).read_bytes()).hexdigest() == digest
-    for path, digest in source_bindings.items()
-), "Selection sources changed before controls"
+assert bun_version == captured_sources[repo / ".bun-version"].decode().strip(), "Bun pin changed"
 timeout_digest = hashlib.sha256(timeout.read_bytes()).hexdigest()
 clients = {
     "stable": args.stable or repo / "node_modules/@turbo/linux-64/bin/turbo",
@@ -481,7 +483,7 @@ assert hashlib.sha256(bun.read_bytes()).hexdigest() == bun_digest, (
     "Bun changed during controls"
 )
 assert all(
-    hashlib.sha256((repo / path).read_bytes()).hexdigest() == digest
+    hashlib.sha256(read_contained_source(repo / path, repo) if repo / path == pins_path else (repo / path).read_bytes()).hexdigest() == digest
     for path, digest in source_bindings.items()
 ), "Selection sources changed during controls"
 assert hashlib.sha256(timeout.read_bytes()).hexdigest() == timeout_digest, "Process wrapper changed"

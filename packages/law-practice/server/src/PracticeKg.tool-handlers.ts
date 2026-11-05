@@ -8,13 +8,18 @@
 import { DuckDb } from "@beep/duckdb";
 import { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import {
+  ClaimInspection,
+  ClaimInspectionLive,
+  ClaimInspectionPageRequest,
   ClaimSelfCheck,
   ClaimSelfCheckLive,
+  UsptoClaimInputs,
   UsptoClaims,
   UsptoClaimsError,
 } from "@beep/law-practice-use-cases/ClaimSelfCheck";
 import {
   ClaimSelfCheckReviewRequest,
+  claimInspectInput,
   claimSelfCheckReview,
   PracticeKgCandidateClaimsNotLoadedResult,
   PracticeKgCorrespondentAddressError,
@@ -303,6 +308,55 @@ const queryPglite = <A>(
     .pipe(Effect.mapError(failureOf("store-query-failed")), Effect.flatMap(decodeRows(decode)));
 
 /**
+ * Local claim checks with public-document acquisition explicitly unavailable.
+ *
+ * **Details**
+ * The read-only toolkit uses this composition for caller-supplied claims and
+ * source ledgers. Both published-source methods fail through their typed port
+ * errors; this layer requires no HTTP client or external credentials.
+ *
+ * **Example** (Compose local claim checks)
+ * ```ts
+ * import { PracticeKgLocalClaimChecksLive } from "@beep/law-practice-server"
+ * import * as Layer from "effect/Layer"
+ * console.log(Layer.isLayer(PracticeKgLocalClaimChecksLive))
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const PracticeKgLocalClaimChecksLive: Layer.Layer<ClaimSelfCheck | ClaimInspection> = Layer.merge(
+  ClaimSelfCheckLive.pipe(
+    Layer.provide(
+      Layer.succeed(UsptoClaims, {
+        claims: Effect.fn("ClaimSelfCheckLocal.publicClaimsUnavailable")(() =>
+          Effect.fail(
+            UsptoClaimsError.make({
+              reason: "unavailable",
+              message: "This local review tool accepts supplied claims and does not fetch USPTO documents.",
+            })
+          )
+        ),
+      })
+    )
+  ),
+  ClaimInspectionLive.pipe(
+    Layer.provide(
+      Layer.succeed(UsptoClaimInputs, {
+        inputs: Effect.fn("ClaimInspectionLocal.publicInputsUnavailable")(() =>
+          Effect.fail(
+            UsptoClaimsError.make({
+              reason: "unavailable",
+              message: "This local inspection tool accepts supplied source records and does not fetch USPTO documents.",
+            })
+          )
+        ),
+      })
+    )
+  )
+);
+
+/**
  * Live toolkit handlers over injected PGlite SQL, DuckDB, and bundle metadata.
  *
  * **Details**
@@ -327,6 +381,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
 > = PracticeKgToolkit.toLayer(
   Effect.gen(function* () {
     const selfCheck = yield* ClaimSelfCheck;
+    const inspection = yield* ClaimInspection;
     const bundle = yield* PracticeKgBundle;
     const duckdb = yield* DuckDb;
     const sql = (yield* SqlClientService).withoutTransforms();
@@ -425,6 +480,11 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
       claim_self_check: Effect.fn("PracticeKgTools.claim_self_check")((request) =>
         claimSelfCheckReview(ClaimSelfCheckReviewRequest.make(request)).pipe(
           Effect.provideService(ClaimSelfCheck, selfCheck)
+        )
+      ),
+      claim_inspect_input: Effect.fn("PracticeKgTools.claim_inspect_input")((request) =>
+        claimInspectInput(ClaimInspectionPageRequest.make(request)).pipe(
+          Effect.provideService(ClaimInspection, inspection)
         )
       ),
       kg_candidate_claims: Effect.fn("PracticeKgTools.kg_candidate_claims")(
@@ -589,21 +649,4 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
       ),
     });
   })
-).pipe(
-  Layer.provide(
-    ClaimSelfCheckLive.pipe(
-      Layer.provide(
-        Layer.succeed(UsptoClaims, {
-          claims: Effect.fn("ClaimSelfCheckLocal.publicClaimsUnavailable")(() =>
-            Effect.fail(
-              UsptoClaimsError.make({
-                reason: "unavailable",
-                message: "This local review tool accepts supplied claims and does not fetch USPTO documents.",
-              })
-            )
-          ),
-        })
-      )
-    )
-  )
-);
+).pipe(Layer.provide(PracticeKgLocalClaimChecksLive));

@@ -30,6 +30,7 @@ This packet removes the need for that instruction.
 | D9 | `monitor --until-ready` gains a terminal `ready-pending-flip` (exit 0) for a draft whose only remaining blocker is the draft flag. It prints the flip command. | Auto-flip (defeats draft-until-final); keep holding (agents hand-roll `gh`). |
 | D10 | `yeet ready` flips draft to ready only when, on the current head, every review thread is answered and the required checks are green. It refuses otherwise and names the blocker. No `--force`. Amended by D11. | Threads-only gate; thin `gh pr ready` wrapper. |
 | D11 | Operator ruling 2026-10-06 (see Decision Log). Ready at content-final: the owner flips draft to ready as soon as the content is final and cheap gates pass, before hosted heavy CI finishes; `yeet ready` refuses only on a known failing required check or an unanswered thread. The merge gate gains a review window: not mergeable until 20 minutes after the later of the latest ready-for-review event and the latest push to the head. Nobody un-drafts and merges in one step; the merger re-reads threads right before merging. | Keep draft-until-green (reviews start after the merge gate is already open); require a named reviewer or bot verdict (bots rotate with quota and must never gate); a window from PR creation only (a late push would merge unreviewed). |
+| D12 | Amends D1 and D6 (2026-11-05). Under the 2026-10-24 constrained-compute ruling, `yeet open` pushes the committed HEAD and runs the D4/D7 pull-request tail (draft, `ready-for-heavy`, provenance stamp, detached `monitor --until-ready`) with no local gate. `publish --body-file` and `yeet gh pr body` replace raw `gh pr create` and `gh pr edit --body*`, which dropped the provenance footer. `yeet ready` and `yeet merge-gate` re-assert the footer. | Keep raw `gh` for the escape (128 of 250 PRs lost the footer); a `publish --no-gates` flag (publish already carries about 15 flags and their guard rules; a separate verb keeps the bypass easy to audit). |
 
 ### Why the full proof can leave the publish path
 
@@ -38,8 +39,9 @@ This packet removes the need for that instruction.
   HEAD while GitHub proves the merge ref.
 - Hosted `check.yml` runs every lane the local proof ran, including the
   gitleaks, semgrep/SAST, and Nix lanes. Nothing is left uncovered.
-- Cheap-gates takes no admission token, so it never waits behind another
-  session's lease. It catches the cheap, deterministic reds (knip, fallow,
+- Cheap-gates took no admission token when this packet closed. Its schema-catalog
+  scan now holds weighted admission for its memory cost, so under contention it
+  can queue behind other sessions' leases (D12). It catches the cheap, deterministic reds (knip, fallow,
   schema-first, changeset, jsdoc ratchet, config sync, tsgo rule parity) that
   would otherwise cost a hosted run.
 
@@ -48,6 +50,7 @@ This packet removes the need for that instruction.
 | Date | Decision | Evidence and reason | How to reverse |
 | --- | --- | --- | --- |
 | 2026-10-06 | D11, review-window ruling (operator). `yeet ready` gates on `pr-open`, `no-required-red`, `threads-resolved` instead of fully green checks. `merge-ready` gains the hard criterion `review-window-elapsed`, read lazily over REST (`issues/<n>/timeline` for `ready_for_review`, `pulls/<n>` `created_at` when the PR was opened ready, `commits/<sha>/check-suites` for the head push) with `Clock` time; a failed read is `unknown` and blocks. Default 20 minutes, `YEET_REVIEW_WINDOW_DEFAULT` in `internal/ReviewWindow.ts`, overridable with `BEEP_YEET_REVIEW_WINDOW`. The orchestrator's `gate.sh` prints `window=` and needs `window=ok` for `GATE-MET`. | PRs were opened as drafts, un-drafted only when everything was green, and merged by the orchestrator within minutes. Review bots and people start when a PR leaves draft and take about 8–15 minutes, so on 2026-10-06 eight PRs merged with zero reviews and on others the review threads arrived at or after the gate. Heavy CI already takes longer than a review, so flipping at content-final costs no wall-clock time. | Set `BEEP_YEET_REVIEW_WINDOW="0 seconds"` to turn the window off without a code change (`gate.sh` reads the same variable). To restore D10, revert the D11 pull request: `YeetReadyGateCriterion` goes back to `required-checks-green`, and the `review-window-elapsed` criterion, `ReviewWindow.ts`, and the AGENTS.md "Mergeable" bullet are removed. |
+| 2026-11-05 | D12, `yeet open` (agent decision under the autonomy charter, at the operator's request). Adds `yeet open`, `publish --body-file` and `yeet gh pr body`. `yeet ready` records the session and re-asserts the footer on its first pull-request read; `yeet merge-gate` re-asserts it from the registry rows without recording a row, and not under `--dry-run`. | Census of the last 250 PRs on 2026-11-05: 128 had no provenance footer. 113 had no PR-session registry row: they were opened with raw `gh pr create`, the AGENTS.md constrained-compute escape, after cheap-gates queued behind admission. All 12 of the rest that could be checked were stamped and then lost the footer to `gh pr edit --body*` rewrites. | Remove `yeetOpenCommand`, the `hostedProof` option and planner branch, the `--body-file` flag, `yeet gh pr body` and the two re-assert calls, and restore the AGENTS.md escape text. |
 
 ## Non-Goals
 

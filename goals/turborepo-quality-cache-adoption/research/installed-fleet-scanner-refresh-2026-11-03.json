@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "cache-adoption-installed-scanner-refresh/v1",
+  "recordedAt": "2026-11-03T15:19:10.898986+00:00",
+  "authority": "Accepted-source scanner maintenance and installed-state observation on one workstation. Discovery capability is not enrollment, artifact reuse, task qualification, a backend grant or producer approval.",
+  "cohort": "This Linux workstation only; no remote host changed.",
+  "sourceRevision": "31e2ac20f34a1c699a35be55f67881dbf0d8ffd0",
+  "acceptedFix": {
+    "commit": "690afb9e57",
+    "pullRequest": 2669,
+    "path": "infra/r2-cache/fleet.py"
+  },
+  "installedPriorSourceRevision": "ed0c4ec45e7beaed152ca811489ca1030d4b8879",
+  "installedBeforeSha256": "8dd1722afd9e3b69d4051d9711501dfd463175d174f57ca3ef72b3bbd24f071f",
+  "installedAfterSha256": "7a287efbb9c228f5933f989e044ca7706921a34a0ca1a32843e864bee6e6baad",
+  "installedMode": "0700",
+  "defect": "The installed scanner looked only at the old repo-cli policy path. Four current checkouts use the accepted repo-cli-kit location and were incorrectly reported as legacy.",
+  "repair": "Atomically copy the already-accepted scanner, with a verified private original backup. No new scanner implementation was authored.",
+  "beforeDiscovery": {
+    "registeredCheckouts": 38,
+    "statuses": {
+      "planned": 33,
+      "legacy-use-beep-turbo": 5
+    },
+    "readWriteCapableFromSource": 22
+  },
+  "afterDiscovery": {
+    "registeredCheckouts": 38,
+    "statuses": {
+      "planned": 37,
+      "legacy-use-beep-turbo": 1
+    },
+    "readWriteCapableFromSource": 26
+  },
+  "reclassifiedCheckouts": 4,
+  "allOtherDiscoveryRowsUnchanged": true,
+  "boundedMaintenance": {
+    "filesReplaced": 1,
+    "combinedSourceBytesUnder": 65536,
+    "cloudRequests": 0,
+    "artifactRequests": 0,
+    "serviceRestarts": 0,
+    "elapsedSeconds": 0.0068
+  },
+  "currentAdapter": {
+    "serviceActive": true,
+    "serviceMainProcessUnchangedAcrossRepair": true,
+    "serviceMainProcessIsCredentialBroker": true,
+    "adapterChildMatchesPinnedOrdinaryBinary": true,
+    "binarySha256": "52334c002a55276b29e059caaf19c83326d50ede4280a13dbe48aebde0b816fd",
+    "ownsLoopbackListener": true,
+    "unauthenticatedManagementStatus": 200,
+    "administrativeCredentialVariablesInAdapterChild": [],
+    "clientCacheMode": "local:rw,remote:rw",
+    "clientAndBackendReferenceFilesMode": "0600",
+    "credentialFieldsRemainReferenceOnly": true
+  },
+  "environmentBoundaryLimit": "The adapter child has an explicit environment. This does not isolate same-user jobs from the credential broker or the operator-approved shared-vault grant.",
+  "adapterScriptDifference": "The installed adapter script predates the later opt-in signed entrypoint. Its ordinary pinned binary and launch posture are unchanged; signed activation still needs separate readiness proof.",
+  "remoteObservation": {
+    "beep-worker": "Unverified after three terminal agent-refused SSH authentication attempts; no remote command ran.",
+    "dankserver": "Not attempted after shared authentication route refusals.",
+    "tbk-worker": "Protective stop preserved; not contacted.",
+    "tom-pc-1": "Operator skip preserved; not contacted."
+  },
+  "rollback": "Restore only installed fleet.py from the privately retained verified original, or the named prior accepted Git source, with mode0700. No service restart or enrollment reversal is needed.",
+  "retention": "Private before/after discovery, service observations, applied-operation receipt and verified original source backup retained through both goal closeouts; no configured expiry or offsite backup claim.",
+  "localTaskBodiesExecuted": 0,
+  "enrollmentApplied": false,
+  "qualificationGranted": false,
+  "fullGoalAcceptanceChanged": false
+}

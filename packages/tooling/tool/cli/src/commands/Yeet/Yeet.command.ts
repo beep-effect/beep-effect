@@ -251,6 +251,18 @@ const allowStaleBaseFlag = Flag.Boolean("allow-stale-base").pipe(
   )
 );
 
+const bodyFileFlag = Flag.String("body-file").pipe(
+  Flag.withDefault(""),
+  Flag.withDescription(
+    "Markdown file that replaces the generated commit-log summary of a pull request this run creates; an existing pull request keeps its body (use `yeet gh pr body`)"
+  )
+);
+
+const titleFlag = Flag.String("title").pipe(
+  Flag.withDefault(""),
+  Flag.withDescription("Pull request title (default: the branch's first non-merge commit subject)")
+);
+
 const prFlag = Flag.Boolean("pr").pipe(
   Flag.withDefault(true),
   Flag.withDescription(
@@ -444,6 +456,7 @@ const publishFlags = {
   ...sharedFlags,
   allowStaleBase: allowStaleBaseFlag,
   amend: amendFlag,
+  bodyFile: bodyFileFlag,
   message: messageFlag,
   monitor: monitorFlag,
   noEdit: noEditFlag,
@@ -454,6 +467,21 @@ const publishFlags = {
   stagedOnly: stagedOnlyFlag,
   stateRoot: yeetStateRootFlag,
   summary: summaryFlag,
+} as const;
+
+// `yeet open` takes no proof, commit or detach flags: it pushes the committed
+// HEAD and opens the pull request, nothing else.
+const openFlags = {
+  allowStaleBase: allowStaleBaseFlag,
+  base: baseFlag,
+  bodyFile: bodyFileFlag,
+  head: headFlag,
+  json: jsonFlag,
+  monitor: monitorFlag,
+  packetDir: packetDirFlag,
+  plan: planFlag,
+  stateRoot: yeetStateRootFlag,
+  title: titleFlag,
 } as const;
 
 const watchFlag = Flag.Boolean("watch").pipe(
@@ -586,6 +614,10 @@ class SharedOptions extends S.Opaque<SharedOptions, { readonly brand: unique sym
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
     base: S.String,
+    bodyFile: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultTypeKey(Effect.succeed(""))
+    ),
     bots: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("greptile")),
       S.withDecodingDefaultTypeKey(Effect.succeed("greptile"))
@@ -599,6 +631,10 @@ class SharedOptions extends S.Opaque<SharedOptions, { readonly brand: unique sym
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
     head: S.String,
+    hostedProof: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     json: S.Boolean,
     merged: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
@@ -691,9 +727,11 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
       ...sharedOptions,
       allowStaleBase: sharedOptions.allowStaleBase,
       amend: sharedOptions.amend,
+      bodyFile: sharedOptions.bodyFile,
       bots: sharedOptions.bots,
       ciParity: sharedOptions.ciParity,
       collectAll: sharedOptions.collectAll || sharedOptions.noFailFast,
+      hostedProof: sharedOptions.hostedProof,
       merged: sharedOptions.merged,
       message: options.message ?? "",
       mode,
@@ -990,6 +1028,14 @@ const yeetPublishCommand = Command.make("publish", publishFlags, ({ stateRoot, .
 ).pipe(
   Command.withDescription(
     "Commit reviewed staged changes, run cheap-gates, push to a draft PR, and submit the detached readiness monitor"
+  )
+);
+
+const yeetOpenCommand = Command.make("open", openFlags, ({ stateRoot, title, ...options }) =>
+  provideYeetStateRoot(runYeetMode("publish", { ...options, hostedProof: true, message: title, pr: true }), stateRoot)
+).pipe(
+  Command.withDescription(
+    "Push the committed HEAD and open (or reuse) its draft PR with the heavy-admission label, provenance footer and detached readiness monitor, running no local gate; hosted CI is the proof"
   )
 );
 
@@ -1432,6 +1478,7 @@ export const yeetCommand = Command.make("yeet", publishFlags, ({ stateRoot, ...o
     yeetVerifyCommand,
     yeetRepairCommand,
     yeetPublishCommand,
+    yeetOpenCommand,
     yeetMonitorCommand,
     yeetCloseoutCommand,
     yeetStatusCommand,

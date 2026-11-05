@@ -18701,6 +18701,18 @@
             "functions": 0
           }
         },
+        "packages/law-practice/use-cases/src/ClaimInspection.tools.ts": {
+          "lines": 97.87,
+          "statements": 97.95,
+          "branches": 100,
+          "functions": 91.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
         "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.errors.ts": {
           "lines": 100,
           "statements": 100,
