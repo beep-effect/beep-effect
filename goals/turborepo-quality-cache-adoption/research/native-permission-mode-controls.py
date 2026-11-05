@@ -34,11 +34,18 @@ for path in (args.output, args.raw_dir):
     assert not path.exists() and not path.is_symlink(), "Existing captures are refused."
 repo = Path(__file__).resolve().parents[3]
 research = Path(__file__).resolve().parent
+source_reader = research / "native-future-flag-availability.py"
+source_reader_bytes = source_reader.read_bytes()
+source_reader_node = next(n for n in ast.parse(source_reader_bytes).body
+                          if isinstance(n, ast.FunctionDef) and n.name == "read_contained_source")
+source_reader_namespace = {"os": os}
+exec(compile(ast.Module(body=[source_reader_node], type_ignores=[]), str(source_reader), "exec"), source_reader_namespace)
+read_contained_source = source_reader_namespace["read_contained_source"]
 pins_path = research / "current-client-pins.json"
-pins_bytes = pins_path.read_bytes()
+pins_bytes = read_contained_source(pins_path, repo)
 pins = json.loads(pins_bytes)
 harness = research / "native-future-flag-availability.py"
-harness_bytes = harness.read_bytes()
+harness_bytes = source_reader_bytes
 function = next(
     node for node in ast.parse(harness_bytes).body
     if isinstance(node, ast.FunctionDef) and node.name == "run_bounded"
@@ -52,7 +59,7 @@ exec(compile(ast.Module(body=[function], type_ignores=[]), str(harness), "exec")
 
 
 def sha(path):
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return hashlib.sha256(read_contained_source(path, repo) if path == pins_path else path.read_bytes()).hexdigest()
 
 
 driver = Path(__file__).resolve()

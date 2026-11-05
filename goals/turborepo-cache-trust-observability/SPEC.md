@@ -1304,6 +1304,31 @@ profile. Reversal removes the observer invocation, separate artifact and researc
 helper while preserving both original reports and all existing production gates.
 All whole-goal acceptance criteria remain incomplete.
 
+### Complete read-only pilot tree snapshots, 2026-11-03
+
+Include the package root and every visited directory in the existing internal
+pilot snapshot, alongside regular files and symlink targets. Retain complete
+filesystem modes for roots, directories and regular files. A directory uses an
+empty-content digest with its distinct mode/type and relative path; even an
+empty directory therefore changes the snapshot. The digest remains an internal
+before/after guard, not a new persisted receipt or qualification authority.
+
+Apply the existing 5,000-entry ceiling before each append and retain the depth
+limit. The former file counter ran only when entering a directory, so a wide
+leaf list could exceed it; counting every entry closes that gap. Keep the
+existing top-level `.turbo` exclusion for native logs and summaries.
+
+Author nine supervisory regression cases: file, nested-directory and package-
+root mode changes, plus empty-directory creation, in both the selected package
+and a dependency; a wide empty-directory population must hit the entry limit.
+Require the specific source-change/bound error, no experiment receipt and
+owned fixture cleanup. Hosted CI is authoritative under the operator's explicit
+no-local-verify/publish instruction; authored cases are not passing evidence.
+
+This change grants no task/profile qualification or signing activation. Existing
+receipts remain historical under their original source. Reverse through Git;
+no public protocol/schema, persisted state or cloud resource migration is needed.
+
 ### Preserve unknown hosted checks in readiness, 2026-11-03
 
 The shared status/completion readiness policy consumes the existing typed remote
