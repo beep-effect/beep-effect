@@ -31,10 +31,7 @@ const printScriptsReport = Effect.fnUntraced(function* (
   json: boolean,
   implDrift: boolean
 ) {
-  if (json) {
-    const jsonStringifyPretty1 = yield* jsonStringifyPretty(wire);
-    return yield* Console.log(jsonStringifyPretty1);
-  }
+  if (json) return yield* jsonStringifyPretty(wire).pipe(Effect.flatMap(Console.log));
   yield* Console.log(
     `package-scripts: ${report.manifests} manifests, ${HashMap.size(report.drift)} drifting, ${HashSet.size(report.written)} written, ${HashMap.size(report.implDrift)} with advisory impl drift`
   );
@@ -71,17 +68,13 @@ export const lintPackageScriptsCommand = Command.make(
     implDrift: Flag.Boolean("impl-drift").pipe(Flag.withDefault(false)),
   },
   Effect.fn("lintPackageScripts")(function* ({ check, write, json, implDrift }) {
-    if (check && write) {
-      return yield* failWithReportedExit("Choose --check or --write, not both.");
-    }
+    if (check && write) return yield* failWithReportedExit("Choose --check or --write, not both.");
     const root = yield* findRepoRoot();
     const policy = yield* PackageScriptsPolicy.make(root);
     const report = yield* write ? policy.write(root) : policy.check(root);
     const wire = yield* encodeScriptsReport(report);
     yield* printScriptsReport(report, wire, json, implDrift);
-    if (HashMap.size(report.drift) > 0) {
-      return yield* failWithReportedExit("Package scripts policy drift.");
-    }
+    if (HashMap.size(report.drift) > 0) return yield* failWithReportedExit("Package scripts policy drift.");
   })
 ).pipe(
   Command.withDescription(

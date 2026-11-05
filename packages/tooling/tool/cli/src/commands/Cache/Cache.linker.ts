@@ -68,9 +68,8 @@ export const parseCacheLinkerOutput = Effect.fn("CacheLinker.parse")(function* (
       return O.some(file);
     })
   ).pipe(Effect.map(A.getSomes));
-  if (paths.length === 0 || paths.length > 256 || A.dedupe(paths).length !== paths.length) {
+  if (paths.length === 0 || paths.length > 256 || A.dedupe(paths).length !== paths.length)
     return yield* CacheCommandError.new("Library listing is empty, duplicated or exceeds its file bound.");
-  }
   return A.sort(paths, Order.String);
 }, CacheCommandError.mapError("Cannot parse startup library resolution."));
 
@@ -92,13 +91,11 @@ export const inspectCacheLinkedFile = Effect.fn("CacheLinker.file")(function* (f
   const fs = yield* FileSystem.FileSystem;
   const target = yield* fs.realPath(file);
   const info = yield* fs.stat(target);
-  if (info.type !== "File" || info.size > BigInt(128 * 1024 * 1024)) {
+  if (info.type !== "File" || info.size > BigInt(128 * 1024 * 1024))
     return yield* CacheCommandError.new("Runtime library must be a regular file within the 128 MiB bound.");
-  }
   const sha256 = yield* hash(target);
-  if ((yield* fs.realPath(file)) !== target) {
+  if ((yield* fs.realPath(file)) !== target)
     return yield* CacheCommandError.new("Runtime library alias changed during inspection.");
-  }
   return CacheLinkedFile.make({ path: file, target, sha256 });
 }, CacheCommandError.mapError("Cannot inspect a runtime library file."));
 
@@ -129,14 +126,12 @@ export const inspectCacheLinkerResolution = Effect.fn("CacheLinker.inspect")(fun
     env: { PATH: "/usr/bin", LANG: "C", LC_ALL: "C" },
     bound: OutputBound.make({ maxChars: 16384, truncatedNotice: "[library listing exceeds limit]" }),
   }).pipe(Effect.timeout(Duration.seconds(10)));
-  if (result.exitCode !== 0 || result.truncated || Str.trim(result.stderr) !== "") {
+  if (result.exitCode !== 0 || result.truncated || Str.trim(result.stderr) !== "")
     return yield* CacheCommandError.new("Startup library discovery failed or exceeded its capture bound.");
-  }
   const paths = yield* parseCacheLinkerOutput(result.stdout);
   const files = yield* Effect.forEach(paths, inspectCacheLinkedFile, { concurrency: 1 });
-  if ((yield* hash(executable)) !== before) {
+  if ((yield* hash(executable)) !== before)
     return yield* CacheCommandError.new("Executable changed during library discovery.");
-  }
   return A.match(files, {
     onEmpty: () => CacheLinkerResolution.cases.Static.make({}),
     onNonEmpty: (files) => CacheLinkerResolution.cases.Dynamic.make({ files }),

@@ -241,6 +241,17 @@ const validateFixture = Effect.fn("ConformanceLedgerTest.validateFixture")(funct
 const runFixture = (options: FixtureOptions) => Effect.scoped(validateFixture(options));
 
 it.layer(BunFileSystem.layer)("conformance-ledger validation", (it) => {
+  it.effect("preserves a typed failure when a ledger artifact cannot be read", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-conformance-missing-" });
+      const error = yield* validateConformanceLedgerArtifacts(NodeURL.pathToFileURL(`${root}/`), packageName).pipe(
+        Effect.flip
+      );
+      expect(error._tag).toBe("ConformanceLedgerEvidenceOperationError");
+    })
+  );
+
   it.effect("matches a published annotation against its profile-selected ledger records", () =>
     Effect.gen(function* () {
       const annotation = Conformance.makeAnnotation({

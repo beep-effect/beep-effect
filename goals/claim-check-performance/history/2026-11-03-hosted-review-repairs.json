@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "claim-review-repair-proof/v1",
+  "reviews": [
+    "PRRT_kwDOPbO_N86zPao4",
+    "PRRT_kwDOPbO_N86zPapy",
+    "PRRT_kwDOPbO_N86zPaqA"
+  ],
+  "repairs": [
+    "Diagnostic recognizes both product inspection schemas; authoritative scorer unchanged",
+    "Verifier independently pins exact original addendum bytes; coordinated tamper rejected",
+    "Source adapter accepts empty XML subsets; nonempty and malformed declaration cases remain rejected"
+  ],
+  "proof": {
+    "adapterTests": 41,
+    "independentRegexProbes": 8,
+    "pythonTests": 29,
+    "serverSourceAndTestTypechecks": true,
+    "serverAudit": true,
+    "serverDocgen": true,
+    "independentSourceReviewRequiredFindings": 0,
+    "familiesRowsIdenticalToPrior": true,
+    "predictionReportsByteIdentical": 60,
+    "strict": 39,
+    "selected": 538,
+    "parsed": 537,
+    "abstained": 455,
+    "lostOriginal37": [],
+    "lostPrior39": []
+  },
+  "numericalGatesPassed": false,
+  "goalCompletionClaimed": false,
+  "sourceFreeze": "research/implementation-review-fixes-001.json",
+  "implementationDigest": "1eeac29ddb04123c236b277995dd227974a5ba11664b33a62e56488a5b5e2a9f",
+  "evidence": {
+    "results.json": "6771e890f6f30ad569920c400c58f5fa21b8db933bfe066e6487958c5059e56f",
+    "gates.json": "3a551093639fe090576b300cc3196c183434692ece3d358e7a7c69ea8e93ac4c",
+    "preservation.json": "97739efe35ddbbb73887ba1559a0c1f15c501422672fd48c871feaf09c750347",
+    "diagnostics.json": "64726131447154595bf9cd41dbe9101322c618e81e9e9f33a8bba3b260ee8aa5"
+  }
+}
