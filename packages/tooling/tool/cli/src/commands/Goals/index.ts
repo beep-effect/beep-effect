@@ -126,6 +126,25 @@ export * from "./Graph.ts";
  */
 export * from "./Inventory.ts";
 /**
+ * Formatter port of the manifest writer.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./Manifest.service.ts";
+/**
+ * `beep goals manifest`: the generated `researchReports` projection writer and check.
+ *
+ * @since 0.0.0
+ */
+export * from "./Manifest.ts";
+/**
+ * Pure `researchReports` projection core shared by the manifest writer and the doctor.
+ *
+ * @since 0.0.0
+ */
+export * from "./ManifestProjection.ts";
+/**
  * Materialization executor: replay reviewed bootstrap and adoption plans.
  *
  * @category cli-commands

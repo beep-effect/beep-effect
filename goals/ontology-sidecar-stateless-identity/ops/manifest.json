@@ -39,10 +39,7 @@
     "goals/agent-execution-authority/SPEC.md",
     "goals/mcp-stateless-kit-and-drivers/SPEC.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "explorations/effect-mcp-2026-07-28/research/SOURCES.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -92,5 +89,8 @@
     "The implementation would exceed named scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
+  ],
+  "researchReferences": [
+    "explorations/effect-mcp-2026-07-28/research/SOURCES.md"
   ]
 }

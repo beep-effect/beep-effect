@@ -31,7 +31,11 @@
     "goals/push-first-publish/GOAL.md",
     "goals/push-first-publish/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/draft-reviewers.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

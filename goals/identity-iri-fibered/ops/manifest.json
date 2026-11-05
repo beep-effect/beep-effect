@@ -44,16 +44,10 @@
     "goals/identity-iri-fibered/history/reflections/2026-08-25-claude.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/identity-as-iri/research/SOURCES.md",
-    "../../explorations/identity-as-iri/research/20-repo-mining-synthesis.md",
-    "../../explorations/identity-as-iri/research/21-synthesis-adversarial-review.md",
+    "research/2026-08-17-academia-wave2-findings.md",
     "research/2026-08-25-p1-design.md",
-    "history/p0-blocker-audit.md",
-    "history/p1-p2-evidence.md",
-    "history/p1-lane-a-report.md",
-    "history/p1-lane-b-report.md",
-    "research/OPPORTUNITIES.md"
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {
@@ -103,5 +97,14 @@
     "The post-move SHACL contract layer cannot be identified.",
     "The discrete case would require version/coherence machinery.",
     "Store work would become a production technology decision."
+  ],
+  "researchReferences": [
+    "../../explorations/identity-as-iri/research/20-repo-mining-synthesis.md",
+    "../../explorations/identity-as-iri/research/21-synthesis-adversarial-review.md",
+    "../../explorations/identity-as-iri/research/SOURCES.md",
+    "history/p0-blocker-audit.md",
+    "history/p1-lane-a-report.md",
+    "history/p1-lane-b-report.md",
+    "history/p1-p2-evidence.md"
   ]
 }

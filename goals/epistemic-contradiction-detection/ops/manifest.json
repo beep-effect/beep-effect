@@ -40,7 +40,7 @@
     "packages/epistemic/domain/src/entities/Contradiction/Contradiction.model.ts",
     "packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

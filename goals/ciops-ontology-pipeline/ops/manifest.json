@@ -51,11 +51,15 @@
   "researchReports": [
     "research/SOURCES.md",
     "research/decisions.md",
-    "../../explorations/beep-ci-operational-ontology/RESEARCH.md",
-    "../../explorations/beep-ci-operational-ontology/research/SOURCES.md",
-    "../../explorations/beep-ci-operational-ontology/research/kpi-measurement-rules.md",
-    "../../explorations/beep-ci-operational-ontology/research/auditor-run4-intake.md",
-    "../../explorations/beep-ci-operational-ontology/DECISIONS.md"
+    "research/kpi-adoption-table.json",
+    "research/kpi-reading.json",
+    "research/kpi-reading.md",
+    "research/kpi-scripts-cache-baseline-request.json",
+    "research/kpi-verdict.md",
+    "research/p4-survey.md",
+    "research/s7-live-replay-evidence.md",
+    "research/scripts/w1_lever_query.sh",
+    "research/w1-lever-query.md"
   ],
   "agentLaunchers": [
     {
@@ -130,5 +134,12 @@
     "S8 IRI-scheme, OWL 2 RL formalization, or rules-compilation work becomes necessary: stop and reopen the exploration at decompose for ciops-iri-formalization.",
     "A capture would place raw process identities, host paths, uids, hostnames, or session ids in the public tree (residue scan non-empty).",
     "Run 4 would launch without the graduation Ruling 1 gate holding, or with seats routed against graduation Ruling 4."
+  ],
+  "researchReferences": [
+    "../../explorations/beep-ci-operational-ontology/DECISIONS.md",
+    "../../explorations/beep-ci-operational-ontology/RESEARCH.md",
+    "../../explorations/beep-ci-operational-ontology/research/SOURCES.md",
+    "../../explorations/beep-ci-operational-ontology/research/auditor-run4-intake.md",
+    "../../explorations/beep-ci-operational-ontology/research/kpi-measurement-rules.md"
   ]
 }

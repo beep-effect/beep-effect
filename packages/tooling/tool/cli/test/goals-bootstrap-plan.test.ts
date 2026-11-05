@@ -234,7 +234,6 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           expect(unmodeledKeys).toStrictEqual([
             "agentLaunchers",
             "currentSourceOfTruth",
-            "researchReports",
             "stopConditions",
             "verificationCommands",
           ]);
@@ -311,13 +310,7 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
         const encoded: unknown = yield* encodeGoalManifest(decoded);
         expect(isJsonRecord(encoded)).toBe(true);
         const roundTripKeys = isJsonRecord(encoded) ? R.keys(encoded) : A.empty<string>();
-        for (const lost of [
-          "agentLaunchers",
-          "currentSourceOfTruth",
-          "researchReports",
-          "stopConditions",
-          "verificationCommands",
-        ]) {
+        for (const lost of ["agentLaunchers", "currentSourceOfTruth", "stopConditions", "verificationCommands"]) {
           expect(originalKeys).toContain(lost);
           expect(roundTripKeys).not.toContain(lost);
         }

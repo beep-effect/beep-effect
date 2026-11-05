@@ -18,6 +18,8 @@ case "$repo_path" in
     ;;
   apps/professional-desktop/src/runtime/Migrations.gen.ts)
     ;;
+  goals/*/ops/manifest.json)
+    ;;
   *)
     echo "regenerate merge driver refused non-projection path: $repo_path" >&2
     exit 1

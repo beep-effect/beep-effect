@@ -39,7 +39,11 @@
     "explorations/court-vocabulary-resolver/MAP.md",
     "explorations/court-vocabulary-resolver/DECISIONS.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/EYECITE_DATA_AUDIT.md"],
+  "researchReports": [
+    "research/EYECITE_DATA_AUDIT.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
