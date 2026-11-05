@@ -857,6 +857,78 @@ observed schema difference changed the matrix and next qualification work.
   an older observation onto them. A new source binding requires its own replay.
 
 
+### 2026-11-03 — keep the adoption queue aligned with accepted packages
+
+- Accepted main added 36 executable computations after the published population.
+  A configured cache flag and an old workspace-wide script-map digest cannot
+  decide whether those computations are safe to reuse.
+- Consume the existing Cache census, retain the prior reviewed population, and
+  recheck literal wrappers and effective configuration. Three new source-writing
+  fixers remain fresh; their pure lint counterparts still need qualification.
+- Consume the existing economics report rather than attributing its lint/test
+  repairs to cache hits. Keep preview measurements separate from the absent
+  final full-week verdict and from any new cache-specific before/after proof.
+
+
+### 2026-11-03 — distinguish the preview from later repair effects
+
+- Review #2683 found that the consumer incorrectly described the window-4
+  preview as including later lint and unit-layout repairs. The owning plan
+  states that the census used the old layout.
+- Bind attribution to the measurement window and repair timing before writing
+  a benefit claim. This preview measures no repair or Turbo speed-up; the
+  Test Unit re-bin gain remains unobserved. Correct the plan, receipt and PR
+  description together, retaining the owning source hashes and measurements.
+
+
+### 2026-11-03 — Explicit wrappers left in the disposition queue
+
+The accepted-source inventory still listed the website dev server, its fixer
+and the live Bun audit as pending even though their literal commands and
+existing disabled-cache configuration support whole-task freshness. A changed
+workspace script-map digest is not a semantic task review. The new explicit
+freshness report resolves these three aliases against their implementations,
+effective configuration and accepted source bytes. During each population
+reconciliation, enumerate remaining service/fixer/audit candidates and follow
+the actual command before carrying a disposition forward. Their pure
+prerequisites still need qualification; this review changes no runtime setting.
+
+
+### 2026-11-03 — Installed fleet scanner lagged the CLI-kit move
+
+A deployed-boundary refresh found the workstation's installed `fleet.py` still
+looking only at the retired repo-cli policy path after accepted #2669. It
+reported four current checkouts as legacy. The accepted source already handles
+both paths; a backed-up atomic refresh corrected read-only discovery without
+restarting the adapter or applying enrollment. Include installed helper source
+parity in package-layout migration handoffs. Refresh the needed helper
+independently so maintenance does not activate a later opt-in signing extension.
+The receipt preserves the source hashes and the 38-checkout before/after plan.
+
+
+### 2026-11-03 — Configured task graphs omit script-only entrypoints
+
+The real `turbo query` catalogue on both pinned clients exposes 1,799 script
+entrypoints outside the requested configured graph. All match manifest names
+and literal command bytes. The earlier 2,436-executable projection remained a
+useful graph census, but the nested-command obligation needed an explicit
+complete inventory. The new receipt names every additional entrypoint and
+1,309 literal wrapper-call relationships without inventing execution or
+equivalence. Use the manifest/query join during future census refreshes, and
+retain the remaining role and dynamic-caller reviews as unfinished work.
+The first query selected unnecessary fields and reached its one-MiB bound;
+reducing fields preserved the budget and captured the complete needed catalogue.
+
+
+### 2026-11-03 — Record capture guard phases explicitly
+
+Review [#2683](https://github.com/beep-effect/beep-effect/pull/2683#discussion_r4457136459)
+found that the committed catalogue reported aggregate binding checks without
+separate pre/post receipts. A bounded metadata replay now emits each census
+digest, observed binding digest, count and timestamp, plus the private receipt's
+digest and retention reference. Successful assertions should emit their phase
+identity and observed values when they are part of an auditable capture contract.
+The original captures and refusal remain retained; no historical phase was invented.
 ### 2026-11-03 — distinguish doctor timeout phases from mint context
 
 - Hosted policy retry job 126142873504 preserved the new timeout tail, but its

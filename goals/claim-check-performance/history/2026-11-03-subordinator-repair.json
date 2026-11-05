@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "claim-performance-subordinator-repair/v1",
+  "sourceFreeze": "research/implementation-subordinator-002.json",
+  "resultSha256": "c356031109e986eb9fff077dda6103fb6064c4ed9f386a6a2ae88d8cc2aad543",
+  "legacyStrictMatches": 39,
+  "selectedClaims": 538,
+  "newExactMatches": [["12749812-root-1", 6]],
+  "lostOriginalOrPriorPasses": [],
+  "parsed": 537,
+  "abstained": 455,
+  "focusedRulesCollectiveAndSubordinatorTests": 41,
+  "independentFocusedPolicyFiniteAndSubordinatorTests": 14,
+  "domainPackageAudit": "passed",
+  "domainDocgen": "passed",
+  "independentRequiredFindings": 0,
+  "quotationScope": "Paired term-name quotations protect lexical boundaries. Other earlier stages retain existing behavior.",
+  "oldLabelsScorerResultsAndThresholdsChanged": false,
+  "usefulnessEstablished": false,
+  "goalComplete": false
+}

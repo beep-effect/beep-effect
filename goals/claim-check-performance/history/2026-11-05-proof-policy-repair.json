@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "claim-proof-policy-repair/v1",
+  "strict": 39,
+  "selected": 538,
+  "allPrior39Retained": true,
+  "original37Retained": true,
+  "familyRowsUnchanged": true,
+  "byteIdenticalPredictionReports": 60,
+  "changes": [
+    "Use S.tag(true) for single literal schema field",
+    "Use canonical assertNone for Option assertion"
+  ],
+  "sourceFreeze": "research/implementation-proof-policy-001.json",
+  "schemaTagRuleFindings": 0,
+  "scopedEffectVitestFindings": 0,
+  "focusedTests": 14,
+  "typecheckPassed": true,
+  "numericalUsefulnessAchieved": false,
+  "resultsSha256": "d2d0d411753e3550e739e73961964e9958ec901c5cab8dbec6d881150af99bab"
+}

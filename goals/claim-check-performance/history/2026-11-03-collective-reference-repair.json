@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "claim-performance-collective-reference/v1",
+  "sourceFreeze": "research/implementation-collective-reference-002.json",
+  "resultSha256": "7b748717944431973cd248d170d8083b6ed22f3f37fc53a30c38338a12b1a6e1",
+  "legacyStrictMatches": 38,
+  "selectedClaims": 538,
+  "newExactMatches": [["14659462-root-1", 11]],
+  "lostOriginalOrPriorPasses": [],
+  "parsed": 537,
+  "abstained": 455,
+  "focusedTests": 46,
+  "domainPackageAudit": "passed",
+  "domainDocgen": "passed",
+  "independentRequiredFindings": 0,
+  "closedFinding": "COLLECTIVE-001",
+  "earlierCandidateResultsRetained": true,
+  "labelsScorerThresholdsAndPreviousResultsChanged": false,
+  "usefulnessEstablished": false,
+  "goalComplete": false
+}
