@@ -1,6 +1,7 @@
 import { fcRuns } from "@beep/fc-runs";
 import {
   encodeManagedControllerObservation,
+  ManagedControllerError,
   ManagedControllerObservation,
 } from "@beep/repo-ai-metrics/managed-controller";
 import { encodeNativeTraceBatch, NativeExportInput } from "@beep/repo-ai-metrics/native-export";
@@ -15,7 +16,7 @@ import { hashPrivateIdentifier, hashPublicTextSha256 } from "@beep/repo-ai-metri
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import { expect } from "@effect/vitest";
+import { expect, vi } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -356,6 +357,35 @@ it.layer(NodeCrypto.layer)((it) => {
       expect(NativeTraceError.make({ reason: "invalid-envelope" }).message).toBe(
         "Native trace request refused (invalid-envelope)."
       );
+    })
+  );
+});
+
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
+  it.effect("refuses invalid controller evidence before encoding or hashing it", () =>
+    Effect.gen(function* () {
+      const invalid = ManagedControllerObservation.make(
+        { ...observation, elapsedNanos: "120000000001" },
+        { disableChecks: true }
+      );
+      const error = yield* Effect.flip(encodeManagedControllerObservation(invalid));
+      expect(error).toEqual(ManagedControllerError.make({ reason: "evidence" }));
+    })
+  );
+
+  it.effect("returns a content-free encoding error when the protobuf writer fails", () =>
+    Effect.gen(function* () {
+      const writer = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          vi.spyOn(Protobuf.Writer.prototype, "finish").mockImplementationOnce(() => {
+            throw ManagedControllerError.make({ reason: "evidence" });
+          })
+        ),
+        (mock) => Effect.sync(() => mock.mockRestore())
+      );
+      const error = yield* Effect.flip(encodeManagedControllerObservation(observation));
+      expect(error).toEqual(ManagedControllerError.make({ reason: "encoding" }));
+      expect(writer).toHaveBeenCalledTimes(1);
     })
   );
 });
