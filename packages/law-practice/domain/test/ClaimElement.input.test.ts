@@ -13,7 +13,6 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -35,14 +34,14 @@ const textRecord = (sourceOrdinal: number, numberText: O.Option<string>) =>
 describe("claim inspection source identity", () => {
   it.effect.prop(
     "roundtrips arbitrary source records without changing literal numbers or source fragments",
-    { record: Arbitrary.schema(ClaimInputRecord) },
-    ({ record }) =>
+    [ClaimInputRecord],
+    ([record]) =>
       Effect.gen(function* () {
         const encoded = yield* S.encodeEffect(claimRecordJson)(record);
         const decoded = yield* S.decodeEffect(claimRecordJson)(encoded);
         assert.isTrue(claimRecordEquivalence(decoded, record));
       }),
-    { arbitrary: fcRuns(100) }
+    { arbitrary: { ...fcRuns(100), seed: "claim-input-preservation-v1" } }
   );
 
   it.effect("preserves duplicate and missing literal numbers through the actual JSON codec", () =>

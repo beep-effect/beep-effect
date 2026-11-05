@@ -89,6 +89,26 @@ const optionGuardRules: ReadonlyArray<OptionGuardRule> = [
     message:
       "yeet publish --staged-only cannot be combined with --push-only, --reuse-verified, or --amend; those modes never create a fresh reviewed commit to scope.",
   },
+  {
+    rejects: (options) => options.hostedProof && (options.mode !== "publish" || !options.pr),
+    message: "yeet open is a publish that always opens or reuses a pull request.",
+  },
+  {
+    rejects: (options) =>
+      options.hostedProof &&
+      (options.proveFirst ||
+        options.pushOnly ||
+        options.reuseVerified ||
+        options.amend ||
+        options.noEdit ||
+        options.stagedOnly),
+    message:
+      "yeet open pushes the committed HEAD without a local proof; it cannot be combined with --prove-first, --push-only, --reuse-verified, --amend, --no-edit, or --staged-only.",
+  },
+  {
+    rejects: (options) => O.isSome(optionFromNonEmpty(options.bodyFile)) && options.mode !== "publish",
+    message: "yeet --body-file is only valid for publish and open.",
+  },
 ];
 
 const validateOptionGuards = (options: YeetRunOptions): Effect.Effect<void, YeetCommandError> =>

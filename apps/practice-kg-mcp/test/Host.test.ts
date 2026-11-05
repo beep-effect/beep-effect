@@ -534,6 +534,24 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
       },
     ],
     ["claim_self_check", { input: { docket: canaries.docket } }],
+    [
+      "claim_inspect_input",
+      {
+        input: {
+          sourceKey: canaries.key,
+          records: [
+            {
+              kind: "text",
+              sourceOrdinal: 1,
+              numberText: "1",
+              sourceText: canaryClaimsSource,
+              canonicalText: canaryClaim,
+            },
+          ],
+        },
+      },
+    ],
+    ["claim_inspect_input", { input: { sourceKey: canaries.key, records: [] } }],
     ["kg_clients", {}],
     ["kg_docket_family", { family: canaries.family }],
     ["kg_application_lookup", { docket: canaries.docket }],

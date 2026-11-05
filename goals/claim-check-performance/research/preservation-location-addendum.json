@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "claim-performance-preservation-location/v1",
+  "acceptedRevision": "31e2ac20f34a1c699a35be55f67881dbf0d8ffd0",
+  "reason": "Retain exact historical runner bytes while accepted mechanical yield hoisting satisfies current diagnostics. No reference, scorer, result or numerical gate changes.",
+  "mappings": [
+    {
+      "originalPath": "packages/law-practice/server/test/evaluation/allowed.main.ts",
+      "archivePath": "goals/claim-check-performance/research/legacy-protocol/allowed.main.ts.txt",
+      "historicalSha256": "5d6e892810065e5abc08863e075c9b48a51ca5eecb72bf0888c02d759fa23e20",
+      "activeSha256": "d774701ac7e444ce165d79d28535a9a556388c515f5859809abf2359fa1b0094"
+    },
+    {
+      "originalPath": "packages/law-practice/server/test/evaluation/iprally-smoke.main.ts",
+      "archivePath": "goals/claim-check-performance/research/legacy-protocol/iprally-smoke.main.ts.txt",
+      "historicalSha256": "81180ce2afb1915d5abffe5442d58b9f54d23529338bec6772cfdd74a3af0bf1",
+      "activeSha256": "041e4c9ed71c372cc91951d6707c61640958ab490672efbf7d02c3e96bec0813"
+    },
+    {
+      "originalPath": "packages/law-practice/server/test/evaluation/positive.main.ts",
+      "archivePath": "goals/claim-check-performance/research/legacy-protocol/positive.main.ts.txt",
+      "historicalSha256": "ab9e2b6ae8e9f7b76a2c81755a45156960871efa363b41a0f6b35f51c5e2cde3",
+      "activeSha256": "061c8a578fca133ca7da71595271568906b2ff474664f6c2e31b60920a607d03"
+    }
+  ]
+}

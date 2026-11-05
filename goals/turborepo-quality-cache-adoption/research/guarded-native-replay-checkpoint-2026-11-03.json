@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "guarded-native-replay-checkpoint/v1",
+  "recordedAt": "2026-11-03T22:12:16.625758+00:00",
+  "authority": "Startup refusal and synthetic exact-client semantics only. No Beep quality suite, real computation/profile or rollout qualification.",
+  "executionBaseHead": "52a33e7e66b36ac11be28c671e16ab9e3167eba9",
+  "driverGuardEditsWereCommittedAtExecution": false,
+  "sourceBindingExplanation": "The two uncommitted guard edits are bound by captured digests. Normal replay reports bind their exact executed sources; historical reports keep their original source envelopes.",
+  "startupRefusals": {
+    "report": "native-startup-refusals-2026-11-03.json",
+    "cases": 12,
+    "nativeOrFixtureExecutions": 0,
+    "outputParentsAbsent": true,
+    "simulatedPlatformBranchOnly": true,
+    "sourceReportSha256": "15e389040bc9e658df91d3b8eb8c2de83592b11f4e6b1061b77fb8f55c2a0d03",
+    "sourceReportBytes": 10581,
+    "publishedReportSha256": "0f33849906b1218f2b85918dd426e72937c1f4a461765c90c9783b58019ef1cf",
+    "publishedReportBytes": 10569,
+    "decodedPublicReportEqualsNative": true
+  },
+  "reports": [
+    {
+      "kind": "boundaries",
+      "file": "native-boundaries-controls-2026-11-03-guarded.json",
+      "rawBatchReport": "boundaries/report.json",
+      "sourceReportSha256": "25e65977ee002cd875b612343a3bae5be0c2a3b14e9f795fba1f392cd02934f1",
+      "sourceReportBytes": 30239,
+      "counts": {
+        "cases": 24,
+        "positive": 10,
+        "negative": 14,
+        "fixtureTaskExecutions": 0,
+        "rawBytes": 13808
+      },
+      "sourceBindings": [
+        {
+          "path": "goals/turborepo-quality-cache-adoption/research/native-boundaries-controls.py",
+          "sha256": "50eb3e7f702d3b6d620b4423214150d9e7a586ac515bd893707a57a22eb5dea4"
+        },
+        {
+          "path": "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py",
+          "sha256": "ab4a4f6be9e7c1ed5f132b9600c90d63ff45223f2af59efe58a7b12bf93e7ad2"
+        },
+        {
+          "path": "goals/turborepo-quality-cache-adoption/research/current-client-pins.json",
+          "sha256": "b3d507054f6e67ae8de5b235f05ae6786aed2f3f4361da20ec49a50d67cacecd"
+        },
+        {
+          "path": ".bun-version",
+          "sha256": "d03d8b268b4171328ac2458ce8ca82d69a1fde38469d4e4faae4f8fa8d8a5e35"
+        },
+        {
+          "path": "node_modules/turbo/docs/reference/boundaries.mdx",
+          "sha256": "2abbea2b157fef9e517cc1975a3cc68cab99a56730846ed2c0c033ab23dfb380"
+        }
+      ],
+      "retainedRawFiles": 120,
+      "allReferencedDigestsChecked": true,
+      "decodedPublicReportEqualsRaw": true,
+      "publishedReportSha256": "25e65977ee002cd875b612343a3bae5be0c2a3b14e9f795fba1f392cd02934f1",
+      "publishedReportBytes": 30239
+    },
+    {
+      "kind": "worktrees",
+      "file": "native-worktree-controls-2026-11-03-guarded.json",
+      "rawBatchReport": "worktrees/report.json",
+      "sourceReportSha256": "1ce7c85127b8049a482be21a5bf98ba11d99b85b1f8cba313d851177170f764b",
+      "sourceReportBytes": 92727,
+      "counts": {
+        "taskInvocations": 36,
+        "hits": 14,
+        "fixtureTaskExecutions": 22,
+        "gitPrerequisites": 32,
+        "rawBytes": 130372
+      },
+      "sourceBindings": [
+        {
+          "path": "goals/turborepo-quality-cache-adoption/research/native-worktree-controls.py",
+          "sha256": "0a3de73a0227b8be33165c1a81ea22cbd419bc7b12238354d6b60f950b9dd2d9"
+        },
+        {
+          "path": "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py",
+          "sha256": "ab4a4f6be9e7c1ed5f132b9600c90d63ff45223f2af59efe58a7b12bf93e7ad2"
+        },
+        {
+          "path": "goals/turborepo-quality-cache-adoption/research/current-client-pins.json",
+          "sha256": "b3d507054f6e67ae8de5b235f05ae6786aed2f3f4361da20ec49a50d67cacecd"
+        },
+        {
+          "path": ".bun-version",
+          "sha256": "d03d8b268b4171328ac2458ce8ca82d69a1fde38469d4e4faae4f8fa8d8a5e35"
+        },
+        {
+          "path": "node_modules/turbo/docs/crafting-your-repository/caching.mdx",
+          "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e"
+        }
+      ],
+      "retainedRawFiles": 284,
+      "allReferencedDigestsChecked": true,
+      "decodedPublicReportEqualsRaw": true,
+      "publishedReportSha256": "1ce7c85127b8049a482be21a5bf98ba11d99b85b1f8cba313d851177170f764b",
+      "publishedReportBytes": 92727
+    }
+  ],
+  "admission": {
+    "existingTokens": 1,
+    "waitMs": 27,
+    "runtimeMs": 11516,
+    "peakMemoryBytes": 210583552,
+    "released": true,
+    "wrapperElapsedSeconds": 12.081,
+    "scope": "One shared batch; not duplicated per child and not time saved."
+  },
+  "publishedPairRecheck": {
+    "at": "2026-11-03T22:08:53.043565+00:00",
+    "source": "https://registry.npmjs.org/-/package/turbo/dist-tags",
+    "latest": "2.11.10",
+    "canary": "2.11.11-canary.1"
+  },
+  "remaining": [
+    "Fresh hosted CI and review",
+    "Real computation/profile and feature acceptance",
+    "Protected producer/trust/epoch and cohort observation work"
+  ],
+  "historicalReportsUnchanged": true,
+  "reportByteBindings": "sourceReportSha256 binds retained captured bytes; publishedReportSha256 binds the committed formatted report. Decoded public/native equality is checked separately."
+}
