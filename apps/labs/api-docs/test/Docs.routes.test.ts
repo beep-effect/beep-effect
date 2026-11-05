@@ -1,5 +1,5 @@
 import { it } from "@beep/test-runner";
-import { describe, expect } from "@effect/vitest";
+import { afterEach, describe, expect, vi } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as HttpRouter from "effect/http/HttpRouter";
 import * as S from "effect/Schema";
@@ -22,6 +22,10 @@ const decodeOpenApiDocument = S.decodeUnknownEffect(
   )
 );
 const decodeUnknownJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const scalarScriptModuleUrl = new URL(
+  "./internal/httpApiScalar.js",
+  import.meta.resolve("effect/http-api/HttpApiScalar")
+).href;
 
 const verifyDocsRoutes = Effect.fn("ApiDocs.test.verifyDocsRoutes")(function* () {
   const webHandler = yield* Effect.acquireRelease(
@@ -90,5 +94,23 @@ const verifyDocsRoutes = Effect.fn("ApiDocs.test.verifyDocsRoutes")(function* ()
 });
 
 describe("API docs routes", () => {
+  afterEach(() => vi.doUnmock(scalarScriptModuleUrl));
+
   it.effect("serves contract docs and committed specifications", verifyDocsRoutes);
+
+  it.effect("returns a server error when the local Scalar script cannot be loaded", () =>
+    Effect.gen(function* () {
+      vi.doMock(scalarScriptModuleUrl, () => {
+        throw DocsRoutesTestOperationError.make({ cause: "unavailable bundled Scalar script" });
+      });
+      const webHandler = yield* Effect.acquireRelease(
+        Effect.sync(() => HttpRouter.toWebHandler(ApiLive, { disableLogger: true })),
+        ({ dispose }) => Effect.promise(dispose)
+      );
+      const response = yield* Effect.promise(() =>
+        webHandler.handler(new Request("http://api-docs.test/assets/scalar-api-reference-1.43.5.js"))
+      );
+      expect(response.status).toBe(500);
+    })
+  );
 });

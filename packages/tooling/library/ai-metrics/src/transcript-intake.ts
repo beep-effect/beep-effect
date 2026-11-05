@@ -344,9 +344,7 @@ const requireStoredConfiguration = Effect.fnUntraced(function* (sql: SqlClient.S
     yield* sql`SELECT substr(payload,1,4097) AS payload FROM observation_intake_config WHERE singleton = 1`.pipe(
       Effect.flatMap(S.decodeUnknownEffect(PayloadRows))
     );
-  if (existing.length !== 1 || existing[0]?.payload !== configJson) {
-    return yield* failure("configuration");
-  }
+  if (existing.length !== 1 || existing[0]?.payload !== configJson) return yield* failure("configuration");
 });
 const requireOwnedJournal = Effect.fnUntraced(function* (sql: SqlClient.SqlClient, configJson: string) {
   const names =
@@ -357,9 +355,8 @@ const requireOwnedJournal = Effect.fnUntraced(function* (sql: SqlClient.SqlClien
     names.length > tables.length ||
     A.some(names, (row) => !A.contains(tables, row.name)) ||
     (names.length > 0 && !A.some(names, (row) => row.name === "observation_intake_config"))
-  ) {
+  )
     return yield* failure("not-owned");
-  }
   if (names.length > 0) {
     yield* requireStoredConfiguration(sql, configJson);
   }
@@ -369,9 +366,8 @@ const configureJournalDatabase = Effect.fnUntraced(function* (
   config: TranscriptIntakeConfig
 ) {
   const databases = yield* sql`PRAGMA database_list`.pipe(Effect.flatMap(decodeNameFileRecordRows));
-  if (databases.length !== 1 || databases[0]?.name !== "main" || databases[0]?.file === "") {
+  if (databases.length !== 1 || databases[0]?.name !== "main" || databases[0]?.file === "")
     return yield* failure("configuration");
-  }
   yield* sql`PRAGMA page_size = 4096`;
   yield* sql`PRAGMA journal_mode = DELETE`;
   yield* sql`PRAGMA synchronous = EXTRA`;
@@ -382,9 +378,7 @@ const configureJournalDatabase = Effect.fnUntraced(function* (
   yield* sql`PRAGMA journal_mode`.pipe(Effect.flatMap(decodeArguments2));
   yield* sql`PRAGMA page_size`.pipe(Effect.flatMap(decodeArguments3));
   const ceiling = yield* sql`PRAGMA max_page_count`.pipe(Effect.flatMap(decodeArguments4));
-  if (ceiling[0].max_page_count !== config.maxDatabasePages) {
-    return yield* failure("configuration");
-  }
+  if (ceiling[0].max_page_count !== config.maxDatabasePages) return yield* failure("configuration");
 });
 const initializeJournalTables = Effect.fnUntraced(function* (sql: SqlClient.SqlClient, configJson: string) {
   yield* sql.withTransaction(
@@ -399,9 +393,8 @@ const initializeJournalTables = Effect.fnUntraced(function* (sql: SqlClient.SqlC
       const columns = yield* sql`PRAGMA table_info(observation_intake_pages)`.pipe(
         Effect.flatMap(decodeNameRecordRows)
       );
-      if (!A.some(columns, (c) => c.name === "evidence_epoch")) {
+      if (!A.some(columns, (c) => c.name === "evidence_epoch"))
         yield* sql`ALTER TABLE observation_intake_pages ADD COLUMN evidence_epoch INTEGER NOT NULL DEFAULT 0`;
-      }
       yield* sql`CREATE TABLE IF NOT EXISTS observation_evidence_window(singleton INTEGER PRIMARY KEY CHECK(singleton=1),payload TEXT NOT NULL,digest TEXT NOT NULL)`;
       const window = EvidenceWindow.make({
         epoch: 0,
@@ -491,13 +484,9 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
                   Effect.flatMap(decodePayloadDigestRecordRows)
                 );
               if (rows[0] === undefined) return O.none<PageDisposition>();
-              if ((yield* hashPublicTextSha256(rows[0].payload)) !== rows[0].digest) {
-                return yield* failure("storage");
-              }
+              if ((yield* hashPublicTextSha256(rows[0].payload)) !== rows[0].digest) return yield* failure("storage");
               const value = yield* decodePageDispositionJson(rows[0].payload);
-              if (value.page.receiptId !== receiptId) {
-                return yield* failure("storage");
-              }
+              if (value.page.receiptId !== receiptId) return yield* failure("storage");
               return O.some(value);
             })
           )
@@ -521,22 +510,17 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
           (page: TranscriptPage, expected: O.Option<TranscriptCursor>) =>
             safe(
               Effect.gen(function* () {
-                if (page.cursor.namespaceId !== config.namespaceId) {
-                  return yield* failure("namespace");
-                }
+                if (page.cursor.namespaceId !== config.namespaceId) return yield* failure("namespace");
                 if (
                   O.isSome(expected) &&
                   (expected.value.namespaceId !== config.namespaceId ||
                     expected.value.pathHash !== page.cursor.pathHash ||
                     expected.value.source !== page.cursor.source)
-                ) {
+                )
                   return yield* failure("namespace");
-                }
                 const payload = yield* encodeTranscriptPageJson(page);
                 const payloadBytes = new TextEncoder().encode(payload).byteLength;
-                if (payloadBytes > 4_194_304) {
-                  return yield* failure("oversize");
-                }
+                if (payloadBytes > 4_194_304) return yield* failure("oversize");
 
                 const expectedJson = O.isSome(expected)
                   ? yield* Effect.asSome(encodeCursor(expected.value))
@@ -558,9 +542,7 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
                     if (replay[0] !== undefined) return replay[0];
                     const disposed = yield* readDisposition(receiptId);
                     if (O.isSome(disposed)) {
-                      if (disposed.value.reason === "retention-expired") {
-                        return yield* failure("expired");
-                      }
+                      if (disposed.value.reason === "retention-expired") return yield* failure("expired");
                       return disposed.value.page;
                     }
                     const current =
@@ -572,9 +554,8 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
                         O.map(A.head(current), (row) => row.payload),
                         expectedJson
                       )
-                    ) {
+                    )
                       return yield* failure("stale-cursor");
-                    }
                     yield* requireDispositionCapacity.pipe(
                       Effect.provideService(SqlClient.SqlClient, sql),
                       Effect.mapError((error) => failure(error === "disposition-capacity" ? "capacity" : "storage"))
@@ -583,9 +564,8 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
                     if (
                       count.pages >= config.maxPages ||
                       count.payloadBytes + (yield* reservedLaunchBytes) + payloadBytes > config.maxPayloadBytes
-                    ) {
+                    )
                       return yield* failure("capacity");
-                    }
                     const at = yield* Clock.currentTimeMillis;
                     yield* sql`INSERT INTO observation_intake_pages(receipt_id,source_key,payload,payload_bytes,frames,accepted_at,evidence_epoch)
           VALUES (${receiptId},${key},${payload},${payloadBytes},${page.frames.length},${at},${window.epoch})`;

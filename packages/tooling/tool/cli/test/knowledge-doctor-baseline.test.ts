@@ -879,10 +879,11 @@ describe("knowledge doctor sealed baseline", () => {
             Effect.fail(PlatformError.systemError({ _tag: "NotFound", module: "ChildProcess", method: "spawn" }))
           );
         yield* Effect.gen(function* () {
+          const previousErrors = yield* TestConsole.errorLines;
           yield* warnKnowledgeLeases("/synthetic-checkout");
           yield* warnKnowledgeLeases("/synthetic-checkout");
           yield* warnKnowledgeLeases("/synthetic-checkout");
-          const errors = yield* TestConsole.errorLines;
+          const errors = yield* Effect.map(TestConsole.errorLines, A.drop(A.length(previousErrors)));
           assert.strictEqual(A.length(errors), 2);
           assert.include(errors[0] ?? "", "exit 1");
           assert.include(errors[1] ?? "", "did not start");

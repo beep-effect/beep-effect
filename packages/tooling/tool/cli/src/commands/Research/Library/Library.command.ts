@@ -146,8 +146,7 @@ const status = Command.make(
   "status",
   { library },
   Effect.fn("ResearchLibrary.statusCommand")(function* ({ library }) {
-    const resolvedLibraryRoot = yield* resolveLibraryRoot(library);
-    yield* libraryStatus(resolvedLibraryRoot);
+    yield* resolveLibraryRoot(library).pipe(Effect.flatMap(libraryStatus));
   })
 ).pipe(Command.withDescription("Report coverage and provider health separately"));
 
