@@ -52,3 +52,24 @@ restarted.
 - dankserver tailnet exposure of `:3773` (Serve decision; its `:443` is taken).
 - Links on the agent plane (Labs, both ends), tom-pc-1 WSL distro, tbk-worker
   (gated), `t3 service protect` on both hosts (needs sudo, not yet run).
+
+## Link receipt (same day, after the hub restart)
+
+- Hub restarted on `0.1.7-fork.20261105.2218`; `linkedEnvironmentsEnabled`,
+  `loadBalancingEnabled` and project grouping "by repository" survived the
+  restart. beep-worker's server had the Labs flag set and was restarted.
+- Pairing: `t3 pair --ttl 15m` on beep-worker (orchestration, settings,
+  source-control and access scopes); on the hub
+  `t3 environment link https://<beep-worker>.<tailnet>.ts.net --pairing-code <code> --access auto`.
+  Result: `Linked beep-worker (<id>) with auto access, until 2026-12-05`.
+  `t3_environment_links` lists it `reachable`, access `auto`.
+- Through the link: `t3_environment_read` reports `0.1.7-fork.20261105.2218`;
+  `orchestrator_capabilities` lists Codex, Claude, Cursor, Grok and Muse;
+  `t3_project_list` shows `beep-effect` with repository key
+  `github.com/beep-effect/beep-effect` (the same key as the hub's project, so
+  Auto balance can group them).
+- One delegated turn (`delegate_task`, `claude-opus-5-5` medium, read-only)
+  completed and returned verbatim: hostname `beep-worker`,
+  `t3 v0.1.7-fork.20261105.2218`, `fork-current` = `25b53299b7` + version,
+  checkout HEAD `b43a4098bb`, 4 CPUs.
+- The environment id lives in the private orchestrator handoff, not here.
