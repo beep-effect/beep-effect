@@ -54,3 +54,36 @@ response. Eleven open pull requests on two packets from one base were the multip
   2026-11-04T01:06Z, reads "designated primary acceptance and merge only; no local verify/publish".
 - Detection: `yeet monitor --until-ready` P0 base-conflict rows on each lane's inbox
   (`.beep/inbox/`), rendered by `renderYeetBaseConflictDispatchLine`.
+
+## Worked example: episode 30 (2026-11-05, this pull request)
+
+The rules above were exercised by the pull request that carries them, #2701, while
+the orchestrator drained the queue under the operator's 23:40Z ruling ("main might be
+red now but that is okay; get the queue merged, then fix any issues in a follow-up
+PR").
+
+1. 23:31Z: #2700 (`yeet open` and the provenance footer) merged and touched the Yeet
+   command tree and the yeet skill, both of which #2701 edits. The lane's detached
+   readiness monitor wrote the P0 row `base conflict with origin/main (pr #2701 @
+   eb8c79c)` within one poll.
+2. B1 applied: the lane merged `origin/main` at once, whatever its brief said about
+   acceptance. One file conflicted, the generated instrumentation catalog, and it
+   was regenerated (`bun run beep observability catalog --write`), never hand-merged.
+   The touched suites (`yeet-siblings`, `yeet-merge-gate`) were re-run green and the
+   row was acknowledged with the merge commit.
+3. `yeet publish --push-only` refused the merge as non-reproducible because of the
+   regenerated file; the merge went out through the ordinary cheap-gates publish.
+   While it ran, `main` moved twice more (#2511 hand-merged by the operator, then
+   #2692), so the lane merged `origin/main` a second time before pushing: under B4
+   each sibling catch-up is one ordinary merge, not a storm.
+4. The shared `gh` login's GraphQL budget was exhausted by twelve concurrent polling
+   sessions, so every readiness monitor died on `Failed to read the complete pull
+   request check census`. The REST gate view (`yeet gh pr status`) kept working and
+   the lane waited for the budget to return before re-arming the detached monitor.
+   The orchestrator then ruled that `final` is posted with each red attributed, without
+   waiting for hosted green or the readiness job, and merged under S11.
+
+What the episode confirms: the P0 row plus the merged-sibling signal gives the owner a
+concrete, immediate catch-up; a regenerated file is the only safe resolution for a
+generated conflict; and a shared GitHub identity needs REST-first polling budgets
+(the `orchestrate` skill's "REST first" ruling) or the monitors starve each other.
