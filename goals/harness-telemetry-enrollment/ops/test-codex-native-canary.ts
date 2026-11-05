@@ -421,3 +421,31 @@ it.effect("retains admission refusal for quote and backslash paths", () =>
     expect(validWorkspace("/fixture/workspace.v1 with spaces")).toBe(true);
   })
 );
+
+it.live("serialized private admission round-trips its redacted salt without launching a source", () =>
+  // @effect-diagnostics-next-line asyncFunction:off -- Offline codec regression owns only a synthetic local fixture; no producer is invoked.
+  Effect.tryPromise(async () => {
+    const f = await fixture({ nativeHome: true });
+    try {
+      const codec = S.fromJsonString(CodexNativeCanaryRequest);
+      const serialized = await Effect.runPromise(S.encodeEffect(codec)(f.request));
+      const decoded = await Effect.runPromise(S.decodeEffect(codec, { onExcessProperty: "error" })(serialized));
+      expect(Redacted.isRedacted(decoded.hashSalt)).toBe(true);
+      expect(Redacted.value(decoded.hashSalt) === Redacted.value(f.request.hashSalt)).toBe(true);
+      expect(await Effect.runPromise(S.encodeEffect(codec)(decoded))).toBe(serialized);
+      expect(f.spawner.spawns).toHaveLength(0);
+      expect(await Fs.readdir(f.request.attemptDirectory)).toHaveLength(0);
+    } finally {
+      await f.close();
+    }
+  })
+);
+
+it.effect("private salt wire codec rejects empty and non-string values", () =>
+  Effect.gen(function* () {
+    const decode = S.decodeUnknownEffect(CodexNativeCanaryRequest.fields.hashSalt);
+    expect((yield* decode("").pipe(Effect.result))._tag).toBe("Failure");
+    expect((yield* decode(0).pipe(Effect.result))._tag).toBe("Failure");
+    expect((yield* decode(null).pipe(Effect.result))._tag).toBe("Failure");
+  })
+);
