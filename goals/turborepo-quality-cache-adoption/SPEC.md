@@ -1004,3 +1004,28 @@ removes it. Preserve the refusal message and apply the same existing experiment
 bounds. Optimized flags/environment and simulated platform branches must create
 no output parents. Normal guarded replays retain their exact source envelopes;
 old reports remain historical and no feature/task qualification is promoted.
+
+### Prepare the signed native minimum-key safeguard, 2026-11-04 UTC
+
+The trust-owned signed overlay must include `longerSignatureKey: true` and
+its projected identity must bind that exact flag. Consume the source review at
+`../turborepo-cache-trust-observability/research/signed-key-floor-review-2026-11-04.json`.
+This prepares the named signed pilot consumer using the recorded native
+32-byte-boundary behavior; it changes no root flag or live cache setting.
+Keep the feature pending until current hosted, signed remote and rollout
+evidence satisfy its remaining gates. Missing-key roles and protected producer
+authority remain independent. Suspend affected candidate tuples before a
+reviewed revert; do not relabel historical qualification for the new overlay.
+
+### Preserve source during generator checks, 2026-11-03
+
+The HTML and label-glyph `generate:check` entrypoints must compare freshly
+rendered, project-formatted content without writing a target or creating its
+parent directory. Reuse CodegenKit drift reporting and add a project-format
+path while preserving the OpenAPI formatter's existing defaults. Treat a
+nonzero formatter exit as a typed failure. Keep ordinary generation unchanged.
+The isolated CI regressions preserve dirty bytes, reject missing outputs and
+formatter failure, and forbid writes through the check's filesystem service.
+No cache or qualification transition is included. If this repair must be
+withdrawn, suspend the affected checks until repaired rather than restoring
+the destructive generate-then-diff wrappers.

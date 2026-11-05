@@ -67,7 +67,21 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
-    "research/alchemy-fit-2026-10-28.md"
+    "research/alchemy-fit-2026-10-28.md",
+    "research/cache-baseline-request-2026-10-31-2.json",
+    "research/cache-baseline-request-2026-10-31-3.json",
+    "research/cache-baseline-request-2026-10-31-4.json",
+    "research/cache-baseline-request-2026-10-31-5.json",
+    "research/cache-baseline-request-2026-10-31-6.json",
+    "research/cache-baseline-request-2026-10-31-7.json",
+    "research/cache-baseline-request-2026-10-31.json",
+    "research/cache-baseline-review-2026-10-31-2.md",
+    "research/cache-baseline-review-2026-10-31-3.md",
+    "research/cache-baseline-review-2026-10-31-4.md",
+    "research/cache-baseline-review-2026-10-31-5.md",
+    "research/cache-baseline-review-2026-10-31-6.md",
+    "research/cache-baseline-review-2026-10-31-7.md",
+    "research/cache-baseline-review-2026-10-31.md"
   ],
   "agentLaunchers": [
     {

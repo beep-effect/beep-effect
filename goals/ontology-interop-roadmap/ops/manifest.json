@@ -126,5 +126,14 @@
     "Legal/OIP-specific concepts start leaking into foundation modeling APIs.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
+  ],
+  "researchReports": [
+    "research/current-surface-gap-analysis.md",
+    "research/effect-json-schema-metadata.md",
+    "research/folio-export-benchmark.md",
+    "research/oip-workflow-fit.md",
+    "research/roadmap-synthesis.md",
+    "research/skos-profile-research.md",
+    "research/standards-format-inventory.md"
   ]
 }

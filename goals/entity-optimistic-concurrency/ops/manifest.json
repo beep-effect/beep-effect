@@ -43,7 +43,12 @@
     "goals/entity-optimistic-concurrency/GOAL.md",
     "goals/entity-optimistic-concurrency/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/cache-baseline-request-2026-10-21.json",
+    "research/cache-baseline-review-2026-10-21.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

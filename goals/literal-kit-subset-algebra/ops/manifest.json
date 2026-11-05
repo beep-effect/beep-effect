@@ -44,10 +44,21 @@
     "goals/literal-kit-subset-algebra/research/SOURCES.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
+    "research/2026-10-22-adhd-wide-set.md",
     "research/2026-10-22-grill-rulings.md",
     "research/2026-10-22-panel-synthesis.md",
-    "research/2026-10-22-performance.md"
+    "research/2026-10-22-performance.md",
+    "research/SOURCES.md",
+    "research/panel/astra.md",
+    "research/panel/fable-implementation-review.md",
+    "research/panel/grok.md",
+    "research/panel/muse.md",
+    "research/panel/prompt.md",
+    "research/probes/annotation-needs.probe.ts",
+    "research/probes/match-return-and-whenor.probe.ts",
+    "research/tools/dispatch-bench.ts",
+    "research/upstream/9821-literals-omit.md",
+    "research/upstream/9822-match-literals.md"
   ],
   "agentLaunchers": [
     {

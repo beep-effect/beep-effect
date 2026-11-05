@@ -49,15 +49,7 @@
     "goals/agent-pipeline-velocity/GOAL.md",
     "goals/agent-pipeline-velocity/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "explorations/agent-pipeline-velocity/research/baseline-agent-config.md",
-    "explorations/agent-pipeline-velocity/research/baseline-pipeline.md",
-    "explorations/agent-pipeline-velocity/research/baseline-review-merge.md",
-    "explorations/agent-pipeline-velocity/research/audit-nested-instructions.md",
-    "explorations/agent-pipeline-velocity/research/audit-skills-economy.md",
-    "explorations/agent-pipeline-velocity/research/deep-research-report.json"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -113,5 +105,13 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "Concurrency increase causes memory thrash — record the measured ceiling instead of forcing a target.",
     "The same blocker repeats after reasonable investigation."
+  ],
+  "researchReferences": [
+    "explorations/agent-pipeline-velocity/research/audit-nested-instructions.md",
+    "explorations/agent-pipeline-velocity/research/audit-skills-economy.md",
+    "explorations/agent-pipeline-velocity/research/baseline-agent-config.md",
+    "explorations/agent-pipeline-velocity/research/baseline-pipeline.md",
+    "explorations/agent-pipeline-velocity/research/baseline-review-merge.md",
+    "explorations/agent-pipeline-velocity/research/deep-research-report.json"
   ]
 }

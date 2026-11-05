@@ -37,10 +37,7 @@
     "explorations/effect-mcp-2026-07-28/MAP.md",
     "packages/foundation/capability/mcp-kit/README.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "explorations/effect-mcp-2026-07-28/research/SOURCES.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -91,5 +88,8 @@
     "The implementation would exceed named scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
+  ],
+  "researchReferences": [
+    "explorations/effect-mcp-2026-07-28/research/SOURCES.md"
   ]
 }

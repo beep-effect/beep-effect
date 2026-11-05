@@ -12,6 +12,7 @@ refreshed **only in dedicated chore PRs**, never on feature branches.
 | `standards/instrumentation-catalog/<package>.generated.jsonc` | `bun run beep observability catalog --write`; the `instrumentation-catalog` pre-commit hook runs it scoped the same way | one shard per owning package; gated by the `observability:catalog-check` cheap gate and hosted Repo Sanity |
 | `standards/jsdoc-documentation.inventory.jsonc` | `bun run beep quality jsdoc-inventory` | whole-repo snapshot; regen absorbs every package's drift |
 | `standards/jsdoc-documentation.inventory.md` | same lane | small totals file; updating it in a feature PR is fine |
+| `goals/<slug>/ops/manifest.json` `researchReports` | `bun run beep goals manifest --write` | per-packet projection of `research/`; gated by the `research-reports-drift` finding of `goals:doctor`; the file sits on the `regenerate` merge driver, so a concurrent edit is left conflicted and the writer resolves it after the merge |
 
 Hand-maintained files (e.g. `standards/effect-laws.allowlist.jsonc`) are out of
 scope — they are edited, not regenerated.

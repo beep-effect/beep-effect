@@ -34,10 +34,10 @@
     "goals/patent-citation-candor-gate/research/SOURCES.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
     "research/01-gate-shape-check.md",
     "research/02-surface-reverification.md",
-    "research/03-durability-lane.md"
+    "research/03-durability-lane.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {
