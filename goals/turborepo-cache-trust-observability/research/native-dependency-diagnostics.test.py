@@ -190,6 +190,37 @@ class DependencyDiagnostics(unittest.TestCase):
         with self.assertRaisesRegex(PROBE.Refusal, "source-not-regular"):
             PROBE.read_source(fifo)
 
+    def test_refusal_codes_distinguish_failures_without_retaining_exception_details(self):
+        private = "PRIVATE_EXCEPTION_PAYLOAD_SENTINEL"
+        failures = [
+            (PROBE.Refusal("deadline"), "deadline"),
+            (MemoryError(private), "memory-limit"),
+            (subprocess.TimeoutExpired([private], 1, output=private, stderr=private), "subprocess-deadline"),
+            (subprocess.SubprocessError(private), "subprocess-failed"),
+            (PROBE.tarfile.ReadError(private), "archive-read-failed"),
+            (FileNotFoundError(2, private, "/private/" + private), "filesystem-or-process-failed"),
+            (ValueError(private), "invalid-value-or-shape"),
+            (KeyError(private), "invalid-value-or-shape"),
+            (TypeError(private), "invalid-value-or-shape"),
+        ]
+        for index, (failure, expected) in enumerate(failures):
+            with self.subTest(code=expected, failure=type(failure).__name__):
+                output = self.root / f"refusal-{index}.json"
+                arguments = [str(OBSERVER), "--source-report", str(self.source),
+                             "--output", str(output), "--revision", "a" * 40]
+                with patch.object(PROBE.sys, "argv", arguments), \
+                     patch.object(PROBE.resource, "setrlimit"), \
+                     patch.object(PROBE, "observe", side_effect=failure):
+                    self.assertEqual(PROBE.main(), 1)
+                raw = output.read_bytes()
+                self.assertEqual(json.loads(raw), {
+                    "schemaVersion": "cache-dependency-diagnostics/v1", "status": "refused", "code": expected,
+                })
+                self.assertNotIn(private.encode(), raw)
+                self.assertNotIn(str(self.root).encode(), raw)
+                self.assertEqual(output.stat().st_mode & 0o777, 0o600)
+                self.assertLessEqual(len(raw), 256)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

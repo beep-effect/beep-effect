@@ -1442,3 +1442,16 @@ attributed repair before independent producer approval and signed trials.
 See `research/installed-dependency-diagnostic-preparation-2026-11-03.json`. This
 checkpoint does not complete a phase, qualify a task or prove any acceptance
 criterion.
+
+
+### Accepted dependency observation refused, 2026-11-05
+
+The first accepted-source diagnostic run42126399874 failed after successful
+source inspection. Its bounded104-byte refusal is privately retained and hashed;
+the source upload was skipped. The runtime cause and earlier installed-tree
+digest drift remain unknown. `research/installed-dependency-refusal-retention-2026-11-05.json`
+binds the run, refusal, repair source and unchanged authority/resource limits.
+Keep source reports after later diagnostic refusal and distinguish fixed error
+categories without retaining exception details. Hosted regression proof and
+primary acceptance must precede fresh bound observations; do not repeat the
+unchanged source. Both goals and all whole-goal criteria remain incomplete.

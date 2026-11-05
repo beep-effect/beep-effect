@@ -1767,6 +1767,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         stepIndexByName(steps, "Retain inspection for at most one day")
       );
       const retain = stepByName(steps, "Retain inspection for at most one day");
+      expect(retain.if).toBe(
+        "always() && steps.inspection.outcome == 'success' && steps.inspection.outputs.report != ''"
+      );
       expect(retain.with).toEqual({
         name: "cache-producer-inspection-${{ github.run_id }}-${{ github.run_attempt }}",
         path: "${{ steps.inspection.outputs.report }}",

@@ -411,6 +411,7 @@ jobs:
             --source-report "$SOURCE_REPORT" --output "$diagnostic" --revision "$GITHUB_SHA"
 
       - name: Retain inspection for at most one day
+        if: always() && steps.inspection.outcome == 'success' && steps.inspection.outputs.report != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cache-producer-inspection-${{ github.run_id }}-${{ github.run_attempt }}

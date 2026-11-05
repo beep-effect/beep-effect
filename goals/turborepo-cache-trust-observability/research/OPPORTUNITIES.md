@@ -2305,3 +2305,7 @@ five state-policy tasks passed. Hoist the schema and its encoder to module scope
 to reuse the parser cache while preserving the fixture bytes and assertions.
 Keep the failed job receipt and require fresh hosted proof after the repair.
 No local verify, publish or repository test suite was run.
+
+### 2026-11-05: Keep successful inspection evidence after diagnostic refusal
+
+Accepted-main workflow run42126399874 / job127591603870 failed with `invalid-input-or-stream`; its source inspection passed but the following source upload was skipped. The retained104-byte refusal cannot distinguish memory, archive, process, filesystem or input failures. Gate the source upload on successful inspection plus its report output, independently of later diagnostic success. Retain only fixed categorical failure codes, with no exception messages, paths, payloads or environment values. The actual cause remains unknown; an unchanged retry cannot repair the missing evidence.

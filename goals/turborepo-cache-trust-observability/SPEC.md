@@ -1303,3 +1303,24 @@ two actual observations and repair the attributed cause without weakening the
 profile. Reversal removes the observer invocation, separate artifact and research
 helper while preserving both original reports and all existing production gates.
 All whole-goal acceptance criteria remain incomplete.
+
+
+### Retain source evidence when dependency diagnostics refuse, 2026-11-05
+
+Run42126399874 on accepted4975e29168 completed source inspection but refused
+dependency diagnostics with the generic `invalid-input-or-stream` code. The
+source artifact was skipped, preventing a bound comparison. Supersede the
+previous diagnostic decision's success-only source retention: upload an already
+successful source report whenever its output exists, even if the later
+diagnostic fails. Failed source inspection never qualifies for that upload.
+Retain the one-day limit and existing report-size bounds.
+
+Distinguish only fixed memory, subprocess deadline/failure, archive read,
+filesystem/process and invalid value/shape codes. Never retain exception
+messages, paths, command output or environment values. The old refusal does not
+identify the runtime cause; no package drift attribution or environment approval
+is inferred. Author redaction/retention controls for hosted CI and push directly,
+without local verify, publish or suites. After primary acceptance, obtain bound
+source and diagnostic reports before continuing producer approval. Reversal
+reverts this retention/classification delta and preserves the failed evidence.
+No fingerprint, credential, signing, capacity, qualification or goal-status change.

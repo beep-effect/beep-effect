@@ -250,12 +250,25 @@ def main():
         print("Refusing existing or unavailable diagnostic output.")
         return 1
     with os.fdopen(output_fd, "wb") as output:
+        code = None
         try:
             data, exit_code = observe(Path(args.source_report), args.revision)
         except Refusal as error:
-            data, exit_code = encoded({"schemaVersion": "cache-dependency-diagnostics/v1", "status": "refused", "code": error.args[0]}) + b"\n", 1
-        except (OSError, ValueError, KeyError, TypeError, MemoryError, tarfile.TarError, subprocess.SubprocessError):
-            data, exit_code = encoded({"schemaVersion": "cache-dependency-diagnostics/v1", "status": "refused", "code": "invalid-input-or-stream"}) + b"\n", 1
+            code = error.args[0]
+        except MemoryError:
+            code = "memory-limit"
+        except subprocess.TimeoutExpired:
+            code = "subprocess-deadline"
+        except subprocess.SubprocessError:
+            code = "subprocess-failed"
+        except tarfile.TarError:
+            code = "archive-read-failed"
+        except OSError:
+            code = "filesystem-or-process-failed"
+        except (ValueError, KeyError, TypeError):
+            code = "invalid-value-or-shape"
+        if code is not None:
+            data, exit_code = encoded({"schemaVersion": "cache-dependency-diagnostics/v1", "status": "refused", "code": code}) + b"\n", 1
         output.write(data)
     print("Dependency diagnostic saved." if exit_code == 0 else "Dependency diagnostic refused; no approval granted.")
     return exit_code
