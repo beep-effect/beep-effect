@@ -420,7 +420,7 @@ const observeNativeDescendant = Effect.fn("MuseProxyCanary.observeNativeDescenda
  * An attempted marker without a complete source receipt refuses execution. Failure is unknown,
  * never zero. A source receipt permits only exact lifecycle/AGENT replay in its original epoch.
  * Receipt acceptance proves local durability; backend remains unknown until worker readback.
- * Native OAuth is consumed by the CLI in its existing home; no credentials are read or copied.
+ * The canonical wrapper consumes the existing proxy credential; the adapter reads or copies no credentials.
  * No-session-persistence suppresses native transcripts/resume. Ancillary native home writes remain Unknown.
  *
  * **Example** (Inspect the fixed launcher)

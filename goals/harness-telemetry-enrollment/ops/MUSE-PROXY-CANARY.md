@@ -66,3 +66,11 @@ and Claude; separate current and frozen8029 runtimes prove config-schema,
 controller DTO, metadata projection and protobuf export parity for fixed
 synthetic Muse evidence. This is selected public-contract composition, not full
 transitive equivalence, upstream model attestation or production qualification.
+
+The wire decoder also accepts the reviewed SDK0.3.318 root rate-limit metadata
+grammar: three known statuses, same session after init and before/after the one
+terminal, at most eight notifications and24total lines. Only status counts remain
+in source metadata. Selected optional numeric fields are validated then discarded,
+as are warning text, UUID and account details. A rejected notification never
+overrides native exit or the requirement for the valid fixed assistant/terminal;
+notifications do not become API or billing counts.
