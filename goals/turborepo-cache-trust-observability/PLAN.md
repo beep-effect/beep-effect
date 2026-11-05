@@ -1458,6 +1458,17 @@ counterexamples motivate the review but do not prove this supervisory change.
 Fresh hosted test/check/review results remain required. All whole-goal criteria
 and signed production, epoch, role and representative-window work remain open.
 
+### Signed-overlay minimum-key preparation, 2026-11-04 UTC
+
+Source review found that the shared signed-root projection omitted native
+32-byte minimum-key enforcement. The projector and exact verifier now prepare
+`longerSignatureKey: true` in both layouts while preserving unrelated flags.
+One new four-row regression and extended preservation/identity/omission controls
+are authored; no local suite ran and current hosted proof is pending. See
+`research/signed-key-floor-review-2026-11-04.json`. The recorded native 168-case
+experiment is historical evidence, not a fresh run. No live signing, credential,
+profile qualification, phase completion or representative window is granted.
+
 ### Hold readiness after a failed check capture, 2026-11-03
 
 [The regression receipt](research/readiness-unread-check-regression-2026-11-03.json)

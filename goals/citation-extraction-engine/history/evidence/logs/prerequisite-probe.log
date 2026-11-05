@@ -1,0 +1,11 @@
+$ bun run beep:test test/CitationPrerequisites.test.ts
+$ bunx --bun vitest run --passWithNoTests test/CitationPrerequisites.test.ts
+
+ RUN  v5.0.5 ~/YeeBois/projects/beep-effect-worktrees/citation-extraction-engine/packages/law-practice/use-cases
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  03:32:34
+   Duration  6.17s (transform 79%, import 11%, setup 9%, worker 1%)
+

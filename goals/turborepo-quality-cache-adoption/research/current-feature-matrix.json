@@ -1533,6 +1533,11 @@
         "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
         "driverSha256": "0f01addd1148b146e9fbe00ca55a08d1c108a876bf5e3ce099ab829ffef58326",
         "scope": "Actual repaired-driver supplied-key UTF8 length controls, missing/local/signature-off controls; no signed transport or production qualification."
+      },
+      "signedProjectionPreparation": {
+        "review": "../../turborepo-cache-trust-observability/research/signed-key-floor-review-2026-11-04.json",
+        "scope": "The shared pilot/verifier overlay is prepared to enforce the native 32-byte floor. Source preparation grants no activation; current hosted proof, signed remote behavior and rollout acceptance remain pending.",
+        "rootSettingChanged": false
       }
     },
     {

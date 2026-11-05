@@ -1,0 +1,76 @@
+{
+  "cases": [
+    {
+      "id": 0,
+      "modes": {
+        "finditer": [[[0, 1], [-1, -1], [0, 1]], [[2, 4], [2, 3], [3, 4]]],
+        "match": [[[0, 1], [-1, -1], [0, 1]]],
+        "search": [[[0, 1], [-1, -1], [0, 1]]]
+      },
+      "sourcePoints": 4,
+      "sourceWords": "YiBhYg==",
+      "width": 1
+    },
+    {
+      "id": 1,
+      "modes": {
+        "finditer": [[[3, 4], [-1, -1], [3, 4]], [[5, 7], [5, 6], [6, 7]]],
+        "match": [],
+        "search": [[[3, 4], [-1, -1], [3, 4]]]
+      },
+      "sourcePoints": 7,
+      "sourceWords": "enogYiBhYg==",
+      "width": 1
+    },
+    {
+      "id": 2,
+      "modes": {
+        "finditer": [[[0, 2], [0, 1], [1, 2]], [[3, 4], [-1, -1], [3, 4]]],
+        "match": [[[0, 2], [0, 1], [1, 2]]],
+        "search": [[[0, 2], [0, 1], [1, 2]]]
+      },
+      "sourcePoints": 4,
+      "sourceWords": "YWIgYg==",
+      "width": 1
+    },
+    {
+      "id": 3,
+      "modes": {
+        "finditer": [[[4, 5], [-1, -1], [4, 5]]],
+        "match": [],
+        "search": [[[4, 5], [-1, -1], [4, 5]]]
+      },
+      "sourcePoints": 5,
+      "sourceWords": "ztcBADXYAADO3wAAIAAAAGIAAAA=",
+      "width": 4
+    },
+    {
+      "id": 4,
+      "modes": {
+        "finditer": [],
+        "match": [],
+        "search": []
+      },
+      "sourcePoints": 0,
+      "sourceWords": "",
+      "width": 1
+    }
+  ],
+  "flags": 0,
+  "pattern": "(?P<maybe>a)?(b)",
+  "patternSha256": "b07d89ba5ecfc4ef7c8c6208e879a81454b1cc89203805eceef7e16b55117bb7",
+  "producerSha256": "5d22a03ce21756269d96660e4e219e84d02b89b9cb5d42e858d913ab4d13898f",
+  "profile": {
+    "groups": 2,
+    "minimumWidthFloor": 1,
+    "names": {
+      "maybe": 1
+    },
+    "nullableMultiRepeat": false,
+    "repeatedCaptures": false
+  },
+  "pythonVersion": "3.11.15",
+  "schemaVersion": "citation-regex-mode-controls/v1",
+  "scope": "Synthetic CPython operation-selection controls; no source-family approval.",
+  "unicodeVersion": "14.0.0"
+}

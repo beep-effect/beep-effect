@@ -158,6 +158,7 @@
     "research/native-dependency-diagnostics.py",
     "research/native-dependency-diagnostics.test.py",
     "research/installed-dependency-diagnostic-preparation-2026-11-03.json",
+    "research/signed-key-floor-review-2026-11-04.json",
     "research/readiness-unread-check-regression-2026-11-03.json"
   ],
   "agentLaunchers": [

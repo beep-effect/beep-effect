@@ -1329,6 +1329,24 @@ This change grants no task/profile qualification or signing activation. Existing
 receipts remain historical under their original source. Reverse through Git;
 no public protocol/schema, persisted state or cloud resource migration is needed.
 
+### Enforce the native key floor in reviewed signed overlays, 2026-11-04 UTC
+
+The shared pilot/verifier signed-root projector must set
+`futureFlags.longerSignatureKey` to `true` with remote-cache enablement and
+signature verification. Preserve other flags, task definitions and remote
+options in both legacy and global layouts. Bind this flag into the exact
+projected root bytes and configuration identity; an omitted or disabled floor
+is a different, rejected projection. This does not activate the root setting.
+
+The recorded 168-case stable/current-canary experiment proves only native
+length behavior: short supplied UTF-8 keys fail with this safeguard enabled,
+but an absent key still needs Beep's separate reader/writer/canary posture.
+Key length does not establish entropy, upload authority or a protected producer.
+New source and assertion changes require hosted proof; prior signed artifacts
+are retained and receive no automatic new qualification. Reverse by suspending
+affected candidate tuples and reverting the projector delta, retaining both
+projection histories. Whole-goal acceptance and production gates remain open.
+
 ### Preserve unknown hosted checks in readiness, 2026-11-03
 
 The shared status/completion readiness policy consumes the existing typed remote
