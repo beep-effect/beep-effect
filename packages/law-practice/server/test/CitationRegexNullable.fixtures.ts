@@ -20,7 +20,7 @@ const Modes = S.Record(CitationRegexMatchMode, Matches);
 const Pattern = S.Struct({
   pattern: Native,
   patternSha256: S.String,
-  flags: S.Literal(0),
+  flags: S.tag(0),
   profile: CitationRegexPatternProfile,
   cases: S.Array(S.Struct({ source: Native, engines: S.Struct({ re: Modes, regex: Modes }) })).check(
     S.isBetweenLength(7, 7)

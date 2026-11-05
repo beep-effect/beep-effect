@@ -35,7 +35,7 @@ const Corpus = S.fromJsonString(
     oracleCommit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
     oracleTree: S.tag("a35a58fac03400f71a93a93485b77f1d56f2b02f"),
     python: S.tag("3.11.15"),
-    currentYear: S.Literal(2026),
+    currentYear: S.tag(2026),
     producerSha256: S.tag("e68a96683ae75e75bead81ce7c9922b4b37a72ab723a5bbcbd2c4903368ac1ab"),
     synthetic: S.Array(CitationRuntimeEdition).check(S.isBetweenLength(5, 5)),
     canonical: S.Array(CitationEditionRef).check(S.isBetweenLength(2533, 2533)),

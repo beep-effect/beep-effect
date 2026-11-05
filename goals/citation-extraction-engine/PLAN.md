@@ -931,3 +931,9 @@ accounting checker.
   serve law metadata. Corpus: 1152 source observations; nineteen focused tests
   pass. Full hosted replay and broader goal acceptance remain pending; see
   history/evidence/2026-11-03-journal-metadata.md.
+
+- 2026-11-05: integrated five main commits and repaired actual hosted Check,
+  unit and policy failures. Recipe corpus v2 losslessly compacts all 6805 rows
+  below the existing formatter ceiling; canonical oracle cases/editions are
+  unchanged. Focused gates pass; fresh hosted coverage/quality remains pending.
+  See history/evidence/2026-11-05-hosted-repairs.md.

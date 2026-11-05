@@ -1679,7 +1679,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* findRepoRoot();
-      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
+      const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const heavy = parseWorkflowYaml(heavyText);
       const requested = yamlAt(heavy, ["jobs", "producer-execute", "permissions"]);
       expect(requested).toEqual({ contents: "read", actions: "read" });
       const callers = [
@@ -1692,7 +1693,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       for (const [file, job] of callers) {
         const text = yield* fs.readFileString(`${root}/.github/workflows/${file}`);
         const caller = parseWorkflowYaml(text);
-        expect(yield* workflowPolicyDiagnostics(file, text), file).toEqual([]);
+        const diagnostics = yield* workflowPolicyDiagnostics(file, text);
+        expect(diagnostics, file).toEqual([]);
         expect(yamlAt(caller, ["jobs", job, "uses"]), file).toBe(
           "beep-effect/beep-effect/.github/workflows/heavy.yml@main"
         );
@@ -1702,7 +1704,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       // The caller ceiling permits validation; ordinary quality jobs still
       // strip Actions access and cannot select the protected producer mode.
       expect(yamlAt(heavy, ["jobs", "verify", "permissions"])).toEqual({ contents: "read" });
-      const check = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/check.yml`));
+      const checkText = yield* fs.readFileString(`${root}/.github/workflows/check.yml`);
+      const check = parseWorkflowYaml(checkText);
       expect(yamlAt(check, ["jobs", "heavy", "with", "producer_execution"])).toBeUndefined();
       expect(yamlAt(heavy, ["jobs", "producer-execute", "if"])).toContain(
         "github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-producer.yml@refs/heads/main'"

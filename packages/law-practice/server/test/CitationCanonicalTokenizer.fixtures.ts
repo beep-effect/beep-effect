@@ -3,7 +3,6 @@
  */
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationExtractorRecipe } from "@beep/law-practice-server/internal/Citation/ExtractorRecipes";
 import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { CitationTokenizerEdition } from "@beep/law-practice-server/internal/Citation/Tokenizer";
 import { Sha256Hex } from "@beep/schema";
@@ -14,6 +13,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { decodeCitationExtractorRecipeCorpus } from "./CitationExtractorRecipes.fixtures.ts";
 import { loadCitationExtractorSelectionControls } from "./CitationExtractorSelection.fixtures.ts";
 import { CitationTokenizerSourceCase } from "./CitationTokenizer.fixtures.ts";
 
@@ -49,9 +49,6 @@ const Corpus = S.fromJsonString(
 );
 const Operations = S.fromJsonString(S.Struct({ artifacts: S.Record(S.String, S.Unknown) }));
 const Artifact = S.Struct({ kind: S.tag("tokenizer-extractors"), payload: S.String });
-const Recipes = S.fromJsonString(
-  S.Struct({ recipes: S.Array(CitationExtractorRecipe).check(S.isBetweenLength(6805, 6805)) })
-);
 const Facts = S.fromJsonString(
   S.Struct({
     descriptors: S.Array(CitationRegexPatternDescriptor).check(S.isBetweenLength(13258, 13258)),
@@ -66,7 +63,7 @@ export const loadCitationCanonicalTokenizerControls = Effect.fn("CanonicalTokeni
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/canonical-tokenizer.json", import.meta.url))
   );
   const hash = yield* digest.digestHex(Digest.sha256, raw);
-  expect(hash).toBe("9b59b41956d07ae2086d5dd339babd564c1bc6edfa51d49045ac85fc77748a30");
+  expect(hash).toBe("7f624597ee68176326cd8252a9858acd48faa7be27f1dc3e986119140a4080f3");
   const corpus = yield* S.decodeEffect(Corpus)(new TextDecoder().decode(raw));
   const read = Effect.fn("CanonicalTokenizerTest.readInput")(function* (name: typeof InputNames.Type) {
     const bytes = yield* fs.readFile(
@@ -81,7 +78,7 @@ export const loadCitationCanonicalTokenizerControls = Effect.fn("CanonicalTokeni
   const captured = yield* Effect.fromOption(R.get(operations.artifacts, corpus.extractorsSha256));
   const artifact = yield* S.decodeUnknownEffect(Artifact)(captured);
   const recipeRaw = yield* read("extractor-recipes.json");
-  const recipes = yield* S.decodeEffect(Recipes)(recipeRaw);
+  const recipes = yield* decodeCitationExtractorRecipeCorpus(recipeRaw);
   const factsRaw = yield* read("regex-program-facts.json");
   const facts = yield* S.decodeEffect(Facts)(factsRaw);
   const indices = yield* Effect.fromOption(R.get(facts.artifactDescriptorIndices, corpus.extractorsSha256));

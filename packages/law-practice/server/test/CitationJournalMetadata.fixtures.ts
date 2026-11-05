@@ -56,7 +56,7 @@ const Corpus = S.fromJsonString(
     oracleCommit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
     oracleTree: S.tag("a35a58fac03400f71a93a93485b77f1d56f2b02f"),
     python: S.tag("3.11.15"),
-    currentYear: S.Literal(2026),
+    currentYear: S.tag(2026),
     producerSha256: S.tag("b0e9a582bb93ad61956312767d997e731b05bb0af64ad3558d4dec47075ae8f8"),
     lawCorpusSha256: S.tag("098ed3007ff63ca34b63310f822b037fea3ee5fb3c1874351bbeb67c373b6dea"),
     fullLawCorpusSha256: S.tag("e899dae1c175c26a70fc15baa916596b7f63ed5967ef79a028a62083f64d9784"),

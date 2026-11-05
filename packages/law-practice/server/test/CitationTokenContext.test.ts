@@ -32,7 +32,7 @@ const Corpus = S.fromJsonString(
     producerSha256: S.tag("28ee79ce711fc16a906f5df7e12ea0515518e0051f6b772bcaf51b8c3f0093ea"),
     python: S.tag("3.11.15"),
     regex: S.tag("2023.12.25"),
-    maxMatchChars: S.Literal(300),
+    maxMatchChars: S.tag(300),
     vectors: Word.pipe(S.Array, S.Array),
     prefixes: S.Array(Native),
     cases: S.Array(

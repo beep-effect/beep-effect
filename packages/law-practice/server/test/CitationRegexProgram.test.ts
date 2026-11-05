@@ -151,13 +151,16 @@ it.effect("rejects unsupported or invalid source syntax and preserves literal un
       "{3}",
       "^+",
       "(?P<a>x)(?P<a>y)",
-      "(?=x)",
       "\\U00110000",
       "[\\d-z]",
     ]) {
       const citationResult20 = yield* compile(pattern).pipe(Effect.flip);
       expect(citationResult20).toMatchObject({ reason: "unsupported-syntax" });
     }
+    const lookahead = yield* compile("(?=x)");
+    expect(lookahead.minimumWidthFloor).toBe(0);
+    expect(lookahead.groups).toBe(0);
+    expect(A.some(lookahead.tokens, (token) => token.kind === "lookahead")).toBe(true);
     const citationResult8 = yield* compile("é", 2).pipe(Effect.flip);
     expect(citationResult8).toMatchObject({ reason: "unsupported-syntax" });
     const citationResult9 = yield* compile("ch\\[.,]");

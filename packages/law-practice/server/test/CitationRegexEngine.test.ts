@@ -38,8 +38,8 @@ const Corpus = S.fromJsonString(
     producerSha256: S.tag("718ee492ff49aad339482d3c370f22c7dcca1371596cd1dacd0fd1f8223b997e"),
     intervals: S.Struct({ digitClass: Ranges, spaceClass: Ranges, wordClass: Ranges, verboseSpaceClass: Ranges }),
     candidates: S.Array(S.Natural).check(S.isBetweenLength(132, 132)),
-    asciiRangeCount: S.Literal(8256),
-    asciiRangeStride: S.Literal(17),
+    asciiRangeCount: S.tag(8256),
+    asciiRangeStride: S.tag(17),
     asciiRangeMasks: S.Uint8ArrayFromBase64.check(S.isBetweenLength(140352, 140352)),
     workerCases: S.Array(
       S.Struct({

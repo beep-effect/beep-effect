@@ -30,10 +30,10 @@ const Corpus = S.fromJsonString(
     producerSha256: S.tag("2f750eee2f2cebeca4aad071c72999797a23c8e0acb1f72b9f943a835ac22807"),
     python: S.tag("3.11.15"),
     unicode: S.tag("14.0.0"),
-    integerDigitLimit: S.Literal(4300),
-    decimalPoints: S.Literal(660),
-    nondecimalDigits: S.Literal(128),
-    whitespacePoints: S.Literal(29),
+    integerDigitLimit: S.tag(4300),
+    decimalPoints: S.tag(660),
+    nondecimalDigits: S.tag(128),
+    whitespacePoints: S.tag(29),
     cases: S.Array(S.Struct({ highest: S.Int, source: Native, year: S.NullOr(S.Int) })).check(
       S.isBetweenLength(1169, 1169)
     ),

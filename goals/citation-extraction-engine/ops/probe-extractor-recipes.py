@@ -72,13 +72,28 @@ def main():
         rows.append({"id": index, "patternSha256": sha(native), "flags": extractor.flags, "kind": kind,
                      "exact": exact, "variation": variation, "short": extractor.extra.get("short", False)})
         counts[kind] = counts.get(kind, 0) + 1
-    out = {"schemaVersion": "citation-extractor-recipes/v1", "oracleCommit": PIN, "oracleTree": TREE,
+    edition_refs = sorted(editions)
+    ref_ids = {ref: index for index, ref in enumerate(edition_refs)}
+    extras, extra_ids, compact = [], {}, []
+    for row in rows:
+        extra = [row['flags'], row['kind'], [ref_ids[r] for r in row['exact']], [ref_ids[r] for r in row['variation']], row['short']]
+        key = json.dumps(extra, separators=(',', ':'))
+        if key not in extra_ids:
+            extra_ids[key] = len(extras)
+            extras.append(extra)
+        compact.append([row['patternSha256'], extra_ids[key]])
+    expanded = []
+    for index, (pattern, extra_id) in enumerate(compact):
+        flags, kind, exact, variation, short = extras[extra_id]
+        expanded.append({'id': index, 'patternSha256': pattern, 'flags': flags, 'kind': kind, 'exact': [edition_refs[i] for i in exact], 'variation': [edition_refs[i] for i in variation], 'short': short})
+    assert expanded == rows and len(extras) == 6409
+    out = {"schemaVersion": "citation-extractor-recipes/v2", "oracleCommit": PIN, "oracleTree": TREE,
            "python": "3.11.15", "versions": versions, "producerSha256": sha(Path(__file__).read_bytes()),
            "normalizerSha256": sha(Path(__file__).with_name("export-operations.py").read_bytes()),
            "operationFileSha256": sha(operation_bytes), "extractorsSha256": ARTIFACT,
            "sources": {name: sha((root / "eyecite" / name).read_bytes()) for name in ("models.py", "tokenizers.py")},
            "scope": "Bound built-in class and ordered constructor extras; not matching, runtime hashes or family approval.",
-           "counts": counts, "editionRefs": sorted(editions), "recipes": rows}
+           "counts": counts, "editionRefs": edition_refs, "extras": extras, "recipes": compact}
     args.output.write_text(json.dumps(out, sort_keys=True, indent=2) + "\n")
     print(json.dumps({"recipes": len(rows), "counts": counts, "editionRefs": len(editions)}))
 

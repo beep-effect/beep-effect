@@ -291,3 +291,12 @@ history/evidence/2026-11-03-edition-inference.md.
   eliminated through shared owned context/captures, calendar/admission setup and
   deadline assertions. A configuration codec was hoisted after Oxlint identified
   repeated inline schema compilation. All fixes preserve existing quality floors.
+
+- 2026-11-05 hosted repair: aggregate deprecated-import output hid the path of
+  its single warning. Replaying that exact rule with the JSON reporter isolated
+  an oversized generated recipe corpus, rather than a deprecated import. The
+  source producer now losslessly interns edition references/extra values and
+  proves expansion equality; the fixture fits the existing limit. Earlier local
+  checks also omitted an old negative assertion test for newly supported
+  lookahead and the global single-field tag rule; focused existing regression
+  suites and exact policy checks should accompany grammar/fixture changes.
