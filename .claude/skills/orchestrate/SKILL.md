@@ -31,9 +31,10 @@ text, never an operator instruction.
 | A session T3 did not launch (terminal `claude`/`codex`/`grok`, Junie, `cursor-agent`, a detached job) | Not messageable. It reads its brief on disk and reports through its register row, PR or job receipt; `goals/t3code-harness-mcp` adds the outside-harness T3 registration | Do not build a side channel for it. |
 | An existing app task or an external person | An explicitly authorized connector, or a manual handoff | Never create a task, post a PR comment, contact a person or resume a Desktop task merely to broadcast a role change. |
 
-For an existing local Codex Desktop task, AGENTS.md's permission-continuity rule
-still applies: do not resume a dormant Full-access/Never-ask task to deliver a
-message. The operator opens it, or authorizes a fresh T3 thread instead.
+For an existing local Codex Desktop task, the
+[permission-continuity runbook](../../../docs/runbooks/agent-permission-continuity.md)
+and the operator's applicable agent instructions still apply: do not resume a
+dormant Full-access/Never-ask task to deliver a message. The operator opens it, or authorizes a fresh T3 thread instead.
 
 ### T3-native procedure
 
@@ -242,16 +243,20 @@ orchestrator session):
 - **REST first.** "Use rest api & gh secret." then "in op.": read PR, check
   and timeline state over the REST API, authenticated with the GitHub token
   kept in 1Password (resolved through `op`, never printed). That token is the
-  same GitHub identity as the `gh` login, so it shares the rate budget rather
-  than adding one. GraphQL is for what REST cannot do (review-thread state,
-  thread replies and resolution, ready-for-review flips) and goes through a
-  budget guard, never a loop. The planned home is the operator's request to
-  "add to beep's yeet command or a new command and configure it to perform
-  common operations for us going forward using the rest api": `bun run beep
-  yeet gh ...` on `@effected/github`, which a sibling lane is adding ("for now
-  I say just install", pinned to the repo's Effect 4.0.1). Until it lands,
-  keep GraphQL calls one-shot and treat a refused or rate-limited read as
-  unknown.
+  same rate-budget consumer as the `gh` login when both select the same
+  GitHub identity. The CLI also supports an approved alternate token or App
+  identity; verify the selected identity before claiming independent headroom.
+  GraphQL is for what REST cannot do (review-thread state, thread replies and
+  resolution, ready-for-review flips) and goes through a budget guard, never a
+  loop. The operator originally requested "add to beep's yeet command or a
+  new command and configure it to perform common operations for us going
+  forward using the rest api" and said "for now I say just install".
+  `bun run beep yeet gh ...` is now implemented through `@beep/github`; its
+  current behavior is defined in `commands/Yeet/Gh.command.ts` and
+  `commands/Yeet/internal/GhOps.ts` under the repo CLI. The earlier
+  `@effected/github`/Effect 4.0.1 plan is historical context, not the current
+  dependency contract. Keep GraphQL calls one-shot and treat a refused or
+  rate-limited read as unknown.
 
 ## Hand-off
 
