@@ -8,7 +8,7 @@ Status: `in-progress`
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | done | Restore a tom-pc-1 access route; record each host's arch, Node and service state; confirm how to disable T3's updater on fork builds. | Required facts and blockers are recorded. |
+| P0 Research | complete | Restore a tom-pc-1 access route; record each host's arch, Node and service state; confirm how to disable T3's updater on fork builds. | Required facts and blockers are recorded. |
 | P1 Implement | in-progress | DankStation pack and publish; pull timer and `t3 service` on beep-worker, dankserver, tom-pc-1 WSL; Tailscale HTTPS; hub-and-spoke links; runbook and host profiles. | Acceptance criteria are met. |
 | P2 Verify | pending | Version parity, reboot survival, a reachability check from DankStation, and one linked-thread turn per host, recorded in `history/`. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
