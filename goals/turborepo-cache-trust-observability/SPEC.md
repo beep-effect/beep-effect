@@ -1346,3 +1346,14 @@ New source and assertion changes require hosted proof; prior signed artifacts
 are retained and receive no automatic new qualification. Reverse by suspending
 affected candidate tuples and reverting the projector delta, retaining both
 projection histories. Whole-goal acceptance and production gates remain open.
+
+### Preserve unknown hosted checks in readiness, 2026-11-03
+
+The shared status/completion readiness policy consumes the existing typed remote
+read failure. A passing required-only view cannot establish a complete check
+census; unknown optional checks keep the checks criterion held and the summary
+labels the incomplete read instead of displaying absent counts as zero. Preserve the
+current attribution, required-context, thread, exact-head and review-window
+checks. A complete later read can recover without a persistent failure latch.
+Reverse the isolated policy and regression-test change through Git. No stored
+proof is relabeled, baseline relaxed or runtime cache policy changed.
