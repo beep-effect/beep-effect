@@ -9,7 +9,7 @@ import {
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, vi } from "@effect/vitest";
 import { isImportDeclaration, isStringLiteral } from "@typescript/native/unstable/ast";
-import { API } from "@typescript/native/unstable/sync";
+import { API, DiagnosticCategory, Program } from "@typescript/native/unstable/sync";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -69,6 +69,25 @@ describe("TsNativeApi", () => {
     );
 
     it.layer(layer, { timeout: "30 seconds" })((it) => {
+      it.effect("preserves warning, suggestion, and message diagnostic severities", () =>
+        Effect.gen(function* () {
+          const diagnostics = yield* Effect.acquireRelease(
+            Effect.sync(() =>
+              vi.spyOn(Program.prototype, "getSemanticDiagnostics").mockReturnValue([
+                { category: DiagnosticCategory.Warning, code: 1, pos: 0, end: 1, text: "warning" },
+                { category: DiagnosticCategory.Suggestion, code: 2, pos: 0, end: 1, text: "suggestion" },
+                { category: DiagnosticCategory.Message, code: 3, pos: 0, end: 1, text: "message" },
+              ])
+            ),
+            (spy) => Effect.sync(() => spy.mockRestore())
+          );
+          const api = yield* TsNativeApi;
+          const actual = yield* api.diagnostics();
+          expect(A.map(actual, (diagnostic) => diagnostic.category)).toEqual(["warning", "suggestion", "message"]);
+          expect(diagnostics).toHaveBeenCalledTimes(1);
+        })
+      );
+
       it.effect(
         "loads a fixture program and walks native AST nodes",
         Effect.fnUntraced(function* () {

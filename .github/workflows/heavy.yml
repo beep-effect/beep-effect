@@ -386,6 +386,7 @@ jobs:
         env:
           BEEP_TURBO_HOST_CACHE_DISABLED: "true"
         run: |
+          set -euo pipefail
           umask 077
           inspection_dir="$(mktemp -d "$RUNNER_TEMP/beep-cache-producer-inspection.XXXXXX")"
           report="$inspection_dir/report.json"
@@ -393,12 +394,38 @@ jobs:
           test -s "$report"
           printf 'report=%s\n' "$report" >> "$GITHUB_OUTPUT"
 
+      - name: Diagnose installed dependency drift without capabilities
+        id: dependency-diagnostics
+        shell: bash
+        env:
+          SOURCE_REPORT: ${{ steps.inspection.outputs.report }}
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          diagnostic="${SOURCE_REPORT%/report.json}/dependencies.json"
+          printf 'report=%s\n' "$diagnostic" >> "$GITHUB_OUTPUT"
+          # The helper enforces 4 MiB for source plus diagnostics together,
+          # two streaming passes / 300 seconds, and never executes task bodies.
+          /usr/bin/python3 -I -S goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py \
+            --source-report "$SOURCE_REPORT" --output "$diagnostic" --revision "$GITHUB_SHA"
+
       - name: Retain inspection for at most one day
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cache-producer-inspection-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ steps.inspection.outputs.report }}
           if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
+      - name: Retain dependency diagnostic for at most one day
+        if: always() && steps.dependency-diagnostics.outputs.report != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cache-producer-dependencies-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.dependency-diagnostics.outputs.report }}
+          if-no-files-found: warn
           retention-days: 1
           compression-level: 0
 

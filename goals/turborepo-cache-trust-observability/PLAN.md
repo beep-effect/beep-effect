@@ -1426,6 +1426,23 @@ relabel the failed intent. Independent artifact inspection, protected execution,
 signed trials and all nine whole-goal criteria remain open.
 
 
+### Current diagnostic preparation, 2026-11-03
+
+Successful protected inspections at `4d266aa559` and `dc4bcb9b26` have identical
+dependency aggregate counts, bytes and links but different canonical digests.
+The cause remains unknown. The candidate build and its static-artifact
+inspection succeeded separately; neither result approves execution.
+
+A package-level, credential-free diagnostic is authored in the existing source
+inspection job with unchanged runner/job/artifact limits. Its tiny-tree tests
+are intended for hosted CI; no local suite or real diagnostic has run. Preserve
+both original source-bound reports. Next: exact-head hosted regression proof,
+primary acceptance, two authenticated accepted-source observations, then an
+attributed repair before independent producer approval and signed trials.
+See `research/installed-dependency-diagnostic-preparation-2026-11-03.json`. This
+checkpoint does not complete a phase, qualify a task or prove any acceptance
+criterion.
+
 ### Pilot directory and root mutation guard, 2026-11-03
 
 Source inspection found that the read-only snapshot omitted directories and its

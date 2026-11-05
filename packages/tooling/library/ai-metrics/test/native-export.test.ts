@@ -1,9 +1,9 @@
-import { encodeNativeTraceBatch, NativeExportInput } from "@beep/repo-ai-metrics/native-export";
+import { encodeNativeTraceBatch, NativeExportError, NativeExportInput } from "@beep/repo-ai-metrics/native-export";
 import { NativeTraceMetadata, NativeTraceRequest, projectNativeTraceRequest } from "@beep/repo-ai-metrics/native-trace";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import { expect } from "@effect/vitest";
+import { expect, vi } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -111,6 +111,24 @@ const fixture = Effect.fn("NativeExportTest.fixture")(function* () {
     encodeNativeTraceBatch(NativeExportInput.make({ ...input, spans: [span] }));
   return { input, span, encode };
 });
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
+  it.effect("returns a safe encoding error when the protobuf writer fails", () =>
+    Effect.gen(function* () {
+      const { input } = yield* fixture();
+      yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          vi.spyOn(Protobuf.Writer.prototype, "finish").mockImplementationOnce(() => {
+            throw NativeExportError.make({ reason: "digest" });
+          })
+        ),
+        (mock) => Effect.sync(() => mock.mockRestore())
+      );
+      const error = yield* Effect.flip(encodeNativeTraceBatch(input));
+      expect(error).toEqual(NativeExportError.make({ reason: "encoding" }));
+    })
+  )
+);
+
 it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
   it.effect("encodes native Claude identity/time and cache-inclusive totals without retaining private fields", () =>
     Effect.gen(function* () {

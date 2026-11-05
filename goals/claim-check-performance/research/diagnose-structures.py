@@ -53,9 +53,14 @@ def diagnose(root, directory):
         fixture = root / "packages/law-practice/domain/test/fixtures/claim-element/positive" / family["familyId"]
         references = json.loads((fixture / "expected.json").read_text())
         report = json.loads((directory / f"{family['familyId']}.prediction.json").read_text())
-        predictions = report["report"]["trees"]
+        inspection = results["schemaVersion"] in ("claim-input-inspection-evaluation/v1", "claim-input-tool-evaluation/v1")
+        predictions = ([row["decomposition"]["tree"] for row in report["report"]["records"]
+                        if row["decomposition"]["status"] == "decomposed"]
+                       if inspection else report["report"]["trees"])
         reference_index, prediction_index = nodes(references), nodes(predictions)
-        canonical = {claim["claimNumber"]: claim["claimText"] for claim in report["claimSet"]["claims"]}
+        canonical_source = (json.loads((fixture / "claims.json").read_text())["claims"]
+                            if inspection else report["claimSet"]["claims"])
+        canonical = {claim["claimNumber"]: claim["claimText"] for claim in canonical_source}
         for score in family["claims"]:
             if score["strict"]:
                 counts["strict-match"] += 1
@@ -97,7 +102,14 @@ def diagnose(root, directory):
     return {"schemaVersion": "claim-performance-diagnostics/v1", "authoritativeScorerChanged": False,
             "diagnosticOnly": True, "implementationDigest": results["implementationDigest"],
             "overlappingFailureCounts": dict(counts),
-            "closest": sorted(rows, key=lambda row: (row["differenceCount"], row["familyId"], row["claimNumber"]))[:30]}
+            "closest": sorted(rows, key=lambda row: (row["differenceCount"], row["familyId"], row["claimNumber"]))[:30],
+            # Global nearest matches can hide entire recurring error classes.
+            # These are development diagnostics only, never a scorer or cohort filter.
+            "closestByFeature": {
+                feature: sorted((row for row in rows if feature in row["features"]),
+                                key=lambda row: (row["differenceCount"], row["familyId"], row["claimNumber"]))[:10]
+                for feature in sorted({feature for row in rows for feature in row["features"]})
+            }}
 
 
 if __name__ == "__main__":
