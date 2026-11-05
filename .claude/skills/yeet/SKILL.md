@@ -46,14 +46,13 @@ git rev-list --count "$(git merge-base HEAD origin/main)"..origin/main
    feature branch — never by rebasing:
 
 ```bash
-git fetch origin
-```
-
-```bash
-git merge origin/main
+git fetch origin && git merge origin/main
 ```
 
    Resolve conflicts, re-run `bun run beep yeet verify`, then publish again.
+   A base-conflict P0 inbox row or a merge-gate "sibling #N merged" comment is
+   this same merge, now, whatever your brief says about acceptance or merge
+   authority (2026-11-05; [`references/merge-loop.md`](references/merge-loop.md#base-conflict-rows-and-packet-siblings)).
    Do not rebase a published branch: rebase implies a force-push, and this
    repository denies `git push --force*`. GitHub squash-merge erases
    feature-branch merge commits at land time anyway. `--allow-stale-base` is
@@ -493,7 +492,7 @@ Load these on demand; `SKILL.md` keeps the path, the references keep the depth.
 | [`references/gates-and-proof.md`](references/gates-and-proof.md) | a cheap gate is red, reproducing a hosted red locally, plan mode |
 | [`references/monitor-and-inbox.md`](references/monitor-and-inbox.md) | monitor exits, `--watch` rows, resume, settle rule, inbox rows and waves |
 | [`references/review-threads.md`](references/review-threads.md) | thread states, review bodies, comment replay, `yeet reply` drafts |
-| [`references/merge-loop.md`](references/merge-loop.md) | heavy admission label, job triage, branch-deletion contract |
+| [`references/merge-loop.md`](references/merge-loop.md) | heavy admission label, job triage, branch-deletion contract, base-conflict rows, `yeet siblings` |
 | [`references/gh-rest.md`](references/gh-rest.md) | any GitHub call: `yeet gh` instead of `gh pr` |
 | [`references/sweep-retire.md`](references/sweep-retire.md) | `sweep --retire` refusals and holders |
 | [`references/run-artifacts.md`](references/run-artifacts.md) | verdict, packets, proof ledger, changeset gate |

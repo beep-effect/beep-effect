@@ -75,6 +75,7 @@ import { runYeetProofReportCommand } from "./internal/ProofShadow.ts";
 import { runYeetReady } from "./internal/ReadyGate.ts";
 import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
 import { parsePrRef, runYeetResume } from "./internal/Resume.ts";
+import { runYeetSiblings, SiblingsCommandOptions } from "./internal/Siblings.ts";
 import { YeetCommandError } from "./Yeet.errors.ts";
 import { YeetReadyOptions, YeetRunOptions } from "./Yeet.schemas.ts";
 import type { YeetRunMode } from "./internal/Planner.schemas.ts";
@@ -1201,6 +1202,20 @@ const yeetMergeGateCommand = Command.make(
   )
 );
 
+const siblingsPrArgument = Argument.Int("pr").pipe(
+  Argument.withDescription("Pull request number whose goal-packet siblings to list")
+);
+
+const yeetSiblingsCommand = Command.make(
+  "siblings",
+  { ...porcelainFlags, pr: siblingsPrArgument },
+  flow(SiblingsCommandOptions.make, runYeetSiblings)
+).pipe(
+  Command.withDescription(
+    "List the open PRs that share a goals/<slug>/ packet with this PR and the files each would conflict on against the base (git merge-tree); the merge gate posts the same report to every sibling when a packet PR merges"
+  )
+);
+
 const yeetReplyCommand = Command.make("reply", porcelainFlags, (options) => runYeetReplyPass(options)).pipe(
   Command.withDescription("Post and resolve the drafted review-thread replies for this branch's pull request")
 );
@@ -1424,6 +1439,7 @@ export const yeetCommand = Command.make("yeet", publishFlags, ({ stateRoot, ...o
     yeetSweepCommand,
     yeetMergeCommand,
     yeetMergeGateCommand,
+    yeetSiblingsCommand,
     yeetReplyCommand,
     yeetReadyCommand,
     yeetFinalCheckCommand,
