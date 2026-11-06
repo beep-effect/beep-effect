@@ -2465,6 +2465,9 @@
       "@beep/repo-cli-kit/*": ["./packages/tooling/library/repo-cli-kit/src/*"],
       "@beep/repo-cli/commands/Kb": [
         "./packages/tooling/tool/cli/src/commands/Kb/index.ts"
+      ],
+      "@beep/repo-cli/commands/History": [
+        "./packages/tooling/tool/cli/src/commands/History/index.ts"
       ]
     }
   }

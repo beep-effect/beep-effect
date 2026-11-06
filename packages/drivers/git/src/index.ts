@@ -30,6 +30,7 @@ export {
   NameStatusEntry,
   NonFastForwardError,
   NotARepositoryError,
+  NoteEntry,
   RefEntry,
   StashEntry,
   StatusEntry,

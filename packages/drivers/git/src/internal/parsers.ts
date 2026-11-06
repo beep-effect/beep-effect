@@ -9,7 +9,7 @@
  *
  * The entry parsers (`parseNameStatus`, `parseStatus`, `parseWorktreeList`,
  * `parseLsTree`, `parseLsFiles`, the `parseLog` family, `parseRevListCount`,
- * `parseMergeTree`, `parseUpstream`) FAIL CLOSED: they answer a
+ * `parseMergeTree`, `parseUpstream`, `parseNotesList`, `parseObjectId`) FAIL CLOSED: they answer a
  * `Result` whose failure names the offending record, and the service maps
  * that to a `GitCommandError` instead of inventing a plausible-looking entry.
  * The plain path-list parsers (`parseNulSeparated`, `parseConfigGetAll`) have
@@ -36,6 +36,7 @@ import {
   LsTreeEntry,
   MergeTreeResult,
   NameStatusEntry,
+  NoteEntry,
   RefEntry,
   StashEntry,
   StatusEntry,
@@ -552,6 +553,57 @@ export const parseRevListCount = (output: string): Result.Result<number, string>
 
 /** A full object id: 40 hex digits (SHA-1) or 64 (SHA-256). */
 const isObjectId = S.is(S.String.check(S.isPattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/)));
+
+/**
+ * Parses `GitCommand.notesList`'s output: one `<note blob> <annotated object>`
+ * line per note, both full object ids. Empty output (no notes, or no such
+ * ref) is an empty list; any other line shape fails closed.
+ *
+ * **Example** (Read a notes listing)
+ *
+ * ```ts import.meta.vitest name="Read a notes listing"
+ * import { parseNotesList } from "@beep/git/internal/parsers";
+ * import * as Result from "effect/Result";
+ *
+ * const line = `${"a".repeat(40)} ${"b".repeat(40)}\n`;
+ * Result.getOrThrow(parseNotesList(line))[0]?.object === "b".repeat(40) // => true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const parseNotesList = (output: string): Result.Result<ReadonlyArray<NoteEntry>, string> =>
+  parseRecords(A.filter(Str.split("\n")(output), Str.isNonEmpty), (line) => {
+    const fields = Str.split(" ")(line);
+    const [note = "", object = ""] = fields;
+    return fields.length === 2 && isObjectId(note) && isObjectId(object)
+      ? Result.succeed(NoteEntry.make({ note, object }))
+      : Result.fail(`expected "<note> <object>" object ids, received ${quoteRecord(line)}`);
+  });
+
+/**
+ * Parses a single full object id answer such as `GitCommand.hashObject`'s,
+ * its trailing newline removed. Anything but one 40- or 64-digit lowercase
+ * hex id fails closed.
+ *
+ * **Example** (Read a blob id)
+ *
+ * ```ts import.meta.vitest name="Read a blob id"
+ * import { parseObjectId } from "@beep/git/internal/parsers";
+ * import * as Result from "effect/Result";
+ *
+ * [Result.getOrThrow(parseObjectId(`${"c".repeat(40)}\n`)).length, Result.isFailure(parseObjectId("nope"))] // => [40, true]
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const parseObjectId = (output: string): Result.Result<string, string> => {
+  const trimmed = Str.trim(output);
+  return isObjectId(trimmed)
+    ? Result.succeed(trimmed)
+    : Result.fail(`expected one object id, received ${quoteRecord(output)}`);
+};
 
 /** Removes the one newline git ends each merge-tree message with. */
 const stripMessageNewline = Str.replace(/\n$/, "");

@@ -740,6 +740,42 @@ export class RefEntry extends S.Opaque<RefEntry, { readonly brand: unique symbol
 ) {}
 
 /**
+ * One note on a notes ref, from `git notes list`.
+ *
+ * **Details**
+ *
+ * `note` is the id of the blob holding the note text; `object` is the id of
+ * the object (usually a commit) the note annotates. Comparing `note` against
+ * the blob id of an expected body tells whether a note drifted without
+ * reading the blob.
+ *
+ * **Example** (Represent a commit note)
+ *
+ * ```ts import.meta.vitest name="Represent a commit note"
+ * import { NoteEntry } from "@beep/git/Git";
+ *
+ * const entry = NoteEntry.make({ note: "a".repeat(40), object: "b".repeat(40) });
+ * entry.object.length // => 40
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export class NoteEntry extends S.Opaque<NoteEntry, { readonly brand: unique symbol }>()(
+  S.Struct({
+    /** The id of the blob that holds the note text. */
+    note: S.String.pipe(
+      $I.annoteKey("NoteEntry.note", { description: "The id of the blob that holds the note text." })
+    ),
+    /** The id of the object the note annotates. */
+    object: S.String.pipe(
+      $I.annoteKey("NoteEntry.object", { description: "The id of the object the note annotates." })
+    ),
+  }).pipe($I.annoteSchema("NoteEntry", { description: "One note on a notes ref, from `git notes list`." }))
+) {}
+
+/**
  * One configuration entry, from `git config --list`.
  *
  * **Example** (Represent a valueless config key)

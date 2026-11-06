@@ -556,6 +556,37 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
       );
     });
 
+    describe("notes reads, in their own repository", () => {
+      it.effect("notesList is empty for a missing ref and hashObject matches the stored note blob", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const fs = yield* FileSystem.FileSystem;
+          const dir = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-int-notes-" });
+          const raw = (args: ReadonlyArray<string>) => runFixtureGit(dir, args);
+          yield* raw(["-c", "init.defaultBranch=main", "init"]);
+          yield* raw(["config", "user.email", "git-integration@example.com"]);
+          yield* raw(["config", "user.name", "Git Integration"]);
+          yield* raw(["-c", "commit.gpgsign=false", "commit", "--allow-empty", "-m", "saving"]);
+          const head = yield* raw(["rev-parse", "HEAD"]);
+          const commit = Str.trim(head);
+
+          const before = yield* git.notesList(dir, "refs/notes/history");
+          assert.deepStrictEqual(before, []);
+          const published = yield* git.refExists(dir, "refs/notes/history");
+          assert.isFalse(published);
+
+          const body = "chore(repo): checkpoint work\n\nBody line.\n";
+          yield* raw(["notes", "--ref=refs/notes/history", "add", "-m", "chore(repo): checkpoint work\n\nBody line."]);
+          const after = yield* git.notesList(dir, "refs/notes/history");
+          const expected = yield* git.hashObject(dir, body);
+          assert.deepStrictEqual(
+            A.map(after, (entry) => [entry.note, entry.object]),
+            [[expected, commit]]
+          );
+        })
+      );
+    });
+
     describe("an empty directory is not a repository", () => {
       it.effect("revParse fails with NotARepositoryError", () =>
         Effect.gen(function* () {

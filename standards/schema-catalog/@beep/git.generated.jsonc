@@ -21,6 +21,7 @@
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"LsTreeEntry","kind":"struct-const","owner":"@beep/git","identity":"LsTreeEntry","description":"One entry of a `git ls-tree` listing."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"MergeTreeResult","kind":"tagged-union","owner":"@beep/git","identity":"MergeTreeResult","description":"The clean or conflicted answer of `git merge-tree --write-tree` for two commits."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"NameStatusEntry","kind":"struct-const","owner":"@beep/git","identity":"NameStatusEntry","description":"One entry of a `git diff --name-status` listing."},
+    {"file":"packages/drivers/git/src/Git.models.ts","symbol":"NoteEntry","kind":"struct-const","owner":"@beep/git","identity":"NoteEntry","description":"One note on a notes ref, from `git notes list`."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"RefEntry","kind":"struct-const","owner":"@beep/git","identity":"RefEntry","description":"One ref, from `git for-each-ref`."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"StashEntry","kind":"struct-const","owner":"@beep/git","identity":"StashEntry","description":"One stash entry, from `git stash list`."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"StatusEntry","kind":"schema-class","owner":"@beep/git","identity":"StatusEntry","description":"One entry of a `git status --porcelain -z` listing."},

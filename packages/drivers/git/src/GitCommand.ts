@@ -973,6 +973,14 @@ const revListCount: {
     git(["rev-list", "--count", ...(firstParent === true ? ["--first-parent"] : []), "--end-of-options", range, "--"])
 );
 
+// Implementation of GitCommand.notesList; the public contract lives on the static.
+// `--ref=<ref>` is one argv token, so the ref can never be read as a separate option.
+const notesList = (ref: string): GitInvocation => git(["notes", `--ref=${ref}`, "list"]);
+
+// Implementation of GitCommand.hashObject; the public contract lives on the static.
+// No `-w`: the object id is computed, never written to the object store.
+const hashObject = (content: string): GitInvocation => git(["hash-object", "--no-filters", "--stdin"], content);
+
 // Implementation of GitCommand.mergeTree; the public contract lives on the static.
 const mergeTree: {
   (base: string, head: string): GitInvocation;
@@ -3185,6 +3193,61 @@ export class GitCommand {
    * @since 0.0.0
    */
   static readonly revListCount = revListCount;
+
+  /**
+   * Builds an invocation to list every note on a notes ref.
+   *
+   * **Details**
+   *
+   * `git notes --ref=<ref> list` — one `<note blob> <annotated object>` line
+   * per note. A short ref such as `history` expands to `refs/notes/history`.
+   *
+   * **Gotchas**
+   *
+   * A notes ref that does not exist lists nothing and exits 0, so an empty
+   * answer cannot tell "no notes" from "no ref"; ask `refExists` when the
+   * difference matters.
+   *
+   * **Example** (Inspect notes list argv)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.notesList("refs/notes/history");
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // notes --ref=refs/notes/history list
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly notesList = notesList;
+
+  /**
+   * Builds an invocation to compute the blob id of some content without
+   * storing it.
+   *
+   * **Details**
+   *
+   * `git hash-object --no-filters --stdin` — the content is fed on stdin as
+   * one UTF-8 chunk and hashed as a blob in the repository's object format.
+   * `--no-filters` keeps clean filters and line-ending conversion out of the
+   * answer, and the absent `-w` keeps the object store untouched.
+   *
+   * **Example** (Inspect hash-object argv)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.hashObject("hello\n");
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // hash-object --no-filters --stdin
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly hashObject = hashObject;
 
   /**
    * Builds an invocation to merge two commits in the object store only.

@@ -211,6 +211,8 @@ describe("Git.makeTest", () => {
         revListCount: () => double.revListCount(cwd, "main..HEAD"),
         updateRef: () => double.updateRef(cwd, "refs/archive/x", { create: "HEAD" }),
         upstream: () => double.upstream(cwd, "main"),
+        notesList: () => double.notesList(cwd, "refs/notes/history"),
+        hashObject: () => double.hashObject(cwd, "body\n"),
       };
       for (const method of R.keys(double)) {
         const fn = double[method];

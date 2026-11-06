@@ -50,6 +50,12 @@ git diff --check -- goals/history-message-overlay
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug history-message-overlay`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### Slice 1 landed in the lane: map tracked, history notes --check, 2026-11-06
+
+docs/history/commit-message-map.json (940 rows) tracked; @beep/git gains notesList and hashObject; beep history notes --check decodes the map, proves every key reachable from origin/main and compares published notes by blob id. Real-repo run: 940/940 reachable, ref not yet published. Next: slice 2 (--write, sync, bootstrap hooks).
+
+Lane `docs/git-history-rewrite-exploration` · PR #2785
+
+Reverse: Revert the slice-1 commits on the branch
 
 <!-- beep:decisions:end -->

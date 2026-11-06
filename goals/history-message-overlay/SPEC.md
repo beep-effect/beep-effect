@@ -105,6 +105,14 @@ generated from that directory and never edited by hand.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug history-message-overlay`; add a `kind: decision` file there, never edit this block._
 
+### Canonical note body is the message with exactly one trailing newline, 2026-11-06
+
+historyNoteBody strips trailing newlines from the map value and appends one \n, which is what git notes add -m stores (a real-git integration test asserts hashObject(body) equals the -m note blob). Map rows all end with \n; the message schema also rejects trailing whitespace and doubled blank lines because git's cleanup would rewrite them, so --check compares blob ids exactly. Map keys decode with onExcessProperty error so a short SHA fails instead of being dropped.
+
+Lane `docs/git-history-rewrite-exploration` · PR #2785
+
+Reverse: Change historyNoteBody in commands/History/History.schemas.ts and rebuild refs/notes/history with --write
+
 ### Track the map, archive the rest of the cutover folder, 2026-11-06
 
 Map and validators move into docs/history/; scripts, curation, decision sheet, fleet inventory and research reports go to ~/.local/state/beep/archive/beep-effect-cutover/ and the folder is removed, closing goals/legacy-drain's archive line. The inventory names local paths and stays out of the public repo. Source: explorations/git-history-rewrite/DECISIONS.md (2026-11-06).
