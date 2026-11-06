@@ -2,9 +2,17 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `active`; all three phases complete and `completed-retained` proposed by the final PR.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+Latest evidence (2026-11-06): P2 shipped `bun run beep yeet gate-table`, `session handoff`,
+`session ruling add|list` and `session register convert`, plus an `owner-merge-hold` hold in
+`yeet merge-gate`. P3 was a read-only take-over drill a fresh session ran from the files alone
+while the holder stayed live. It refused the take-over correctly, and its findings (carry-over
+of hand-typed rows, a holder thread line, hold labels) were fixed in the same PR. See
+[`history/reflections/2026-11-06-claude.md`](./history/reflections/2026-11-06-claude.md) and
+[`decisions/`](./decisions/).
 
 ## Mission
 

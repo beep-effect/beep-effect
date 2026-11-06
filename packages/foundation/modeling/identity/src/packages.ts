@@ -246,7 +246,8 @@ const generatedComposers = $I.compose(
   "party-domain",
   "party-use-cases",
   "party-server",
-  "repo-cli-kit"
+  "repo-cli-kit",
+  "alchemy-postgres"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -3621,3 +3622,20 @@ export const $PartyServerId: Identity.IdentityComposer<"@beep/party-server"> = c
  * @since 0.0.0
  */
 export const $RepoCliKitId: Identity.IdentityComposer<"@beep/repo-cli-kit"> = composers.$RepoCliKitId;
+
+/**
+ * Identity composer for `@beep/alchemy-postgres`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $AlchemyPostgresId } from "@beep/identity/packages"
+ *
+ * const id = $AlchemyPostgresId.make("AlchemyPostgres")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $AlchemyPostgresId: Identity.IdentityComposer<"@beep/alchemy-postgres"> = composers.$AlchemyPostgresId;

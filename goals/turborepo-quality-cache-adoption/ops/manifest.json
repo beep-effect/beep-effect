@@ -207,6 +207,8 @@
     "research/task-descriptions-feature-review.json",
     "research/test_cargo_review_integrity.py",
     "research/test_selection_invoke_compatibility.py",
+    "research/types-lint-toolchain-key-2026-11-06.json",
+    "research/types-lint-toolchain-key-2026-11-06.md",
     "research/watch-feature-review.json",
     "research/watch-source-driver-controls.json",
     "research/watch-source-observation.json",
