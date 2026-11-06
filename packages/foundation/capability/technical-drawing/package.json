@@ -40,7 +40,7 @@
     "beep:check:scripts": "tsrs -p tsconfig.scripts.json --noEmit",
     "check:scripts": "bun run beep:check:scripts",
     "generate": "bun run scripts/generate-label-glyphs.ts && biome check --write src/internal/LabelGlyphs.ts",
-    "generate:check": "bun run generate && git diff --exit-code -- src/internal/LabelGlyphs.ts"
+    "generate:check": "bun run scripts/generate-label-glyphs.ts --check"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -74,6 +74,7 @@
     "opentype.js": "catalog:"
   },
   "devDependencies": {
+    "@beep/codegen-kit": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",

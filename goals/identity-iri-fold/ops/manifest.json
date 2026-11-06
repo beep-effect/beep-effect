@@ -41,10 +41,8 @@
     "explorations/identity-as-iri/DECISIONS.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/identity-as-iri/research/SOURCES.md",
-    "../../explorations/identity-as-iri/research/20-repo-mining-synthesis.md",
-    "../../explorations/identity-as-iri/research/21-synthesis-adversarial-review.md"
+    "research/2026-07-25-academia-corpus-mining-note.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {
@@ -90,5 +88,10 @@
     "Authoring channels would require divergent tuple validation or diagnostics.",
     "A FOLIO predicate cannot be mapped without new domain authority.",
     "Implementation would expand into Fibered, stores, SHACL, or unrelated scope."
+  ],
+  "researchReferences": [
+    "../../explorations/identity-as-iri/research/20-repo-mining-synthesis.md",
+    "../../explorations/identity-as-iri/research/21-synthesis-adversarial-review.md",
+    "../../explorations/identity-as-iri/research/SOURCES.md"
   ]
 }

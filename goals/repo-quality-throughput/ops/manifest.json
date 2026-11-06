@@ -182,5 +182,28 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "legacy status: complete"
+  "statusNote": "legacy status: complete",
+  "researchReports": [
+    "research/README.md",
+    "research/batch-01-config-inventory.md",
+    "research/batch-01-docgen-cost-model.md",
+    "research/batch-01-duplicate-proof-work.md",
+    "research/batch-01-quality-command-map.md",
+    "research/batch-01-timing-baseline.md",
+    "research/batch-01-turbo-dag-cache.md",
+    "research/batch-02-check-test-coverage.md",
+    "research/batch-02-ci-nix-storybook-data-sync.md",
+    "research/batch-02-lint-fix-biome-eslint.md",
+    "research/batch-02-metadata-release-sidecars.md",
+    "research/batch-02-repo-cli-orchestration.md",
+    "research/batch-02-security-audit-sast.md",
+    "research/batch-03-docgen-selectivity-shadow.md",
+    "research/batch-03-effect-v4-tools.md",
+    "research/batch-03-scoped-config-design.md",
+    "research/batch-03-synthesis.md",
+    "research/batch-03-tooling-candidates.md",
+    "research/batch-03-yeet-fast-monitor.md",
+    "research/known-findings.md",
+    "research/repo-exports-sharding-design.md"
+  ]
 }

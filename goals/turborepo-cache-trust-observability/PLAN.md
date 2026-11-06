@@ -1468,3 +1468,31 @@ are authored; no local suite ran and current hosted proof is pending. See
 `research/signed-key-floor-review-2026-11-04.json`. The recorded native 168-case
 experiment is historical evidence, not a fresh run. No live signing, credential,
 profile qualification, phase completion or representative window is granted.
+
+### Hold readiness after a failed check capture, 2026-11-03
+
+[The regression receipt](research/readiness-unread-check-regression-2026-11-03.json)
+records a live closeout that printed ready while an independent exact-head read
+still showed two CI failures. The collector retained a typed read failure, but
+the shared status/completion readiness policy ignored it. Require a complete
+read before the checks criterion can pass and label an incomplete check summary. Authored partition, zero-count and
+recovery regressions await hosted CI; no local test or quality suite ran.
+
+Keep the observed PR held, the inherited main repair separate, and every trust
+acceptance criterion open. This repair changes no cache or producer authority.
+
+### Process creation-mask identity repair, 2026-11-03
+
+A supported runtime identity omitted umask despite its effect on file creation
+and cached output restoration. Add a bounded schema field and read it through
+the existing toolchain discovery process. New fingerprints include an observed
+mask; older receipts retain an absent field and their historical serialization.
+Mask-only changes alter toolchain identity while preserving computation config.
+
+Four new hosted regression cases cover real child inheritance without a parent
+mask change, invalid native output, persisted mask bounds, and old/new/different
+mask identities. They are authored, not locally executed. Push to hosted CI
+without verify/publish under the operator instruction; retain explicit local
+gate skips and require actual current-head results. Existing native permission
+counterexamples, task/profile qualification, shared #2682 repair, protected
+producer execution, rollout windows and all nine whole-goal criteria stay open.

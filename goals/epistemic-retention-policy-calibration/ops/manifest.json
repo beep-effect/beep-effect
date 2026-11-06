@@ -53,7 +53,7 @@
     "goals/epistemic-retention-policy-calibration/research/SOURCES.md",
     "goals/epistemic-memory-retention-projections/ops/REPORT.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

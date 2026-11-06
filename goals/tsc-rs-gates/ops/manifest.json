@@ -30,7 +30,15 @@
     "goals/tsc-rs-gates/GOAL.md",
     "goals/tsc-rs-gates/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/cache-baseline-request-2026-10-14.json",
+    "research/cache-baseline-request-2026-10-23-t3-code.json",
+    "research/cache-baseline-review-2026-10-14.md",
+    "research/cache-baseline-review-2026-10-23-t3-code.md",
+    "research/measurements-2026-10-13.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

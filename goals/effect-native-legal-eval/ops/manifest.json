@@ -38,13 +38,7 @@
     "explorations/harvey-lab-firm-knowledge/MAP.md",
     "explorations/harvey-lab-firm-knowledge/DECISIONS.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/harvey-lab-firm-knowledge/research/SOURCES.md",
-    "../../explorations/harvey-lab-firm-knowledge/research/map-evaluation.md",
-    "../../explorations/harvey-lab-firm-knowledge/research/map-harness.md",
-    "../../explorations/harvey-lab-firm-knowledge/research/mine-eval-methodology.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -73,5 +67,11 @@
     "The design requires retaining the Python harness as a normal runtime.",
     "Any OIP/client material would leave the device or enter telemetry/remote evaluation.",
     "The framework would duplicate rather than compose live judge/QA services."
+  ],
+  "researchReferences": [
+    "../../explorations/harvey-lab-firm-knowledge/research/SOURCES.md",
+    "../../explorations/harvey-lab-firm-knowledge/research/map-evaluation.md",
+    "../../explorations/harvey-lab-firm-knowledge/research/map-harness.md",
+    "../../explorations/harvey-lab-firm-knowledge/research/mine-eval-methodology.md"
   ]
 }

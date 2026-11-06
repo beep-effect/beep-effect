@@ -36,9 +36,17 @@
     "harness-ledger/README.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
-    "history/p2-rerun/FINDINGS.md",
-    "history/p4-rerun/FINDINGS.md"
+    "research/2026-09-25-rrsi-deep-research/bootstrap-plan.json",
+    "research/2026-09-25-rrsi-deep-research/concepts.md",
+    "research/2026-09-25-rrsi-deep-research/explore-code.md",
+    "research/2026-09-25-rrsi-deep-research/explore-packets.md",
+    "research/2026-09-25-rrsi-deep-research/explore-telemetry.md",
+    "research/2026-09-25-rrsi-deep-research/refs-evolution.md",
+    "research/2026-09-25-rrsi-deep-research/refs-rsi-memory.md",
+    "research/2026-09-25-rrsi-deep-research/repo-code-map.md",
+    "research/2026-09-25-rrsi-deep-research/repo-prose-map.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {
@@ -98,5 +106,9 @@
     "The same blocker repeats after reasonable investigation.",
     "A ledger row or telemetry field would carry a path, prompt, tool argument, secret, or corpus content.",
     "A change would apply a harness edit or pruning proposal without human admission."
+  ],
+  "researchReferences": [
+    "history/p2-rerun/FINDINGS.md",
+    "history/p4-rerun/FINDINGS.md"
   ]
 }

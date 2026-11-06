@@ -38,7 +38,12 @@
     "explorations/citation-grounding-hallucination-guard/MAP.md",
     "explorations/citation-grounding-hallucination-guard/DECISIONS.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/2026-07-25-academia-corpus-mining-note.md",
+    "research/2026-08-17-academia-wave2-findings.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

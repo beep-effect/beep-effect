@@ -78,6 +78,7 @@ import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { MergeGateCheckRun } from "./MergeGate.schemas.ts";
 import { readYeetReviewWindow, renderYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
 import { readYeetRulesetRequiredContexts } from "./Settle.ts";
+import { broadcastPacketSiblings } from "./Siblings.ts";
 import {
   readSquashCommitlint,
   renderSquashCommitlintVerdict,
@@ -1419,9 +1420,11 @@ const cancelMergedHeadRuns = Effect.fn("Yeet.cancelMergedHeadRuns")(function* (h
  * relaxed merge prints its at-merge lists instead). The
  * window override is printed whenever it was used. After a relaxed (S11)
  * merge it posts one PR comment recording the checks that were not green and
- * cancels the merged head's active workflow runs across all pages; both are
- * best effort, so a failure prints a warning and the command still succeeds.
- * A dry run does neither.
+ * cancels the merged head's active workflow runs across all pages. After any
+ * merge of a PR that touched `goals/<slug>/**` it comments on every other open
+ * PR on that packet with the merged sibling and its predicted conflicting
+ * files (B2, 2026-11-05). All three are best effort, so a failure prints a
+ * warning and the command still succeeds. A dry run does none of them.
  *
  * **Example** (Build the gate effect)
  *
@@ -1482,6 +1485,10 @@ const runMergeGateAsGhLogin = Effect.fnUntraced(function* (context: RepoRunConte
     );
     yield* cancelMergedHeadRuns(decision.headSha);
   }
+  // B2 (2026-11-05): every open PR on a goal packet this merge touched is told to merge main now.
+  yield* broadcastPacketSiblings(context, merged.prNumber, merged.mergeSha).pipe(
+    Effect.catch(warnAfterMerge("the packet sibling broadcast"))
+  );
   return decision;
 });
 

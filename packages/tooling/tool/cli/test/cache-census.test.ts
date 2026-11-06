@@ -331,6 +331,51 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("executable cache census",
 });
 
 it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("computation configuration fingerprint", (it) => {
+  it.effect("preserves historical observations without granting their identity to an observed creation mask", () =>
+    Effect.gen(function* () {
+      const census = yield* fingerprintFixture();
+      const encoded = yield* S.encodeEffect(CacheToolchainSnapshot)(toolchain);
+      expect(encoded).not.toHaveProperty("fileCreationMask");
+      const historical = yield* S.decodeEffect(CacheToolchainSnapshot)(encoded);
+      assertNone(historical.fileCreationMask);
+      const reencoded = yield* S.encodeEffect(CacheToolchainSnapshot)(historical);
+      expect(reencoded).toEqual(encoded);
+      const before = yield* fingerprintCacheComputation(key, census, historical);
+      const shared = yield* fingerprintCacheComputation(
+        key,
+        census,
+        CacheToolchainSnapshot.make({ ...historical, fileCreationMask: O.some(0o022) })
+      );
+      const privateMask = yield* fingerprintCacheComputation(
+        key,
+        census,
+        CacheToolchainSnapshot.make({ ...historical, fileCreationMask: O.some(0o077) })
+      );
+      expect(shared.configurationDigest).toBe(before.configurationDigest);
+      expect(privateMask.configurationDigest).toBe(before.configurationDigest);
+      expect(shared.toolchainDigest).not.toBe(before.toolchainDigest);
+      expect(privateMask.toolchainDigest).not.toBe(before.toolchainDigest);
+      expect(privateMask.toolchainDigest).not.toBe(shared.toolchainDigest);
+    })
+  );
+
+  it.effect("accepts only complete POSIX creation masks at the persisted boundary", () =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(CacheToolchainSnapshot)(toolchain);
+      for (const mask of [0, 0o022, 0o077, 0o777]) {
+        const observed = yield* S.decodeEffect(CacheToolchainSnapshot)({ ...encoded, fileCreationMask: mask });
+        assertSome(observed.fileCreationMask, mask);
+      }
+      for (const mask of [-1, 1.5, 0o1000, "077", null]) {
+        const failed = yield* S.decodeUnknownEffect(CacheToolchainSnapshot)({
+          ...encoded,
+          fileCreationMask: mask,
+        }).pipe(Effect.isFailure);
+        expect(failed).toBe(true);
+      }
+    })
+  );
+
   it.effect("observes the current pinned Bun without inheriting historical profile qualification", () =>
     Effect.gen(function* () {
       const census = yield* fingerprintFixture();

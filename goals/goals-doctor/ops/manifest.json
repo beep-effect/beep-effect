@@ -33,7 +33,7 @@
     "goals/goals-doctor/GOAL.md",
     "goals/goals-doctor/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/SOURCES.md", "research/status-token-census.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

@@ -35,13 +35,19 @@
     "goals/per-module-imports/research/SOURCES.md"
   ],
   "researchReports": [
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
+    "research/assets/biome-path-restrictions.jsonc",
+    "research/assets/biome-per-name-patterns.jsonc",
+    "research/assets/biome-severity-ratchet.jsonc",
+    "research/assets/ts-morph-prototype.ts",
+    "research/effect-community-guidance.md",
     "research/enforcement-census.md",
     "research/import-census.md",
-    "research/tooling-autofix-eval.md",
+    "research/lint-tool-landscape.md",
+    "research/p1-census-baseline.md",
     "research/pilot-and-measurement.md",
-    "research/effect-community-guidance.md",
-    "research/lint-tool-landscape.md"
+    "research/tooling-autofix-eval.md"
   ],
   "agentLaunchers": [
     {

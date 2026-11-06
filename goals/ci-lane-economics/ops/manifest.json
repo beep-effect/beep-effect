@@ -36,18 +36,21 @@
     "goals/ci-fleet-endgame/research/runner-endgame-decision-record.md"
   ],
   "researchReports": [
-    "research/cache-warm-lane-census.md",
-    "research/placement-decision.md",
-    "research/coverage-sharding-design.md",
-    "research/live-week-p95.md",
-    "research/current-ruleset-week-p95.md",
-    "research/tail-attribution.md",
-    "research/repair-decision.md",
-    "research/admission-week-p95.md",
+    "research/OPPORTUNITIES.md",
+    "research/admission-census-2026-09-04-window.md",
     "research/admission-week-2-p95.md",
     "research/admission-week-3-p95.md",
+    "research/admission-week-p95.md",
+    "research/cache-warm-lane-census.md",
+    "research/coverage-sharding-design.md",
+    "research/current-ruleset-week-p95.md",
+    "research/live-week-p95.md",
+    "research/placement-decision.md",
+    "research/repair-decision-2.md",
     "research/repair-decision-3.md",
-    "research/repair-decision-2.md"
+    "research/repair-decision.md",
+    "research/tail-attribution.md",
+    "research/test-unit-rebin-2026-11-02.md"
   ],
   "agentLaunchers": [
     {
