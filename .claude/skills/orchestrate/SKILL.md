@@ -262,7 +262,7 @@ orchestrator session):
   loop. The operator originally requested "add to beep's yeet command or a
   new command and configure it to perform common operations for us going
   forward using the rest api" and said "for now I say just install".
-  `bun run beep yeet gh ...` is now implemented through `@beep/github`; its
+  Yeet's GitHub operations are now implemented through `@beep/github`; their
   current behavior is defined in `commands/Yeet/Gh.command.ts` and
   `commands/Yeet/internal/GhOps.ts` under the repo CLI. The earlier
   `@effected/github`/Effect 4.0.1 plan is historical context, not the current
