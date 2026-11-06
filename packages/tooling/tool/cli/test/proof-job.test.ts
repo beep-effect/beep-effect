@@ -1,4 +1,4 @@
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { yeetCommand } from "@beep/repo-cli/commands/Yeet";
 import { acquireJournalFileLock, MemoryStats, releaseJournalFileLock } from "@beep/repo-cli/test/RepoRun";
@@ -47,6 +47,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs } from "./support/commandArgs.ts";
 import { waitTimesOut } from "./support/ProofJobWait.ts";
 import { captureGithub } from "./support/YeetGithub.ts";
+import type { GitShape, GitStubs } from "@beep/git/Git";
 
 // Every GitHub read the monitor's provenance stamp makes fails, so the stamp is skipped.
 const unreachableGithub = captureGithub(() => Effect.succeed({ exitCode: 1, output: "" }));
@@ -1472,6 +1473,12 @@ describe("job wait wave return", () => {
 });
 
 const runJobCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
+// The detached-job coordinates the submit reads: the branch and the resolved head.
+const jobGitStubs: Partial<GitStubs> = {
+  currentBranch: () => Effect.succeedSome("feature/job"),
+  revParse: () => Effect.succeed("feature/job"),
+};
+const jobGit = Git.makeTest(jobGitStubs);
 class CommandCheckout extends Context.Service<
   CommandCheckout,
   { readonly root: string; readonly launcher: Job.ProofJobLauncherShape }
@@ -1801,25 +1808,42 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
   it.effect(
     "submits detached commands and rejects invalid git coordinates and argv",
     Effect.fnUntraced(function* () {
-      const { root } = yield* CommandCheckout;
-      yield* writeExecutable(`${root}/git`, "#!/bin/sh\nprintf 'feature/job\\n'\n");
+      yield* CommandCheckout;
+      // The coordinates are `Git` reads (W7a Y56/Y57): a detached HEAD is the literal `HEAD`, a failure
+      // git reported is its stderr, and a run git never reached keeps the capture's wording.
+      const detach = (argv: ReadonlyArray<string>, git: GitShape = jobGit) =>
+        runJobCommand(argv).pipe(Effect.provideService(Git, git));
       process.argv = [process.execPath, "/repo/cli.ts", "--", "yeet", "verify", "--detach"];
-      yield* runJobCommand(["verify", "--detach"]);
-      yield* runJobCommand(["verify", "--detach", "--json", "--job-max-runtime", "1h"]);
+      yield* detach(["verify", "--detach"]);
+      yield* detach(["verify", "--detach", "--json", "--job-max-runtime", "1h"]);
+      yield* detach(["verify", "--detach"], Git.makeTest({ ...jobGitStubs, currentBranch: () => Effect.succeedNone }));
       process.argv = [process.execPath, "/repo/cli.ts", "wrong"];
-      const pipe67 = yield* runJobCommand(["verify", "--detach"]).pipe(Effect.flip);
-      expect(pipe67).toMatchObject({
-        message: "Cannot detach: original argv must begin with yeet.",
-      });
+      const wrongArgv = yield* detach(["verify", "--detach"]).pipe(Effect.flip);
+      expect(wrongArgv).toMatchObject({ message: "Cannot detach: original argv must begin with yeet." });
       process.argv = [process.execPath, "/repo/cli.ts"];
-      expect((yield* runJobCommand(["verify", "--detach"]).pipe(Effect.flip))._tag).toBe("YeetCommandError");
+      const shortArgv = yield* detach(["verify", "--detach"]).pipe(Effect.flip);
+      expect(shortArgv._tag).toBe("YeetCommandError");
       process.argv = [];
-      expect((yield* runJobCommand(["verify", "--detach"]).pipe(Effect.flip))._tag).toBe("YeetCommandError");
-      yield* writeExecutable(`${root}/git`, "#!/bin/sh\nprintf 'bad git coordinates\\n'\nexit 1\n");
-      const pipe68 = yield* runJobCommand(["verify", "--detach"]).pipe(Effect.flip);
-      expect(pipe68).toMatchObject({
-        message: "bad git coordinates",
+      const emptyArgv = yield* detach(["verify", "--detach"]).pipe(Effect.flip);
+      expect(emptyArgv._tag).toBe("YeetCommandError");
+      const refused = GitCommandError.make({
+        kind: "failed",
+        args: ["rev-parse", "--verify", "HEAD"],
+        cwd: "/repo",
+        exitCode: 1,
+        stderr: "bad git coordinates\n",
       });
+      const refusedRead = yield* detach(
+        ["verify", "--detach"],
+        Git.makeTest({ ...jobGitStubs, revParse: () => Effect.fail(refused) })
+      ).pipe(Effect.flip);
+      expect(refusedRead).toMatchObject({ message: "bad git coordinates" });
+      const unreachable = GitCommandError.make({ kind: "failed", args: ["rev-parse"], cwd: "/repo", stderr: "" });
+      const unreachableRead = yield* detach(
+        ["verify", "--detach"],
+        Git.makeTest({ ...jobGitStubs, currentBranch: () => Effect.fail(unreachable) })
+      ).pipe(Effect.flip);
+      expect(unreachableRead).toMatchObject({ message: "Failed to read detached job git coordinates." });
     })
   );
   it.effect(
@@ -1827,13 +1851,12 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
     Effect.fnUntraced(function* () {
       const { root, launcher } = yield* CommandCheckout;
       const fs = yield* FileSystem.FileSystem;
-      yield* writeExecutable(`${root}/git`, "#!/bin/sh\nprintf 'feature/job\\n'\n");
       yield* writeExecutable(`${root}/systemd-run`, `#!/bin/sh\nprintf '%s\\n' "$@" > '${root}/launch.argv'\n`);
       const argv = ["monitor", "--until-ready", "--poll-interval", "60s", "--detach"];
       process.argv = [process.execPath, "/repo/cli.ts", "--", "yeet", ...argv];
-      yield* runJobCommand(argv);
-      const list69 = yield* launcher.list;
-      const record = O.getOrThrow(A.findFirst(list69, (record) => A.contains(record.request.argv, "--poll-interval")));
+      yield* runJobCommand(argv).pipe(Effect.provideService(Git, jobGit));
+      const records = yield* launcher.list;
+      const record = O.getOrThrow(A.findFirst(records, (record) => A.contains(record.request.argv, "--poll-interval")));
       expect(record.request.argv).toEqual(["monitor", "--until-ready", "--poll-interval", "60s"]);
       const readFileString70 = yield* fs.readFileString(`${root}/launch.argv`);
       expect(readFileString70).toContain("monitor\n--until-ready\n--poll-interval\n60s");

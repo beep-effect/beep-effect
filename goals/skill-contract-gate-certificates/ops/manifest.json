@@ -35,7 +35,27 @@
     "goals/skill-contract-gate-certificates/research/SOURCES.md",
     "goals/skill-contract-gate-certificates/history/2026-11-02-p0-p1-evidence.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/cache-baseline-request-2026-11-02-main-merge-2.json",
+    "research/cache-baseline-request-2026-11-02-main-merge-3.json",
+    "research/cache-baseline-request-2026-11-02-main-merge-4.json",
+    "research/cache-baseline-request-2026-11-02-main-merge-5.json",
+    "research/cache-baseline-request-2026-11-02-main-merge-6.json",
+    "research/cache-baseline-request-2026-11-02-main-merge-7.json",
+    "research/cache-baseline-request-2026-11-02-main-merge-8.json",
+    "research/cache-baseline-request-2026-11-02-main-merge.json",
+    "research/cache-baseline-request-2026-11-02.json",
+    "research/cache-baseline-review-2026-11-02-main-merge-2.md",
+    "research/cache-baseline-review-2026-11-02-main-merge-3.md",
+    "research/cache-baseline-review-2026-11-02-main-merge-4.md",
+    "research/cache-baseline-review-2026-11-02-main-merge-5.md",
+    "research/cache-baseline-review-2026-11-02-main-merge-6.md",
+    "research/cache-baseline-review-2026-11-02-main-merge-7.md",
+    "research/cache-baseline-review-2026-11-02-main-merge-8.md",
+    "research/cache-baseline-review-2026-11-02-main-merge.md",
+    "research/cache-baseline-review-2026-11-02.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "citation-supplemental-extraction-plan/v1",
+  "scope": "Focused extraction/resolution projections; not exhaustive supplemental or target parity proof.",
+  "cases": [
+    {
+      "id": "cit-merger",
+      "text": "1 C.I.T. 1. 1 Ct. Int'l Trade 1.",
+      "expectedKinds": ["FullCaseCitation", "FullCaseCitation"],
+      "expectedAuthorityGroups": [[0], [1]]
+    },
+    {
+      "id": "astral-prefix",
+      "text": "😀 1 U.S. 1.",
+      "expectedKinds": ["FullCaseCitation"],
+      "expectedAuthorityGroups": [[0]]
+    },
+    {
+      "id": "combining-prefix",
+      "text": "é 1 U.S. 1.",
+      "expectedKinds": ["FullCaseCitation"],
+      "expectedAuthorityGroups": [[0]]
+    },
+    {
+      "id": "usc-law",
+      "text": "35 U.S.C. § 101 (2018)",
+      "expectedKinds": ["FullLawCitation"],
+      "expectedAuthorityGroups": [[0]]
+    },
+    {
+      "id": "cfr-law",
+      "text": "37 C.F.R. § 1.56 (2020)",
+      "expectedKinds": ["FullLawCitation"],
+      "expectedAuthorityGroups": [[0]]
+    },
+    {
+      "id": "unresolved-id",
+      "text": "Id. at 2.",
+      "expectedKinds": ["IdCitation"],
+      "expectedAuthorityGroups": []
+    },
+    {
+      "id": "resolved-id",
+      "text": "1 U.S. 1. Id. at 2.",
+      "expectedKinds": ["FullCaseCitation", "IdCitation"],
+      "expectedAuthorityGroups": [[0, 1]]
+    },
+    {
+      "id": "nearest-id",
+      "text": "1 U.S. 1. 2 U.S. 2. Id. at 3.",
+      "expectedKinds": ["FullCaseCitation", "FullCaseCitation", "IdCitation"],
+      "expectedAuthorityGroups": [[0], [1, 2]]
+    },
+    {
+      "id": "repeated-authority",
+      "text": "1 U.S. 1. 1 U.S. 1.",
+      "expectedKinds": ["FullCaseCitation", "FullCaseCitation"],
+      "expectedAuthorityGroups": [[0, 1]]
+    },
+    {
+      "id": "reporter-spelling",
+      "text": "1 U. S. 1.",
+      "expectedKinds": ["FullCaseCitation"],
+      "expectedAuthorityGroups": [[0]]
+    },
+    {
+      "id": "no-citations",
+      "text": "Text without a citation.",
+      "expectedKinds": [],
+      "expectedAuthorityGroups": []
+    },
+    {
+      "id": "crlf-context",
+      "text": "1 U.S. 1.\r\nId. at 2.",
+      "expectedKinds": ["FullCaseCitation", "IdCitation"],
+      "expectedAuthorityGroups": [[0, 1]]
+    },
+    {
+      "id": "astral-context",
+      "text": "1 U.S. 1. 😀 Id. at 2.",
+      "expectedKinds": ["FullCaseCitation", "IdCitation"],
+      "expectedAuthorityGroups": [[0, 1]]
+    }
+  ],
+  "remainingCoverage": [
+    "cleaning-and-markup-mapping",
+    "annotation-diff-and-ambiguity",
+    "tokenizer-and-callback-injection",
+    "hash-and-model-identity",
+    "malformed-and-adversarial-inputs"
+  ]
+}

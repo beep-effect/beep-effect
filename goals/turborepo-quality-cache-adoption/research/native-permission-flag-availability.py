@@ -30,11 +30,18 @@ args = parser.parse_args()
 assert not args.output.exists() and not args.output.is_symlink(), "Existing reports are refused."
 repo = Path(__file__).resolve().parents[3]
 research = Path(__file__).resolve().parent
+source_reader = research / "native-future-flag-availability.py"
+source_reader_bytes = source_reader.read_bytes()
+source_reader_node = next(n for n in ast.parse(source_reader_bytes).body
+                          if isinstance(n, ast.FunctionDef) and n.name == "read_contained_source")
+source_reader_namespace = {"os": os}
+exec(compile(ast.Module(body=[source_reader_node], type_ignores=[]), str(source_reader), "exec"), source_reader_namespace)
+read_contained_source = source_reader_namespace["read_contained_source"]
 pins_path = research / "current-client-pins.json"
-pins_bytes = pins_path.read_bytes()
+pins_bytes = read_contained_source(pins_path, repo)
 pins = json.loads(pins_bytes)
 harness = research / "native-future-flag-availability.py"
-harness_bytes = harness.read_bytes()
+harness_bytes = source_reader_bytes
 function = next(
     node for node in ast.parse(harness_bytes).body
     if isinstance(node, ast.FunctionDef) and node.name == "run_bounded"
@@ -53,7 +60,7 @@ bindings = [
     for path, data in captured.items()
 ]
 for binding in bindings:
-    assert hashlib.sha256((repo / binding["path"]).read_bytes()).hexdigest() == binding["sha256"], "Source changed before observation."
+    assert hashlib.sha256(read_contained_source(repo / binding["path"], repo) if repo / binding["path"] == pins_path else (repo / binding["path"]).read_bytes()).hexdigest() == binding["sha256"], "Source changed before observation."
 clients = {
     "stable": repo / "node_modules/@turbo/linux-64/bin/turbo",
     "canary": Path.home() / ".cache/beep/turbo-goals-clients" / pins["canary"]["packageVersion"] / "turbo",

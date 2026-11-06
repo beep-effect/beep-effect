@@ -34,7 +34,7 @@
     "goals/oppold-corpus-salvage-restoration/GOAL.md",
     "goals/oppold-corpus-salvage-restoration/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

@@ -6,6 +6,15 @@ Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
+## Storage handoff — 2026-11-05
+
+Before using this retained packet, read the
+[workstation consolidation handoff](../oppold-corpus-salvage-restoration/history/2026-11-05-workstation-consolidation-handoff.md).
+The historical archive now includes verified links to active keepers, and the
+old temporary backup capture is retired. Re-resolve current private source maps
+before any new run. This packet remains `completed-retained`; do not replay its
+salvage/archive-move steps or infer extraction completion from recovery backup.
+
 ## Mission
 
 Consolidate the post-June exports/downloads from the user's data-home boundary

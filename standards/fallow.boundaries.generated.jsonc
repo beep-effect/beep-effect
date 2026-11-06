@@ -2714,6 +2714,7 @@
       {
         "from": "@beep/html",
         "allow": [
+          "@beep/codegen-kit",
           "@beep/html",
           "@beep/identity",
           "@beep/schema",
@@ -2722,6 +2723,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/codegen-kit",
           "@beep/html",
           "@beep/identity",
           "@beep/schema",
@@ -4511,6 +4513,7 @@
           "@beep/glob",
           "@beep/identity",
           "@beep/jsonc",
+          "@beep/jsonl",
           "@beep/libpff",
           "@beep/lockfiles",
           "@beep/m365",
@@ -4527,7 +4530,9 @@
           "@beep/pdf-tools",
           "@beep/phoenix",
           "@beep/poppler",
+          "@beep/provenance",
           "@beep/qa-capture",
+          "@beep/rdf",
           "@beep/repo-ai-metrics",
           "@beep/repo-cli",
           "@beep/repo-cli-kit",
@@ -4574,6 +4579,7 @@
           "@beep/glob",
           "@beep/identity",
           "@beep/jsonc",
+          "@beep/jsonl",
           "@beep/libpff",
           "@beep/lockfiles",
           "@beep/m365",
@@ -4590,7 +4596,9 @@
           "@beep/pdf-tools",
           "@beep/phoenix",
           "@beep/poppler",
+          "@beep/provenance",
           "@beep/qa-capture",
+          "@beep/rdf",
           "@beep/repo-ai-metrics",
           "@beep/repo-cli",
           "@beep/repo-cli-kit",
@@ -5214,6 +5222,7 @@
       {
         "from": "@beep/technical-drawing",
         "allow": [
+          "@beep/codegen-kit",
           "@beep/identity",
           "@beep/schema",
           "@beep/technical-drawing",
@@ -5221,6 +5230,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/codegen-kit",
           "@beep/identity",
           "@beep/schema",
           "@beep/technical-drawing",

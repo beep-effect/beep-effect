@@ -293,7 +293,10 @@
   ],
   "nextAction": "None — packet closed 2026-07-27. Consumers start from history/outputs/p5-implementation-notes.md; follow-up debt (FileProcessingWarningRecord, streaming digests) is recorded there and in the closeout reflection.",
   "researchReports": [
+    "research/2026-08-17-academia-wave2-reentry.md",
     "research/SOURCES.md",
+    "research/engine-selection.md",
+    "research/gold-intake-ocr-pdf-diagnostics.md",
     "research/p3-libpff-design.md",
     "research/p4-files-process-design.md"
   ],

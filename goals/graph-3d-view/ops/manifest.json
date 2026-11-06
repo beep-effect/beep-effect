@@ -35,14 +35,17 @@
     "goals/graph-3d-view/research/SOURCES.md"
   ],
   "researchReports": [
+    "research/DESIGN-REVIEW.md",
+    "research/DESIGN.md",
+    "research/SEED-INVENTORY.md",
     "research/SOURCES.md",
+    "research/VERIFICATION.md",
     "research/bundle-static-analysis.md",
     "research/demo-behavior-matrix.md",
-    "research/label-anti-overlap.md",
-    "research/library-landscape-3d.md",
     "research/infranodus-method-corpus.md",
     "research/integration-constraints.md",
-    "research/VERIFICATION.md"
+    "research/label-anti-overlap.md",
+    "research/library-landscape-3d.md"
   ],
   "agentLaunchers": [
     {

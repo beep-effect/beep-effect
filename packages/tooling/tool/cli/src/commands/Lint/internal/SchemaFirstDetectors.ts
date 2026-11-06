@@ -227,12 +227,12 @@ const isDataLikeObjectType = (type: Type, location: Node, depth: number): boolea
 
 const isDataLikeType = (type: Type, location: Node, depth = 0): boolean =>
   pipe(
-    O.firstSomeOf([
-      dataLikeRuntimeDecision(type, location),
-      dataLikeCollectionDecision(type, location, depth),
-      dataLikeCompositionDecision(type, location, depth),
-      dataLikeTerminalDecision(type, location, depth),
-    ]),
+    dataLikeRuntimeDecision(type, location),
+    // Later decisions can recursively expand compiler types. Preserve first-Some
+    // priority without evaluating decisions whose results would be discarded.
+    O.orElse(() => dataLikeCollectionDecision(type, location, depth)),
+    O.orElse(() => dataLikeCompositionDecision(type, location, depth)),
+    O.orElse(() => dataLikeTerminalDecision(type, location, depth)),
     O.getOrElse(() => isDataLikeObjectType(type, location, depth))
   );
 

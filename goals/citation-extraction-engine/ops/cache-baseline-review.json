@@ -1,0 +1,20 @@
+{
+  "previous": "ceafdb6e605eea140cf4e7bc513b4fb1f2df3adaae666789bf33ef6f84788ff4",
+  "review": {
+    "reviewer": "Codex (citation native capture / CI repair)",
+    "reason": "Preserve the Node-only static boundary suite as a disjoint Node continuation while excluding it from incompatible Bun coverage; no production exclusion, floor, cache flag or qualification scope changes.",
+    "basis": {
+      "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-node-boundary-coverage-review.md",
+      "sha256": "18d54673811c8c4aae6ee9491df6a5884931d59b60ada1b929e4a0ce86890cae"
+    }
+  },
+  "subjects": ["@beep/law-practice-server"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

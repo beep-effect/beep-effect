@@ -17,5 +17,12 @@
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
-  }
+  },
+  "researchReports": [
+    "research/legacy-knowledge-integration-explained.md",
+    "research/legacy-knowledge-integration-exploration.md",
+    "research/rdfs-owl-reasoning-engines.md",
+    "research/semantic-kg-integration-explained.md",
+    "research/white-paper-research-foundations.md"
+  ]
 }

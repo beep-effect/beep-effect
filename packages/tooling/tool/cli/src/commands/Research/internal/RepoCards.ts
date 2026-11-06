@@ -10,17 +10,21 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitHubClient } from "@beep/github/GitHubClient";
 import { $RepoCliId } from "@beep/identity/packages";
-import { runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { GithubClientRequest, GithubIdentity, layerGithubClientFor } from "../../../internal/github/GithubIdentity.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -71,25 +75,7 @@ export class StarredRepo extends S.Opaque<StarredRepo, { readonly brand: unique 
   )
 ) {}
 
-const decodeStarredRepoJsonLine = S.decodeEffect(S.fromJsonString(StarredRepo));
-
-const runForOutput = Effect.fn("RepoCards.runForOutput")(function* (
-  command: string,
-  args: ReadonlyArray<string>,
-  cwd: string
-): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
-  const result = yield* runCaptured({
-    command,
-    args,
-    cwd,
-    source: "stdout",
-    trim: true,
-  }).pipe(Effect.option);
-  return result.pipe(
-    O.filter((run) => run.exitCode === 0 && Str.isNonEmpty(run.output)),
-    O.map((run) => run.output)
-  );
-});
+const decodeStarredRepos = S.decodeUnknownEffect(S.Array(StarredRepo));
 
 const CLONE_SEARCH_DEPTH = 3;
 
@@ -207,7 +193,19 @@ export const slugPartsOf: {
 /**
  * Gather remote, README, license, and last-commit facts for one clone.
  *
+ * **Details**
+ * Git read failures leave their facts absent. Commit timestamps use UTC ISO format.
+ *
+ * **Example** (Inspect a local research clone)
+ *
+ * ```ts
+ * import { inspectClone } from "@beep/repo-cli/test/Research"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(inspectClone(".")))
+ * ```
+ *
  * @internal
+ * @since 0.0.0
  * @category utilities
  */
 export const inspectClone = Effect.fn("RepoCards.inspectClone")(function* (
@@ -219,10 +217,16 @@ export const inspectClone = Effect.fn("RepoCards.inspectClone")(function* (
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const remoteUrl = (yield* runForOutput("git", ["remote", "get-url", "origin"], repoDir)).pipe(
-    O.map(remoteToHttpsUrl)
+  const remoteUrl = yield* Git.use((git) => git.remoteUrl(repoDir)).pipe(
+    Effect.provideServiceEffect(Git, Git.make),
+    Effect.orElseSucceed(O.none<string>),
+    Effect.map(O.map(remoteToHttpsUrl))
   );
-  const lastCommitIso = yield* runForOutput("git", ["log", "-1", "--format=%cI"], repoDir);
+  const lastCommitIso = yield* Git.use((git) => git.log(repoDir, { limit: 1 })).pipe(
+    Effect.provideServiceEffect(Git, Git.make),
+    Effect.map((rows) => O.map(A.head(rows), (entry) => DateTime.formatIso(entry.committedAt))),
+    Effect.orElseSucceed(O.none<string>)
+  );
   const readmeExcerpt = yield* readmeExcerptOf(repoDir);
   let hasLicense = false;
   for (const name of ["LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING"]) {
@@ -244,9 +248,18 @@ export const inspectClone = Effect.fn("RepoCards.inspectClone")(function* (
 });
 
 /**
- * List the authenticated user's starred repositories via the `gh` CLI.
+ * List every page of the authenticated gh user's starred repositories over REST.
+ *
+ * **Example** (Read the current login's stars)
+ *
+ * ```ts
+ * import { listStarredRepos } from "@beep/repo-cli/test/Research"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(listStarredRepos(".")))
+ * ```
  *
  * @internal
+ * @since 0.0.0
  * @category utilities
  */
 export const listStarredRepos = Effect.fn("RepoCards.listStarredRepos")(function* (
@@ -256,17 +269,25 @@ export const listStarredRepos = Effect.fn("RepoCards.listStarredRepos")(function
   ResearchCommandError,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
-  const output = yield* runForOutput(
-    "gh",
-    ["api", "user/starred", "--paginate", "--jq", ".[] | {full_name, html_url, description, language, topics}"],
-    cwd
+  const identity = GithubIdentity.make({
+    kind: "gh-cli",
+    tokenRef: O.none(),
+    appId: O.none(),
+    installationId: O.none(),
+    privateKeyRef: O.none(),
+  });
+  const rows = yield* Effect.flatMap(
+    Layer.build(layerGithubClientFor(GithubClientRequest.make({ identity, cwd }), { retry: "off" })),
+    (services) =>
+      Effect.provideContext(
+        GitHubClient.use((client) => client.paginate("GET /user/starred", { per_page: 100 })),
+        services
+      )
+  ).pipe(
+    Effect.scoped,
+    ResearchCommandError.mapError(
+      "Failed listing GitHub stars via `gh api user/starred`; is gh installed and authenticated?"
+    )
   );
-  if (O.isNone(output)) {
-    return yield* ResearchCommandError.make({
-      message: "Failed listing GitHub stars via `gh api user/starred`; is gh installed and authenticated?",
-    });
-  }
-  return yield* Effect.forEach(A.filter(Str.split(output.value, "\n"), Str.isNonEmpty), (line) =>
-    decodeStarredRepoJsonLine(line)
-  ).pipe(ResearchCommandError.mapError("GitHub stars failed schema validation."));
+  return yield* decodeStarredRepos(rows).pipe(ResearchCommandError.mapError("GitHub stars failed schema validation."));
 });

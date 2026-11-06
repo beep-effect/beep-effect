@@ -159,6 +159,10 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
     []
   )(() => import("../../commands/Holds/index.ts").then((module) => module.holdsCommand)),
   groupRoute(
+    { name: "kb", description: "Validate and project a generic evidence ledger" },
+    []
+  )(() => import("../../commands/Kb/index.ts").then((module) => module.kbCommand)),
+  groupRoute(
     { name: "refs", description: "Manage the manifest-defined reference workspace" },
     []
   )(() => import("../../commands/Refs/index.ts").then((module) => module.refsCommand)),

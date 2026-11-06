@@ -23,6 +23,7 @@ type ReadinessRemote = Pick<
   YeetStatusRemote,
   | "available"
   | "checked"
+  | "readFailure"
   | "checks"
   | "requiredCheckCount"
   | "failingRequiredCheckCount"
@@ -57,6 +58,7 @@ const requiredChecksAreGreen = (remote: ReadinessRemote): boolean => {
     O.fromUndefinedOr(remote.requiredCheckCount),
     O.exists(
       (count) =>
+        O.isNone(remote.readFailure) &&
         count > 0 &&
         A.every(
           [

@@ -213,7 +213,11 @@
     "The SDK contract is context packets plus candidate writes, not authoritative agent writes.",
     "The P3 proof runs both scenarios through the agents use-cases package contract test."
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/2026-07-25-academia-corpus-mining-note.md",
+    "research/SOURCES.md",
+    "research/gold-intake-agent-skills-ethical-wall.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

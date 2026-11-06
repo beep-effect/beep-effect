@@ -5,6 +5,7 @@ import {
   ManagedControllerObservation,
 } from "@beep/repo-ai-metrics/managed-controller";
 import { makeNativeHttpIntake, NativeHttpPolicy, renderNativeHttpMetrics } from "@beep/repo-ai-metrics/native-http";
+import * as LaunchFacts from "@beep/repo-ai-metrics/observation-launch-facts";
 import {
   makeObservationLaunchFacts,
   ObservationLaunchFact,
@@ -19,7 +20,7 @@ import { it } from "@beep/test-runner";
 import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import * as NodeHttpServer from "@effect/platform-node/NodeHttpServer";
-import { expect } from "@effect/vitest";
+import { expect, vi } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -518,3 +519,59 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
     })
   );
 });
+
+const realMakeLaunchFacts = LaunchFacts.makeObservationLaunchFacts;
+for (const reason of LaunchFacts.ObservationLaunchFactsError.fields.reason.literals) {
+  const expectedStatus = reason === "retired" ? 410 : reason === "conflict" ? 409 : 503;
+  const expectedCode = reason === "retired" ? 9 : reason === "conflict" ? 3 : 14;
+  const expectedCounter = reason === "retired" ? "expired" : reason === "capacity" ? "capacity" : "storage";
+  const expectedMessage =
+    reason === "retired"
+      ? "Request references expired local acceptance; it cannot be reaccepted"
+      : "Local intake refused the request";
+  it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+    it.effect(`returns a content-free native refusal for ${reason} launch-fact read failure`, () =>
+      Effect.gen(function* () {
+        const read = vi.fn(() => Effect.fail(LaunchFacts.ObservationLaunchFactsError.make({ reason })));
+        yield* Effect.acquireRelease(
+          Effect.sync(() =>
+            vi
+              .spyOn(LaunchFacts, "makeObservationLaunchFacts")
+              .mockImplementation((config) =>
+                realMakeLaunchFacts(config).pipe(Effect.map((facts) => ({ ...facts, read })))
+              )
+          ),
+          (mock) => Effect.sync(() => mock.mockRestore())
+        );
+        const f = yield* fixture(16, 2000, true);
+        const id = (c: string) => Sha256Hex.make(Str.repeat(64)(c));
+        const observed = ManagedControllerObservation.make({
+          launchId: id("1"),
+          launchRouteId: id("c"),
+          processInstanceId: id("2"),
+          sourceSessionId: id("3"),
+          evidenceId: id("4"),
+          startTimeUnixNano: "1793000000000000000",
+          endTimeUnixNano: "1793000000100000000",
+          elapsedNanos: "100000000",
+        });
+        const bytes = yield* encodeManagedControllerObservation(observed);
+        const refused = yield* f.post(bytes, "application/x-protobuf");
+        expect(read).toHaveBeenCalledTimes(1);
+        expect(refused.status).toBe(expectedStatus);
+        expect(refused.headers.get("x-observation-receipt")).toBeNull();
+        const status = responseType.lookupType("Status");
+        expect(status.toObject(status.decode(refused.bytes))).toEqual({
+          code: expectedCode,
+          message: expectedMessage,
+        });
+        expect(refused.text).not.toContain("ObservationLaunchFactsError");
+        const health = yield* f.health;
+        expect(health.counts.accepted).toBe(0);
+        expect(health.counts).toMatchObject({ [expectedCounter]: 1 });
+        const stats = yield* f.journal.stats;
+        expect(stats).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
+      })
+    )
+  );
+}

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "claim-product-tool-pages-measurement/v1",
+  "implementationDigest": "512b0e12aaf68f82d75e92a88b556304fc95ec489ee5699c7a2aa2565a3bb02a",
+  "selected": 538,
+  "strict": 39,
+  "parsed": 537,
+  "abstained": 455,
+  "lostOriginal37": [],
+  "lostPrior39": [],
+  "familiesDelivered": 60,
+  "pagesDelivered": 62,
+  "maxEncodedPageBytes": 1030807,
+  "pageLimitBytes": 1048576,
+  "multiPageFamilies": ["18018354-root-6", "11670278-root-61"],
+  "numericalGatesPassed": false,
+  "goalCompletionClaimed": false,
+  "evidence": [
+    {
+      "artifact": "product-tool-pages-002/results.json",
+      "sha256": "c9d63cd82bda4282d1f566991fc8e4c8ef1a2bc27dbe2b5720e40f1d1a4beea9"
+    },
+    {
+      "artifact": "product-tool-pages-002/gates.json",
+      "sha256": "7f634011625a94b039282b658270cd767c5ad9f70dc2d1b39cab39055aa30893"
+    },
+    {
+      "artifact": "product-tool-pages-002/preservation.json",
+      "sha256": "97739efe35ddbbb73887ba1559a0c1f15c501422672fd48c871feaf09c750347"
+    }
+  ],
+  "failedLaunchRetained": "product-tool-pages-001: refused pre-existing empty directory before prediction; no prior output overwritten",
+  "review": "pagination-review-002:0 required correctness findings; scoped Fallow0; EV0030; server testtypecheck passed; app audit/docgen passed"
+}

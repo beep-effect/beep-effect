@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "claim-performance-hosted-coverage-confirmation/v1",
+  "pullRequest": 2685,
+  "verifiedHead": "fb87ba103922924fdfd9680bd658d5a4219d47ed",
+  "hostedJob": 126016910737,
+  "hostedRun": 41661453888,
+  "serverMetrics": {
+    "lines": 99.22,
+    "statements": 99.07,
+    "branches": 94.65,
+    "functions": 98.26
+  },
+  "allOwnUnchangedFloorsPass": true,
+  "priorProjectionExactlyMatched": true,
+  "remainingInheritedRegressionKeys": 94,
+  "newInheritedRegressionKeys": 0,
+  "mainRepair2682AcceptedAtVerification": false,
+  "confirmationSha256": "ccedb5bebc15ba5dbca0ce1db006e62e230e5f3a1c25f288d9408c6f77f71e42",
+  "thisDoesNotCertifyLaterRollupHead": true,
+  "goalComplete": false
+}

@@ -39,12 +39,7 @@
     "explorations/agent-memory-tiers-bitemporal-edges/MAP.md",
     "explorations/agent-memory-tiers-bitemporal-edges/DECISIONS.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/agent-memory-tiers-bitemporal-edges/research/SOURCES.md",
-    "../../explorations/agent-memory-tiers-bitemporal-edges/research/memory-tier-decay-and-eviction.md",
-    "../../explorations/agent-memory-tiers-bitemporal-edges/research/rrf-retrieval-layer-consumption.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -92,5 +87,10 @@
     "The projection would mutate or replace accepted authority records.",
     "Retention policy would activate without calibration evidence.",
     "The implementation would absorb RRF arithmetic or operator-memory scope."
+  ],
+  "researchReferences": [
+    "../../explorations/agent-memory-tiers-bitemporal-edges/research/SOURCES.md",
+    "../../explorations/agent-memory-tiers-bitemporal-edges/research/memory-tier-decay-and-eviction.md",
+    "../../explorations/agent-memory-tiers-bitemporal-edges/research/rrf-retrieval-layer-consumption.md"
   ]
 }

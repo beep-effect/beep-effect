@@ -18701,6 +18701,18 @@
             "functions": 0
           }
         },
+        "packages/law-practice/use-cases/src/ClaimInspection.tools.ts": {
+          "lines": 97.87,
+          "statements": 97.95,
+          "branches": 100,
+          "functions": 91.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
         "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.errors.ts": {
           "lines": 100,
           "statements": 100,
@@ -39978,6 +39990,18 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Siblings.ts": {
+          "lines": 87.95,
+          "statements": 87.5,
+          "branches": 81.25,
+          "functions": 80,
+          "uncovered": {
+            "lines": 10,
+            "statements": 12,
+            "branches": 3,
+            "functions": 8
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/SquashCommitlint.ts": {

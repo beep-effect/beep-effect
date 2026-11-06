@@ -44,12 +44,7 @@
     "explorations/patent-drafting-episode-ledger/MAP.md",
     "explorations/patent-drafting-episode-ledger/DECISIONS.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/patent-drafting-episode-ledger/research/SOURCES.md",
-    "../../explorations/patent-drafting-episode-ledger/research/01-repo-surfaces.md",
-    "../../explorations/patent-drafting-episode-ledger/research/02-drafting-episode-frame.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -78,5 +73,10 @@
     "Practice-KG rows cannot be made totally deterministic within scope.",
     "The design would compute a legal verdict from anchor fidelity.",
     "An emitterless event payload would be treated as stable without producer proof."
+  ],
+  "researchReferences": [
+    "../../explorations/patent-drafting-episode-ledger/research/01-repo-surfaces.md",
+    "../../explorations/patent-drafting-episode-ledger/research/02-drafting-episode-frame.md",
+    "../../explorations/patent-drafting-episode-ledger/research/SOURCES.md"
   ]
 }

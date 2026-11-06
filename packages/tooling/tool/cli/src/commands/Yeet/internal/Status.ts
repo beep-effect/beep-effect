@@ -713,6 +713,7 @@ export const collectRemoteChecks: {
     SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   > {
     const args = ["pr", "checks", ...(required ? ["--required"] : []), "--json", YEET_STATUS_CHECK_FIELDS];
+    // KEEP (D-13): `gh pr checks` gives the checks rollup with `bucket`, which no kit member does.
     const result = yield* runRepoCommandCapture("gh", args, context.repoRoot).pipe(
       Effect.mapError(YeetCommandError.new("Failed to inspect PR checks for yeet status."))
     );
@@ -824,6 +825,7 @@ export const collectRemoteWorkflowRuns = Effect.fn("YeetStatus.collectRemoteWork
   never,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
+  // KEEP (D-13): `gh run list --branch` feeds the failed-job collection beside the checks rollup, which no kit member reads.
   const result = yield* runRepoCommandCapture(
     "gh",
     ["run", "list", "--branch", context.branch, "--limit", "20", "--json", "databaseId,headSha,status,conclusion,name"],
@@ -1090,6 +1092,7 @@ export const yeetRerunDecisionText = (runName: string): string =>
 // Use the shared pushed-branch REST lookup after any failed GraphQL read.
 // Only a successful empty lookup proves absence; two failed reads stay unknown.
 const readRemotePullRequest = Effect.fn("YeetStatus.readRemotePullRequest")(function* (context: RepoRunContext) {
+  // KEEP (D-13): `mergeStateStatus` and `reviewDecision` are GraphQL-only fields `gh pr view` resolves from the branch.
   const primary = yield* ghOutput({
     args: [
       "pr",
@@ -1121,6 +1124,7 @@ const readRemotePullRequest = Effect.fn("YeetStatus.readRemotePullRequest")(func
   return yield* Effect.gen(function* () {
     const found = yield* findOpenPullRequestViaRest(context).pipe(provideYeetGhLogin(context.repoRoot));
     if (O.isNone(found)) return O.none<GhStatusPullRequest>();
+    // KEEP (D-13): the REST `pulls/{n}` fallback keeps gh's tri-state `mergeable` projection.
     const output = yield* ghOutput({
       args: [
         "api",
@@ -1525,6 +1529,7 @@ const optionalCount = (value: number | undefined): number =>
 
 const renderCheckLine = (remote: YeetStatusRemote): string => {
   if (!remote.checked) return "checks: not checked";
+  if (O.isSome(remote.readFailure)) return "checks: incomplete remote read; retry before assessing readiness";
   if (remote.requiredCheckCount !== undefined) {
     return `checks: ${remote.requiredCheckCount} required (${optionalCount(remote.failingRequiredCheckCount)} failing, ${optionalCount(remote.pendingRequiredCheckCount)} pending); ${optionalCount(remote.optionalCheckCount)} optional (${optionalCount(remote.failingOptionalCheckCount)} failing, ${optionalCount(remote.pendingOptionalCheckCount)} pending)`;
   }

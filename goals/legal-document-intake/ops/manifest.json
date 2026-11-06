@@ -43,7 +43,12 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
-    "research/exploration-findings.md"
+    "research/embedding-bakeoff.md",
+    "research/exploration-findings.md",
+    "research/folder-structure.md",
+    "research/librarian-critic.md",
+    "research/sync-state-model.md",
+    "research/taxonomy-seed.md"
   ],
   "agentLaunchers": [
     {

@@ -55,12 +55,16 @@ const record = (text: string): GoalPacketRecord =>
 const stubReader = (files: ReadonlyArray<string>) => {
   const reads = { ops: 0 };
   const reader: GoalPacketReader<never, never> = {
+    decisionFiles: () => Effect.succeed(A.empty<string>()),
+    readDecision: () => Effect.succeed(""),
+    readDocument: () => Effect.succeedNone,
     explorationPath: () => Effect.succeed(GoalExplorationPathState.Enum.present),
     opsFiles: () =>
       Effect.sync(() => {
         reads.ops += 1;
         return files;
       }),
+    researchFiles: () => Effect.succeed(A.empty<string>()),
     readReflection: () => Effect.succeed(""),
     reflectionFiles: () => Effect.succeed(A.empty<string>()),
   };
@@ -206,6 +210,31 @@ describe("goal ops script registration", () => {
     })
   );
 
+  it.effect("the tree reader lists every tracked file under one packet's research/", () =>
+    Effect.gen(function* () {
+      const tree = makeKnowledgeDoctorMemoryTree({
+        files: {
+          "goals/demo/research/SOURCES.md": "",
+          "goals/demo/research/evidence/run.json": "",
+          "goals/demo/research/.gitkeep": "",
+          "goals/demo/ops/manifest.json": "{}",
+          "goals/demo-two/research/notes.md": "",
+        },
+      });
+      const reader = makeKnowledgeGoalPacketReader(tree);
+      const researchFiles1 = yield* reader.researchFiles("goals/demo");
+      assert.deepStrictEqual(researchFiles1, [
+        "research/.gitkeep",
+        "research/SOURCES.md",
+        "research/evidence/run.json",
+      ]);
+      const researchFiles2 = yield* reader.researchFiles("goals/demo-two");
+      assert.deepStrictEqual(researchFiles2, ["research/notes.md"]);
+      const researchFiles3 = yield* reader.researchFiles("goals/absent");
+      assert.deepStrictEqual(researchFiles3, []);
+    })
+  );
+
   it.layer(memoryLayer, { timeout: "30 seconds" })((it) => {
     it.effect("the filesystem reader lists files, not directories, at any depth", () =>
       Effect.gen(function* () {
@@ -220,6 +249,13 @@ describe("goal ops script registration", () => {
         assert.deepStrictEqual(opsFiles4, ["ops/a.ts", "ops/nested/b.ts"]);
         const opsFiles5 = yield* reader.opsFiles(path.join(packet, "absent"));
         assert.deepStrictEqual(opsFiles5, []);
+        yield* fs.makeDirectory(path.join(packet, "research", "evidence"), { recursive: true });
+        yield* fs.writeFileString(path.join(packet, "research", "SOURCES.md"), "");
+        yield* fs.writeFileString(path.join(packet, "research", "evidence", "run.json"), "");
+        const researchFiles4 = yield* reader.researchFiles(packet);
+        assert.deepStrictEqual(researchFiles4, ["research/SOURCES.md", "research/evidence/run.json"]);
+        const researchFiles5 = yield* reader.researchFiles(path.join(packet, "absent"));
+        assert.deepStrictEqual(researchFiles5, []);
       })
     );
   });

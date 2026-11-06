@@ -32,11 +32,7 @@
     "goals/mcp-kit/GOAL.md",
     "goals/mcp-kit/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/mcp-auth-gated-registration/research/SOURCES.md",
-    "../../explorations/mcp-auth-gated-registration/reviews/2026-07-01-codex-verification.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -87,5 +83,9 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "legacy status: complete"
+  "statusNote": "legacy status: complete",
+  "researchReferences": [
+    "../../explorations/mcp-auth-gated-registration/research/SOURCES.md",
+    "../../explorations/mcp-auth-gated-registration/reviews/2026-07-01-codex-verification.md"
+  ]
 }

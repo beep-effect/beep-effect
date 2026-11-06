@@ -5,10 +5,13 @@
  * @since 0.0.0
  */
 
+import { Git, GitOptions } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc, JsoncParseOptions } from "@beep/jsonc/Jsonc";
 import { messageWithCause } from "@beep/repo-cli-kit/cli/CommandErrorFields";
 import { runCapturedStreams } from "@beep/repo-cli-kit/process/index";
+import { formatCommandLine } from "@beep/repo-cli-kit/process/StepExec";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { Fn } from "@beep/schema";
 import * as A from "effect/Array";
@@ -20,7 +23,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Yaml from "effect/encoding/Yaml";
 import * as FileSystem from "effect/FileSystem";
-import { dual, flow, pipe } from "effect/Function";
+import { constFalse, dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
@@ -29,12 +32,14 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ts } from "ts-morph";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import {
   ensureFallowAuditCacheRoot,
   fallowAuditCacheEnv,
   fallowAuditCacheRemoveArgs,
   resolveFallowAuditCacheSettings,
 } from "../../internal/repo-run/index.ts";
+import { PATIENT_GIT_OPTIONS } from "../../internal/repo-run/PatientGit.ts";
 import { SchemaParityCodemodReport } from "../Lint/internal/SchemaParityCodemod.schemas.ts";
 import { fallowCiContractDiagnostics } from "./internal/FallowCiContract.ts";
 import {
@@ -58,8 +63,10 @@ import {
   sameFeatureFamily,
 } from "./internal/FallowEnvelope.schema.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
+import type { GitInvocation } from "@beep/git/GitCommand";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GitKitError } from "../../internal/repo-run/GitExec.ts";
 import type { FallowFeature, FindingAttributionKind } from "./internal/FallowEnvelope.schema.ts";
 
 // jsonc-parser's default reading: comments allowed, trailing commas rejected.
@@ -406,7 +413,8 @@ type FallowQualityEnvironment =
   | FileSystem.FileSystem
   | Path.Path
   | SecureRandom.SecureRandom
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git;
 type FallowCommandOptions = {
   readonly advisory: boolean;
   readonly base: string;
@@ -1514,16 +1522,54 @@ const writeEnvelope = Effect.fn("FallowQuality.writeEnvelope")(function* (
 
 const dirtyWorktree = Effect.fn("FallowQuality.dirtyWorktree")(function* (
   repoRoot: string
-): Effect.fn.Return<boolean, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const result = yield* collectProcessOutput(repoRoot, "git", ["status", "--porcelain"]).pipe(Effect.option);
-  return O.isSome(result) && Str.trim(result.value.output).length > 0;
+): Effect.fn.Return<boolean, never, Git> {
+  const git = yield* Git;
+  // Any failed read is a clean tree, as the capture's failure was.
+  return yield* git.status(repoRoot).pipe(Effect.map(A.isReadonlyArrayNonEmpty), Effect.orElseSucceed(constFalse));
 });
+
+// A kit read as the capture saw it: its value, or a failed `ProcessResult` with git's exit code and stderr (an
+// overflow of the bound is exit 1). A git that never ran stays the capture's spawn failure.
+const kitOutcome =
+  (invocation: GitInvocation) =>
+  <A, R>(
+    read: Effect.Effect<A, GitKitError, R>
+  ): Effect.Effect<Result.Result<A, ProcessResult>, QualityScriptCommandError, R> => {
+    const command = formatCommandLine("git", invocation.redactedArgs);
+    const failed = (exitCode: number, output: string) =>
+      Effect.succeed(Result.fail({ stdout: "", stderr: output, output: Str.trim(output), exitCode }));
+    return read.pipe(
+      Effect.map(Result.succeed),
+      Effect.catch((error) =>
+        adaptGitKitError<Effect.Effect<Result.Result<A, ProcessResult>, QualityScriptCommandError>>(error, invocation, {
+          onSpawnFailure: () => (cause) =>
+            Effect.fail(QualityScriptCommandError.new(cause, `Failed to run ${command}.`, { command })),
+          onNonZeroExit: ({ exitCode, output }) => failed(exitCode, output),
+          onTruncated: O.some(() =>
+            failed(1, `${command} printed more than ${FALLOW_DIFF_GIT_OPTIONS.maxOutputBytes} bytes`)
+          ),
+        })
+      )
+    );
+  };
+
+// A kit text read as the capture's `ProcessResult`: its text at exit 0, or the failed result.
+const kitProcessResult =
+  (invocation: GitInvocation) =>
+  <R>(read: Effect.Effect<string, GitKitError, R>): Effect.Effect<ProcessResult, QualityScriptCommandError, R> =>
+    read.pipe(
+      Effect.map((stdout): ProcessResult => ({ stdout, stderr: "", output: Str.trim(stdout), exitCode: 0 })),
+      kitOutcome(invocation),
+      Effect.map(Result.merge)
+    );
 
 const resolveBaseRef = Effect.fn("FallowQuality.resolveBaseRef")(function* (
   repoRoot: string,
   base: string
-): Effect.fn.Return<ProcessResult, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* collectProcessOutput(repoRoot, "git", ["rev-parse", "--verify", base]).pipe(
+): Effect.fn.Return<ProcessResult, never, Git> {
+  const git = yield* Git;
+  return yield* git.revParse(repoRoot, base).pipe(
+    kitProcessResult(GitCommand.revParse(base)),
     Effect.orElseSucceed(() => ({
       stdout: "",
       stderr: `unable to resolve base ref ${base}`,
@@ -1531,6 +1577,13 @@ const resolveBaseRef = Effect.fn("FallowQuality.resolveBaseRef")(function* (
       exitCode: 128,
     }))
   );
+});
+
+// The audit diff was an unbounded capture; on the kit it gets its own instance with a 256 MiB fail-closed bound
+// (an overflow reads as a failed diff, so the fallback keeps the original result) and the patient deadline.
+const FALLOW_DIFF_GIT_OPTIONS = GitOptions.make({
+  maxOutputBytes: 256 * 1024 * 1024,
+  timeout: PATIENT_GIT_OPTIONS.timeout,
 });
 
 /**
@@ -1565,43 +1618,31 @@ export const collectAuditDiffInputForTesting = Effect.fn("FallowQuality.collectA
 ): Effect.fn.Return<
   ProcessResult,
   QualityScriptCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
-  const trackedDiff = yield* collectProcessOutput(repoRoot, "git", [
-    "diff",
-    "--binary",
-    ...(noRenames === true ? ["--no-renames"] : []),
-    `--unified=${context}`,
+  const git = yield* Git;
+  const diffGit = yield* Git.makeWith(FALLOW_DIFF_GIT_OPTIONS);
+  const tracked = {
     base,
-    "--",
-    ".",
-  ]);
+    binary: true,
+    unified: context,
+    pathspec: ["."],
+    ...(noRenames === true ? { noRenames: true } : {}),
+  } as const;
+  const trackedDiff = yield* diffGit.diffPatch(repoRoot, tracked).pipe(kitProcessResult(GitCommand.diffPatch(tracked)));
   if (trackedDiff.exitCode !== 0) {
     return trackedDiff;
   }
 
-  const untrackedFiles = yield* collectProcessOutput(repoRoot, "git", [
-    "ls-files",
-    "--others",
-    "--exclude-standard",
-    "-z",
-  ]);
-  if (untrackedFiles.exitCode !== 0) {
-    return untrackedFiles;
+  const untrackedFiles = yield* git.untrackedFiles(repoRoot).pipe(kitOutcome(GitCommand.untrackedFiles()));
+  if (Result.isFailure(untrackedFiles)) {
+    return untrackedFiles.failure;
   }
 
-  const paths = pipe(Str.split("\0")(untrackedFiles.stdout), A.filter(Str.isNonEmpty));
-  const untrackedDiffs = yield* Effect.forEach(paths, (filePath) =>
-    collectProcessOutput(repoRoot, "git", [
-      "diff",
-      "--binary",
-      `--unified=${context}`,
-      "--no-index",
-      "--",
-      "/dev/null",
-      filePath,
-    ])
-  );
+  const untrackedDiffs = yield* Effect.forEach(untrackedFiles.success, (filePath) => {
+    const untracked = { noIndex: ["/dev/null", filePath], binary: true, unified: context } as const;
+    return diffGit.diffPatch(repoRoot, untracked).pipe(kitProcessResult(GitCommand.diffPatch(untracked)));
+  });
   const failedDiff = A.findFirst(untrackedDiffs, (result) => result.exitCode !== 0 && result.exitCode !== 1);
   if (O.isSome(failedDiff)) {
     return failedDiff.value;
@@ -1673,6 +1714,9 @@ const shouldFailInvocation = (envelope: FallowReportEnvelope, options: FallowCom
   return options.advisory ? false : envelope.exitStatus !== 0;
 };
 
+// The codemod write reports a clone group may inherit its duplication from.
+const CODEMOD_WRITE_REPORTS = ["goals/*/research/codemod-write.jsonc"];
+
 const collectCodemodInheritance = Effect.fn("FallowQuality.collectCodemodInheritance")(function* (
   repoRoot: string,
   base: string,
@@ -1690,18 +1734,19 @@ const collectCodemodInheritance = Effect.fn("FallowQuality.collectCodemodInherit
     return 0;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const files = yield* collectProcessOutput(repoRoot, "git", [
-    "ls-files",
-    "--",
-    "goals/*/research/codemod-write.jsonc",
-  ]);
+  const git = yield* Git;
+  const files = yield* git
+    .lsFiles(repoRoot, { pathspec: CODEMOD_WRITE_REPORTS })
+    .pipe(kitOutcome(GitCommand.lsFiles(CODEMOD_WRITE_REPORTS)));
   const diff = yield* collectAuditDiffInputForTesting(repoRoot, base, 0, true);
-  if (files.exitCode !== 0 || diff.exitCode !== 0) return 0;
-  const reports = yield* Effect.forEach(A.filter(Str.split(files.stdout, "\n"), Str.isNonEmpty), (file) =>
-    fs.readFileString(path.join(repoRoot, file)).pipe(
-      Effect.map((text) => Result.getOrUndefined(Jsonc.parseResult(text, strictJson))),
-      Effect.orElseSucceed(() => undefined)
-    )
+  if (Result.isFailure(files) || diff.exitCode !== 0) return 0;
+  const reports = yield* Effect.forEach(
+    A.map(files.success, (entry) => entry.path),
+    (file) =>
+      fs.readFileString(path.join(repoRoot, file)).pipe(
+        Effect.map((text) => Result.getOrUndefined(Jsonc.parseResult(text, strictJson))),
+        Effect.orElseSucceed(() => undefined)
+      )
   );
   return inheritedCodemodDuplicationCountForTesting(document, diff.stdout, reports);
 });

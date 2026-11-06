@@ -222,6 +222,12 @@ export {
   imageCommand,
 } from "./commands/Image/index.ts";
 /**
+ * Generic knowledge ledger command group.
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export { kbCommand } from "./commands/Kb/index.ts";
+/**
  * Knowledge-surface verification command group.
  *
  * @category cli-commands
