@@ -28,7 +28,9 @@ Upstream repositories:
 
 The private citation `AnnotationAssembly.ts` adapts unchecked default annotation
 assembly from pinned eyecite `annotate.py`, preserving Python slicing and overlap
-behavior with native Unicode ranges. Source-generated primitive fixtures retain
+behavior with native Unicode ranges. `AnnotationPreparation.ts` adapts primitive
+tuple ordering and left/right source-map application using Effect Array/Order
+and the existing offset/diff owners. Source-generated primitive fixtures retain
 that attribution; broader annotation integration remains unfinished.
 
 The private citation `ExtractorSelection.ts` adapts required-string selection

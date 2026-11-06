@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "c6defc5bbba1e1b8b32bd6fd04b75da3d577153daca9ec723e05dd2a692d874c",
+  "planSha256": "f97eac437f9b200a029037221ad0652e0b57755a3f4cc28af0f0107c34a5c8ca",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -556,7 +556,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlGeometryPreparation.ts",
-          "sha256": "e0441774bb96a83d043eac77f6aac27d8f71c3e55b28e17896448e14df4781c8"
+          "sha256": "bbd4e4fa9c63b5df173f2be55102b305434b0295a6e9cfde09a819a9e496fd4c"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlGeometryPreparation.fixtures.ts",
@@ -1228,7 +1228,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationAnnotationAssembly.test.ts",
-          "sha256": "1bea0c50078345a15b2b700c6a0838b1b11e4fe429f6ad922bbc904796126ec5"
+          "sha256": "a58465ca5d6ccff6e5a0b44348985df588b996a489e387d106e5b779536979d7"
         },
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-assembly.json",
@@ -1237,6 +1237,22 @@
         {
           "path": "goals/citation-extraction-engine/ops/probe-annotation-assembly.py",
           "sha256": "77fb9a01de8284f7fedf57c2f62034da8019c805212ee1e66a952abdfc0e2ee6"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-preparation.md",
+          "sha256": "024adda773d2c1d334625e0fade31a0d87c5ce893cfdce4ce791d2c30c7d9180"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-annotation-mapping.py",
+          "sha256": "3fd3ce696955892e699483f13b0383aa9302c04448ffac4d05bd6f2c16a883ed"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/AnnotationPreparation.ts",
+          "sha256": "aad5fbc4efad56a9eb4713b50d32a450ab5dc8b2eb8a769aab16e0f2ccd1fd6d"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-mapping.json",
+          "sha256": "15562e5666859ab936a10c3f0f48e8d6cf665b60b3d11a5b244d915392353d30"
         }
       ],
       "workflowState": "audit",

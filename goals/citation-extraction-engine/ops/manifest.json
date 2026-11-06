@@ -179,7 +179,11 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-06-cleaner-unchanged-reservation.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-assembly.md",
     "packages/law-practice/server/src/internal/Citation/AnnotationAssembly.ts",
-    "goals/citation-extraction-engine/ops/probe-annotation-assembly.py"
+    "goals/citation-extraction-engine/ops/probe-annotation-assembly.py",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-preparation.md",
+    "goals/citation-extraction-engine/ops/probe-annotation-mapping.py",
+    "packages/law-practice/server/src/internal/Citation/AnnotationPreparation.ts",
+    "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-mapping.json"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

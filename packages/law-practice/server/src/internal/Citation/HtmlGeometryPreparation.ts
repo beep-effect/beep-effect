@@ -89,12 +89,12 @@ export const copyCitationHtmlGeometryConfiguration = Effect.fn("Citation.ownHtml
     diffRuntime: CitationNativeProcessRuntime.make({ ...config.diffRuntime }),
   });
 });
-/** Run within one captured operation and budget. Resolve cleaned plain input
- * after placeholder generation, matching the original constructor's error order.
- * The effect parameter is trusted server composition, never request data.
+/** Prepare the original forward placeholder/diff path once. Document geometry
+ * continues with backward mapping/emphasis; annotation needs only this direction.
+ * Callers retain captured configuration, admission, Scope and text authority.
  * @internal @category operations @since 0.0.0
  */
-export const prepareCitationHtmlGeometry = Effect.fn("Citation.prepareOwnedHtmlGeometry")(function* <E>(
+export const prepareCitationForwardHtmlMap = Effect.fn("Citation.prepareForwardHtmlMap")(function* <E>(
   limits: CitationEngineLimits,
   regexRuntime: CitationNativeProcessRuntime,
   config: CitationHtmlGeometryPreparationConfiguration,
@@ -109,12 +109,38 @@ export const prepareCitationHtmlGeometry = Effect.fn("Citation.prepareOwnedHtmlG
   const placeholder = yield* input.prepareUnicode(masked.placeholder, () => Effect.void);
   const diff = yield* makeCitationDiffWorker(limits, config.diffRuntime);
   const forwardSteps = yield* diff.evaluate(plain.value.storage, placeholder.value.storage);
-  const backwardSteps = yield* diff.evaluate(masked.source.value.storage, plain.value.storage);
-  const tags = yield* discovery.emphasis(masked.source.value.storage);
+  return {
+    discovery,
+    diff,
+    plain,
+    source: masked.source,
+    forward: CitationSpanOffsetsPlan.make({ before: plain.layout, after: placeholder.layout, steps: forwardSteps }),
+  };
+});
+/** Continue the same prepared forward path with the original backward diff and
+ * emphasis discovery. Source order and four physical worker exits are retained.
+ * @internal @category operations @since 0.0.0
+ */
+export const prepareCitationHtmlGeometry = Effect.fn("Citation.prepareOwnedHtmlGeometry")(function* <E>(
+  limits: CitationEngineLimits,
+  regexRuntime: CitationNativeProcessRuntime,
+  config: CitationHtmlGeometryPreparationConfiguration,
+  markup: unknown,
+  plainInput: Effect.Effect<unknown, E>
+) {
+  const { discovery, diff, plain, source, forward } = yield* prepareCitationForwardHtmlMap(
+    limits,
+    regexRuntime,
+    config,
+    markup,
+    plainInput
+  );
+  const backwardSteps = yield* diff.evaluate(source.value.storage, plain.value.storage);
+  const tags = yield* discovery.emphasis(source.value.storage);
   return CitationHtmlTagGeometryInput.make({
     plain: plain.value.storage,
-    forward: CitationSpanOffsetsPlan.make({ before: plain.layout, after: placeholder.layout, steps: forwardSteps }),
-    backward: CitationSpanOffsetsPlan.make({ before: masked.source.layout, after: plain.layout, steps: backwardSteps }),
+    forward,
+    backward: CitationSpanOffsetsPlan.make({ before: source.layout, after: plain.layout, steps: backwardSteps }),
     tags,
   });
 });

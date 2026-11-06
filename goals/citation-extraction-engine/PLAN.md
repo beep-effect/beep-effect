@@ -1253,6 +1253,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the annotation assembly module, source corpus and this checkpoint together; preserve the original annotation capability obligations.
 
+### Connect annotation ordering and original source maps, 2026-11-06
+
+Effect Array/Order now sorts primitive tuples with Python point-order string ties, then applies existing offsets right at starts and left at ends. The Document forward placeholder/diff path has one shared owner; annotation executes only that direction while Document retains backward/emphasis order. All 214 unsorted primitive cases and 36 new mapped cases compare. Seven tests pass, including actual Bun/Node placeholder+diff children with twelve confirmed exits each and Document geometry regression. Full HTML/callback modes and synchronous-sort isolation/scaling remain open before engine completion. See history/evidence/2026-11-06-annotation-preparation.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert annotation preparation and restore the prior single Document forward-map implementation together; retain all original source corpora and open acceptance requirements.
+
 ### Authenticated source through verified extraction, 2026-11-06
 
 A genuine parent source capability now drives the actual primitive extraction request. Unchanged text retains its existing proof. Changed tokenizer text receives a verified manifestation with preserved artifact/locator/normalization identity and a versioned parent/engine/cleaning-mode/output commitment. Source derivation and occurrence projection share one admitted operation, deadline and cumulative budget with extraction. Plain, Unicode and raw HTML replay pass on both runtimes; output evidence is produced by production code. Determinism, mode/engine changes, malformed-text refusal and shortcut bypass controls pass. Public service/Layer, authenticated runtime asset loading, final document adaptation and full accounting/safety qualification remain open. See history/evidence/2026-11-06-verified-extraction.md.
