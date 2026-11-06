@@ -320,7 +320,7 @@
         ".claude/skills/orchestrate",
         ".agents/skills/orchestrate"
       ],
-      "installedTreeHash": "0a99211c2fe31c3c6c39cdbf0d4fdf28816d83cd8fc9a393c403403b59fb9106"
+      "installedTreeHash": "eb16b7307bb77359d188a936a015793bcf5431301a771029ebf2a8766995f593"
     },
     "plasma-sensitive-entry": {
       "_tag": "local",
