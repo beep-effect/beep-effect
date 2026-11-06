@@ -103,3 +103,17 @@ missing evidence.
   separate accepted-review records. Keep the remaining candidates unresolved; do
   not suppress a class or assign zero claims from a mechanical count. This audit
   owns the review; existing gate and content owners retain their code.
+
+## P4 effective-tree hash omitted after main integration, 2026-11-06
+
+- Work: verify the skill reconciliation boundary after integrating newer main.
+- Evidence: `bun run beep skills update --check` reported one stale file,
+  `skills-lock.json`. Canonical regeneration changed only Yeet's
+  `installedTreeHash`; the same check then passed.
+- Attribution: newer main changed Yeet reference content. The generated local
+  hash had not followed that content change. All other skill entries, ADHD
+  provenance and skill source files were preserved.
+- Impact: one stale effective-tree receipt; no runtime or user impact measured.
+- Prevention: run the existing canonical update/check after skill edits and
+  base integration. The audit repaired the generated field in this delivery;
+  no duplicate content fix, manual hash or new gate was introduced.

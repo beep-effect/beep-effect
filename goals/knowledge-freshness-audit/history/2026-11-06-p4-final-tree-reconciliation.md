@@ -27,7 +27,8 @@ remain intact and create additional final-tree review obligations. This pass
 does not claim to re-extract or accept their substantive content.
 
 This delivery changes seven audit-packet paths: the compact report, checkpoint,
-phase/launcher records and friction ledger. Their authored assertions are
+phase/launcher records and friction ledger. A separate canonical repair updates
+the Yeet effective-tree hash in the skills lock. Their authored assertions are
 reviewed against the private receipts. The publication comparison must be
 refreshed when the head moves; no blanket generated-evidence exemption applies.
 
@@ -115,6 +116,19 @@ No audited-content defect was validated in this selected sample. The raw
 findings, exact review decisions and identity checks remain in the private
 archive. The remaining scanner candidates still require review; this sample
 neither clears them nor authorizes a broad suppression.
+
+## Validated metadata omission and repair
+
+After main integration, the canonical skills check failed with one stale file,
+`skills-lock.json`. The integrated main edits had changed Yeet reference files
+without refreshing its local effective-tree hash. This is separate from the
+eleven rejected content-repair candidates.
+
+The canonical skills updater changed only Yeet's `installedTreeHash`. Every
+other entry and field, including ADHD's held provenance record, remained
+unchanged. No skill content or upstream pin was replaced. The same
+check passed afterward. The existing skills check is the deterministic guard
+for this demonstrated discrepancy; no new scanner exception or gate was added.
 
 ## Record-quality checks and remaining work
 
