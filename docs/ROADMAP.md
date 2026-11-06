@@ -265,7 +265,7 @@ Riding in the slot, not holding it:
    [`turborepo-task-qualification`](../goals/turborepo-task-qualification/README.md)
    closed via #1389 on 2026-10-02. Single writer for the shared Cache
    contracts; `turborepo-quality-cache-adoption` stays parked until they ship.
-2. [`runner-trust-boundary`](../goals/runner-trust-boundary/README.md) (8/9)
+2. [`runner-trust-boundary`](../goals/runner-trust-boundary/README.md) (9/9)
    — P8 post-release JIT containment is a security acceptance gate, not a
    closeout: it closes only when live proof shows no recoverable handoff
    credential, or server-side replay rejection after the original listener

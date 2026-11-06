@@ -2133,6 +2133,93 @@
       "reason": "Prepends a bin directory of ssh and rsync shims to PATH for one `mirror sync` call. The real ChildProcessSpawner resolves those executables through the inherited process PATH, and it.layer would leak the PATH change across the block. Owner: @beep/repo-cli. Exit: the mirror sync resolves ssh and rsync through Config or an injected executable path, so the test provides the shim paths instead. #1855 wave 5 register."
     },
     {
+      "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:1933:withEnvVarEffect@6#1",
+      "lens": "detector",
+      "ruleId": "EV003",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "line": 1933,
+      "endLine": 1942,
+      "symbol": "withEnvVarEffect",
+      "occurrence": "v2:22ab9b8e9a72bdaabc0a13aa41228277902d21a8b3e1eda9a9d6f689b5e23f2c",
+      "class": "resource-wrapper",
+      "evidence": "withEnvVarEffect( \"BEEP_CACHE_TOOLCHAIN_DIGEST\", \"caller-controlled\", Effect.gen(function* () { const error = yield* runCiLane(\"storybook\", baseOptions).pipe(Effect.flip); expect(error._tag).toBe(\"Qua",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "The test asserts the storybook lane rejects an ambient BEEP_CACHE_TOOLCHAIN_DIGEST, which runCiLane reads from Bun.env (assertCacheRuntimeKeyUnspecified(step.command, step.args, Bun.env, stepEnv)); the ambient environment is the subject. Owner: @beep/repo-cli. Exit: CiLane reads its ambient environment through Config or an injected environment service and hands spawned children an explicit env, so the test provides both. #1855 wave 5 register."
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:203:withEnvVarEffect@25#1",
+      "lens": "detector",
+      "ruleId": "EV003",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "line": 203,
+      "endLine": 221,
+      "symbol": "withEnvVarEffect",
+      "occurrence": "v2:5a40ab2cf186e0dfa00bda12419a54fe1c5eebf0a1c5045625b9fa2e1b2ffef1",
+      "class": "resource-wrapper",
+      "evidence": "<A, E, R>( name: string, value: string | undefined, use: Effect.Effect<A, E, R> ): Effect.Effect<A, E, R> => Effect.acquireUseRelease( Effect.sync(() => { const previous = Bun.env[name]; if (value ===",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "Sets and restores one Bun.env key around a CI lane call. CiLane reads BEEP_CACHE_TOOLCHAIN_DIGEST, BEEP_QUALITY_CHECK_CONCURRENCY and the TURBO_* names from Bun.env directly and passes the ambient environment to native children; withPartitionShim also uses it for PATH and the CI_LANE_TEST_* inputs its shim reads. Process environment is global, and it.layer would leak it across the block. Owner: @beep/repo-cli. Exit: CiLane reads its ambient environment through Config or an injected environment service and hands spawned children an explicit env, so the test provides both. #1855 wave 5 register."
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:229:withPartitionShim@26#1",
+      "lens": "detector",
+      "ruleId": "EV003",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "line": 229,
+      "endLine": 294,
+      "symbol": "withPartitionShim",
+      "occurrence": "v2:9a46ab35a4049d5b8428aad35023ba5a16799f5fe44fef5e7df2bbddc6f36f14",
+      "class": "resource-wrapper",
+      "evidence": "<A, E, R>( options: PartitionShimOptions, use: (fixture: { readonly commandLogPath: string; readonly tempDir: string }) => Effect.Effect<A, E, R> ) => Effect.acquireUseRelease( Effect.gen(function* ()",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "open"
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:296:withWorkingDirectory@29#1",
+      "lens": "detector",
+      "ruleId": "EV003",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "line": 296,
+      "endLine": 305,
+      "symbol": "withWorkingDirectory",
+      "occurrence": "v2:1aaf61b6a4363d4b459df10a3d09e774f3400d2a519a0ee4da00e369d4da0534",
+      "class": "resource-wrapper",
+      "evidence": "<A, E, R>(directory: string, use: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> => Effect.acquireUseRelease( Effect.sync(() => { const previous = process.cwd(); process.chdir(directory); return prev",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "Changes into a temp checkout for one partition-lane call: the lane locates the repository through findRepoRoot(), which starts from process.cwd(), and the test proves the unreadable-inventory mapping there. A cwd override is process state, and it.layer would leak it across the block. Owner: @beep/repo-cli. Exit: the CI lane takes its repository root from an injected working-directory service or an explicit option. #1855 wave 5 register."
+    },
+    {
       "id": "EV003:packages/tooling/tool/cli/test/files-command.test.ts:766:withReplacedPath@25#1",
       "lens": "detector",
       "ruleId": "EV003",
@@ -2988,6 +3075,28 @@
       "reason": "policyFor owns one event payload directory per invocation and releases it right after policy resolution (goals/effect-vitest-canon/research/knowledge-semantic-delta-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises a helper scope whose close the caller observes before returning (#1855 wave 8 register)."
     },
     {
+      "id": "EV004:packages/tooling/tool/cli/test/owner-checkpoint.test.ts:152:scoped@2#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/owner-checkpoint.test.ts",
+      "line": 152,
+      "endLine": 157,
+      "symbol": "scoped",
+      "occurrence": "v2:badb0e2fa464084e1bb58427a38f9393f8b5c6895c7984da0983cc5569718776",
+      "class": "helper-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const services = yield* Layer.build(sqlite(filename)); return yield* Effect.provideContext(effect, services); }) )",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Separate scoped SQLite connections are the subject of database reopen and dispatch fence tests. Closing each connection before reopening is required. Owner: @beep/repo-cli. Exit: remove if persistent reopen coverage moves to another test."
+    },
+    {
       "id": "EV004:packages/tooling/tool/cli/test/session-ledger.test.ts:99:scoped@2#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -3141,13 +3250,13 @@
       "reason": "Scratch repository cleanup, a fresh probe service lifetime or an open-file descriptor release must finish before caller assertions or the next invocation (goals/effect-vitest-canon/research/worktree-command-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises a helper scope whose close the caller observes before returning (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/worktree-command.test.ts:2384:scoped@33#1",
+      "id": "EV004:packages/tooling/tool/cli/test/worktree-command.test.ts:2463:scoped@33#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
-      "line": 2384,
-      "endLine": 2389,
+      "line": 2463,
+      "endLine": 2468,
       "symbol": "scoped",
       "occurrence": "v2:bec94b204861e7984d6f6e58e51f25a7a4aff4aa5471e1499ab0a6f34da3f1b1",
       "class": "shorter-scope-lifetime-review",
@@ -3316,13 +3425,13 @@
       "status": "open"
     },
     {
-      "id": "EV007:packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts:382:checkEffect@38#1",
+      "id": "EV007:packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts:386:checkEffect@38#1",
       "lens": "detector",
       "ruleId": "EV007",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts",
-      "line": 382,
-      "endLine": 402,
+      "line": 386,
+      "endLine": 406,
       "symbol": "checkEffect",
       "occurrence": "v2:3eb2c64f5ef5b23138fd45fc829b338018ff06b8e9b01345449a0a6fd8aecd30",
       "class": "direct-arbitrary-check",
@@ -7844,6 +7953,28 @@
       "reason": "A spawned Vitest worker consumes actual files, and its output, abort and report evidence is read before scoped directory deletion. Owner: @beep/test-utils. Exit: retire when the runtime cases run against an in-process worker double."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/Kb.test.ts:21:@effect/platform-node/NodeFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/Kb.test.ts",
+      "line": 21,
+      "endLine": 21,
+      "symbol": "@effect/platform-node/NodeFileSystem",
+      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Real temporary filesystem behavior is the subject: ledger path overlap, persisted output, or SQLite reopen. Test scope cleans temporary directories. Owner: @beep/repo-cli. Exit: remove if these integration tests no longer exercise disk behavior."
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:67:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -7974,28 +8105,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The test runs git merge-file through ChildProcess.make on real temp files. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the merge driver is exercised with a scripted spawner."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-command.test.ts:4:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-command.test.ts",
-      "line": 4,
-      "endLine": 4,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The warm-lane tests run bun --version, git and bun -e through Bun.spawnSync and runCacheWarmLaneForTesting. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the warm lane runs behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-conformance-lab.test.ts:27:@effect/platform-node@0#1",
@@ -8284,28 +8393,6 @@
       "reason": "Real scoped files are needed for containment, mount-root resolution, issuer byte mutation and bounded report reads, while admission and subprocess execution are controlled doubles (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models mount-root resolution and the supervisor cases move to it."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/changeset-graph.test.ts:12:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
-      "line": 12,
-      "endLine": 12,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The release-path tests run real git against scoped temporary repository files, and TestConsole captures the real command error. Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/ci-command.test.ts:7:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -8350,13 +8437,13 @@
       "reason": "The governance commands run through Command.runWith, which needs the platform environment (FileSystem, Path, Terminal); the suite reads and writes no files, GitHub is faked through GithubTransportFetch and the only spawn is a scripted gh auth token. Owner: @beep/repo-cli. Exit: retire when the CLI runner takes a narrower test platform layer."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/ci-heavy-admission.test.ts:23:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/ci-heavy-admission.test.ts:24:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/ci-heavy-admission.test.ts",
-      "line": 23,
-      "endLine": 23,
+      "line": 24,
+      "endLine": 24,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -8370,6 +8457,50 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The ci admission command path resolves the checkout with findRepoRoot() before reading the event payload. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the admission command takes an injected root."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/ci-lane.test.ts:39:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "line": 39,
+      "endLine": 39,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The lane runner calls process.chdir(directory) and restores it, and reads the committed branch-protection contexts through import.meta.url. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the lane runner takes its working directory as a parameter."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/ci-lane.test.ts:40:@effect/platform-node/NodeFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "line": 40,
+      "endLine": 40,
+      "symbol": "@effect/platform-node/NodeFileSystem",
+      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Real temporary files are the test subject: tsrs reads project configs, CI appends GITHUB_OUTPUT, and SQLite reopens a database. Test scopes clean temporary files. Owner: @beep/repo-cli. Exit: remove if disk integration coverage moves elsewhere."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/ci-rerun-runner-loss.test.ts:37:@effect/platform-node@0#1",
@@ -8724,27 +8855,6 @@
       "reason": "The committed fixtures/gate-order-handoff-knip-retired.json is read at findRepoRoot(). The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the handoff fixture is seeded into a MemoryFileSystem volume."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/goals-decisions.test.ts:14:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/goals-decisions.test.ts",
-      "line": 14,
-      "endLine": 14,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/goals-doctor-path-security.test.ts:3:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -8767,57 +8877,13 @@
       "reason": "temporaryWorkingDirectory from support/CommandTest.ts chdirs into a temp project before goals doctor runs. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when goals doctor resolves its root from an injected path instead of process.cwd()."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/goals-graph.test.ts:28:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/goals-graph.test.ts",
-      "line": 28,
-      "endLine": 28,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The graph command runs in a temp working directory and git status --porcelain spawns in the checkout. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the graph takes an injected root and the git probe runs behind a scripted spawner."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/goals-manifest-capabilities.test.ts:14:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/goals-manifest-capabilities.test.ts",
-      "line": 14,
-      "endLine": 14,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test runs git ls-files at findRepoRoot() and the command resolves its root from the working directory. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the manifest list is read from a seeded volume and the root is injected."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/goals-manifest-projection.test.ts:20:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/goals-manifest-projection.test.ts:25:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/goals-manifest-projection.test.ts",
-      "line": 20,
-      "endLine": 20,
+      "line": 25,
+      "endLine": 25,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -8898,13 +8964,13 @@
       "reason": "The subject changes the process-global working directory with process.chdir, which needs the directory on the real filesystem. #1875 wave 7 memory trial (H3): fails with ENOENT on chdir into the temp directory. Owner: @beep/repo-cli. Exit: retire when the command takes its working directory from an injected service instead of process.chdir (#1855 wave 8 register)."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:11:@effect/platform-node/NodeFileSystem@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:12:@effect/platform-node/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts",
-      "line": 11,
-      "endLine": 11,
+      "line": 12,
+      "endLine": 12,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",
@@ -9118,6 +9184,28 @@
       "reason": "The rubric tests read committed rubric sources at findRepoRoot(). The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the rubric sources are seeded into a MemoryFileSystem volume."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/lint-program-assignment.test.ts:3:@effect/platform-node/NodeFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/lint-program-assignment.test.ts",
+      "line": 3,
+      "endLine": 3,
+      "symbol": "@effect/platform-node/NodeFileSystem",
+      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Real temporary files are the test subject: tsrs reads project configs, CI appends GITHUB_OUTPUT, and SQLite reopens a database. Test scopes clean temporary files. Owner: @beep/repo-cli. Exit: remove if disk integration coverage moves elsewhere."
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/lint-subcommand-allowlist.test.ts:9:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -9226,6 +9314,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The prefix check reads the real checkout at findRepoRoot() through FsUtilsLive. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the check runs over a seeded workspace volume."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/owner-checkpoint.test.ts:31:@effect/platform-node/NodeFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/owner-checkpoint.test.ts",
+      "line": 31,
+      "endLine": 31,
+      "symbol": "@effect/platform-node/NodeFileSystem",
+      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Real temporary filesystem behavior is the subject: ledger path overlap, persisted output, or SQLite reopen. Test scope cleans temporary directories. Owner: @beep/repo-cli. Exit: remove if these integration tests no longer exercise disk behavior."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/process-attachment.test.ts:21:@effect/platform-node@0#1",
@@ -9380,28 +9490,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "runGit and NodeChildProcessSpawner run git and the quality task steps against real temp repositories. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the task runner takes a scripted spawner."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/research-history-sift.test.ts:5:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/research-history-sift.test.ts",
-      "line": 5,
-      "endLine": 5,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The subject opens DuckDB on a path in the temp root, natively and not through FileSystem. #1875 wave 7 memory trial (H5): fails with \"Failed to open DuckDB connection\". Owner: @beep/repo-cli. Exit: retire when DuckDB accepts an in-memory database for the sift, or EV010 recognises DuckDB-file suites as a native-engine subject (#1855 wave 8 register)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/research-library-acquisition.test.ts:35:@effect/platform-node@0#1",
@@ -9844,13 +9932,13 @@
       "reason": "The shim binds real Unix-domain sockets and TCP ports, so socket files, rebinding and owner refusal on the native filesystem are the subject. Owner: @beep/repo-cli. Exit: retire when the shim's socket binding runs behind an injected listener double, or EV010 recognises a Unix-socket server as a native subject."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/worktree-command.test.ts:52:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/worktree-command.test.ts:49:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
-      "line": 52,
-      "endLine": 52,
+      "line": 49,
+      "endLine": 49,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -10788,203 +10876,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Fixed-count independent race trials, not retries: every trial asserts its result and a single failure fails the test. TestClock and explicit lease completion govern ownership; no failed trial is retried. Owner: @beep/law-practice-server. Exit: detector distinguishes repeated independent cases from retry-until-success loops. Re-reviewed after expression-only Effect 4.1.2 adaptation; independent trials and shorter child Scope are unchanged."
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:1889:withEnvVarEffect@6#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
-      "line": 1889,
-      "endLine": 1898,
-      "symbol": "withEnvVarEffect",
-      "occurrence": "v2:22ab9b8e9a72bdaabc0a13aa41228277902d21a8b3e1eda9a9d6f689b5e23f2c",
-      "class": "resource-wrapper",
-      "evidence": "withEnvVarEffect( \"BEEP_CACHE_TOOLCHAIN_DIGEST\", \"caller-controlled\", Effect.gen(function* () { const error = yield* runCiLane(\"storybook\", baseOptions).pipe(Effect.flip); expect(error._tag).toBe(\"Qua",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "exception",
-      "reason": "The test asserts the storybook lane rejects an ambient BEEP_CACHE_TOOLCHAIN_DIGEST, which runCiLane reads from Bun.env (assertCacheRuntimeKeyUnspecified(step.command, step.args, Bun.env, stepEnv)); the ambient environment is the subject. Owner: @beep/repo-cli. Exit: CiLane reads its ambient environment through Config or an injected environment service and hands spawned children an explicit env, so the test provides both. #1855 wave 5 register."
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:197:withEnvVarEffect@25#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
-      "line": 197,
-      "endLine": 215,
-      "symbol": "withEnvVarEffect",
-      "occurrence": "v2:5a40ab2cf186e0dfa00bda12419a54fe1c5eebf0a1c5045625b9fa2e1b2ffef1",
-      "class": "resource-wrapper",
-      "evidence": "<A, E, R>( name: string, value: string | undefined, use: Effect.Effect<A, E, R> ): Effect.Effect<A, E, R> => Effect.acquireUseRelease( Effect.sync(() => { const previous = Bun.env[name]; if (value ===",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "exception",
-      "reason": "Sets and restores one Bun.env key around a CI lane call. CiLane reads BEEP_CACHE_TOOLCHAIN_DIGEST, BEEP_QUALITY_CHECK_CONCURRENCY and the TURBO_* names from Bun.env directly and passes the ambient environment to native children; withPartitionShim also uses it for PATH and the CI_LANE_TEST_* inputs its shim reads. Process environment is global, and it.layer would leak it across the block. Owner: @beep/repo-cli. Exit: CiLane reads its ambient environment through Config or an injected environment service and hands spawned children an explicit env, so the test provides both. #1855 wave 5 register."
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:223:withPartitionShim@26#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
-      "line": 223,
-      "endLine": 288,
-      "symbol": "withPartitionShim",
-      "occurrence": "v2:9a46ab35a4049d5b8428aad35023ba5a16799f5fe44fef5e7df2bbddc6f36f14",
-      "class": "resource-wrapper",
-      "evidence": "<A, E, R>( options: PartitionShimOptions, use: (fixture: { readonly commandLogPath: string; readonly tempDir: string }) => Effect.Effect<A, E, R> ) => Effect.acquireUseRelease( Effect.gen(function* ()",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:290:withWorkingDirectory@29#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
-      "line": 290,
-      "endLine": 299,
-      "symbol": "withWorkingDirectory",
-      "occurrence": "v2:1aaf61b6a4363d4b459df10a3d09e774f3400d2a519a0ee4da00e369d4da0534",
-      "class": "resource-wrapper",
-      "evidence": "<A, E, R>(directory: string, use: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> => Effect.acquireUseRelease( Effect.sync(() => { const previous = process.cwd(); process.chdir(directory); return prev",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "exception",
-      "reason": "Changes into a temp checkout for one partition-lane call: the lane locates the repository through findRepoRoot(), which starts from process.cwd(), and the test proves the unreadable-inventory mapping there. A cwd override is process state, and it.layer would leak it across the block. Owner: @beep/repo-cli. Exit: the CI lane takes its repository root from an injected working-directory service or an explicit option. #1855 wave 5 register."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/ci-lane.test.ts:38:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
-      "line": 38,
-      "endLine": 38,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The lane runner calls process.chdir(directory) and restores it, and reads the committed branch-protection contexts through import.meta.url. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the lane runner takes its working directory as a parameter."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/ci-lane.test.ts:40:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
-      "line": 40,
-      "endLine": 40,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Judge whether MemoryFileSystem.layer can replace the platform filesystem without changing the subject."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Real temporary files are the test subject: tsrs reads project configs, CI appends GITHUB_OUTPUT, and SQLite reopens a database. Test scopes clean temporary files. Owner: @beep/repo-cli. Exit: remove if disk integration coverage moves elsewhere."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/lint-program-assignment.test.ts:3:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-program-assignment.test.ts",
-      "line": 3,
-      "endLine": 3,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Judge whether MemoryFileSystem.layer can replace the platform filesystem without changing the subject."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Real temporary files are the test subject: tsrs reads project configs, CI appends GITHUB_OUTPUT, and SQLite reopens a database. Test scopes clean temporary files. Owner: @beep/repo-cli. Exit: remove if disk integration coverage moves elsewhere."
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/owner-checkpoint.test.ts:152:scoped@2#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/owner-checkpoint.test.ts",
-      "line": 152,
-      "endLine": 157,
-      "symbol": "scoped",
-      "occurrence": "v2:badb0e2fa464084e1bb58427a38f9393f8b5c6895c7984da0983cc5569718776",
-      "class": "helper-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const services = yield* Layer.build(sqlite(filename)); return yield* Effect.provideContext(effect, services); }) )",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "Delete only a whole-body Effect.scoped; retain deliberate shorter lifetimes for judgment."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Separate scoped SQLite connections are required to test persistence across database reopen and dispatch fencing. Owner: @beep/repo-cli. Exit: remove if reopen coverage moves elsewhere."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/owner-checkpoint.test.ts:31:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/owner-checkpoint.test.ts",
-      "line": 31,
-      "endLine": 31,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Judge whether MemoryFileSystem.layer can replace the platform filesystem without changing the subject."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Real temporary files are the test subject: tsrs reads project configs, CI appends GITHUB_OUTPUT, and SQLite reopens a database. Test scopes clean temporary files. Owner: @beep/repo-cli. Exit: remove if disk integration coverage moves elsewhere."
     }
   ]
 }
