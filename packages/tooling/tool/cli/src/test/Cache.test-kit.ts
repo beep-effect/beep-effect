@@ -59,6 +59,7 @@ export {
   inspectCacheFixtureCapture,
 } from "../commands/Cache/Cache.experiment.ts";
 export {
+  collectCacheFileCreationMask,
   collectCacheGitExclusions,
   collectCacheToolchain,
   fingerprintCacheComputation,

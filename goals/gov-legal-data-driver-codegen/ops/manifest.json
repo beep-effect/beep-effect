@@ -86,6 +86,8 @@
   ],
   "researchReports": [
     "research/2026-06-29-codex-spec.md",
+    "research/2026-06-30-ecfr-generator-spike.md",
+    "research/README.md",
     "research/SOURCES.md"
   ]
 }

@@ -52,6 +52,9 @@ Before marking the packet closed (and `status` → `completed-retained` / `compl
 - Preserve unrelated worktree changes.
 - Keep `SPEC.md` normative and update it only when the contract changes.
 - Keep this plan current; archive old run outputs under `history/`.
+- Status checkpoints are `kind: checkpoint` files under `decisions/`
+  (`bun run beep goals decisions add <slug> --kind checkpoint ...`),
+  rendered into the Checkpoints block at the end of this plan.
 
 ## Verification Commands
 
@@ -61,3 +64,12 @@ jq . goals/<slug>/ops/manifest.json
 rg -n "<slug>|GOAL.md|agentLaunchers|packetAnchorDocument" goals/<slug>
 git diff --check -- goals/<slug>
 ```
+
+## Checkpoints
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug <slug>`; add a `kind: checkpoint` file there, never edit this block._
+
+_No checkpoint files yet._
+
+<!-- beep:decisions:end -->

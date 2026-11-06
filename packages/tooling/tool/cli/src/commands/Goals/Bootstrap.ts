@@ -34,6 +34,7 @@ import {
   PlanEntry,
   PlanPreservation,
 } from "./Bootstrap.schemas.ts";
+import { GOAL_DECISION_TARGETS, renderGoalDecisionBlock } from "./Decisions.projection.ts";
 import { GoalPlanInputError, GoalPlanOperationalError } from "./Goals.errors.ts";
 import { isCapabilitySlug } from "./Goals.schemas.ts";
 import { listGoalPackets } from "./Inventory.ts";
@@ -323,17 +324,18 @@ git diff --check -- goals/${input.slug}
 
 Decide changes to public API, schema, data migration, auth, infra, security
 behavior, dependencies, lockfiles, generated files, or destructive state
-yourself when the goal needs them: record each in SPEC.md's Decision Log with
+yourself when the goal needs them: record each as a decision file (\`bun run beep goals decisions add\`) with
 its reason and how to reverse it, then continue. Land the reversal path for an
 irreversible change (a tested down-migration, a backup of deleted state) before
 the change merges, and ship a breaking public API or schema change with a major
 changeset. Escalate only what AGENTS.md "Autonomy" lists.
 
-Ship proposedCloseout and the reflection in the final implementation PR while
-initiative.status stays active or paused. A proposal never reports achievement.
-Done only when exact-head hosted readiness and merge evidence verify the proposal
-through \`bun run beep goals completion refresh --slug <slug>\`, or when a blocker
-that needs the operator is reported with file/command evidence.
+Ship proposedCloseout and the reflection in the final PR (status stays active or
+paused). After that merge, verify with \`bun run beep goals completion refresh --slug ${input.slug}\`,
+then adopt with \`bun run beep goals set-status ${input.slug} <status>\` in a
+packet-state PR. Done only once it merges and this passes, or an operator
+blocker is reported with evidence:
+\`git show origin/main:goals/${input.slug}/ops/manifest.json | jq -e '.closeout.status == .initiative.status'\`
 `;
 
 const specPayload = (input: BootstrapInput): string => `# ${input.title} Spec
@@ -387,13 +389,15 @@ Higher sources outrank lower sources when they conflict.
 - The same blocker repeats after reasonable investigation.
 
 Scope growth, destructive side effects and policy calls are not stops: decide
-them and record each in the Decision Log.
+them and record each as a decision file.
 
-## Decision Log
+## Decision log
 
-| Date | Decision | Reason | How to reverse |
-| --- | --- | --- | --- |
-| None | N/A | N/A | N/A |
+Record each decision as its own file under \`decisions/\` (\`bun run beep goals
+decisions add ${input.slug} --title "..." --reversal "..."\`); the block below is
+generated from that directory and never edited by hand.
+
+${renderGoalDecisionBlock(input.slug, GOAL_DECISION_TARGETS[0]!, [])}
 
 ## Exception Ledger
 
@@ -437,6 +441,9 @@ Before marking the packet closed:
 - Preserve unrelated worktree changes.
 - Keep \`SPEC.md\` normative and update it only when the contract changes.
 - Keep this plan current; archive old run outputs under \`history/\`.
+- Status checkpoints are \`kind: checkpoint\` files under \`decisions/\`
+  (\`bun run beep goals decisions add ${input.slug} --kind checkpoint ...\`),
+  rendered into the Checkpoints block at the end of this plan.
 
 ## Verification Commands
 
@@ -446,6 +453,10 @@ jq . goals/${input.slug}/ops/manifest.json
 rg -n "${input.slug}|GOAL.md|agentLaunchers|packetAnchorDocument" goals/${input.slug}
 git diff --check -- goals/${input.slug}
 \`\`\`
+
+## Checkpoints
+
+${renderGoalDecisionBlock(input.slug, GOAL_DECISION_TARGETS[1]!, [])}
 `;
 };
 

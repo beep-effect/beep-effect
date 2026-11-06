@@ -48,7 +48,15 @@
     "goals/hold-ledger/GOAL.md",
     "goals/hold-ledger/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/cache-baseline-request-2026-10-31-inventory.json",
+    "research/cache-baseline-request-2026-10-31.json",
+    "research/cache-baseline-request-2026-11-01-sweep.json",
+    "research/cache-baseline-review-2026-10-31-inventory.md",
+    "research/cache-baseline-review-2026-10-31.md",
+    "research/cache-baseline-review-2026-11-01-sweep.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

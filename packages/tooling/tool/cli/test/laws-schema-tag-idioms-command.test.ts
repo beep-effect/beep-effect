@@ -1,10 +1,10 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
+import { Git } from "@beep/git/Git";
 import { lawsCommand } from "@beep/repo-cli/commands/Laws";
 import { runSchemaTagIdioms, SchemaTagIdiomsOptions } from "@beep/repo-cli/test/Laws";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -17,10 +17,10 @@ import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as Str from "effect/String";
-import { withAncestorsHidden } from "./support/CommandTest.ts";
+import { NodeTestLayer, withAncestorsHidden } from "./support/CommandTest.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 
-const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
+const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeTestLayer));
 const runInProcess = Command.runWith(lawsCommand, { version: "0.0.0" });
 const withEmptyConfig = Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}));
 
@@ -141,7 +141,12 @@ it.layer(PlatformLayer, { timeout: "60 seconds" })((it) => {
 
         const noRoot = yield* run(bare).pipe(withAncestorsHidden(bare), Effect.exit);
         const noGit = yield* run(notGit).pipe(Effect.exit);
-        const noSpawn = yield* run(notGit).pipe(provideSpawner(spawnFailure), Effect.exit);
+        // A `Git` built over the failing spawner: the suite's own is memoized over the real one.
+        const noSpawn = yield* run(notGit).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
+          provideSpawner(spawnFailure),
+          Effect.exit
+        );
 
         expect(failureText(noRoot)).toContain("Failed to locate the repository root");
         expect(failureText(noGit)).toContain("failed with exit code");

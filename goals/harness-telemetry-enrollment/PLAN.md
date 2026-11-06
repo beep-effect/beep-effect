@@ -25,3 +25,7 @@ Use the repo reflection workflow/template. Keep operative lifecycle until exact-
 ## Accepted orchestration cutover
 
 Main PR2594 intentionally removes the managed-session/message broker and orphaned launch claims/client/population APIs. The initial prototype and its local tests remain retained evidence at their original revision; they are removed from the active support tree. Do not restore or rename that messaging stack. Requalify current source after this cutover and use a narrow standalone native one-shot or a properly authorized T3 route for real observation. The enrollment goal and all actual-route gates remain active.
+
+## Native source snapshot
+
+P1 retains a fixed native Codex canary and private config generator, with synthetic producer/config tests and complete goals-operations compilation. Supporting retained-core changes have their own reviewed tests/catalog proof. P0 current-source admission remains in progress for the new extension; P2 real runtime/backend qualification remains pending. Preserve historical81/87/86 source-bound receipts and every Unknown population. No local snapshot or supporting PR completes this goal.

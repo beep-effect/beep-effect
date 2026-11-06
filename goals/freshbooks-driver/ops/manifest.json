@@ -37,7 +37,11 @@
     "goals/freshbooks-driver/GOAL.md",
     "goals/freshbooks-driver/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/live-spike-harness.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

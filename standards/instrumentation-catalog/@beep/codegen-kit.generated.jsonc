@@ -6,6 +6,8 @@
   "attributes": [],
   "instruments": [],
   "spans": [
+    {"name":"CodegenKit.checkModule","owner":"@beep/codegen-kit","family":"tooling","conforms":true},
+    {"name":"CodegenKit.checkModules","owner":"@beep/codegen-kit","family":"tooling","conforms":true},
     {"name":"CodegenKit.cli","owner":"@beep/codegen-kit","family":"tooling","conforms":true},
     {"name":"CodegenKit.definitionsFor","owner":"@beep/codegen-kit","family":"tooling","conforms":true},
     {"name":"CodegenKit.drift","owner":"@beep/codegen-kit","family":"tooling","conforms":true},

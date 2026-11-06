@@ -90,7 +90,12 @@ const respond = (url: string, answer: GithubAnswer): Response => {
 const githubFetch = (routes: GithubRoutes, calls: Array<GithubCall>): typeof globalThis.fetch =>
   Object.assign(
     (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
-      const request = new Request(input instanceof URL ? input.href : input, init);
+      const request =
+        input instanceof URL
+          ? new Request(input.href, init)
+          : P.isString(input)
+            ? new Request(input, init)
+            : new Request(input, init);
       const url = new URL(request.url);
       const path = Str.replace(repoPrefix, "{repo}")(decodeURIComponent(url.pathname));
       return request.text().then((text) => {

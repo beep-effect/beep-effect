@@ -1,0 +1,19 @@
+PASS missing-source-row
+PASS duplicate-source-row
+PASS unknown-source-kind
+PASS missing-case
+PASS duplicate-case
+PASS wrong-observation-hash
+PASS missing-capability
+PASS wrong-capability-owner
+PASS missing-expansion
+PASS composite-state
+PASS canonical-rejection
+PASS missing-fixture-license
+PASS wrong-fixture-hash
+PASS missing-regex-family
+PASS missing-regex-instance
+PASS duplicate-regex-instance
+PASS wrong-expanded-pattern
+PASS wrong-input-evidence-hash
+audit baseline passed; unfinished completion rejected; 18 corruption controls passed

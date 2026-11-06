@@ -1,0 +1,762 @@
+bun test v1.4.4 (38afee6c8)
+
+tests/annotate.test.ts:
+(pass) Annotate Citations > Basic Annotation > should annotate simple citation [331.08ms]
+(pass) Annotate Citations > Basic Annotation > should annotate multiple citations [21.08ms]
+(pass) Annotate Citations > Basic Annotation > should preserve original text outside citations [11.87ms]
+(pass) Annotate Citations > HTML Handling > should handle existing HTML tags [11.46ms]
+(pass) Annotate Citations > HTML Handling > should handle unbalanced tags [7.11ms]
+(pass) Annotate Citations > HTML Handling > should not annotate inside script tags [6.69ms]
+(pass) Annotate Citations > Custom Annotation > should support custom annotation function [2.62ms]
+(pass) Annotate Citations > Custom Annotation > should pass citation metadata to annotation function [7.22ms]
+(pass) Annotate Citations > Clean Text Integration > should annotate after cleaning text [8.33ms]
+(pass) Annotate Citations > Clean Text Integration > should maintain correct spans after cleaning [2.42ms]
+
+tests/bluebook.test.ts:
+(pass) Bluebook Formatting Utilities > reorderParallelCitations > should reorder parallel citations with LEXIS and WL [57.98ms]
+(pass) Bluebook Formatting Utilities > reorderParallelCitations > should place official reporters before electronic databases [14.60ms]
+(pass) Bluebook Formatting Utilities > reorderParallelCitations > should maintain order of non-parallel citations [12.03ms]
+(pass) Bluebook Formatting Utilities > reorderParallelCitations > should handle mixed citation types [18.94ms]
+(pass) Bluebook Formatting Utilities > areParallelCitations > should identify parallel citations with same metadata [19.78ms]
+(pass) Bluebook Formatting Utilities > areParallelCitations > should not identify different cases as parallel [10.78ms]
+(pass) Bluebook Formatting Utilities > areParallelCitations > should handle non-case citations [13.76ms]
+(pass) Bluebook Formatting Utilities > getReporterType > should identify official reporters [11.35ms]
+(pass) Bluebook Formatting Utilities > getReporterType > should identify regional reporters [11.25ms]
+(pass) Bluebook Formatting Utilities > getReporterType > should identify Westlaw citations [13.45ms]
+(pass) Bluebook Formatting Utilities > getReporterType > should identify LEXIS citations [17.99ms]
+(pass) Bluebook Formatting Utilities > formatBluebook > should reorder when option is enabled [18.81ms]
+(pass) Bluebook Formatting Utilities > formatBluebook > should not reorder when option is disabled [21.27ms]
+(pass) Bluebook Formatting Utilities > formatBluebook > should handle empty options [31.58ms]
+(pass) Bluebook Formatting Utilities > Complex real-world example > should correctly reorder the provided complex citation string [32.54ms]
+
+tests/case-name-citations.test.ts:
+(pass) Case Name Only Citations > should extract basic plaintiff v defendant citations [7.35ms]
+(pass) Case Name Only Citations > should extract complex plaintiff names [8.17ms]
+(pass) Case Name Only Citations > should extract In re citations [7.73ms]
+(pass) Case Name Only Citations > should extract Ex parte citations [4.07ms]
+(pass) Case Name Only Citations > should handle government entity names [8.09ms]
+(pass) Case Name Only Citations > should extract case names with abbreviations [8.05ms]
+(pass) Case Name Only Citations > should extract case names in context [9.65ms]
+(pass) Case Name Only Citations > should handle case names with numbers and special characters [7.85ms]
+(pass) Case Name Only Citations > should extract multiple case name citations [7.87ms]
+(pass) Case Name Only Citations > should generate consistent hashes for identical case names [15.99ms]
+(pass) Case Name Only Citations > should format corrected citations properly [15.45ms]
+(pass) Case Name Only Citations > should handle edge case with "Re " prefix [7.39ms]
+(pass) Case Name Only Citations > should preserve span accuracy across different text positions [21.51ms]
+(pass) Case Name Only Citations > should extract case names with long party names [8.40ms]
+(pass) Case Name Only Citations > should handle metadata for pin cites and parentheticals [9.82ms]
+
+tests/cfr-citations.test.ts:
+(pass) C.F.R. Citation Parsing > should correctly parse mixed U.S.C. and C.F.R. citations [19.96ms]
+(pass) C.F.R. Citation Parsing > should parse simple C.F.R. citation [10.42ms]
+(pass) C.F.R. Citation Parsing > should parse multiple C.F.R. sections as single citation [12.32ms]
+(pass) C.F.R. Citation Parsing > should parse mixed U.S.C. and C.F.R. citations [15.47ms]
+(pass) C.F.R. Citation Parsing > should parse C.F.R. after semicolon correctly [11.96ms]
+(pass) C.F.R. Citation Parsing > should not create false U.S.C. citations for C.F.R. volume numbers [9.10ms]
+
+tests/cfr-part-section.test.ts:
+(pass) C.F.R. Part and Section Parsing > should parse basic C.F.R. citation with part and section [8.94ms]
+(pass) C.F.R. Part and Section Parsing > should parse C.F.R. citation with subsection pinCite [12.31ms]
+(pass) C.F.R. Part and Section Parsing > should parse C.F.R. citation with complex subsection [11.06ms]
+(pass) C.F.R. Part and Section Parsing > should parse different title C.F.R. citation [8.87ms]
+(pass) C.F.R. Part and Section Parsing > should parse C.F.R. citation with nested section numbers [10.90ms]
+(pass) C.F.R. Part and Section Parsing > should parse C.F.R. citation with multi-level section [15.89ms]
+(pass) C.F.R. Part and Section Parsing > should handle multiple C.F.R. citations [11.56ms]
+(pass) C.F.R. Part and Section Parsing > should maintain backward compatibility - access via groups [7.99ms]
+(pass) C.F.R. Part and Section Parsing > should generate correct citation text [9.61ms]
+(pass) C.F.R. Part and Section Parsing > should handle edge case with single digit section [7.40ms]
+(pass) C.F.R. Part and Section Parsing > should parse citation in context [11.21ms]
+
+tests/clean.test.ts:
+(pass) Text Cleaning Utilities > cleanText > should apply cleaning steps in order [0.43ms]
+(pass) Text Cleaning Utilities > cleanText > should accept custom functions [0.04ms]
+(pass) Text Cleaning Utilities > cleanText > should apply multiple steps [0.04ms]
+(pass) Text Cleaning Utilities > cleanText > should throw error for invalid steps [0.12ms]
+(pass) Text Cleaning Utilities > html > should extract visible text from HTML [0.75ms]
+(pass) Text Cleaning Utilities > html > should handle nested elements [0.14ms]
+(pass) Text Cleaning Utilities > html > should skip style and script content [0.64ms]
+(pass) Text Cleaning Utilities > inlineWhitespace > should collapse multiple spaces [0.11ms]
+(pass) Text Cleaning Utilities > inlineWhitespace > should collapse tabs [0.03ms]
+(pass) Text Cleaning Utilities > inlineWhitespace > should handle mixed spaces and tabs [0.01ms]
+(pass) Text Cleaning Utilities > inlineWhitespace > should preserve newlines [0.02ms]
+(pass) Text Cleaning Utilities > allWhitespace > should collapse all whitespace including newlines [0.01ms]
+(pass) Text Cleaning Utilities > allWhitespace > should handle zero-width spaces [0.06ms]
+(pass) Text Cleaning Utilities > allWhitespace > should handle mixed whitespace [0.01ms]
+(pass) Text Cleaning Utilities > underscores > should replace double underscores with spaces [0.02ms]
+(pass) Text Cleaning Utilities > underscores > should replace multiple underscores with spaces [0.01ms]
+(pass) Text Cleaning Utilities > underscores > should preserve single underscores [0.01ms]
+(pass) Text Cleaning Utilities > underscores > should handle multiple occurrences [0.01ms]
+(pass) Text Cleaning Utilities > xml > should remove XML declaration [0.06ms]
+(pass) Text Cleaning Utilities > xml > should handle different XML declarations [0.01ms]
+(pass) Text Cleaning Utilities > xml > should not affect text without XML declaration
+(pass) Text Cleaning Utilities > xml > should only remove first XML declaration
+
+tests/debug.test.ts:
+(pass) debug supra regex [7.17ms]
+(pass) debug id regex [6.84ms]
+
+tests/detailed-citation-parsing.test.ts:
+
+========================================
+DETAILED CITATION PARSING TEST RESULTS
+========================================
+
+
+C.F.R. Citations:
+────────────────────────────────────────────────────────────
+
+Citation: "40 C.F.R. § 261.4 (2023)"
+Status: ✓ SUCCESS
+Type: FullLawCitation
+Metadata:
+  - volume: "40"
+  - reporter: "C.F.R."
+  - year: 2023
+  - section: "261.4"
+
+Citation: "21 C.F.R. § 314.50 (2023)"
+Status: ✓ SUCCESS
+Type: FullLawCitation
+Metadata:
+  - volume: "21"
+  - reporter: "C.F.R."
+  - year: 2023
+  - section: "314.50"
+
+Citation: "29 C.F.R. § 1910.1200 (2023)"
+Status: ✓ SUCCESS
+Type: FullLawCitation
+Metadata:
+  - volume: "29"
+  - reporter: "C.F.R."
+  - year: 2023
+  - section: "1910.1200"
+
+Citation: "45 C.F.R. §§ 160.101-160.104 (2023)"
+Status: ✓ SUCCESS
+Type: FullLawCitation
+Metadata:
+  - volume: "45"
+  - reporter: "C.F.R."
+  - year: 2023
+  - section: "160.101-160.104"
+
+Case Citations:
+────────────────────────────────────────────────────────────
+
+Citation: "Brown v. Board of Education, 347 U.S. 483 (1954)"
+Status: ✓ SUCCESS
+Type: FullCaseCitation
+Metadata:
+  - volume: "347"
+  - page: "483"
+  - year: 1954
+
+Citation: "Miranda v. Arizona, 384 U.S. 436 (1966)"
+Status: ✓ SUCCESS
+Type: FullCaseCitation
+Metadata:
+  - volume: "384"
+  - page: "436"
+  - year: 1966
+
+Citation: "Marbury v. Madison, 5 U.S. (1 Cranch) 137 (1803)"
+Status: ✓ SUCCESS
+Type: FullCaseCitation
+Metadata:
+  - volume: "5"
+  - page: "137"
+  - year: 1803
+
+Journal Citations:
+────────────────────────────────────────────────────────────
+
+Citation: "Charles A. Reich, The New Property, 73 Yale L.J. 733 (1964)"
+Status: ✓ SUCCESS
+Type: FullJournalCitation
+Metadata:
+  - volume: "73"
+  - reporter: "Yale L.J."
+  - page: "733"
+  - year: 1964
+
+Citation: "Oliver Wendell Holmes, Jr., The Path of the Law, 10 Harv. L. Rev. 457 (1897)"
+Status: ✓ SUCCESS
+Type: FullJournalCitation
+Metadata:
+  - volume: "10"
+  - reporter: "Harv. L. Rev."
+  - page: "457"
+  - year: 1897
+
+Citation: "Cass R. Sunstein, Interpreting Statutes in the Regulatory State, 103 Harv. L. Rev. 405 (1989)"
+Status: ✓ SUCCESS
+Type: FullJournalCitation
+Metadata:
+  - volume: "103"
+  - reporter: "Harv. L. Rev."
+  - page: "405"
+  - year: 1989
+
+Public Law Citations:
+────────────────────────────────────────────────────────────
+
+Citation: "Pub. L. No. 116-136, 134 Stat. 281 (2020)"
+Status: ✓ SUCCESS
+Type: FullLawCitation
+Metadata:
+  - volume: "116-136"
+  - reporter: "Pub. L."
+  - year: 2020
+  - section: "134"
+
+Citation: "Pub. L. No. 111-148, 124 Stat. 119 (2010)"
+Status: ✓ SUCCESS
+Type: FullLawCitation
+Metadata:
+  - volume: "111-148"
+  - reporter: "Pub. L."
+  - year: 2010
+  - section: "124"
+
+Restatement Citations:
+────────────────────────────────────────────────────────────
+
+Citation: "Restatement (Second) of Contracts § 90 (1981)"
+Status: ✓ SUCCESS
+Type: FullLawCitation
+Metadata:
+  - reporter: "Restatement (Second) of Contracts"
+  - year: 1981
+  - section: "90"
+
+Citation: "Restatement (Third) of Torts §§ 1-8 (2010)"
+Status: ✓ SUCCESS
+Type: FullLawCitation
+Metadata:
+  - reporter: "Restatement (Third) of Torts"
+  - year: 2010
+  - section: "1-8"
+
+State Law Citations:
+────────────────────────────────────────────────────────────
+
+Citation: "Cal. Penal Code § 187 (West 2023)"
+Status: ✓ SUCCESS
+Type: FullLawCitation
+Metadata:
+  - reporter: "Cal. Penal Code"
+  - year: 2023
+  - section: "187"
+
+Citation: "N.Y. Gen. Bus. Law § 349 (McKinney 2023)"
+Status: ✓ SUCCESS
+Type: FullLawCitation
+Metadata:
+  - reporter: "N.Y. Gen. Bus. Law"
+  - year: 2023
+  - section: "349"
+
+Citation: "Tex. Bus. & Com. Code Ann. §§ 17.41-17.63 (West 2023)"
+Status: ✓ SUCCESS
+Type: FullLawCitation
+Metadata:
+  - reporter: "Tex. Bus. & Com. Code Ann."
+  - year: 2023
+  - section: "17.41-17.63"
+
+U.S.C. Citations:
+────────────────────────────────────────────────────────────
+
+Citation: "42 U.S.C. § 1983 (2018)"
+Status: ✓ SUCCESS
+Type: FullLawCitation
+Metadata:
+  - volume: "42"
+  - reporter: "U.S.C."
+  - year: 2018
+  - section: "1983"
+
+Citation: "18 U.S.C. § 1001 (2018)"
+Status: ✓ SUCCESS
+Type: FullLawCitation
+Metadata:
+  - volume: "18"
+  - reporter: "U.S.C."
+  - year: 2018
+  - section: "1001"
+
+Citation: "26 U.S.C. § 501(c)(3) (2018)"
+Status: ✓ SUCCESS
+Type: FullLawCitation
+Metadata:
+  - volume: "26"
+  - reporter: "U.S.C."
+  - year: 2018
+  - section: "501"
+
+Citation: "15 U.S.C. §§ 78a-78pp (2018)"
+Status: ✓ SUCCESS
+Type: FullLawCitation
+Metadata:
+  - volume: "15"
+  - reporter: "U.S.C."
+  - year: 2018
+  - section: "78a-78pp"
+
+
+SUMMARY STATISTICS:
+════════════════════════════════════════════════════════════
+C.F.R.: 4/4 (100.0%)
+Case: 3/3 (100.0%)
+Journal: 3/3 (100.0%)
+Public Law: 2/2 (100.0%)
+Restatement: 2/2 (100.0%)
+State Law: 3/3 (100.0%)
+U.S.C.: 4/4 (100.0%)
+────────────────────────────────────────────────────────────
+TOTAL: 21/21 (100.0%)
+
+
+SPECIAL ATTENTION ITEMS:
+════════════════════════════════════════════════════════════
+
+1. Marbury v. Madison (parallel citation):
+   Status: ✓ SUCCESS
+   Type: FullCaseCitation
+
+2. Complex Section Parsing:
+   "45 C.F.R. §§ 160.101-160.104 (2023)": ✓
+   "26 U.S.C. § 501(c)(3) (2018)": ✓
+   "15 U.S.C. §§ 78a-78pp (2018)": ✓
+   "Tex. Bus. & Com. Code Ann. §§ 17.41-17.63 (West 2023)": ✓
+   "Pub. L. No. 116-136, 134 Stat. 281 (2020)": ✓
+   "Pub. L. No. 111-148, 124 Stat. 119 (2010)": ✓
+   "Restatement (Third) of Torts §§ 1-8 (2010)": ✓
+   Success rate: 7/7
+
+3. State Law Citations:
+   "Cal. Penal Code § 187 (West 2023)": ✓
+   "N.Y. Gen. Bus. Law § 349 (McKinney 2023)": ✓
+   "Tex. Bus. & Com. Code Ann. §§ 17.41-17.63 (West 2023)": ✓
+
+========================================
+
+(pass) Detailed Citation Parsing Test > Parse all citations and generate report [178.11ms]
+
+tests/dol-opinion.test.ts:
+(pass) DOL Opinion Letter Citations > should extract basic DOL Opinion Letter citations [8.70ms]
+(pass) DOL Opinion Letter Citations > should extract DOL Opinion Letters with different subjects [24.80ms]
+(pass) DOL Opinion Letter Citations > should extract DOL Opinion Letters in context [10.25ms]
+(pass) DOL Opinion Letter Citations > should handle single-digit opinion numbers [8.58ms]
+(pass) DOL Opinion Letter Citations > should handle double-digit opinion numbers [9.15ms]
+(pass) DOL Opinion Letter Citations > should extract multiple DOL Opinion citations [15.49ms]
+(pass) DOL Opinion Letter Citations > should generate correct hash for DOL Opinion citations [34.22ms]
+(pass) DOL Opinion Letter Citations > should format DOL Opinion citation correctly [13.47ms]
+
+tests/enhanced-supra.test.ts:
+(pass) Enhanced Supra Citations with Case Names > should extract basic supra citation [9.41ms]
+(pass) Enhanced Supra Citations with Case Names > should extract supra citation with pin cite [10.94ms]
+(pass) Enhanced Supra Citations with Case Names > should extract supra with case name and volume [10.98ms]
+(pass) Enhanced Supra Citations with Case Names > should extract supra with full case name [8.67ms]
+(pass) Enhanced Supra Citations with Case Names > should extract supra with complex case names [31.18ms]
+(pass) Enhanced Supra Citations with Case Names > should extract supra with pin cites in different formats [28.99ms]
+(pass) Enhanced Supra Citations with Case Names > should extract multiple supra citations [26.48ms]
+(pass) Enhanced Supra Citations with Case Names > should format supra citations correctly [8.05ms]
+(pass) Enhanced Supra Citations with Case Names > should generate consistent hashes for identical supra citations [10.31ms]
+(pass) Enhanced Supra Citations with Case Names > should extract supra in context with punctuation [7.19ms]
+(pass) Enhanced Supra Citations with Case Names > should handle supra with note numbers [17.51ms]
+(pass) Enhanced Supra Citations with Case Names > should extract supra with institutional plaintiffs [7.59ms]
+(pass) Enhanced Supra Citations with Case Names > should preserve span accuracy for supra citations [16.48ms]
+(pass) Enhanced Supra Citations with Case Names > should handle supra with parentheticals [7.60ms]
+(pass) Enhanced Supra Citations with Case Names > should distinguish between case name and supra citations [7.58ms]
+(pass) Enhanced Supra Citations with Case Names > should extract supra with abbreviated case names [6.97ms]
+
+tests/find.test.ts:
+(pass) Find Citations > Basic Citation Extraction > should find basic case citation [3.55ms]
+(pass) Find Citations > Basic Citation Extraction > should find citation with line break [2.40ms]
+(pass) Find Citations > Basic Citation Extraction > should find citation with line break within reporter [2.31ms]
+(pass) Find Citations > Basic Citation Extraction > should not capture non-case name before citation [6.38ms]
+(pass) Find Citations > Case Name Extraction > should extract plaintiff and defendant [6.90ms]
+(pass) Find Citations > Case Name Extraction > should extract plaintiff, defendant and year [10.08ms]
+(pass) Find Citations > Case Name Extraction > should handle misformatted year [280.30ms]
+(pass) Find Citations > Case Name Extraction > should handle comma after defendant name [24.58ms]
+(pass) Find Citations > Pin Cites and Courts > should extract pin cite [5.99ms]
+(pass) Find Citations > Pin Cites and Courts > should extract court and pin cite [20.11ms]
+(pass) Find Citations > Pin Cites and Courts > should handle court string without space [13.35ms]
+(pass) Find Citations > Pin Cites and Courts > should handle exact court match [12.65ms]
+(pass) Find Citations > Pin Cites and Courts > should extract month and day in court parenthetical [12.51ms]
+(pass) Find Citations > Parallel Citations > should extract parallel citations with parenthetical [16.39ms]
+(pass) Find Citations > Parentheticals > should handle nested parenthetical [12.88ms]
+(pass) Find Citations > Parentheticals > should handle parenthetical with subsequent unrelated parenthetical [12.09ms]
+(pass) Find Citations > Reporter Variations > should find variant reporter [12.55ms]
+(pass) Find Citations > Reporter Variations > should find second edition reporter [10.14ms]
+(pass) Find Citations > Reporter Variations > should find proper citation when reporter in string [8.89ms]
+(pass) Find Citations > Reporter Variations > should find variant second edition reporter [9.08ms]
+(pass) Find Citations > Special Page Numbers > should handle Roman numeral page numbers [9.95ms]
+(pass) Find Citations > Special Page Numbers > should handle missing page numbers [2.79ms]
+(pass) Find Citations > Special Page Numbers > should handle missing page numbers followed by comma [6.02ms]
+(pass) Find Citations > Special Page Numbers > should reject malformed page numbers [3.96ms]
+(pass) Find Citations > Special Citation Formats > should handle digit-REPORTER-digit format [6.48ms]
+(pass) Find Citations > Special Citation Formats > should handle Ohio format [5.24ms]
+(pass) Find Citations > Special Citation Formats > should handle Illinois appellate format [11.04ms]
+(pass) Find Citations > Special Citation Formats > should handle Illinois appellate format with letter suffix [13.88ms]
+(pass) Find Citations > Short Form Citations > should find short form with meaningless antecedent [9.93ms]
+(pass) Find Citations > Short Form Citations > should find short form with meaningful antecedent [9.48ms]
+(pass) Find Citations > Short Form Citations > should handle short form with preceding quotation [7.28ms]
+(pass) Find Citations > Short Form Citations > should handle short form when case name looks like reporter [12.60ms]
+(pass) Find Citations > Short Form Citations > should handle short form with no comma after reporter [7.72ms]
+(pass) Find Citations > Short Form Citations > should not find short form at end of document [6.86ms]
+(pass) Find Citations > Short Form Citations > should handle short form with "at p." format [8.82ms]
+(pass) Find Citations > Short Form Citations > should handle short form with page range [8.40ms]
+(pass) Find Citations > Short Form Citations > should handle short form with parenthetical [8.60ms]
+(pass) Find Citations > Short Form Citations > should handle short form with no space before parenthetical [11.37ms]
+(pass) Find Citations > Short Form Citations > should handle short form with nested parentheticals [12.68ms]
+(pass) Find Citations > Short Form Citations > should not treat year as parenthetical in short form [15.21ms]
+(pass) Find Citations > Supra Citations > should find standard supra citation [8.03ms]
+(pass) Find Citations > Supra Citations > should find supra citation with volume [137.22ms]
+(pass) Find Citations > Supra Citations > should find supra citation without page [6.20ms]
+(pass) Find Citations > Supra Citations > should find supra citation with period [5.86ms]
+(pass) Find Citations > Supra Citations > should find supra citation at end of document [5.39ms]
+(pass) Find Citations > Supra Citations > should find supra across line break [8.48ms]
+(pass) Find Citations > Supra Citations > should handle supra with parenthetical [14.63ms]
+(pass) Find Citations > Supra Citations > should handle supra with pin cite and parenthetical [12.49ms]
+(pass) Find Citations > Id Citations > should find Ibid citation [14.52ms]
+(pass) Find Citations > Id Citations > should find id. citation [11.98ms]
+(pass) Find Citations > Id Citations > should find id. with pin cite [11.52ms]
+(pass) Find Citations > Multiple Citations > should handle multiple citations with parentheticals [10.41ms]
+(pass) Find Citations > Edge Cases > should handle citations with abutting punctuation [7.73ms]
+(pass) Find Citations > Edge Cases > should handle page range with weird suffix [6.10ms]
+(pass) Find Citations > Law Citations > should find basic law citation [7.41ms]
+(pass) Find Citations > Law Citations > should find Statutes at Large citation [2.12ms]
+(pass) Find Citations > Law Citations > should find law citation with year [6.72ms]
+(pass) Find Citations > Law Citations > should find law citation with publisher and et seq. [9.23ms]
+(pass) Find Citations > Law Citations > should find law citation with multiple sections [6.62ms]
+(pass) Find Citations > Law Citations > should find CFR citation with multiple sections [10.40ms]
+(pass) Find Citations > Law Citations > should find law citation with repealed parenthetical [9.06ms]
+(pass) Find Citations > Law Citations > should find law citation with supplement publisher [8.68ms]
+(pass) Find Citations > Law Citations > should find law citation with year range [7.97ms]
+(pass) Find Citations > Law Citations > should find law citation with "and" pin cite [8.54ms]
+(pass) Find Citations > Law Citations > should find basic U.S.C. citation [5.22ms]
+(pass) Find Citations > Law Citations > should find U.S.C. citation with subsections [7.24ms]
+(pass) Find Citations > Law Citations > should find U.S.C. citation with multiple sections [8.32ms]
+(pass) Find Citations > Law Citations > should find single C.F.R. section citation [10.26ms]
+(pass) Find Citations > Law Citations > should find C.F.R. section range citation [9.73ms]
+(pass) Find Citations > Law Citations > should not find improperly formatted CFR citation [9.70ms]
+(pass) Find Citations > Law Citations > should find U.S.C. citation with space variations [7.75ms]
+(pass) Find Citations > Law Citations > should find California Penal Code citation with publisher and year [8.09ms]
+(pass) Find Citations > Law Citations > should find New York General Business Law citation with publisher and year [7.72ms]
+(pass) Find Citations > Law Citations > should find Texas Business & Commerce Code citation with multiple sections [8.91ms]
+(pass) Find Citations > Law Citations > should find Restatement (Second) of Contracts citation [9.39ms]
+(pass) Find Citations > Law Citations > should find Restatement (Third) of Torts citation with multiple sections [7.21ms]
+(pass) Find Citations > Journal Citations > should find basic journal citation [5.73ms]
+(pass) Find Citations > Journal Citations > should find journal citation with pin cite [6.46ms]
+(pass) Find Citations > Journal Citations > should find journal citation with year [6.43ms]
+(pass) Find Citations > Journal Citations > should find journal citation with pin cite and year [7.51ms]
+(pass) Find Citations > Journal Citations > should find journal citation with pin cite, year and parenthetical [10.18ms]
+(pass) Find Citations > Journal Citations > should find journal citation with year range [8.52ms]
+(pass) Find Citations > Journal Citations > should find journal citation with multiple page spans [7.21ms]
+(pass) Find Citations > Journal Citations > should find journal citation with author [8.54ms]
+(pass) Find Citations > Journal Citations > should find journal citation at beginning of footnote [6.66ms]
+(pass) Find Citations > Journal Citations > should find journal citation with footnote reference [8.81ms]
+(pass) Find Citations > Tax Court Citations > should find standard Tax Court citation [2.09ms]
+(pass) Find Citations > Tax Court Citations > should find Board of Tax Appeals citation [1.74ms]
+(pass) Find Citations > Tax Court Citations > should find Tax Court No. citation [5.34ms]
+(pass) Find Citations > Tax Court Citations > should find Tax Court Memo citation with atypical format [5.50ms]
+(pass) Find Citations > Tax Court Citations > should find Tax Court Summary Opinion with atypical format [6.72ms]
+(pass) Find Citations > Tax Court Citations > should find Tax Court Summary Opinion at start of text [6.45ms]
+(pass) Find Citations > Citation Filtering > should filter overlapping citations keeping the better one [0.40ms]
+(pass) Find Citations > Citation Filtering > should remove duplicate citations with same span [0.06ms]
+(pass) Find Citations > Citation Filtering > should prefer ShortCaseCitation over SupraCitation when overlapping [0.14ms]
+(pass) Find Citations > Citation Filtering > should keep citations within parentheticals even if overlapping [0.08ms]
+(pass) Find Citations > Citation Filtering > should allow known overlap case of parallel full citations [0.10ms]
+(pass) Find Citations > Citation Filtering > should handle nested citations with proper priority [0.11ms]
+(pass) Find Citations > Citation Filtering > should filter problematic overlaps but preserve acceptable ones [0.12ms]
+(pass) Find Citations > Citation Filtering > should handle performance cache correctly [0.04ms]
+(pass) Find Citations > Citation Filtering > Reporter Disambiguation > should keep unambiguous reporter (P.R.R.) [1.93ms]
+(pass) Find Citations > Citation Filtering > Reporter Disambiguation > should resolve simple variant (U. S. -> U.S.) [1.37ms]
+(pass) Find Citations > Citation Filtering > Reporter Disambiguation > should remove A.2d due to multiple editions [0.50ms]
+(pass) Find Citations > Citation Filtering > Reporter Disambiguation > should remove variant A. 2d due to multiple editions [0.45ms]
+(pass) Find Citations > Citation Filtering > Reporter Disambiguation > should remove ambiguous P.R. citation [3.84ms]
+(pass) Find Citations > Citation Filtering > Reporter Disambiguation > should remove ambiguous W.2d citation [3.48ms]
+(pass) Find Citations > Citation Filtering > Reporter Disambiguation > should remove Wash. due to multiple editions [4.03ms]
+(pass) Find Citations > Citation Filtering > Reporter Disambiguation > should keep Cra. variant of Cranch [1.42ms]
+(pass) Find Citations > Citation Filtering > Reporter Disambiguation > should remove ambiguous Cranch citation when paired with U.S. [5.60ms]
+(pass) Find Citations > Citation Filtering > Reporter Disambiguation > should remove ambiguous Johnson citation (1890) [4.72ms]
+(pass) Find Citations > Citation Filtering > Reporter Disambiguation > should remove ambiguous Johnson citation (1806) [4.61ms]
+(pass) Find Citations > Citation Filtering > Reporter Disambiguation > should remove F.3d due to multiple editions [1.30ms]
+(pass) Find Citations > Citation Filtering > Reporter Disambiguation > should remove truly ambiguous citations [1.49ms]
+(pass) Find Citations > Reference Citations > should extract reference citation using plaintiff name [11.25ms]
+(pass) Find Citations > Reference Citations > should extract reference citation using defendant name [9.92ms]
+(pass) Find Citations > Reference Citations > should extract reference citation with pin cite pattern [10.59ms]
+(pass) Find Citations > Reference Citations > should not extract reference from invalid names [11.90ms]
+(pass) Find Citations > Reference Citations > should extract references from markup text [19.70ms]
+(pass) Find Citations > Reference Citations > should filter out ReferenceCitation that overlap other citations [50.36ms]
+(pass) Find Citations > Reference Citations > should extract reference citations using resolved case names [29.62ms]
+(pass) Find Citations > Citation Fullspan > should include case name in full span [9.22ms]
+(pass) Find Citations > Citation Fullspan > should include pin cite in full span [9.95ms]
+(pass) Find Citations > Citation Fullspan > should include parenthetical in full span [24.49ms]
+(pass) Find Citations > Citation Fullspan > should handle nested parentheticals in full span [13.63ms]
+(pass) Find Citations > Citation Fullspan > should correctly calculate full span for multiple citations in one string [13.97ms]
+(pass) Find Citations > Citation Fullspan > should return full string span for citations covering entire text [54.53ms]
+(pass) Find Citations > Citation Fullspan > should exclude leading stop words from full span [21.00ms]
+(pass) Find Citations > Citation Fullspan > should handle complex citation with all components [14.76ms]
+(pass) Find Citations > Nominative Reporter Overlaps > should parse "In re Cooke" with Wn. App. reporter [7.72ms]
+(pass) Find Citations > Nominative Reporter Overlaps > should parse Shapiro v. Thompson with spaced U. S. reporter [7.05ms]
+(pass) Find Citations > Nominative Reporter Overlaps > should parse MacArdell v. Olcott with N.E. reporter [6.68ms]
+(pass) Find Citations > Nominative Reporter Overlaps > should parse Connecticut v. Holmes with A.3d reporter [6.44ms]
+(pass) Find Citations > Nominative Reporter Overlaps > should parse Kern v Taney with Pa. D. & C.5th reporter [8.92ms]
+(pass) Find Citations > Nominative Reporter Overlaps > should parse Ellenburg v. Chase with MT reporter format [7.68ms]
+(pass) Find Citations > Nominative Reporter Overlaps > should parse short form Gilmer citation [7.94ms]
+(pass) Find Citations > Nominative Reporter Overlaps > should parse Bison Bee with F. reporter (not F. App'x) [9.82ms]
+(pass) Find Citations > Nominative Reporter Overlaps > should handle "A. v. B." case names before citations [5.84ms]
+(pass) Find Citations > Nominative Reporter Overlaps > should handle "So." in party name vs Southern Reporter [6.71ms]
+(pass) Find Citations > Nominative Reporter Overlaps > should parse citation when party name contains period [6.76ms]
+(pass) Find Citations > Nominative Reporter Overlaps > should not confuse state abbreviations with reporters [7.02ms]
+(pass) Find Citations > Date in Editions > should validate year-based edition matching [3.00ms]
+(pass) Find Citations > Date in Editions > should handle year ranges in parentheticals [5.38ms]
+(pass) Find Citations > Date in Editions > should extract date from edition year range [12.40ms]
+(pass) Find Citations > Date in Editions > should handle editions with date restrictions [5.06ms]
+(pass) Find Citations > Date in Editions > should disambiguate reporters by year when multiple editions exist [12.06ms]
+(pass) Find Citations > Date in Editions > should handle editions without date ranges [2.21ms]
+(pass) Find Citations > Enhanced Date Validation > should validate year ranges correctly [0.19ms]
+(pass) Find Citations > Enhanced Date Validation > should validate date components in court strings [0.30ms]
+(pass) Find Citations > Enhanced Date Validation > should validate citations against reporter editions [0.35ms]
+(pass) Find Citations > Enhanced Date Validation > should handle suspicious dates [0.10ms]
+(pass) Find Citations > Enhanced Date Validation > should handle year ranges in citations [8.03ms]
+(pass) Find Citations > Enhanced Date Validation > should handle invalid year ranges with warnings [10.17ms]
+(pass) Find Citations > Enhanced Date Validation > should cache date validation results for performance [0.25ms]
+(pass) Find Citations > Enhanced Date Validation > should validate input parameters for includesYear [0.05ms]
+(pass) Find Citations > Custom Tokenizer > should support custom tokenizer with modified regex patterns [3.09ms]
+(pass) Find Citations > Custom Tokenizer > should support creating tokenizer with custom extractors [0.35ms]
+(pass) Find Citations > Custom Tokenizer > should allow filtering extractors based on text content [2.11ms]
+(pass) Find Citations > Markup Plaintiff and Antecedent Guesses > should identify full case names in markup text [239.22ms]
+(pass) Find Citations > Markup Plaintiff and Antecedent Guesses > should extract citations from HTML markup text (basic functionality) [40.08ms]
+(pass) Find Citations > Abbreviated Case Names > should extract plaintiff and defendant with abbreviated names [58.43ms]
+(pass) Find Citations > Warning Emission Tests > citation in parenthetical does not emit warning [14.81ms]
+
+tests/full-span-end-issue.test.ts:
+(pass) FullSpanEnd issue with signal phrases > Root cause: en-dash vs hyphen in pin cites > FAILS: citation with en-dash in pin cite prevents metadata extraction [68.53ms]
+(pass) FullSpanEnd issue with signal phrases > Root cause: en-dash vs hyphen in pin cites > PASSES: citation with regular hyphen in pin cite works correctly [14.26ms]
+(pass) FullSpanEnd issue with signal phrases > Root cause: en-dash vs hyphen in pin cites > demonstrates the regex issue [0.14ms]
+(pass) FullSpanEnd issue with signal phrases > extracts court and year from citation with "Id.; see also" prefix [15.54ms]
+(pass) FullSpanEnd issue with signal phrases > extracts court and year from citation with "See also" prefix [12.69ms]
+(pass) FullSpanEnd issue with signal phrases > extracts court and year from citation with "But see" prefix [12.59ms]
+(pass) FullSpanEnd issue with signal phrases > extracts court and year from citation with "Cf." prefix [12.31ms]
+(pass) FullSpanEnd issue with signal phrases > extracts court and year from citation with "See generally" prefix [12.39ms]
+(pass) FullSpanEnd issue with signal phrases > extracts court and year from citation with "Id. at" prefix [13.27ms]
+(pass) FullSpanEnd issue with signal phrases > extracts court and year from citation without signal phrase [11.14ms]
+(pass) FullSpanEnd issue with signal phrases > extracts multiple citations with various signal phrases [17.50ms]
+(pass) FullSpanEnd issue with signal phrases > handles citations with parentheticals after court/year [12.47ms]
+(pass) FullSpanEnd issue with signal phrases > handles citations with complex signal phrases [12.11ms]
+(pass) FullSpanEnd issue with signal phrases > verifies the bug: fullSpanEnd undefined prevents metadata extraction [14.65ms]
+
+tests/fullspan-regression.test.ts:
+(pass) Full span regression tests > IdCitation should have defined fullSpanStart and fullSpanEnd [13.38ms]
+(pass) Full span regression tests > IdCitation with pin cite should include it in fullSpan [2.18ms]
+(pass) Full span regression tests > IdCitation with parenthetical should include it in fullSpan [8.85ms]
+(pass) Full span regression tests > SupraCitation should have defined fullSpanStart and fullSpanEnd [5.10ms]
+(pass) Full span regression tests > All citation types should have valid fullSpan() [13.43ms]
+
+tests/id-citation-comprehensive.test.ts:
+(pass) Comprehensive IdCitation extraction tests > extracts Id citation followed by full citation (reported issue) [17.34ms]
+(pass) Comprehensive IdCitation extraction tests > extracts Id citation with semicolon in various contexts [44.94ms]
+(pass) Comprehensive IdCitation extraction tests > extracts Id citation with various punctuation [4.63ms]
+(pass) Comprehensive IdCitation extraction tests > extracts Id citation with pin cites in various formats [16.57ms]
+(pass) Comprehensive IdCitation extraction tests > extracts Id citation with parenthetical [22.08ms]
+(pass) Comprehensive IdCitation extraction tests > correctly handles Id citations in complex sentences [48.75ms]
+(pass) Comprehensive IdCitation extraction tests > handles both Id. and ibid. citations [3.67ms]
+(pass) Comprehensive IdCitation extraction tests > does not extract Id from words containing "id" [33.55ms]
+(pass) Comprehensive IdCitation extraction tests > handles edge case with multiple Id citations [8.33ms]
+(pass) Comprehensive IdCitation extraction tests > preserves original citation order [13.26ms]
+
+tests/id-citation.test.ts:
+(pass) IdCitation extraction > extracts Id citation with semicolon [52.60ms]
+(pass) IdCitation extraction > extracts simple Id citation [0.97ms]
+(pass) IdCitation extraction > extracts Id citation with colon [7.67ms]
+(pass) IdCitation extraction > extracts Id citation with comma and pin cite [4.08ms]
+(pass) IdCitation extraction > extracts ibid citation [1.04ms]
+(pass) IdCitation extraction > does not extract Id in middle of word [6.53ms]
+(pass) IdCitation extraction > extracts Id citation with pin cite [2.70ms]
+
+tests/integration.test.ts:
+(pass) Integration Tests > Clean and Extract Citations > should clean text before extracting citations [10.81ms]
+(pass) Integration Tests > Clean and Extract Citations > should handle HTML cleaning [11.27ms]
+(pass) Integration Tests > Clean and Extract Citations > should handle PDF-like text [11.76ms]
+(pass) Integration Tests > Full Pipeline > should clean, extract, and resolve citations [14.38ms]
+
+tests/models.test.ts:
+(pass) Models > Token > should create a basic token [0.07ms]
+(pass) Models > Token > should merge identical tokens [0.48ms]
+(pass) Models > Token > should not merge different tokens [0.04ms]
+(pass) Models > Reporter and Edition > should create a reporter [0.04ms]
+(pass) Models > Reporter and Edition > should create an edition [0.04ms]
+(pass) Models > Citations > should create a FullCaseCitation [0.15ms]
+(pass) Models > Citations > should handle missing page numbers [0.06ms]
+(pass) Models > Citations > should create IdCitation with unique hash [0.08ms]
+(pass) Models > Citations > should format SupraCitation correctly [0.05ms]
+
+tests/multi-section-law.test.ts:
+(pass) Multi-section law citations > should extract C.F.R. citations with §§ as single citation [10.76ms]
+(pass) Multi-section law citations > should handle U.S.C. multi-section citations as single citation [11.61ms]
+(pass) Multi-section law citations > should handle multi-section with complex parentheticals [12.70ms]
+(pass) Multi-section law citations > should not create multiple citations for single section with § [11.41ms]
+(pass) Multi-section law citations > should handle section ranges [15.06ms]
+(pass) Multi-section law citations > should not create false U.S.C. citations for C.F.R. volume numbers [16.90ms]
+
+tests/multiple-sections.test.ts:
+(pass) Multiple Sections Parsing > Basic Multiple Sections > should parse basic C.F.R. multiple sections as single citation [12.15ms]
+(pass) Multiple Sections Parsing > Basic Multiple Sections > should parse U.S.C. multiple sections as single citation [10.20ms]
+(pass) Multiple Sections Parsing > Basic Multiple Sections > should parse three or more sections as single citation [11.96ms]
+(pass) Multiple Sections Parsing > Sections with Descriptions/Parentheticals > should parse CFR sections with parenthetical descriptions [14.64ms]
+(pass) Multiple Sections Parsing > Sections with Descriptions/Parentheticals > should parse sections with mixed parentheticals [13.82ms]
+(pass) Multiple Sections Parsing > Sections with Descriptions/Parentheticals > should parse sections with complex parenthetical descriptions [12.54ms]
+(pass) Multiple Sections Parsing > Mixed Patterns and Subsections > should parse mixed sections with subsections [10.37ms]
+(pass) Multiple Sections Parsing > Mixed Patterns and Subsections > should parse sections with various subsection formats [10.24ms]
+(pass) Multiple Sections Parsing > Real-World Complex Cases > should parse complex citation with both U.S.C. and C.F.R. [12.94ms]
+(pass) Multiple Sections Parsing > Real-World Complex Cases > should not create false U.S.C. citations for C.F.R. volume numbers [8.29ms]
+(pass) Multiple Sections Parsing > Edge Cases > should handle sections with semicolons [9.71ms]
+(pass) Multiple Sections Parsing > Edge Cases > should handle sections with ranges [10.76ms]
+
+tests/opinion-letter-citations.test.ts:
+(pass) DOL Opinion Letter Citations > should extract basic DOL Opinion Letter citations [9.45ms]
+(pass) DOL Opinion Letter Citations > should extract DOL Opinion Letters with different subjects [52.01ms]
+(pass) DOL Opinion Letter Citations > should extract DOL Opinion Letters in context [14.64ms]
+(pass) DOL Opinion Letter Citations > should handle single-digit opinion numbers [11.31ms]
+(pass) DOL Opinion Letter Citations > should handle double-digit opinion numbers [24.41ms]
+(pass) DOL Opinion Letter Citations > should handle zero-padded opinion numbers [14.72ms]
+(pass) DOL Opinion Letter Citations > should extract multiple DOL Opinion citations [17.06ms]
+(pass) DOL Opinion Letter Citations > should generate correct hash for DOL Opinion citations [35.62ms]
+(pass) DOL Opinion Letter Citations > should format DOL Opinion citation correctly [13.03ms]
+(pass) DOL Opinion Letter Citations > should handle different date formats [45.37ms]
+(pass) DOL Opinion Letter Citations > should handle different subject matter codes [103.86ms]
+(pass) DOL Opinion Letter Citations > should preserve span accuracy with surrounding text [41.86ms]
+(pass) DOL Opinion Letter Citations > should handle year variations correctly [52.81ms]
+(pass) DOL Opinion Letter Citations > should extract metadata correctly from groups [11.68ms]
+(pass) DOL Opinion Letter Citations > should handle edge cases with whitespace and punctuation [13.01ms]
+
+tests/overlap-handling.test.ts:
+(pass) Overlap handling in getCitations > default behavior (all) returns single multi-section citation [15.13ms]
+(pass) Overlap handling in getCitations > parent-only returns same single multi-section citation [15.22ms]
+(pass) Overlap handling in getCitations > children-only returns same single multi-section citation [15.10ms]
+(pass) Overlap handling in getCitations > non-overlapping citations are unaffected [40.18ms]
+(pass) Overlap handling in getCitations > complex scenario with multiple citations [33.40ms]
+(pass) Overlap handling in getCitations > manual annotation works with single multi-section citation [13.41ms]
+(pass) Overlap handling in getCitations > backward compatibility with legacy signature [25.31ms]
+
+tests/overlapping-annotation.test.ts:
+Original text: See 29 C.F.R. §§ 778.113, 778.114, 778.115 for details.
+Annotated text: See <cite>29 C.F.R. §§ 778.113, 778.114, 778.115</cite> for details.
+Citations:
+  Citation 0: [4, 42] = "29 C.F.R. §§ 778.113, 778.114, 778.115"
+(pass) Overlapping citation annotation > should handle multi-section law citations as single citation [52.71ms]
+
+Deep nesting test:
+Original: See 15 U.S.C. §§ 78a, 78b, 78c for reference.
+Annotated: See <cite data-id="78a, 78b, 78c">15 U.S.C. §§ 78a, 78b, 78c</cite> for reference.
+(pass) Overlapping citation annotation > should handle multi-section U.S.C. citations as single citation [60.10ms]
+
+Non-overlapping test:
+Original: See 29 C.F.R. § 778.113 and 15 U.S.C. § 78a for details.
+Annotated: See <cite>29 C.F.R. § 778.113</cite> and <cite>15 U.S.C. § 78a</cite> for details.
+(pass) Overlapping citation annotation > should handle non-overlapping citations correctly [53.02ms]
+
+Metadata preservation test:
+Annotated: See <cite section="778.113, 778.114, 778.115">29 C.F.R. §§ 778.113, 778.114, 778.115</cite> for details.
+(pass) Overlapping citation annotation > should preserve citation metadata in multi-section annotations [70.23ms]
+
+tests/parallel-citation.test.ts:
+(pass) Parallel Citation Support > should parse U.S. Reports with parallel nominative reporters [42.33ms]
+(pass) Parallel Citation Support > should parse full case citations with parallel reporters [42.11ms]
+(pass) Parallel Citation Support > should handle various edge cases [49.54ms]
+
+tests/plaintiff-extraction.test.ts:
+(pass) Plaintiff extraction > should not include preceding text in plaintiff name [58.19ms]
+(pass) Plaintiff extraction > should handle complex case names correctly [90.03ms]
+(pass) Plaintiff extraction > should handle sentence boundaries properly [12.44ms]
+
+tests/reporters-db.test.ts:
+(pass) Reporters Database > should have basic reporters [0.04ms]
+Found citations: 1
+Citations: [
+  {
+    type: "FullCaseCitation",
+    text: "347 U.S. 483",
+    groups: [Object: null prototype] {
+      volume: "347",
+      reporter: "U.S.",
+      page: "483",
+    },
+  }
+]
+(pass) Reporters Database > should extract U.S. Reports citation [12.10ms]
+(pass) Reporters Database > should extract Federal Reporter citation [38.67ms]
+US variation found: 1
+U. S. variation found: 1
+(pass) Reporters Database > should handle reporter variations [8.58ms]
+
+tests/resolve-id-section.test.ts:
+(pass) Id Citation Resolution with Section Substitution > should resolve Id. § citations with section substitution [15.14ms]
+(pass) Id Citation Resolution with Section Substitution > should handle Id. without antecedent [2.89ms]
+(pass) Id Citation Resolution with Section Substitution > should handle multiple Id. citations in sequence [18.82ms]
+(pass) Id Citation Resolution with Section Substitution > should handle Id. after case citation [18.48ms]
+(pass) Id Citation Resolution with Section Substitution > should track last non-Id citation through Id. chains [15.27ms]
+(pass) Id Citation Resolution with Section Substitution > should handle complex citation patterns [13.51ms]
+
+tests/resolve.test.ts:
+(pass) Citation Resolution > resolveCitations > should resolve full citations to resources [0.27ms]
+(pass) Citation Resolution > resolveCitations > should resolve short citations to matching full citations [0.38ms]
+(pass) Citation Resolution > resolveCitations > should resolve id citations to previous citation [0.08ms]
+(pass) Citation Resolution > resolveCitations > should not resolve id citations with invalid pin cites [0.04ms]
+(pass) Citation Resolution > resolveCitations > should resolve supra citations by antecedent [0.08ms]
+(pass) Citation Resolution > resolveCitations > should handle multiple resources [0.08ms]
+(pass) Citation Resolution > resolveCitations > should handle unresolvable citations [0.02ms]
+(pass) Citation Resolution > Custom Resolution Functions > should accept custom resolution functions [0.06ms]
+
+tests/tokenizer-extensibility.test.ts:
+(pass) Tokenizer Extensibility > Base Tokenizer Extension Methods > should add single extractor [0.14ms]
+(pass) Tokenizer Extensibility > Base Tokenizer Extension Methods > should add multiple extractors [0.38ms]
+(pass) Tokenizer Extensibility > Base Tokenizer Extension Methods > should remove specific extractor [0.12ms]
+(pass) Tokenizer Extensibility > Base Tokenizer Extension Methods > should remove extractors by predicate [0.12ms]
+(pass) Tokenizer Extensibility > Base Tokenizer Extension Methods > should clear all extractors [0.03ms]
+(pass) Tokenizer Extensibility > Base Tokenizer Extension Methods > should get copy of extractors [0.04ms]
+(pass) Tokenizer Extensibility > Base Tokenizer Extension Methods > should set new extractors [0.06ms]
+(pass) Tokenizer Extensibility > Pattern Modification > should modify extractor patterns [0.43ms]
+(pass) Tokenizer Extensibility > Pattern Modification > should find extractors by pattern [0.13ms]
+(pass) Tokenizer Extensibility > Pattern Modification > should find extractors by string [0.09ms]
+(pass) Tokenizer Extensibility > CustomTokenizer > should create simple citation patterns [0.54ms]
+(pass) Tokenizer Extensibility > CustomTokenizer > should create year-page format patterns [0.77ms]
+(pass) Tokenizer Extensibility > CustomTokenizer > should create hyphen format patterns [0.25ms]
+(pass) Tokenizer Extensibility > CustomTokenizer > should add custom extractors [0.08ms]
+(pass) Tokenizer Extensibility > CustomTokenizer > should modify reporter punctuation [0.16ms]
+(pass) Tokenizer Extensibility > CustomTokenizer > should add multiple reporters at once [0.55ms]
+(pass) Tokenizer Extensibility > CustomTokenizer > should clone tokenizer [0.09ms]
+(pass) Tokenizer Extensibility > CustomTokenizer > should create filtered tokenizer [0.07ms]
+(pass) Tokenizer Extensibility > CustomTokenizer > should provide extractor statistics [0.16ms]
+(pass) Tokenizer Extensibility > RegexPatternBuilder > should create patterns with alternative punctuation [0.07ms]
+(pass) Tokenizer Extensibility > RegexPatternBuilder > should create flexible reporter patterns [0.03ms]
+(pass) Tokenizer Extensibility > RegexPatternBuilder > should create optional patterns [0.02ms]
+(pass) Tokenizer Extensibility > RegexPatternBuilder > should create year patterns [0.02ms]
+(pass) Tokenizer Extensibility > RegexPatternBuilder > should create volume patterns [0.04ms]
+(pass) Tokenizer Extensibility > RegexPatternBuilder > should create page patterns [0.03ms]
+(pass) Tokenizer Extensibility > AhocorasickTokenizer Dynamic Updates > should rebuild string maps when extractors are added [0.21ms]
+(pass) Tokenizer Extensibility > AhocorasickTokenizer Dynamic Updates > should rebuild string maps when extractors are removed [0.05ms]
+(pass) Tokenizer Extensibility > AhocorasickTokenizer Dynamic Updates > should handle pattern modifications [0.11ms]
+(pass) Tokenizer Extensibility > Integration with getCitations > should work with custom tokenizers in getCitations [0.39ms]
+(pass) Tokenizer Extensibility > Integration with getCitations > should work with modified patterns [0.35ms]
+
+tests/tokenizer.test.ts:
+(pass) Tokenizer > BaseTokenExtractor > should extract simple matches [0.04ms]
+(pass) Tokenizer > BaseTokenExtractor > should handle case-insensitive matching [0.03ms]
+(pass) Tokenizer > BaseTokenExtractor > should create tokens from matches [0.11ms]
+(pass) Tokenizer > DefaultTokenizer > should tokenize text with Id citations [5.20ms]
+(pass) Tokenizer > DefaultTokenizer > should tokenize text with Supra citations [9.76ms]
+(pass) Tokenizer > DefaultTokenizer > should tokenize text with stop words [4.03ms]
+(pass) Tokenizer > DefaultTokenizer > should tokenize text with section symbols [3.27ms]
+(pass) Tokenizer > DefaultTokenizer > should handle overlapping tokens [4.51ms]
+(pass) Tokenizer > DefaultTokenizer > should preserve text between tokens [9.01ms]
+
+ 423 pass
+ 0 fail
+ 2146 expect() calls
+Ran 423 tests across 29 files. [8.66s]

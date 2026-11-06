@@ -14,6 +14,18 @@ local signed-boundary evidence; it does not claim whole-packet completion or
 production readiness. Remaining comparison/deployment milestones retain their
 SPEC gates. Prefer local fixtures with no incremental cloud resources.
 
+### Accepted dependency observation refused, 2026-11-05
+
+The first accepted-source diagnostic run42126399874 failed after successful
+source inspection. Its bounded104-byte refusal is privately retained and hashed;
+the source upload was skipped. The runtime cause and earlier installed-tree
+digest drift remain unknown. `research/installed-dependency-refusal-retention-2026-11-05.json`
+binds the run, refusal, repair source and unchanged authority/resource limits.
+Keep source reports after later diagnostic refusal and distinguish fixed error
+categories without retaining exception details. Hosted regression proof and
+primary acceptance must precede fresh bound observations; do not repeat the
+unchanged source. Both goals and all whole-goal criteria remain incomplete.
+
 ## Phases
 
 | Phase | Status | Work | Exit criteria |
@@ -1442,3 +1454,57 @@ attributed repair before independent producer approval and signed trials.
 See `research/installed-dependency-diagnostic-preparation-2026-11-03.json`. This
 checkpoint does not complete a phase, qualify a task or prove any acceptance
 criterion.
+
+### Pilot directory and root mutation guard, 2026-11-03
+
+Source inspection found that the read-only snapshot omitted directories and its
+package root. A mode-only directory change or an added empty directory could
+therefore leave the comparison unchanged. The internal snapshot now includes
+those entries and complete regular-file modes, and enforces its entry limit
+for every visited child. Nine new orchestration fault cases exercise mode-only
+changes, empty directories, the bound, refusal without a receipt and cleanup.
+
+The isolated implementation is prepared for hosted CI; no local quality suite
+or pilot execution is used as proof. Current source-bound native permission
+counterexamples motivate the review but do not prove this supervisory change.
+Fresh hosted test/check/review results remain required. All whole-goal criteria
+and signed production, epoch, role and representative-window work remain open.
+
+### Signed-overlay minimum-key preparation, 2026-11-04 UTC
+
+Source review found that the shared signed-root projection omitted native
+32-byte minimum-key enforcement. The projector and exact verifier now prepare
+`longerSignatureKey: true` in both layouts while preserving unrelated flags.
+One new four-row regression and extended preservation/identity/omission controls
+are authored; no local suite ran and current hosted proof is pending. See
+`research/signed-key-floor-review-2026-11-04.json`. The recorded native 168-case
+experiment is historical evidence, not a fresh run. No live signing, credential,
+profile qualification, phase completion or representative window is granted.
+
+### Hold readiness after a failed check capture, 2026-11-03
+
+[The regression receipt](research/readiness-unread-check-regression-2026-11-03.json)
+records a live closeout that printed ready while an independent exact-head read
+still showed two CI failures. The collector retained a typed read failure, but
+the shared status/completion readiness policy ignored it. Require a complete
+read before the checks criterion can pass and label an incomplete check summary. Authored partition, zero-count and
+recovery regressions await hosted CI; no local test or quality suite ran.
+
+Keep the observed PR held, the inherited main repair separate, and every trust
+acceptance criterion open. This repair changes no cache or producer authority.
+
+### Process creation-mask identity repair, 2026-11-03
+
+A supported runtime identity omitted umask despite its effect on file creation
+and cached output restoration. Add a bounded schema field and read it through
+the existing toolchain discovery process. New fingerprints include an observed
+mask; older receipts retain an absent field and their historical serialization.
+Mask-only changes alter toolchain identity while preserving computation config.
+
+Four new hosted regression cases cover real child inheritance without a parent
+mask change, invalid native output, persisted mask bounds, and old/new/different
+mask identities. They are authored, not locally executed. Push to hosted CI
+without verify/publish under the operator instruction; retain explicit local
+gate skips and require actual current-head results. Existing native permission
+counterexamples, task/profile qualification, shared #2682 repair, protected
+producer execution, rollout windows and all nine whole-goal criteria stay open.

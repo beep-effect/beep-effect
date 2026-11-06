@@ -1,6 +1,6 @@
 # Claim Checker Performance Plan
 
-Status: active. The current inspection candidate recovers41/538 exact structures, parses537/538 and abstains on455/538. All original37 and all prior39passes are retained. Nominal/relation grammar improves matched elements724->734 and edges2107->2124 with no per-claim component regressions. Hierarchy PR2697 landed into the parent feature branch2685; accepted shared main repair2682 is being incorporated. Independent source audit provides24prospective families/567nodes and54clear source alternatives, while final references and metric truth remain unaccepted. All usefulness and final delivery gates remain required.
+Status: active. The measured composed nominal/predicate/policy/ownership candidate retains 43/538 exact structures, parses 537/538 and abstains on 453/538. All original 37 and every prior 41 pass remain; two owner-context gains are in one family. Accepted main metadata is admitted prospectively with exact old bytes archived; all 1,213 original artifacts verify. Full 24-family/567-claim source frame remains fixed, with 572 context nodes; independent source-context assessments are underway, new structural references/truth remain unaccepted. Broader clause-role implementation is separate and unmeasured. Every usefulness and final delivery gate remains required.
 
 ## P0 — Baseline and evaluation integrity
 

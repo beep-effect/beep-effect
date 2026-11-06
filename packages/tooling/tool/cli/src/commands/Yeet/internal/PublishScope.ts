@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
@@ -15,11 +17,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
-import {
-  gitPathListFromNulOutput,
-  runRepoCommandCapture,
-  sortedUniquePaths,
-} from "../../../internal/repo-run/index.ts";
+import { adaptGitKitError, gitPathListFromNulOutput, sortedUniquePaths } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
   QualityIssue,
@@ -29,22 +27,24 @@ import {
 } from "../Yeet.schemas.ts";
 import { runIdForContext } from "./ArtifactPaths.ts";
 import {
+  changedYeetPaths,
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
   collectUntrackedPaths,
+  countYeetRevisions,
   currentCommitSha,
-  optionFromNonEmpty,
-  runGitOutput,
-  runGitPathList,
+  resolveYeetMergeBase,
+  resolveYeetRev,
+  YeetChangedPathsQuery,
+  yeetGitKitError,
 } from "./GitExec.ts";
 import { writeIssueArtifacts } from "./IssueArtifacts.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { YeetBaseFreshness, YeetStashState } from "./Verdict.ts";
-import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { GitCommandErrorAdapter, RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetPublishIntent, YeetRunOptions } from "../Yeet.schemas.ts";
 
 const protectedPublishBranches: ReadonlyArray<string> = ["main", "master", "HEAD"];
@@ -458,29 +458,39 @@ export const stashUnstagedWorktree = Effect.fn("Yeet.stashUnstagedWorktree")(fun
   // --keep-index preserves the reviewed staged index so the parking happens
   // before `git commit`: residue is removed from the worktree first, so a
   // commit hook (e.g. `git add .`) can only ever stage the reviewed files.
-  yield* runGitOutput(context.repoRoot, ["stash", "push", "--keep-index", "--include-untracked", "-m", marker]);
-  const stashSha = yield* runGitOutput(context.repoRoot, ["rev-parse", "stash@{0}"]).pipe(Effect.map(Str.trim));
+  const git = yield* Git;
+  yield* git
+    .stashPush(context.repoRoot, { message: marker, includeUntracked: true, keepIndex: true })
+    .pipe(Effect.mapError(yeetGitKitError(GitCommand.stashPush(marker, true, [], true))));
+  const stashSha = yield* resolveYeetRev(context.repoRoot, "stash@{0}");
   yield* Console.log(
     `[yeet] staged-only: parked ${unstagedPaths.length + untrackedPaths.length} residue path(s) in stash "${marker}"`
   );
   return O.some(YeetStashState.make({ createdAt, marker, stashSha }));
 });
 
-const locateStashRef = Effect.fn("Yeet.locateStashRef")(function* (
+const stashIndexPattern = /^stash@\{(\d+)\}$/u;
+
+// `stash@{<n>}` to `<n>`, the index `Git.stashPop` takes.
+const stashIndexFromRef = (ref: string): O.Option<number> =>
+  pipe(
+    O.fromNullishOr(stashIndexPattern.exec(ref)),
+    O.flatMap((match) => A.get(match, 1)),
+    O.map(Number)
+  );
+
+const locateStashIndex = Effect.fn("Yeet.locateStashIndex")(function* (
   repoRoot: string,
   stash: YeetStashState
-): Effect.fn.Return<
-  O.Option<string>,
-  YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const listing = yield* runGitOutput(repoRoot, ["stash", "list", "--format=%H %gd %s"]);
+): Effect.fn.Return<O.Option<number>, YeetCommandError, Git> {
+  const git = yield* Git;
+  const entries = yield* git.stashList(repoRoot).pipe(Effect.mapError(yeetGitKitError(GitCommand.stashList())));
   return pipe(
-    Str.split(/\r?\n/u)(listing),
-    A.map(Str.trim),
-    A.filter(Str.isNonEmpty),
-    A.findFirst((line) => Str.startsWith(stash.stashSha)(line) || Str.includes(stash.marker)(line)),
-    O.flatMap((line) => A.get(Str.split(/\s+/u)(line), 1))
+    entries,
+    A.findFirst(
+      (entry) => Str.startsWith(stash.stashSha)(entry.sha) || pipe(entry.message, Str.includes(stash.marker))
+    ),
+    O.flatMap((entry) => stashIndexFromRef(entry.ref))
   );
 });
 
@@ -523,13 +533,14 @@ const locateStashRef = Effect.fn("Yeet.locateStashRef")(function* (
 export const restoreStashedWorktree = Effect.fn("Yeet.restoreStashedWorktree")(function* (
   context: RepoRunContext,
   stash: YeetStashState
-): Effect.fn.Return<void, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, never, Git> {
   const failureDetail = yield* Effect.gen(function* () {
-    const stashRef = yield* locateStashRef(context.repoRoot, stash);
-    if (O.isNone(stashRef)) {
+    const stashIndex = yield* locateStashIndex(context.repoRoot, stash);
+    if (O.isNone(stashIndex)) {
       return `stash not found by sha or marker; inspect "git stash list" for "${stash.marker}"`;
     }
-    yield* runGitOutput(context.repoRoot, ["stash", "pop", stashRef.value]);
+    const git = yield* Git;
+    yield* git.stashPop(context.repoRoot, { index: stashIndex.value });
     return "";
   }).pipe(
     Effect.catch((error) =>
@@ -664,9 +675,7 @@ export const restoreStashedWorktreeForTesting = restoreStashedWorktree;
  */
 export const restorePublishStashOnFailure =
   (scope: { readonly context: RepoRunContext; readonly stash: O.Option<YeetStashState> }) =>
-  <A, E, R>(
-    effect: Effect.Effect<A, E, R>
-  ): Effect.Effect<A, E, R | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Git> =>
     O.match(scope.stash, {
       onNone: () => effect,
       onSome: (state) => Effect.onError(effect, () => restoreStashedWorktree(scope.context, state)),
@@ -708,32 +717,28 @@ export const assessBaseFreshness = Effect.fn("Yeet.assessBaseFreshness")(functio
   YeetCommandError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
-  const mergeBase = yield* runGitOutput(context.repoRoot, ["merge-base", context.base, "HEAD"]).pipe(
-    Effect.mapBoth({
-      onFailure: YeetCommandError.new(
+  const mergeBase = yield* resolveYeetMergeBase(context.repoRoot, context.base, "HEAD").pipe(
+    Effect.mapError(
+      YeetCommandError.new(
         `yeet publish could not compute a merge-base between ${context.base} and HEAD. Rebase onto the base ref before publishing.`
-      ),
-      onSuccess: Str.trim,
-    })
+      )
+    )
   );
-  const behindCount = yield* runGitOutput(context.repoRoot, [
-    "rev-list",
-    "--count",
-    `${mergeBase}..${context.base}`,
-  ]).pipe(Effect.map((output) => Number(Str.trim(output))));
+  const behindCount = yield* countYeetRevisions(context.repoRoot, `${mergeBase}..${context.base}`);
   if (behindCount === 0) {
     return YeetBaseFreshness.make({ behindCount: 0, mergeBase, overlappingPaths: [] });
   }
 
-  const committedPaths = yield* runGitPathList(context.repoRoot, ["diff", "--name-only", "-z", `${mergeBase}..HEAD`]);
+  const committedPaths = yield* changedYeetPaths(
+    context.repoRoot,
+    YeetChangedPathsQuery.make({ base: mergeBase, head: "HEAD" })
+  );
   const stagedFreshnessPaths = yield* collectStagedPublishPaths(context.repoRoot);
   const branchPaths = sortedUniquePaths([...committedPaths, ...stagedFreshnessPaths]);
-  const basePaths = yield* runGitPathList(context.repoRoot, [
-    "diff",
-    "--name-only",
-    "-z",
-    `${mergeBase}..${context.base}`,
-  ]);
+  const basePaths = yield* changedYeetPaths(
+    context.repoRoot,
+    YeetChangedPathsQuery.make({ base: mergeBase, head: context.base })
+  );
   return YeetBaseFreshness.make({
     behindCount,
     mergeBase,
@@ -836,24 +841,34 @@ export const enforceBaseFreshness = Effect.fn("Yeet.enforceBaseFreshness")(funct
   });
 });
 
+// `--abbrev-ref` spelling of a full upstream refname: `refs/remotes/origin/x` is `origin/x`, a local
+// upstream `refs/heads/x` is `x`.
+const abbreviateUpstreamRef = (refname: string): string =>
+  pipe(refname, Str.replace(/^refs\/remotes\//u, ""), Str.replace(/^refs\/heads\//u, ""));
+
+// A failure git reported (no branch, no upstream, not a repository) reads as no upstream, as the
+// `rev-parse --abbrev-ref --symbolic-full-name @{u}` capture's non-zero exit did; a run git never
+// reached keeps that capture's spawn-failure wording.
+const upstreamFailureAdapter: GitCommandErrorAdapter<Effect.Effect<O.Option<string>, YeetCommandError>> = {
+  onSpawnFailure: () => flow(YeetCommandError.new("Failed to inspect current branch upstream."), Effect.fail),
+  onNonZeroExit: () => Effect.succeedNone,
+  onTruncated: O.none(),
+};
+
 const collectCurrentUpstreamBranch = Effect.fn("Yeet.collectCurrentUpstreamBranch")(function* (
   repoRoot: string
-): Effect.fn.Return<
-  O.Option<string>,
-  YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const result = yield* runRepoCommandCapture(
-    "git",
-    ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
-    repoRoot
-  ).pipe(Effect.mapError(YeetCommandError.new("Failed to inspect current branch upstream.")));
-
-  if (result.exitCode !== 0) {
+): Effect.fn.Return<O.Option<string>, YeetCommandError, Git> {
+  const git = yield* Git;
+  const branch = yield* git
+    .currentBranch(repoRoot)
+    .pipe(Effect.catch((error) => adaptGitKitError(error, GitCommand.currentBranch(), upstreamFailureAdapter)));
+  if (O.isNone(branch)) {
     return O.none();
   }
-
-  return optionFromNonEmpty(result.output);
+  return yield* git.upstream(repoRoot, branch.value).pipe(
+    Effect.map(O.map(abbreviateUpstreamRef)),
+    Effect.catch((error) => adaptGitKitError(error, GitCommand.upstream(branch.value), upstreamFailureAdapter))
+  );
 });
 
 /**
@@ -887,7 +902,7 @@ const collectCurrentUpstreamBranch = Effect.fn("Yeet.collectCurrentUpstreamBranc
  */
 export const warnOnMismatchedPublishUpstream = Effect.fn("Yeet.warnOnMismatchedPublishUpstream")(function* (
   context: RepoRunContext
-): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, Git> {
   const upstream = yield* collectCurrentUpstreamBranch(context.repoRoot);
   if (O.isNone(upstream)) {
     return;
@@ -907,17 +922,15 @@ const collectExistingCommitPublishIntent = Effect.fn("Yeet.collectExistingCommit
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const remoteRef = `origin/${context.branch}`;
-  const remoteRefExists = yield* runRepoCommandCapture(
-    "git",
-    ["show-ref", "--verify", "--quiet", `refs/remotes/${remoteRef}`],
-    context.repoRoot
-  ).pipe(Effect.mapError(YeetCommandError.new(`Failed to inspect publish target ${remoteRef}.`)));
-  const comparisonRef = remoteRefExists.exitCode === 0 ? remoteRef : context.base;
-  const aheadCount = yield* runGitOutput(context.repoRoot, ["rev-list", "--count", `${comparisonRef}..HEAD`]).pipe(
-    Effect.mapBoth({
-      onFailure: YeetCommandError.new(`Failed to inspect local commits ahead of ${comparisonRef}.`),
-      onSuccess: (output) => Number(Str.trim(output)),
-    })
+  const git = yield* Git;
+  // `cat-file -e` answers the `show-ref --verify` probe; the two differ only for a ref whose object is
+  // missing, which reads absent here and falls back to the base (W7a Y10, SPEC D-18).
+  const remoteRefExists = yield* git
+    .refExists(context.repoRoot, `refs/remotes/${remoteRef}`)
+    .pipe(Effect.mapError(YeetCommandError.new(`Failed to inspect publish target ${remoteRef}.`)));
+  const comparisonRef = remoteRefExists ? remoteRef : context.base;
+  const aheadCount = yield* countYeetRevisions(context.repoRoot, `${comparisonRef}..HEAD`).pipe(
+    Effect.mapError(YeetCommandError.new(`Failed to inspect local commits ahead of ${comparisonRef}.`))
   );
   if (aheadCount === 0) {
     return O.none();
@@ -925,7 +938,7 @@ const collectExistingCommitPublishIntent = Effect.fn("Yeet.collectExistingCommit
 
   const [commitSha, paths] = yield* Effect.all([
     currentCommitSha(context),
-    runGitPathList(context.repoRoot, ["diff", "--name-only", "-z", `${comparisonRef}..HEAD`]),
+    changedYeetPaths(context.repoRoot, YeetChangedPathsQuery.make({ base: comparisonRef, head: "HEAD" })),
   ]);
   return O.some(YeetExistingCommitPublishIntent.make({ commitSha, paths }));
 });
@@ -1203,29 +1216,42 @@ export const stageReviewedPublishIntent = Effect.fn("Yeet.stageReviewedPublishIn
   const existingPaths = yield* collectExistingPublishIntentPaths(context, intent);
   // A reviewed path that is on disk but absent from the index was staged as an
   // untrack (`git rm --cached`); `git add` would silently reverse it.
+  const git = yield* Git;
   const indexedPaths = A.isReadonlyArrayEmpty(existingPaths)
     ? existingPaths
-    : yield* runGitPathList(context.repoRoot, ["ls-files", "--cached", "-z", "--", ...existingPaths]);
+    : yield* git.lsFiles(context.repoRoot, { pathspec: existingPaths }).pipe(
+        Effect.mapBoth({
+          onFailure: yeetGitKitError(GitCommand.lsFiles(existingPaths)),
+          onSuccess: flow(
+            A.map((entry) => entry.path),
+            sortedUniquePaths
+          ),
+        })
+      );
   const restagePaths = publishRestagePaths(intent.paths, indexedPaths);
   if (!A.isReadonlyArrayEmpty(restagePaths)) {
-    const ignoredRestagePaths = yield* runGitPathList(context.repoRoot, [
-      "ls-files",
-      "--cached",
-      "--ignored",
-      "--exclude-standard",
-      "-z",
-      "--",
-      ...restagePaths,
-    ]);
+    // The restage paths are index paths, so `check-ignore --no-index` answers the question
+    // `ls-files --cached --ignored --exclude-standard` asked: which tracked paths match an ignore rule
+    // (W7a Y14, SPEC D-18).
+    const ignoredRestagePaths = yield* git.checkIgnore(context.repoRoot, restagePaths, { noIndex: true }).pipe(
+      Effect.mapBoth({
+        onFailure: yeetGitKitError(GitCommand.checkIgnore(restagePaths, true)),
+        onSuccess: sortedUniquePaths,
+      })
+    );
     const regularRestagePaths = pipe(
       restagePaths,
       A.filter((filePath) => !A.contains(ignoredRestagePaths, filePath))
     );
     if (!A.isReadonlyArrayEmpty(regularRestagePaths)) {
-      yield* runGitOutput(context.repoRoot, ["add", "--", ...regularRestagePaths]);
+      yield* git
+        .add(context.repoRoot, regularRestagePaths)
+        .pipe(Effect.mapError(yeetGitKitError(GitCommand.add(regularRestagePaths))));
     }
     if (!A.isReadonlyArrayEmpty(ignoredRestagePaths)) {
-      yield* runGitOutput(context.repoRoot, ["add", "--force", "--", ...ignoredRestagePaths]);
+      yield* git
+        .add(context.repoRoot, ignoredRestagePaths, { force: true })
+        .pipe(Effect.mapError(yeetGitKitError(GitCommand.add(ignoredRestagePaths, true))));
     }
   }
   yield* validatePublishIntentStillSafe(context, intent, stagedOnly);

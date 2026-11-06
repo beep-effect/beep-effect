@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   CapabilityProjection,
   capabilityDoctorFindings,
@@ -47,6 +48,7 @@ import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import { completionIoFixture } from "./support/CompletionIo.ts";
 
 const decodeGoalManifest = S.decodeEffect(GoalManifest);
 const encodeGoalCompletionReceiptJson = S.encodeEffect(S.fromJsonString(GoalCompletionReceipt));
@@ -57,6 +59,8 @@ const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Resu
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
+  // The doctor's git advisories read history through the kit (W7b, SPEC D-19).
+  Git.layer.pipe(Layer.provide(NodeServices.layer)),
   layerGoalCompletionReceiptStoreMemory,
   NodeCrypto.layer,
   PacketEventStoreLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
@@ -179,9 +183,10 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         runGoalsCommand(["doctor"]).pipe(
           Effect.provideService(
             GoalCompletionIo,
-            GoalCompletionIo.of({
-              git: Effect.fn("GoalsDoctorTest.offlineGit")(() => Effect.succeed("git@github.com:example/repo.git")),
-              github: Effect.fn("GoalsDoctorTest.offlineGitHub")(() =>
+            completionIoFixture({
+              manifest: Effect.succeed(""),
+              origin: Effect.succeed("git@github.com:example/repo.git"),
+              respond: Effect.fn("GoalsDoctorTest.offlineGitHub")(() =>
                 Effect.sync(() => {
                   networkReads += 1;
                 }).pipe(Effect.andThen(Effect.die("offline network read")))
@@ -227,9 +232,10 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         runGoalsCommand(["doctor"]).pipe(
           Effect.provideService(
             GoalCompletionIo,
-            GoalCompletionIo.of({
-              git: Effect.fn("GoalsDoctorTest.proposalGit")(() => Effect.succeed("git@github.com:example/repo.git")),
-              github: Effect.fn("GoalsDoctorTest.proposalGitHub")(() => Effect.die("offline proposal used GitHub")),
+            completionIoFixture({
+              manifest: Effect.succeed(""),
+              origin: Effect.succeed("git@github.com:example/repo.git"),
+              respond: Effect.fn("GoalsDoctorTest.proposalGitHub")(() => Effect.die("offline proposal used GitHub")),
             })
           )
         )
@@ -272,9 +278,10 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         runGoalsCommand(["doctor"]).pipe(
           Effect.provideService(
             GoalCompletionIo,
-            GoalCompletionIo.of({
-              git: Effect.fn("GoalsDoctorTest.closeoutGit")(() => Effect.succeed("git@github.com:example/repo.git")),
-              github: Effect.fn("GoalsDoctorTest.closeoutGitHub")(() => Effect.die("offline closeout used GitHub")),
+            completionIoFixture({
+              manifest: Effect.succeed(""),
+              origin: Effect.succeed("git@github.com:example/repo.git"),
+              respond: Effect.fn("GoalsDoctorTest.closeoutGitHub")(() => Effect.die("offline closeout used GitHub")),
             })
           )
         )
@@ -391,9 +398,10 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           runGoalsCommand(["doctor"]).pipe(
             Effect.provideService(
               GoalCompletionIo,
-              GoalCompletionIo.of({
-                git: Effect.fn("GoalsDoctorTest.wordingGit")(() => Effect.succeed("git@github.com:example/repo.git")),
-                github: Effect.fn("GoalsDoctorTest.wordingGitHub")(() =>
+              completionIoFixture({
+                manifest: Effect.succeed(""),
+                origin: Effect.succeed("git@github.com:example/repo.git"),
+                respond: Effect.fn("GoalsDoctorTest.wordingGitHub")(() =>
                   Effect.die("offline receipt read used GitHub")
                 ),
               })
@@ -409,6 +417,118 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         }
       })
     )
+  );
+  it.effect("a verified proposal reads as adoption pending until set-status commits it", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* runGit(["init", "-b", "main"]);
+      const verdictRef = GoalAcceptanceEvidenceRef.make({
+        kind: "yeet-verdict",
+        ref: ".beep/yeet/verdict.json",
+        gating: true,
+      });
+      const manifest = yield* decodeGoalManifest({
+        initiative: { id: "pending", status: "active" },
+        lifecycle: "active",
+        completionGate: { ...COMPLETION_GATE, acceptanceEvidence: [verdictRef] },
+        proposedCloseout: { status: "completed-retained", finalPullRequest: 7 },
+      });
+      const manifestJson = yield* encodeGoalManifestJson(manifest);
+      yield* writeProjectFile("goals/pending/ops/manifest.json", manifestJson);
+      yield* writeProjectFile("goals/pending/README.md", "# Pending\n\nLifecycle: `active`\n");
+      yield* writeBaseline([]);
+      const digest = yield* goalCompletionDeclarationDigest(manifest);
+      const time = DateTime.makeUnsafe("2026-10-06T01:00:00Z");
+      const verifiedCheck = (ref: GoalAcceptanceEvidenceRef) =>
+        GoalEvidenceCheck.make({ ref, outcome: "verified", observedHead: O.some("accepted-head"), detail: "Green" });
+      const receipt = GoalCompletionReceipt.make({
+        schemaVersion: "goal-completion-receipt/v1",
+        repository: "example/repo",
+        packet: "pending",
+        declarationDigest: digest,
+        acceptedDeclarationDigest: O.some(digest),
+        requiredChecks: O.some(
+          GoalRequiredCheckSnapshot.make({
+            contexts: ["Lint"],
+            sources: ["repos/{owner}/{repo}/rulesets/42/history/1"],
+            effectiveAt: time,
+            inventoryComplete: true,
+            mergeTimeInventory: O.some(
+              GoalMergeTimeInventory.make({
+                source: "repos/{owner}/{repo}/rulesets/rule-suites/1",
+                ruleSuiteId: 1,
+                ref: "refs/heads/main",
+                afterSha: "merge-result",
+                pushedAt: time,
+                result: "pass",
+                ruleSources: [
+                  GoalMergeTimeRuleSource.make({
+                    sourceType: "ruleset",
+                    rulesetId: O.some(42),
+                    name: O.some("main"),
+                    enforcement: "active",
+                    requiredStatusChecks: O.some("pass"),
+                    survives: true,
+                    version: O.some("repos/{owner}/{repo}/rulesets/42/history/1"),
+                  }),
+                ],
+              })
+            ),
+          })
+        ),
+        requiredCheckFacts: [
+          GoalRequiredCheckFact.make({
+            context: "Lint",
+            head: "accepted-head",
+            checkRunId: O.some(1),
+            conclusion: "success",
+            outcome: "verified",
+            source: "check-run",
+          }),
+        ],
+        finalPullRequest: 7,
+        acceptedHead: O.some("accepted-head"),
+        merge: O.some(
+          GoalMergeResult.make({
+            mergeCommit: "merge-result",
+            tree: "merge-tree",
+            mergedAt: time,
+            method: O.none(),
+            baseRef: "main",
+          })
+        ),
+        evidence: [
+          verifiedCheck(
+            GoalAcceptanceEvidenceRef.make({ kind: "hosted-required-checks", ref: "required", gating: true })
+          ),
+          verifiedCheck(verdictRef),
+        ],
+        nonRequiredReds: [],
+        subClaims: [],
+        outcome: "verified",
+        verifiedAt: time,
+      });
+      yield* writeProjectFile(
+        ".beep/goals/completion-receipts.ndjson",
+        `${yield* encodeGoalCompletionReceiptJson(receipt)}\n`
+      );
+      const output = yield* captureOutput(
+        runGoalsCommand(["doctor"]).pipe(
+          Effect.provideService(
+            GoalCompletionIo,
+            completionIoFixture({
+              manifest: Effect.succeed(""),
+              origin: Effect.succeed("git@github.com:example/repo.git"),
+              respond: Effect.fn("GoalsDoctorTest.adoptionGitHub")(() => Effect.die("offline adoption used GitHub")),
+            })
+          )
+        )
+      );
+      // Proof alone never closes the packet: the note says so and the advisory names the adoption command.
+      expect(output).toContain("[goals:doctor] note: pending: completed-retained (verified via #7, adoption pending)");
+      expect(output).toContain("pending [closeout-adoption-pending]");
+      expect(output).toContain("bun run beep goals set-status pending completed-retained");
+    })
   );
   it.effect("stored receipts name a known red and unreadable merge facts plainly", () =>
     Effect.forEach(
@@ -480,9 +600,10 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           runGoalsCommand(["doctor"]).pipe(
             Effect.provideService(
               GoalCompletionIo,
-              GoalCompletionIo.of({
-                git: Effect.fn("GoalsDoctorTest.messageGit")(() => Effect.succeed("git@github.com:example/repo.git")),
-                github: Effect.fn("GoalsDoctorTest.messageGitHub")(() =>
+              completionIoFixture({
+                manifest: Effect.succeed(""),
+                origin: Effect.succeed("git@github.com:example/repo.git"),
+                respond: Effect.fn("GoalsDoctorTest.messageGitHub")(() =>
                   Effect.die("offline receipt read used GitHub")
                 ),
               })
@@ -565,9 +686,10 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         runGoalsCommand(["doctor"]).pipe(
           Effect.provideService(
             GoalCompletionIo,
-            GoalCompletionIo.of({
-              git: Effect.fn("GoalsDoctorTest.storedGit")(() => Effect.succeed("git@github.com:example/repo.git")),
-              github: Effect.fn("GoalsDoctorTest.storedGitHub")(() => Effect.die("offline receipt read used GitHub")),
+            completionIoFixture({
+              manifest: Effect.succeed(""),
+              origin: Effect.succeed("git@github.com:example/repo.git"),
+              respond: Effect.fn("GoalsDoctorTest.storedGitHub")(() => Effect.die("offline receipt read used GitHub")),
             })
           )
         )
@@ -684,9 +806,12 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           runGoalsCommand(["doctor"]).pipe(
             Effect.provideService(
               GoalCompletionIo,
-              GoalCompletionIo.of({
-                git: Effect.fn("GoalsDoctorTest.phaseGit")(() => Effect.succeed("git@github.com:example/repo.git")),
-                github: Effect.fn("GoalsDoctorTest.phaseGitHub")(() => Effect.die("offline phase fixture used GitHub")),
+              completionIoFixture({
+                manifest: Effect.succeed(""),
+                origin: Effect.succeed("git@github.com:example/repo.git"),
+                respond: Effect.fn("GoalsDoctorTest.phaseGitHub")(() =>
+                  Effect.die("offline phase fixture used GitHub")
+                ),
               })
             ),
             Effect.exit,

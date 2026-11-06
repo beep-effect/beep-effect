@@ -308,6 +308,55 @@ const queryPglite = <A>(
     .pipe(Effect.mapError(failureOf("store-query-failed")), Effect.flatMap(decodeRows(decode)));
 
 /**
+ * Local claim checks with public-document acquisition explicitly unavailable.
+ *
+ * **Details**
+ * The read-only toolkit uses this composition for caller-supplied claims and
+ * source ledgers. Both published-source methods fail through their typed port
+ * errors; this layer requires no HTTP client or external credentials.
+ *
+ * **Example** (Compose local claim checks)
+ * ```ts
+ * import { PracticeKgLocalClaimChecksLive } from "@beep/law-practice-server"
+ * import * as Layer from "effect/Layer"
+ * console.log(Layer.isLayer(PracticeKgLocalClaimChecksLive))
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const PracticeKgLocalClaimChecksLive: Layer.Layer<ClaimSelfCheck | ClaimInspection> = Layer.merge(
+  ClaimSelfCheckLive.pipe(
+    Layer.provide(
+      Layer.succeed(UsptoClaims, {
+        claims: Effect.fn("ClaimSelfCheckLocal.publicClaimsUnavailable")(() =>
+          Effect.fail(
+            UsptoClaimsError.make({
+              reason: "unavailable",
+              message: "This local review tool accepts supplied claims and does not fetch USPTO documents.",
+            })
+          )
+        ),
+      })
+    )
+  ),
+  ClaimInspectionWithLexicalEvidenceLive.pipe(
+    Layer.provide(
+      Layer.succeed(UsptoClaimInputs, {
+        inputs: Effect.fn("ClaimInspectionLocal.publicInputsUnavailable")(() =>
+          Effect.fail(
+            UsptoClaimsError.make({
+              reason: "unavailable",
+              message: "This local inspection tool accepts supplied source records and does not fetch USPTO documents.",
+            })
+          )
+        ),
+      })
+    )
+  )
+);
+
+/**
  * Live toolkit handlers over injected PGlite SQL, DuckDB, and bundle metadata.
  *
  * **Details**
@@ -600,38 +649,4 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
       ),
     });
   })
-).pipe(
-  Layer.provide(
-    ClaimSelfCheckLive.pipe(
-      Layer.provide(
-        Layer.succeed(UsptoClaims, {
-          claims: Effect.fn("ClaimSelfCheckLocal.publicClaimsUnavailable")(() =>
-            Effect.fail(
-              UsptoClaimsError.make({
-                reason: "unavailable",
-                message: "This local review tool accepts supplied claims and does not fetch USPTO documents.",
-              })
-            )
-          ),
-        })
-      )
-    )
-  ),
-  Layer.provide(
-    ClaimInspectionWithLexicalEvidenceLive.pipe(
-      Layer.provide(
-        Layer.succeed(UsptoClaimInputs, {
-          inputs: Effect.fn("ClaimInspectionLocal.publicInputsUnavailable")(() =>
-            Effect.fail(
-              UsptoClaimsError.make({
-                reason: "unavailable",
-                message:
-                  "This local inspection tool accepts supplied source records and does not fetch USPTO documents.",
-              })
-            )
-          ),
-        })
-      )
-    )
-  )
-);
+).pipe(Layer.provide(PracticeKgLocalClaimChecksLive));
