@@ -35,7 +35,7 @@ zero unclassified differences). Each PR flips its own row.
 | W7a | none (the W7 kit) | `R/commands/Yeet/**` census rows Y1-Y88 (`research/w7-site-census-2026-11-03.md`, D-16) | merged, #2708 (D-18) |
 | W7b | none (the W7 kit) | the other command groups plus Qa and Refs, census rows B1-B136 (D-16) | merged, #2721 (D-19) |
 | W7c | none (the W7 kit) | `R/commands/Worktree/**` census rows W1-W45 (D-16) | merged, #2736 (D-20) |
-| W7 retire | none | delete the generic runners from `internal/repo-run/GitExec.ts`, census rows X1-X10 (D-16) | in review, this PR (D-21) |
+| W7 retire | none | delete the generic runners from `internal/repo-run/GitExec.ts`, census rows X1-X10 (D-16) | in review, #2753 (D-21) |
 | C | none | Closeout: ledger of every site-list row (migrated or kept with reason), reflection, `proposedCloseout` | pending |
 
 ## Closeout Checklist
