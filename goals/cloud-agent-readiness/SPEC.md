@@ -207,6 +207,7 @@ explicitly authorized credentials and native Codex tools on managed Linux hosts.
 | D39 | Start dankserver's worker at 8 GiB aggregate RAM, two CPUs' worth of time, no swap and one substantive job at a time; use a new 256 GiB development filesystem on the existing root disk. Operator accepted. | Root-owned user-slice limits and a preallocated loop filesystem are provisioned. NVMe, backup and monitoring storage are not reformatted. The filesystem caps home storage, not every host temporary directory. |
 | D40 | The operator explicitly approved separate replacement accounts for tbk-worker and dankserver with read-only access to all of BEEP_SECRETS plus each worker development vault, no environment access and no vault-creation permission. | This supersedes reuse under D10 and the development-only/exclusion assumptions in D12/D19/D29/D35. Any job running as the worker can read its 0600 service-account store or invoke the approved op shim and obtain every shared-vault item, including any cloud, fleet-administration or review-signing credentials present. Clearing OP variables prevents ambient inheritance; it does not enforce item-level or per-job credential isolation. Read-only vault access does not reduce stored credentials' upstream powers. Unrelated use, cloud sign-ins/deployment and privileged administration remain task-authorization restrictions, not technical denials. Both replacements passed exact two-vault membership and storage/environment checks; recovery is human-only and predecessors are revoked. Beep-worker sees BEEP_SECRETS only. Revoke the affected account or replace it with a narrower vault grant to reduce technical access; no such scope change is made here. |
 | D41 | Make `beep-reviewer` advisory: remove its required check from `main` ruleset 10240248, which also deactivates the `yeet merge` / `merge-gate` reviewer gate. Operator accepted on 2026-10-26 after the Grok quota behind the reviewer ran out and blocked every merge. | Applied with `kriegcloud`'s gh login; the 16 other required checks, conditions and both bypass actors were diffed unchanged and the prior ruleset was saved before the PUT. `beep reviewer ruleset release --apply` repeats the switch. Reverse with `BEEP_REVIEWER_APP_ID=5321138 beep reviewer ruleset require --apply` once the reviewer runs on a healthy quota. |
+| D42 | Local audit clarification (2026-11-05): D30's Linux development/parity baseline is this packet's named workflow; optional additions outside it require a specific workflow. Vendor-VM bootstrap preparation is a separate, curated scope. | Resolves the criteria/amendment wording without adding a tool, installation, authentication, host-admission or cloud-use permission. Existing exclusions and proof requirements remain. Reverse this documentation clarification by reverting its commit; no operational state changed. |
 
 ### Linux acceptance criteria
 
@@ -218,7 +219,8 @@ explicitly authorized credentials and native Codex tools on managed Linux hosts.
 - [ ] Git, build dependencies, Rust/Cargo, Python/uv, Node 24/nvm, pinned Bun,
       Docker Compose/Buildx, Codex, Claude, Cursor, Grok, Muse and CLIProxyAPI are installed from official
       sources, configured for interactive and noninteractive shells, and checked
-      with actual commands. Install optional tools only for a named workflow.
+      with actual commands. The named baseline is the Linux development/parity
+      workflow below; tools outside that baseline need their own named workflow.
 - [ ] Docker runs a disposable container and a representative compose service;
       expose services only on loopback or the approved tailnet surface. Choose
       rootless operation for agent work where compatible, and document exceptions.
@@ -254,6 +256,18 @@ For infrastructure utilities, record exact authenticated AWS/ECR and other
 required operations separately from installing their CLI binaries.
 
 ### Workstation scan and headless friction acceptance
+
+This packet's named Linux development workflow is the parity baseline described
+in D30. Inventory inclusion remains the default unless a compatibility,
+ownership or host-specific exception is recorded. "Optional tools" in the
+Linux criteria means additions outside that baseline; it does not silently
+remove inventoried baseline capabilities. Installation is still distinct from
+authentication and permission to use a credential or mutate a cloud account.
+
+Vendor-hosted agent VMs have the separate, curated preparation contract in
+`scripts/cloud/bootstrap.sh` and `docs/runbooks/cloud-environments.md`. That
+bootstrap is not the Linux-worker parity installer or proof that every worker
+capability is available.
 
 - Inventory installed development/cloud/agent CLIs, package managers, wrappers,
   headless services and portable agent configuration on DankStation. Assume they
