@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Final selection checkpoint (2026-11-06): actual full/reference constructor
+results now supply Python-point selection facts. All 148 original filtering and
+disambiguation cases match selected identities, stable order and warning pairs.
+Parallel inheritance is connected to full-case construction with sixteen original
+None/zero/positive/negative span-start transitions. The complete extraction loop
+and generated references remain open. See
+[selection evidence](history/evidence/2026-11-06-extraction-selection.md).
+
 Reference-token checkpoint (2026-11-06): short/Id./supra/unknown construction
 now connects existing pin/name/edition/court services under one captured owner.
 All 24 original cases match complete state and spans on both runtimes, with

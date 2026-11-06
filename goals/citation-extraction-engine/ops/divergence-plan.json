@@ -209,7 +209,14 @@
         "packages/law-practice/use-cases/test/fixtures/eyecite/reference-token.json",
         "goals/citation-extraction-engine/ops/probe-reference-token.py",
         "goals/citation-extraction-engine/ops/verify-reference-token.py",
-        "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-token-extraction.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-token-extraction.md",
+        "packages/law-practice/server/src/internal/Citation/ExtractionSelection.ts",
+        "packages/law-practice/server/test/CitationExtractionSelection.fixtures.ts",
+        "packages/law-practice/server/test/CitationExtractionSelection.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/extraction-selection.json",
+        "goals/citation-extraction-engine/ops/probe-extraction-selection.py",
+        "goals/citation-extraction-engine/ops/verify-extraction-selection.py",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-selection.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

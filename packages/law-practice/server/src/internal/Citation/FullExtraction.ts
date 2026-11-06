@@ -160,6 +160,33 @@ export class CitationFullExtractionResult extends S.Opaque<
     })
   )
 ) {}
+/** Apply the original parallel-case assignment to newly constructed private state.
+ * The extraction loop invokes this only for consecutive full cases. Existing
+ * text and edition references are reused; no native text or child is produced.
+ * @internal @category operations @since 0.0.0
+ */
+export const inheritCitationParallelCase = Effect.fn("Citation.inheritParallelCase")(function* (
+  current: CitationFullExtractionResult,
+  preceding: CitationFullExtractionResult
+) {
+  const state = current.outcome;
+  const prior = preceding.outcome;
+  if (state._tag !== "FullCaseCitation" || prior._tag !== "FullCaseCitation") return current;
+  if (state.fullSpanStart !== prior.fullSpanStart) return current;
+  return {
+    ...current,
+    outcome: {
+      ...state,
+      metadata: {
+        ...state.metadata,
+        plaintiff: prior.metadata.plaintiff,
+        defendant: prior.metadata.defendant,
+        year: prior.metadata.year,
+      },
+      year: prior.year,
+    },
+  };
+});
 const emptyCase = CitationCaseMetadataFields.make({
   plaintiff: null,
   defendant: null,

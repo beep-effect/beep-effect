@@ -3,6 +3,7 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
+import { projectCitationExtractionSelection } from "@beep/law-practice-server/internal/Citation/ExtractionSelection";
 import {
   CitationReferenceTokenConfiguration,
   makeCitationReferenceTokenExtraction,
@@ -114,6 +115,9 @@ const assertRow = Effect.fn("ReferenceTokenTest.row")(function* (
   const invocation = installed.stage.extract({ ...row, geometry });
   const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
   const result = yield* closed;
+  const selection = yield* projectCitationExtractionSelection(row.id, result);
+  expect(selection.span).toEqual(row.expected.span);
+  expect(selection.fullSpan).toEqual(row.expected.fullSpan);
   const state = result.outcome;
   const metadata = yield* readCitationModelMetadata(state.metadata);
   expect(state._tag).toBe(row.expected.kind);

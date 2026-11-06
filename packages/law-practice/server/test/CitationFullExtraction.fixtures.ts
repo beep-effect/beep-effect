@@ -3,6 +3,7 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
+import { projectCitationExtractionSelection } from "@beep/law-practice-server/internal/Citation/ExtractionSelection";
 import { makeCitationFullExtraction } from "@beep/law-practice-server/internal/Citation/FullExtraction";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -11,6 +12,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { readCitationCaseMetadataConfiguration } from "./CitationCaseMetadata.fixtures.ts";
+import { makeCitationParallelAssertion } from "./CitationExtractionSelection.fixtures.ts";
 import { installCitationFrozenMetadataRuntime } from "./CitationFrozenEditions.fixtures.ts";
 import { readCitationJournalMetadataCorpus } from "./CitationJournalMetadata.fixtures.ts";
 import { loadCitationLawMetadataFixtures } from "./CitationLawMetadata.fixtures.ts";
@@ -82,10 +84,15 @@ export const replayCitationFullExtraction = Effect.fn("FullExtractionTest.replay
   kind: CitationNativeRuntimeKind
 ) {
   const { corpus, setup, stage } = yield* install(kind);
+  const assertParallel = yield* makeCitationParallelAssertion();
   for (const row of corpus.cases) {
     const invocation = stage.extract({ ...row, geometry: O.none() });
     const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
     const result = yield* closed;
+    yield* assertParallel(result);
+    const selection = yield* projectCitationExtractionSelection(row.id, result);
+    expect(selection.span).toEqual(row.expected.span);
+    expect(selection.fullSpan).toEqual(row.expected.fullSpan);
     expect(result.outcome._tag).toBe(row.expected.kind);
     expect(result.index).toBe(row.index);
     expect([result.token.start, result.token.end]).toEqual(row.expected.span);
