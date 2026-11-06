@@ -1,5 +1,14 @@
 # Citation Extraction Engine Plan
 
+Native-text extraction checkpoint (2026-11-06): the complete original tokenizer
+now feeds owned words/tokens into the connected extraction loop under one
+operation, Scope, deadline and text authority. Eight representative original
+documents match on Bun and Node with all 6,805 extractors/2,533 editions installed;
+full 36-document replay is registered for hosted execution. Hosted Fallow passes
+on the preceding head; its TS2527 declaration failure is repaired and package
+emission passes. Raw-input cleaning/entry and public service remain open. See
+[composition evidence](history/evidence/2026-11-06-tokenized-extraction.md).
+
 Prepared extraction-loop checkpoint (2026-11-06): full/reference constructors,
 parallel inheritance, generated references and final selection now compose under
 one admitted Scope/deadline/text authority. Original source capture retains

@@ -40,7 +40,10 @@ import {
   CitationTokenSeedHex,
   readCitationModelMetadata,
 } from "./CitationTokenSeed.fixtures.ts";
-import type { CitationExtractionLoopEntry } from "@beep/law-practice-server/internal/Citation/ExtractionLoop";
+import type {
+  CitationExtractionLoopEntry,
+  CitationExtractionLoopResult,
+} from "@beep/law-practice-server/internal/Citation/ExtractionLoop";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationExtractionLoop");
@@ -88,7 +91,7 @@ const Corpus = S.fromJsonString(
 );
 type Expected = typeof Model.Type;
 const isGenerated = S.is(CitationGeneratedReference);
-const assertModel = Effect.fn("ExtractionLoopTest.model")(function* (
+export const assertCitationExtractionLoopModel = Effect.fn("ExtractionLoopTest.model")(function* (
   entry: CitationExtractionLoopEntry,
   expected: Expected,
   id: number
@@ -110,8 +113,20 @@ const assertModel = Effect.fn("ExtractionLoopTest.model")(function* (
   expect("editionGuess" in state ? state.editionGuess : null).toBe(expected.editionGuess);
   expect(entry.documentAttached).toBe(expected.documentAttached);
 });
-/** Replay the real loop with a single operation permit and real native admission. */
-export const replayCitationExtractionLoop = Effect.fn("ExtractionLoopTest.replay")(function* (
+/** Preserve original selected ids, warning pairs and returned-entry identity. */
+export const assertCitationExtractionLoopSelection = Effect.fn("ExtractionLoopTest.selection")(function* (
+  result: CitationExtractionLoopResult,
+  row: Pick<(typeof Corpus.Type.cases)[number], "selected" | "warnings" | "expected" | "returned">
+) {
+  expect(result.selection.selected).toEqual(row.selected);
+  expect(result.selection.warnings).toEqual(row.warnings);
+  expect(result.citations).toHaveLength(row.expected.length);
+  for (const [index, id] of A.map(row.returned, (id, index) => Tuple.make(index, id))) {
+    expect(A.getUnsafe(result.citations, index)).toBe(A.getUnsafe(result.models, id));
+  }
+});
+/** Install shared authenticated loop evidence, configuration and actual runtime. */
+export const installCitationExtractionLoopFixture = Effect.fn("ExtractionLoopTest.install")(function* (
   kind: CitationNativeRuntimeKind
 ) {
   const corpus = yield* readCitationOracleFixture(
@@ -149,6 +164,14 @@ export const replayCitationExtractionLoop = Effect.fn("ExtractionLoopTest.replay
     DateTime.withCurrentZoneOffset(0)
   );
   const geometry = yield* installCitationHtmlGeometryFixture(kind, setup);
+  return { corpus, setup, configuration, stage, geometry };
+});
+/** Replay the real loop with a single operation permit and real native admission. */
+export const replayCitationExtractionLoop = Effect.fn("ExtractionLoopTest.replay")(function* (
+  kind: CitationNativeRuntimeKind
+) {
+  const { corpus, setup, configuration, stage, geometry } = yield* installCitationExtractionLoopFixture(kind);
+  const { limits, operation } = setup;
   for (const row of corpus.cases) {
     const maps = yield* prepareCitationOptionalHtmlGeometry(geometry, row, row.markup.bytes.length > 0);
     const invocation = stage.extract({ ...row, geometry: maps });
@@ -167,17 +190,18 @@ export const replayCitationExtractionLoop = Effect.fn("ExtractionLoopTest.replay
       expect(after.spawned).toBeGreaterThan(before.spawned);
     }
     expect(result.models).toHaveLength(row.before.length);
-    yield* Effect.forEach(result.models, (entry, id) => assertModel(entry, A.getUnsafe(row.before, id), id), {
-      concurrency: 1,
-      discard: true,
-    });
-    expect(result.selection.selected).toEqual(row.selected);
-    expect(result.selection.warnings).toEqual(row.warnings);
-    expect(result.citations).toHaveLength(row.expected.length);
+    yield* Effect.forEach(
+      result.models,
+      (entry, id) => assertCitationExtractionLoopModel(entry, A.getUnsafe(row.before, id), id),
+      {
+        concurrency: 1,
+        discard: true,
+      }
+    );
+    yield* assertCitationExtractionLoopSelection(result, row);
     for (const [index, id] of A.map(row.returned, (id, index) => Tuple.make(index, id))) {
       const retained = A.getUnsafe(result.citations, index);
-      expect(retained).toBe(A.getUnsafe(result.models, id));
-      yield* assertModel(retained, A.getUnsafe(row.expected, index), id);
+      yield* assertCitationExtractionLoopModel(retained, A.getUnsafe(row.expected, index), id);
     }
   }
   expect(corpus.cases).toHaveLength(36);

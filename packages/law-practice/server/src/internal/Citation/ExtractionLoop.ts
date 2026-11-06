@@ -7,19 +7,18 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
-import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as MutableList from "effect/MutableList";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationOperationAdmission } from "./Admission.ts";
+import { captureCitationExtractionChildren } from "./ExtractionChildren.ts";
 import { CitationTokenExtractionInput } from "./ExtractionContext.ts";
 import {
   CitationExtractionSelectionResult,
   makeCitationExtractionSelection,
   projectCitationExtractionSelection,
 } from "./ExtractionSelection.ts";
-import { CitationFrozenEditions } from "./FrozenEditions.ts";
 import {
   CitationFullExtractionConfiguration,
   CitationFullExtractionResult,
@@ -27,7 +26,11 @@ import {
   makeCitationFullExtraction,
 } from "./FullExtraction.ts";
 import { CitationGeneratedReference, makeCitationGeneratedCombinedReferences } from "./GeneratedReferences.ts";
-import { decodeCitationMetadataRuntimeConfiguration, makeCitationMetadataOperation } from "./MetadataComposition.ts";
+import {
+  decodeCitationMetadataRuntimeConfiguration,
+  detachCitationMetadataConfiguration,
+  makeCitationMetadataOperation,
+} from "./MetadataComposition.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationReferencePatternConfiguration } from "./ReferencePatterns.ts";
 import {
@@ -227,29 +230,14 @@ export const makeCitationExtractionLoop = Effect.fn("Citation.makeExtractionLoop
     Configuration,
     () => fail("invalid-configuration")
   );
-  const encoded = yield* S.encodeEffect(ConfigurationJson)(configuration).pipe(
-    Effect.mapError(() => fail("invalid-configuration"))
-  );
-  const config = yield* S.decodeEffect(ConfigurationJson)(encoded).pipe(
-    Effect.mapError(() => fail("invalid-configuration"))
+  const config = yield* detachCitationMetadataConfiguration(ConfigurationJson, configuration, () =>
+    fail("invalid-configuration")
   );
   const admission = yield* CitationOperationAdmission;
-  const editions = yield* CitationFrozenEditions;
-  const zone = yield* DateTime.CurrentTimeZone;
-  const nested = CitationOperationAdmission.of({
-    run: Effect.fn("Citation.reuseExtractionPermit")(
-      <A, E>(_: CitationSafetyLimitExceeded["operation"], body: Effect.Effect<A, E>) => body
-    ),
-    snapshot: admission.snapshot,
-  });
+  const children = yield* captureCitationExtractionChildren();
   const installed = yield* makeCitationMetadataOperation(
     limits,
-    (raw: unknown) =>
-      prepare(limits, runtime, config, raw).pipe(
-        Effect.provideService(CitationOperationAdmission, nested),
-        Effect.provideService(CitationFrozenEditions, editions),
-        Effect.provideService(DateTime.CurrentTimeZone, zone)
-      ),
+    (raw: unknown) => prepare(limits, runtime, config, raw).pipe(Effect.provideContext(children)),
     () => fail("invalid-configuration")
   );
   const extract = Effect.fn("Citation.extractDocumentLoop")(
@@ -261,7 +249,11 @@ export const makeCitationExtractionLoop = Effect.fn("Citation.makeExtractionLoop
           const completed = CitationExtractionLoopResult.make({ ...result, reservedUnits });
           // Struct construction validates each occurrence independently. Reconnect
           // returned entries to that one validated model list by original ids.
-          return { ...completed, citations: A.map(result.retained, (id) => A.getUnsafe(completed.models, id)) };
+          const restored: CitationExtractionLoopResult = {
+            ...completed,
+            citations: A.map(result.retained, (id) => A.getUnsafe(completed.models, id)),
+          };
+          return restored;
         })
       ),
     installed.timing.timed

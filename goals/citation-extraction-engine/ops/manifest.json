@@ -119,7 +119,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-pattern-construction.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-pin-references.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-markup-references.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-loop.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-loop.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-tokenized-extraction.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

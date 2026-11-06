@@ -97,6 +97,18 @@ export const fingerprintCitationMetadataPattern = Effect.fn("Citation.fingerprin
       Effect.catchDefect(() => Effect.fail(invalid()))
     )
 );
+/** Detach a trusted configuration through its hoisted upstream canonical codec.
+ * Native declarations use their Schema representation; failures stay source-free.
+ * @internal @category operations @since 0.0.0
+ */
+export const detachCitationMetadataConfiguration = Effect.fn("Citation.detachMetadataConfiguration")(function* <
+  A,
+  I,
+  E,
+>(codec: S.Codec<A, I>, configuration: A, invalid: () => E) {
+  const encoded = yield* S.encodeEffect(codec)(configuration).pipe(Effect.mapError(invalid));
+  return yield* S.decodeEffect(codec)(encoded).pipe(Effect.mapError(invalid));
+});
 /** Own and authenticate fixed native patterns before retaining configuration.
  * @internal @category operations @since 0.0.0
  */
