@@ -24,3 +24,5 @@ is inferred. The normative example is not treated as a verbatim source transcrip
 
 P4 remains in progress. PM's missing original, ADHD provenance, other owners'
 repairs and earlier delivery-proof gaps remain separate. No cloud or paid work.
+
+The publication replay exposed a new Effect/Vitest assertion-style finding in the invalid-input loop. Use the existing assertTrue helper in its pipeable form, preserving the Boolean failure check rather than inventing an expected SchemaError payload. The first direct Bun test invocation did not initialize Vitest and failed before any test; the package Vitest command then passed all25 focused tests. Quick package lint and type checking pass after the pipeable assertion change. No baseline allowance was added; previous failed receipts remain private.

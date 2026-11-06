@@ -36,7 +36,7 @@ import { ConformanceReport } from "@beep/schema/Conformance";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertFailure, assertSuccess } from "@effect/vitest/utils";
+import { assertFailure, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Result from "effect/Result";
@@ -85,7 +85,7 @@ describe("Markdown semantic conformance", () => {
       assertSuccess(decoded, level);
     });
     A.forEach([0, 7, 2.5, "2", null], (value) => {
-      expect(Result.isFailure(S.decodeUnknownResult(HeadingLevel)(value))).toBe(true);
+      S.decodeUnknownResult(HeadingLevel)(value).pipe(Result.isFailure, assertTrue);
     });
   });
 
