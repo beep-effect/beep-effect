@@ -1720,7 +1720,7 @@ describe("inert owner publication fence", () => {
       yield* Effect.promise(() => fixture.started);
       yield* TestClock.adjust("4 seconds");
       const outcome = yield* Fiber.join(fiber).pipe(Effect.result);
-      expect(Result.isFailure(outcome)).toBe(true);
+      outcome.pipe(Result.isFailure, assertTrue);
       if (Result.isFailure(outcome)) expect(outcome.failure.reason).toBe("binding");
       expect(fixture.native().conclusion).toBe("success");
       const outbox = yield* publisher.owner.outbox(binding, 1);
@@ -1787,7 +1787,7 @@ describe("inert owner publication fence", () => {
         else yield* sql`UPDATE yeet_owner_checkpoint_anchor SET payload=json_set(payload, '$.binding.generation', 1)`;
         fixture.resume({ body: { object: { type: "commit", sha: head } } });
         const outcome = yield* Fiber.join(fiber);
-        expect(Result.isFailure(outcome)).toBe(true);
+        outcome.pipe(Result.isFailure, assertTrue);
         expect(fixture.native().conclusion).toBe("success");
         const outbox = yield* publisher.owner.outbox(binding, 1);
         expect(O.getOrThrow(outbox).delivery._tag).toBe("Pending");
