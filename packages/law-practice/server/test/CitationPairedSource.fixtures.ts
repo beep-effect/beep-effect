@@ -17,29 +17,16 @@ import { installCitationDefaultConfigurationFixture } from "./CitationDefaultCon
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 
 const sameSource = S.toEquivalence(SourceTextIdentity);
-/** Compare the verified adapter with unchanged primitive execution; this is
- * composition proof, not a new exhaustive upstream-model parity claim.
- */
-export const replayCitationPairedSource = Effect.fn("PairedSourceTest.replay")(function* (
-  kind: CitationNativeRuntimeKind
+type Installed = Effect.Success<ReturnType<typeof installCitationDefaultConfigurationFixture>>;
+const installPair = Effect.fnUntraced(function* (
+  installed: Installed,
+  plain: VerifiedSourceText,
+  markup: VerifiedSourceText
 ) {
-  const { setup, defaultConfiguration, engineArtifact, provided } =
-    yield* installCitationDefaultConfigurationFixture(kind);
-  const verified = yield* makeCitationVerifiedExtraction(setup.limits, setup.runtime, {
-    engineArtifact,
-    extraction: defaultConfiguration,
-  }).pipe(Effect.provideContext(provided), DateTime.withCurrentZoneOffset(0));
-  const semantic = yield* makeCitationSemanticExtraction(setup.limits, setup.runtime, defaultConfiguration).pipe(
-    Effect.provideContext(provided),
-    DateTime.withCurrentZoneOffset(0)
-  );
-  const plain = yield* citationFixtureSourceProof("Foo v. Bar, 1 U.S. 1 (2000). Id. at 2.");
-  const markup = yield* citationFixtureSourceProof("<p>Independently supplied markup 😀</p>");
-  const expected = yield* semantic.extract({ plain: plain.sourceText, markup: markup.sourceText, cleanSteps: [] });
-  if (expected.raw.outcome._tag !== "Document") return yield* Effect.die("expected original Both branch");
-  const expectedModels = A.map(expected.raw.outcome.result.extraction.extraction.citations, (entry) => entry.model);
+  const { setup, defaultConfiguration, engineArtifact, provided } = installed;
   let resolutions = 0;
   const paired = yield* makeCitationSourcePairExtraction(setup.limits, setup.runtime, {
     engineArtifact,
@@ -65,6 +52,63 @@ export const replayCitationPairedSource = Effect.fn("PairedSourceTest.replay")(f
     ),
     DateTime.withCurrentZoneOffset(0)
   );
+  return { paired, resolutions: Effect.sync(() => resolutions) };
+});
+type VerifiedResult = Effect.Success<
+  ReturnType<Effect.Success<ReturnType<typeof makeCitationVerifiedExtraction>>["extract"]>
+>;
+type SemanticResult = Effect.Success<
+  ReturnType<Effect.Success<ReturnType<typeof makeCitationSemanticExtraction>>["extract"]>
+>;
+const assertPairResult = Effect.fnUntraced(function* (
+  actual: VerifiedResult,
+  expected: SemanticResult,
+  plain: VerifiedSourceText,
+  markup: VerifiedSourceText
+) {
+  if (expected.raw.outcome._tag !== "Document") return yield* Effect.die("expected original Both branch");
+  const expectedModels = A.map(expected.raw.outcome.result.extraction.extraction.citations, (entry) => entry.model);
+  expect(actual.inputs).toEqual({ plain: plain.source, markup: markup.source });
+  expect(actual.source.parent).toEqual(markup.source);
+  expect(actual.source._tag).toBe("Derived");
+  expect(actual.source.source.sourceText).toBe(plain.sourceText);
+  expect(actual.source.source.source.sourceDigest).toBe(markup.source.sourceDigest);
+  expect(actual.semantic.citations).toEqual(expected.citations);
+  if (actual.semantic.raw.outcome._tag !== "Document") return yield* Effect.die("expected verified Both branch");
+  const actualModels = A.map(
+    actual.semantic.raw.outcome.result.extraction.extraction.citations,
+    (entry) => entry.model
+  );
+  expect(actualModels).toEqual(expectedModels);
+  expect(actual.occurrences.unverified).toEqual([]);
+  expect(actual.occurrences.mentions.length).toBeGreaterThan(0);
+  for (const mention of actual.occurrences.mentions) {
+    const anchor = mention.anchor.anchor;
+    expect(Str.slice(anchor.startChar, anchor.endChar)(plain.sourceText)).toBe(anchor.quote);
+    expect(mention.anchor.source).toEqual(actual.source.source.source);
+  }
+});
+/** Compare the verified adapter with unchanged primitive execution; this is
+ * composition proof, not a new exhaustive upstream-model parity claim.
+ */
+export const replayCitationPairedSource = Effect.fn("PairedSourceTest.replay")(function* (
+  kind: CitationNativeRuntimeKind
+) {
+  const installed = yield* installCitationDefaultConfigurationFixture(kind);
+  const { setup, defaultConfiguration, engineArtifact, provided } = installed;
+  const verified = yield* makeCitationVerifiedExtraction(setup.limits, setup.runtime, {
+    engineArtifact,
+    extraction: defaultConfiguration,
+  }).pipe(Effect.provideContext(provided), DateTime.withCurrentZoneOffset(0));
+  const semantic = yield* makeCitationSemanticExtraction(setup.limits, setup.runtime, defaultConfiguration).pipe(
+    Effect.provideContext(provided),
+    DateTime.withCurrentZoneOffset(0)
+  );
+  const plain = yield* citationFixtureSourceProof("Foo v. Bar, 1 U.S. 1 (2000). Id. at 2.");
+  const markup = yield* citationFixtureSourceProof("<p>Independently supplied markup 😀</p>");
+  const expected = yield* semantic.extract({ plain: plain.sourceText, markup: markup.sourceText, cleanSteps: [] });
+  const pair = yield* installPair(installed, plain, markup);
+  const paired = pair.paired;
   for (const role of ["plain", "markup", "raw"]) {
     const source = role === "plain" ? plain : markup;
     const companion = role === "plain" ? markup : plain;
@@ -78,26 +122,9 @@ export const replayCitationPairedSource = Effect.fn("PairedSourceTest.replay")(f
         : verified.extract({ source, companion, role, cleanSteps: [] });
     const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
     const actual = yield* closed;
-    expect(actual.inputs).toEqual({ plain: plain.source, markup: markup.source });
-    expect(actual.source.parent).toEqual(markup.source);
-    expect(actual.source._tag).toBe("Derived");
-    expect(actual.source.source.sourceText).toBe(plain.sourceText);
-    expect(actual.source.source.source.sourceDigest).toBe(markup.source.sourceDigest);
-    expect(actual.semantic.citations).toEqual(expected.citations);
-    if (actual.semantic.raw.outcome._tag !== "Document") return yield* Effect.die("expected verified Both branch");
-    const actualModels = A.map(
-      actual.semantic.raw.outcome.result.extraction.extraction.citations,
-      (entry) => entry.model
-    );
-    expect(actualModels).toEqual(expectedModels);
-    expect(actual.occurrences.unverified).toEqual([]);
-    expect(actual.occurrences.mentions.length).toBeGreaterThan(0);
-    for (const mention of actual.occurrences.mentions) {
-      const anchor = mention.anchor.anchor;
-      expect(Str.slice(anchor.startChar, anchor.endChar)(plain.sourceText)).toBe(anchor.quote);
-      expect(mention.anchor.source).toEqual(actual.source.source.source);
-    }
+    yield* assertPairResult(actual, expected, plain, markup);
   }
+  const resolutions = yield* pair.resolutions;
   expect(resolutions).toBe(2);
   const before = yield* setup.observed.snapshot;
   const forged = yield* verified

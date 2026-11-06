@@ -94,6 +94,21 @@ export class CitationDocumentExtractionResult extends S.Opaque<
     })
   )
 ) {}
+const RetainedDocument = CitationInputDocument.pipe(
+  S.is,
+  S.declare,
+  $I.annoteSchema("RetainedDocument", {
+    description: "Validate an existing Document without cloning it; handle ownership is checked separately.",
+  })
+);
+const RetainedInput = S.Struct({
+  document: RetainedDocument,
+  removeAmbiguous: CitationTokenizedExtractionInput.fields.removeAmbiguous,
+}).pipe(
+  $I.annoteSchema("RetainedInput", {
+    description: "An initialized private Document and ambiguity mode; no raw request or re-cleaning program.",
+  })
+);
 const Input = S.toType(CitationDocumentExtractionInput);
 const Configuration = S.toType(CitationDocumentExtractionConfiguration);
 const ConfigurationJson = Configuration.pipe(S.toCodecJson);
@@ -127,6 +142,28 @@ const markupValue = Effect.fn("Citation.extractDocumentMarkup")(function* (
   const text = yield* copyCitationCleanerUnicode(values, value, () => fail("non-unicode-document"));
   return text.storage;
 });
+const extractInitialized = Effect.fn("Citation.extractInitializedDocument")(function* (
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  owned: Effect.Success<ReturnType<typeof ownCitationDocumentExtraction>>,
+  document: CitationInputDocument,
+  removeAmbiguous: boolean
+) {
+  yield* owned.values.assertOwned(document.plain);
+  yield* owned.values.assertOwned(document.markup);
+  yield* owned.values.assertOwned(document.source);
+  yield* owned.values.assertOwned(document.steps);
+  const plain = yield* copyCitationCleanerUnicode(owned.values, document.plain, () => fail("non-unicode-document"));
+  const markup = yield* markupValue(owned.values, document.markup);
+  const stage = yield* makeCitationTokenizedExtraction(limits, runtime, owned.config.extraction);
+  const extraction = yield* stage.extract({
+    plain: plain.storage,
+    markup,
+    geometry: document.geometry,
+    removeAmbiguous,
+  });
+  return { document, extraction };
+});
 const extractDocument = Effect.fn("Citation.extractDecodedDocument")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
@@ -135,16 +172,18 @@ const extractDocument = Effect.fn("Citation.extractDecodedDocument")(function* (
 ) {
   const initializer = yield* makeCitationInputDocument(limits, runtime, owned.config.document);
   const document = yield* initializer.initialize(request);
-  const plain = yield* copyCitationCleanerUnicode(owned.values, document.plain, () => fail("non-unicode-document"));
-  const markup = yield* markupValue(owned.values, document.markup);
-  const stage = yield* makeCitationTokenizedExtraction(limits, runtime, owned.config.extraction);
-  const extraction = yield* stage.extract({
-    plain: plain.storage,
-    markup,
-    geometry: document.geometry,
-    removeAmbiguous: request.removeAmbiguous,
-  });
-  return { document, extraction };
+  return yield* extractInitialized(limits, runtime, owned, document, request.removeAmbiguous);
+});
+const prepareRetained = Effect.fn("Citation.extractRetainedDocument")(function* (
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  owned: Effect.Success<ReturnType<typeof ownCitationDocumentExtraction>>,
+  raw: unknown
+) {
+  const request = yield* S.decodeUnknownEffect(RetainedInput)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+  return yield* extractInitialized(limits, runtime, owned, request.document, request.removeAmbiguous).pipe(
+    Effect.provideContext(owned.children)
+  );
 });
 const prepare = Effect.fn("Citation.extractLiveDocument")(
   (
@@ -165,15 +204,40 @@ const prepare = Effect.fn("Citation.extractLiveDocument")(
  * Returned extract requires R=never; failures publish no partial document/models.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationDocumentExtraction = makeCitationMetadataStage({
-  method: "extract",
-  schema: Configuration,
+const definition = {
   invalid: () => fail("invalid-configuration"),
   own: ownCitationDocumentExtraction,
-  prepare,
-  project: (result, reservedUnits) => {
+  project: (
+    result: Effect.Success<ReturnType<typeof extractInitialized>>,
+    reservedUnits: number
+  ): CitationDocumentExtractionResult => {
     const completed = CitationDocumentExtractionResult.make({ ...result, reservedUnits });
-    const restored: CitationDocumentExtractionResult = { ...completed, extraction: result.extraction };
+    const restored: CitationDocumentExtractionResult = {
+      ...completed,
+      document: result.document,
+      extraction: result.extraction,
+    };
     return restored;
   },
+};
+/** Initialize original input handles before builtin tokenization/extraction.
+ * @internal @category constructors @since 0.0.0
+ */
+export const makeCitationDocumentExtraction = makeCitationMetadataStage({
+  ...definition,
+  method: "extract",
+  schema: Configuration,
+  prepare,
+});
+/** Reuse an initialized private Document without executing __post_init__ again.
+ * All source/step handles must still belong to the captured live owner. This is
+ * a model-stage composition boundary, not a new get_citations wire-input mode.
+ * Mutable tokenizer/Document aliases remain separate compatibility work.
+ * @internal @category constructors @since 0.0.0
+ */
+export const makeCitationRetainedDocumentExtraction = makeCitationMetadataStage({
+  ...definition,
+  method: "extract",
+  schema: Configuration,
+  prepare: prepareRetained,
 });

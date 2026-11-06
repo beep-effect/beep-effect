@@ -2,11 +2,14 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { CitationCleanerProtocols } from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
+import { makeCitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import {
   CitationDocumentExtractionConfiguration,
   makeCitationDocumentExtraction,
+  makeCitationRetainedDocumentExtraction,
 } from "@beep/law-practice-server/internal/Citation/DocumentExtraction";
 import { makeCitationDocumentServices } from "@beep/law-practice-server/internal/Citation/DocumentServices";
+import { CitationDocumentInputProtocols } from "@beep/law-practice-server/internal/Citation/InputDocument";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -71,12 +74,53 @@ export const installCitationDocumentExtractionFixture = Effect.fn("DocumentExtra
     stage,
   };
 });
+const unexpectedInitialization = () => Effect.die("retained document must not initialize again");
+const retainedProtocols = CitationDocumentInputProtocols.of({
+  truth: unexpectedInitialization,
+  containsHtml: unexpectedInitialization,
+  insertSourceHtml: unexpectedInitialization,
+  plan: unexpectedInitialization,
+  warnHtmlAdded: unexpectedInitialization(),
+});
+const replayRetained = Effect.fnUntraced(function* (
+  installed: Effect.Success<ReturnType<typeof installCitationDocumentExtractionFixture>>,
+  document: Effect.Success<ReturnType<typeof installed.stage.extract>>["document"],
+  row: Installed["corpus"]["cases"][number]
+) {
+  const { setup, provided, configuration, translated } = installed;
+  const retained = yield* makeCitationRetainedDocumentExtraction(setup.limits, setup.runtime, configuration).pipe(
+    Effect.provideContext(provided),
+    Effect.provideService(CitationDocumentInputProtocols, retainedProtocols),
+    DateTime.withCurrentZoneOffset(0)
+  );
+  const invocation = retained.extract({ document, removeAmbiguous: row.removeAmbiguous });
+  const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
+  const result = yield* closed;
+  expect(result.document).toBe(document);
+  expect(result.document.plain).toBe(document.plain);
+  expect(result.document.markup).toBe(document.markup);
+  expect(result.document.geometry).toBe(document.geometry);
+  yield* assertCitationTokenizedExtractionRow(result.extraction, row, translated);
+  const foreign = yield* makeCitationCleanerValues(setup.limits);
+  const otherPlain = yield* foreign.sourceText("other owner");
+  const before = yield* setup.observed.snapshot;
+  const refused = yield* retained
+    .extract({
+      document: { ...document, plain: otherPlain },
+      removeAmbiguous: row.removeAmbiguous,
+    })
+    .pipe(Effect.flip);
+  expect(refused).toMatchObject({ _tag: "CitationCleanerFailure", reason: "unissued-value" });
+  const after = yield* setup.observed.snapshot;
+  expect(after).toEqual(before);
+});
 /** Builtin protocols, actual cleaner registry and complete default extractor catalog. */
 export const replayCitationDocumentExtraction = Effect.fn("DocumentExtractionTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
-  const { corpus, setup, adapter, values, stage, translated } = yield* installCitationDocumentExtractionFixture(kind);
+  const installed = yield* installCitationDocumentExtractionFixture(kind);
+  const { corpus, setup, adapter, values, stage, translated } = installed;
   const rows = A.filter(corpus.cases, (row) => full || A.contains([0, 4, 18, 20, 22, 32], row.id));
   for (const row of rows) {
     const request = yield* documentRequest(values, adapter, row);
@@ -89,6 +133,7 @@ export const replayCitationDocumentExtraction = Effect.fn("DocumentExtractionTes
     const stepIdentity = yield* values.same(result.document.steps, request.steps);
     expect(stepIdentity).toBe(true);
     expect(result.reservedUnits).toBe(result.extraction.reservedUnits);
+    if (!full && A.contains([4, 32], row.id)) yield* replayRetained(installed, result.document, row);
   }
   expect(rows).toHaveLength(full ? 36 : 6);
   const malformed = yield* stage.extract(null).pipe(Effect.flip);
