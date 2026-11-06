@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7b, feat/gh-git-w7b-groups)",
-      "reason": "Record the W7b seal drift and the inherited #2686 manifest drift: the goals completion reads moved onto GitHubContent, so GitHubContent.ts joins the goals-doctor and knowledge policy seals (Goals.errors.ts stays, main's doctor keeps GoalsGitError); @beep/html and @beep/technical-drawing manifests changed in #2686 without a re-stamp; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7c, feat/gh-git-w7c-worktree)",
+      "reason": "Record the W7c seal drift: Worktree.service.ts now imports @beep/github PullRequest and Rest, so PullRequest.ts, Rest.ts and GitHubCommit.ts join the quality-bun-audit, quality-changeset-graph, quality-jsdoc-inventory, quality-jsdoc-module-tags, quality-jsdoc-ratchet and quality-tsgo-rules policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
-        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7b.md",
-        "sha256": "92674c433ed07d4630843c32dbe2c99e09c5c877a67ab4893db54b0482b62a28"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7c.md",
+        "sha256": "6949df094af725c869328c582f2afa39fa07a3ca69f6a50afe66e35630dfce39"
       }
     },
     "@beep/acp": {
@@ -1162,11 +1162,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7b, feat/gh-git-w7b-groups)",
-      "reason": "Record the W7b seal drift and the inherited #2686 manifest drift: the goals completion reads moved onto GitHubContent, so GitHubContent.ts joins the goals-doctor and knowledge policy seals (Goals.errors.ts stays, main's doctor keeps GoalsGitError); @beep/html and @beep/technical-drawing manifests changed in #2686 without a re-stamp; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7c, feat/gh-git-w7c-worktree)",
+      "reason": "Record the W7c seal drift: Worktree.service.ts now imports @beep/github PullRequest and Rest, so PullRequest.ts, Rest.ts and GitHubCommit.ts join the quality-bun-audit, quality-changeset-graph, quality-jsdoc-inventory, quality-jsdoc-module-tags, quality-jsdoc-ratchet and quality-tsgo-rules policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
-        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7b.md",
-        "sha256": "92674c433ed07d4630843c32dbe2c99e09c5c877a67ab4893db54b0482b62a28"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7c.md",
+        "sha256": "6949df094af725c869328c582f2afa39fa07a3ca69f6a50afe66e35630dfce39"
       }
     },
     "@beep/repo-cli-kit": {
@@ -121770,7 +121770,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "2efbb0c00f77cf59cc97af270e5e4847afecf3d308aa1823e8fd97b98812ffc3"
+        "sha256": "9cc66dfe0984bb488f69be4dcb20e96239107cb82448a4447ad97ea185aec43d"
       }
     ]
   }

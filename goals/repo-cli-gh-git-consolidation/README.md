@@ -31,16 +31,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, W7b in review (#2721). `research/w7-site-census-2026-11-03.md` counted 279 remaining git and gh
+P1 Implement, W7c in review (#2736). `research/w7-site-census-2026-11-03.md` counted 279 remaining git and gh
 argv templates, 208 without a recorded outcome (SPEC D-16); the W7 kit (#2665, SPEC D-17) added the `@beep/git` members
 and options the 37 (B) rows need and moved `patientGit` to `internal/repo-run/PatientGit.ts`; W7a (#2708, SPEC D-18)
-moved the Yeet census rows Y1-Y88 onto it; #2721 moves the other command groups' rows B1-B136 (SPEC D-19). Earlier
+moved the Yeet census rows Y1-Y88 onto it; W7b (#2721, SPEC D-19) moved the other command groups' rows B1-B136; #2736
+moves the Worktree rows W1-W45 (SPEC D-20). Earlier
 waves merged: W0 (#2514), the W1 kit (#2522), W1a (#2539), W1b (#2546), W2 (#2593, D-10), W2b (#2606, D-11), the W3 kit
 (#2556), W3 sites (#2614, D-12), the W4 kit (#2600), W4 sites (#2622, D-13), W5 (#2642, D-14), W6 (#2648, D-15), the W7
-kit (#2665, D-17) and W7a (#2708, D-18). Next: W7c, then the runner retirement, then closeout C.
+kit (#2665, D-17), W7a (#2708, D-18) and W7b (#2721, D-19). Next: the runner retirement, then closeout C.
 
 ## Latest Evidence
 
+- 2026-11-03 W7c: `research/worktree-differential-w7.json` (107 scenarios, 106 same, 1 classified, 0 unclassified);
+  repo-cli `check` clean, the Worktree, reap, residue, fleet, tmpfs and merge-driver suites green on Node and Bun,
+  `goals/tsconfig.ops.json` clean for the W7c files; `lint effect-vitest`, Fallow audit and Fallow health introduce 0.
 - 2026-11-03 W7b: `research/groups-differential-w7.json` (100 scenarios, 34 git and 66 gh; 76 same, 24 classified,
   0 unclassified); the census W7b rows B1-B136 are on `@beep/git`/`@beep/github` or KEEP with their reason (D-19).
 - 2026-11-03 W7a: `research/yeet-differential-w7.json` (81 scenarios, 72 same, 9 classified, 0 unclassified);

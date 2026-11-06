@@ -41,6 +41,7 @@
     "research/cache-baseline-request-w6.json",
     "research/cache-baseline-request-w7-kit.json",
     "research/cache-baseline-request-w7b.json",
+    "research/cache-baseline-request-w7c.json",
     "research/cache-baseline-review-w0.md",
     "research/cache-baseline-review-w1b.md",
     "research/cache-baseline-review-w2b.md",
@@ -49,6 +50,7 @@
     "research/cache-baseline-review-w6.md",
     "research/cache-baseline-review-w7-kit.md",
     "research/cache-baseline-review-w7b.md",
+    "research/cache-baseline-review-w7c.md",
     "research/dirty-axis-differential-w2.json",
     "research/git-readers-differential-w1a.json",
     "research/groups-differential-w7.json",
@@ -58,6 +60,7 @@
     "research/reviewer-ci-github-differential-w3.json",
     "research/site-list.md",
     "research/w7-site-census-2026-11-03.md",
+    "research/worktree-differential-w7.json",
     "research/yeet-differential-w7.json",
     "research/yeet-gh-seams-differential-w6.json",
     "research/yeet-git-differential-w1b.json",
@@ -321,6 +324,30 @@
     {
       "path": "ops/groups-differential-w7.ts",
       "purpose": "Retained W7b command-group Git and GitHub differential driver documenting 100 scenarios with zero unclassified differences."
+    },
+    {
+      "path": "ops/worktree-differential-w7.ts",
+      "purpose": "W7c differential: the frozen pre-W7 Worktree bodies (ops/frozen-w7c: the removal service's preservation probes, archive-ref create, common-dir, status, submodule and residue-patch reads, worktree remove and prune, the branch compare-and-swap delete and merge-driver config writes; the worktree new and doctor steps; the reap head, idle and status probes; the terminal-lane layout and branch facts; the gh pr list reads) compared with their @beep/git and @beep/github replacements over scratch repositories (a bare origin, linked, dirty, detached, pruned-upstream and submodule worktrees, a dangling and a missing origin/HEAD, a non-repository) and one fixture pull-request table served to a scripted gh and a REST fetch."
+    },
+    {
+      "path": "ops/frozen-w7c/GitRunners.old.ts",
+      "purpose": "Frozen pre-W7 runGitOutput and runGitRawOutput with their private capture helpers (lane base 8602b24203), inlined because the runner retirement deletes them; used by the other frozen-w7c bodies."
+    },
+    {
+      "path": "ops/frozen-w7c/WorktreeService.old.ts",
+      "purpose": "Frozen pre-W7 Worktree.service git and gh bodies (lane base 8602b24203), replayed by ops/worktree-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7c/WorktreeCommand.old.ts",
+      "purpose": "Frozen pre-W7 Worktree.command git steps (lane base 8602b24203), replayed by ops/worktree-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7c/Reap.old.ts",
+      "purpose": "Frozen pre-W7 Reap.service probe and gh pr list bodies (lane base 8602b24203), replayed by ops/worktree-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7c/ResidueTerminalLaneLive.old.ts",
+      "purpose": "Frozen pre-W7 ResidueTerminalLaneLive git facts (lane base 8602b24203), replayed by ops/worktree-differential-w7.ts."
     }
   ]
 }
