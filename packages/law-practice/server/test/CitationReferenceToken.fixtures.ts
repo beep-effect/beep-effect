@@ -74,11 +74,15 @@ const Corpus = S.fromJsonString(
       "Actual original short/Id./supra/unknown state and token contexts, including source-created optional fields.",
   })
 );
-const install = Effect.fn("ReferenceTokenTest.install")(function* (kind: CitationNativeRuntimeKind) {
-  const corpus = yield* readCitationOracleFixture(
+/** Read the shared authenticated original reference-token source/configuration. */
+export const readCitationReferenceTokenCorpus = Effect.fn("ReferenceTokenTest.source")(function* () {
+  return yield* readCitationOracleFixture(
     "reference-token",
     "86dac62c3e85b1de5327dcafd03f4ff3e241b1d013bda00542df149c6867c0b7"
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
+});
+const install = Effect.fn("ReferenceTokenTest.install")(function* (kind: CitationNativeRuntimeKind) {
+  const corpus = yield* readCitationReferenceTokenCorpus();
   const cases = yield* readCitationCaseMetadataConfiguration();
   const pin = yield* readCitationPinExtractionCorpus();
   const setup = yield* installCitationFrozenMetadataRuntime(kind);

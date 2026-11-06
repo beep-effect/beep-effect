@@ -118,7 +118,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-name-preparation.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-pattern-construction.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-pin-references.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-markup-references.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-markup-references.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-loop.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -209,7 +210,8 @@
     "python3 goals/citation-extraction-engine/ops/verify-reference-token.py --self-test",
     "python3 goals/citation-extraction-engine/ops/verify-extraction-selection.py --self-test",
     "python3 goals/citation-extraction-engine/ops/verify-generated-references.py --self-test",
-    "python3 goals/citation-extraction-engine/ops/verify-reference-template.py --self-test"
+    "python3 goals/citation-extraction-engine/ops/verify-reference-template.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-extraction-loop.py --self-test"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
@@ -586,6 +588,14 @@
     {
       "path": "ops/verify-reference-template.py",
       "purpose": "Seal template and exhaustive-escape observations, reject structural corruption and optionally replay the clean pinned oracle; not full target generation proof."
+    },
+    {
+      "path": "ops/probe-extraction-loop.py",
+      "purpose": "Capture actual original get_citations Document/token and pre/post-filter model identity."
+    },
+    {
+      "path": "ops/verify-extraction-loop.py",
+      "purpose": "Seal original extraction-loop evidence, corruption controls and exact pinned replay."
     }
   ]
 }

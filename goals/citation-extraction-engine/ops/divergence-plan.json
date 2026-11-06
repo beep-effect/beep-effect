@@ -236,7 +236,14 @@
         "packages/law-practice/server/test/CitationGeneratedReferences.fixtures.ts",
         "packages/law-practice/server/test/CitationGeneratedReferences.test.ts",
         "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-pin-references.md",
-        "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-markup-references.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-markup-references.md",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-loop.md",
+        "goals/citation-extraction-engine/ops/probe-extraction-loop.py",
+        "goals/citation-extraction-engine/ops/verify-extraction-loop.py",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/extraction-loop.json",
+        "packages/law-practice/server/src/internal/Citation/ExtractionLoop.ts",
+        "packages/law-practice/server/test/CitationExtractionLoop.fixtures.ts",
+        "packages/law-practice/server/test/CitationExtractionLoop.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

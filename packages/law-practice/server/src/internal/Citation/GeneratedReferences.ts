@@ -226,6 +226,26 @@ export class CitationGeneratedMarkupInput extends S.Opaque<
 const MarkupInput = S.toType(CitationGeneratedMarkupInput);
 const sameLayout = CitationRegexInputLayout.pipe(S.toType, S.toEquivalence);
 const sameNative = CitationPythonUnicodeStorage.pipe(S.toType, S.toEquivalence);
+const prepareMarkupGeometry = Effect.fn("Citation.prepareReferenceMarkupGeometry")(function* (
+  limits: CitationEngineLimits,
+  request: CitationGeneratedMarkupInput,
+  geometry: CitationHtmlTagGeometryInput
+) {
+  const input = yield* makeCitationRegexInput(limits, "source");
+  const plain = yield* input.prepareUnicode(request.plain, () => Effect.void);
+  const markup = yield* input.prepareUnicode(request.markup, () => Effect.void);
+  if (
+    !sameNative(geometry.plain, plain.value.storage) ||
+    !sameLayout(geometry.forward.before, plain.layout) ||
+    !sameLayout(geometry.backward.after, plain.layout) ||
+    !sameLayout(geometry.backward.before, markup.layout) ||
+    geometry.forward.after.pythonLength !== markup.layout.pythonLength
+  )
+    return yield* fail("invalid-input");
+  const forward = yield* makeCitationSpanOffsets(limits, geometry.forward);
+  const backward = yield* makeCitationSpanOffsets(limits, geometry.backward);
+  return { plain, markup, forward, backward };
+});
 const prepareMarkup = Effect.fn("Citation.extractMarkupReferences")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
@@ -237,20 +257,7 @@ const prepareMarkup = Effect.fn("Citation.extractMarkupReferences")(function* (
   const pattern = yield* builder.build(request.metadata, "markup");
   if (O.isNone(pattern) || O.isNone(request.geometry) || request.markup.bytes.length === 0)
     return A.empty<CitationGeneratedReference>();
-  const input = yield* makeCitationRegexInput(limits, "source");
-  const plain = yield* input.prepareUnicode(request.plain, () => Effect.void);
-  const markup = yield* input.prepareUnicode(request.markup, () => Effect.void);
-  const geometry = request.geometry.value;
-  if (
-    !sameNative(geometry.plain, plain.value.storage) ||
-    !sameLayout(geometry.forward.before, plain.layout) ||
-    !sameLayout(geometry.backward.after, plain.layout) ||
-    !sameLayout(geometry.backward.before, markup.layout) ||
-    geometry.forward.after.pythonLength !== markup.layout.pythonLength
-  )
-    return yield* fail("invalid-input");
-  const forward = yield* makeCitationSpanOffsets(limits, geometry.forward);
-  const backward = yield* makeCitationSpanOffsets(limits, geometry.backward);
+  const { plain, markup, forward, backward } = yield* prepareMarkupGeometry(limits, request, request.geometry.value);
   const offset = yield* forward.update(request.start, "right");
   const suffix = yield* markup.slice(
     { start: bound(offset, markup.value.pythonLength), end: markup.value.pythonLength },

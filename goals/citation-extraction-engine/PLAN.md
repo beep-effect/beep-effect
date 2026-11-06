@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Prepared extraction-loop checkpoint (2026-11-06): full/reference constructors,
+parallel inheritance, generated references and final selection now compose under
+one admitted Scope/deadline/text authority. Original source capture retains
+36 documents, 80 pre-filter models, 77 returned models and two warning pairs.
+Bun/Node replay preserves state and returned-entry identity with one operation
+permit. Raw-input assembly and public engine integration remain open. See
+[loop evidence](history/evidence/2026-11-06-extraction-loop.md).
+
 Generated markup/combined checkpoint (2026-11-06): original name-only and
 whole-element spans now map through existing bidirectional geometry and regex
 workers, with original following-text rejection and ordered combined guards.
