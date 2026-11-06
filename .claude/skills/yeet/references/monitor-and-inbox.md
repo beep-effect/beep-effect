@@ -4,6 +4,31 @@ Read when a monitor exits for a reason you do not expect, when you consume `--wa
 
 ## Resume and stream commands
 
+### One remote poller per pull request
+
+The existing readiness monitor owns recurring GitHub reads. Do not start a second
+`gh pr checks` loop, a Python watcher, or repeated `status --remote` calls beside
+it. Wait on its recorded job/session; consume its branch-scoped
+`.beep/yeet/runs/<run-id>/status.json` for progress between meaningful events.
+This removes duplicate API calls and repeated status text from agent context.
+
+Before reporting that snapshot, check `createdAt`, `remote.headSha` and the
+monitor's process/job state. A snapshot older than two configured poll intervals,
+or one for another head, is historical evidence, not current readiness. Check
+the owning monitor's failure/output first; if a fresh read is necessary, make
+one bounded read and let the same monitor continue. Do not overwrite its remote
+snapshot by repeatedly running a local-only status command into the same run.
+
+Targeted reads remain necessary for new failed-job logs, review threads and the
+final merge gate. An old snapshot never substitutes for the fresh thread read
+immediately before merging. A terminal monitor can be restarted once after its
+reported cause is handled; a pending tool/session ID is still a live request.
+
+During the November 6 performance work, an attached monitor, a separate watcher
+and manual check polls overlapped. The operating change is three polling paths
+to one, not a measured token-percentage saving. Compare request counts over the
+same observation interval before making a numerical API or context claim.
+
 - Resume the newest publishing agent recorded for a pull request:
 
 ```bash

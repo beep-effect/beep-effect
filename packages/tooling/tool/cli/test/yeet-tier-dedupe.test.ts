@@ -17,6 +17,7 @@ import {
   collectProofEnvironment,
   decideParityLaneReuse,
   executeStepWithArtifacts,
+  FinalCheckPlannedStep,
   HEAD_INSTALL_RECEIPT_TTL,
   HeadInstallInputs,
   HeadInstallReceipt,
@@ -33,8 +34,10 @@ import {
   recordHeadInstallReceipt,
   renderParityLaneDecision,
   reuseVerifiedHeadInstallForTesting,
+  runFinalCheckStep,
   writeVerifiedState,
 } from "@beep/repo-cli/test/Yeet";
+import { QualityTaskStep } from "@beep/repo-cli-kit/process/index";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -441,6 +444,16 @@ describe("clean-HEAD install receipt reuse (A4)", () => {
           O.map(loadedHeadInstallReceipt10, (receipt) => receipt.inputs.lockfileDigest),
           "absent"
         );
+        const repeated = yield* Effect.forEach(preflight, (step) => executeStepWithArtifacts(context, step));
+        expect(
+          A.every(
+            repeated,
+            (result) =>
+              result.exitCode === 0 && O.exists(O.fromUndefinedOr(result.output), Str.includes("reused clean install"))
+          )
+        ).toBe(true);
+        const retained = yield* loadHeadInstallReceipt(context, installed);
+        expect(retained).toEqual(loadedHeadInstallReceipt10);
         // An unparseable lockfile fails the frozen install and drops the receipt.
         const broken = yield* commit("bun.lock", "not a lockfile\n");
         const failed = yield* Effect.forEach(preflight, (step) => executeStepWithArtifacts(context, step));
@@ -450,6 +463,88 @@ describe("clean-HEAD install receipt reuse (A4)", () => {
         const loadedHeadInstallReceipt12 = yield* loadHeadInstallReceipt(context, installed);
         assertNone(loadedHeadInstallReceipt12);
       }).pipe(withTestConsole)
+    );
+  });
+});
+
+describe("resumable final-check steps", () => {
+  it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("over a real checkout", (it) => {
+    it.effect("saves a completed step before the full receipt and invalidates changed inputs", () =>
+      Effect.gen(function* () {
+        const { root, commit, git } = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        const step = FinalCheckPlannedStep.make({
+          gate: "check",
+          hostedContext: "Heavy / Check",
+          step: QualityTaskStep.make({
+            label: "final-check:check",
+            command: "sh",
+            args: ["-c", "mkdir -p .beep; printf x >> .beep/executions"],
+            cwd: root,
+            env: { PROOF_TEST: "one" },
+          }),
+        });
+        const first = yield* runFinalCheckStep(step, false);
+        expect(first.status).toBe("passed");
+        const resumed = yield* runFinalCheckStep(step, true);
+        expect(resumed.reason).toContain("reused completed step");
+        const observation1 = yield* fs.readFileString(`${root}/.beep/executions`);
+        expect(observation1).toBe("x");
+        const observation2 = yield* fs.exists(`${root}/.beep/yeet/final-check`);
+        expect(observation2).toBe(false);
+        // A failed later gate does not erase the earlier success or create a success of its own.
+        const failing = FinalCheckPlannedStep.make({
+          ...step,
+          step: QualityTaskStep.make({ ...step.step, label: "final-check:failing", args: ["-c", "exit 1"] }),
+        });
+        const observation3 = yield* runFinalCheckStep(failing, true);
+        expect(observation3.status).toBe("failed");
+        const observation4 = yield* runFinalCheckStep(failing, true);
+        expect(observation4.status).toBe("failed");
+        const observation5 = yield* runFinalCheckStep(step, true);
+        expect(observation5.reason).toContain("reused completed step");
+        const changedEnvironment = FinalCheckPlannedStep.make({
+          ...step,
+          step: QualityTaskStep.make({ ...step.step, env: { PROOF_TEST: "two" } }),
+        });
+        const observation6 = yield* runFinalCheckStep(changedEnvironment, true);
+        expect(observation6.reason).toBeUndefined();
+        yield* fs.writeFileString(`${root}/untracked.txt`, "changed input");
+        const observation7 = yield* runFinalCheckStep(changedEnvironment, true);
+        expect(observation7.reason).toBeUndefined();
+        const next = yield* commit("README.md", "# changed head\n");
+        const observation8 = yield* runFinalCheckStep(changedEnvironment, true);
+        expect(observation8.reason).toBeUndefined();
+        yield* git("update-ref", "refs/remotes/origin/main", next);
+        const observation9 = yield* runFinalCheckStep(changedEnvironment, true);
+        expect(observation9.reason).toBeUndefined();
+        const observation10 = yield* fs.readFileString(`${root}/.beep/executions`);
+        expect(observation10).toBe("xxxxx");
+      })
+    );
+
+    it.effect("always executes live sanity checks and allows an explicit fresh replay", () =>
+      Effect.gen(function* () {
+        const { root } = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        const step = FinalCheckPlannedStep.make({
+          gate: "repo-sanity",
+          hostedContext: "Repo Sanity",
+          step: QualityTaskStep.make({
+            label: "final-check:repo-sanity",
+            command: "sh",
+            args: ["-c", "mkdir -p .beep; printf x >> .beep/executions"],
+            cwd: root,
+          }),
+        });
+        yield* runFinalCheckStep(step, true);
+        yield* runFinalCheckStep(step, true);
+        const checked = FinalCheckPlannedStep.make({ ...step, gate: "check" });
+        yield* runFinalCheckStep(checked, false);
+        yield* runFinalCheckStep(checked, false);
+        const observation11 = yield* fs.readFileString(`${root}/.beep/executions`);
+        expect(observation11).toBe("xxxx");
+      })
     );
   });
 });
