@@ -86,6 +86,28 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })(
         }),
       { timeout: 60000 }
     );
+    it.effect(
+      "refuses build metadata whose runtime kind disagrees with the installed diff backend",
+      () =>
+        Effect.gen(function* () {
+          const expected = yield* installCitationDocumentExtractionFixture("bun");
+          expect(expected.configuration.document.diffRuntime.kind).toBe("bun");
+          const failure = yield* makeCitationDefaultEngineConfiguration(
+            expected.setup.limits,
+            {
+              parserCatalog: asset("parser-catalog.data"),
+              helpers: asset("helper-configurations.data"),
+              vocabulary: asset("semantic-editions.json"),
+              diffRuntime: expected.configuration.document.diffRuntime,
+            },
+            citationFixtureEngineBuild("node")
+          ).pipe(Effect.provideContext(expected.provided), DateTime.withCurrentZoneOffset(0), Effect.flip);
+          expect(failure._tag).toBe("CitationEngineArtifactFailure");
+          const counts = yield* expected.setup.observed.snapshot;
+          expect(counts).toEqual({ spawned: 0, confirmed: 0 });
+        }),
+      { timeout: 60000 }
+    );
     it.effect("refuses changed, truncated, appended and unavailable vocabulary assets", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

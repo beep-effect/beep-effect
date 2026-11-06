@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "87bb4ccc7e5a0b03de4a2ed6b967e1300b39fcbd353afbc55dce4ce2ec1b45f3",
+  "planSha256": "8436ed58f28f3ac4754d9c7fe8e2f388f7c7a560ac18fb0ce93171b6fe379d49",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1181,6 +1181,10 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-server-failure-contract.md",
           "sha256": "8e8490c1953ebb18ccd950cc9f014200d33c7d6fa8c2e7574fa5151724b2e519"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-runtime-kind-review.md",
+          "sha256": "7af48e87db4264a40164f6b878efca313ac5a3aaab2dc743eb037161284d9bfe"
         }
       ],
       "workflowState": "audit",

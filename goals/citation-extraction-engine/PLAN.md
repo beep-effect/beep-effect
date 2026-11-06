@@ -1309,6 +1309,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the composition wave; retain separately qualified raw entry and semantic projection.
 
+### Prove installer runtime-kind mismatch refusal, 2026-11-06
+
+Two review threads identified the untested runtime-kind refusal. A focused effect test passes Node build metadata with an actual Bun diff backend and asserts CitationEngineArtifactFailure plus zero native children. Six configuration/artifact tests pass in 9.97s, with package and scoped quality checks. Production behavior is unchanged. See history/evidence/2026-11-06-runtime-kind-review.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert only the new regression test and receipt; keep the production guard and acceptance requirements.
+
 ### Publish the closed server citation failure union, 2026-11-06
 
 Publish exactly the five SPEC failure classes from the use-case server subpath and share the four-operation schema with safety. The typed extraction translator reconstructs declared data, emits closed debug labels and tests private-payload redaction. It accepts only established input/source/vocabulary/safety families, never arbitrary native errors or missing canonical capabilities as unsupported modes. Root/client surfaces remain empty. Full service/Layer and remaining translators/acceptance remain open. See history/evidence/2026-11-06-server-failure-contract.md.

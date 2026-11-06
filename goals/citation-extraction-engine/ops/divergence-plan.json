@@ -296,7 +296,8 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-06-default-configuration.md",
         "goals/citation-extraction-engine/history/evidence/2026-11-06-engine-artifact.md",
         "goals/citation-extraction-engine/history/evidence/2026-11-06-document-services.md",
-        "goals/citation-extraction-engine/history/evidence/2026-11-06-server-failure-contract.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-server-failure-contract.md",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-runtime-kind-review.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

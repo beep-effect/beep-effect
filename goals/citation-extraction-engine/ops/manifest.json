@@ -160,7 +160,8 @@
     "packages/law-practice/server/src/internal/Citation/DocumentServices.ts",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-server-failure-contract.md",
     "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.errors.ts",
-    "packages/law-practice/server/src/internal/Citation/EngineFailure.ts"
+    "packages/law-practice/server/src/internal/Citation/EngineFailure.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-runtime-kind-review.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
