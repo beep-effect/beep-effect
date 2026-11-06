@@ -8,11 +8,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Fable 5.1 (goals/alchemy-vault-sync-slice foundations)",
-      "reason": "Record the added //#lint:entity-kit-freeze root computation (cloned from //#lint:retired-effect-paths) and the generated default computations of the new @beep/alchemy-postgres driver package, and attribute the shared root scripts-digest change to the added root script; no other command, input, output, env, dependency edge or cache flag changes, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-driver PR 2a)",
+      "reason": "Record the @beep/pglite dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the PGlite conformance project; no command, input, output, env or cache flag changes, and no qualification is granted. Also re-stamps the inherited @beep/types turbo.json source review row from main.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review.md",
-        "sha256": "9d2822366e3c5391c6816282f9430eb21ce299fbfb020c884f15598ca933dfd5"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2a.md",
+        "sha256": "195dd170569ba0e9650cc19920e67d779afc7b5333e4318f31fd6687acfaf096"
       }
     },
     "@beep/acp": {
@@ -80,11 +80,11 @@
       }
     },
     "@beep/alchemy-postgres": {
-      "reviewer": "Claude Fable 5.1 (goals/alchemy-vault-sync-slice foundations)",
-      "reason": "Record the added //#lint:entity-kit-freeze root computation (cloned from //#lint:retired-effect-paths) and the generated default computations of the new @beep/alchemy-postgres driver package, and attribute the shared root scripts-digest change to the added root script; no other command, input, output, env, dependency edge or cache flag changes, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-driver PR 2a)",
+      "reason": "Record the @beep/pglite dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the PGlite conformance project; no command, input, output, env or cache flag changes, and no qualification is granted. Also re-stamps the inherited @beep/types turbo.json source review row from main.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review.md",
-        "sha256": "9d2822366e3c5391c6816282f9430eb21ce299fbfb020c884f15598ca933dfd5"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2a.md",
+        "sha256": "195dd170569ba0e9650cc19920e67d779afc7b5333e4318f31fd6687acfaf096"
       }
     },
     "@beep/anthropic": {
@@ -1440,11 +1440,11 @@
       }
     },
     "@beep/types": {
-      "reviewer": "Claude Opus 5.5 (perf-turbo-granularity, claude/perf-turbo-granularity-110eae)",
-      "reason": "Re-record input lists and policy-task fingerprint edges after quality audit M9, M10 and K3: package-root README/CHANGELOG/LICENSE leave transit, build, check and test hashes, test/** leaves build and transit (eleven test-compiling builds keep it), and the policy seals move to script-less @beep/repo-cli tasks with per-seal root-config routing. Commands, outputs, cache flags and environment are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-driver PR 2a)",
+      "reason": "Record the @beep/pglite dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the PGlite conformance project; no command, input, output, env or cache flag changes, and no qualification is granted. Also re-stamps the inherited @beep/types turbo.json source review row from main.",
       "basis": {
-        "path": "docs/reports/perf-turbo-granularity-cache-review-2026-11-02.md",
-        "sha256": "1da98f30c3c2545b941ca97f7e8bc5fcfad15810713ff25c9f92e2f2ec82fc28"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2a.md",
+        "sha256": "195dd170569ba0e9650cc19920e67d779afc7b5333e4318f31fd6687acfaf096"
       }
     },
     "@beep/ui": {
@@ -9331,6 +9331,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/pglite#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -9386,6 +9387,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/pglite#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -9427,6 +9429,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/pglite#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -9550,6 +9553,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/pglite#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
           "@beep/utils#transit"
@@ -9754,6 +9758,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/pglite#transit",
           "@beep/schema#transit",
           "@beep/utils#transit"
         ],
@@ -9798,6 +9803,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/pglite#transit",
           "@beep/schema#transit",
           "@beep/utils#transit",
           "@beep/utils#transit"
@@ -9850,6 +9856,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/pglite#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -113402,7 +113409,9 @@
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json"
           ],
-          "env": [],
+          "env": [
+            "BEEP_CACHE_TOOLCHAIN_DIGEST"
+          ],
           "passThroughEnv": [],
           "outputs": [],
           "dependsOn": [],
@@ -122437,7 +122446,7 @@
       },
       {
         "path": "packages/foundation/primitive/types/turbo.json",
-        "sha256": "6c8d1d6e3c12318fa0273a3ec1585487e4661e8a80bda2ccf5d48a2c821dedd4"
+        "sha256": "7a3bc28477bb6761fefb109a38019dfc9b75e6c6d070be51251cd2b29328f486"
       },
       {
         "path": "packages/tooling/library/ai-sync/turbo.json",
