@@ -16,8 +16,8 @@ from different workloads together.
 | Load a package's complete JSDoc source set before querying its exports | Full inventory 286.63 → 134.14 seconds; peak RSS 5,914,908 → 4,355,136 KiB (53% less time, 26% less memory) | Inventories identical except `generatedAt`: 187 packages, 3,663 modules, 26,321 exports; existing detector fixtures pass |
 | Generate canonical dependency references in test overlays | CLI test check median 1.79 → 1.55 seconds; peak RSS 6,420,996 → 4,758,956 KiB (13% less time, 26% less memory) | All 342 root check tasks pass; both modes report the same deliberate TS2322 diagnostic |
 | Same test-reference change in `@beep/colors` | Median 0.11 → 0.05 seconds; peak RSS 461,888 → 309,452 KiB | Same clean diagnostics; dependency source count 191 → 5; small absolute duration limits timing precision |
-| Enable JSDoc inventory's existing remote cache in Check | No hosted improvement claimed yet; enables identical-input reuse | Full inventory retained; protected writer environment, PR read-only policy and adapter cleanup tested |
-| Select Storybook before browser provisioning | Avoids browser version resolution, cache restore and Chromium/OS setup for unaffected PRs; hosted seconds not yet measured | Reuses the existing dependency-aware Turbo probe and preserves failures; affected/unaffected selection fixtures pass |
+| Enable JSDoc inventory's existing remote cache in Check | Enables identical-input reuse; realized savings depend on cache hits | Full inventory retained; protected writer environment, PR read-only policy and adapter cleanup tested |
+| Select Storybook before browser provisioning | Avoids browser version resolution, cache restore and Chromium/OS setup for unaffected PRs; compare the publishing PR's hosted provisioning steps | Reuses the existing dependency-aware Turbo probe and preserves failures; affected/unaffected selection fixtures pass |
 | Accept multiple package names in `quality package-verify` | Avoids one CLI startup per additional package; no whole-repo timing claim | Sequential execution, duplicate names run once, later packages still run after diagnostic failure, final failure retained |
 | Attribute generated governance metadata to its coverage consumers | The observed two-file metadata change selected all 190 packages before; the live planner now selects only `@beep/repo-cli` and `@beep/repo-cli-kit` | 304 planning tests pass; unknown inputs, unavailable consumers and coverage machinery changes retain full fallback; no elapsed-time claim |
 | Repair Phoenix inventory query with the current GraphQL field alias | Live doctor can read inventory again | Focused tests and live metadata query pass; no collector restart or instrumentation removal |
@@ -149,9 +149,13 @@ telemetry are excluded from tracked reports.
 - Full JSDoc inventory equivalence and the positive compiler diagnostic control
   are retained with the local timing receipts.
 
-These are local checks. The cache and browser-provisioning changes still require
-hosted run observations before claiming CI time savings. No collectors, cache
-trust boundaries, required proof scopes, or property-test run floors were weakened.
+These are local checks. Record hosted observations in the publishing PR body
+with exact run, attempt, job and step identifiers, workload and cache state.
+Updating that evidence in the PR body avoids invalidating an already tested code
+head solely to attach timings. Hosted observations are required before claiming
+CI time savings; standard job metadata alone does not establish peak memory.
+No collectors, cache trust boundaries, required proof scopes, or property-test
+run floors were weakened.
 
 ## Reversal
 
