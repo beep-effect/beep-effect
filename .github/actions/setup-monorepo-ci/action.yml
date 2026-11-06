@@ -145,10 +145,23 @@ runs:
           fi
           if command -v apt-get >/dev/null 2>&1; then
             bash scripts/ci-prune-apt-sources.sh
-            "${privilege[@]}" apt-get update
-            "${privilege[@]}" apt-get install -y --no-install-recommends poppler-utils
+            # Run timeout inside sudo so its signals also reach privileged
+            # package-manager children. Network retries alone do not bound
+            # mirror stalls, lock waits, or the complete operation.
+            apt_options=(
+              -o Acquire::Retries=2
+              -o Acquire::http::Timeout=20
+              -o Acquire::https::Timeout=20
+              -o DPkg::Lock::Timeout=30
+            )
+            "${privilege[@]}" timeout --signal=TERM --kill-after=15s 180s \
+              apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any update
+            "${privilege[@]}" timeout --signal=TERM --kill-after=15s 300s \
+              apt-get "${apt_options[@]}" install -y --no-install-recommends poppler-utils
           elif command -v dnf >/dev/null 2>&1; then
-            "${privilege[@]}" dnf install -y poppler-utils
+            "${privilege[@]}" timeout --signal=TERM --kill-after=15s 300s \
+              dnf --setopt=timeout=20 --setopt=retries=2 --setopt=minrate=1000 \
+              install -y poppler-utils
           else
             echo "::error::pdftotext is required; this runner has no supported package manager."
             exit 1

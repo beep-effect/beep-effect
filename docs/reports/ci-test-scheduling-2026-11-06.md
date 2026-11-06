@@ -66,3 +66,31 @@ control test admission, coverage scope, assertions or pass/fail policy.
 
 To reverse, restore the serial property configuration and remove the custom
 sequencer plus its assignment file. No persistent cache or migration is involved.
+
+## Bound stalled native-tool setup
+
+The [CLI shard 1 job on #2754](https://github.com/beep-effect/beep-effect/actions/runs/42219820232/job/127898787055)
+reached its one-hour limit while `apt-get update` waited on the Ubuntu mirror.
+It never reached test execution. This is setup failure, not a slow test suite.
+
+Native PDF setup now bounds apt metadata refresh to 180 seconds and installation
+to 300 seconds, with 15 seconds of termination grace for each. HTTP/HTTPS waits
+are 20 seconds, retries are two, and package-lock waits are 30 seconds. Any failed
+repository refresh fails the step instead of silently using incomplete indexes.
+The dnf alternative has a 300-second limit and bounded network retries too.
+`timeout` runs inside the privilege wrapper so it can terminate package-manager
+children. Existing installations still run `pdftotext -v`; missing or broken PDF
+tools never produce a passing setup.
+
+Eleven shell fixture cases passed, covering apt/dnf success, update/install error
+propagation, stalls, preinstalled tools and unsupported managers. Accelerated real
+GNU timeout controls killed both a TERM-ignoring process and its child. Workflow
+lint and shell syntax checks passed. This bounds wasted time on a failed setup;
+it does not claim faster normal installation or a hosted saving yet. Slow but
+healthy mirrors can now fail earlier and require a job retry. Reversal restores
+the previous package-manager commands.
+
+The initial hosted config check also caught two Effect policy violations in the
+sequencer boundary. The repair uses the platform Path service and Effect promise
+boundary. Config type checking, package lint/check and the 412-file partition
+controls pass after that repair.
