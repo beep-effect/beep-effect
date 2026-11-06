@@ -5,6 +5,7 @@
 import * as A from "effect/Array";
 import { makeCoworkLifecycleCore } from "../internal/cowork-lifecycle-core.ts";
 import { prepareCoworkCallback } from "../internal/cowork-lifecycle-forward.ts";
+import { CoworkLifecycleCodecs } from "../internal/cowork-lifecycle-schemas.ts";
 import { CursorLifecycleSourceContract } from "../internal/cursor-lifecycle-schemas.ts";
 import type { CoworkLifecyclePolicy } from "../internal/cowork-lifecycle-schemas.ts";
 /**
@@ -45,5 +46,16 @@ export const makeCoworkLifecycleFixtureReceiver = (policy: CoworkLifecyclePolicy
  * @since 0.0.0
  */
 export const prepareCoworkLifecycleFixtureHook = prepareCoworkCallback;
+/**
+ * Existing positive wire codecs for a real synthetic descendant peer.
+ * **Example** (Inspect the fixture codec without reading input)
+ * ```ts
+ * import { coworkLifecycleFixtureCodecs } from "@beep/repo-ai-metrics/test/claude-cowork-lifecycle"
+ * console.log(typeof coworkLifecycleFixtureCodecs.decodeCallback)
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const coworkLifecycleFixtureCodecs = CoworkLifecycleCodecs;
 export { coworkPeerSource } from "../internal/cowork-peer-source.ts";
 export { hashObservationPayload, nativeTraceWire } from "../internal/native-trace-wire.ts";

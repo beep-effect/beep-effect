@@ -27,7 +27,17 @@ class RuntimeFixtureError extends S.TaggedError<RuntimeFixtureError, { readonly 
 const failure = (reason: RuntimeFixtureError["reason"]) => RuntimeFixtureError.make({ reason });
 // One real process serves serial fixture callbacks, preserving runtime PID/start-ticks for replay.
 // Only bounded ACK text leaves stdout; the input channel keeps lost-ACK peers alive until teardown.
-const socketPeer = String.raw`
+/**
+ * Fixed synthetic socket peer program shared by private runtime ancestry fixtures.
+ * **Example** (Inspect the fixture program without launching it)
+ * ```ts
+ * import { sealedRuntimeSocketPeerSource } from "@beep/repo-ai-metrics/test/sealed-runtime"
+ * console.log(sealedRuntimeSocketPeerSource.length > 0)
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const sealedRuntimeSocketPeerSource = String.raw`
 const net = require("node:net");
 const readline = require("node:readline");
 const lines = readline.createInterface({input:process.stdin,crlfDelay:Infinity});
@@ -99,7 +109,7 @@ export const makeSealedRuntimeFixture = Effect.fn("NativeBoundaryTest.sealedRunt
       return yield* failure("runtime");
     const commands = yield* Effect.acquireRelease(Queue.bounded<Uint8Array>(1), Queue.shutdown);
     const semaphore = yield* Semaphore.make(1);
-    const child = yield* ChildProcess.make(executable, ["--eval", socketPeer], {
+    const child = yield* ChildProcess.make(executable, ["--eval", sealedRuntimeSocketPeerSource], {
       extendEnv: false,
       cwd: process.cwd(),
       stdin: Stream.fromQueue(commands),

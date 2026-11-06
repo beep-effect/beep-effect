@@ -1,5 +1,5 @@
-import * as NodeNet from "node:net";
 import {
+  CoworkLifecycleError,
   CoworkLifecyclePolicy,
   CoworkLifecycleRuntime,
   makeCoworkLifecycleReceiver,
@@ -10,12 +10,15 @@ import { makeNativeIntakeJournal } from "@beep/repo-ai-metrics/native-intake";
 import { makeObservationControl, ObservationControlPolicy } from "@beep/repo-ai-metrics/observation-control";
 import { hashPrivateIdentifier } from "@beep/repo-ai-metrics/privacy";
 import {
+  coworkLifecycleFixtureCodecs,
   coworkPeerSource,
   hashObservationPayload,
   makeCoworkLifecycleFixtureReceiver,
   nativeTraceWire,
   prepareCoworkLifecycleFixtureHook,
 } from "@beep/repo-ai-metrics/test/claude-cowork-lifecycle";
+import { makeCoworkAncestorFixture } from "@beep/repo-ai-metrics/test/cowork-ancestor";
+import { cursorLifecycleFixtureCodecs } from "@beep/repo-ai-metrics/test/cursor-lifecycle";
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -96,7 +99,8 @@ const start = {
 const makeDelivery = (
   policy: CoworkLifecyclePolicy,
   journal: Effect.Success<ReturnType<typeof makeNativeIntakeJournal>>,
-  control: ObservationControl
+  control: ObservationControl,
+  ancestor: Effect.Success<ReturnType<typeof makeCoworkAncestorFixture>>
 ) => {
   const deliver = Effect.fn("CoworkLifecycleTest.deliver")(function* (
     body: unknown,
@@ -110,13 +114,18 @@ const makeDelivery = (
     );
     const opened = yield* receiver.open().pipe(Effect.result);
     if (Result.isFailure(opened)) return { result: Result.fail(opened.failure), reply: Result.fail(opened.failure) };
-    const prepared = yield* prepareCoworkLifecycleFixtureHook(
-      opened.success.socketPath,
-      encoded,
-      selector,
-      occurrenceId
+    yield* prepareCoworkLifecycleFixtureHook(opened.success.socketPath, encoded, selector, occurrenceId);
+    const callback = yield* coworkLifecycleFixtureCodecs.decodeCallback(encoded);
+    const projected = yield* coworkLifecycleFixtureCodecs.encodeEnvelope(
+      coworkLifecycleFixtureCodecs.makeEnvelope({ callback, occurrenceId })
     );
-    const sending = yield* Effect.forkChild(prepared.send.pipe(Effect.result));
+    const sending = yield* Effect.forkChild(
+      ancestor.send(opened.success.socketPath, projected).pipe(
+        Effect.flatMap(cursorLifecycleFixtureCodecs.decodeAcknowledgement),
+        Effect.mapError(() => CoworkLifecycleError.make({ reason: "transport" })),
+        Effect.result
+      )
+    );
     const result = yield* opened.success.accept.pipe(Effect.result);
     const reply = yield* Fiber.join(sending);
     return { result, reply };
@@ -126,7 +135,8 @@ const makeDelivery = (
 const fixture = Effect.fn("CoworkLifecycleTest.fixture")(function* (maxPages = 32) {
   yield* TestClock.adjust("1 second");
   const fs = yield* FileSystem.FileSystem;
-  const runtimeExecutable = yield* fs.realPath(process.execPath);
+  const ancestor = yield* makeCoworkAncestorFixture();
+  const runtimeExecutable = ancestor.runtime.executable;
   const pythonExecutable = yield* fs.realPath("/usr/bin/python3");
   const namespaceId = yield* hashPrivateIdentifier("ai-metrics-hash-salt-namespace/v1", O.some(salt));
   const sourceRoot = yield* fs.makeTempDirectoryScoped({ prefix: "cowork-source-fixture-" });
@@ -140,11 +150,6 @@ const fixture = Effect.fn("CoworkLifecycleTest.fixture")(function* (maxPages = 3
       return { path, sha256: yield* sha(path) };
     })
   );
-  const statText = yield* fs.readFileString(`/proc/${process.pid}/stat`);
-  const closing = yield* Effect.fromOption(Str.lastIndexOf(")")(statText));
-  const suffix = Str.slice(closing + 2)(statText);
-  const fields = Str.split(" ")(suffix);
-  const appStartTicks = yield* Effect.fromOption(A.get(fields, 19));
   const policy = CoworkLifecyclePolicy.make({
     workspace: process.cwd(),
     runtimeExecutable,
@@ -161,8 +166,8 @@ const fixture = Effect.fn("CoworkLifecycleTest.fixture")(function* (maxPages = 3
     socketPath: `${sourceRoot}/s`,
     appExecutable: runtimeExecutable,
     appSha256: yield* sha(runtimeExecutable),
-    appPid: process.pid,
-    appStartTicks,
+    appPid: ancestor.appPid,
+    appStartTicks: ancestor.appStartTicks,
     sourcePins,
   });
   const journal = yield* makeNativeIntakeJournal(
@@ -172,7 +177,7 @@ const fixture = Effect.fn("CoworkLifecycleTest.fixture")(function* (maxPages = 3
     ObservationControlPolicy.make({ maxActive: 1, drainTimeoutMillis: 1000 })
   );
   yield* control.resume;
-  return { policy, journal, control, namespaceId, deliver: makeDelivery(policy, journal, control) };
+  return { policy, journal, control, namespaceId, ancestor, deliver: makeDelivery(policy, journal, control, ancestor) };
 });
 
 it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer, platformLayer), {
@@ -290,17 +295,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer
         selector: "local-agent",
         callback: start,
       });
-      yield* Effect.callback<void>((resume) => {
-        const socket = NodeNet.createConnection({ path: opened.socketPath, allowHalfOpen: true });
-        socket.once("connect", () =>
-          socket.end(body, () => {
-            socket.destroy();
-            resume(Effect.void);
-          })
-        );
-        socket.once("error", () => resume(Effect.void));
-        return Effect.sync(() => socket.destroy());
-      });
+      yield* f.ancestor.send(opened.socketPath, body, true);
       const uncertain = yield* opened.accept.pipe(Effect.result);
       uncertain.pipe(Result.isFailure, assertTrue);
       expect((yield* f.journal.stats).pages).toBe(1);
@@ -336,15 +331,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer
         selector: "local-agent",
         callback: { ...start, source: "unsupported" },
       });
-      const sending = yield* Effect.forkChild(
-        Effect.callback<void>((resume) => {
-          const socket = NodeNet.createConnection({ path: opened.socketPath, allowHalfOpen: true });
-          socket.once("connect", () => socket.end(invalidBody));
-          socket.once("end", () => resume(Effect.void));
-          socket.once("error", () => resume(Effect.void));
-          return Effect.sync(() => socket.destroy());
-        })
-      );
+      const sending = yield* Effect.forkChild(f.ancestor.send(opened.socketPath, invalidBody));
       const invalid = yield* opened.accept.pipe(Effect.result);
       yield* Fiber.join(sending);
       invalid.pipe(Result.isFailure, assertTrue);
@@ -372,7 +359,7 @@ for (const capacityRefusal of [false, true]) {
             return yield* f.journal.acceptBatch(batch);
           }),
         };
-        const deliver = makeDelivery(f.policy, journal, f.control);
+        const deliver = makeDelivery(f.policy, journal, f.control, f.ancestor);
         const delivered = yield* deliver(start, f.policy, "synthetic-occurrence-replaced");
         deepStrictEqual(Result.isFailure(delivered.result), capacityRefusal);
         const retained = yield* fs.readFileString(f.policy.socketPath);
@@ -585,24 +572,16 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer
         const script = `${directory}/observe-lifecycle.mjs`;
         yield* fs.writeFileString(script, files["scripts/observe-lifecycle.mjs"]);
         const body = yield* encode(start);
-        const child = yield* ChildProcess.make(f.policy.runtimeExecutable, [script, opened.socketPath], {
-          cwd: f.policy.workspace,
-          extendEnv: false,
-          env: { CLAUDE_CODE_ENTRYPOINT: "local-agent" },
-          stdin: Stream.make(new TextEncoder().encode(body)),
-        });
         const captured = yield* Effect.all(
           {
             receipt: opened.accept,
-            stdout: child.stdout.pipe(Stream.runCollect),
-            stderr: child.stderr.pipe(Stream.runCollect),
-            code: child.exitCode,
+            child: f.ancestor.runScript(script, opened.socketPath, body, "local-agent"),
           },
           { concurrency: "unbounded" }
         );
-        expect(Number(captured.code)).toBe(0);
-        expect(captured.stdout).toHaveLength(0);
-        expect(captured.stderr).toHaveLength(0);
+        expect(captured.child.code).toBe(0);
+        expect(captured.child.stdout).toBe("");
+        expect(captured.child.stderr).toBe("");
         expect(captured.receipt.accepted).toBe(1);
         const stored = yield* f.journal.readNewEvents(captured.receipt.page.receiptId);
         const serialized = yield* encode(stored);
