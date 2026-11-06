@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "source-plan-outer-metadata-correction/001",
+  "originalSha256": "85610a4b583e904fa0d108bd9582a45dbc48df5b3ccc3a4904b5af82ceff9b24",
+  "normativeAmendmentSha256": "a4637e83a1bc1a86cb6b48b4aff04927a0d6a49672449d43f6d5677fa6de8f46",
+  "rootSourceConsistencyAssessmentSha256": "f5f1236e9acff4cd86cde6a9758e5a136ef7782592b85591042ac66d8f1daf02",
+  "reason": "Complete attached PP/relative/event outer metadata under approved SPP002; original public term anchors, heads, kinds, parents and source strings unchanged. Not benchmark label changes. Concrete source review approval pending.",
+  "replacements": [
+    {
+      "case": "argument-comma-relative-kept",
+      "termOrdinal": 1,
+      "oldOuter": {
+        "startChar": 42,
+        "endChar": 54,
+        "quote": "a lower part"
+      },
+      "newOuter": {
+        "startChar": 42,
+        "endChar": 66,
+        "quote": "a lower part of the unit"
+      }
+    },
+    {
+      "case": "argument-comma-relative-kept",
+      "termOrdinal": 3,
+      "oldOuter": {
+        "startChar": 68,
+        "endChar": 84,
+        "quote": "a collection box"
+      },
+      "newOuter": {
+        "startChar": 68,
+        "endChar": 127,
+        "quote": "a collection box in which the recording medium is collected"
+      }
+    },
+    {
+      "case": "event-gerund-object",
+      "termOrdinal": 0,
+      "oldOuter": {
+        "startChar": 20,
+        "endChar": 26,
+        "quote": "a unit"
+      },
+      "newOuter": {
+        "startChar": 20,
+        "endChar": 46,
+        "quote": "a unit for punching a hole"
+      }
+    }
+  ]
+}

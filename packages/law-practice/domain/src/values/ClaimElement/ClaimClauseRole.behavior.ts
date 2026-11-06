@@ -174,19 +174,30 @@ const articleDeterminer = (
   const article = plainArticle(wordAt(tokens, index));
   const width = surface(tokens, index + 1, "one or more") ? 4 : 1;
   if (O.isSome(article)) return [article.value, width, width];
-  return ["bare", HashSet.has(articleWords, wordAt(tokens, index)) || demonstrativeThat(tokens, index) ? 1 : 0, 0];
+  if (tagAt(tokens, index) === "NUM") return ["bare", 1, 1];
+  const prefix = HashSet.has(articleWords, wordAt(tokens, index)) || demonstrativeThat(tokens, index) ? 1 : 0;
+  return ["bare", prefix, prefix];
 };
 const determiner = (
   tokens: ReadonlyArray<ClaimLexicalToken>,
   index: number
 ): readonly [ClaimTermDeterminer, number, number] =>
   O.getOrElse(quantityDeterminer(tokens, index), () => articleDeterminer(tokens, index));
-const relativeSubjectAt = (tokens: ReadonlyArray<ClaimLexicalToken>, index: number): boolean =>
-  HashSet.has(HashSet.make("that", "which"), wordAt(tokens, index - 1)) &&
-  HashSet.has(nominalTags, tagAt(tokens, index - 2));
+const beforeAdjuncts = (tokens: ReadonlyArray<ClaimLexicalToken>, index: number): number => {
+  let before = index - 1;
+  while (tagAt(tokens, before) === "ADV" || HashSet.has(HashSet.make("not", "n't"), wordAt(tokens, before))) before--;
+  return before;
+};
+const relativeSubjectAt = (tokens: ReadonlyArray<ClaimLexicalToken>, index: number): boolean => {
+  const before = beforeAdjuncts(tokens, index);
+  return (
+    HashSet.has(HashSet.make("that", "which"), wordAt(tokens, before)) &&
+    HashSet.has(nominalTags, tagAt(tokens, before - 1))
+  );
+};
 const singularLexicalSubject = (tokens: ReadonlyArray<ClaimLexicalToken>, index: number): boolean =>
   O.exists(
-    at(tokens, index - 1),
+    at(tokens, beforeAdjuncts(tokens, index)),
     (token) =>
       token.pos === "NOUN" &&
       O.exists(token.lemma, (lemma) => normalized(lemma) === word(token)) &&
@@ -195,7 +206,12 @@ const singularLexicalSubject = (tokens: ReadonlyArray<ClaimLexicalToken>, index:
 const inflectedNounPredicate = (tokens: ReadonlyArray<ClaimLexicalToken>, index: number): boolean => {
   if (!at(tokens, index).pipe(O.getOrThrow, regularPlural)) return false;
   if (singularLexicalSubject(tokens, index) && HashSet.has(articleWords, wordAt(tokens, index + 1))) return true;
-  return relativeSubjectAt(tokens, index) && HashSet.has(nominalTags, tagAt(tokens, index + 1));
+  return (
+    relativeSubjectAt(tokens, index) &&
+    (HashSet.has(nominalTags, tagAt(tokens, index + 1)) ||
+      HashSet.has(articleWords, wordAt(tokens, index + 1)) ||
+      (tagAt(tokens, index + 1) === "ADP" && HashSet.has(articleWords, wordAt(tokens, index + 2))))
+  );
 };
 const hasInfinitiveComplement = (tokens: ReadonlyArray<ClaimLexicalToken>, index: number): boolean =>
   wordAt(tokens, index + 1) === "to" && tagAt(tokens, index + 1) === "PART" && tagAt(tokens, index + 2) === "VERB";
@@ -220,10 +236,27 @@ const infinitiveBefore = (tokens: ReadonlyArray<ClaimLexicalToken>, index: numbe
   const toIndex = tagAt(tokens, index - 1) === "ADV" ? index - 2 : index - 1;
   return wordAt(tokens, toIndex) === "to" && tagAt(tokens, toIndex) === "PART";
 };
+const adjectiveNominalBefore = (tokens: ReadonlyArray<ClaimLexicalToken>, before: number): boolean => {
+  if (tagAt(tokens, before) !== "ADJ") return false;
+  let cursor = before;
+  while (tagAt(tokens, cursor) === "ADJ") cursor--;
+  const participle = at(tokens, cursor);
+  if (
+    O.exists(
+      participle,
+      (t) =>
+        t.pos === "VERB" &&
+        O.exists(t.lemma, (lemma) => word(t) === `${normalized(lemma)}ed` || word(t) === `${normalized(lemma)}d`)
+    )
+  )
+    cursor--;
+  return HashSet.has(articleWords, wordAt(tokens, cursor));
+};
 const finitePosition = (tokens: ReadonlyArray<ClaimLexicalToken>, index: number): boolean => {
-  if (HashSet.has(HashSet.make("that", "which"), wordAt(tokens, index - 1))) return true;
-  if (HashSet.has(nominalTags, tagAt(tokens, index - 1))) return true;
-  if (tagAt(tokens, index - 1) === "ADV" && HashSet.has(nominalTags, tagAt(tokens, index - 2))) return true;
+  const before = beforeAdjuncts(tokens, index);
+  if (HashSet.has(HashSet.make("that", "which"), wordAt(tokens, before))) return true;
+  if (HashSet.has(nominalTags, tagAt(tokens, before))) return true;
+  if (adjectiveNominalBefore(tokens, before)) return true;
   return (
     surface(tokens, index - 1, ")") &&
     wordAt(tokens, index - 3) === "(" &&
@@ -239,6 +272,12 @@ const finiteInflection = (token: ClaimLexicalToken): boolean =>
 const finiteFrameProof = (tokens: ReadonlyArray<ClaimLexicalToken>, index: number): boolean => {
   if (HashSet.has(articleWords, wordAt(tokens, index + 1))) return true;
   if (relativeSubjectAt(tokens, index) || coordinatedSubject(tokens, index)) return true;
+  if (
+    O.exists(at(tokens, index - 1), regularPlural) &&
+    lexicalObjectAfter(tokens, index) &&
+    O.exists(at(tokens, index), (token) => O.exists(token.lemma, (lemma) => normalized(lemma) === word(token)))
+  )
+    return true;
   return singularLexicalSubject(tokens, index) && O.exists(at(tokens, index), finiteInflection);
 };
 const gerundPosition = (tokens: ReadonlyArray<ClaimLexicalToken>, index: number): boolean => {
@@ -313,6 +352,11 @@ const predicateKind = (
 ): O.Option<typeof ClaimPredicateSpan.Type.kind> => {
   if (namingPredicate(tokens, index)) return O.some("adjectival");
   if (licensedGovernor(tokens, index)) return O.some("auxiliary");
+  if (
+    HashSet.has(HashSet.make("configured", "adapted", "operable", "arranged"), wordAt(tokens, index)) &&
+    wordAt(tokens, index + 1) === "to"
+  )
+    return O.some("auxiliary-head");
   return O.flatMap(HashMap.get(lexicalPredicateKinds, tagAt(tokens, index)), (rule) => rule(tokens, index));
 };
 const isExplicitName = (tokens: ReadonlyArray<ClaimLexicalToken>, start: number, end: number): boolean =>
@@ -418,21 +462,126 @@ class RoleCompiler {
   private readPredicates = (): boolean => {
     for (let index = 0; index < this.tokens.length; index++) {
       if (!this.charge(1)) return false;
-      if (this.protected(index)) continue;
+      if (this.protected(index) || HashSet.has(this.predicateIndexes, index)) continue;
       O.map(predicateKind(this.tokens, index), (kind) => {
+        if (kind === "finite" && !this.independentSubjectSlot(index)) return;
         this.predicates.push(ClaimPredicateSpan.make({ anchor: O.getOrThrow(at(this.tokens, index)).anchor, kind }));
         this.predicateIndexes = HashSet.add(this.predicateIndexes, index);
       });
     }
     return true;
   };
+  private readQualifiedTransition = (): boolean => {
+    if (!this.charge(this.claim.claimText.length * 2 + this.tokens.length * 2)) return false;
+    const preamble = Str.indexOf(this.claim.preamble)(this.claim.claimText);
+    if (O.isNone(preamble)) return false;
+    const from = preamble.value + this.claim.preamble.length;
+    const body = Str.indexOf(this.claim.body)(Str.slice(from)(this.claim.claimText));
+    if (O.isNone(body)) return false;
+    const to = from + body.value;
+    // Qualified governing syntax is an independently proved function region,
+    // even when its object is bare and no article follows the operator.
+    for (let index = 0; index < this.tokens.length; index++) {
+      const token = O.getOrThrow(at(this.tokens, index));
+      if (token.anchor.startChar < from || token.anchor.endChar > to || token.pos === "PUNCT") continue;
+      this.predicateIndexes = HashSet.add(this.predicateIndexes, index);
+      this.predicates.push(ClaimPredicateSpan.make({ anchor: token.anchor, kind: "auxiliary-head" }));
+    }
+    return true;
+  };
+  private gerundForm = (token: ClaimLexicalToken): boolean =>
+    O.exists(token.lemma, (lemma) => {
+      const base = normalized(lemma);
+      return (
+        word(token) === `${base}ing` || (Str.endsWith("e")(base) && word(token) === `${Str.slice(0, -1)(base)}ing`)
+      );
+    });
+  private adjunctSlot = (index: number): boolean =>
+    tagAt(this.tokens, index) === "ADV" || HashSet.has(HashSet.make("not", "n't"), wordAt(this.tokens, index));
+  private skipAdjuncts = (index: number, step: -1 | 1): number => {
+    let cursor = index;
+    while (this.adjunctSlot(cursor)) {
+      if (!this.charge(1)) return cursor;
+      cursor += step;
+    }
+    return cursor;
+  };
+  private inheritedPredicate = (index: number): boolean => {
+    const before = this.skipAdjuncts(index - 1, -1);
+    if (!this.charge(this.predicates.length + 1)) return false;
+    const token = O.getOrThrow(at(this.tokens, index));
+    const preceding = A.findLast(
+      this.predicates,
+      (p) => p.anchor.endChar <= token.anchor.startChar && p.kind !== "adjunct"
+    );
+    if (!HashSet.has(connectors, wordAt(this.tokens, before)) || O.isNone(preceding)) return false;
+    const gap = Str.slice(preceding.value.anchor.endChar, token.anchor.startChar)(this.claim.claimText);
+    return this.charge(gap.length) && O.isNone(Str.match(/[;:]|\b(?:that|which|wherein|if|when)\b/iu)(gap));
+  };
+  private finiteToken = (token: ClaimLexicalToken): boolean =>
+    token.pos === "VERB" &&
+    O.exists(token.lemma, (lemma) => normalized(lemma) === word(token) || finiteInflection(token));
+  private continuationKind = (index: number): O.Option<typeof ClaimPredicateSpan.Type.kind> => {
+    const token = O.getOrThrow(at(this.tokens, index));
+    if (!HashSet.has(HashSet.make("VERB", "NOUN"), token.pos)) return O.none();
+    const gerund = this.gerundForm(token);
+    const governor = wordAt(this.tokens, index - 1);
+    const governed =
+      gerund &&
+      HashSet.has(HashSet.make("includes", "including", "comprises", "comprising", "contains", "containing"), governor);
+    const inherited = this.inheritedPredicate(index);
+    if (this.remaining < 0) return O.none();
+    if (governed) return O.some("gerund");
+    if (!inherited) return O.none();
+    if (gerund) return O.some("gerund");
+    return predicateWhen("finite", this.finiteToken(token));
+  };
+  private continuationAt = (index: number): void => {
+    if (this.protected(index) || HashSet.has(this.predicateIndexes, index) || !lexicalObjectAfter(this.tokens, index))
+      return;
+    const kind = this.continuationKind(index);
+    if (O.isNone(kind)) return;
+    this.predicates.push(
+      ClaimPredicateSpan.make({ anchor: O.getOrThrow(at(this.tokens, index)).anchor, kind: kind.value })
+    );
+    this.predicateIndexes = HashSet.add(this.predicateIndexes, index);
+  };
+  private readContinuations = (): boolean => {
+    for (let index = 0; index < this.tokens.length; index++) {
+      if (!this.charge(1)) return false;
+      this.continuationAt(index);
+    }
+    if (!this.charge(this.predicates.length ** 2)) return false;
+    this.predicates = A.sort(this.predicates, (left: ClaimPredicateSpan, right: ClaimPredicateSpan) =>
+      left.anchor.startChar < right.anchor.startChar ? -1 : left.anchor.startChar > right.anchor.startChar ? 1 : 0
+    );
+    return this.remaining >= 0;
+  };
+  private independentSubjectSlot = (index: number): boolean => {
+    if (relativeSubjectAt(this.tokens, index)) return true;
+    let cursor = index - 1;
+    while (cursor >= 0 && HashSet.has(HashSet.make("NOUN", "PROPN", "ADJ", "NUM"), tagAt(this.tokens, cursor))) {
+      if (!this.charge(1)) return false;
+      cursor--;
+    }
+    if (HashSet.has(articleWords, wordAt(this.tokens, cursor))) cursor--;
+    // A PP's NP is not an independent subject. In particular, a verb-tagged
+    // regular plural in `on the side surfaces of ...` stays nominal.
+    return tagAt(this.tokens, cursor) !== "ADP";
+  };
+  private discourseAdjunct = (index: number): boolean =>
+    surface(this.tokens, index - 1, "in response") &&
+    HashSet.has(HashSet.make(",", "to"), wordAt(this.tokens, index + 1));
   private adjunct = (index: number): boolean => {
-    const adjacent = HashSet.has(this.predicateIndexes, index - 1) || HashSet.has(this.predicateIndexes, index + 1);
-    const particle = HashSet.has(HashSet.make("ADV", "PART"), tagAt(this.tokens, index)) && adjacent;
-    const discourse =
-      surface(this.tokens, index - 1, "in response") &&
-      HashSet.has(HashSet.make(",", "to"), wordAt(this.tokens, index + 1));
-    return particle || discourse;
+    if (!this.adjunctSlot(index)) return this.discourseAdjunct(index);
+    const left = this.skipAdjuncts(index - 1, -1);
+    const right = this.skipAdjuncts(index + 1, 1);
+    if (this.remaining < 0) return false;
+    return (
+      HashSet.has(this.predicateIndexes, left) ||
+      HashSet.has(this.predicateIndexes, right) ||
+      this.discourseAdjunct(index)
+    );
   };
   private readAdjuncts = (): boolean => {
     for (let index = 0; index < this.tokens.length; index++) {
@@ -486,6 +635,7 @@ class RoleCompiler {
   };
   private nominalBarrier = (index: number): boolean =>
     HashSet.has(this.predicateIndexes, index) ||
+    HashSet.has(this.adjunctIndexes, index) ||
     A.some([auxiliaries, clauseWords, articleWords, stopWords, punctuation, connectors], (words) =>
       HashSet.has(words, wordAt(this.tokens, index))
     );
@@ -493,30 +643,76 @@ class RoleCompiler {
     wordAt(this.tokens, index) === "(" &&
     O.exists(at(this.tokens, index + 1), (token) => O.isSome(Str.match(/^[A-Z][A-Z0-9-]+$/u)(token.anchor.quote))) &&
     wordAt(this.tokens, index + 2) === ")";
-  private modifierAt = (index: number, hasNoun: boolean, width: number): boolean => {
+  private verbModifierHead = (index: number): boolean => {
+    if (HashSet.has(nominalTags, tagAt(this.tokens, index + 1))) return true;
+    let cursor = index + 1;
+    while (tagAt(this.tokens, cursor) === "ADJ") {
+      if (!this.charge(1)) return false;
+      cursor++;
+    }
+    return cursor > index + 1 && HashSet.has(this.predicateIndexes, cursor);
+  };
+  private modifierAt = (index: number, width: number): boolean => {
     const tag = tagAt(this.tokens, index);
     if (HashSet.has(modifierTags, tag)) return true;
     if (tag === "ADV" && tagAt(this.tokens, index + 1) === "ADJ") return true;
-    return tag === "VERB" && !hasNoun && width > 0 && HashSet.has(nominalTags, tagAt(this.tokens, index + 1));
+    return tag === "VERB" && width > 0 && !HashSet.has(this.predicateIndexes, index) && this.verbModifierHead(index);
   };
-  private nominalAdvance = (index: number, hasNoun: boolean, width: number): readonly [number, boolean] => {
+  private nominalVerbHead = (index: number, start: number, width: number): boolean =>
+    width > 0 &&
+    tagAt(this.tokens, start - 1) === "ADP" &&
+    HashSet.has(nominalTags, tagAt(this.tokens, index - 1)) &&
+    tagAt(this.tokens, index) === "VERB" &&
+    !HashSet.has(this.predicateIndexes, index) &&
+    tagAt(this.tokens, index + 1) === "ADP" &&
+    O.exists(at(this.tokens, index), finiteInflection);
+  private cliticWidth = (index: number, hasNoun: boolean): number => {
+    if (!hasNoun) return 0;
+    const following = (offset: number): boolean =>
+      HashSet.has(HashSet.make("NOUN", "PROPN", "ADJ"), tagAt(this.tokens, index + offset));
+    if (HashSet.has(HashSet.make("'s", "’s"), wordAt(this.tokens, index)) && following(1)) return 1;
+    return HashSet.has(HashSet.make("'", "’"), wordAt(this.tokens, index)) &&
+      wordAt(this.tokens, index + 1) === "s" &&
+      following(2)
+      ? 2
+      : 0;
+  };
+  private hyphenModifier = (index: number): boolean =>
+    wordAt(this.tokens, index) === "-" &&
+    index > 0 &&
+    HashSet.has(HashSet.make("NOUN", "PROPN", "ADJ"), tagAt(this.tokens, index + 1));
+  private nounAt = (index: number, hasNoun: boolean, width: number, start: number): boolean =>
+    HashSet.has(nominalTags, tagAt(this.tokens, index)) || (hasNoun && this.nominalVerbHead(index, start, width));
+  private nominalAdvance = (
+    index: number,
+    hasNoun: boolean,
+    width: number,
+    start: number
+  ): readonly [number, boolean] => {
     if (this.quoted(index)) return [1, true];
     if (this.aliasAt(index)) return [3, false];
+    if (this.hyphenModifier(index)) return [1, false];
+    const clitic = this.cliticWidth(index, hasNoun);
+    if (clitic > 0) return [clitic, false];
     if (this.nominalBarrier(index)) return [0, false];
-    if (HashSet.has(nominalTags, tagAt(this.tokens, index))) return [1, true];
-    return [this.modifierAt(index, hasNoun, width) ? 1 : 0, false];
+    if (this.nounAt(index, hasNoun, width, start)) return [1, true];
+    return [this.modifierAt(index, width) ? 1 : 0, false];
+  };
+  private nominalComplete = (start: number, end: number, width: number, hasNoun: boolean): boolean => {
+    if (end <= start + width) return false;
+    return hasNoun || (width > 0 && tagAt(this.tokens, end - 1) === "ADJ" && HashSet.has(this.predicateIndexes, end));
   };
   private nominalEnd = (start: number, width: number): O.Option<number> => {
     let end = start + width;
     let hasNoun = false;
     while (end < this.tokens.length) {
       if (!this.charge(1)) return O.none();
-      const [advance, noun] = this.nominalAdvance(end, hasNoun, width);
+      const [advance, noun] = this.nominalAdvance(end, hasNoun, width, start);
       if (advance === 0) break;
       hasNoun = hasNoun || noun;
       end += advance;
     }
-    return hasNoun && end > start + width ? O.some(end) : O.none();
+    return this.nominalComplete(start, end, width, hasNoun) ? O.some(end) : O.none();
   };
   private coordinatedPlural = (start: number, end: number): boolean =>
     O.exists(
@@ -544,7 +740,7 @@ class RoleCompiler {
       cursor++;
     }
     if (!this.charge(1) || !HashSet.has(this.predicateIndexes, cursor)) return false;
-    return O.exists(at(this.tokens, cursor), singularAgreement);
+    return O.exists(at(this.tokens, cursor), (token) => singularAgreement(token) || finiteInflection(token));
   };
   private appendNominal = (
     start: number,
@@ -560,6 +756,7 @@ class RoleCompiler {
     if (kind === "bare" && HashSet.has(this.names, start)) role = "explicit-name";
     if (kind === "bare" && role === "unknown" && this.coordinatedPlural(start, end)) role = "generic-plural";
     if (role === "generic-plural" && this.contradictoryPluralRelative(end)) role = "unknown";
+    if (this.remaining < 0) return;
     this.nominals.push(
       ClaimNominalSpan.make({
         anchor: anchor(this.claim.claimText, first, last),
@@ -672,7 +869,9 @@ class RoleCompiler {
     const passes = [
       this.readQuotes,
       this.readBrackets,
+      this.readQualifiedTransition,
       this.readPredicates,
+      this.readContinuations,
       this.readAdjuncts,
       this.readNames,
       this.readNominals,
@@ -683,6 +882,7 @@ class RoleCompiler {
     return O.some(
       ClaimClauseRolePlan.make({
         qualifiedText: this.claim.claimText,
+        remainingWork: this.remaining,
         nominals: this.nominals,
         predicates: this.predicates,
         clauses: this.clauses,
@@ -693,6 +893,8 @@ class RoleCompiler {
 const compileRoles = (claim: PatentClaim, evidence: ClaimLexicalEvidence): O.Option<ClaimClauseRolePlan> => {
   if (evidence.status !== "aligned" || evidence.qualifiedText !== claim.claimText) return O.none();
   if (claim.claimText.length > 32_768 || evidence.tokens.length > 8_192) return O.none();
+  // Reserve the initial source/token work before validating any provider span.
+  if (evidence.tokens.length * 32 + claim.claimText.length > 262_144) return O.none();
   if (!validClaimLexicalTokens(claim.claimText, evidence.tokens)) return O.none();
   return new RoleCompiler(claim, evidence.tokens).run();
 };

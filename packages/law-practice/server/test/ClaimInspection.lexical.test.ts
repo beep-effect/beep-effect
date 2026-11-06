@@ -1,6 +1,7 @@
 import { ContentDigest } from "@beep/file-processing/Artifact";
 import {
   ClaimInputCollection,
+  ClaimInputInspectionReport,
   ClaimInputRecord,
   decomposeClaimInput,
 } from "@beep/law-practice-domain/values/ClaimElement";
@@ -28,9 +29,10 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { ClaimInputInspectionReport } from "@beep/law-practice-domain/values/ClaimElement";
 
 const live = ClaimInspectionWithLexicalEvidenceLive.pipe(
   Layer.provide(
@@ -858,3 +860,38 @@ it.effect("preserves cancellation during provider acquisition and closes its out
     assert.strictEqual(observedCount12, 1);
   })
 );
+
+it.layer(live, { timeout: "30 seconds" })("real source projection topology", (it) => {
+  it.effect("projects independent restrictions and keeps frame metadata out of the public report", () =>
+    Effect.gen(function* () {
+      const report = yield* inspect([
+        "A system comprising the unit detects a signal, and the processor stores a value.",
+      ]);
+      const record = O.getOrThrow(A.head(report.records));
+      assert.strictEqual(record.decomposition.status, "decomposed");
+      if (record.decomposition.status !== "decomposed") return;
+      const tree = record.decomposition.tree;
+      assert.deepStrictEqual(
+        A.map(tree.elements, (element) => element.anchor.quote),
+        ["A system", "the unit detects a signal", "the processor stores a value"]
+      );
+      assert.deepStrictEqual(
+        A.map(tree.elements, (element) => element.kind),
+        ["preamble-subject", "functional-relation", "functional-relation"]
+      );
+      const encoded = yield* S.encodeEffect(ClaimInputInspectionReport)(report);
+      assert.deepStrictEqual<ReadonlyArray<string>>(
+        A.sort(R.keys(encoded), Str.Order),
+        A.sort(["input", "indexStatus", "records"], Str.Order)
+      );
+      assert.isFalse("sourcePlan" in encoded);
+      for (const value of encoded.records) {
+        assert.isFalse("sourcePlan" in value);
+        if (value.decomposition.status === "decomposed") {
+          assert.isFalse("sourcePlan" in value.decomposition.tree);
+          assert.isFalse("frames" in value.decomposition.tree);
+        }
+      }
+    })
+  );
+});

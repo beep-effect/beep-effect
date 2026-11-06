@@ -899,11 +899,46 @@ const roleInputBudget = (plans: ReadonlyArray<ClaimBoundRolePlan>): O.Option<num
   }
   return O.some(remaining);
 };
+const enhancedContextReady = (
+  plans: ReadonlyArray<ClaimBoundRolePlan>,
+  decompositions: ReadonlyArray<ClaimInputDecomposition>,
+  availableWork: number
+): O.Option<HashSet.HashSet<number>> => {
+  let remaining = availableWork;
+  // This is coverage propagation through actual source references, not source
+  // mode selection. Registry nodes and admitted roles never roll back.
+  remaining -= decompositions.length ** 2 + plans.length * 2 + 1;
+  if (remaining < 0) return O.none();
+  const admitted = HashSet.fromIterable(A.map(plans, ({ claimNumber }) => claimNumber));
+  const numbered = A.sort(
+    A.filter(decompositions, ClaimInputDecomposition.guards.decomposed),
+    Order.mapInput(
+      Num.Order,
+      (decomposition: typeof ClaimInputDecomposition.cases.decomposed.Type) => decomposition.tree.claimNumber
+    )
+  );
+  let contextReady = HashSet.empty<number>();
+  for (const decomposition of numbered) {
+    const claim = decomposition.qualification.claim;
+    const parents = PatentClaim.match(claim, {
+      independent: () => A.empty<number>(),
+      dependent: ({ claimReferences }) => claimReferences,
+    });
+    remaining -= parents.length * 2 + 1;
+    if (remaining < 0) return O.none();
+    if (HashSet.has(admitted, claim.claimNumber) && A.every(parents, (parent) => HashSet.has(contextReady, parent)))
+      contextReady = HashSet.add(contextReady, claim.claimNumber);
+  }
+  return O.some(contextReady);
+};
 const sourceRoleIndex = (
-  plans: ReadonlyArray<ClaimBoundRolePlan>
-): O.Option<HashMap.HashMap<string, ClaimNominalPolicyRole>> => {
+  plans: ReadonlyArray<ClaimBoundRolePlan>,
+  decompositions: ReadonlyArray<ClaimInputDecomposition>
+): O.Option<readonly [HashMap.HashMap<string, ClaimNominalPolicyRole>, HashSet.HashSet<number>]> => {
   const budget = roleInputBudget(plans);
   if (O.isNone(budget)) return O.none();
+  const contextReady = enhancedContextReady(plans, decompositions, budget.value);
+  if (O.isNone(contextReady)) return O.none();
   let roles = HashMap.empty<string, ClaimNominalPolicyRole>();
   for (const { claimNumber, plan } of plans) {
     for (const nominal of plan.nominals) {
@@ -914,7 +949,7 @@ const sourceRoleIndex = (
       );
     }
   }
-  return O.some(roles);
+  return O.some([roles, contextReady.value]);
 };
 /**
  * Inspect prepared source roles through the same coverage/report policy.
@@ -927,18 +962,24 @@ export const inspectPreparedClaimRoles = Effect.fn("ClaimElement.inspectPrepared
   evidence: ReadonlyArray<ClaimLexicalEvidence>
 ) {
   const result = yield* decomposePreparedClaimRoles(prepared, evidence);
-  const indexed = sourceRoleIndex(result.plans);
+  const indexed = sourceRoleIndex(result.plans, result.decompositions);
   if (O.isNone(indexed))
     return lexicalCoverage(inspectionReport(prepared.input, result.decompositions, unknownBareRole), HashSet.empty());
   const roleFor: RoleFor = (claimNumber, term) =>
     O.getOrElse(
-      HashMap.get(indexed.value, `${claimNumber}:${term.anchor.startChar}:${term.anchor.endChar}:${term.anchor.quote}`),
+      HashMap.get(
+        indexed.value[0],
+        `${claimNumber}:${term.anchor.startChar}:${term.anchor.endChar}:${term.anchor.quote}`
+      ),
       () => unknownBareRole(claimNumber, term)
     );
   return lexicalCoverage(
     inspectionReport(prepared.input, result.decompositions, roleFor, (claimNumber, term) =>
-      HashMap.has(indexed.value, `${claimNumber}:${term.anchor.startChar}:${term.anchor.endChar}:${term.anchor.quote}`)
+      HashMap.has(
+        indexed.value[0],
+        `${claimNumber}:${term.anchor.startChar}:${term.anchor.endChar}:${term.anchor.quote}`
+      )
     ),
-    HashSet.fromIterable(A.map(result.plans, ({ claimNumber }) => claimNumber))
+    indexed.value[1]
   );
 });

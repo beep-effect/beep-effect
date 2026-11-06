@@ -15,6 +15,7 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
+import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -31,6 +32,7 @@ import { qualifyClaimInput } from "../PatentDocument/PatentDocument.normalizer.t
 import { compileClaimClauseRoles } from "./ClaimClauseRole.behavior.ts";
 import { ClaimBoundRolePlan, ClaimRoleDecomposition } from "./ClaimClauseRole.model.ts";
 import { projectClaimRoleTerms } from "./ClaimClauseRole.projection.ts";
+import { compileClaimSourceElements } from "./ClaimClauseRole.structure.ts";
 import { ClaimDecompositionError } from "./ClaimElement.errors.ts";
 import { ClaimInputQualification } from "./ClaimElement.input.model.ts";
 import { ClaimInputDecomposition } from "./ClaimElement.inspection.model.ts";
@@ -46,11 +48,11 @@ import {
   pluralityReferenceContent,
 } from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
-import type { ClaimClauseRolePlan } from "./ClaimClauseRole.model.ts";
+import type { ClaimClauseRolePlan, ClaimSourceElementPlan } from "./ClaimClauseRole.model.ts";
 import type { ClaimElementEdge, ClaimFunctionalPart } from "./ClaimElement.edge.model.ts";
 import type { ClaimInputCollection } from "./ClaimElement.input.model.ts";
 import type { ClaimElement, ClaimElementKind, ClaimTerm } from "./ClaimElement.model.ts";
-import type { ClaimLexicalEvidence, PreparedClaimInspection } from "./ClaimLexicalEvidence.model.ts";
+import type { ClaimLexicalEvidence, ClaimLexicalToken, PreparedClaimInspection } from "./ClaimLexicalEvidence.model.ts";
 
 const $I = $LawPracticeDomainId.create("values/ClaimElement/ClaimElement.behavior");
 
@@ -2227,34 +2229,68 @@ export const decomposeClaimInput = Effect.fn("ClaimElement.decomposeClaimInput")
   return yield* Effect.forEach(qualifications, inputDecomposition(claims, inspectionTreeInput));
 });
 
-const projectedClaimInput = (
+const sourcePlanFor = (
   claim: PatentClaim,
-  plan: ClaimClauseRolePlan
-): O.Option<ReturnType<typeof inspectionTreeInput>> => {
+  plan: ClaimClauseRolePlan,
+  tokens: ReadonlyArray<ClaimLexicalToken>
+): O.Option<ClaimSourceElementPlan> => {
   const parts = locateParts(claim);
   if (O.isNone(parts)) return O.none();
-  let remaining = 262_144;
+  const preamble = pipe(parts.value.preamble, trimSpan, dropSuffix([",", ":", ";"]), trimSpan);
+  return compileClaimSourceElements(
+    claim,
+    plan,
+    tokens,
+    TextAnchor.make(anchorOf(preamble)),
+    TextAnchor.make(anchorOf(parts.value.body))
+  );
+};
+const projectedClaimInput = (
+  claim: PatentClaim,
+  structural: ClaimSourceElementPlan
+): O.Option<ReturnType<typeof inspectionTreeInput>> => {
+  let remaining = structural.remainingWork;
   const charge = (amount: number): boolean => {
     remaining -= amount;
     return remaining >= 0;
   };
-  const grammar: LexicalGrammar = {
-    ...inspectionLexicalGrammar,
-    functionalAt: (span) =>
-      charge(plan.predicates.length) &&
-      A.some(
-        plan.predicates,
-        (predicate) =>
-          predicate.kind !== "adjunct" &&
-          predicate.kind !== "auxiliary-head" &&
-          predicate.kind !== "possession" &&
-          predicate.anchor.startChar >= span.start &&
-          predicate.anchor.endChar <= span.start + span.text.length
-      ),
-    refineTerms: (span, terms) => O.getOrElse(projectClaimRoleTerms(plan, anchorOf(span), terms, charge), () => terms),
-  };
-  const candidate = inspectionTreeInputFor(grammar)(claim, parts.value);
-  return remaining >= 0 ? O.some(candidate) : O.none();
+  if (!charge(structural.elements.length ** 2 + structural.roles.nominals.length)) return O.none();
+  const paths = A.reduce(structural.elements, HashMap.empty<number, string>(), (index, element) => {
+    const parent = O.flatMap(element.parent, (ordinal) => HashMap.get(index, ordinal));
+    const siblings = A.countBy(
+      structural.elements,
+      (previous) => previous.ordinal < element.ordinal && O.getOrNull(previous.parent) === O.getOrNull(element.parent)
+    );
+    const path = O.match(parent, {
+      onNone: () => `${claim.claimNumber}`,
+      onSome: (value) => `${value}.${letterSegment(siblings)}`,
+    });
+    return HashMap.set(index, element.ordinal, path);
+  });
+  const terms = O.all(A.map(structural.elements, (element) => projectClaimRoleTerms(element, charge)));
+  if (O.isNone(terms)) return O.none();
+  const elements = A.map(
+    structural.elements,
+    (element, index): EncodedElement => ({
+      path: O.getOrThrow(HashMap.get(paths, element.ordinal)),
+      anchor: element.extent,
+      kind: element.kind,
+      terms: O.getOrThrow(A.get(terms.value, index)),
+    })
+  );
+  const containment = A.flatMap(structural.elements, (element) =>
+    O.match(element.parent, {
+      onNone: () => [],
+      onSome: (ordinal): ReadonlyArray<EncodedEdge> => [
+        {
+          kind: "part-of",
+          child: O.getOrThrow(HashMap.get(paths, element.ordinal)),
+          parent: O.getOrThrow(HashMap.get(paths, ordinal)),
+        },
+      ],
+    })
+  );
+  return remaining >= 0 && A.isArrayNonEmpty(elements) ? O.some(assembleTree(claim, elements, containment)) : O.none();
 };
 const boundedSourceEvidence = (
   prepared: PreparedClaimInspection,
@@ -2291,10 +2327,21 @@ export const decomposePreparedClaimRoles = Effect.fn("ClaimElement.decomposePrep
     const plan = O.flatMap(facts.length === 1 ? A.head(facts) : O.none(), (fact) =>
       compileClaimClauseRoles(claim, fact)
     );
-    const candidate = O.flatMap(plan, (value) => projectedClaimInput(claim, value));
-    if (O.isNone(plan) || O.isNone(candidate)) continue;
+    const structure = O.flatMap(plan, (value) =>
+      O.flatMap(A.head(facts), (fact) =>
+        fact.status === "aligned" ? sourcePlanFor(claim, value, fact.tokens) : O.none()
+      )
+    );
+    const candidate = O.flatMap(structure, (value) => projectedClaimInput(claim, value));
+    if (O.isNone(structure) || O.isNone(candidate)) continue;
     inputs = HashMap.set(inputs, claim.claimNumber, candidate.value);
-    plans.push(ClaimBoundRolePlan.make({ claimNumber: claim.claimNumber, plan: plan.value }));
+    plans.push(
+      ClaimBoundRolePlan.make({
+        claimNumber: claim.claimNumber,
+        plan: structure.value.roles,
+        sourcePlan: structure.value,
+      })
+    );
   }
   const construct: typeof inspectionTreeInput = (claim, parts) =>
     O.getOrElse(HashMap.get(inputs, claim.claimNumber), () => inspectionTreeInput(claim, parts));

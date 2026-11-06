@@ -1,0 +1,523 @@
+{
+  "fixtures": [
+    {
+      "case": "supported-current-declined-parent",
+      "registry": {
+        "1": {
+          "mode": "DECLINED",
+          "nodes": ["L1.root", "L1.body"],
+          "roles": []
+        },
+        "2": {
+          "mode": "ADMITTED",
+          "nodes": ["E2.root", "E2.body"],
+          "roles": ["E2.body@core"]
+        }
+      },
+      "actualRoutes": [[2, 1]],
+      "expectedPartial": true,
+      "forbidden": [
+        "candidate E1 endpoint",
+        "candidate E1 role",
+        "ancestor mode rebuild"
+      ],
+      "endpointRule": "Each source uses exactly its immutable registry node IDs in current and ancestor appearances.",
+      "sourceRecords": [
+        {
+          "claimNumber": 1,
+          "sourceOrdinal": 1,
+          "claimText": "A system comprising a pair of jaws.",
+          "claimReferences": [],
+          "qualifiedParts": {
+            "preamble": "A system",
+            "transition": "comprising",
+            "body": "a pair of jaws."
+          }
+        },
+        {
+          "claimNumber": 2,
+          "sourceOrdinal": 2,
+          "claimText": "The system of claim 1 wherein the plate detects a signal.",
+          "claimReferences": [1],
+          "qualifiedParts": {
+            "preamble": "The system of claim 1",
+            "transition": "wherein",
+            "body": "the plate detects a signal."
+          }
+        }
+      ],
+      "canonicalEndpointIdentityIndex": {
+        "L1.root": {
+          "claimNumber": 1,
+          "kind": "preamble-subject",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        },
+        "L1.body": {
+          "claimNumber": 1,
+          "kind": "limitation",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 34,
+            "quote": "a pair of jaws"
+          }
+        },
+        "E2.root": {
+          "claimNumber": 2,
+          "kind": "preamble-subject",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "The system of claim 1"
+          }
+        },
+        "E2.body": {
+          "claimNumber": 2,
+          "kind": "functional-relation",
+          "anchor": {
+            "startChar": 30,
+            "endChar": 56,
+            "quote": "the plate detects a signal"
+          }
+        }
+      },
+      "exactModeAssertion": "Repeated current/ancestor use must preserve these complete claim/kind/source-anchor node identities; route failure changes findings/coverage only."
+    },
+    {
+      "case": "declined-current-supported-parent",
+      "registry": {
+        "1": {
+          "mode": "ADMITTED",
+          "nodes": ["E1.root", "E1.body"],
+          "roles": ["E1.body@core"]
+        },
+        "2": {
+          "mode": "DECLINED",
+          "nodes": ["L2.root", "L2.body"],
+          "roles": []
+        }
+      },
+      "actualRoutes": [[2, 1]],
+      "expectedPartial": true,
+      "forbidden": ["candidate E2 role", "rollback E1 to L1"],
+      "endpointRule": "Each source uses exactly its immutable registry node IDs in current and ancestor appearances.",
+      "sourceRecords": [
+        {
+          "claimNumber": 1,
+          "sourceOrdinal": 1,
+          "claimText": "A system comprising a plate.",
+          "claimReferences": [],
+          "qualifiedParts": {
+            "preamble": "A system",
+            "transition": "comprising",
+            "body": "a plate."
+          }
+        },
+        {
+          "claimNumber": 2,
+          "sourceOrdinal": 2,
+          "claimText": "The system of claim 1 wherein a pair of jaws.",
+          "claimReferences": [1],
+          "qualifiedParts": {
+            "preamble": "The system of claim 1",
+            "transition": "wherein",
+            "body": "a pair of jaws."
+          }
+        }
+      ],
+      "canonicalEndpointIdentityIndex": {
+        "E1.root": {
+          "claimNumber": 1,
+          "kind": "preamble-subject",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        },
+        "E1.body": {
+          "claimNumber": 1,
+          "kind": "limitation",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 27,
+            "quote": "a plate"
+          }
+        },
+        "L2.root": {
+          "claimNumber": 2,
+          "kind": "preamble-subject",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "The system of claim 1"
+          }
+        },
+        "L2.body": {
+          "claimNumber": 2,
+          "kind": "limitation",
+          "anchor": {
+            "startChar": 30,
+            "endChar": 44,
+            "quote": "a pair of jaws"
+          }
+        }
+      },
+      "exactModeAssertion": "Repeated current/ancestor use must preserve these complete claim/kind/source-anchor node identities; route failure changes findings/coverage only."
+    },
+    {
+      "case": "shared-ancestor-stable",
+      "registry": {
+        "1": {
+          "mode": "ADMITTED",
+          "nodes": ["E1.root", "E1.body"],
+          "roles": ["E1.body@core"]
+        },
+        "2": {
+          "mode": "DECLINED",
+          "nodes": ["L2.root"],
+          "roles": []
+        },
+        "3": {
+          "mode": "ADMITTED",
+          "nodes": ["E3.root"],
+          "roles": []
+        }
+      },
+      "actualRoutes": [[2, 1], [3, 1]],
+      "expectedPartial": {
+        "2": true,
+        "3": "normal policy"
+      },
+      "forbidden": [
+        "mutate E1 through claim2",
+        "reuse claim2 route uncertainty on claim3"
+      ],
+      "endpointRule": "Each source uses exactly its immutable registry node IDs in current and ancestor appearances.",
+      "sourceRecords": [
+        {
+          "claimNumber": 1,
+          "sourceOrdinal": 1,
+          "claimText": "A system comprising a plate.",
+          "claimReferences": [],
+          "qualifiedParts": {
+            "preamble": "A system",
+            "transition": "comprising",
+            "body": "a plate."
+          }
+        },
+        {
+          "claimNumber": 2,
+          "sourceOrdinal": 2,
+          "claimText": "The system of claim 1 wherein a pair of jaws.",
+          "claimReferences": [1],
+          "qualifiedParts": {
+            "preamble": "The system of claim 1",
+            "transition": "wherein",
+            "body": "a pair of jaws."
+          }
+        },
+        {
+          "claimNumber": 3,
+          "sourceOrdinal": 3,
+          "claimText": "The system of claim 1 wherein the plate detects a signal.",
+          "claimReferences": [1],
+          "qualifiedParts": {
+            "preamble": "The system of claim 1",
+            "transition": "wherein",
+            "body": "the plate detects a signal."
+          }
+        }
+      ],
+      "canonicalEndpointIdentityIndex": {
+        "E1.root": {
+          "claimNumber": 1,
+          "kind": "preamble-subject",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        },
+        "E1.body": {
+          "claimNumber": 1,
+          "kind": "limitation",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 27,
+            "quote": "a plate"
+          }
+        },
+        "L2.root": {
+          "claimNumber": 2,
+          "kind": "preamble-subject",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "The system of claim 1"
+          }
+        },
+        "E3.root": {
+          "claimNumber": 3,
+          "kind": "preamble-subject",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "The system of claim 1"
+          }
+        }
+      },
+      "exactModeAssertion": "Repeated current/ancestor use must preserve these complete claim/kind/source-anchor node identities; route failure changes findings/coverage only."
+    },
+    {
+      "case": "alternative-route-failure",
+      "registry": {
+        "1": {
+          "mode": "ADMITTED",
+          "nodes": ["E1.root"],
+          "roles": []
+        },
+        "2": {
+          "mode": "DECLINED",
+          "nodes": ["L2.root"],
+          "roles": []
+        },
+        "3": {
+          "mode": "ADMITTED",
+          "nodes": ["E3.root"],
+          "roles": []
+        }
+      },
+      "actualRoutes": [[3, 1], [3, 2]],
+      "expectedPartial": true,
+      "forbidden": [
+        "role donation from route3-1 into3-2",
+        "universal missing assertion with unresolved basis"
+      ],
+      "endpointRule": "Each source uses exactly its immutable registry node IDs in current and ancestor appearances.",
+      "sourceRecords": [
+        {
+          "claimNumber": 1,
+          "sourceOrdinal": 1,
+          "claimText": "A system comprising a plate.",
+          "claimReferences": [],
+          "qualifiedParts": {
+            "preamble": "A system",
+            "transition": "comprising",
+            "body": "a plate."
+          }
+        },
+        {
+          "claimNumber": 2,
+          "sourceOrdinal": 2,
+          "claimText": "A system comprising a pair of jaws.",
+          "claimReferences": [],
+          "qualifiedParts": {
+            "preamble": "A system",
+            "transition": "comprising",
+            "body": "a pair of jaws."
+          }
+        },
+        {
+          "claimNumber": 3,
+          "sourceOrdinal": 3,
+          "claimText": "The system of claim 1 or claim 2 wherein the plate detects a signal.",
+          "claimReferences": [1, 2],
+          "qualifiedParts": {
+            "preamble": "The system of claim 1 or claim 2",
+            "transition": "wherein",
+            "body": "the plate detects a signal."
+          }
+        }
+      ],
+      "canonicalEndpointIdentityIndex": {
+        "E1.root": {
+          "claimNumber": 1,
+          "kind": "preamble-subject",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        },
+        "L2.root": {
+          "claimNumber": 2,
+          "kind": "preamble-subject",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        },
+        "E3.root": {
+          "claimNumber": 3,
+          "kind": "preamble-subject",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 32,
+            "quote": "The system of claim 1 or claim 2"
+          }
+        }
+      },
+      "exactModeAssertion": "Repeated current/ancestor use must preserve these complete claim/kind/source-anchor node identities; route failure changes findings/coverage only."
+    },
+    {
+      "case": "absent-parent",
+      "registry": {
+        "2": {
+          "mode": "ADMITTED",
+          "nodes": ["E2.root"],
+          "roles": []
+        }
+      },
+      "actualRoutes": [[2, 99]],
+      "expectedPartial": true,
+      "forbidden": [
+        "fabricated99 endpoint",
+        "confident absence from incomplete route"
+      ],
+      "endpointRule": "Each source uses exactly its immutable registry node IDs in current and ancestor appearances.",
+      "sourceRecords": [
+        {
+          "claimNumber": 2,
+          "sourceOrdinal": 2,
+          "claimText": "The system of claim 99 wherein the plate detects a signal.",
+          "claimReferences": [99],
+          "qualifiedParts": {
+            "preamble": "The system of claim 99",
+            "transition": "wherein",
+            "body": "the plate detects a signal."
+          }
+        }
+      ],
+      "canonicalEndpointIdentityIndex": {
+        "E2.root": {
+          "claimNumber": 2,
+          "kind": "preamble-subject",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 22,
+            "quote": "The system of claim 99"
+          }
+        }
+      },
+      "exactModeAssertion": "Repeated current/ancestor use must preserve these complete claim/kind/source-anchor node identities; route failure changes findings/coverage only."
+    },
+    {
+      "case": "source-budget-decline",
+      "registry": {
+        "1": {
+          "mode": "DECLINED",
+          "reason": "source-work",
+          "nodes": ["L1.root"],
+          "roles": []
+        }
+      },
+      "actualRoutes": [[1]],
+      "expectedPartial": true,
+      "forbidden": ["partially built E1 nodes", "partially built E1 roles"],
+      "endpointRule": "Each source uses exactly its immutable registry node IDs in current and ancestor appearances.",
+      "sourceRecords": [
+        {
+          "claimNumber": 1,
+          "sourceOrdinal": 1,
+          "claimText": "A system comprising a plate.",
+          "claimReferences": [],
+          "qualifiedParts": {
+            "preamble": "A system",
+            "transition": "comprising",
+            "body": "a plate."
+          }
+        }
+      ],
+      "canonicalEndpointIdentityIndex": {
+        "L1.root": {
+          "claimNumber": 1,
+          "kind": "preamble-subject",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      "exactModeAssertion": "Repeated current/ancestor use must preserve these complete claim/kind/source-anchor node identities; route failure changes findings/coverage only."
+    },
+    {
+      "case": "route-budget-exhaustion",
+      "registry": {
+        "1": {
+          "mode": "ADMITTED",
+          "nodes": ["E1.root"],
+          "roles": []
+        },
+        "2": {
+          "mode": "ADMITTED",
+          "nodes": ["E2.root"],
+          "roles": []
+        }
+      },
+      "actualRoutes": [[2, 1]],
+      "expectedPartial": true,
+      "forbidden": [
+        "registry mutation after route exhaustion",
+        "unresolved antecedent edge",
+        "silent work success"
+      ],
+      "endpointRule": "Each source uses exactly its immutable registry node IDs in current and ancestor appearances.",
+      "sourceRecords": [
+        {
+          "claimNumber": 1,
+          "sourceOrdinal": 1,
+          "claimText": "A system comprising a plate.",
+          "claimReferences": [],
+          "qualifiedParts": {
+            "preamble": "A system",
+            "transition": "comprising",
+            "body": "a plate."
+          }
+        },
+        {
+          "claimNumber": 2,
+          "sourceOrdinal": 2,
+          "claimText": "The system of claim 1 wherein the plate detects a signal.",
+          "claimReferences": [1],
+          "qualifiedParts": {
+            "preamble": "The system of claim 1",
+            "transition": "wherein",
+            "body": "the plate detects a signal."
+          }
+        }
+      ],
+      "canonicalEndpointIdentityIndex": {
+        "E1.root": {
+          "claimNumber": 1,
+          "kind": "preamble-subject",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        },
+        "E2.root": {
+          "claimNumber": 2,
+          "kind": "preamble-subject",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "The system of claim 1"
+          }
+        }
+      },
+      "exactModeAssertion": "Repeated current/ancestor use must preserve these complete claim/kind/source-anchor node identities; route failure changes findings/coverage only."
+    }
+  ],
+  "repeatPermutationControl": {
+    "inputOrders": [[1, 2, 3], [3, 1, 2], [2, 3, 1]],
+    "sourceOrdinalsUnchanged": true,
+    "expected": "identical registry and final finding order after canonical sourceOrdinal ordering; route budget outcome deterministic"
+  }
+}

@@ -10941,6 +10941,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only one typed-unavailable borrowed-provider family helper before finalizer assertions; outer tokenizer ownership remains alive. Removing or hoisting the scope invalidates the acquisition/finalizer subject. No source-code fix or semantic waiver required. Owner: claim-check-performance provider-lifetime implementation owner. Source binding: fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4. Expiry: Re-review on any change to test SHA256 fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4 or to the deliberate family-versus-outer provider lifetime invariant. Independent review: provider-lifetime-implementation-independent-review-001/delivery-ratchet-addendum.md."
+    },
+    {
+      "id": "EV010:packages/law-practice/server/test/ClaimInspection.projection-fixtures.test.ts:5:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/ClaimInspection.projection-fixtures.test.ts",
+      "line": 5,
+      "endLine": 5,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The invariant is the exact bytes on disk of two immutable authored fixture artifacts. Native BunFileSystem is provided once with it.layer alongside BunCrypto and BunPath; replacing it with a test filesystem would sever the evidence from actual frozen bytes. There is no production filesystem use or per-test platform provisioning. Owner: @beep/law-practice-server. Valid only for source SHA a2b5f71a0070d0750460ef64143a75b840f394af8ecb0c54afb7b501c26b5ce8; re-review on source or invariant change. Independent review: structural-projection-implementation-independent-review-001."
     }
   ]
 }

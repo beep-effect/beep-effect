@@ -1,0 +1,4334 @@
+{
+  "schemaVersion": "source-led-expected-element-plans/001",
+  "note": "Authored specification only; no proposed runtime executed; not new benchmark gold. All exact UTF-16 anchors here are ASCII-source fixtures.",
+  "fixtures": [
+    {
+      "case": "independent-coordinate-subjects",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising the unit detects a signal, and the processor stores a value.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "the unit detects a signal, and the processor stores a value."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "functional-relation",
+          "groupingReason": "independent-coordinate",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "the unit detects a signal"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "the unit detects a signal"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 28,
+                "quote": "the unit"
+              },
+              "head": "unit",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 37,
+                "endChar": 45,
+                "quote": "a signal"
+              },
+              "head": "signal",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ],
+          "functionalParts": [
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 20,
+                "endChar": 28,
+                "quote": "the unit"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 28,
+                "endChar": 37,
+                "quote": " detects "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 37,
+                "endChar": 45,
+                "quote": "a signal"
+              }
+            }
+          ]
+        },
+        {
+          "id": "second",
+          "parent": "root",
+          "kind": "functional-relation",
+          "groupingReason": "independent-coordinate",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 79,
+            "quote": "the processor stores a value"
+          },
+          "lexicalHeader": {
+            "startChar": 51,
+            "endChar": 79,
+            "quote": "the processor stores a value"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 51,
+                "endChar": 64,
+                "quote": "the processor"
+              },
+              "head": "processor",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 72,
+                "endChar": 79,
+                "quote": "a value"
+              },
+              "head": "value",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ],
+          "functionalParts": [
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 64,
+                "quote": "the processor"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 64,
+                "endChar": 72,
+                "quote": " stores "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 72,
+                "endChar": 79,
+                "quote": "a value"
+              }
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the unit"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the unit"
+          },
+          "head": {
+            "startChar": 24,
+            "endChar": 28,
+            "quote": "unit"
+          },
+          "headText": "unit",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the unit"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 37,
+            "endChar": 45,
+            "quote": "a signal"
+          },
+          "outer": {
+            "startChar": 37,
+            "endChar": 45,
+            "quote": "a signal"
+          },
+          "head": {
+            "startChar": 39,
+            "endChar": 45,
+            "quote": "signal"
+          },
+          "headText": "signal",
+          "publicAnchor": {
+            "startChar": 37,
+            "endChar": 45,
+            "quote": "a signal"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "second",
+          "core": {
+            "startChar": 51,
+            "endChar": 64,
+            "quote": "the processor"
+          },
+          "outer": {
+            "startChar": 51,
+            "endChar": 64,
+            "quote": "the processor"
+          },
+          "head": {
+            "startChar": 55,
+            "endChar": 64,
+            "quote": "processor"
+          },
+          "headText": "processor",
+          "publicAnchor": {
+            "startChar": 51,
+            "endChar": 64,
+            "quote": "the processor"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "second",
+          "core": {
+            "startChar": 72,
+            "endChar": 79,
+            "quote": "a value"
+          },
+          "outer": {
+            "startChar": 72,
+            "endChar": 79,
+            "quote": "a value"
+          },
+          "head": {
+            "startChar": 74,
+            "endChar": 79,
+            "quote": "value"
+          },
+          "headText": "value",
+          "publicAnchor": {
+            "startChar": 72,
+            "endChar": 79,
+            "quote": "a value"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "shared-subject-continuation",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising the unit detects a signal and stores a value.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "the unit detects a signal and stores a value."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "functional-relation",
+          "groupingReason": "shared-subject-continuation",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 64,
+            "quote": "the unit detects a signal and stores a value"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 64,
+            "quote": "the unit detects a signal and stores a value"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 28,
+                "quote": "the unit"
+              },
+              "head": "unit",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 37,
+                "endChar": 45,
+                "quote": "a signal"
+              },
+              "head": "signal",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 57,
+                "endChar": 64,
+                "quote": "a value"
+              },
+              "head": "value",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ],
+          "functionalParts": [
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 20,
+                "endChar": 28,
+                "quote": "the unit"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 28,
+                "endChar": 37,
+                "quote": " detects "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 37,
+                "endChar": 45,
+                "quote": "a signal"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 57,
+                "quote": " and stores "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 57,
+                "endChar": 64,
+                "quote": "a value"
+              }
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the unit"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the unit"
+          },
+          "head": {
+            "startChar": 24,
+            "endChar": 28,
+            "quote": "unit"
+          },
+          "headText": "unit",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the unit"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 37,
+            "endChar": 45,
+            "quote": "a signal"
+          },
+          "outer": {
+            "startChar": 37,
+            "endChar": 45,
+            "quote": "a signal"
+          },
+          "head": {
+            "startChar": 39,
+            "endChar": 45,
+            "quote": "signal"
+          },
+          "headText": "signal",
+          "publicAnchor": {
+            "startChar": 37,
+            "endChar": 45,
+            "quote": "a signal"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 57,
+            "endChar": 64,
+            "quote": "a value"
+          },
+          "outer": {
+            "startChar": 57,
+            "endChar": 64,
+            "quote": "a value"
+          },
+          "head": {
+            "startChar": 59,
+            "endChar": 64,
+            "quote": "value"
+          },
+          "headText": "value",
+          "publicAnchor": {
+            "startChar": 57,
+            "endChar": 64,
+            "quote": "a value"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "argument-comma-relative-kept",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising the unit includes, in a lower part of the unit, a collection box in which the recording medium is collected.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "the unit includes, in a lower part of the unit, a collection box in which the recording medium is collected."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "functional-relation",
+          "groupingReason": "single-restriction",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 127,
+            "quote": "the unit includes, in a lower part of the unit, a collection box in which the recording medium is collected"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 127,
+            "quote": "the unit includes, in a lower part of the unit, a collection box in which the recording medium is collected"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 28,
+                "quote": "the unit"
+              },
+              "head": "unit",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 42,
+                "endChar": 54,
+                "quote": "a lower part"
+              },
+              "head": "lower part",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 58,
+                "endChar": 66,
+                "quote": "the unit"
+              },
+              "head": "unit",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 68,
+                "endChar": 84,
+                "quote": "a collection box"
+              },
+              "head": "collection box",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 94,
+                "endChar": 114,
+                "quote": "the recording medium"
+              },
+              "head": "recording medium",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            }
+          ],
+          "functionalParts": [
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 20,
+                "endChar": 28,
+                "quote": "the unit"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 28,
+                "endChar": 42,
+                "quote": " includes, in "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 42,
+                "endChar": 54,
+                "quote": "a lower part"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 54,
+                "endChar": 58,
+                "quote": " of "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 58,
+                "endChar": 66,
+                "quote": "the unit"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 66,
+                "endChar": 68,
+                "quote": ", "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 68,
+                "endChar": 84,
+                "quote": "a collection box"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 84,
+                "endChar": 94,
+                "quote": " in which "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 94,
+                "endChar": 114,
+                "quote": "the recording medium"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 114,
+                "endChar": 127,
+                "quote": " is collected"
+              }
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [
+        {
+          "id": "main",
+          "parentFrame": null,
+          "attachment": "main",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 127,
+            "quote": "the unit includes, in a lower part of the unit, a collection box in which the recording medium is collected"
+          },
+          "elementOwner": "body",
+          "predicates": [
+            {
+              "startChar": 29,
+              "endChar": 37,
+              "quote": "includes"
+            }
+          ]
+        },
+        {
+          "id": "relative",
+          "parentFrame": "main",
+          "attachment": "relative",
+          "anchor": {
+            "startChar": 85,
+            "endChar": 127,
+            "quote": "in which the recording medium is collected"
+          },
+          "elementOwner": "body",
+          "predicates": [
+            {
+              "startChar": 115,
+              "endChar": 127,
+              "quote": "is collected"
+            }
+          ]
+        }
+      ],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the unit"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the unit"
+          },
+          "head": {
+            "startChar": 24,
+            "endChar": 28,
+            "quote": "unit"
+          },
+          "headText": "unit",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the unit"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 42,
+            "endChar": 54,
+            "quote": "a lower part"
+          },
+          "outer": {
+            "startChar": 42,
+            "endChar": 54,
+            "quote": "a lower part"
+          },
+          "head": {
+            "startChar": 44,
+            "endChar": 54,
+            "quote": "lower part"
+          },
+          "headText": "lower part",
+          "publicAnchor": {
+            "startChar": 42,
+            "endChar": 54,
+            "quote": "a lower part"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 58,
+            "endChar": 66,
+            "quote": "the unit"
+          },
+          "outer": {
+            "startChar": 58,
+            "endChar": 66,
+            "quote": "the unit"
+          },
+          "head": {
+            "startChar": 62,
+            "endChar": 66,
+            "quote": "unit"
+          },
+          "headText": "unit",
+          "publicAnchor": {
+            "startChar": 58,
+            "endChar": 66,
+            "quote": "the unit"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 68,
+            "endChar": 84,
+            "quote": "a collection box"
+          },
+          "outer": {
+            "startChar": 68,
+            "endChar": 84,
+            "quote": "a collection box"
+          },
+          "head": {
+            "startChar": 70,
+            "endChar": 84,
+            "quote": "collection box"
+          },
+          "headText": "collection box",
+          "publicAnchor": {
+            "startChar": 68,
+            "endChar": 84,
+            "quote": "a collection box"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 94,
+            "endChar": 114,
+            "quote": "the recording medium"
+          },
+          "outer": {
+            "startChar": 94,
+            "endChar": 114,
+            "quote": "the recording medium"
+          },
+          "head": {
+            "startChar": 98,
+            "endChar": 114,
+            "quote": "recording medium"
+          },
+          "headText": "recording medium",
+          "publicAnchor": {
+            "startChar": 94,
+            "endChar": 114,
+            "quote": "the recording medium"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "complement-that-not-sibling",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising the controller ensures that, during a scan, the detector receives a signal.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "the controller ensures that, during a scan, the detector receives a signal."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "functional-relation",
+          "groupingReason": "single-restriction",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 94,
+            "quote": "the controller ensures that, during a scan, the detector receives a signal"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 94,
+            "quote": "the controller ensures that, during a scan, the detector receives a signal"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 34,
+                "quote": "the controller"
+              },
+              "head": "controller",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 56,
+                "endChar": 62,
+                "quote": "a scan"
+              },
+              "head": "scan",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 64,
+                "endChar": 76,
+                "quote": "the detector"
+              },
+              "head": "detector",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 86,
+                "endChar": 94,
+                "quote": "a signal"
+              },
+              "head": "signal",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ],
+          "functionalParts": [
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 20,
+                "endChar": 34,
+                "quote": "the controller"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 34,
+                "endChar": 56,
+                "quote": " ensures that, during "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 56,
+                "endChar": 62,
+                "quote": "a scan"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 62,
+                "endChar": 64,
+                "quote": ", "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 64,
+                "endChar": 76,
+                "quote": "the detector"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 76,
+                "endChar": 86,
+                "quote": " receives "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 86,
+                "endChar": 94,
+                "quote": "a signal"
+              }
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [
+        {
+          "id": "main",
+          "parentFrame": null,
+          "attachment": "main",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 94,
+            "quote": "the controller ensures that, during a scan, the detector receives a signal"
+          },
+          "elementOwner": "body",
+          "predicates": [
+            {
+              "startChar": 35,
+              "endChar": 42,
+              "quote": "ensures"
+            }
+          ]
+        },
+        {
+          "id": "complement",
+          "parentFrame": "main",
+          "attachment": "event-complement",
+          "anchor": {
+            "startChar": 43,
+            "endChar": 94,
+            "quote": "that, during a scan, the detector receives a signal"
+          },
+          "elementOwner": "body",
+          "predicates": [
+            {
+              "startChar": 77,
+              "endChar": 85,
+              "quote": "receives"
+            }
+          ]
+        }
+      ],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 34,
+            "quote": "the controller"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 34,
+            "quote": "the controller"
+          },
+          "head": {
+            "startChar": 24,
+            "endChar": 34,
+            "quote": "controller"
+          },
+          "headText": "controller",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 34,
+            "quote": "the controller"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 56,
+            "endChar": 62,
+            "quote": "a scan"
+          },
+          "outer": {
+            "startChar": 56,
+            "endChar": 62,
+            "quote": "a scan"
+          },
+          "head": {
+            "startChar": 58,
+            "endChar": 62,
+            "quote": "scan"
+          },
+          "headText": "scan",
+          "publicAnchor": {
+            "startChar": 56,
+            "endChar": 62,
+            "quote": "a scan"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 64,
+            "endChar": 76,
+            "quote": "the detector"
+          },
+          "outer": {
+            "startChar": 64,
+            "endChar": 76,
+            "quote": "the detector"
+          },
+          "head": {
+            "startChar": 68,
+            "endChar": 76,
+            "quote": "detector"
+          },
+          "headText": "detector",
+          "publicAnchor": {
+            "startChar": 64,
+            "endChar": 76,
+            "quote": "the detector"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 86,
+            "endChar": 94,
+            "quote": "a signal"
+          },
+          "outer": {
+            "startChar": 86,
+            "endChar": 94,
+            "quote": "a signal"
+          },
+          "head": {
+            "startChar": 88,
+            "endChar": 94,
+            "quote": "signal"
+          },
+          "headText": "signal",
+          "publicAnchor": {
+            "startChar": 86,
+            "endChar": 94,
+            "quote": "a signal"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "relative-intervening-adjunct",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising a display control unit that displays during a scan a curve.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "a display control unit that displays during a scan a curve."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "functional-relation",
+          "groupingReason": "single-restriction",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 78,
+            "quote": "a display control unit that displays during a scan a curve"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 78,
+            "quote": "a display control unit that displays during a scan a curve"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 42,
+                "quote": "a display control unit"
+              },
+              "head": "display control unit",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 64,
+                "endChar": 70,
+                "quote": "a scan"
+              },
+              "head": "scan",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 71,
+                "endChar": 78,
+                "quote": "a curve"
+              },
+              "head": "curve",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ],
+          "functionalParts": [
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 20,
+                "endChar": 42,
+                "quote": "a display control unit"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 42,
+                "endChar": 64,
+                "quote": " that displays during "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 64,
+                "endChar": 70,
+                "quote": "a scan"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 70,
+                "endChar": 71,
+                "quote": " "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 71,
+                "endChar": 78,
+                "quote": "a curve"
+              }
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [
+        {
+          "id": "main",
+          "parentFrame": null,
+          "attachment": "main",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 78,
+            "quote": "a display control unit that displays during a scan a curve"
+          },
+          "elementOwner": "body",
+          "predicates": []
+        },
+        {
+          "id": "relative",
+          "parentFrame": "main",
+          "attachment": "relative",
+          "anchor": {
+            "startChar": 43,
+            "endChar": 78,
+            "quote": "that displays during a scan a curve"
+          },
+          "elementOwner": "body",
+          "predicates": [
+            {
+              "startChar": 48,
+              "endChar": 56,
+              "quote": "displays"
+            }
+          ]
+        }
+      ],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 42,
+            "quote": "a display control unit"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 78,
+            "quote": "a display control unit that displays during a scan a curve"
+          },
+          "head": {
+            "startChar": 22,
+            "endChar": 42,
+            "quote": "display control unit"
+          },
+          "headText": "display control unit",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 42,
+            "quote": "a display control unit"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 64,
+            "endChar": 70,
+            "quote": "a scan"
+          },
+          "outer": {
+            "startChar": 64,
+            "endChar": 70,
+            "quote": "a scan"
+          },
+          "head": {
+            "startChar": 66,
+            "endChar": 70,
+            "quote": "scan"
+          },
+          "headText": "scan",
+          "publicAnchor": {
+            "startChar": 64,
+            "endChar": 70,
+            "quote": "a scan"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 71,
+            "endChar": 78,
+            "quote": "a curve"
+          },
+          "outer": {
+            "startChar": 71,
+            "endChar": 78,
+            "quote": "a curve"
+          },
+          "head": {
+            "startChar": 73,
+            "endChar": 78,
+            "quote": "curve"
+          },
+          "headText": "curve",
+          "publicAnchor": {
+            "startChar": 71,
+            "endChar": 78,
+            "quote": "a curve"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "explicit-labelled-composition",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising a housing comprising: (a) a plate; (b) a cover.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "a housing comprising: (a) a plate; (b) a cover."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "housing",
+          "parent": "root",
+          "kind": "limitation",
+          "groupingReason": "explicit-list-header",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 66,
+            "quote": "a housing comprising: (a) a plate; (b) a cover"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 40,
+            "quote": "a housing comprising"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 29,
+                "quote": "a housing"
+              },
+              "head": "housing",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "plate",
+          "parent": "housing",
+          "kind": "limitation",
+          "groupingReason": "enumeration-child",
+          "anchor": {
+            "startChar": 46,
+            "endChar": 53,
+            "quote": "a plate"
+          },
+          "lexicalHeader": {
+            "startChar": 46,
+            "endChar": 53,
+            "quote": "a plate"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 46,
+                "endChar": 53,
+                "quote": "a plate"
+              },
+              "head": "plate",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "cover",
+          "parent": "housing",
+          "kind": "limitation",
+          "groupingReason": "enumeration-child",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 66,
+            "quote": "a cover"
+          },
+          "lexicalHeader": {
+            "startChar": 59,
+            "endChar": 66,
+            "quote": "a cover"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 59,
+                "endChar": 66,
+                "quote": "a cover"
+              },
+              "head": "cover",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "housing",
+          "core": {
+            "startChar": 20,
+            "endChar": 29,
+            "quote": "a housing"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 29,
+            "quote": "a housing"
+          },
+          "head": {
+            "startChar": 22,
+            "endChar": 29,
+            "quote": "housing"
+          },
+          "headText": "housing",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 29,
+            "quote": "a housing"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "plate",
+          "core": {
+            "startChar": 46,
+            "endChar": 53,
+            "quote": "a plate"
+          },
+          "outer": {
+            "startChar": 46,
+            "endChar": 53,
+            "quote": "a plate"
+          },
+          "head": {
+            "startChar": 48,
+            "endChar": 53,
+            "quote": "plate"
+          },
+          "headText": "plate",
+          "publicAnchor": {
+            "startChar": 46,
+            "endChar": 53,
+            "quote": "a plate"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "cover",
+          "core": {
+            "startChar": 59,
+            "endChar": 66,
+            "quote": "a cover"
+          },
+          "outer": {
+            "startChar": 59,
+            "endChar": 66,
+            "quote": "a cover"
+          },
+          "head": {
+            "startChar": 61,
+            "endChar": 66,
+            "quote": "cover"
+          },
+          "headText": "cover",
+          "publicAnchor": {
+            "startChar": 59,
+            "endChar": 66,
+            "quote": "a cover"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "nested-labelled-container",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising a housing comprising: (a) a plate having: (i) a rib; (ii) a lip; (b) a cover.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "a housing comprising: (a) a plate having: (i) a rib; (ii) a lip; (b) a cover."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "housing",
+          "parent": "root",
+          "kind": "limitation",
+          "groupingReason": "explicit-list-header",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 96,
+            "quote": "a housing comprising: (a) a plate having: (i) a rib; (ii) a lip; (b) a cover"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 40,
+            "quote": "a housing comprising"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 29,
+                "quote": "a housing"
+              },
+              "head": "housing",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "plate",
+          "parent": "housing",
+          "kind": "limitation",
+          "groupingReason": "explicit-list-header",
+          "anchor": {
+            "startChar": 46,
+            "endChar": 83,
+            "quote": "a plate having: (i) a rib; (ii) a lip"
+          },
+          "lexicalHeader": {
+            "startChar": 46,
+            "endChar": 60,
+            "quote": "a plate having"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 46,
+                "endChar": 53,
+                "quote": "a plate"
+              },
+              "head": "plate",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "rib",
+          "parent": "plate",
+          "kind": "limitation",
+          "groupingReason": "enumeration-child",
+          "anchor": {
+            "startChar": 66,
+            "endChar": 71,
+            "quote": "a rib"
+          },
+          "lexicalHeader": {
+            "startChar": 66,
+            "endChar": 71,
+            "quote": "a rib"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 66,
+                "endChar": 71,
+                "quote": "a rib"
+              },
+              "head": "rib",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "lip",
+          "parent": "plate",
+          "kind": "limitation",
+          "groupingReason": "enumeration-child",
+          "anchor": {
+            "startChar": 78,
+            "endChar": 83,
+            "quote": "a lip"
+          },
+          "lexicalHeader": {
+            "startChar": 78,
+            "endChar": 83,
+            "quote": "a lip"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 78,
+                "endChar": 83,
+                "quote": "a lip"
+              },
+              "head": "lip",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "cover",
+          "parent": "housing",
+          "kind": "limitation",
+          "groupingReason": "enumeration-child",
+          "anchor": {
+            "startChar": 89,
+            "endChar": 96,
+            "quote": "a cover"
+          },
+          "lexicalHeader": {
+            "startChar": 89,
+            "endChar": 96,
+            "quote": "a cover"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 89,
+                "endChar": 96,
+                "quote": "a cover"
+              },
+              "head": "cover",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "housing",
+          "core": {
+            "startChar": 20,
+            "endChar": 29,
+            "quote": "a housing"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 29,
+            "quote": "a housing"
+          },
+          "head": {
+            "startChar": 22,
+            "endChar": 29,
+            "quote": "housing"
+          },
+          "headText": "housing",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 29,
+            "quote": "a housing"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "plate",
+          "core": {
+            "startChar": 46,
+            "endChar": 53,
+            "quote": "a plate"
+          },
+          "outer": {
+            "startChar": 46,
+            "endChar": 53,
+            "quote": "a plate"
+          },
+          "head": {
+            "startChar": 48,
+            "endChar": 53,
+            "quote": "plate"
+          },
+          "headText": "plate",
+          "publicAnchor": {
+            "startChar": 46,
+            "endChar": 53,
+            "quote": "a plate"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "rib",
+          "core": {
+            "startChar": 66,
+            "endChar": 71,
+            "quote": "a rib"
+          },
+          "outer": {
+            "startChar": 66,
+            "endChar": 71,
+            "quote": "a rib"
+          },
+          "head": {
+            "startChar": 68,
+            "endChar": 71,
+            "quote": "rib"
+          },
+          "headText": "rib",
+          "publicAnchor": {
+            "startChar": 66,
+            "endChar": 71,
+            "quote": "a rib"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "lip",
+          "core": {
+            "startChar": 78,
+            "endChar": 83,
+            "quote": "a lip"
+          },
+          "outer": {
+            "startChar": 78,
+            "endChar": 83,
+            "quote": "a lip"
+          },
+          "head": {
+            "startChar": 80,
+            "endChar": 83,
+            "quote": "lip"
+          },
+          "headText": "lip",
+          "publicAnchor": {
+            "startChar": 78,
+            "endChar": 83,
+            "quote": "a lip"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "cover",
+          "core": {
+            "startChar": 89,
+            "endChar": 96,
+            "quote": "a cover"
+          },
+          "outer": {
+            "startChar": 89,
+            "endChar": 96,
+            "quote": "a cover"
+          },
+          "head": {
+            "startChar": 91,
+            "endChar": 96,
+            "quote": "cover"
+          },
+          "headText": "cover",
+          "publicAnchor": {
+            "startChar": 89,
+            "endChar": 96,
+            "quote": "a cover"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "unlabelled-composition-list",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising the unit includes a plate and a cover.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "the unit includes a plate and a cover."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "unit",
+          "parent": "root",
+          "kind": "limitation",
+          "groupingReason": "composition-header",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 57,
+            "quote": "the unit includes a plate and a cover"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 37,
+            "quote": "the unit includes"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 28,
+                "quote": "the unit"
+              },
+              "head": "unit",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "plate",
+          "parent": "unit",
+          "kind": "limitation",
+          "groupingReason": "composition-child",
+          "anchor": {
+            "startChar": 38,
+            "endChar": 45,
+            "quote": "a plate"
+          },
+          "lexicalHeader": {
+            "startChar": 38,
+            "endChar": 45,
+            "quote": "a plate"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 38,
+                "endChar": 45,
+                "quote": "a plate"
+              },
+              "head": "plate",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "cover",
+          "parent": "unit",
+          "kind": "limitation",
+          "groupingReason": "composition-child",
+          "anchor": {
+            "startChar": 50,
+            "endChar": 57,
+            "quote": "a cover"
+          },
+          "lexicalHeader": {
+            "startChar": 50,
+            "endChar": 57,
+            "quote": "a cover"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 50,
+                "endChar": 57,
+                "quote": "a cover"
+              },
+              "head": "cover",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "unit",
+          "core": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the unit"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the unit"
+          },
+          "head": {
+            "startChar": 24,
+            "endChar": 28,
+            "quote": "unit"
+          },
+          "headText": "unit",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the unit"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "plate",
+          "core": {
+            "startChar": 38,
+            "endChar": 45,
+            "quote": "a plate"
+          },
+          "outer": {
+            "startChar": 38,
+            "endChar": 45,
+            "quote": "a plate"
+          },
+          "head": {
+            "startChar": 40,
+            "endChar": 45,
+            "quote": "plate"
+          },
+          "headText": "plate",
+          "publicAnchor": {
+            "startChar": 38,
+            "endChar": 45,
+            "quote": "a plate"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "cover",
+          "core": {
+            "startChar": 50,
+            "endChar": 57,
+            "quote": "a cover"
+          },
+          "outer": {
+            "startChar": 50,
+            "endChar": 57,
+            "quote": "a cover"
+          },
+          "head": {
+            "startChar": 52,
+            "endChar": 57,
+            "quote": "cover"
+          },
+          "headText": "cover",
+          "publicAnchor": {
+            "startChar": 50,
+            "endChar": 57,
+            "quote": "a cover"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "nominal-gerund-compound",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising a hole punching operation.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "a hole punching operation."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "limitation",
+          "groupingReason": "nominal-leaf",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "a hole punching operation"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "a hole punching operation"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 45,
+                "quote": "a hole punching operation"
+              },
+              "head": "hole punching operation",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "a hole punching operation"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "a hole punching operation"
+          },
+          "head": {
+            "startChar": 22,
+            "endChar": 45,
+            "quote": "hole punching operation"
+          },
+          "headText": "hole punching operation",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "a hole punching operation"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "each-prefix",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising each packet type.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "each packet type."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "limitation",
+          "groupingReason": "nominal-leaf",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 36,
+            "quote": "each packet type"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 36,
+            "quote": "each packet type"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 36,
+                "quote": "each packet type"
+              },
+              "head": "packet type",
+              "determiner": "bare",
+              "roleEligibility": "unknown"
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 36,
+            "quote": "each packet type"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 36,
+            "quote": "each packet type"
+          },
+          "head": {
+            "startChar": 25,
+            "endChar": 36,
+            "quote": "packet type"
+          },
+          "headText": "packet type",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 36,
+            "quote": "each packet type"
+          },
+          "roleEligibility": "unknown"
+        }
+      ]
+    },
+    {
+      "case": "possessive-prefix",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising its outer surface.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "its outer surface."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "limitation",
+          "groupingReason": "nominal-leaf",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 37,
+            "quote": "its outer surface"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 37,
+            "quote": "its outer surface"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 37,
+                "quote": "its outer surface"
+              },
+              "head": "outer surface",
+              "determiner": "bare",
+              "roleEligibility": "unknown"
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 37,
+            "quote": "its outer surface"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 37,
+            "quote": "its outer surface"
+          },
+          "head": {
+            "startChar": 24,
+            "endChar": 37,
+            "quote": "outer surface"
+          },
+          "headText": "outer surface",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 37,
+            "quote": "its outer surface"
+          },
+          "roleEligibility": "unknown"
+        }
+      ]
+    },
+    {
+      "case": "lexical-genitive",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising the rotor's outer surface.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "the rotor's outer surface."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "limitation",
+          "groupingReason": "nominal-leaf",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "the rotor's outer surface"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "the rotor's outer surface"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 45,
+                "quote": "the rotor's outer surface"
+              },
+              "head": "rotor's outer surface",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "the rotor's outer surface"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "the rotor's outer surface"
+          },
+          "head": {
+            "startChar": 24,
+            "endChar": 45,
+            "quote": "rotor's outer surface"
+          },
+          "headText": "rotor's outer surface",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "the rotor's outer surface"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "quoted-name",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising a \"time of flight\" sensor.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "a \"time of flight\" sensor."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "limitation",
+          "groupingReason": "nominal-leaf",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "a \"time of flight\" sensor"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "a \"time of flight\" sensor"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 45,
+                "quote": "a \"time of flight\" sensor"
+              },
+              "head": "\"time of flight\" sensor",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "a \"time of flight\" sensor"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "a \"time of flight\" sensor"
+          },
+          "head": {
+            "startChar": 22,
+            "endChar": 45,
+            "quote": "\"time of flight\" sensor"
+          },
+          "headText": "\"time of flight\" sensor",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 45,
+            "quote": "a \"time of flight\" sensor"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "hyphenated-compound",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising a data-communications system.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "a data-communications system."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "limitation",
+          "groupingReason": "nominal-leaf",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 48,
+            "quote": "a data-communications system"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 48,
+            "quote": "a data-communications system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 48,
+                "quote": "a data-communications system"
+              },
+              "head": "data-communications system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 48,
+            "quote": "a data-communications system"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 48,
+            "quote": "a data-communications system"
+          },
+          "head": {
+            "startChar": 22,
+            "endChar": 48,
+            "quote": "data-communications system"
+          },
+          "headText": "data-communications system",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 48,
+            "quote": "a data-communications system"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "event-gerund-object",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising a unit for punching a hole.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "a unit for punching a hole."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "functional-relation",
+          "groupingReason": "single-restriction",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 46,
+            "quote": "a unit for punching a hole"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 46,
+            "quote": "a unit for punching a hole"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 26,
+                "quote": "a unit"
+              },
+              "head": "unit",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 40,
+                "endChar": 46,
+                "quote": "a hole"
+              },
+              "head": "hole",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ],
+          "functionalParts": [
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 20,
+                "endChar": 26,
+                "quote": "a unit"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 26,
+                "endChar": 40,
+                "quote": " for punching "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 40,
+                "endChar": 46,
+                "quote": "a hole"
+              }
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [
+        {
+          "id": "main",
+          "parentFrame": null,
+          "attachment": "main",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 46,
+            "quote": "a unit for punching a hole"
+          },
+          "elementOwner": "body",
+          "predicates": []
+        },
+        {
+          "id": "event",
+          "parentFrame": "main",
+          "attachment": "event-complement",
+          "anchor": {
+            "startChar": 27,
+            "endChar": 46,
+            "quote": "for punching a hole"
+          },
+          "elementOwner": "body",
+          "predicates": [
+            {
+              "startChar": 31,
+              "endChar": 39,
+              "quote": "punching"
+            }
+          ]
+        }
+      ],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 26,
+            "quote": "a unit"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 26,
+            "quote": "a unit"
+          },
+          "head": {
+            "startChar": 22,
+            "endChar": 26,
+            "quote": "unit"
+          },
+          "headText": "unit",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 26,
+            "quote": "a unit"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 40,
+            "endChar": 46,
+            "quote": "a hole"
+          },
+          "outer": {
+            "startChar": 40,
+            "endChar": 46,
+            "quote": "a hole"
+          },
+          "head": {
+            "startChar": 42,
+            "endChar": 46,
+            "quote": "hole"
+          },
+          "headText": "hole",
+          "publicAnchor": {
+            "startChar": 40,
+            "endChar": 46,
+            "quote": "a hole"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "of-nominal-arguments",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising the base of said nut.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "the base of said nut."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "limitation",
+          "groupingReason": "nominal-leaf",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 40,
+            "quote": "the base of said nut"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 40,
+            "quote": "the base of said nut"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 28,
+                "quote": "the base"
+              },
+              "head": "base",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 32,
+                "endChar": 40,
+                "quote": "said nut"
+              },
+              "head": "nut",
+              "determiner": "said",
+              "roleEligibility": "legacy"
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the base"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 40,
+            "quote": "the base of said nut"
+          },
+          "head": {
+            "startChar": 24,
+            "endChar": 28,
+            "quote": "base"
+          },
+          "headText": "base",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the base"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 32,
+            "endChar": 40,
+            "quote": "said nut"
+          },
+          "outer": {
+            "startChar": 32,
+            "endChar": 40,
+            "quote": "said nut"
+          },
+          "head": {
+            "startChar": 37,
+            "endChar": 40,
+            "quote": "nut"
+          },
+          "headText": "nut",
+          "publicAnchor": {
+            "startChar": 32,
+            "endChar": 40,
+            "quote": "said nut"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "attached-function-versus-response-noun",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising the unit operates in response to a signal.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "the unit operates in response to a signal."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "functional-relation",
+          "groupingReason": "single-restriction",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 61,
+            "quote": "the unit operates in response to a signal"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 61,
+            "quote": "the unit operates in response to a signal"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 28,
+                "quote": "the unit"
+              },
+              "head": "unit",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 53,
+                "endChar": 61,
+                "quote": "a signal"
+              },
+              "head": "signal",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ],
+          "functionalParts": [
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 20,
+                "endChar": 28,
+                "quote": "the unit"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 28,
+                "endChar": 53,
+                "quote": " operates in response to "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 53,
+                "endChar": 61,
+                "quote": "a signal"
+              }
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the unit"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the unit"
+          },
+          "head": {
+            "startChar": 24,
+            "endChar": 28,
+            "quote": "unit"
+          },
+          "headText": "unit",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 28,
+            "quote": "the unit"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 53,
+            "endChar": 61,
+            "quote": "a signal"
+          },
+          "outer": {
+            "startChar": 53,
+            "endChar": 61,
+            "quote": "a signal"
+          },
+          "head": {
+            "startChar": 55,
+            "endChar": 61,
+            "quote": "signal"
+          },
+          "headText": "signal",
+          "publicAnchor": {
+            "startChar": 53,
+            "endChar": 61,
+            "quote": "a signal"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "response-is-entity",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising a response to a signal.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "a response to a signal."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "limitation",
+          "groupingReason": "nominal-leaf",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 42,
+            "quote": "a response to a signal"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 42,
+            "quote": "a response to a signal"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 30,
+                "quote": "a response"
+              },
+              "head": "response",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 34,
+                "endChar": 42,
+                "quote": "a signal"
+              },
+              "head": "signal",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 30,
+            "quote": "a response"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 30,
+            "quote": "a response"
+          },
+          "head": {
+            "startChar": 22,
+            "endChar": 30,
+            "quote": "response"
+          },
+          "headText": "response",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 30,
+            "quote": "a response"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 34,
+            "endChar": 42,
+            "quote": "a signal"
+          },
+          "outer": {
+            "startChar": 34,
+            "endChar": 42,
+            "quote": "a signal"
+          },
+          "head": {
+            "startChar": 36,
+            "endChar": 42,
+            "quote": "signal"
+          },
+          "headText": "signal",
+          "publicAnchor": {
+            "startChar": 34,
+            "endChar": 42,
+            "quote": "a signal"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "adjective-property",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising the plate is radial.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "the plate is radial."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "limitation",
+          "groupingReason": "adjectival-property",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 39,
+            "quote": "the plate is radial"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 39,
+            "quote": "the plate is radial"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 29,
+                "quote": "the plate"
+              },
+              "head": "plate",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 29,
+            "quote": "the plate"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 29,
+            "quote": "the plate"
+          },
+          "head": {
+            "startChar": 24,
+            "endChar": 29,
+            "quote": "plate"
+          },
+          "headText": "plate",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 29,
+            "quote": "the plate"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "passive-not-property",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising the plate is attached to the housing.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "the plate is attached to the housing."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "functional-relation",
+          "groupingReason": "single-restriction",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 56,
+            "quote": "the plate is attached to the housing"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 56,
+            "quote": "the plate is attached to the housing"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 29,
+                "quote": "the plate"
+              },
+              "head": "plate",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 45,
+                "endChar": 56,
+                "quote": "the housing"
+              },
+              "head": "housing",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            }
+          ],
+          "functionalParts": [
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 20,
+                "endChar": 29,
+                "quote": "the plate"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 29,
+                "endChar": 45,
+                "quote": " is attached to "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 56,
+                "quote": "the housing"
+              }
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 29,
+            "quote": "the plate"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 29,
+            "quote": "the plate"
+          },
+          "head": {
+            "startChar": 24,
+            "endChar": 29,
+            "quote": "plate"
+          },
+          "headText": "plate",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 29,
+            "quote": "the plate"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 45,
+            "endChar": 56,
+            "quote": "the housing"
+          },
+          "outer": {
+            "startChar": 45,
+            "endChar": 56,
+            "quote": "the housing"
+          },
+          "head": {
+            "startChar": 49,
+            "endChar": 56,
+            "quote": "housing"
+          },
+          "headText": "housing",
+          "publicAnchor": {
+            "startChar": 45,
+            "endChar": 56,
+            "quote": "the housing"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "later-introducer-retained",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising a plate; wherein the detector receives a signal.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "a plate; wherein the detector receives a signal."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "limitation",
+          "groupingReason": "nominal-leaf",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 27,
+            "quote": "a plate"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 27,
+            "quote": "a plate"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 27,
+                "quote": "a plate"
+              },
+              "head": "plate",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "restriction",
+          "parent": "root",
+          "kind": "functional-relation",
+          "groupingReason": "introduced-restriction",
+          "anchor": {
+            "startChar": 29,
+            "endChar": 67,
+            "quote": "wherein the detector receives a signal"
+          },
+          "lexicalHeader": {
+            "startChar": 29,
+            "endChar": 67,
+            "quote": "wherein the detector receives a signal"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 37,
+                "endChar": 49,
+                "quote": "the detector"
+              },
+              "head": "detector",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 59,
+                "endChar": 67,
+                "quote": "a signal"
+              },
+              "head": "signal",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ],
+          "functionalParts": [
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 29,
+                "endChar": 37,
+                "quote": "wherein "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 37,
+                "endChar": 49,
+                "quote": "the detector"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 49,
+                "endChar": 59,
+                "quote": " receives "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 59,
+                "endChar": 67,
+                "quote": "a signal"
+              }
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 27,
+            "quote": "a plate"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 27,
+            "quote": "a plate"
+          },
+          "head": {
+            "startChar": 22,
+            "endChar": 27,
+            "quote": "plate"
+          },
+          "headText": "plate",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 27,
+            "quote": "a plate"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "restriction",
+          "core": {
+            "startChar": 37,
+            "endChar": 49,
+            "quote": "the detector"
+          },
+          "outer": {
+            "startChar": 37,
+            "endChar": 49,
+            "quote": "the detector"
+          },
+          "head": {
+            "startChar": 41,
+            "endChar": 49,
+            "quote": "detector"
+          },
+          "headText": "detector",
+          "publicAnchor": {
+            "startChar": 37,
+            "endChar": 49,
+            "quote": "the detector"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "restriction",
+          "core": {
+            "startChar": 59,
+            "endChar": 67,
+            "quote": "a signal"
+          },
+          "outer": {
+            "startChar": 59,
+            "endChar": 67,
+            "quote": "a signal"
+          },
+          "head": {
+            "startChar": 61,
+            "endChar": 67,
+            "quote": "signal"
+          },
+          "headText": "signal",
+          "publicAnchor": {
+            "startChar": 59,
+            "endChar": 67,
+            "quote": "a signal"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "governing-introducer-excluded",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "The system of claim 1, wherein the detector receives a signal.",
+      "qualifiedParts": {
+        "preamble": "The system of claim 1,",
+        "transition": "wherein",
+        "body": "the detector receives a signal."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "The system of claim 1"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "The system of claim 1"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 10,
+                "quote": "The system"
+              },
+              "head": "system",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "functional-relation",
+          "groupingReason": "single-restriction",
+          "anchor": {
+            "startChar": 31,
+            "endChar": 61,
+            "quote": "the detector receives a signal"
+          },
+          "lexicalHeader": {
+            "startChar": 31,
+            "endChar": 61,
+            "quote": "the detector receives a signal"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 31,
+                "endChar": 43,
+                "quote": "the detector"
+              },
+              "head": "detector",
+              "determiner": "the",
+              "roleEligibility": "legacy"
+            },
+            {
+              "anchor": {
+                "startChar": 53,
+                "endChar": 61,
+                "quote": "a signal"
+              },
+              "head": "signal",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ],
+          "functionalParts": [
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 43,
+                "quote": "the detector"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 43,
+                "endChar": 53,
+                "quote": " receives "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 53,
+                "endChar": 61,
+                "quote": "a signal"
+              }
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 31,
+            "endChar": 43,
+            "quote": "the detector"
+          },
+          "outer": {
+            "startChar": 31,
+            "endChar": 43,
+            "quote": "the detector"
+          },
+          "head": {
+            "startChar": 35,
+            "endChar": 43,
+            "quote": "detector"
+          },
+          "headText": "detector",
+          "publicAnchor": {
+            "startChar": 31,
+            "endChar": 43,
+            "quote": "the detector"
+          },
+          "roleEligibility": "legacy"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 53,
+            "endChar": 61,
+            "quote": "a signal"
+          },
+          "outer": {
+            "startChar": 53,
+            "endChar": 61,
+            "quote": "a signal"
+          },
+          "head": {
+            "startChar": 55,
+            "endChar": 61,
+            "quote": "signal"
+          },
+          "headText": "signal",
+          "publicAnchor": {
+            "startChar": 53,
+            "endChar": 61,
+            "quote": "a signal"
+          },
+          "roleEligibility": "legacy"
+        }
+      ]
+    },
+    {
+      "case": "partitive-countability-unknown",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising a pair of jaws.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "a pair of jaws."
+      },
+      "outcome": "declined",
+      "reason": "competing partitive head/quantity attachment",
+      "elements": [],
+      "attachedFrames": [],
+      "forbiddenEnhancedFacts": [
+        "candidate nodes",
+        "candidate roles",
+        "candidate alias donors",
+        "candidate relations"
+      ]
+    },
+    {
+      "case": "relative-attachment-unknown",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising a controller with a detector that receives a signal.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "a controller with a detector that receives a signal."
+      },
+      "outcome": "declined",
+      "reason": "competing relative attachment to controller/detector without unique source proof",
+      "elements": [],
+      "attachedFrames": [],
+      "forbiddenEnhancedFacts": [
+        "candidate nodes",
+        "candidate roles",
+        "candidate alias donors",
+        "candidate relations"
+      ]
+    },
+    {
+      "case": "unlicensed-labels",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising a plate (a) and a cover (b).",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "a plate (a) and a cover (b)."
+      },
+      "outcome": "declined",
+      "reason": "no list declaration licenses label ownership; ambiguous protected labels",
+      "elements": [],
+      "attachedFrames": [],
+      "forbiddenEnhancedFacts": [
+        "candidate nodes",
+        "candidate roles",
+        "candidate alias donors",
+        "candidate relations"
+      ]
+    },
+    {
+      "case": "nonrelative-that-unknown",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising a controller that signal.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "a controller that signal."
+      },
+      "outcome": "declined",
+      "reason": "neither proved relative predicate nor licensed complement",
+      "elements": [],
+      "attachedFrames": [],
+      "forbiddenEnhancedFacts": [
+        "candidate nodes",
+        "candidate roles",
+        "candidate alias donors",
+        "candidate relations"
+      ]
+    },
+    {
+      "case": "bent-shape-object-continuation",
+      "sourceKind": "synthetic source-led contract control",
+      "qualifiedText": "A system comprising each side section contains two tabs at its L-shaped lower bend, and two slots at its U-shaped upper bend.",
+      "qualifiedParts": {
+        "preamble": "A system",
+        "transition": "comprising",
+        "body": "each side section contains two tabs at its L-shaped lower bend, and two slots at its U-shaped upper bend."
+      },
+      "outcome": "admitted",
+      "reason": null,
+      "elements": [
+        {
+          "id": "root",
+          "parent": null,
+          "kind": "preamble-subject",
+          "groupingReason": "preamble",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "lexicalHeader": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "head": "system",
+              "determiner": "a",
+              "roleEligibility": "legacy"
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "parent": "root",
+          "kind": "functional-relation",
+          "groupingReason": "single-restriction",
+          "anchor": {
+            "startChar": 20,
+            "endChar": 124,
+            "quote": "each side section contains two tabs at its L-shaped lower bend, and two slots at its U-shaped upper bend"
+          },
+          "lexicalHeader": {
+            "startChar": 20,
+            "endChar": 124,
+            "quote": "each side section contains two tabs at its L-shaped lower bend, and two slots at its U-shaped upper bend"
+          },
+          "terms": [
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 37,
+                "quote": "each side section"
+              },
+              "head": "side section",
+              "determiner": "bare",
+              "roleEligibility": "unknown"
+            },
+            {
+              "anchor": {
+                "startChar": 47,
+                "endChar": 55,
+                "quote": "two tabs"
+              },
+              "head": "tabs",
+              "determiner": "bare",
+              "roleEligibility": "quantified-source-proof-required"
+            },
+            {
+              "anchor": {
+                "startChar": 59,
+                "endChar": 82,
+                "quote": "its L-shaped lower bend"
+              },
+              "head": "l-shaped lower bend",
+              "determiner": "bare",
+              "roleEligibility": "unknown"
+            },
+            {
+              "anchor": {
+                "startChar": 88,
+                "endChar": 97,
+                "quote": "two slots"
+              },
+              "head": "slots",
+              "determiner": "bare",
+              "roleEligibility": "quantified-source-proof-required"
+            },
+            {
+              "anchor": {
+                "startChar": 101,
+                "endChar": 124,
+                "quote": "its U-shaped upper bend"
+              },
+              "head": "u-shaped upper bend",
+              "determiner": "bare",
+              "roleEligibility": "unknown"
+            }
+          ],
+          "functionalParts": [
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 20,
+                "endChar": 37,
+                "quote": "each side section"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 37,
+                "endChar": 47,
+                "quote": " contains "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 55,
+                "quote": "two tabs"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 55,
+                "endChar": 59,
+                "quote": " at "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 59,
+                "endChar": 82,
+                "quote": "its L-shaped lower bend"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 82,
+                "endChar": 88,
+                "quote": ", and "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 88,
+                "endChar": 97,
+                "quote": "two slots"
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 97,
+                "endChar": 101,
+                "quote": " at "
+              }
+            },
+            {
+              "kind": "term",
+              "anchor": {
+                "startChar": 101,
+                "endChar": 124,
+                "quote": "its U-shaped upper bend"
+              }
+            }
+          ]
+        }
+      ],
+      "attachedFrames": [],
+      "nominals": [
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 20,
+            "endChar": 37,
+            "quote": "each side section"
+          },
+          "outer": {
+            "startChar": 20,
+            "endChar": 37,
+            "quote": "each side section"
+          },
+          "head": {
+            "startChar": 25,
+            "endChar": 37,
+            "quote": "side section"
+          },
+          "headText": "side section",
+          "publicAnchor": {
+            "startChar": 20,
+            "endChar": 37,
+            "quote": "each side section"
+          },
+          "roleEligibility": "unknown"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 47,
+            "endChar": 55,
+            "quote": "two tabs"
+          },
+          "outer": {
+            "startChar": 47,
+            "endChar": 55,
+            "quote": "two tabs"
+          },
+          "head": {
+            "startChar": 51,
+            "endChar": 55,
+            "quote": "tabs"
+          },
+          "headText": "tabs",
+          "publicAnchor": {
+            "startChar": 47,
+            "endChar": 55,
+            "quote": "two tabs"
+          },
+          "roleEligibility": "quantified-source-proof-required"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 59,
+            "endChar": 82,
+            "quote": "its L-shaped lower bend"
+          },
+          "outer": {
+            "startChar": 59,
+            "endChar": 82,
+            "quote": "its L-shaped lower bend"
+          },
+          "head": {
+            "startChar": 63,
+            "endChar": 82,
+            "quote": "L-shaped lower bend"
+          },
+          "headText": "l-shaped lower bend",
+          "publicAnchor": {
+            "startChar": 59,
+            "endChar": 82,
+            "quote": "its L-shaped lower bend"
+          },
+          "roleEligibility": "unknown"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 88,
+            "endChar": 97,
+            "quote": "two slots"
+          },
+          "outer": {
+            "startChar": 88,
+            "endChar": 97,
+            "quote": "two slots"
+          },
+          "head": {
+            "startChar": 92,
+            "endChar": 97,
+            "quote": "slots"
+          },
+          "headText": "slots",
+          "publicAnchor": {
+            "startChar": 88,
+            "endChar": 97,
+            "quote": "two slots"
+          },
+          "roleEligibility": "quantified-source-proof-required"
+        },
+        {
+          "elementOwner": "body",
+          "core": {
+            "startChar": 101,
+            "endChar": 124,
+            "quote": "its U-shaped upper bend"
+          },
+          "outer": {
+            "startChar": 101,
+            "endChar": 124,
+            "quote": "its U-shaped upper bend"
+          },
+          "head": {
+            "startChar": 105,
+            "endChar": 124,
+            "quote": "U-shaped upper bend"
+          },
+          "headText": "u-shaped upper bend",
+          "publicAnchor": {
+            "startChar": 101,
+            "endChar": 124,
+            "quote": "its U-shaped upper bend"
+          },
+          "roleEligibility": "unknown"
+        }
+      ]
+    }
+  ]
+}
