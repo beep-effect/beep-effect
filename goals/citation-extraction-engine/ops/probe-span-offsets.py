@@ -33,6 +33,11 @@ def main():
     assert importlib.metadata.version('fast-diff-match-patch') == '2.0.1'
     sha = lambda data: hashlib.sha256(data).hexdigest()
 
+    def entries(updater):
+        return [{'offset': offset, 'kind': 'shift' if update.func.__name__ == 'shift_offset' else 'replace',
+                 'value': update.keywords['delta' if update.func.__name__ == 'shift_offset' else 'new_offset']}
+                for offset, update in zip(updater.offsets, updater.updaters)]
+
     def capture(before, after, engine, supplied=None):
         row = {'id': len(maps), 'before': native(before), 'after': native(after), 'engine': engine}
         try:
@@ -47,9 +52,6 @@ def main():
             row.update(error=type(exc).__name__, steps=[], entries=[], queries=[])
             maps.append(row)
             return row['id']
-        entries = [{'offset': offset, 'kind': 'shift' if update.func.__name__ == 'shift_offset' else 'replace',
-                    'value': update.keywords['delta' if update.func.__name__ == 'shift_offset' else 'new_offset']}
-                   for offset, update in zip(updater.offsets, updater.updaters)]
         positions = sorted(set([-3, -1, 0, 1, len(before), len(before) + 1, len(before) + 3] +
                                list(range(len(before) + 1)) + updater.offsets))
         queries = []
@@ -61,7 +63,7 @@ def main():
                 except IndexError:
                     error = 'IndexError'
                 queries.append({'position': position, 'side': side, 'value': value, 'error': error})
-        row.update(error=None, steps=[{'operation': op, 'amount': amount} for op, amount in steps], entries=entries, queries=queries)
+        row.update(error=None, steps=[{'operation': op, 'amount': amount} for op, amount in steps], entries=entries(updater), queries=queries)
         maps.append(row)
         return row['id']
 
@@ -82,18 +84,27 @@ def main():
                      '<i class="a>b">Foo</i>, 1 U.S. 1', '<i>Foo</em>, 1 U.S. 1',
                      '<em>😀 v. Bar</em>, 1 U.S. 1', '<i>Foo &amp; Bar</i>, 1 U.S. 1',
                      '<i></i> 1 U.S. 1', '<i>Foo</i><i>Bar</i> 1 U.S. 1',
-                     'plain 1 U.S. 1', '<script>hidden</script><i>Foo</i> 1 U.S. 1']
+                     'plain 1 U.S. 1', '<script>hidden</script><i>Foo</i> 1 U.S. 1',
+                     '<em id="Foo">Foo</em> v. Bar 1 U.S. 1',
+                     '<em title="😀">Foo</em> v. Bar 1 U.S. 1']
     documents = []
     for markup in markup_values:
         document = models.Document(markup_text=markup, clean_steps=['html'])
         placeholder = utils.placeholder_markup(markup)
         forward = capture(document.plain_text, placeholder, 'dmp')
-        backward = capture(placeholder, document.plain_text, 'dmp')
+        backward = capture(markup, document.plain_text, 'dmp')
+        assert maps[forward]['entries'] == entries(document.plain_to_markup)
+        assert maps[backward]['entries'] == entries(document.markup_to_plain)
         tags = lambda values: [{'text': native(text), 'start': start, 'end': end} for text, start, end in values]
         queries = [{'position': position, 'tags': tags(helpers.find_html_tags_at_position(document, position))}
                    for position in range(-2, len(document.plain_text) + 3)]
         conversions = []
-        for tag in document.emphasis_tags:
+        conversion_tags = list(document.emphasis_tags)
+        if markup == '<em id="Foo">Foo</em> v. Bar 1 U.S. 1':
+            # The public helper accepts supplied tuples. These attribute bounds
+            # map to Foo only through the actual original-markup backward map.
+            conversion_tags.append(('', 8, 11))
+        for tag in conversion_tags:
             text, start, end = helpers.convert_html_to_plain_text_and_loc(document, [tag])
             conversions.append({'tag': tags([tag])[0], 'text': native(text), 'start': start, 'end': end})
         documents.append({'markup': native(markup), 'placeholder': native(placeholder), 'plain': native(document.plain_text),

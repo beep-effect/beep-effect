@@ -1,5 +1,19 @@
 # Citation engine friction receipts
 
+## 2026-11-05 — shared-layout assumption concealed asymmetric document maps
+
+- Work: compose HTML discovery with original Document diff geometry.
+- Evidence: Document constructs plain-to-placeholder and original-markup-to-plain
+  maps. The previous producer instead constructed placeholder-to-plain, while
+  the adapter required both markup layouts to match. An attribute containing
+  `Foo` maps that supplied range to plain `Foo` only through the original map;
+  the placeholder map returns an empty string.
+- Resolution: correct the producer, compare both captured indexes with actual
+  Document-owned indexes, add attribute/native-width controls and preserve only
+  the source-required equal point count across original/placeholder markup.
+- Prevention: assert prepared artifacts against actual owner state in source
+  probes, and add controls that distinguish each apparently shared input.
+
 ## 2026-11-05 — publication succeeds before detached monitor admission fails
 
 - Work: push the owned diff worker and original HTML discovery continuation to

@@ -95,7 +95,7 @@ def main():
     for notice in notices['additionalRuntimeNotices']:
         assert sha(assets / notice['file']) == notice['sha256']
     expected = {'diff-kernel': '24470daeb7bbc4b8166867e8071d3a2a85b9a35b4e595c0a0b7c3429a67b0dda',
-                'span-offsets': 'd1f8800ef9c6b3730348c0f634d92d9e6c473a822ab72b8c933d57a67f030fd5'}
+                'span-offsets': '7f3ea888395629a5472de3ca0fc952db102ff3b918194ffab0cb1543b07f4223'}
     for name, digest in expected.items():
         assert sha(fixtures / (name + '.json')) == digest
     corpus = json.loads((fixtures / 'diff-kernel.json').read_text())

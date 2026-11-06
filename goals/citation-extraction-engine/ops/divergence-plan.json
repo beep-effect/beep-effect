@@ -138,7 +138,8 @@
         "packages/law-practice/server/test/integration/CitationHtmlDiscovery.test.ts",
         "goals/citation-extraction-engine/ops/probe-html-discovery-patterns.py",
         "packages/law-practice/use-cases/test/fixtures/eyecite/html-discovery-patterns.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-html-discovery-worker.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-html-discovery-worker.md",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-html-document-maps.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

@@ -96,10 +96,12 @@ export const makeCitationHtmlTagGeometry = Effect.fn("Citation.makeHtmlTagGeomet
     return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });
   const input = yield* makeCitationRegexInput(limits);
   const plain = yield* input.prepareUnicode(decoded.plain, () => Effect.void);
+  // Forward targets placeholder markup; backward starts at original markup.
+  // Masking preserves Python point count but can change width and UTF-16 units.
   if (
     !sameLayout(decoded.forward.before, plain.layout) ||
     !sameLayout(decoded.backward.after, plain.layout) ||
-    !sameLayout(decoded.forward.after, decoded.backward.before)
+    decoded.forward.after.pythonLength !== decoded.backward.before.pythonLength
   )
     return yield* fail("invalid-input");
   const forward = yield* makeCitationSpanOffsets(limits, decoded.forward);

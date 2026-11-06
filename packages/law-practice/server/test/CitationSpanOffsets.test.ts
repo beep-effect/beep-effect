@@ -28,7 +28,7 @@ const Corpus = S.fromJsonString(
     oracleTree: S.tag("a35a58fac03400f71a93a93485b77f1d56f2b02f"),
     python: S.tag("3.11.15"),
     dmp: S.tag("2.0.1"),
-    producerSha256: S.tag("056e2cead2d863ed14ac2b08a1c4e8f2974c6bc8162d1e5cfb982dea05bff955"),
+    producerSha256: S.tag("05cd5994d30bf9bb214aa5ba7599ed7d8cc933bf9089dac40b6a474294a5bc7b"),
     maps: S.Array(
       S.Struct({
         id: S.Natural,
@@ -46,7 +46,7 @@ const Corpus = S.fromJsonString(
           })
         ),
       })
-    ).check(S.isBetweenLength(68, 68)),
+    ).check(S.isBetweenLength(72, 72)),
     documents: S.Array(
       S.Struct({
         plain: Native,
@@ -56,7 +56,7 @@ const Corpus = S.fromJsonString(
         queries: S.Array(S.Struct({ position: S.Int, tags: S.Array(Tag) })),
         conversions: S.Array(S.Struct({ tag: Tag, text: Native, start: S.Int, end: S.Int })),
       })
-    ).check(S.isBetweenLength(14, 14)),
+    ).check(S.isBetweenLength(16, 16)),
   })
 ).pipe(
   $I.annoteSchema("Corpus", {
@@ -67,7 +67,7 @@ const Corpus = S.fromJsonString(
 const load = Effect.fn("SpanOffsetsTest.load")(function* () {
   const corpus = yield* readCitationOracleFixture(
     "span-offsets",
-    "d1f8800ef9c6b3730348c0f634d92d9e6c473a822ab72b8c933d57a67f030fd5"
+    "7f3ea888395629a5472de3ca0fc952db102ff3b918194ffab0cb1543b07f4223"
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   const limits = (yield* defaultCitationEnginePolicy).limits;
   const input = yield* makeCitationRegexInput(limits);
@@ -102,7 +102,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source diff
           count++;
         }
       }
-      expect(count).toBe(2222);
+      expect(count).toBe(2492);
     })
   );
   it.effect("finds unique emphasis matches and converts native spans from prepared original plans", () =>
@@ -131,8 +131,8 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source diff
           conversions++;
         }
       }
-      expect(queries).toBe(312);
-      expect(conversions).toBe(14);
+      expect(queries).toBe(362);
+      expect(conversions).toBe(17);
     })
   );
   it.effect("preflights input/step budgets and owns map state after installation", () =>

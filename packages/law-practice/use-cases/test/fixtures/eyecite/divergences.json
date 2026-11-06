@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "52aed0a377663f235aa0b90473d51a88617e160471ce01d2433ebbbf8c7ad247",
+  "planSha256": "108f2c9458bb0c41002d4050b5dd6da3e67e6716df1069258505bb3fa5c87519",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -384,7 +384,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/ops/probe-span-offsets.py",
-          "sha256": "056e2cead2d863ed14ac2b08a1c4e8f2974c6bc8162d1e5cfb982dea05bff955"
+          "sha256": "05cd5994d30bf9bb214aa5ba7599ed7d8cc933bf9089dac40b6a474294a5bc7b"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SpanOffsets.ts",
@@ -392,19 +392,19 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlTagGeometry.ts",
-          "sha256": "5139db4dda9080eda44527d036ea6e1eaa96a5f510441ffba5ed77abbcc85b34"
+          "sha256": "9c9f2df592cb74cfd105d2f4a521cb5ca997da830d264e1a35f2dfc428b25d23"
         },
         {
           "path": "packages/law-practice/server/test/CitationSpanOffsets.test.ts",
-          "sha256": "98954372dd6d69714e28066ead57c8b3c3b023e31ebbb7e4aceb6545464544ea"
+          "sha256": "70642dd5c5ff7030354f51ef4e020f28d21f7d80ac04397a6d7ac1e379b5a106"
         },
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/span-offsets.json",
-          "sha256": "d1f8800ef9c6b3730348c0f634d92d9e6c473a822ab72b8c933d57a67f030fd5"
+          "sha256": "7f3ea888395629a5472de3ca0fc952db102ff3b918194ffab0cb1543b07f4223"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-html-tag-geometry.md",
-          "sha256": "a86a63616f2cfbc2ba8d21bc73fd20c0fb206540a89be6f703bf10e75512bcba"
+          "sha256": "31969064a47d2f1abd571bfe7fafa48ce6f6f30ff87a0e7ee612e6df7ffc55b7"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-kernel.md",
@@ -420,7 +420,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/ops/verify-diff-kernel.py",
-          "sha256": "08f9c36b4a63804ccc323691034ef6b24d6caf1b363edecf0280c55188b1b15b"
+          "sha256": "c62afbccf986431d5f54b88be9055d52297da45a9cb05a79930b135c3058c0cf"
         },
         {
           "path": "packages/law-practice/server/assets/citation-diff/kernel.cpp",
@@ -549,6 +549,10 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-html-discovery-worker.md",
           "sha256": "b82ae84dc4e559b90a8da801497f249d056d1e278140cb38f97d8b57cc7bdf52"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-html-document-maps.md",
+          "sha256": "61c7a9e12c86f20698e0ccdb8cd1dd221cf9d9273ae62716a63dc896ef6d743b"
         }
       ],
       "workflowState": "audit",
@@ -1697,7 +1701,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/ops/probe-span-offsets.py",
-          "sha256": "056e2cead2d863ed14ac2b08a1c4e8f2974c6bc8162d1e5cfb982dea05bff955"
+          "sha256": "05cd5994d30bf9bb214aa5ba7599ed7d8cc933bf9089dac40b6a474294a5bc7b"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SpanOffsets.ts",
@@ -1705,19 +1709,19 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlTagGeometry.ts",
-          "sha256": "5139db4dda9080eda44527d036ea6e1eaa96a5f510441ffba5ed77abbcc85b34"
+          "sha256": "9c9f2df592cb74cfd105d2f4a521cb5ca997da830d264e1a35f2dfc428b25d23"
         },
         {
           "path": "packages/law-practice/server/test/CitationSpanOffsets.test.ts",
-          "sha256": "98954372dd6d69714e28066ead57c8b3c3b023e31ebbb7e4aceb6545464544ea"
+          "sha256": "70642dd5c5ff7030354f51ef4e020f28d21f7d80ac04397a6d7ac1e379b5a106"
         },
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/span-offsets.json",
-          "sha256": "d1f8800ef9c6b3730348c0f634d92d9e6c473a822ab72b8c933d57a67f030fd5"
+          "sha256": "7f3ea888395629a5472de3ca0fc952db102ff3b918194ffab0cb1543b07f4223"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-html-tag-geometry.md",
-          "sha256": "a86a63616f2cfbc2ba8d21bc73fd20c0fb206540a89be6f703bf10e75512bcba"
+          "sha256": "31969064a47d2f1abd571bfe7fafa48ce6f6f30ff87a0e7ee612e6df7ffc55b7"
         }
       ],
       "workflowState": "audit",

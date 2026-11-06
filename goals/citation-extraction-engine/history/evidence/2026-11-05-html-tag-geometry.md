@@ -1,5 +1,12 @@
 # Prepared diff offsets and native HTML tag geometry
 
+Correction: the initial corpus below constructed the backward map from
+placeholder markup. The original Document uses original markup in that
+direction. Those historical map/geometry receipts did not prove this distinction.
+The corrected corpus and width/coherence rule are documented in
+[HTML document map correction](2026-11-05-html-document-maps.md); its seals and
+counts supersede the initial corpus below. Historical results remain recorded.
+
 The private SpanOffsets component folds prepared source edit steps into the
 original relative-shift/constant-replacement index and implements built-in left
 and right bisect lookup. It preserves Python's final-updater selection at index

@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+HTML document map correction (2026-11-05): source composition uses placeholder
+markup only in the forward direction; backward mapping starts from original
+markup. The earlier probe and complete-layout equality assumption are corrected.
+The 72-map corpus includes an attribute counterexample and differing native
+widths; all 2,492 lookups, 362 tag queries and 17 conversions pass. Both portable
+runtimes match 1,056 DMP maps / 9,998 steps. Document composition remains open.
+See [map correction](history/evidence/2026-11-05-html-document-maps.md).
+
 HTML discovery worker checkpoint (2026-11-05): the private stage now reuses
 existing captured operation/text ownership and two owned regex jobs. A fixed
 three-branch lowering preserves CPython backreference case distinctions across
