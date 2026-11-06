@@ -12,13 +12,14 @@ import {
   LibraryInventoryOptions,
   LibraryOccurrence,
   LibrarySource,
-  LibraryVersion,
+  LibrarySourceVersion,
   loadCatalog,
+  ResearchLibraryLive,
   saveImmutable,
   withCatalog,
 } from "@beep/repo-cli/commands/Research";
 import { runLibraryVerificationCommand } from "@beep/repo-cli/test/ResearchLibrary";
-import { NodeCrypto, NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeHttpClient, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -123,9 +124,10 @@ const resolutionFixture = Effect.fn("test.resolutionFixture")(function* () {
 });
 
 // `Git` rides over the platform spawner: an input root's commit is read through the kit (W2b).
-const InventoryPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+const InventoryPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NodeHttpClient.layerUndici);
+const LibraryPlatform = Layer.provideMerge(Git.layer, InventoryPlatform);
 
-it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 seconds" })(
+it.layer(Layer.provideMerge(ResearchLibraryLive, LibraryPlatform), { timeout: "30 seconds" })(
   "research library provenance",
   (it) => {
     it.effect("returns a nonzero CLI sentinel for an incomplete source library", () =>
@@ -150,7 +152,7 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
         yield* fs.makeDirectory(path.join(root, "qualifications"));
         yield* fs.writeFile(path.join(root, "qualifications/legacy.txt"), bytes);
         const legacy = LibraryCatalog.make({
-          schema: "beep.research.library/v1",
+          schema: "beep.research.library/v2",
           documents: [],
           sources: [],
           occurrences: [],
@@ -197,7 +199,7 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
           ...full,
           revision: "@evolu",
           versions: [
-            LibraryVersion.make({ revision: "@evolu", canonicalUrl: full.canonicalUrl, locators: full.locators }),
+            LibrarySourceVersion.make({ revision: "@evolu", canonicalUrl: full.canonicalUrl, locators: full.locators }),
           ],
         });
         yield* withCatalog(root, (catalog) =>
@@ -358,7 +360,7 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
         yield* fs.makeDirectory(path.join(root, ".writer-lock"));
         const locked = yield* withCatalog(root, Effect.succeed).pipe(Effect.flip);
         expect(locked.message).toContain("writer already active");
-        expect((yield* loadCatalog(root)).schema).toBe("beep.research.library/v1");
+        expect((yield* loadCatalog(root)).schema).toBe("beep.research.library/v2");
       })
     );
     it.effect("rejects artifact symlink escapes before creating outside directories", () =>
@@ -671,7 +673,9 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
                   ? LibrarySource.make({
                       ...source,
                       revision: "",
-                      versions: A.map(source.versions, (version) => LibraryVersion.make({ ...version, revision: "" })),
+                      versions: A.map(source.versions, (version) =>
+                        LibrarySourceVersion.make({ ...version, revision: "" })
+                      ),
                     })
                   : source
               ),
@@ -834,7 +838,7 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
           reason: "",
         });
         const legacy = LibraryCatalog.make({
-          schema: "beep.research.library/v1",
+          schema: "beep.research.library/v2",
           documents: [],
           sources: [source],
           occurrences: [occurrence],
@@ -916,17 +920,17 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
           ownership: "external",
           locators: [],
           versions: [
-            LibraryVersion.make({
+            LibrarySourceVersion.make({
               revision: "v1",
               canonicalUrl: "https://arxiv.org/abs/2610.00609v1",
               locators: ["https://arxiv.org/abs/2610.00609v1"],
             }),
-            LibraryVersion.make({
+            LibrarySourceVersion.make({
               revision: "v1",
               canonicalUrl: "https://arxiv.org/abs/2610.00609v1",
               locators: ["https://arxiv.org/pdf/2610.00609v1"],
             }),
-            LibraryVersion.make({
+            LibrarySourceVersion.make({
               revision: "",
               canonicalUrl: "https://arxiv.org/abs/2610.00609",
               locators: ["https://arxiv.org/abs/2610.00609"],

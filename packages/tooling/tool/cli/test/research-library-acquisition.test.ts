@@ -9,6 +9,7 @@ import {
   LibraryQualification,
   LibraryQualifyOptions,
   LibrarySource,
+  LibrarySourceVersion,
   loadCatalog,
   qualifyLibrary,
   removedLibraryWebAdapter,
@@ -810,8 +811,8 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
         ...source,
         revision: "v1",
         versions: [
-          { revision: "v1", canonicalUrl: "https://example.com/v1", locators: [] },
-          { revision: "v2", canonicalUrl: "https://example.com/v2", locators: [] },
+          LibrarySourceVersion.make({ revision: "v1", canonicalUrl: "https://example.com/v1", locators: [] }),
+          LibrarySourceVersion.make({ revision: "v2", canonicalUrl: "https://example.com/v2", locators: [] }),
         ],
       });
       yield* withCatalog(fixture.root, (catalog) =>

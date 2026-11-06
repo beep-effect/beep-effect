@@ -147,7 +147,7 @@ const validateQualificationProbe = Effect.fn("Library.validateQualificationProbe
  * import { libraryQualificationValid } from "@beep/repo-cli/test/ResearchLibrary"
  * import { LibraryCatalog, LibraryQualification } from "@beep/repo-cli/commands/Research"
  * import * as Effect from "effect/Effect";
- * const catalog = LibraryCatalog.make({schema: "beep.research.library/v1", documents: [], sources: [], occurrences: [], captures: [], qualifications: []})
+ * const catalog = LibraryCatalog.make({schema: "beep.research.library/v2", documents: [], sources: [], occurrences: [], captures: [], qualifications: []})
  * const receipt = LibraryQualification.make({id: "probe", adapter: "paper", status: "failed", required: true, recordedAt: "2026-10-06T00:00:00Z", evidence: [], reason: "No source-bound probe evidence"})
  * console.log(Effect.isEffect(libraryQualificationValid("/library", catalog, receipt)))
  * ```

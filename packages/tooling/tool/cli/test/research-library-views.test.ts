@@ -14,7 +14,7 @@ import {
   LibraryProbeEvidence,
   LibraryQualification,
   LibrarySource,
-  LibraryVersion,
+  LibrarySourceVersion,
   loadCatalog,
   removedLibraryWebAdapter,
   renderLibrary,
@@ -356,7 +356,7 @@ const fixture = Effect.gen(function* () {
     })
   );
   const catalog = LibraryCatalog.make({
-    schema: "beep.research.library/v1",
+    schema: "beep.research.library/v2",
     documents: [document],
     sources: [source],
     occurrences: A.map(extractLibraryReferences("A report referencing https://example.com/source"), (reference) =>
@@ -497,7 +497,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       const source = LibrarySource.make({
         ...A.getUnsafe(catalog.sources, 0),
         versions: [
-          LibraryVersion.make({
+          LibrarySourceVersion.make({
             revision: "v2",
             canonicalUrl: "https://example.com/source?v2",
             locators: ["https://example.com/source"],
@@ -611,12 +611,12 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         const source = LibrarySource.make({
           ...A.getUnsafe(catalog.sources, 0),
           versions: [
-            LibraryVersion.make({
+            LibrarySourceVersion.make({
               revision: "abc",
               canonicalUrl: A.getUnsafe(catalog.sources, 0).canonicalUrl,
               locators: A.getUnsafe(catalog.sources, 0).locators,
             }),
-            LibraryVersion.make({
+            LibrarySourceVersion.make({
               revision: "other",
               canonicalUrl: A.getUnsafe(catalog.sources, 0).canonicalUrl,
               locators: A.getUnsafe(catalog.sources, 0).locators,
@@ -823,12 +823,12 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       const source = LibrarySource.make({
         ...A.getUnsafe(catalog.sources, 0),
         versions: [
-          LibraryVersion.make({
+          LibrarySourceVersion.make({
             revision: "abc",
             canonicalUrl: "https://example.com/source",
             locators: ["https://example.com/source"],
           }),
-          LibraryVersion.make({
+          LibrarySourceVersion.make({
             revision: "v2",
             canonicalUrl: "https://example.com/source?v2",
             locators: ["https://example.com/source?v2"],
@@ -969,7 +969,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         canonicalUrl: `https://arxiv.org/abs/2609.12345${requested}`,
         revision: requested,
         versions: [
-          LibraryVersion.make({
+          LibrarySourceVersion.make({
             revision: requested,
             canonicalUrl: `https://arxiv.org/abs/2609.12345${requested}`,
             locators: A.getUnsafe(catalog.sources, 0).locators,
@@ -1671,7 +1671,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       yield* withCatalog(root, () =>
         Effect.succeed(
           LibraryCatalog.make({
-            schema: "beep.research.library/v1",
+            schema: "beep.research.library/v2",
             documents: [],
             sources: [source],
             occurrences: [],
@@ -1947,7 +1947,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         evidence: [probe],
       });
       const catalog = LibraryCatalog.make({
-        schema: "beep.research.library/v1",
+        schema: "beep.research.library/v2",
         documents: [],
         sources: [source],
         occurrences: [],
