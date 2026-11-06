@@ -18,7 +18,7 @@ import type { TranscriptIntakeConfig } from "./transcript-intake.ts";
 const $I = $RepoAiMetricsId.create("observation-outcomes");
 /**
  * One observed launch, with declaration and actual process evidence kept separate.
- * @example
+ * **Example** (Inspect the launch outcome constructor)
  * ```ts
  * import { ObservationLaunchOutcome } from "@beep/repo-ai-metrics/observation-outcomes"
  * console.log(typeof ObservationLaunchOutcome.make)
@@ -50,7 +50,7 @@ export class ObservationLaunchOutcome extends S.Opaque<ObservationLaunchOutcome,
 ) {}
 /**
  * Display label for a historical quota report; current availability is always Unknown.
- * @example
+ * **Example** (Inspect the historical availability view)
  * ```ts
  * import { ObservationAvailabilityView } from "@beep/repo-ai-metrics/observation-outcomes"
  * console.log(typeof ObservationAvailabilityView.make)
@@ -82,7 +82,7 @@ const availability = (receipt: ObservationAvailabilityReceipt): ObservationAvail
 };
 /**
  * Render one historical status receipt without claiming freshness, native authority or launch causation.
- * @example
+ * **Example** (Inspect the historical availability renderer)
  * ```ts
  * import { renderObservationAvailability } from "@beep/repo-ai-metrics/observation-outcomes"
  * console.log(typeof renderObservationAvailability)
@@ -101,7 +101,7 @@ export const renderObservationAvailability = (receipt: ObservationAvailabilityRe
  * Read independently by explicit ID and evidence epoch. No enumeration or implicit cross-source join.
  * Underlying launch read validates every envelope, ordering, receipt digest and owner binding.
  * No duration is derived from local observation timestamps.
- * @example
+ * **Example** (Inspect the outcome reader factory)
  * ```ts
  * import { makeObservationOutcomes } from "@beep/repo-ai-metrics/observation-outcomes"
  * console.log(typeof makeObservationOutcomes)

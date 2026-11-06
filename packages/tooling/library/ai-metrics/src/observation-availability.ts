@@ -21,7 +21,7 @@ const percent = S.Finite.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualT
 const window = S.Struct({ usedPercent: percent, reportedResetAt: S.OptionFromNullOr(S.Natural) });
 /**
  * Explicit source report, never proof of a particular invocation's account or cause.
- * @example
+ * **Example** (Inspect the source report)
  * ```ts
  * import { ObservationAvailabilityReport } from "@beep/repo-ai-metrics/observation-availability"
  * console.log(ObservationAvailabilityReport.cases.Unknown.make({ reason: "not-reported" }))
@@ -47,7 +47,7 @@ export type ObservationAvailabilityReport = typeof ObservationAvailabilityReport
 /**
  * Consumer-projected snapshot. Source attribution is declared, not authentication or native-runtime attestation.
  * No launch/session ID is accepted, so account quota cannot silently become an invocation diagnosis.
- * @example
+ * **Example** (Inspect the snapshot constructor)
  * ```ts
  * import { ObservationAvailabilitySnapshot } from "@beep/repo-ai-metrics/observation-availability"
  * console.log(typeof ObservationAvailabilitySnapshot.make)
@@ -74,7 +74,7 @@ export class ObservationAvailabilitySnapshot extends S.Opaque<
 ) {}
 /**
  * First local durable acknowledgment of an immutable snapshot.
- * @example
+ * **Example** (Inspect the durable receipt)
  * ```ts
  * import { ObservationAvailabilityReceipt } from "@beep/repo-ai-metrics/observation-availability"
  * console.log(typeof ObservationAvailabilityReceipt.make)
@@ -102,7 +102,7 @@ export class ObservationAvailabilityReceipt extends S.Opaque<
 ) {}
 /**
  * Finite snapshot ingestion refusal.
- * @example
+ * **Example** (Inspect the finite refusal)
  * ```ts
  * import { ObservationAvailabilityError } from "@beep/repo-ai-metrics/observation-availability"
  * console.log(ObservationAvailabilityError.make({ reason: "conflict" }).reason)
@@ -133,7 +133,7 @@ const decodeCount = S.decodeUnknownEffect(S.Tuple([S.Struct({ n: S.Natural })]))
  * Uses the shared physical ceiling and payload accounting, including launch completion reservations.
  * Snapshots remain immutable across epochs; old rows consume capacity until an explicitly reviewed recovery.
  * Known-ID reads only: no enumeration, implicit latest snapshot, inferred freshness or account/launch join.
- * @example
+ * **Example** (Inspect the availability journal factory)
  * ```ts
  * import { makeObservationAvailability } from "@beep/repo-ai-metrics/observation-availability"
  * console.log(typeof makeObservationAvailability)
