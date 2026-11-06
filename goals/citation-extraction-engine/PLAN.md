@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Input Document constructor checkpoint (2026-11-05): captured server protocols
+now drive the actual source branch order through owned cleaning and geometry,
+including reversed insertion, generator consumption and None results. Thirty
+source cases pass with twenty confirmed child exits; focused regressions,
+registry reuse and package checks pass. Full 112-case hosted replay, default
+protocol adapter, Node constructor proof and whole-engine text authority remain
+open. See [constructor evidence](history/evidence/2026-11-05-input-document-constructor.md).
+
 Document input-mode checkpoint (2026-11-05): 112 actual constructor traces now
 freeze truth/membership/mutation, generator state, partial fields and phase order.
 The pinned source calls list.insert with reversed arguments: ordinary missing-html

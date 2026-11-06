@@ -75,7 +75,7 @@ export class CitationPreparedHtmlGeometry extends S.Opaque<
   )
 ) {}
 const invalid = () => CitationHtmlGeometryPreparationFailure.make({ reason: "invalid-configuration" });
-const own = Effect.fn("Citation.ownHtmlGeometryConfiguration")(function* (
+export const copyCitationHtmlGeometryConfiguration = Effect.fn("Citation.ownHtmlGeometryConfiguration")(function* (
   limits: CitationEngineLimits,
   config: CitationHtmlGeometryPreparationConfiguration
 ) {
@@ -85,19 +85,23 @@ const own = Effect.fn("Citation.ownHtmlGeometryConfiguration")(function* (
     diffRuntime: CitationNativeProcessRuntime.make({ ...config.diffRuntime }),
   });
 });
-const prepare = Effect.fn("Citation.prepareHtmlGeometry")(function* (
+/** Run within one captured operation and budget. Resolve cleaned plain input
+ * after placeholder generation, matching the original constructor's error order.
+ * The effect parameter is trusted server composition, never request data.
+ * @internal @category operations @since 0.0.0
+ */
+export const prepareCitationHtmlGeometry = Effect.fn("Citation.prepareOwnedHtmlGeometry")(function* <E>(
   limits: CitationEngineLimits,
   regexRuntime: CitationNativeProcessRuntime,
   config: CitationHtmlGeometryPreparationConfiguration,
-  raw: unknown
+  markup: unknown,
+  plainInput: Effect.Effect<unknown, E>
 ) {
-  const source = yield* S.decodeUnknownEffect(S.toType(CitationPreparedHtmlSource))(raw).pipe(
-    Effect.mapError(() => CitationHtmlGeometryPreparationFailure.make({ reason: "invalid-input" }))
-  );
   const input = yield* makeCitationRegexInput(limits);
-  const plain = yield* input.prepareUnicode(source.plain, () => Effect.void);
   const discovery = yield* makeCitationHtmlDiscoveryRunner(limits, regexRuntime, config.discovery);
-  const masked = yield* discovery.placeholder(source.markup);
+  const masked = yield* discovery.placeholder(markup);
+  const plainValue = yield* plainInput;
+  const plain = yield* input.prepareUnicode(plainValue, () => Effect.void);
   const placeholder = yield* input.prepareUnicode(masked.placeholder, () => Effect.void);
   const diff = yield* makeCitationDiffWorker(limits, config.diffRuntime);
   const forwardSteps = yield* diff.evaluate(plain.value.storage, placeholder.value.storage);
@@ -110,6 +114,17 @@ const prepare = Effect.fn("Citation.prepareHtmlGeometry")(function* (
     tags,
   });
 });
+const prepare = Effect.fn("Citation.prepareHtmlGeometry")(function* (
+  limits: CitationEngineLimits,
+  regexRuntime: CitationNativeProcessRuntime,
+  config: CitationHtmlGeometryPreparationConfiguration,
+  raw: unknown
+) {
+  const source = yield* S.decodeUnknownEffect(S.toType(CitationPreparedHtmlSource))(raw).pipe(
+    Effect.mapError(() => CitationHtmlGeometryPreparationFailure.make({ reason: "invalid-input" }))
+  );
+  return yield* prepareCitationHtmlGeometry(limits, regexRuntime, config, source.markup, Effect.succeed(source.plain));
+});
 /** Capture the existing admitted operation and cumulative native text owner.
  * The method has R=never and preserves placeholder/forward/backward/emphasis
  * source order. Four independently retired children precede publication.
@@ -120,7 +135,7 @@ export const makeCitationHtmlGeometryPreparation = makeCitationMetadataStage({
   method: "prepare",
   schema: S.toType(CitationHtmlGeometryPreparationConfiguration),
   invalid,
-  own,
+  own: copyCitationHtmlGeometryConfiguration,
   prepare,
   project: (geometry, reservedUnits) => CitationPreparedHtmlGeometry.make({ geometry, reservedUnits }),
 });

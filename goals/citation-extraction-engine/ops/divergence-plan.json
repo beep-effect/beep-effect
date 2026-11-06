@@ -145,7 +145,12 @@
         "packages/law-practice/server/test/CitationHtmlGeometryPreparation.test.ts",
         "packages/law-practice/server/test/integration/CitationHtmlGeometryPreparation.test.ts",
         "packages/law-practice/server/test/CitationSpanOffsets.fixtures.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-html-geometry-preparation.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-html-geometry-preparation.md",
+        "packages/law-practice/server/src/internal/Citation/InputDocument.ts",
+        "packages/law-practice/server/test/CitationInputDocument.fixtures.ts",
+        "packages/law-practice/server/test/CitationInputDocument.test.ts",
+        "packages/law-practice/server/test/integration/CitationInputDocument.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-input-document-constructor.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

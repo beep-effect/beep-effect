@@ -61,10 +61,11 @@ export class CitationCleanerTextCharge extends S.Opaque<CitationCleanerTextCharg
 ) {}
 // A structural decoder reconstructs data. These fields instead carry live
 // adapter/operation handles unchanged; their owner still rejects decoded copies.
-const LiveObject = S.declare<CitationCleanerObject>((value): value is CitationCleanerObject =>
+/** @internal @category models @since 0.0.0 */
+export const CitationLiveCleanerObject = S.declare<CitationCleanerObject>((value): value is CitationCleanerObject =>
   S.is(CitationCleanerObject)(value)
 ).pipe(
-  $I.annoteSchema("LiveObject", {
+  $I.annoteSchema("CitationLiveCleanerObject", {
     description: "Preserve a live reference's identity while validating its shape; ownership is checked separately.",
   })
 );
@@ -77,7 +78,7 @@ const LiveCharge = S.declare<CitationCleanerTextCharge>((value): value is Citati
 );
 /** @internal @category models @since 0.0.0 */
 export class CitationCleanerProduced extends S.Opaque<CitationCleanerProduced, { readonly brand: unique symbol }>()(
-  S.Struct({ value: LiveObject, charges: S.Array(LiveCharge) }).pipe(
+  S.Struct({ value: CitationLiveCleanerObject, charges: S.Array(LiveCharge) }).pipe(
     $I.annoteSchema("CitationCleanerProduced", {
       description:
         "Runtime result plus reservations made before materializing its text; non-text results have no text charge.",
@@ -106,7 +107,7 @@ const Request = S.Struct({
     description: "Private raw-text invocation of a captured server plan, not the final public cleaner request.",
   })
 );
-const OwnedRequest = S.Struct({ value: LiveObject, plan: Plan }).pipe(
+const OwnedRequest = S.Struct({ value: CitationLiveCleanerObject, plan: Plan }).pipe(
   $I.annoteSchema("OwnedRequest", {
     description:
       "An issued immutable native/host value and captured server plan; structural decoding does not grant ownership.",
@@ -148,7 +149,7 @@ export class CitationCleanerFailure extends S.TaggedError<CitationCleanerFailure
 ) {}
 /** @internal @category models @since 0.0.0 */
 export class CitationCleanerRun extends S.Opaque<CitationCleanerRun, { readonly brand: unique symbol }>()(
-  S.Struct({ value: LiveObject, producedTextUtf16: S.Natural }).pipe(
+  S.Struct({ value: CitationLiveCleanerObject, producedTextUtf16: S.Natural }).pipe(
     $I.annoteSchema("CitationCleanerRun", {
       description: "Private complete result identity and logical work; no partial result accompanies failure.",
     })

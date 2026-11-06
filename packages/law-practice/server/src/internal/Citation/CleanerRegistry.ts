@@ -17,7 +17,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { CitationBuiltinCleaners } from "./BuiltinCleaners.ts";
-import { CitationCleanerFailure, CitationCleanerObject, CitationCleanerRuntime } from "./CleanerPipeline.ts";
+import { CitationCleanerFailure, CitationCleanerRuntime, CitationLiveCleanerObject } from "./CleanerPipeline.ts";
 import { CitationBuiltinCleanerName, CitationCleanerValues } from "./CleanerValues.ts";
 import { makeCitationPythonHash } from "./PythonHash.ts";
 import {
@@ -26,21 +26,23 @@ import {
   CitationRuntimeDictionaryKey,
   makeCitationRuntimeDictionary,
 } from "./RuntimeDictionary.ts";
-import type { CitationCleanerCursor, CitationCleanerProduced, CitationCleanerWork } from "./CleanerPipeline.ts";
+import type {
+  CitationCleanerCursor,
+  CitationCleanerObject,
+  CitationCleanerProduced,
+  CitationCleanerWork,
+} from "./CleanerPipeline.ts";
 
 const crossPrimitiveKinds = (leftText: boolean, rightText: boolean, leftBytes: boolean, rightBytes: boolean) =>
   (leftText && rightBytes) || (rightText && leftBytes);
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerRegistry");
 const Limits = S.toType(CitationEngineLimits);
 const Hash = S.toType(CitationRuntimeDictionaryKey.fields.hash);
-const LiveObject = CitationCleanerObject.pipe(
-  S.is,
-  S.declare<CitationCleanerObject>,
-  $I.annoteSchema("LiveObject", {
-    description: "Retain an issued runtime handle without reconstructing its identity during a structural decode.",
-  })
-);
-const RegistryEntry = S.Tuple([LiveObject, LiveObject, S.Option(CitationBuiltinCleanerName)]).pipe(
+const RegistryEntry = S.Tuple([
+  CitationLiveCleanerObject,
+  CitationLiveCleanerObject,
+  S.Option(CitationBuiltinCleanerName),
+]).pipe(
   $I.annoteSchema("RegistryEntry", {
     description:
       "Ordered live key/value handles and the owner's builtin-function classification; not a persisted registry record.",
