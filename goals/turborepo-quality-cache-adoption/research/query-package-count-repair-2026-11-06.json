@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "turbo-query-package-count-repair/v1",
+  "recordedAt": "2026-11-06T00:20:08.246897+00:00",
+  "acceptedBase": "7484d606e6323a0398e148dc0ea92c91b59a3b55",
+  "finding": "The native affected-query summary reduced from packages0 and never counted package identities, even for nonempty valid task rows.",
+  "repair": "Count distinct string package.name values using the existing record/string guards and Effect Array/Option helpers. Keep the accepted optional-array codec fix.",
+  "regressions": {
+    "existingPositiveFixtureTasks": 3,
+    "expectedDistinctPackages": 2,
+    "explicitEmptyQueryPackages": 0,
+    "newAssertions": 2,
+    "executedLocally": false,
+    "hostedStatus": "pending on repair head"
+  },
+  "preparedSourceBindings": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
+      "sha256": "cc384c0ebebc3bd9f53274f8ba9d10aa13fddd0d63f926cee3846beca5cd1488"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
+      "sha256": "701b4d4dc7ca76173b03383d7d59f9eff0e63c068790b47ddd8eeb3365864754"
+    }
+  ],
+  "historicalBindingClarification": {
+    "report": "research/proof-scm-ref-binding-review-2026-11-04.json",
+    "initialPreparedRevision": "f48bf842d2eebd2a7a491283e829bfef637a2ac0",
+    "bothRecordedHashesVerifiedAtInitialRevision": true,
+    "originalHashesPreserved": true,
+    "rawNativeCaptureOrToolDigestsChanged": false
+  },
+  "authority": {
+    "countsAreMetadataOnly": true,
+    "taskBodiesExecuted": 0,
+    "newQualification": false,
+    "featureAcceptanceChanged": false,
+    "newCredentialsSigningOrCapacity": false,
+    "goalCompleted": false
+  },
+  "rollback": "Revert the counter and two assertions while preserving historical source and native evidence. No persisted schema or cloud state changes."
+}

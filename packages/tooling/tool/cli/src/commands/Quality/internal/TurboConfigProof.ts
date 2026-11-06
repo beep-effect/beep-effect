@@ -454,7 +454,20 @@ export const summarizeTurboQueryAffectedOutput = Effect.fn("TurboConfigProof.sum
     const document = yield* decodeQuerySelection(parsed).pipe(
       Effect.mapError(() => TurboConfigProofError.new("Invalid Turbo affected query task envelope."))
     );
-    return A.reduce(document.data.affectedTasks.items, emptySummary(), (summary, item) =>
+    const items = document.data.affectedTasks.items;
+    const packages = pipe(
+      items,
+      A.filterMap((item) =>
+        pipe(
+          O.fromUndefinedOr(item.package),
+          O.flatMap(getRecord),
+          O.flatMap((record) => getString(record.name))
+        )
+      ),
+      A.dedupe,
+      A.length
+    );
+    return A.reduce(items, TurboConfigProofCountSummary.make({ ...emptySummary(), packages }), (summary, item) =>
       TurboConfigProofCountSummary.make({
         ...summary,
         total: summary.total + 1,
