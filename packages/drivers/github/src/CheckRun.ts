@@ -314,6 +314,60 @@ const capBytes = (value: string): string => {
 };
 
 /**
+ * Native identity selected from the same authenticated check-run response.
+ *
+ * **Details**
+ * This metadata is not authentication by itself. Trusted consumers must verify
+ * the client authority, exact App, head and publication binding before acting.
+ *
+ * **Example** (Inspect native identity)
+ * ```ts
+ * import { CheckRunNativeIdentity } from "@beep/github/CheckRun"
+ * console.log(typeof CheckRunNativeIdentity) // "function"
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CheckRunNativeIdentity extends S.Opaque<CheckRunNativeIdentity, { readonly brand: unique symbol }>()(
+  S.Struct({
+    applicationId: S.Int.check(S.isGreaterThan(0)),
+    headSha: S.String.check(S.isPattern(/^[a-f0-9]{40}$/)),
+    externalId: S.NullOr(S.String),
+    conclusion: S.NullOr(S.String),
+  }).pipe(
+    $I.annoteSchema("CheckRunNativeIdentity", {
+      description: "Native App, full head and external publication identity; no response bodies.",
+    })
+  )
+) {}
+
+/**
+ * Optional correlation supplied when creating or concluding an owned check run.
+ *
+ * **Details**
+ * GitHub's external ID is a correlation field, not a uniqueness or retry fence.
+ * Ambiguous publication still requires durable local fencing and native readback.
+ *
+ * **Example** (Bind a publication reference)
+ * ```ts
+ * import { CheckRunCorrelationOptions } from "@beep/github/CheckRun"
+ * console.log(CheckRunCorrelationOptions.make({ externalId: "owned-release-1" }).externalId)
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CheckRunCorrelationOptions extends S.Opaque<
+  CheckRunCorrelationOptions,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ externalId: S.optionalKey(S.NonEmptyString) }).pipe(
+    $I.annoteSchema("CheckRunCorrelationOptions", {
+      description: "Optional check publication correlation; never an idempotency guarantee.",
+    })
+  )
+) {}
+
+/**
  * Captures the identity, web URL and execution status GitHub reports for a check run.
  *
  * **Example** (Read a check run identifier)
@@ -350,6 +404,7 @@ export class CheckRunRef extends S.Opaque<CheckRunRef, { readonly brand: unique 
     status: S.String.pipe(
       $I.annoteKey("CheckRunRef.status", { description: "The check run's execution status as reported by GitHub" })
     ),
+    nativeIdentity: S.optionalKey(CheckRunNativeIdentity),
   }).pipe($I.annoteSchema("CheckRunRef", { description: "A check run as GitHub reports it." }))
 ) {}
 
@@ -402,11 +457,13 @@ export interface CheckRunShape {
     (
       id: number,
       conclusion: (typeof CheckConclusion.literals)[number],
-      output?: CheckRunOutput
+      output?: CheckRunOutput,
+      options?: CheckRunCorrelationOptions
     ): Effect.Effect<void, GitHubError, Repo>;
     (
       conclusion: (typeof CheckConclusion.literals)[number],
-      output?: CheckRunOutput
+      output?: CheckRunOutput,
+      options?: CheckRunCorrelationOptions
     ): (id: number) => Effect.Effect<void, GitHubError, Repo>;
   };
   /**
@@ -415,8 +472,15 @@ export interface CheckRunShape {
    * @since 0.0.0
    */
   readonly create: {
-    (name: string, headSha: string): Effect.Effect<CheckRunRef, GitHubError, Repo>;
-    (headSha: string): (name: string) => Effect.Effect<CheckRunRef, GitHubError, Repo>;
+    (
+      name: string,
+      headSha: string,
+      options?: CheckRunCorrelationOptions
+    ): Effect.Effect<CheckRunRef, GitHubError, Repo>;
+    (
+      headSha: string,
+      options?: CheckRunCorrelationOptions
+    ): (name: string) => Effect.Effect<CheckRunRef, GitHubError, Repo>;
   };
   readonly get: (id: number) => Effect.Effect<CheckRunRef, GitHubError, Repo>;
   /**
@@ -710,6 +774,10 @@ const CheckRunResponse = S.Struct({
   name: S.String,
   html_url: S.String.pipe(S.NullOr, S.optionalKey),
   status: S.String,
+  app: S.optionalKey(S.Struct({ id: S.Int.check(S.isGreaterThan(0)) })),
+  head_sha: S.optionalKey(S.String),
+  external_id: S.String.pipe(S.NullOr, S.optionalKey),
+  conclusion: S.String.pipe(S.NullOr, S.optionalKey),
 }).pipe($I.annoteSchema("CheckRunResponse", { description: "The selected fields of a check-run response." }));
 
 const refOf: {
@@ -726,6 +794,19 @@ const refOf: {
       name: raw.name,
       url: raw.html_url ?? "",
       status: raw.status,
+      ...(raw.app !== undefined &&
+      raw.head_sha !== undefined &&
+      raw.external_id !== undefined &&
+      raw.conclusion !== undefined
+        ? {
+            nativeIdentity: {
+              applicationId: raw.app.id,
+              headSha: raw.head_sha,
+              externalId: raw.external_id,
+              conclusion: raw.conclusion,
+            },
+          }
+        : {}),
     }).pipe(
       Effect.mapError((error) => GitHubError.decode(operation, "GitHub returned an unexpected check run", error))
     );
@@ -734,8 +815,8 @@ const refOf: {
 
 const make = (client: GitHubClient["Service"]): CheckRunShape => {
   const create: CheckRunShape["create"] = dual(
-    2,
-    Effect.fn("CheckRun.create")(function* (name: string, headSha: string) {
+    (args) => P.isString(args[1]),
+    Effect.fn("CheckRun.create")(function* (name: string, headSha: string, options?: CheckRunCorrelationOptions) {
       const { owner, repo } = yield* Repo;
       yield* Effect.annotateCurrentSpan({ owner, repo, name, headSha });
       const now1 = yield* DateTime.now;
@@ -746,6 +827,7 @@ const make = (client: GitHubClient["Service"]): CheckRunShape => {
         head_sha: headSha,
         status: "in_progress",
         started_at: DateTime.formatIso(now1),
+        ...(options?.externalId === undefined ? {} : { external_id: options.externalId }),
       });
       return yield* refOf(created, "CheckRun.create");
     })
@@ -756,7 +838,8 @@ const make = (client: GitHubClient["Service"]): CheckRunShape => {
     Effect.fn("CheckRun.complete")(function* (
       id: number,
       conclusion: (typeof CheckConclusion.literals)[number],
-      output?: CheckRunOutput
+      output?: CheckRunOutput,
+      options?: CheckRunCorrelationOptions
     ) {
       const { owner, repo } = yield* Repo;
       yield* Effect.annotateCurrentSpan({ owner, repo, id, conclusion });
@@ -768,6 +851,7 @@ const make = (client: GitHubClient["Service"]): CheckRunShape => {
         status: "completed",
         conclusion,
         completed_at: DateTime.formatIso(now2),
+        ...(options?.externalId === undefined ? {} : { external_id: options.externalId }),
         ...O.getSomesStruct({ output: O.map(O.fromUndefinedOr(output), wireOutput) }),
       });
     })
