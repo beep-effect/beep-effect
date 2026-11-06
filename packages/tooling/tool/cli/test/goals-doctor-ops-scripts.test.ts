@@ -55,6 +55,9 @@ const record = (text: string): GoalPacketRecord =>
 const stubReader = (files: ReadonlyArray<string>) => {
   const reads = { ops: 0 };
   const reader: GoalPacketReader<never, never> = {
+    decisionFiles: () => Effect.succeed(A.empty<string>()),
+    readDecision: () => Effect.succeed(""),
+    readDocument: () => Effect.succeedNone,
     explorationPath: () => Effect.succeed(GoalExplorationPathState.Enum.present),
     opsFiles: () =>
       Effect.sync(() => {

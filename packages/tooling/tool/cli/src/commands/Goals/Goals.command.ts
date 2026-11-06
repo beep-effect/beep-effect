@@ -15,6 +15,7 @@ import * as Command from "effect/cli/Command";
 import { goalsAdoptCommand } from "./Adopt.ts";
 import { goalsBootstrapCommand } from "./Bootstrap.ts";
 import { goalsCompletionCommand } from "./Completion.ts";
+import { goalsDecisionsCommand } from "./Decisions.ts";
 import { goalsDoctorCommand } from "./Doctor.ts";
 import { goalsCatalogCommand, goalsExplainCommand, goalsNextCommand } from "./Graph.ts";
 import { goalsManifestCommand } from "./Manifest.ts";
@@ -41,6 +42,8 @@ export const goalsCommand = Command.make("goals", {}, () =>
     "Goals commands:",
     "- bun run beep goals doctor [--online] [--write-baseline]",
     "- bun run beep goals completion refresh [--slug <slug>]",
+    "- bun run beep goals decisions check|write [--slug <slug>]",
+    '- bun run beep goals decisions add <slug> --title "..." --reversal "..." [--body "..."] [--kind checkpoint]',
     "- bun run beep goals index [--write | --check | --json]",
     "- bun run beep goals manifest [--write | --check]",
     "- bun run beep goals next [--json]",
@@ -59,6 +62,7 @@ export const goalsCommand = Command.make("goals", {}, () =>
   Command.withSubcommands([
     goalsDoctorCommand,
     goalsCompletionCommand,
+    goalsDecisionsCommand,
     goalsIndexCommand,
     goalsManifestCommand,
     goalsNextCommand,

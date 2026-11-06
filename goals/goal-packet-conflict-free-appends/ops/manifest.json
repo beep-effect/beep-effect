@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "goal-packet-conflict-free-appends",
+    "packetId": "goal-packet/v1:909a8f068e6e238622182d000e23cb2c400a6e96ede14c9d0781ac6eede2687b",
+    "title": "Goal packet conflict-free appends",
+    "status": "active",
+    "created": "2026-11-05",
+    "updated": "2026-11-05",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/goal-packet-conflict-free-appends",
+  "lifecycle": "active",
+  "mission": "Lanes record decisions as their own files; SPEC.md and PLAN.md blocks are generated projections, so sibling PRs never conflict on a shared tail.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/goal-packet-conflict-free-appends/README.md",
+    "goals/goal-packet-conflict-free-appends/SPEC.md",
+    "goals/goal-packet-conflict-free-appends/PLAN.md",
+    "goals/goal-packet-conflict-free-appends/GOAL.md",
+    "goals/goal-packet-conflict-free-appends/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/goal-packet-conflict-free-appends/GOAL.md"
+    }
+  ],
+  "provides": ["goals/decisions"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/goal-packet-conflict-free-appends/GOAL.md)\" -le 4000",
+    "jq . goals/goal-packet-conflict-free-appends/ops/manifest.json",
+    "rg -n \"goal-packet-conflict-free-appends|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/goal-packet-conflict-free-appends",
+    "git diff --check -- goals/goal-packet-conflict-free-appends",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

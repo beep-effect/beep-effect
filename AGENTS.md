@@ -224,9 +224,13 @@ needed only for the escalation list below.
 
 - Escalate only money: purchases, new paid services or endpoints, quota
   top-ups, plan changes. Everything else is agent-decided: record the call,
-  its reason and how to reverse it in the packet's `SPEC.md` Decision Log,
-  then continue. The operator reviews asynchronously and never blocks
-  progress.
+  its reason and how to reverse it as a decision file
+  (`bun run beep goals decisions add <slug> --title "..." --reversal "..."`,
+  one file per decision under `goals/<slug>/decisions/`; `--kind checkpoint`
+  for `PLAN.md` status notes), then continue. Never append to the tail of
+  `SPEC.md`'s Decision log or `PLAN.md`: the generated blocks are projections
+  and sibling lanes appending to one tail conflict on merge. The operator
+  reviews asynchronously and never blocks progress.
 - Irreversible changes still need a safety net, not a person: land the
   reversal path (tested down-migration, backup of deleted state) before the
   change merges, and ship a breaking public API or schema change with a major
