@@ -474,13 +474,13 @@ const runPilot = Effect.fn("CachePilot.run")(
         Effect.flatMap(JsonStringCodec(CacheActivationPreview).decode)
       );
       const recipe = yield* S.decodeUnknownEffect(PilotComputation)(preview.source.key.computation).pipe(
-        Effect.map(
-          PilotComputation.match({
+        Effect.mapBoth({
+          onSuccess: PilotComputation.match({
             "@beep/identity#lint": () => identityRecipe,
             "@beep/types#lint": () => typesRecipe,
-          })
-        ),
-        Effect.mapError(() => CacheCommandError.new("The pilot computation has no reviewed execution recipe."))
+          }),
+          onFailure: () => CacheCommandError.new("The pilot computation has no reviewed execution recipe."),
+        })
       );
       if (mode === "signed" && recipe.selected.computation !== identityRecipe.selected.computation) {
         return yield* CacheCommandError.new("Signed types pilot execution is not admitted.");
@@ -624,7 +624,7 @@ const runPilot = Effect.fn("CachePilot.run")(
     const typesConfig = yield* O.match(recipe.dependency, {
       onNone: () => Effect.succeedNone,
       onSome: (dependency) =>
-        readBytes(root, `${dependency.directory}/turbo.json`).pipe(Effect.flatMap(decodeText), Effect.map(O.some)),
+        readBytes(root, `${dependency.directory}/turbo.json`).pipe(Effect.flatMap(decodeText), Effect.asSome),
     });
     const experiment = yield* fs
       .makeTempDirectoryScoped({

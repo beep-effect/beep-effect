@@ -1285,3 +1285,7 @@ than treating property tests or coverage as narrower without source evidence.
 ## Replay formatting and pilot profile phase complexity, 2026-11-06
 
 Hosted #2824 Lint found expanded singleton arrays in types/turbo.json left by an unpublished replay resolution. Apply the exact formatter diff and keep the environment/input declarations unchanged. Fallow artifact13548435278 attributes one new cognitive/CRAP finding to runPilot. Group its selected-profile discovery, refusal and validation in one named phase, leaving executable pin checks reusable before every execution and preserving validation order. Retain the three failed logs and artifact digests privately. No baseline, threshold, suppression or local quality suite changes.
+
+## Hosted diagnostics reject sequential channel and Option wrappers, 2026-11-06
+
+#2824 Check, Build and Integration all fail on the same two introduced Effect diagnostics in Cache.pilot.ts: mapMapErrorToMapBoth and mapSomeToAsSome. Replace the sequential success/error mappings with mapBoth and the success wrapper with asSome, preserving failures and values. Three completed logs are retained once under their actual jobs. No signature, baseline, threshold, test expectation or local quality suite changes.
