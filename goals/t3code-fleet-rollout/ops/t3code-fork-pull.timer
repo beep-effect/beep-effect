@@ -1,0 +1,12 @@
+[Unit]
+Description=Check the DankStation T3 Code fork mirror every 30 minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=30min
+RandomizedDelaySec=3min
+Persistent=true
+Unit=t3code-fork-pull.service
+
+[Install]
+WantedBy=timers.target
