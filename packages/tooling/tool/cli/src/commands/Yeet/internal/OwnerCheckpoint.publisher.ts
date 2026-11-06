@@ -326,9 +326,13 @@ export const makeOwnerCheckpointPublisher = Effect.fn("OwnerCheckpoint.makePubli
     const after = yield* readOwnerCheckpointSnapshot(context, entry.binding, id, policy, externalId);
     return before.value.base.sha === after.base.sha && before.value.base.ref === after.base.ref;
   });
-  const readReleaseSnapshot = Effect.fnUntraced(function* (entry: OwnerCheckpointOutbox, id: number, row: CheckRunRef) {
+  const readReleaseSnapshot = Effect.fnUntraced(function* (
+    entry: OwnerCheckpointOutbox,
+    id: number,
+    externalId: string
+  ) {
     if (entry.intent._tag !== "CheckReleased") return undefined;
-    return yield* readOwnerCheckpointSnapshot(context, entry.binding, id, policy, row.nativeIdentity?.externalId ?? "");
+    return yield* readOwnerCheckpointSnapshot(context, entry.binding, id, policy, externalId);
   });
   const invalidateUnsettledRelease = Effect.fnUntraced(function* (
     entry: OwnerCheckpointOutbox,
@@ -396,8 +400,10 @@ export const makeOwnerCheckpointPublisher = Effect.fn("OwnerCheckpoint.makePubli
     const options = CheckRunCorrelationOptions.make({ externalId });
     const existing = yield* native.get(id).pipe(Effect.result);
     if (Result.isFailure(existing)) return unknown();
-    if (!ownedAnchorMatches(existing.success, entry.binding, id, previous)) return hold("native-identity");
-    const beforeSnapshot = yield* readReleaseSnapshot(entry, id, existing.success);
+    const previousExternalId = O.fromNullishOr(existing.success.nativeIdentity?.externalId);
+    if (O.isNone(previousExternalId) || !ownedAnchorMatches(existing.success, entry.binding, id, previous))
+      return hold("native-identity");
+    const beforeSnapshot = yield* readReleaseSnapshot(entry, id, previousExternalId.value);
     const before = O.fromUndefinedOr(beforeSnapshot);
     if (beforeSnapshot !== undefined && !releaseBaseMatches(entry, beforeSnapshot)) return hold("native-identity");
     yield* current(entry.binding, entry.revision);

@@ -108,16 +108,10 @@ const assertRequiredApplications = Effect.fnUntraced(function* (
   selfCheckId: number,
   policy: OwnerCheckpointPolicy
 ) {
-  if (
-    A.some(
-      rules,
-      (rule) => rule.type === "required_status_checks" && rule.parameters?.required_status_checks === undefined
-    )
-  )
-    return yield* refuse("evidence");
-  const required = A.flatMap(rules, (rule) =>
-    rule.type === "required_status_checks" ? (rule.parameters?.required_status_checks ?? []) : []
-  );
+  const requiredRules = A.filter(rules, (rule) => rule.type === "required_status_checks");
+  const groups = A.getSomes(A.map(requiredRules, (rule) => O.fromUndefinedOr(rule.parameters?.required_status_checks)));
+  if (groups.length !== requiredRules.length) return yield* refuse("evidence");
+  const required = A.flatten(groups);
   const names = A.dedupe(A.map(required, (check) => check.context));
   if (
     !O.exists(

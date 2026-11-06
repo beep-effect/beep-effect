@@ -15,8 +15,10 @@ skill adaptations, repair confirmed discrepancies, and prove complete coverage.
 
 The operator activated bounded report collection, local false-positive/omission
 review, validated repairs, and PR publication. The manifest is active; P1-P3 are
-partial. Promotional cloud work has ended and no paid pilot or spending is
-admitted. Continue from history/2026-11-06-reviewed-local-repairs.md.
+partial, P4 final-tree reconciliation is in progress, and P5 remains pending.
+Promotional cloud work has ended and no paid pilot or spending is
+admitted. Continue from history/2026-11-06-p4-final-tree-reconciliation.md
+and history/2026-11-06-reviewed-local-repairs.md.
 Audited-content mutation still requires its concrete report and parent review.
 Keep PM's missing original and ADHD provenance separate; never infer acceptance
 from an inaccessible source or a repeated claim count.
