@@ -275,6 +275,7 @@
     {"name":"CacheFingerprint.readSignatureRequired","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheFingerprint.toolSource","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheFingerprint.toolchain","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CacheFingerprint.trackedTestMembership","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheFingerprint.validateActivationArtifacts","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheFixture.makeServer","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheFixture.putArtifact","owner":"@beep/repo-cli","family":"tooling","conforms":true},

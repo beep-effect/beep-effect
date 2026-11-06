@@ -93,10 +93,34 @@
   "candidateChange": {
     "task": "//#lint:opaque-roundtrips",
     "cache": false,
-    "candidateTurboSha256": "80adfdc133934221fe8e659e0e12c9ce27fff82b30d3e103be479e86aa657765"
+    "candidateTurboSha256": "618d399d293892463c035856a28639ad717589cec59918cb23abd2814fbc02d2"
   },
   "remaining": "Implement and qualify a portable tracked-file discovery binding or equivalent reviewed scanner semantics before restoring reuse. This temporary fresh boundary remains unfinished adoption work.",
   "completeRepositoryTaskExecuted": false,
   "repositoryFingerprintChainExecuted": false,
-  "qualificationGranted": false
+  "qualificationGranted": false,
+  "preparedBinding": {
+    "schemaField": "CacheToolchainSnapshot.trackedTestMembership",
+    "historicalAbsence": "Option.none; prior receipts remain historical",
+    "runtimeCollection": "Git cached deduplicated NUL-delimited *.test.ts and *.test.tsx paths under a scrubbed environment; only digest retained",
+    "bound": {
+      "maxCapturedCharacters": 1048576,
+      "timeoutSeconds": 10
+    },
+    "failurePolicy": "Refuse failed/truncated/unterminated output and replace operational errors without retaining captured paths.",
+    "nativeInput": "BEEP_CACHE_TOOLCHAIN_DIGEST declared for the affected root task; existing calculated-key path and caller-override rejection reused.",
+    "scope": "The same observed runtime identity conservatively invalidates other governed computations when tracked test membership changes. No per-task cache promotion follows.",
+    "sourceRaceLimit": "Observation does not freeze concurrent index mutation; existing qualification isolation remains required.",
+    "testsAuthoredNotRun": [
+      "empty and untracked membership",
+      "index-only add/removal",
+      "independent linked worktree indexes",
+      "matching paths across clone/worktree locations",
+      "spaces and newlines in filenames",
+      "content-only change leaves membership identity unchanged",
+      "membership changes alter toolchain hash",
+      "failed/truncated/unterminated output refusal",
+      "timeout diagnostic path redaction"
+    ]
+  }
 }

@@ -18,6 +18,7 @@ import * as Census from "@beep/repo-cli/commands/Cache/Cache.census";
 import * as Fingerprint from "@beep/repo-cli/commands/Cache/Cache.fingerprint";
 import {
   collectCacheGitExclusions,
+  collectCacheTrackedTestMembership,
   CacheRuntimeFileGuards as FsGuards,
   CacheRuntimeProfile as Profile,
   CacheRuntimeProcess as StepExec,
@@ -251,7 +252,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
 );
 
 it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
-  "Git exclusion runtime identity",
+  "Git discovery runtime identity",
   (it) => {
     it.effect("binds content across clone and linked-worktree paths and rejects unsafe files", () =>
       Effect.gen(function* () {
@@ -287,6 +288,35 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           "fixture",
         ]);
         yield* git(["worktree", "add", "--detach", worktree]);
+        const emptyMembership = yield* collectCacheTrackedTestMembership(clone);
+        const linkedEmptyMembership = yield* collectCacheTrackedTestMembership(worktree);
+        expect(linkedEmptyMembership).toBe(emptyMembership);
+        const candidateName = "candidate with space\nand newline.test.ts";
+        yield* fs.writeFileString(path.join(clone, candidateName), "export const sample = true;\n");
+        const untrackedMembership = yield* collectCacheTrackedTestMembership(clone);
+        expect(untrackedMembership).toBe(emptyMembership);
+        yield* git(["add", "--", candidateName]);
+        const trackedMembership = yield* collectCacheTrackedTestMembership(clone);
+        expect(trackedMembership).not.toBe(emptyMembership);
+        const independentIndex = yield* collectCacheTrackedTestMembership(worktree);
+        expect(independentIndex).toBe(emptyMembership);
+        yield* fs.writeFileString(path.join(worktree, candidateName), "export const sample = true;\n");
+        yield* git(["-C", worktree, "add", "--", candidateName]);
+        const linkedTrackedMembership = yield* collectCacheTrackedTestMembership(worktree);
+        expect(linkedTrackedMembership).toBe(trackedMembership);
+        const trackedKey = yield* hashCacheToolchain(
+          CacheToolchainSnapshot.make({ ...runtimeSnapshot, trackedTestMembership: O.some(trackedMembership) })
+        );
+        const emptyKey = yield* hashCacheToolchain(
+          CacheToolchainSnapshot.make({ ...runtimeSnapshot, trackedTestMembership: O.some(emptyMembership) })
+        );
+        expect(trackedKey).not.toBe(emptyKey);
+        yield* fs.writeFileString(path.join(clone, candidateName), "export const sample = false;\n");
+        const contentOnlyChange = yield* collectCacheTrackedTestMembership(clone);
+        expect(contentOnlyChange).toBe(trackedMembership);
+        yield* git(["rm", "--cached", "--", candidateName]);
+        const removedMembership = yield* collectCacheTrackedTestMembership(clone);
+        expect(removedMembership).toBe(emptyMembership);
         const absent = yield* collectCacheGitExclusions(clone);
         yield* fs.makeDirectory(path.join(clone, ".git/info"), { recursive: true });
         const exclude = path.join(clone, ".git/info/exclude");
@@ -366,6 +396,39 @@ it.layer(runtimeLayer, { timeout: "10 seconds" })("runtime native spawn", (it) =
     vi.restoreAllMocks();
     vi.unstubAllEnvs();
   });
+
+  it.effect("rejects failed, truncated or unterminated tracked-test discovery without retaining paths", () =>
+    Effect.gen(function* () {
+      for (const captured of [
+        StepExec.CapturedStep.make({ exitCode: 1, output: "private fixture failure", truncated: false }),
+        StepExec.CapturedStep.make({ exitCode: 0, output: "partial.test.ts\0", truncated: true }),
+        StepExec.CapturedStep.make({ exitCode: 0, output: "unterminated.test.ts", truncated: false }),
+      ]) {
+        vi.spyOn(StepExec, "runCaptured").mockImplementation(() => Effect.succeed(captured));
+        const failure = yield* collectCacheTrackedTestMembership("/fixture").pipe(Effect.flip);
+        assertInstanceOf(failure, CacheCommandError);
+        expect(failure.message).toBe("Tracked test discovery failed or exceeded its capture bound.");
+        expect(failure.cause).toBeUndefined();
+      }
+    })
+  );
+
+  it.effect("drops captured discovery paths from timeout diagnostics", () =>
+    Effect.gen(function* () {
+      vi.spyOn(StepExec, "runCaptured").mockImplementation(() =>
+        Effect.fail(
+          StepExec.CaptureCommandTimedOutError.make({
+            commandLine: "git ls-files",
+            message: "timed out after private-discovery-path.test.ts",
+          })
+        )
+      );
+      const failure = yield* collectCacheTrackedTestMembership("/fixture").pipe(Effect.flip);
+      assertInstanceOf(failure, CacheCommandError);
+      expect(failure.message).toBe("Tracked test discovery is unavailable.");
+      expect(failure.cause).toBeUndefined();
+    })
+  );
 
   it.effect("forces a reader without its required key to run locally without forwarding a reference", () =>
     Effect.gen(function* () {

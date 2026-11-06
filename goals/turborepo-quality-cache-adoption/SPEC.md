@@ -1094,6 +1094,12 @@ links together to reverse this component; runtime configuration is unchanged.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-quality-cache-adoption`; add a `kind: decision` file there, never edit this block._
 
+### Bind tracked test paths through the existing runtime identity, 2026-11-06
+
+Prepare an optional tracked-test membership digest in the existing observed toolchain snapshot. Use bounded scrubbed Git discovery of the scanner pathspecs, NUL framing and digest-only retention. Reject incomplete captures and sanitize operational errors without their path-bearing tails. Declare the existing calculated runtime digest for this root command; keep caching off until full qualification. Shared identity conservatively invalidates other governed computations on tracking changes. Authored hosted controls are unrun locally; no activation or promotion is granted. Existing snapshot absence remains historical, not qualification for this newly reviewed input.
+
+Reverse: Remove the optional collector and native input declaration while preserving the fresh cache hold, historical evidence and qualification requirement.
+
 ### Keep tracked-test discovery fresh until membership is bound, 2026-11-06
 
 The scanner selects tracked tests through git ls-files. Four native metadata fixture observations show that index membership can change while task inputs and hash stay equal in both pinned clients. Keep only this command fresh until portable discovery identity and membership perturbation controls are qualified. Preserve scanner behavior, dependency edges and every whole-goal obligation; this temporary hold is unfinished adoption work, not a final exclusion. No local task or quality suite ran; hosted CI and primary acceptance remain required.

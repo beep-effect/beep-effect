@@ -231,6 +231,55 @@ export const collectCacheGitExclusions = Effect.fn("CacheFingerprint.gitExclusio
 }, CacheCommandError.mapError("Cannot fingerprint Git local exclusions."));
 
 /**
+ * Bind tracked test discovery without hashing clone paths or Git index bytes.
+ *
+ * **Details**
+ * Git emits sorted, deduplicated, NUL-delimited paths matching the opaque
+ * roundtrip scanner's test pathspecs. Only their digest is retained. The probe
+ * inherits no Git redirection or application environment, allows ten seconds
+ * and at most one million captured characters, and refuses truncated output.
+ * Empty membership is valid. This observation does not freeze later index edits.
+ *
+ * **Example** (Observe tracked test membership)
+ *
+ * ```ts
+ * import { collectCacheTrackedTestMembership } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.assert(Effect.isEffect(collectCacheTrackedTestMembership("/repo")))
+ * ```
+ *
+ * @param root - Repository root whose index supplies scanner candidates.
+ * @returns A digest of portable discovery paths, including empty discovery.
+ * @category queries
+ * @since 0.0.0
+ */
+export const collectCacheTrackedTestMembership = Effect.fn("CacheFingerprint.trackedTestMembership")(function* (
+  root: string
+) {
+  const searchPath = yield* configStringOption("PATH").pipe(
+    Effect.flatMap(Effect.fromOption(() => CacheCommandError.new("Tracked test discovery requires PATH.")))
+  );
+  const result = yield* runCaptured({
+    command: "git",
+    args: ["ls-files", "--cached", "--deduplicate", "-z", "--", "*.test.ts", "*.test.tsx"],
+    cwd: root,
+    source: "stdout",
+    bound: OutputBound.make({ maxChars: 1048576, truncatedNotice: "[tracked test discovery exceeds limit]" }),
+    timeout: Duration.seconds(10),
+    extendEnv: false,
+    env: { PATH: searchPath, LANG: "C", LC_ALL: "C", GIT_CONFIG_NOSYSTEM: "1", GIT_OPTIONAL_LOCKS: "0" },
+  }).pipe(Effect.mapError(() => CacheCommandError.new("Tracked test discovery is unavailable.")));
+  if (
+    result.exitCode !== 0 ||
+    result.truncated ||
+    (Str.isNonEmpty(result.output) && !Str.endsWith("\0")(result.output))
+  )
+    return yield* CacheCommandError.new("Tracked test discovery failed or exceeded its capture bound.");
+  return yield* hashBytes(new TextEncoder().encode(result.output));
+}, CacheCommandError.mapError("Cannot fingerprint tracked test membership."));
+
+/**
  * Observe an explicitly supported runtime matching the repository's bounded Bun pin.
  *
  * **Example** (Plan toolchain observation)
@@ -306,6 +355,7 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
     installedDependencies: yield* Effect.asSome(
       inspectCacheDependencyTree(root, (yield* collectCacheCensus(root)).workspaces)
     ),
+    trackedTestMembership: yield* Effect.asSome(collectCacheTrackedTestMembership(root)),
     sources: [
       CacheCensusSource.make({ path: ".bun-version", sha256: yield* hashBytes(declaration) }),
       yield* collectCacheGitExclusions(root),
