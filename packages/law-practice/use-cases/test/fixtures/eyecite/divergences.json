@@ -528,7 +528,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlDiscovery.fixtures.ts",
-          "sha256": "a1f1392fba7a4c3f2e05768397a57a3f01ebb4bf0cb72a2376f60b5391327e75"
+          "sha256": "81120f74804547b53812eb9745e72e1d0c29d238691a6688f78181ab6c030ed9"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlDiscovery.test.ts",
@@ -540,15 +540,15 @@
         },
         {
           "path": "goals/citation-extraction-engine/ops/probe-html-discovery-patterns.py",
-          "sha256": "2b1e05c2fd225507620aa9fb10df2dac69e9046eae6ffc00e0335e954d219ff4"
+          "sha256": "7f0309e77b0cb2df40fd35d5c694e32552f0ed34937e48db945919b869d4e588"
         },
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/html-discovery-patterns.json",
-          "sha256": "83243d56a65e6f9d94602ea3922fc3b9ddbcb895096600223e37b91cbcc847fc"
+          "sha256": "95830f0e880b234b2b5ada632e94a1b88abc67c69d825148226dcdcea8b8a230"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-html-discovery-worker.md",
-          "sha256": "da097f49484849f97a4b3198f73ce4ae743fd2705c08810d4a7f4051ea8e1cad"
+          "sha256": "b82ae84dc4e559b90a8da801497f249d056d1e278140cb38f97d8b57cc7bdf52"
         }
       ],
       "workflowState": "audit",

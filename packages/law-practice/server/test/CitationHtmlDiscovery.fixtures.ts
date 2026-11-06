@@ -56,7 +56,7 @@ const Corpus = S.fromJsonString(
 const load = Effect.fn("HtmlDiscoveryTest.load")(function* () {
   const configuration = yield* readCitationOracleFixture(
     "html-discovery-patterns",
-    "83243d56a65e6f9d94602ea3922fc3b9ddbcb895096600223e37b91cbcc847fc"
+    "95830f0e880b234b2b5ada632e94a1b88abc67c69d825148226dcdcea8b8a230"
   ).pipe(Effect.flatMap(S.decodeEffect(PatternCorpus)));
   const corpus = yield* readCitationOracleFixture(
     "html-discovery",

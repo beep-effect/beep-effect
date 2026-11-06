@@ -31,7 +31,7 @@ profiles and a digest of every exhaustive sequence/expected result. Two hash
 seeds reproduce the fixture byte for byte.
 
 Pattern fixture SHA-256:
-83243d56a65e6f9d94602ea3922fc3b9ddbcb895096600223e37b91cbcc847fc.
+95830f0e880b234b2b5ada632e94a1b88abc67c69d825148226dcdcea8b8a230.
 The original 250-case fixture is unchanged. This finite lowering supplies no
 arbitrary backreference support and grants no new general source flag.
 

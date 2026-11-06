@@ -26,6 +26,27 @@ def text(value):
     return ''.join(chr(int.from_bytes(data[i:i+width], 'little')) for i in range(0, len(data), width))
 
 
+def profile(tree, repeated=False):
+    repeated_capture = nullable_multi = False
+    for kind, value in tree:
+        name = str(kind)
+        if name == 'SUBPATTERN':
+            repeated_capture |= value[0] is not None and repeated
+            children = [profile(value[3], repeated)]
+        elif name == 'BRANCH':
+            children = [profile(branch, repeated) for branch in value[1]]
+        elif name in ('MAX_REPEAT', 'MIN_REPEAT'):
+            multiple = value[1] > 1
+            nullable_multi |= multiple and value[2].getwidth()[0] == 0
+            children = [profile(value[2], repeated or multiple)]
+        else:
+            assert name in ('LITERAL', 'NOT_LITERAL', 'IN'), name
+            children = []
+        repeated_capture |= any(row[0] for row in children)
+        nullable_multi |= any(row[1] for row in children)
+    return repeated_capture, nullable_multi
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--oracle-root', required=True, type=Path)
@@ -70,10 +91,12 @@ def main():
         storage = native(pattern)
         compiled = re.compile(pattern, flags)
         parsed = _parser.parse(pattern, flags)
+        repeated, nullable = profile(parsed)
+        assert not repeated and not nullable
         patterns[name] = storage
         bindings.append({'patternSha256': sha(bytes([storage['width']]) + bytes.fromhex(storage['bytes'])),
                          'flags': flags, 'profile': {'groups': compiled.groups, 'names': dict(compiled.groupindex),
-                         'minimumWidthFloor': parsed.getwidth()[0], 'repeatedCaptures': False, 'nullableMultiRepeat': False}})
+                         'minimumWidthFloor': parsed.getwidth()[0], 'repeatedCaptures': repeated, 'nullableMultiRepeat': nullable}})
     result = {'schemaVersion': 'citation-html-discovery-patterns/v1', 'oracleCommit': PIN, 'oracleTree': TREE,
               'python': '3.11.15', 'producerSha256': sha(Path(__file__).read_bytes()),
               'sourceCorpusSha256': sha(corpus_path.read_bytes()),
