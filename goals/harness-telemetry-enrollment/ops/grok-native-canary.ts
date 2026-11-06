@@ -63,7 +63,7 @@ const absolute = S.String.check(S.isPattern(/^\/[^\u0000-\u001f"\\]*$/), S.isMax
     description: "Restricted absolute native path, pinned separately by owner admission.",
   })
 );
-/** Exact private profile; no auth, model transport, provider key or arbitrary hook is configured.
+/** Exact private profile pins the approved Responses model and medium reasoning contract; no auth, endpoint, provider key or arbitrary hook is configured.
  * **Example** (Inspect fixed profile text length)
  * ```ts
  * console.log(grokCanaryProfile.length > 0)
@@ -72,7 +72,7 @@ const absolute = S.String.check(S.isPattern(/^\/[^\u0000-\u001f"\\]*$/), S.isMax
  * @since 0.0.0
  */
 export const grokCanaryProfile =
-  '[models]\nsession_summary="grok-4.7"\ndefault_reasoning_effort="medium"\n[cli]\nauto_update=false\nuse_leader=false\n[features]\ntelemetry=false\nfeedback=false\ncodebase_indexing=false\nremote_fetch=false\nauto_wake=false\ntitle_refresh=false\nturn_summary=false\n[session]\nload_envrc=false\n\n[marketplace]\ndefault_skills_installs_purged = true\n';
+  '[models]\nsession_summary="grok-4.7"\ndefault_reasoning_effort="medium"\n[cli]\nauto_update=false\nuse_leader=false\n[features]\ntelemetry=false\nfeedback=false\ncodebase_indexing=false\nremote_fetch=false\nauto_wake=false\ntitle_refresh=false\nturn_summary=false\n[session]\nload_envrc=false\n\n[marketplace]\ndefault_skills_installs_purged = true\n\n[model."grok-4.7"]\nmodel = "grok-4.7"\napi_backend = "responses"\nreasoning_efforts = [{ id = "medium", value = "medium", label = "Medium", description = "", default = false }]\n';
 /** Fixed local-only pilot project MCP bytes; never publish this override into the ordinary repository.
  * **Example** (Inspect empty MCP content)
  * ```ts
@@ -315,6 +315,14 @@ export class GrokNativeCanaryDiagnostic extends S.Opaque<
 const failed = (phase: GrokNativeCanaryError["phase"]) => GrokNativeCanaryError.make({ phase });
 const io = <A>(thunk: () => Promise<A>, phase: GrokNativeCanaryError["phase"] = "admission") =>
   Effect.tryPromise({ try: thunk, catch: () => failed(phase) });
+const authTransition = S.Struct({
+  operation: S.Literals(["inspect-1", "inspect-2", "main"]),
+  before: Sha256Hex,
+  after: Sha256Hex,
+  change: S.tag("changed-during-native-phase"),
+  cause: S.tag("Unknown"),
+  authHealth: S.tag("Unknown"),
+});
 const qualification = S.Struct({
   version: S.tag("grok-native-isolation/v1"),
   executableSha256: Sha256Hex,
@@ -322,6 +330,7 @@ const qualification = S.Struct({
   projectMcpSha256: Sha256Hex,
   originalPolicySha256: Sha256Hex,
   authIdentitySha256: Sha256Hex,
+  authTransitions: S.OptionFromOptionalKey(S.Array(authTransition).check(S.isMaxLength(3))),
   sessionContextSha256: Sha256Hex,
   inspectSha256: Sha256Hex,
   argvSha256: Sha256Hex,
@@ -609,9 +618,56 @@ const fileDigest = async (filename: string) => {
 };
 // @effect-diagnostics-next-line asyncFunction:off -- Metadata only: authentication contents are never opened or read by this adapter.
 const authIdentity = async (filename: string) => {
-  await privateEntry(filename, "file");
-  const value = await Fs.lstat(filename, { bigint: true });
-  return `${value.dev}:${value.ino}:${value.uid}:${value.mode}:${value.size}:${value.mtimeNs}:${value.ctimeNs}`;
+  const parent = filename.slice(0, filename.lastIndexOf("/"));
+  const directory = await Fs.open(parent, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+  try {
+    const initialParent = await directory.stat({ bigint: true });
+    const parentIdentity = `${initialParent.dev}:${initialParent.ino}:${initialParent.uid}:${initialParent.mode}`;
+    if (initialParent.uid !== BigInt(process.getuid?.() ?? -1) || (initialParent.mode & 0o022n) !== 0n)
+      throw new Error("auth-parent");
+    if ((await Fs.realpath(parent)) !== parent) throw new Error("auth-parent-link");
+    const anchored = `/proc/self/fd/${directory.fd}/auth.json`;
+    const descriptor = await Fs.open(anchored, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    try {
+      const value = await descriptor.stat({ bigint: true });
+      if (
+        !value.isFile() ||
+        value.uid !== initialParent.uid ||
+        (value.mode & 0o777n) !== 0o600n ||
+        value.size <= 0n ||
+        value.size > 1048576n ||
+        value.nlink !== 1n
+      )
+        throw new Error("auth-entry");
+      const entry = await Fs.lstat(anchored, { bigint: true });
+      const currentEntry = await Fs.lstat(filename, { bigint: true });
+      const finalParent = await Fs.lstat(parent, { bigint: true });
+      const identity = `${value.dev}:${value.ino}:${value.uid}:${value.mode}:${value.size}:${value.mtimeNs}:${value.ctimeNs}`;
+      if (
+        entry.isSymbolicLink() ||
+        currentEntry.isSymbolicLink() ||
+        finalParent.isSymbolicLink() ||
+        `${entry.dev}:${entry.ino}:${entry.uid}:${entry.mode}:${entry.size}:${entry.mtimeNs}:${entry.ctimeNs}` !==
+          identity ||
+        `${currentEntry.dev}:${currentEntry.ino}:${currentEntry.uid}:${currentEntry.mode}:${currentEntry.size}:${currentEntry.mtimeNs}:${currentEntry.ctimeNs}` !==
+          identity ||
+        `${finalParent.dev}:${finalParent.ino}:${finalParent.uid}:${finalParent.mode}` !== parentIdentity ||
+        (await Fs.realpath(filename)) !== filename
+      )
+        throw new Error("auth-entry-race");
+      const finalValue = await descriptor.stat({ bigint: true });
+      if (
+        `${finalValue.dev}:${finalValue.ino}:${finalValue.uid}:${finalValue.mode}:${finalValue.size}:${finalValue.mtimeNs}:${finalValue.ctimeNs}` !==
+        identity
+      )
+        throw new Error("auth-descriptor-drift");
+      return { identity, parentIdentity };
+    } finally {
+      await descriptor.close();
+    }
+  } finally {
+    await directory.close();
+  }
 };
 // @effect-diagnostics-next-line asyncFunction:off -- Existing required policy must be absent for this finite host qualification; appearance is a refusal, never a bypass.
 const requireAbsent = async (filename: string) => {
@@ -628,7 +684,10 @@ const originalConfig = S.Record(S.String, S.Unknown).pipe(
     description: "Transient parse solely to reject original security-policy tables; values are never retained.",
   })
 );
-const pinRuntime = Effect.fn("GrokCanary.pinRuntime")(function* (request: GrokNativeCanaryRequest) {
+const pinRuntime = Effect.fn("GrokCanary.pinRuntime")(function* (
+  request: GrokNativeCanaryRequest,
+  expectedAuth: O.Option<Sha256Hex> = O.some(request.nativeAuthIdentitySha256)
+) {
   const path = yield* Path.Path;
   const shared = path.dirname(request.nativeAuthFile);
   if (
@@ -712,9 +771,10 @@ const pinRuntime = Effect.fn("GrokCanary.pinRuntime")(function* (request: GrokNa
       throw new Error("pilot-mcp-required");
     return mcpBytes;
   });
-  const nativeAuthIdentitySha256 = yield* hashPublicTextSha256(yield* io(() => authIdentity(request.nativeAuthFile)));
+  const auth = yield* io(() => authIdentity(request.nativeAuthFile));
+  const nativeAuthIdentitySha256 = yield* hashPublicTextSha256(auth.identity);
   if (
-    nativeAuthIdentitySha256 !== request.nativeAuthIdentitySha256 ||
+    (O.isSome(expectedAuth) && nativeAuthIdentitySha256 !== expectedAuth.value) ||
     (yield* io(() => fileDigest(request.executable))) !== request.executableSha256
   )
     return yield* failed("admission");
@@ -755,6 +815,7 @@ const pinRuntime = Effect.fn("GrokCanary.pinRuntime")(function* (request: GrokNa
     projectMcpSha256: yield* hashPublicTextSha256(projectMcpBytes),
     originalPolicySha256: yield* hashPublicTextSha256(originalPolicy),
     authIdentitySha256: nativeAuthIdentitySha256,
+    authParentIdentitySha256: yield* hashPublicTextSha256(auth.parentIdentity),
     sessionContextSha256,
   };
 });
@@ -793,6 +854,7 @@ const encodePin = S.encodeEffect(
       projectMcpSha256: Sha256Hex,
       originalPolicySha256: Sha256Hex,
       authIdentitySha256: Sha256Hex,
+      authParentIdentitySha256: Sha256Hex,
       sessionContextSha256: Sha256Hex,
     })
   )
@@ -1062,6 +1124,20 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
       yield* checkpoint("diagnostic-000-attempt.json", "attempt", "not-run");
       const first = yield* pinRuntime(request);
       const firstPin = yield* encodePin(first);
+      let currentAuth = first.authIdentitySha256;
+      const transitions: Array<typeof authTransition.Type> = [];
+      const requalify = Effect.fnUntraced(function* (after: O.Option<(typeof authTransition.Type)["operation"]>) {
+        const next = yield* pinRuntime(request, O.isSome(after) ? O.none() : O.some(currentAuth));
+        if ((yield* encodePin({ ...next, authIdentitySha256: first.authIdentitySha256 })) !== firstPin)
+          return yield* failed("admission");
+        if (next.authIdentitySha256 !== currentAuth) {
+          if (O.isNone(after) || transitions.length >= 3) return yield* failed("admission");
+          transitions.push(
+            authTransition.make({ operation: after.value, before: currentAuth, after: next.authIdentitySha256 })
+          );
+          currentAuth = next.authIdentitySha256;
+        }
+      });
       operation = "inspect-1";
       category = "inventory-refused";
       const inspected = yield* inspectNative(request, measure, (code) => {
@@ -1073,7 +1149,7 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
         );
       });
       category = "post-policy-refused";
-      if ((yield* encodePin(yield* pinRuntime(request))) !== firstPin) return yield* failed("admission");
+      yield* requalify(O.some("inspect-1"));
       operation = "inspect-2";
       category = "inventory-refused";
       nativeExitStatus = O.none();
@@ -1088,10 +1164,11 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
         );
       });
       category = "post-policy-refused";
-      if (second !== inspected || (yield* encodePin(yield* pinRuntime(request))) !== firstPin)
-        return yield* failed("admission");
+      if (second !== inspected) return yield* failed("admission");
+      yield* requalify(O.some("inspect-2"));
       const isolation = qualification.make({
         ...first,
+        authTransitions: O.some(transitions.slice()),
         executableSha256: request.executableSha256,
         inspectSha256: inspected,
         argvSha256: yield* hashPublicTextSha256(yield* S.encodeEffect(S.fromJsonString(S.Array(S.String)))(args)),
@@ -1099,7 +1176,7 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
       const qualified = yield* S.encodeEffect(S.fromJsonString(qualification))(isolation);
       yield* io(() => durableCreate(request.attemptDirectory, "preflight.json", qualified));
       yield* postFact(prepared);
-      if ((yield* encodePin(yield* pinRuntime(request))) !== firstPin) return yield* failed("admission");
+      yield* requalify(O.none());
       operation = "main";
       category = "timeout-or-operational";
       dispatches = 1;
@@ -1107,6 +1184,7 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
       stdoutBytes = O.none();
       stderrBytes = O.none();
       yield* checkpoint("diagnostic-030-dispatch.json", "dispatch", "not-run");
+      yield* requalify(O.none());
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const completed = yield* Effect.scoped(
         Effect.gen(function* () {
@@ -1155,8 +1233,17 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
           const started = String(BigInt(start) * 1000000n);
           const ended = String(BigInt(end) * 1000000n);
           category = "post-policy-refused";
-          if ((yield* encodePin(yield* pinRuntime(request))) !== firstPin) return yield* failed("source");
-          const evidenceId = yield* sourceDigest(requestBinding, isolation, source, process, started, ended, elapsed);
+          yield* requalify(O.some("main"));
+          const finalIsolation = qualification.make({ ...isolation, authTransitions: O.some(transitions.slice()) });
+          const evidenceId = yield* sourceDigest(
+            requestBinding,
+            finalIsolation,
+            source,
+            process,
+            started,
+            ended,
+            elapsed
+          );
           const observation = yield* S.decodeEffect(ManagedControllerObservation)({
             version: "managed-controller-observation/v1",
             launchId: request.launchId,
@@ -1174,7 +1261,7 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
             requestBinding,
             observation,
             source,
-            qualification: isolation,
+            qualification: finalIsolation,
             process,
           });
         })

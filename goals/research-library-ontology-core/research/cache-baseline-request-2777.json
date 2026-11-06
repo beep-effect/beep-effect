@@ -1,0 +1,20 @@
+{
+  "previous": "30f4d7121afbc710049738bd11752c45d1647b802ed315be49b5ec47f0cad038",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (fix/coverage-ownercheckpoint-rows)",
+    "reason": "Re-record @beep/repo-cli and the root after #2777 added test inputs and root research sources on top of the #2771 record; inputs only, no qualification granted.",
+    "basis": {
+      "path": "goals/research-library-ontology-core/research/cache-baseline-review-2777.md",
+      "sha256": "cd648743325e3d862b80751e9918551102fb9fbee5ec017f175b005668379158"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/repo-cli"]
+}

@@ -9,6 +9,7 @@ import {
   LibraryQualification,
   LibraryQualifyOptions,
   LibrarySource,
+  LibrarySourceVersion,
   loadCatalog,
   qualifyLibrary,
   removedLibraryWebAdapter,
@@ -23,6 +24,7 @@ import {
   acquireLibrarySource,
   acquireLibraryYoutube,
   correctLibraryCaptures,
+  encodeLibraryCaptureJson,
   LibraryCaptureCorrection,
   libraryCaptionProvenance,
   libraryQualificationValid,
@@ -639,7 +641,7 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       const hashBytes8 = yield* hashBytes(before);
       expect(hashBytes8).toBe(receipt.before.sha256);
       expect(receipt.after.status).toBe("blocked");
-      const afterText = yield* S.encodeEffect(UnknownJson)(receipt.after);
+      const afterText = yield* encodeLibraryCaptureJson(receipt.after);
       const hashBytes9 = yield* hashBytes(new TextEncoder().encode(afterText));
       expect(hashBytes9).toBe(receipt.afterSha256);
       const repeated = yield* withCatalog(fixture.root, (catalog) => correctLibraryCaptures(fixture.root, catalog));
@@ -810,8 +812,8 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
         ...source,
         revision: "v1",
         versions: [
-          { revision: "v1", canonicalUrl: "https://example.com/v1", locators: [] },
-          { revision: "v2", canonicalUrl: "https://example.com/v2", locators: [] },
+          LibrarySourceVersion.make({ revision: "v1", canonicalUrl: "https://example.com/v1", locators: [] }),
+          LibrarySourceVersion.make({ revision: "v2", canonicalUrl: "https://example.com/v2", locators: [] }),
         ],
       });
       yield* withCatalog(fixture.root, (catalog) =>

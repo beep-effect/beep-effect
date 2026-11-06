@@ -1,0 +1,20 @@
+{
+  "previous": "d2c241f6bf6ace9a6daf778b1d347746f83c9f32e6d7bcdc2f7fb6a68c7fa2c0",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (feat/research-library-ontology-core)",
+    "reason": "Re-record @beep/repo-cli after it gains the ontology, semantic-web, shacl, oxigraph and n3 workspace dependencies; standard upstream build edges, no qualification granted.",
+    "basis": {
+      "path": "goals/research-library-ontology-core/research/cache-baseline-review.md",
+      "sha256": "cf7a5a6e7d7023871b129cb7cc874998a289a9883d3250e9df049dc8d3f0cf88"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["@beep/repo-cli"]
+}
