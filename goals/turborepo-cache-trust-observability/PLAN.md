@@ -1514,6 +1514,12 @@ producer execution, rollout windows and all nine whole-goal criteria stay open.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-cache-trust-observability`; add a `kind: checkpoint` file there, never edit this block._
 
+### Bound the source report comparison without raising observer limits, 2026-11-06
+
+Accepted-source run 42220475249 passed source inspection and returned a memory-limit refusal at observer line 62 on Python 3.9.25. The reported shared read_source allocation requests the full 4 MiB artifact cap; its initial/final phase is not explicitly recorded. See research/dependency-source-reread-refusal-2026-11-06.json. Read the initial declared size plus one growth-detection byte, then compare final source contents in 64 KiB chunks against retained bytes. Preserve exact equality, no-follow regular-file/size checks, truncation/growth refusal, immutable output and all existing 256 MiB/two-pass/time/artifact bounds. Add hosted memory-pressure and byte/length mutation regressions through the existing production-digest suite. No local tests ran; actual full-tree success and both comparable observations remain unproven. No cache qualification, producer approval, signing or production rollout is granted.
+
+Reverse: Restore the previous full-report reread; leave all existing memory and archive bounds unchanged.
+
 ### Locate the dependency observer memory refusal, 2026-11-06
 
 The released-source inspection passed on run 42209083425, but dependency diagnosis refused with memory-limit. Add only a fixed module family, line number and Python version to that refusal. Preserve private exception/frame data and the original minimal refusal if metadata allocation also fails. Keep the 256 MiB process cap and all archive/digest/publication bounds unchanged. Hosted CI must prove the new privacy regressions; two successful real diagnostics and every whole-goal acceptance criterion remain pending.
