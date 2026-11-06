@@ -25,6 +25,14 @@ agent command with `--resume` reused that step without executing docgen (recorde
 step duration zero). This establishes avoided step execution, not zero total CLI
 startup time. The subset receipt remains incomplete and cannot authorize ready.
 
+The sequential runner also shares each successful command's refreshed repository
+fingerprint with the following step. Real Git subprocess controls measured three
+commands using four fingerprints rather than six, and three resumed hits using
+one rather than three. Live commands, expectation replay and failed commands
+invalidate that boundary. The fresh Git index still captures changes hidden by
+assume-unchanged flags. These are work-count reductions; no wall-clock percentage
+is claimed for fingerprint sharing.
+
 ## Retry a publication without reinstalling the same head
 
 Ordinary preflight retries now consult the existing clean-install receipt. A valid
@@ -54,7 +62,9 @@ unmeasured token or API percentage saving is claimed.
 
 ## Validation and reversal
 
-The focused proof/final-check suite passed 45 tests. Full CLI package verification
+The original focused proof/final-check suite passed 45 tests. After the sequential
+fingerprint refinement, 51 focused tests passed across final-check, deduplication
+and tree-identity suites. The complete quality-task suite also passed 304 tests. Full CLI package verification
 passed (audit 186.8s, docgen 43.8s), including lint and test type checking after the
 new controls. Hosted proof remains pending; local retry timings are recorded above.
 

@@ -1,5 +1,20 @@
 # Friction receipts
 
+## P4 local skill metadata blocked by unrelated upstream fetch, 2026-11-06
+
+- Work: verify the local atom service guidance after changed-path review.
+- Evidence: the broad skills update check failed on an unrelated held import's
+  upstream HTTP 504 before completing its local checks. No retry or provenance
+  acceptance followed.
+- Impact: the broad check is failed, not passed; remote failure did not establish
+  local content drift. No external service impact was measured.
+- Workaround: use the existing local-entry hash service and canonical lock
+  serializer for the one changed local skill, preserve every other entry, then
+  run its scoped materialization check. Both installed targets match.
+- Prevention: a local-only update/check mode could avoid coupling local metadata
+  verification to unrelated floating imports. This delivery adds no new CLI mode
+  and leaves the held import and existing Skills owner unchanged.
+
 ## 2026-09-24: scheduler status example omits a required flag
 
 While inspecting proof admission, the Yeet skill's scheduler status example
