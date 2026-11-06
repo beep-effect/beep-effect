@@ -95,6 +95,60 @@ it.layer(platform, { timeout: "20 seconds" })("goals doctor git advisories over 
     })
   );
 
+  it.effect("reads scoped typed history and bounded subjects without reporting a touched packet stale", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* writeActivePacket();
+      let observations = A.empty<string>();
+      const output = yield* doctorOutput({
+        isShallow: (cwd) => {
+          expect(cwd).toBe(".");
+          observations = A.append(observations, "shallow");
+          return Effect.succeed(false);
+        },
+        log: (cwd, options) => {
+          expect(cwd).toBe(".");
+          if (options?.omitPaths === true) {
+            expect(options).toEqual({ limit: 4000, omitPaths: true });
+            observations = A.append(observations, "subjects");
+            return Effect.succeed([subject("chore: unrelated")]);
+          }
+          expect(options).toEqual({ since: "21.days", paths: ["goals/"] });
+          observations = A.append(observations, "paths");
+          return Effect.succeed([
+            CommitLogEntry.make({ ...subject("chore: touch packet"), paths: ["goals/quiet/README.md"] }),
+          ]);
+        },
+      });
+      expect(observations).toEqual(["shallow", "paths", "subjects"]);
+      expect(output).not.toContain("quiet [stale-active]");
+      expect(output).not.toContain("advisories skipped");
+    })
+  );
+
+  it.effect("a newline inside one Git path cannot mark a different packet touched", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* writeActivePacket();
+      const output = yield* doctorOutput({
+        isShallow: () => Effect.succeed(false),
+        log: (_cwd, options) =>
+          Effect.succeed(
+            options?.omitPaths === true
+              ? []
+              : [
+                  CommitLogEntry.make({
+                    ...subject("chore: touch another packet"),
+                    paths: ["goals/other/file\ngoals/quiet/README.md"],
+                  }),
+                ]
+          ),
+      });
+      expect(output).toContain("quiet [stale-active]");
+      expect(output).not.toContain("advisories skipped");
+    })
+  );
+
   it.effect("an oversized staleness window skips its advisories instead of reading a partial window", () =>
     Effect.gen(function* () {
       yield* temporaryWorkingDirectory;
