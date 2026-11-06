@@ -15,5 +15,6 @@ in that observed package, bounded to 128 KiB of encoded rows inside the existing
 4 MiB combined report cap and existing two passes. Never retain path strings or
 payloads. The canonical stream digest still hashes every original byte. Add
 hosted redaction, same-size mutation and refusal-bound regressions, and declare
-both consumed Python files as CLI test inputs. This changes neither production
+both consumed Python files as inputs to the CLI test, test:property and coverage
+tasks while preserving inherited inputs and disabled coverage caching. This changes neither production
 trust nor qualification/signing authority.

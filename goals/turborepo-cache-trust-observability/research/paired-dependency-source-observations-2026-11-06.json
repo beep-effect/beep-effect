@@ -124,5 +124,20 @@
   "qualificationGrants": 0,
   "signingOrCredentialsActivated": false,
   "taskBodiesExecuted": false,
-  "wholeGoalAcceptance": "Both goals remain active; no acceptance criterion or representative window is completed by this report."
+  "wholeGoalAcceptance": "Both goals remain active; no acceptance criterion or representative window is completed by this report.",
+  "testInputRepair": {
+    "consumerTasks": [
+      "@beep/repo-cli#test",
+      "@beep/repo-cli#test:property",
+      "@beep/repo-cli#coverage"
+    ],
+    "pythonFiles": [
+      "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
+      "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py"
+    ],
+    "nativeMetadataIncludesBothFiles": true,
+    "nativeMetadataRetainsPackageManifestAndIntegrationTest": true,
+    "coverageCacheEnabled": false,
+    "verificationScope": "Pinned native metadata-only dry-run; no task bodies or local tests executed."
+  }
 }

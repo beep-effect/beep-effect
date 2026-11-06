@@ -2516,6 +2516,6 @@ files, so they do not justify a bytecode cleanup or normalization policy. A
 bounded file-hash/kind summary, with opaque filename hashes and no payloads,
 would have resolved that uncertainty in the same two passes. Both reports are
 privately retained; their sanitized identities and hashes are in the paired
-observation report. While adding this evidence, source review found the CLI
-test's two consumed Python files absent from its declared Turbo inputs; adding
-them prevents Python-only edits from silently reusing the old test result.
+observation report. While adding this evidence, source review found the two consumed Python files absent from the CLI test, test:property and coverage
+inputs. Adding them preserves inherited inputs and prevents Python-only edits
+from being missed; coverage caching remains disabled.

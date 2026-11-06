@@ -1543,6 +1543,6 @@ real identities, report hashes and non-comparability. Bounded opaque per-file
 hashes for this diagnostic target must identify the differing bytes before any
 installation or digest-policy change. Python bytecode remains a hypothesis.
 No task qualification, producer grant, signing activation or whole-goal/window
-acceptance follows. The CLI test now explicitly declares both consumed Python
-files as inputs; a native metadata-only dry-run includes them without executing
+acceptance follows. The CLI test, test:property and coverage tasks explicitly declare both consumed
+Python files as inputs; a native metadata-only dry-run includes them without executing
 a task body. Hosted regression proof and primary acceptance remain required.
