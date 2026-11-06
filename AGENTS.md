@@ -261,15 +261,10 @@ needed only for the escalation list below.
   receipt; do not wait for hosted heavy CI, which doubles as the review
   window. A gate parked by constrained compute is skipped only with
   `--skip <gate>=<reason>`, named in the PR body.
-- Heavy admitted work runs in `agent-run-<ticket>.scope` under
-  `agent-runs.slice` when the user manager allows it; `scheduler reap --apply`
-  stops scopes backed by dead leases. A loaded scope without a dead lease is
-  left alone because it may belong to an admission racing with the reaper.
-  Without the installed slice file, systemd uses a transient slice with defaults.
-- Detached proofs run in `beep-proof-<jobId>.service`: use `--detach` for a proof
-  expected to outlive the repair loop, then `yeet job wait <jobId>`; the systemd finalizer journals dead runners
-  (`signal`, `oom-killed`, `timeout`, `cancelled`, `unrecorded-failure`);
-  start failures have a terminal job record and inbox row, without an attempt.
+- Heavy admitted work and detached proofs run under systemd
+  (`agent-run-<ticket>.scope`, `beep-proof-<jobId>.service`): use `--detach`
+  plus `yeet job wait <jobId>` for a proof that may outlive the repair loop.
+  Mechanics: yeet skill, `references/detached-jobs.md`.
 - `main` is PR-only. Do not commit saving/wip/tmp checkpoints to shared
   branches; publish from a feature branch through Yeet and let hosted required
   checks gate the merge. GitHub merge/squash commit messages are also
@@ -280,11 +275,8 @@ needed only for the escalation list below.
 - Attribute verification failures before repairing — introduced / inherited /
   unrelated / environment-only; attribution decides fix vs rebase vs report,
   not blind rerun.
-- Read a completed red job's log at once with
-  `gh api --allow-escape-sequences repos/<o>/<r>/actions/jobs/<id>/logs`;
-  never wait for the run to finish. `gh run view --log` refuses mid-run, and
-  plain `gh api` prints nothing on ANSI output. Commands: yeet skill, "Read a
-  failed job's log without waiting for the run".
+- Read a completed red job's log at once through the REST logs endpoint;
+  never wait for the run to finish. Commands: yeet skill, `references/gh-rest.md`.
 - “Mergeable” describes the complete PR state, not GitHub's structural
   `MERGEABLE` field alone. It requires all of the following:
   - no outstanding review thread — one that is unresolved, or one the author
@@ -314,37 +306,17 @@ needed only for the escalation list below.
   included, when the thread and window conditions hold and it has no base
   conflict; record each red with its attribution. Every required red that
   reaches `main` gets a named owner and a fix PR the same working day.
-- PR closeout: flip the PR ready at content-final, then, from the checkout you
-  are working in, run
+- PR closeout: flip the PR ready at content-final, then run
   `bun run beep yeet monitor --until-ready --detach` and block on
-  `bun run beep yeet job wait <jobId>` (attached `--until-ready` when the user
-  manager is unreachable; re-submit after a reboot) until it exits 0 with
-  `merge-ready: yes`. Required reds and base conflicts do not end the
-  monitor: it writes them as inbox rows and keeps polling, so pass
-  `--job-max-runtime "<duration>"` when it may be abandoned. Exit 2 is a wave
-  (new P0/P1 rows on the PR): act on the rows, push any fix, and re-run
-  `job wait` on the same job; the attached fallback also exits 2, so re-run it
-  after the push. Any other non-zero exit ended the job: read its summary,
-  fix, and re-submit. A code PR must carry the `ready-for-heavy` label before
-  the `Heavy / *` matrix runs (docs-only PRs skip it); `yeet publish` applies
-  it when it creates the draft PR, so add it by hand only for a PR that
-  already existed or whose label edit failed — `--until-ready` prints the
-  `gh pr edit` command while it holds.
-  Unanswered review threads are a hard merge gate — answer every one and resolve
-  every actionable one via `bun run beep yeet reply`
-  (drafts in `.beep/yeet/reply-drafts.json`); never ask the operator to relay
-  them.
-- Post-merge closeout is the agent's job. Once the PR is MERGED, retire the lane
-  and sweep its clone from inside the lane as the last command of the session:
-  `CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"`.
-  First read [lane retirement](standards/git-worktrees.md) and the
-  [closeout runbook](docs/runbooks/systemd-timers.md#retiring-the-lane-that-ran-the-closeout)
-  for archive fences, process holders, stale-clone fallback and `--lane` handling.
-  The command must preserve other live checkouts; never bypass a holder refusal.
-  If the merged change touched a systemd unit renderer, refresh the affected
-  research/refs timers from the swept clone using the runbook's `--refresh`
-  forms. Installed units are snapshots; do not leave them stale or hand this
-  authorized closeout work back to the operator.
+  `bun run beep yeet job wait <jobId>` until it prints `merge-ready: yes`;
+  exit 2 is a wave of inbox rows to act on. Unanswered review threads are a
+  hard merge gate: answer and resolve every actionable one via
+  `bun run beep yeet reply`; never ask the operator to relay them.
+  Mechanics: yeet skill, `references/monitor-and-inbox.md`.
+- Post-merge closeout is the agent's job: once the PR is MERGED, retire the
+  lane from inside it with `bun run beep yeet sweep --retire`. Preserve other
+  live checkouts, never bypass a holder refusal, and refresh affected systemd
+  timers yourself. Mechanics: yeet skill, `references/sweep-retire.md`.
 - Package handoff: any agent or sub-agent that edits a workspace package runs
   `bun run beep quality package-verify <@beep/package>` before handing the work
   back. Use `--quick` only when the touched surface justifies the lint+check
@@ -395,12 +367,6 @@ If you touch this, load or run this first. Do not hand-author around it.
   lane needs must be committed under `.claude/` or `.codex/`; user-level
   settings, `enabledPlugins`, and user MCP never reach the VM.
 
-## Browser QA
-
-- Gesture-bearing UI milestones run the `browser-qa-loop` skill with recorded
-  evidence via `bun run beep qa` (record → extract → judge); judge inventories
-  are schema-validated (`qa-inventory/v1`).
-
 ## Docs & Knowledge
 
 - `docs/` is tracked authored documentation (`docs/README.md` has the layout);
@@ -429,12 +395,10 @@ If you touch this, load or run this first. Do not hand-author around it.
 
 ## Agent Memory
 
-- File memory is the memory layer: each agent's own durable files
-  (`CLAUDE.md` / `MEMORY.md` auto-memory) plus repo docs. There is no shared
-  external memory service; basic-memory and codegraph were removed on
-  2026-08-29 (`standards/memory-architecture/04-decision-log.md`), and the
-  graft code graph was retired on 2026-10-28 (same log). Do not reintroduce a
-  memory service or wire another code index without a new decision there.
+- File memory is the memory layer: each agent's own durable files plus repo
+  docs. There is no shared external memory service; do not reintroduce one or
+  wire another code index without a new decision in
+  `standards/memory-architecture/04-decision-log.md`.
 - If context is missing, fall back to repo-local docs, code search, and this
   file.
 
