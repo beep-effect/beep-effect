@@ -252,8 +252,8 @@
       "site": "proofState.lockPath",
       "scenario": "an origin URL",
       "verdict": "same",
-      "old": "{\"ok\":\"/home/elpresidank/.beep/runtime/beep-yeet-proof-locks-2a2145724d1c-uid-1000/aa3cdfc31d63.lock\"}",
-      "new": "{\"ok\":\"/home/elpresidank/.beep/runtime/beep-yeet-proof-locks-2a2145724d1c-uid-1000/aa3cdfc31d63.lock\"}"
+      "old": "{\"ok\":\"~/.beep/runtime/beep-yeet-proof-locks-2a2145724d1c-uid-1000/aa3cdfc31d63.lock\"}",
+      "new": "{\"ok\":\"~/.beep/runtime/beep-yeet-proof-locks-2a2145724d1c-uid-1000/aa3cdfc31d63.lock\"}"
     },
     {
       "site": "proofState.lockPath",
