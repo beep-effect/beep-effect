@@ -1,4 +1,5 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   HoldLedger,
@@ -124,7 +125,7 @@ const layerFor = (files: Readonly<Record<string, string>>, spawner: ScriptedSpaw
   Layer.mergeAll(
     Layer.effect(HoldLedger, makeHoldLedger(root)),
     Layer.effect(HoldProbe, makeHoldProbe(scratchRoot))
-  ).pipe(Layer.provideMerge(platformFor(files, spawner)));
+  ).pipe(Layer.provideMerge(Layer.provideMerge(Git.layer, platformFor(files, spawner))));
 
 const probeInput = (holdId: string, dryRun: boolean) => HoldsProbeInput.make({ holdId, dryRun, commitSha });
 

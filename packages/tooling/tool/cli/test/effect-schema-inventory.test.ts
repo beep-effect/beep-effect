@@ -1,5 +1,6 @@
 import * as NodeURL from "node:url";
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
+import { Git } from "@beep/git/Git";
 import {
   checkEffectSchemaInventoryPrompts,
   compactEffectSchemaInventoryPreview,
@@ -256,815 +257,828 @@ export {
 }
 `;
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 seconds" })(
-  "effect-schema-inventory",
-  (it) => {
-    it.effect(
-      "reads snapshot pins and rejects versions without release provenance",
-      Effect.fnUntraced(function* () {
-        const parsedEffectSchemaInventoryPin = yield* parseEffectSchemaInventoryPin(snapshotManifest(PIN));
-        strictEqual(parsedEffectSchemaInventoryPin, PIN);
-        const parsedEffectSchemaInventoryPin1 = yield* parseEffectSchemaInventoryPin(
-          `{"workspaces":{"catalog":{"effect":"https://pkg.pr.new/Effect-TS/effect/effect@${PIN}"}}}`
-        );
-        strictEqual(parsedEffectSchemaInventoryPin1, PIN);
-        const semver = yield* Effect.flip(parseEffectSchemaInventoryPin('{"catalog":{"effect":"4.0.0-rc.118"}}'));
-        strictEqual(semver._tag, "EffectSchemaInventoryCatalogPinError");
-        strictEqual(semver.specifier, "4.0.0-rc.118");
-        const abbreviated = yield* Effect.flip(parseEffectSchemaInventoryPin(snapshotManifest("df77fff939")));
-        strictEqual(abbreviated._tag, "EffectSchemaInventoryCatalogPinError");
-        const missing = yield* Effect.flip(parseEffectSchemaInventoryPin('{"workspaces":["packages/*"]}'));
-        strictEqual(missing.specifier, "<missing>");
-        const broken = yield* Effect.flip(parseEffectSchemaInventoryPin("{"));
-        strictEqual(broken._tag, "EffectSchemaInventoryCatalogPinError");
-      })
-    );
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Layer.provide(NodeServices.layer))), {
+  timeout: "60 seconds",
+})("effect-schema-inventory", (it) => {
+  it.effect(
+    "reads snapshot pins and rejects versions without release provenance",
+    Effect.fnUntraced(function* () {
+      const snapshotPin = yield* parseEffectSchemaInventoryPin(snapshotManifest(PIN));
+      strictEqual(snapshotPin, PIN);
+      const workspacePin = yield* parseEffectSchemaInventoryPin(
+        `{"workspaces":{"catalog":{"effect":"https://pkg.pr.new/Effect-TS/effect/effect@${PIN}"}}}`
+      );
+      strictEqual(workspacePin, PIN);
+      const semver = yield* Effect.flip(parseEffectSchemaInventoryPin('{"catalog":{"effect":"4.0.0-rc.118"}}'));
+      strictEqual(semver._tag, "EffectSchemaInventoryCatalogPinError");
+      strictEqual(semver.specifier, "4.0.0-rc.118");
+      const abbreviated = yield* Effect.flip(parseEffectSchemaInventoryPin(snapshotManifest("df77fff939")));
+      strictEqual(abbreviated._tag, "EffectSchemaInventoryCatalogPinError");
+      const missing = yield* Effect.flip(parseEffectSchemaInventoryPin('{"workspaces":["packages/*"]}'));
+      strictEqual(missing.specifier, "<missing>");
+      const broken = yield* Effect.flip(parseEffectSchemaInventoryPin("{"));
+      strictEqual(broken._tag, "EffectSchemaInventoryCatalogPinError");
+    })
+  );
 
-    it.effect(
-      "reads stable release provenance and rejects stale versions or abbreviated commits",
-      Effect.fnUntraced(function* () {
-        const parsedEffectSchemaInventoryPin2 = yield* parseEffectSchemaInventoryPin(
-          `{"catalog":{"effect":"4.0.1"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`
-        );
-        strictEqual(parsedEffectSchemaInventoryPin2, PIN);
-        const parsedEffectSchemaInventoryPin3 = yield* parseEffectSchemaInventoryPin(
-          `{"workspaces":{"catalog":{"effect":"4.0.1"}},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`
-        );
-        strictEqual(parsedEffectSchemaInventoryPin3, PIN);
-        for (const manifest of [
-          `{"catalog":{"effect":"4.0.2"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`,
-          `{"catalog":{"effect":"^4.0.1"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`,
-          '{"catalog":{"effect":"4.0.1"},"config":{"effectSource":{"version":"4.0.1","commit":"460272d304"}}}',
-          `{"catalog":{"effect":"4.0.1-rc.1"},"config":{"effectSource":{"version":"4.0.1-rc.1","commit":"${PIN}"}}}`,
-        ]) {
-          const failure = yield* Effect.flip(parseEffectSchemaInventoryPin(manifest));
-          strictEqual(failure._tag, "EffectSchemaInventoryCatalogPinError");
-        }
-      })
-    );
+  it.effect(
+    "reads stable release provenance and rejects stale versions or abbreviated commits",
+    Effect.fnUntraced(function* () {
+      const stablePin = yield* parseEffectSchemaInventoryPin(
+        `{"catalog":{"effect":"4.0.1"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`
+      );
+      strictEqual(stablePin, PIN);
+      const workspaceStablePin = yield* parseEffectSchemaInventoryPin(
+        `{"workspaces":{"catalog":{"effect":"4.0.1"}},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`
+      );
+      strictEqual(workspaceStablePin, PIN);
+      for (const manifest of [
+        `{"catalog":{"effect":"4.0.2"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`,
+        `{"catalog":{"effect":"^4.0.1"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`,
+        '{"catalog":{"effect":"4.0.1"},"config":{"effectSource":{"version":"4.0.1","commit":"460272d304"}}}',
+        `{"catalog":{"effect":"4.0.1-rc.1"},"config":{"effectSource":{"version":"4.0.1-rc.1","commit":"${PIN}"}}}`,
+      ]) {
+        const failure = yield* Effect.flip(parseEffectSchemaInventoryPin(manifest));
+        strictEqual(failure._tag, "EffectSchemaInventoryCatalogPinError");
+      }
+    })
+  );
 
-    it.effect(
-      "digests the concatenated JSONL bytes",
-      Effect.fnUntraced(function* () {
-        const digestEffectSchemaInventoryJsonl4 = yield* digestEffectSchemaInventoryJsonl([]);
-        strictEqual(
-          digestEffectSchemaInventoryJsonl4,
-          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        );
-        const digestEffectSchemaInventoryJsonl5 = yield* digestEffectSchemaInventoryJsonl(["a\n", "", "b\n"]);
-        const digestEffectSchemaInventoryJsonl26 = yield* digestEffectSchemaInventoryJsonl(["a\nb\n"]);
-        strictEqual(digestEffectSchemaInventoryJsonl5, digestEffectSchemaInventoryJsonl26);
-      })
-    );
+  it.effect(
+    "digests the concatenated JSONL bytes",
+    Effect.fnUntraced(function* () {
+      const observed1 = yield* digestEffectSchemaInventoryJsonl([]);
+      strictEqual(observed1, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+      const observed2 = yield* digestEffectSchemaInventoryJsonl(["a\n", "", "b\n"]);
+      const expected2 = yield* digestEffectSchemaInventoryJsonl(["a\nb\n"]);
+      strictEqual(observed2, expected2);
+    })
+  );
 
-    it("collapses whitespace and truncates previews with an ellipsis", () => {
-      strictEqual(compactEffectSchemaInventoryPreview("  a\n\t b  ", 300), "a b");
-      strictEqual(compactEffectSchemaInventoryPreview("abcdef", 4), "abc…");
-      strictEqual(compactEffectSchemaInventoryPreview(4)("abcd"), "abcd");
-    });
+  it("collapses whitespace and truncates previews with an ellipsis", () => {
+    strictEqual(compactEffectSchemaInventoryPreview("  a\n\t b  ", 300), "a b");
+    strictEqual(compactEffectSchemaInventoryPreview("abcdef", 4), "abc…");
+    strictEqual(compactEffectSchemaInventoryPreview(4)("abcd"), "abcd");
+  });
 
-    it.effect(
-      "extracts declaration facets with the prototype's rules",
-      Effect.fnUntraced(function* () {
-        const extraction = yield* extractDemo;
-        strictEqual(extraction.bareStarDeclarationsOmitted, 1);
-        const rows = A.flatMap(extraction.modules, (entry) => entry.rows);
-        const demoRows = O.getOrThrow(A.head(extraction.modules)).rows;
-        deepStrictEqual(
-          A.map(demoRows, (row) => `${row.line}:${row.symbol}:${row.kind}`),
-          [
-            "13:a:function",
-            "23:I:interface",
-            "24:I.p:property",
-            "25:I.m:method",
-            "26:I.<call>:call",
-            "28:C:class",
-            "30:C.shown:property",
-            "31:C.<new>:constructor",
-            "33:d:const",
-            "33:f:const",
-            "37:aliased:const",
-            "39:N:namespace",
-            "40:NS:namespace",
-            "41:NS.T:type",
-            "42:NS.U:interface",
-            "46:x:re-export",
-          ]
-        );
-        const a = O.getOrThrow(rowOf(rows, "a", "function"));
-        strictEqual(a.overloads, 2);
-        assertTrue(a.hasExample);
-        deepStrictEqual(a.category, O.some("formatting"));
-        deepStrictEqual(a.since, O.some("1.0.0"));
-        strictEqual(a.summary, "Formats a value.");
-        strictEqual(a.signature, "export function a(x: string): string");
-        assertTrue(O.getOrThrow(rowOf(rows, "I", "interface")).internal);
-        strictEqual(O.getOrThrow(rowOf(rows, "I.<call>", "call")).overloads, 1);
-        strictEqual(O.getOrThrow(rowOf(rows, "d", "const")).signature, "const d: <inferred; see source>");
-        strictEqual(O.getOrThrow(rowOf(rows, "aliased", "const")).summary, "Aliased local.");
-        strictEqual(O.getOrThrow(rowOf(rows, "N", "namespace")).signature, 'export * as N from "./Other.ts"');
-        assertFalse(O.getOrThrow(rowOf(rows, "other", "const")).importable);
-      })
-    );
+  it.effect(
+    "extracts declaration facets with the prototype's rules",
+    Effect.fnUntraced(function* () {
+      const extraction = yield* extractDemo;
+      strictEqual(extraction.bareStarDeclarationsOmitted, 1);
+      const rows = A.flatMap(extraction.modules, (entry) => entry.rows);
+      const demoRows = O.getOrThrow(A.head(extraction.modules)).rows;
+      deepStrictEqual(
+        A.map(demoRows, (row) => `${row.line}:${row.symbol}:${row.kind}`),
+        [
+          "13:a:function",
+          "23:I:interface",
+          "24:I.p:property",
+          "25:I.m:method",
+          "26:I.<call>:call",
+          "28:C:class",
+          "30:C.shown:property",
+          "31:C.<new>:constructor",
+          "33:d:const",
+          "33:f:const",
+          "37:aliased:const",
+          "39:N:namespace",
+          "40:NS:namespace",
+          "41:NS.T:type",
+          "42:NS.U:interface",
+          "46:x:re-export",
+        ]
+      );
+      const a = O.getOrThrow(rowOf(rows, "a", "function"));
+      strictEqual(a.overloads, 2);
+      assertTrue(a.hasExample);
+      deepStrictEqual(a.category, O.some("formatting"));
+      deepStrictEqual(a.since, O.some("1.0.0"));
+      strictEqual(a.summary, "Formats a value.");
+      strictEqual(a.signature, "export function a(x: string): string");
+      assertTrue(O.getOrThrow(rowOf(rows, "I", "interface")).internal);
+      strictEqual(O.getOrThrow(rowOf(rows, "I.<call>", "call")).overloads, 1);
+      strictEqual(O.getOrThrow(rowOf(rows, "d", "const")).signature, "const d: <inferred; see source>");
+      strictEqual(O.getOrThrow(rowOf(rows, "aliased", "const")).summary, "Aliased local.");
+      strictEqual(O.getOrThrow(rowOf(rows, "N", "namespace")).signature, 'export * as N from "./Other.ts"');
+      assertFalse(O.getOrThrow(rowOf(rows, "other", "const")).importable);
+    })
+  );
 
-    it.effect(
-      "fails when a namespace re-export targets a module outside the list, or a source does not parse",
-      Effect.fnUntraced(function* () {
-        const outside = yield* Effect.flip(
-          extractEffectSchemaInventory(PIN, [[demoModule, 'export * as Z from "./Missing.ts"\n']])
-        );
-        strictEqual(outside._tag, "EffectSchemaInventoryError");
-        assertInclude(outside.message, "packages/effect/src/Missing.ts");
-        const unparsable = yield* Effect.flip(extractEffectSchemaInventory(PIN, [[demoModule, "export const = ;\n"]]));
-        assertInclude(unparsable.message, "Parse errors");
-      })
-    );
+  it.effect(
+    "fails when a namespace re-export targets a module outside the list, or a source does not parse",
+    Effect.fnUntraced(function* () {
+      const outside = yield* Effect.flip(
+        extractEffectSchemaInventory(PIN, [[demoModule, 'export * as Z from "./Missing.ts"\n']])
+      );
+      strictEqual(outside._tag, "EffectSchemaInventoryError");
+      assertInclude(outside.message, "packages/effect/src/Missing.ts");
+      const unparsable = yield* Effect.flip(extractEffectSchemaInventory(PIN, [[demoModule, "export const = ;\n"]]));
+      assertInclude(unparsable.message, "Parse errors");
+    })
+  );
 
-    it.effect(
-      "renders JSONL that decodes back and reports missing, stale, and unexpected files",
-      Effect.fnUntraced(function* () {
-        const extraction = yield* extractDemo;
-        const rows = O.getOrThrow(A.head(extraction.modules)).rows;
-        const body = yield* renderEffectSchemaInventoryJsonl(rows);
-        assertTrue(Str.endsWith("\n")(body));
-        strictEqual(A.filter(Str.split(body, "\n"), Str.isNonEmpty).length, rows.length);
-        const renderEffectSchemaInventoryJsonl6 = yield* renderEffectSchemaInventoryJsonl([]);
-        strictEqual(renderEffectSchemaInventoryJsonl6, "");
-        const drift = diffEffectSchemaInventoryFiles(
-          [
-            EffectSchemaInventoryFile.make({ name: "effect-Demo.jsonl", content: "same\nexpected line\n" }),
-            EffectSchemaInventoryFile.make({ name: "INDEX.md", content: "# index\n" }),
-          ],
-          HashMap.make(["effect-Demo.jsonl", "same\nexpected lime\n"], ["effect-Old.jsonl", "{}\n"])
-        );
-        deepStrictEqual(
-          A.map(drift, (entry) => entry._tag),
-          ["stale", "missing", "unexpected"]
-        );
-        const stale = O.getOrThrow(A.head(drift));
-        assertTrue(stale._tag === "stale");
-        strictEqual(stale.line, 2);
-        strictEqual(stale.column, 12);
-        deepStrictEqual(diffEffectSchemaInventoryFiles([], HashMap.empty<string, string>()), []);
-      })
-    );
+  it.effect(
+    "renders JSONL that decodes back and reports missing, stale, and unexpected files",
+    Effect.fnUntraced(function* () {
+      const extraction = yield* extractDemo;
+      const rows = O.getOrThrow(A.head(extraction.modules)).rows;
+      const body = yield* renderEffectSchemaInventoryJsonl(rows);
+      assertTrue(Str.endsWith("\n")(body));
+      strictEqual(A.filter(Str.split(body, "\n"), Str.isNonEmpty).length, rows.length);
+      const observed3 = yield* renderEffectSchemaInventoryJsonl([]);
+      strictEqual(observed3, "");
+      const drift = diffEffectSchemaInventoryFiles(
+        [
+          EffectSchemaInventoryFile.make({ name: "effect-Demo.jsonl", content: "same\nexpected line\n" }),
+          EffectSchemaInventoryFile.make({ name: "INDEX.md", content: "# index\n" }),
+        ],
+        HashMap.make(["effect-Demo.jsonl", "same\nexpected lime\n"], ["effect-Old.jsonl", "{}\n"])
+      );
+      deepStrictEqual(
+        A.map(drift, (entry) => entry._tag),
+        ["stale", "missing", "unexpected"]
+      );
+      const stale = O.getOrThrow(A.head(drift));
+      assertTrue(stale._tag === "stale");
+      strictEqual(stale.line, 2);
+      strictEqual(stale.column, 12);
+      deepStrictEqual(diffEffectSchemaInventoryFiles([], HashMap.empty<string, string>()), []);
+    })
+  );
 
-    it.effect(
-      "rejects an index without its pin, parser, and digest lines",
-      Effect.fnUntraced(function* () {
-        const failure = yield* Effect.flip(readEffectSchemaInventoryIndexHeader("# Schema inventory index\n"));
-        strictEqual(failure._tag, "EffectSchemaInventoryError");
-      })
-    );
+  it.effect(
+    "rejects an index without its pin, parser, and digest lines",
+    Effect.fnUntraced(function* () {
+      const failure = yield* Effect.flip(readEffectSchemaInventoryIndexHeader("# Schema inventory index\n"));
+      strictEqual(failure._tag, "EffectSchemaInventoryError");
+    })
+  );
 
-    it.effect(
-      "maps flags to one request",
-      Effect.fnUntraced(function* () {
-        const flags = { write: false, check: false, prompt: O.none<string>(), out: O.none<string>() };
-        strictEqual((yield* effectSchemaInventoryRequestFromFlags(flags))._tag, "check");
-        strictEqual((yield* effectSchemaInventoryRequestFromFlags({ ...flags, write: true }))._tag, "write");
-        const prompt = yield* effectSchemaInventoryRequestFromFlags({ ...flags, prompt: O.some("effect/SchemaIssue") });
-        assertTrue(EffectSchemaInventoryRequest.guards.prompt(prompt));
-        const both = yield* Effect.flip(effectSchemaInventoryRequestFromFlags({ ...flags, write: true, check: true }));
-        assertInclude(both.message, "Choose one");
-        const strayOut = yield* Effect.flip(effectSchemaInventoryRequestFromFlags({ ...flags, out: O.some("x.md") }));
-        assertInclude(strayOut.message, "--out");
-      })
-    );
+  it.effect(
+    "maps flags to one request",
+    Effect.fnUntraced(function* () {
+      const flags = { write: false, check: false, prompt: O.none<string>(), out: O.none<string>() };
+      strictEqual((yield* effectSchemaInventoryRequestFromFlags(flags))._tag, "check");
+      strictEqual((yield* effectSchemaInventoryRequestFromFlags({ ...flags, write: true }))._tag, "write");
+      const prompt = yield* effectSchemaInventoryRequestFromFlags({ ...flags, prompt: O.some("effect/SchemaIssue") });
+      assertTrue(EffectSchemaInventoryRequest.guards.prompt(prompt));
+      const both = yield* Effect.flip(effectSchemaInventoryRequestFromFlags({ ...flags, write: true, check: true }));
+      assertInclude(both.message, "Choose one");
+      const strayOut = yield* Effect.flip(effectSchemaInventoryRequestFromFlags({ ...flags, out: O.some("x.md") }));
+      assertInclude(strayOut.message, "--out");
+    })
+  );
 
-    it.effect(
-      "fails loud before reading any source when the reference is missing or lacks the pin",
-      Effect.fnUntraced(function* () {
-        const reads = yield* Ref.make(0);
-        const missing = yield* Effect.flip(
-          generateEffectSchemaInventory().pipe(
-            Effect.provideService(
-              EffectSchemaInventorySource,
-              fakeSource(
-                {
-                  verifyPin: Effect.fn("EffectSchemaInventoryTest.missingReference")(() =>
-                    Effect.fail(EffectSchemaInventoryReferenceMissingError.new("/repo/.repos/effect", "missing"))
-                  ),
-                },
-                reads
-              )
+  it.effect(
+    "fails loud before reading any source when the reference is missing or lacks the pin",
+    Effect.fnUntraced(function* () {
+      const reads = yield* Ref.make(0);
+      const missing = yield* Effect.flip(
+        generateEffectSchemaInventory().pipe(
+          Effect.provideService(
+            EffectSchemaInventorySource,
+            fakeSource(
+              {
+                verifyPin: Effect.fn("EffectSchemaInventoryTest.missingReference")(() =>
+                  Effect.fail(EffectSchemaInventoryReferenceMissingError.new("/repo/.repos/effect", "missing"))
+                ),
+              },
+              reads
             )
           )
-        );
-        strictEqual(missing._tag, "EffectSchemaInventoryReferenceMissingError");
-        const absent = yield* Effect.flip(
-          generateEffectSchemaInventory().pipe(
-            Effect.provideService(
-              EffectSchemaInventorySource,
-              fakeSource(
-                {
-                  verifyPin: Effect.fn("EffectSchemaInventoryTest.absentPin")((pin) =>
-                    Effect.fail(EffectSchemaInventoryPinAbsentError.new(pin, "/repo/.repos/effect", "not fetched"))
-                  ),
-                },
-                reads
-              )
+        )
+      );
+      strictEqual(missing._tag, "EffectSchemaInventoryReferenceMissingError");
+      const absent = yield* Effect.flip(
+        generateEffectSchemaInventory().pipe(
+          Effect.provideService(
+            EffectSchemaInventorySource,
+            fakeSource(
+              {
+                verifyPin: Effect.fn("EffectSchemaInventoryTest.absentPin")((pin) =>
+                  Effect.fail(EffectSchemaInventoryPinAbsentError.new(pin, "/repo/.repos/effect", "not fetched"))
+                ),
+              },
+              reads
             )
           )
-        );
-        strictEqual(absent._tag, "EffectSchemaInventoryPinAbsentError");
-        const got = yield* Ref.get(reads);
-        strictEqual(got, 0);
-      })
-    );
+        )
+      );
+      strictEqual(absent._tag, "EffectSchemaInventoryPinAbsentError");
+      const observed4 = yield* Ref.get(reads);
+      strictEqual(observed4, 0);
+    })
+  );
 
-    it.effect(
-      "check fails with every drifted file against an empty fixture and writes nothing",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-check-" });
-        const reads = yield* Ref.make(0);
-        const failure = yield* Effect.flip(
-          runEffectSchemaInventory(root, EffectSchemaInventoryRequest.cases.check.make({})).pipe(
-            Effect.provideService(EffectSchemaInventorySource, fakeSource({}, reads))
+  it.effect(
+    "check fails with every drifted file against an empty fixture and writes nothing",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-check-" });
+      const reads = yield* Ref.make(0);
+      const failure = yield* Effect.flip(
+        runEffectSchemaInventory(root, EffectSchemaInventoryRequest.cases.check.make({})).pipe(
+          Effect.provideService(EffectSchemaInventorySource, fakeSource({}, reads))
+        )
+      );
+      assertTrue(failure._tag === "EffectSchemaInventoryDriftError");
+      // Every module file plus INDEX.md; no prompt directory exists, so no prompt drift.
+      strictEqual(failure.drift.length, EffectSchemaInventoryModules.length + 1);
+      assertTrue(A.every(failure.drift, (entry) => entry._tag === "missing"));
+      const observed5 = yield* Ref.get(reads);
+      strictEqual(observed5, EffectSchemaInventoryModules.length);
+      const rootEntries = yield* fs.readDirectory(root);
+      deepStrictEqual(rootEntries, []);
+    })
+  );
+
+  it.effect(
+    "live source fails loud on a missing reference, an absent pin, and a non-snapshot catalog",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const verify = (root: string) =>
+        Effect.flip(
+          Effect.flatMap(EffectSchemaInventorySource.make(root), (source) =>
+            Effect.flatMap(source.readPin, source.verifyPin)
           )
         );
-        assertTrue(failure._tag === "EffectSchemaInventoryDriftError");
-        // Every module file plus INDEX.md; no prompt directory exists, so no prompt drift.
-        strictEqual(failure.drift.length, EffectSchemaInventoryModules.length + 1);
-        assertTrue(A.every(failure.drift, (entry) => entry._tag === "missing"));
-        const got7 = yield* Ref.get(reads);
-        strictEqual(got7, EffectSchemaInventoryModules.length);
-        const readDirectory8 = yield* fs.readDirectory(root);
-        deepStrictEqual(readDirectory8, []);
-      })
-    );
 
-    it.effect(
-      "live source fails loud on a missing reference, an absent pin, and a non-snapshot catalog",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const verify = (root: string) =>
-          Effect.flip(
-            Effect.flatMap(EffectSchemaInventorySource.make(root), (source) =>
-              Effect.flatMap(source.readPin, source.verifyPin)
-            )
-          );
+      const bare = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-bare-" });
+      yield* fs.writeFileString(path.join(bare, "package.json"), snapshotManifest(PIN));
+      strictEqual((yield* verify(bare))._tag, "EffectSchemaInventoryReferenceMissingError");
 
-        const bare = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-bare-" });
-        yield* fs.writeFileString(path.join(bare, "package.json"), snapshotManifest(PIN));
-        strictEqual((yield* verify(bare))._tag, "EffectSchemaInventoryReferenceMissingError");
+      const linked = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-linked-" });
+      yield* fs.writeFileString(path.join(linked, "package.json"), snapshotManifest(ABSENT_PIN));
+      yield* fs.makeDirectory(path.join(linked, ".repos"));
+      yield* fs.symlink(repositoryRoot, path.join(linked, ".repos", "effect"));
+      const absent = yield* verify(linked);
+      assertTrue(absent._tag === "EffectSchemaInventoryPinAbsentError");
+      strictEqual(absent.pin, ABSENT_PIN);
 
-        const linked = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-linked-" });
-        yield* fs.writeFileString(path.join(linked, "package.json"), snapshotManifest(ABSENT_PIN));
-        yield* fs.makeDirectory(path.join(linked, ".repos"));
-        yield* fs.symlink(repositoryRoot, path.join(linked, ".repos", "effect"));
-        const absent = yield* verify(linked);
-        assertTrue(absent._tag === "EffectSchemaInventoryPinAbsentError");
-        strictEqual(absent.pin, ABSENT_PIN);
+      const semver = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-semver-" });
+      yield* fs.writeFileString(path.join(semver, "package.json"), '{"catalog":{"effect":"4.0.0-rc.118"}}');
+      strictEqual((yield* verify(semver))._tag, "EffectSchemaInventoryCatalogPinError");
+    })
+  );
 
-        const semver = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-semver-" });
-        yield* fs.writeFileString(path.join(semver, "package.json"), '{"catalog":{"effect":"4.0.0-rc.118"}}');
-        strictEqual((yield* verify(semver))._tag, "EffectSchemaInventoryCatalogPinError");
-      })
-    );
+  it.effect(
+    "inlines each row's full declaration and JSDoc into the lane prompt",
+    Effect.fnUntraced(function* () {
+      const extraction = yield* extractDemo;
+      const rows = O.getOrThrow(A.head(extraction.modules)).rows;
+      const prompt = yield* renderEffectSchemaInventoryPrompt({
+        module: demoModule,
+        pin: PIN,
+        rows,
+        source: demoSource,
+      });
+      assertInclude(prompt, "export function a(x: unknown): string {\n  return `${x}`\n}");
+      assertInclude(prompt, "**Example** (Format)");
+      assertInclude(prompt, "````ts\n/**\n * Formats a value.");
+      assertInclude(prompt, "const local = 1");
+    })
+  );
 
-    it.effect(
-      "inlines each row's full declaration and JSDoc into the lane prompt",
-      Effect.fnUntraced(function* () {
-        const extraction = yield* extractDemo;
-        const rows = O.getOrThrow(A.head(extraction.modules)).rows;
-        const prompt = yield* renderEffectSchemaInventoryPrompt({
-          module: demoModule,
-          pin: PIN,
-          rows,
-          source: demoSource,
-        });
-        assertInclude(prompt, "export function a(x: unknown): string {\n  return `${x}`\n}");
-        assertInclude(prompt, "**Example** (Format)");
-        assertInclude(prompt, "````ts\n/**\n * Formats a value.");
-        assertInclude(prompt, "const local = 1");
-      })
-    );
+  it.effect(
+    "refuses a prompt that would ship only truncated row fields",
+    Effect.fnUntraced(function* () {
+      const render = (rows: ReadonlyArray<EffectSchemaInventoryRow>) =>
+        Effect.flip(
+          renderEffectSchemaInventoryPrompt({
+            module: demoModule,
+            pin: PIN,
+            rows,
+            source: demoSource,
+          })
+        );
+      const unresolved = yield* render([makeRow({ line: 999, symbol: "ghost", hasExample: false })]);
+      assertInclude(unresolved.message, "ghost@999");
+      const noExample = yield* render([makeRow({ line: 28, symbol: "C", hasExample: true })]);
+      assertInclude(noExample.message, "hasExample");
+    })
+  );
+  it.effect(
+    "extracts signatures, kinds, and overload counts for every declaration shape",
+    Effect.fnUntraced(function* () {
+      const extraction = yield* extractEffectSchemaInventory(PIN, [[branchModule, branchSource]]);
+      const rows = O.getOrThrow(A.head(extraction.modules)).rows;
+      const row = (symbol: string, kind: string) => O.getOrThrow(rowOf(rows, symbol, kind));
+      strictEqual(row("typed", "const").signature, "const typed: number");
+      strictEqual(row("arrow", "const").signature, "const arrow = (x: number): number =>");
+      strictEqual(row("fn", "const").signature, "const fn = function named(x: string)");
+      strictEqual(row("plain", "const").signature, "const plain: <inferred; see source>");
+      strictEqual(row("K", "class").signature, "export class K");
+      strictEqual(row("K.s", "property").signature, "static readonly s = 1");
+      strictEqual(row("K.g", "accessor").signature, "get g(): string");
+      strictEqual(row("K.m", "method").signature, "m(): void");
+      strictEqual(row("K.m", "method").overloads, 0);
+      strictEqual(row("K.<index>", "property").signature, "[key: string]: unknown");
+      strictEqual(row("Callable", "type").overloads, 2);
+      strictEqual(row("Callable.<call>", "call").overloads, 2);
+      strictEqual(row("Callable.p", "property").signature, "readonly p: number");
+      strictEqual(row("E", "property").signature, "export enum E { A, B }");
+      strictEqual(row("E.B", "property").signature, "B");
+      strictEqual(row("renamed", "const").signature, "const hidden: <inferred; see source>");
+      strictEqual(row("renamed", "const").line, 14);
+      strictEqual(row("WithIndex.<new>", "constructor").overloads, 1);
+      strictEqual(row("WithIndex.<index>", "property").signature, "[key: string]: number;");
+      strictEqual(row("shown", "const").signature, "const shown: <inferred; see source>");
+      strictEqual(row("Dup", "interface").line, row("Dup", "namespace").line);
+      strictEqual(row("Dup.T", "type").signature, "export type T = string");
+      strictEqual(rows.length, 24);
+    })
+  );
 
-    it.effect(
-      "refuses a prompt that would ship only truncated row fields",
-      Effect.fnUntraced(function* () {
-        const render = (rows: ReadonlyArray<EffectSchemaInventoryRow>) =>
-          Effect.flip(
-            renderEffectSchemaInventoryPrompt({
-              module: demoModule,
-              pin: PIN,
-              rows,
-              source: demoSource,
-            })
-          );
-        const unresolved = yield* render([makeRow({ line: 999, symbol: "ghost", hasExample: false })]);
-        assertInclude(unresolved.message, "ghost@999");
-        const noExample = yield* render([makeRow({ line: 28, symbol: "C", hasExample: true })]);
-        assertInclude(noExample.message, "hasExample");
-      })
-    );
-    it.effect(
-      "extracts signatures, kinds, and overload counts for every declaration shape",
-      Effect.fnUntraced(function* () {
-        const extraction = yield* extractEffectSchemaInventory(PIN, [[branchModule, branchSource]]);
-        const rows = O.getOrThrow(A.head(extraction.modules)).rows;
-        const row = (symbol: string, kind: string) => O.getOrThrow(rowOf(rows, symbol, kind));
-        strictEqual(row("typed", "const").signature, "const typed: number");
-        strictEqual(row("arrow", "const").signature, "const arrow = (x: number): number =>");
-        strictEqual(row("fn", "const").signature, "const fn = function named(x: string)");
-        strictEqual(row("plain", "const").signature, "const plain: <inferred; see source>");
-        strictEqual(row("K", "class").signature, "export class K");
-        strictEqual(row("K.s", "property").signature, "static readonly s = 1");
-        strictEqual(row("K.g", "accessor").signature, "get g(): string");
-        strictEqual(row("K.m", "method").signature, "m(): void");
-        strictEqual(row("K.m", "method").overloads, 0);
-        strictEqual(row("K.<index>", "property").signature, "[key: string]: unknown");
-        strictEqual(row("Callable", "type").overloads, 2);
-        strictEqual(row("Callable.<call>", "call").overloads, 2);
-        strictEqual(row("Callable.p", "property").signature, "readonly p: number");
-        strictEqual(row("E", "property").signature, "export enum E { A, B }");
-        strictEqual(row("E.B", "property").signature, "B");
-        strictEqual(row("renamed", "const").signature, "const hidden: <inferred; see source>");
-        strictEqual(row("renamed", "const").line, 14);
-        strictEqual(row("WithIndex.<new>", "constructor").overloads, 1);
-        strictEqual(row("WithIndex.<index>", "property").signature, "[key: string]: number;");
-        strictEqual(row("shown", "const").signature, "const shown: <inferred; see source>");
-        strictEqual(row("Dup", "interface").line, row("Dup", "namespace").line);
-        strictEqual(row("Dup.T", "type").signature, "export type T = string");
-        strictEqual(rows.length, 24);
-      })
-    );
-
-    it.effect(
-      "refuses to generate an inventory with zero rows",
-      Effect.fnUntraced(function* () {
-        const reads = yield* Ref.make(0);
-        const failure = yield* Effect.flip(
-          generateEffectSchemaInventory().pipe(
-            Effect.provideService(
-              EffectSchemaInventorySource,
-              fakeSource({}, reads, () => "")
-            )
+  it.effect(
+    "refuses to generate an inventory with zero rows",
+    Effect.fnUntraced(function* () {
+      const reads = yield* Ref.make(0);
+      const failure = yield* Effect.flip(
+        generateEffectSchemaInventory().pipe(
+          Effect.provideService(
+            EffectSchemaInventorySource,
+            fakeSource({}, reads, () => "")
           )
-        );
-        strictEqual(failure._tag, "EffectSchemaInventoryError");
-        assertInclude(failure.message, "0 rows");
-      })
-    );
+        )
+      );
+      strictEqual(failure._tag, "EffectSchemaInventoryError");
+      assertInclude(failure.message, "0 rows");
+    })
+  );
 
-    it.effect(
-      "swaps a staged fixture into place, keeping hand-maintained and foreign files",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-write-" });
-        const directory = path.join(root, EffectSchemaInventoryFixturePath);
-        const parent = path.dirname(directory);
-        const listing = (target: string) => Effect.map(fs.readDirectory(target), A.sort(Order.String));
-        const leftovers = Effect.map(fs.readDirectory(parent), A.filter(Str.startsWith(".inventory-")));
-        yield* fs.makeDirectory(directory, { recursive: true });
-        yield* fs.writeFileString(path.join(directory, "README.md"), "contract\n");
-        const ownedLine = yield* encodeEffectSchemaInventoryRowJson(
-          makeRow({ line: 1, symbol: "old", hasExample: false })
-        );
-        yield* fs.writeFileString(path.join(directory, "effect-Old.jsonl"), `${ownedLine}\n`);
-        yield* fs.writeFileString(path.join(directory, "notes.jsonl"), "{}\n");
+  it.effect(
+    "swaps a staged fixture into place, keeping hand-maintained and foreign files",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-write-" });
+      const directory = path.join(root, EffectSchemaInventoryFixturePath);
+      const parent = path.dirname(directory);
+      const listing = (target: string) => Effect.map(fs.readDirectory(target), A.sort(Order.String));
+      const leftovers = Effect.map(fs.readDirectory(parent), A.filter(Str.startsWith(".inventory-")));
+      yield* fs.makeDirectory(directory, { recursive: true });
+      yield* fs.writeFileString(path.join(directory, "README.md"), "contract\n");
+      const ownedLine = yield* encodeEffectSchemaInventoryRowJson(
+        makeRow({ line: 1, symbol: "old", hasExample: false })
+      );
+      yield* fs.writeFileString(path.join(directory, "effect-Old.jsonl"), `${ownedLine}\n`);
+      yield* fs.writeFileString(path.join(directory, "notes.jsonl"), "{}\n");
 
-        yield* writeEffectSchemaInventoryFixture(
+      yield* writeEffectSchemaInventoryFixture(
+        root,
+        renderedFiles([
+          ["effect-Demo.jsonl", "x\n"],
+          ["INDEX.md", "# index\n"],
+        ])
+      );
+      const listed = yield* listing(directory);
+      deepStrictEqual(listed, ["INDEX.md", "README.md", "effect-Demo.jsonl", "notes.jsonl"]);
+      const observed6 = yield* fs.readFileString(path.join(directory, "README.md"));
+      strictEqual(observed6, "contract\n");
+      const leftover = yield* leftovers;
+      deepStrictEqual(leftover, []);
+
+      // ".." resolves to the staging parent, so the second write fails before the swap.
+      const failure = yield* Effect.flip(
+        writeEffectSchemaInventoryFixture(
           root,
           renderedFiles([
-            ["effect-Demo.jsonl", "x\n"],
-            ["INDEX.md", "# index\n"],
+            ["effect-Demo.jsonl", "y\n"],
+            ["..", "z"],
           ])
-        );
-        const listing9 = yield* listing(directory);
-        deepStrictEqual(listing9, ["INDEX.md", "README.md", "effect-Demo.jsonl", "notes.jsonl"]);
-        const readFileString10 = yield* fs.readFileString(path.join(directory, "README.md"));
-        strictEqual(readFileString10, "contract\n");
-        const leftovers11 = yield* leftovers;
-        deepStrictEqual(leftovers11, []);
+        )
+      );
+      strictEqual(failure._tag, "EffectSchemaInventoryError");
+      const observed7 = yield* fs.readFileString(path.join(directory, "effect-Demo.jsonl"));
+      strictEqual(observed7, "x\n");
+      const leftoverAfter = yield* leftovers;
+      deepStrictEqual(leftoverAfter, []);
+    })
+  );
 
-        // ".." resolves to the staging parent, so the second write fails before the swap.
-        const failure = yield* Effect.flip(
-          writeEffectSchemaInventoryFixture(
-            root,
-            renderedFiles([
-              ["effect-Demo.jsonl", "y\n"],
-              ["..", "z"],
-            ])
-          )
-        );
-        strictEqual(failure._tag, "EffectSchemaInventoryError");
-        const readFileString12 = yield* fs.readFileString(path.join(directory, "effect-Demo.jsonl"));
-        strictEqual(readFileString12, "x\n");
-        const leftovers13 = yield* leftovers;
-        deepStrictEqual(leftovers13, []);
-      })
-    );
+  it.effect(
+    "restores the previous fixture when the staged one cannot take its place",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-swap-" });
+      const directory = path.join(root, EffectSchemaInventoryFixturePath);
+      const parent = path.dirname(directory);
+      // Only the staged directory's move into place fails; moving the previous copy back succeeds.
+      const refused = PlatformError.systemError({
+        _tag: "PermissionDenied",
+        module: "FileSystem",
+        method: "rename",
+        pathOrDescriptor: directory,
+      });
+      const write = Effect.flip(writeEffectSchemaInventoryFixture(root, renderedFiles([["INDEX.md", "# new\n"]]))).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          rename: (from, to) =>
+            to === directory && !Str.endsWith("-previous")(from) ? Effect.fail(refused) : fs.rename(from, to),
+        })
+      );
 
-    it.effect(
-      "restores the previous fixture when the staged one cannot take its place",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-swap-" });
-        const directory = path.join(root, EffectSchemaInventoryFixturePath);
-        const parent = path.dirname(directory);
-        // Only the staged directory's move into place fails; moving the previous copy back succeeds.
-        const refused = PlatformError.systemError({
-          _tag: "PermissionDenied",
-          module: "FileSystem",
-          method: "rename",
-          pathOrDescriptor: directory,
-        });
-        const write = Effect.flip(
-          writeEffectSchemaInventoryFixture(root, renderedFiles([["INDEX.md", "# new\n"]]))
-        ).pipe(
-          Effect.provideService(FileSystem.FileSystem, {
-            ...fs,
-            rename: (from, to) =>
-              to === directory && !Str.endsWith("-previous")(from) ? Effect.fail(refused) : fs.rename(from, to),
-          })
-        );
+      const firstWrite = yield* write;
+      assertInclude(firstWrite.message, "Unable to move the staged fixture into");
+      const parentEntries = yield* fs.readDirectory(parent);
+      deepStrictEqual(parentEntries, []);
 
-        assertInclude((yield* write).message, "Unable to move the staged fixture into");
-        const readDirectory14 = yield* fs.readDirectory(parent);
-        deepStrictEqual(readDirectory14, []);
+      yield* fs.makeDirectory(directory);
+      yield* fs.writeFileString(path.join(directory, "INDEX.md"), "# old\n");
+      const secondWrite = yield* write;
+      assertInclude(secondWrite.message, "Unable to move the staged fixture into");
+      const parentAfter = yield* fs.readDirectory(parent);
+      deepStrictEqual(parentAfter, [path.basename(directory)]);
+      const directoryEntries = yield* fs.readDirectory(directory);
+      deepStrictEqual(directoryEntries, ["INDEX.md"]);
+      const observed8 = yield* fs.readFileString(path.join(directory, "INDEX.md"));
+      strictEqual(observed8, "# old\n");
+    })
+  );
 
-        yield* fs.makeDirectory(directory);
-        yield* fs.writeFileString(path.join(directory, "INDEX.md"), "# old\n");
-        assertInclude((yield* write).message, "Unable to move the staged fixture into");
-        const readDirectory15 = yield* fs.readDirectory(parent);
-        deepStrictEqual(readDirectory15, [path.basename(directory)]);
-        const readDirectory16 = yield* fs.readDirectory(directory);
-        deepStrictEqual(readDirectory16, ["INDEX.md"]);
-        const readFileString17 = yield* fs.readFileString(path.join(directory, "INDEX.md"));
-        strictEqual(readFileString17, "# old\n");
-      })
-    );
+  it.effect(
+    "fails instead of reading an unlistable fixture directory as empty",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-unlistable-" });
+      const directory = path.join(root, EffectSchemaInventoryFixturePath);
+      yield* fs.makeDirectory(path.dirname(directory), { recursive: true });
+      yield* fs.writeFileString(directory, "not a directory\n");
+      const read = yield* Effect.flip(readEffectSchemaInventoryFixture(root));
+      assertInclude(read.message, "Unable to list");
+      const write = yield* Effect.flip(
+        writeEffectSchemaInventoryFixture(root, renderedFiles([["INDEX.md", "# index\n"]]))
+      );
+      assertInclude(write.message, "Unable to list");
+      const observed9 = yield* fs.readFileString(directory);
+      strictEqual(observed9, "not a directory\n");
+    })
+  );
 
-    it.effect(
-      "fails instead of reading an unlistable fixture directory as empty",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-unlistable-" });
-        const directory = path.join(root, EffectSchemaInventoryFixturePath);
-        yield* fs.makeDirectory(path.dirname(directory), { recursive: true });
-        yield* fs.writeFileString(directory, "not a directory\n");
-        const read = yield* Effect.flip(readEffectSchemaInventoryFixture(root));
-        assertInclude(read.message, "Unable to list");
-        const write = yield* Effect.flip(
-          writeEffectSchemaInventoryFixture(root, renderedFiles([["INDEX.md", "# index\n"]]))
-        );
-        assertInclude(write.message, "Unable to list");
-        const readFileString18 = yield* fs.readFileString(directory);
-        strictEqual(readFileString18, "not a directory\n");
-      })
-    );
-
-    it.effect(
-      "verifies committed prompts byte for byte and ignores hand-written files",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const extraction = yield* extractDemo;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-prompts-" });
-        const directory = path.join(root, EffectSchemaInventoryPromptRoot);
-        const file = path.join(directory, "effect-Demo.md");
-        const rows = O.getOrThrow(A.head(extraction.modules)).rows;
-        const prompt = yield* renderEffectSchemaInventoryPrompt({
-          module: demoModule,
-          pin: PIN,
-          rows,
-          source: demoSource,
-        });
-        const check = checkEffectSchemaInventoryPrompts(root, PIN, extraction.modules, [
+  it.effect(
+    "verifies committed prompts byte for byte and ignores hand-written files",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const extraction = yield* extractDemo;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-prompts-" });
+      const directory = path.join(root, EffectSchemaInventoryPromptRoot);
+      const file = path.join(directory, "effect-Demo.md");
+      const rows = O.getOrThrow(A.head(extraction.modules)).rows;
+      const prompt = yield* renderEffectSchemaInventoryPrompt({
+        module: demoModule,
+        pin: PIN,
+        rows,
+        source: demoSource,
+      });
+      const check = checkEffectSchemaInventoryPrompts(root, PIN, extraction.modules, [
+        [demoModule, demoSource],
+        [otherModule, "export const other = 1\n"],
+      ]);
+      const firstCheck = yield* check;
+      deepStrictEqual(firstCheck, []);
+      yield* fs.makeDirectory(directory, { recursive: true });
+      yield* fs.writeFileString(path.join(directory, "notes.md"), "hand-written\n");
+      yield* fs.writeFileString(file, prompt);
+      const secondCheck = yield* check;
+      deepStrictEqual(secondCheck, []);
+      yield* fs.writeFileString(file, Str.replace("return `${x}`", "return x")(prompt));
+      const drift = yield* check;
+      strictEqual(drift.length, 1);
+      const stale = O.getOrThrow(A.head(drift));
+      assertTrue(stale._tag === "stale");
+      strictEqual(stale.file, `${EffectSchemaInventoryPromptRoot}/effect-Demo.md`);
+    })
+  );
+  it.effect(
+    "rejects a module list that names one file twice",
+    Effect.fnUntraced(function* () {
+      const failure = yield* Effect.flip(
+        extractEffectSchemaInventory(PIN, [
           [demoModule, demoSource],
-          [otherModule, "export const other = 1\n"],
-        ]);
-        const check19 = yield* check;
-        deepStrictEqual(check19, []);
-        yield* fs.makeDirectory(directory, { recursive: true });
-        yield* fs.writeFileString(path.join(directory, "notes.md"), "hand-written\n");
-        yield* fs.writeFileString(file, prompt);
-        const check20 = yield* check;
-        deepStrictEqual(check20, []);
-        yield* fs.writeFileString(file, Str.replace("return `${x}`", "return x")(prompt));
-        const drift = yield* check;
-        strictEqual(drift.length, 1);
-        const stale = O.getOrThrow(A.head(drift));
-        assertTrue(stale._tag === "stale");
-        strictEqual(stale.file, `${EffectSchemaInventoryPromptRoot}/effect-Demo.md`);
-      })
-    );
-    it.effect(
-      "rejects a module list that names one file twice",
-      Effect.fnUntraced(function* () {
-        const failure = yield* Effect.flip(
-          extractEffectSchemaInventory(PIN, [
-            [demoModule, demoSource],
-            [demoModule, demoSource],
-          ])
-        );
-        assertInclude(failure.message, "Duplicate file");
-      })
-    );
+          [demoModule, demoSource],
+        ])
+      );
+      assertInclude(failure.message, "Duplicate file");
+    })
+  );
 
-    it("looks modules up by import path", () => {
-      strictEqual(enableModule.slug, "effect-schema-SchemaJITCompiler-enable");
-      assertNone(findEffectSchemaInventoryModule("effect/Nope"));
-    });
+  it("looks modules up by import path", () => {
+    strictEqual(enableModule.slug, "effect-schema-SchemaJITCompiler-enable");
+    assertNone(findEffectSchemaInventoryModule("effect/Nope"));
+  });
 
-    it.effect(
-      "renders deprecated, overloaded, and provenance-only rows and shared export locals once",
-      Effect.fnUntraced(function* () {
-        const extraction = yield* extractEffectSchemaInventory(PIN, [[provenanceBranchModule, promptBranchSource]]);
-        const rows = O.getOrThrow(A.head(extraction.modules)).rows;
-        const prompt = yield* renderEffectSchemaInventoryPrompt({
+  it.effect(
+    "renders deprecated, overloaded, and provenance-only rows and shared export locals once",
+    Effect.fnUntraced(function* () {
+      const extraction = yield* extractEffectSchemaInventory(PIN, [[provenanceBranchModule, promptBranchSource]]);
+      const rows = O.getOrThrow(A.head(extraction.modules)).rows;
+      const prompt = yield* renderEffectSchemaInventoryPrompt({
+        module: provenanceBranchModule,
+        pin: PIN,
+        rows,
+        source: promptBranchSource,
+      });
+      assertInclude(prompt, "provenance only: Effect's exports map nulls this path");
+      assertInclude(prompt, "1 overload signature, deprecated, not importable");
+      assertInclude(prompt, 'export function old(x: unknown): string {\n  return ""\n}');
+      strictEqual(A.length(Str.split(prompt, "const shared = 1")) - 1, 1);
+      const foreign = yield* Effect.flip(
+        renderEffectSchemaInventoryPrompt({
           module: provenanceBranchModule,
-          pin: PIN,
+          pin: ABSENT_PIN,
           rows,
           source: promptBranchSource,
-        });
-        assertInclude(prompt, "provenance only: Effect's exports map nulls this path");
-        assertInclude(prompt, "1 overload signature, deprecated, not importable");
-        assertInclude(prompt, 'export function old(x: unknown): string {\n  return ""\n}');
-        strictEqual(A.length(Str.split(prompt, "const shared = 1")) - 1, 1);
-        const foreign = yield* Effect.flip(
-          renderEffectSchemaInventoryPrompt({
-            module: provenanceBranchModule,
-            pin: ABSENT_PIN,
-            rows,
-            source: promptBranchSource,
-          })
-        );
-        assertInclude(foreign.message, "must all read");
-      })
-    );
-
-    it.effect(
-      "reports a hand-edited prompt as stale and fails when a prompt's module source is missing",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const extraction = yield* extractDemo;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-prompt-edges-" });
-        const directory = path.join(root, EffectSchemaInventoryPromptRoot);
-        yield* fs.makeDirectory(directory, { recursive: true });
-        yield* fs.writeFileString(path.join(directory, "effect-Demo.md"), "# Lane prompt without sections\n");
-        const drift = yield* checkEffectSchemaInventoryPrompts(root, PIN, extraction.modules, [
-          [demoModule, demoSource],
-        ]);
-        deepStrictEqual(
-          A.map(drift, (entry) => entry._tag),
-          ["stale"]
-        );
-        const missing = yield* Effect.flip(checkEffectSchemaInventoryPrompts(root, PIN, extraction.modules, []));
-        assertInclude(missing.message, "No pinned source was read for effect/Demo");
-      })
-    );
-
-    it.effect(
-      "generates a prompt through the source service and refuses unsafe or stale inputs",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const reads = yield* Ref.make(0);
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-generate-" });
-        const fixture = path.join(root, EffectSchemaInventoryFixturePath);
-        yield* fs.makeDirectory(fixture, { recursive: true });
-        yield* fs.writeFileString(path.join(fixture, "effect-schema-SchemaJITCompiler-enable.jsonl"), "");
-        const staleLine = yield* encodeEffectSchemaInventoryRowJson(
-          EffectSchemaInventoryRow.make({
-            ...makeRow({ line: 1, symbol: "isIssue", hasExample: false }),
-            sha: ABSENT_PIN,
-            module: "effect/SchemaIssue",
-            file: "packages/effect/src/SchemaIssue.ts",
-          })
-        );
-        yield* fs.writeFileString(path.join(fixture, "effect-SchemaIssue.jsonl"), `${staleLine}\n`);
-        const generate = (module: string, out: O.Option<string>) =>
-          generateEffectSchemaInventoryPrompt(root, module, out).pipe(
-            Effect.provideService(EffectSchemaInventorySource, fakeSource({}, reads))
-          );
-
-        const relative = yield* generate("effect/schema/SchemaJITCompiler/enable", O.some("prompts/enable.md"));
-        strictEqual(relative.target, "prompts/enable.md");
-        strictEqual(relative.rows, 0);
-        const readFileString21 = yield* fs.readFileString(path.join(root, "prompts/enable.md"));
-        assertInclude(readFileString21, "| Declarations | 0 top-level declarations");
-        const defaulted = yield* generate("effect/schema/SchemaJITCompiler/enable", O.none());
-        strictEqual(defaulted.target, `${EffectSchemaInventoryPromptRoot}/effect-schema-SchemaJITCompiler-enable.md`);
-        const outside = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-outside-" });
-        const absolute = yield* generate("effect/schema/SchemaJITCompiler/enable", O.some(path.join(outside, "p.md")));
-        strictEqual(absolute.target, path.join(outside, "p.md"));
-
-        assertInclude((yield* Effect.flip(generate("effect/Nope", O.none()))).message, "Unknown inventory module");
-        assertInclude(
-          (yield* Effect.flip(generate("effect/schema/SchemaJITCompiler/enable", O.some("../escape.md")))).message,
-          "resolves outside the repository root"
-        );
-        assertInclude((yield* Effect.flip(generate("effect/SchemaIssue", O.none()))).message, "is not at inventoryPin");
-        assertInclude(
-          (yield* Effect.flip(generate("effect/schema/SchemaJITCompiler/enable", O.some(outside)))).message,
-          "Unable to write"
-        );
-      })
-    );
-
-    it.effect(
-      "runs the command handler for --check and --prompt through the flag parser",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const reads = yield* Ref.make(0);
-        const run = Command.runWith(
-          makeEffectSchemaInventoryCommandForTesting(Layer.succeed(EffectSchemaInventorySource, fakeSource({}, reads))),
-          { version: "0.0.0" }
-        );
-        // The fake sources cannot reproduce the committed fixture, so --check reports drift without writing.
-        const check = yield* Effect.flip(run(["--check"]));
-        assertTrue(check._tag === "EffectSchemaInventoryDriftError");
-        assertTrue(A.some(check.drift, (entry) => entry.file === "INDEX.md"));
-        const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({
-          prefix: "effect-schema-inventory-command-",
-        });
-        const out = path.join(madeTempDirectoryScoped, "p.md");
-        yield* run(["--prompt", "effect/schema/SchemaJITCompiler/enable", "--out", out]);
-        const readFileString22 = yield* fs.readFileString(out);
-        assertInclude(readFileString22, "# Lane prompt: `effect/schema/SchemaJITCompiler/enable`");
-        const conflict = yield* Effect.flip(run(["--write", "--check"]));
-        assertTrue(conflict._tag === "EffectSchemaInventoryError");
-      })
-    );
-    it.effect(
-      "inlines every declaration an export list names: all overloads and both sides of a type/value pair",
-      Effect.fnUntraced(function* () {
-        const extraction = yield* extractEffectSchemaInventory(PIN, [[demoModule, localGroupsSource]]);
-        const rows = O.getOrThrow(A.head(extraction.modules)).rows;
-        const prompt = yield* renderEffectSchemaInventoryPrompt({
-          module: demoModule,
-          pin: PIN,
-          rows,
-          source: localGroupsSource,
-        });
-        assertInclude(
-          prompt,
-          "/** Formats a value. */\nfunction f(x: string): string\nfunction f(x: number): string\nfunction f(x: unknown): string {"
-        );
-        assertInclude(prompt, "/** Shape of X. */\ntype X = { readonly n: number }");
-        assertInclude(prompt, "/** Value of X. */\nconst X = { n: 1 }");
-        assertInclude(prompt, "/** Exported formatter. */");
-        strictEqual(A.length(Str.split(prompt, "function f(x: string): string")) - 1, 1);
-      })
-    );
-    it.effect(
-      "writes a fixture, checks it clean, and writes a prompt through the run orchestration",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-run-" });
-        const reads = yield* Ref.make(0);
-        const run = (request: EffectSchemaInventoryRequest) =>
-          runEffectSchemaInventory(root, request).pipe(
-            Effect.provideService(EffectSchemaInventorySource, fakeSource({}, reads))
-          );
-        yield* run(EffectSchemaInventoryRequest.cases.write.make({}));
-        const directory = path.join(root, EffectSchemaInventoryFixturePath);
-        strictEqual((yield* fs.readDirectory(directory)).length, EffectSchemaInventoryModules.length + 1);
-        yield* run(EffectSchemaInventoryRequest.cases.check.make({}));
-        yield* run(
-          EffectSchemaInventoryRequest.cases.prompt.make({
-            module: "effect/schema/SchemaJITCompiler/enable",
-            out: O.some("prompts/enable.md"),
-          })
-        );
-        const readFileString23 = yield* fs.readFileString(path.join(root, "prompts/enable.md"));
-        assertInclude(readFileString23, "# Lane prompt: `effect/schema/SchemaJITCompiler/enable`");
-      })
-    );
-
-    it("reports a stale line by its first differing column and past the end of a shorter file", () => {
-      const [prefix] = diffEffectSchemaInventoryFiles(
-        [EffectSchemaInventoryFile.make({ name: "a.jsonl", content: "abc\n" })],
-        HashMap.make(["a.jsonl", "abcd\n"])
+        })
       );
-      assertTrue(prefix?._tag === "stale");
-      strictEqual(prefix.column, 4);
-      const lead = Str.repeat(50)("x");
-      const [deep] = diffEffectSchemaInventoryFiles(
-        [EffectSchemaInventoryFile.make({ name: "a.jsonl", content: `${lead}A\n` })],
-        HashMap.make(["a.jsonl", `${lead}B\n`])
-      );
-      assertTrue(deep?._tag === "stale");
-      strictEqual(deep.column, 51);
-      strictEqual(deep.expected, `…${Str.repeat(40)("x")}A`);
-      strictEqual(deep.actual, `…${Str.repeat(40)("x")}B`);
-      const [longer] = diffEffectSchemaInventoryFiles(
-        [EffectSchemaInventoryFile.make({ name: "a.jsonl", content: "a" })],
-        HashMap.make(["a.jsonl", "a\nb"])
-      );
-      assertTrue(longer?._tag === "stale");
-      strictEqual(longer.line, 2);
-      strictEqual(longer.expected, "<end of file>");
-      strictEqual(longer.actual, "b");
-      strictEqual(
-        formatEffectSchemaInventoryDrift(longer),
-        "stale      a.jsonl:2:1\n  expected: <end of file>\n  actual:   b"
-      );
-      strictEqual(
-        formatEffectSchemaInventoryDrift(EffectSchemaInventoryDrift.cases.unexpected.make({ file: "x.jsonl" })),
-        "unexpected x.jsonl"
-      );
-      strictEqual(
-        formatEffectSchemaInventoryDrift(EffectSchemaInventoryDrift.cases.missing.make({ file: "INDEX.md" })),
-        "missing    INDEX.md"
-      );
-    });
+      assertInclude(foreign.message, "must all read");
+    })
+  );
 
-    it.effect(
-      "live source reads pinned bytes and refuses a non-git reference",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-        const string24 = yield* spawner.string(
-          ChildProcess.make("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot })
+  it.effect(
+    "reports a hand-edited prompt as stale and fails when a prompt's module source is missing",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const extraction = yield* extractDemo;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-prompt-edges-" });
+      const directory = path.join(root, EffectSchemaInventoryPromptRoot);
+      yield* fs.makeDirectory(directory, { recursive: true });
+      yield* fs.writeFileString(path.join(directory, "effect-Demo.md"), "# Lane prompt without sections\n");
+      const drift = yield* checkEffectSchemaInventoryPrompts(root, PIN, extraction.modules, [[demoModule, demoSource]]);
+      deepStrictEqual(
+        A.map(drift, (entry) => entry._tag),
+        ["stale"]
+      );
+      const missing = yield* Effect.flip(checkEffectSchemaInventoryPrompts(root, PIN, extraction.modules, []));
+      assertInclude(missing.message, "No pinned source was read for effect/Demo");
+    })
+  );
+
+  it.effect(
+    "generates a prompt through the source service and refuses unsafe or stale inputs",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const reads = yield* Ref.make(0);
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-generate-" });
+      const fixture = path.join(root, EffectSchemaInventoryFixturePath);
+      yield* fs.makeDirectory(fixture, { recursive: true });
+      yield* fs.writeFileString(path.join(fixture, "effect-schema-SchemaJITCompiler-enable.jsonl"), "");
+      const staleLine = yield* encodeEffectSchemaInventoryRowJson(
+        EffectSchemaInventoryRow.make({
+          ...makeRow({ line: 1, symbol: "isIssue", hasExample: false }),
+          sha: ABSENT_PIN,
+          module: "effect/SchemaIssue",
+          file: "packages/effect/src/SchemaIssue.ts",
+        })
+      );
+      yield* fs.writeFileString(path.join(fixture, "effect-SchemaIssue.jsonl"), `${staleLine}\n`);
+      const generate = (module: string, out: O.Option<string>) =>
+        generateEffectSchemaInventoryPrompt(root, module, out).pipe(
+          Effect.provideService(EffectSchemaInventorySource, fakeSource({}, reads))
         );
-        const head = Str.trim(string24);
 
-        const unreadable = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-unreadable-" });
-        const noManifest = yield* Effect.flip((yield* EffectSchemaInventorySource.make(unreadable)).readPin);
-        strictEqual(noManifest.specifier, "<unreadable>");
+      const relative = yield* generate("effect/schema/SchemaJITCompiler/enable", O.some("prompts/enable.md"));
+      strictEqual(relative.target, "prompts/enable.md");
+      strictEqual(relative.rows, 0);
+      const relativePrompt = yield* fs.readFileString(path.join(root, "prompts/enable.md"));
+      assertInclude(relativePrompt, "| Declarations | 0 top-level declarations");
+      const defaulted = yield* generate("effect/schema/SchemaJITCompiler/enable", O.none());
+      strictEqual(defaulted.target, `${EffectSchemaInventoryPromptRoot}/effect-schema-SchemaJITCompiler-enable.md`);
+      const outside = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-outside-" });
+      const absolute = yield* generate("effect/schema/SchemaJITCompiler/enable", O.some(path.join(outside, "p.md")));
+      strictEqual(absolute.target, path.join(outside, "p.md"));
 
-        const plain = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-plain-" });
-        yield* fs.makeDirectory(path.join(plain, ".repos", "effect"), { recursive: true });
-        const notGit = yield* Effect.flip((yield* EffectSchemaInventorySource.make(plain)).verifyPin(PIN));
-        assertInclude(notGit.message, "is not a git checkout");
+      assertInclude((yield* Effect.flip(generate("effect/Nope", O.none()))).message, "Unknown inventory module");
+      assertInclude(
+        (yield* Effect.flip(generate("effect/schema/SchemaJITCompiler/enable", O.some("../escape.md")))).message,
+        "resolves outside the repository root"
+      );
+      assertInclude((yield* Effect.flip(generate("effect/SchemaIssue", O.none()))).message, "is not at inventoryPin");
+      assertInclude(
+        (yield* Effect.flip(generate("effect/schema/SchemaJITCompiler/enable", O.some(outside)))).message,
+        "Unable to write"
+      );
+    })
+  );
 
-        const linked = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-live-" });
-        yield* fs.makeDirectory(path.join(linked, ".repos"));
-        yield* fs.symlink(repositoryRoot, path.join(linked, ".repos", "effect"));
-        EffectSchemaInventorySource.layer(linked).pipe(Layer.isLayer, assertTrue);
-        const live = yield* EffectSchemaInventorySource.make(linked);
-        yield* live.verifyPin(head);
-        const readPinned25 = yield* live.readPinned(head, "package.json");
-        assertInclude(readPinned25, '"name": "@beep/root"');
-        assertInclude(
-          (yield* Effect.flip(live.readPinned(head, "missing-file.txt"))).message,
-          "Unable to read missing-file.txt"
+  it.effect(
+    "runs the command handler for --check and --prompt through the flag parser",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const reads = yield* Ref.make(0);
+      const run = Command.runWith(
+        makeEffectSchemaInventoryCommandForTesting(Layer.succeed(EffectSchemaInventorySource, fakeSource({}, reads))),
+        { version: "0.0.0" }
+      );
+      // The fake sources cannot reproduce the committed fixture, so --check reports drift without writing.
+      const check = yield* Effect.flip(run(["--check"]));
+      assertTrue(check._tag === "EffectSchemaInventoryDriftError");
+      assertTrue(A.some(check.drift, (entry) => entry.file === "INDEX.md"));
+      const outDir = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-command-" });
+      const out = path.join(outDir, "p.md");
+      yield* run(["--prompt", "effect/schema/SchemaJITCompiler/enable", "--out", out]);
+      const prompted = yield* fs.readFileString(out);
+      assertInclude(prompted, "# Lane prompt: `effect/schema/SchemaJITCompiler/enable`");
+      const conflict = yield* Effect.flip(run(["--write", "--check"]));
+      assertTrue(conflict._tag === "EffectSchemaInventoryError");
+    })
+  );
+  it.effect(
+    "inlines every declaration an export list names: all overloads and both sides of a type/value pair",
+    Effect.fnUntraced(function* () {
+      const extraction = yield* extractEffectSchemaInventory(PIN, [[demoModule, localGroupsSource]]);
+      const rows = O.getOrThrow(A.head(extraction.modules)).rows;
+      const prompt = yield* renderEffectSchemaInventoryPrompt({
+        module: demoModule,
+        pin: PIN,
+        rows,
+        source: localGroupsSource,
+      });
+      assertInclude(
+        prompt,
+        "/** Formats a value. */\nfunction f(x: string): string\nfunction f(x: number): string\nfunction f(x: unknown): string {"
+      );
+      assertInclude(prompt, "/** Shape of X. */\ntype X = { readonly n: number }");
+      assertInclude(prompt, "/** Value of X. */\nconst X = { n: 1 }");
+      assertInclude(prompt, "/** Exported formatter. */");
+      strictEqual(A.length(Str.split(prompt, "function f(x: string): string")) - 1, 1);
+    })
+  );
+  it.effect(
+    "writes a fixture, checks it clean, and writes a prompt through the run orchestration",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-run-" });
+      const reads = yield* Ref.make(0);
+      const run = (request: EffectSchemaInventoryRequest) =>
+        runEffectSchemaInventory(root, request).pipe(
+          Effect.provideService(EffectSchemaInventorySource, fakeSource({}, reads))
         );
-      })
+      yield* run(EffectSchemaInventoryRequest.cases.write.make({}));
+      const directory = path.join(root, EffectSchemaInventoryFixturePath);
+      strictEqual((yield* fs.readDirectory(directory)).length, EffectSchemaInventoryModules.length + 1);
+      yield* run(EffectSchemaInventoryRequest.cases.check.make({}));
+      yield* run(
+        EffectSchemaInventoryRequest.cases.prompt.make({
+          module: "effect/schema/SchemaJITCompiler/enable",
+          out: O.some("prompts/enable.md"),
+        })
+      );
+      const enablePrompt = yield* fs.readFileString(path.join(root, "prompts/enable.md"));
+      assertInclude(enablePrompt, "# Lane prompt: `effect/schema/SchemaJITCompiler/enable`");
+    })
+  );
+
+  it("reports a stale line by its first differing column and past the end of a shorter file", () => {
+    const [prefix] = diffEffectSchemaInventoryFiles(
+      [EffectSchemaInventoryFile.make({ name: "a.jsonl", content: "abc\n" })],
+      HashMap.make(["a.jsonl", "abcd\n"])
     );
-
-    it.effect(
-      "translates a git spawn failure into the inventory operation's typed error",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-spawn-" });
-        yield* fs.makeDirectory(path.join(root, ".repos", "effect"), { recursive: true });
-        const unavailableGit = ScriptedSpawner.make(() =>
-          PlatformError.badArgument({
-            description: "fixture git executable is unavailable",
-            method: "spawn",
-            module: "ChildProcess",
-          })
-        );
-        // The source captures its spawner when constructed, before either git operation runs.
-        const source = yield* EffectSchemaInventorySource.make(root).pipe(provideSpawner(unavailableGit));
-        const verification = yield* Effect.flip(source.verifyPin(PIN));
-        strictEqual(verification._tag, "EffectSchemaInventoryReferenceMissingError");
-        assertInclude(verification.message, "is not a git checkout");
-        assertInclude(verification.message, "fixture git executable is unavailable");
-        const reading = yield* Effect.flip(source.readPinned(PIN, "packages/effect/src/Schema.ts"));
-        strictEqual(reading._tag, "EffectSchemaInventoryError");
-        assertInclude(reading.message, "Unable to read packages/effect/src/Schema.ts");
-        assertInclude(reading.message, "fixture git executable is unavailable");
-      })
+    assertTrue(prefix?._tag === "stale");
+    strictEqual(prefix.column, 4);
+    const lead = Str.repeat(50)("x");
+    const [deep] = diffEffectSchemaInventoryFiles(
+      [EffectSchemaInventoryFile.make({ name: "a.jsonl", content: `${lead}A\n` })],
+      HashMap.make(["a.jsonl", `${lead}B\n`])
     );
-
-    it.effect(
-      "live source reads an unstatable reference as missing",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-reference-" });
-        const reference = path.join(root, ".repos", "effect");
-        yield* fs.makeDirectory(reference, { recursive: true });
-
-        const denied = PlatformError.systemError({
-          _tag: "PermissionDenied",
-          module: "FileSystem",
-          method: "exists",
-          pathOrDescriptor: reference,
-        });
-        const unstatable = yield* EffectSchemaInventorySource.make(root).pipe(
-          Effect.provideService(FileSystem.FileSystem, { ...fs, exists: () => Effect.fail(denied) })
-        );
-        const missing = yield* Effect.flip(unstatable.verifyPin(PIN));
-        strictEqual(missing._tag, "EffectSchemaInventoryReferenceMissingError");
-        assertInclude(missing.message, "is missing");
-      })
+    assertTrue(deep?._tag === "stale");
+    strictEqual(deep.column, 51);
+    strictEqual(deep.expected, `…${Str.repeat(40)("x")}A`);
+    strictEqual(deep.actual, `…${Str.repeat(40)("x")}B`);
+    const [longer] = diffEffectSchemaInventoryFiles(
+      [EffectSchemaInventoryFile.make({ name: "a.jsonl", content: "a" })],
+      HashMap.make(["a.jsonl", "a\nb"])
     );
-  }
-);
+    assertTrue(longer?._tag === "stale");
+    strictEqual(longer.line, 2);
+    strictEqual(longer.expected, "<end of file>");
+    strictEqual(longer.actual, "b");
+    strictEqual(
+      formatEffectSchemaInventoryDrift(longer),
+      "stale      a.jsonl:2:1\n  expected: <end of file>\n  actual:   b"
+    );
+    strictEqual(
+      formatEffectSchemaInventoryDrift(EffectSchemaInventoryDrift.cases.unexpected.make({ file: "x.jsonl" })),
+      "unexpected x.jsonl"
+    );
+    strictEqual(
+      formatEffectSchemaInventoryDrift(EffectSchemaInventoryDrift.cases.missing.make({ file: "INDEX.md" })),
+      "missing    INDEX.md"
+    );
+  });
+
+  it.effect(
+    "live source reads pinned bytes and refuses a non-git reference",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const headOutput = yield* spawner.string(
+        ChildProcess.make("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot })
+      );
+      const head = Str.trim(headOutput);
+
+      const unreadable = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-unreadable-" });
+      const noManifest = yield* Effect.flip((yield* EffectSchemaInventorySource.make(unreadable)).readPin);
+      strictEqual(noManifest.specifier, "<unreadable>");
+
+      const plain = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-plain-" });
+      yield* fs.makeDirectory(path.join(plain, ".repos", "effect"), { recursive: true });
+      const notGit = yield* Effect.flip((yield* EffectSchemaInventorySource.make(plain)).verifyPin(PIN));
+      assertInclude(notGit.message, "is not a git checkout");
+
+      const linked = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-live-" });
+      yield* fs.makeDirectory(path.join(linked, ".repos"));
+      yield* fs.symlink(repositoryRoot, path.join(linked, ".repos", "effect"));
+      EffectSchemaInventorySource.layer(linked).pipe(Layer.isLayer, assertTrue);
+      const live = yield* EffectSchemaInventorySource.make(linked);
+      yield* live.verifyPin(head);
+      const pinnedManifest = yield* live.readPinned(head, "package.json");
+      assertInclude(pinnedManifest, '"name": "@beep/root"');
+      assertInclude(
+        (yield* Effect.flip(live.readPinned(head, "missing-file.txt"))).message,
+        "Unable to read missing-file.txt"
+      );
+    })
+  );
+
+  it.effect(
+    "translates a git spawn failure into the inventory operation's typed error",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-spawn-" });
+      yield* fs.makeDirectory(path.join(root, ".repos", "effect"), { recursive: true });
+      const unavailableGit = ScriptedSpawner.make(() =>
+        PlatformError.badArgument({
+          description: "fixture git executable is unavailable",
+          method: "spawn",
+          module: "ChildProcess",
+        })
+      );
+      // The source captures its `Git` (here over the failing spawner) when constructed, before either read runs.
+      // A `Git` built over the failing spawner: the suite's own is memoized over the real one.
+      const source = yield* EffectSchemaInventorySource.make(root).pipe(
+        Effect.provideServiceEffect(Git, Git.make),
+        provideSpawner(unavailableGit)
+      );
+      const verification = yield* Effect.flip(source.verifyPin(PIN));
+      strictEqual(verification._tag, "EffectSchemaInventoryReferenceMissingError");
+      assertInclude(verification.message, "is not a git checkout");
+      assertInclude(verification.message, "fixture git executable is unavailable");
+      const reading = yield* Effect.flip(source.readPinned(PIN, "packages/effect/src/Schema.ts"));
+      strictEqual(reading._tag, "EffectSchemaInventoryError");
+      assertInclude(reading.message, "Unable to read packages/effect/src/Schema.ts");
+      assertInclude(reading.message, "fixture git executable is unavailable");
+    })
+  );
+
+  it.effect(
+    "renders a cause that is not an Error through its inspection",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-cause-" });
+      // A filesystem double failing with a bare value: the manifest read names it as inspected text.
+      const source = yield* EffectSchemaInventorySource.make(root).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          readFileString: () => Effect.fail("disk unplugged" as never),
+        })
+      );
+      const failure = yield* Effect.flip(source.readPin);
+      assertInclude(failure.message, "disk unplugged");
+    })
+  );
+
+  it.effect(
+    "live source reads an unstatable reference as missing",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-reference-" });
+      const reference = path.join(root, ".repos", "effect");
+      yield* fs.makeDirectory(reference, { recursive: true });
+
+      const denied = PlatformError.systemError({
+        _tag: "PermissionDenied",
+        module: "FileSystem",
+        method: "exists",
+        pathOrDescriptor: reference,
+      });
+      const unstatable = yield* EffectSchemaInventorySource.make(root).pipe(
+        Effect.provideService(FileSystem.FileSystem, { ...fs, exists: () => Effect.fail(denied) })
+      );
+      const missing = yield* Effect.flip(unstatable.verifyPin(PIN));
+      strictEqual(missing._tag, "EffectSchemaInventoryReferenceMissingError");
+      assertInclude(missing.message, "is missing");
+    })
+  );
+});

@@ -17,6 +17,7 @@ import { notionPullImpl } from "./internal/NotionPullRun.ts";
 import { repoCardImpl } from "./internal/RepoCardRun.ts";
 import { statusImpl } from "./internal/Status.ts";
 import { resolveVaultRoot } from "./internal/Vault.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
@@ -64,7 +65,8 @@ export type ResearchCommandServiceRequirements =
   | FileSystem.FileSystem
   | HttpClient.HttpClient
   | Path.Path
-  | SecureRandom.SecureRandom;
+  | SecureRandom.SecureRandom
+  | Git;
 
 /**
  * Service contract for research knowledge-vault operations.

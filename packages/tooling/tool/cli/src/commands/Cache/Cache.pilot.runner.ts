@@ -211,6 +211,7 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
       const bun = yield* fs.realPath(process.execPath);
       const node = yield* fs.realPath(request.pilot.nodeExecutable);
       const dependencies = yield* readCacheDependencyMaterialization(sourceRoot, request.pilot.dependencies);
+      // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
       const git = yield* runCapturedStreams({
         command: "/usr/bin/git",
         args: ["rev-parse", "--path-format=absolute", "--git-common-dir"],

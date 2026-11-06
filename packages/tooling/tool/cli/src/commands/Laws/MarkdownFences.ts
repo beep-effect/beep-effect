@@ -79,6 +79,7 @@ import {
   MarkdownFenceVerdict,
   TypecheckFence,
 } from "./MarkdownFences.model.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -727,6 +728,7 @@ export const runMarkdownFences = Effect.fn("MarkdownFences.runMarkdownFences")(f
   | FileSystem.FileSystem
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
+  | Git
 > {
   const repoRoot = yield* findRepoRoot(options.cwd).pipe(
     MarkdownFencesExecutionError.mapError("Failed to locate the repository root")
