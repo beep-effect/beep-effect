@@ -7,6 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Goals/Goals.errors");
@@ -348,4 +349,91 @@ export class GoalGraphOperationalError extends S.TaggedError<
     (message: string): ((cause: unknown) => GoalGraphOperationalError) =>
     (cause: unknown) =>
       GoalGraphOperationalError.make({ message, cause });
+}
+
+/**
+ * What went wrong while collecting, writing or checking a harvest ledger.
+ *
+ * **Example** (Check a reason)
+ *
+ * ```ts
+ * import { HarvestErrorReason } from "@beep/repo-cli/commands/Goals/Goals.errors"
+ *
+ * console.log(HarvestErrorReason.is["harvest-drift"]("harvest-drift")) // true
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const HarvestErrorReason = LiteralKit([
+  "harvest-parse-failed",
+  "harvest-read-failed",
+  "harvest-write-failed",
+  "harvest-git-failed",
+  "harvest-drift",
+]).pipe(
+  $I.annoteSchema("HarvestErrorReason", {
+    description: "Failure class of a harvest ledger operation: parse, read, write, git or check drift.",
+  })
+);
+
+/**
+ * Failure class of a harvest ledger operation.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HarvestErrorReason = typeof HarvestErrorReason.Type;
+
+/**
+ * Failure raised by `beep goals harvest` while reading sources, writing the
+ * ledger or comparing it with the file on disk.
+ *
+ * **Example** (Create a parse error)
+ *
+ * ```ts
+ * import { HarvestError } from "@beep/repo-cli/commands/Goals/Goals.errors"
+ *
+ * const error = HarvestError.new("harvest-parse-failed", "goals/x/history/reflections/2026-11-06-a.md", "bad YAML")
+ * console.log(error.message) // "harvest-parse-failed goals/x/history/reflections/2026-11-06-a.md: bad YAML"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class HarvestError extends S.TaggedError<HarvestError, { readonly brand: unique symbol }>($I`HarvestError`)(
+  "HarvestError",
+  {
+    reason: HarvestErrorReason,
+    path: S.String,
+    detail: S.String,
+  },
+  $I.annoteError<HarvestError>("HarvestError", {
+    description: "A harvest ledger source could not be read or parsed, the ledger could not be written, or it drifted.",
+  })
+) {
+  /**
+   * Render the reason, path and detail as one diagnostic line.
+   *
+   * @returns The `<reason> <path>: <detail>` message.
+   * @category formatting
+   * @since 0.0.0
+   */
+  // fallow-ignore-next-line unused-class-member -- HarvestError.message: Error.toString / Effect Cause.pretty reads this Error override.
+  override get message(): string {
+    return `${this.reason} ${this.path}: ${this.detail}`;
+  }
+
+  /**
+   * Construct a harvest error.
+   *
+   * @param reason - Failure class.
+   * @param path - Repo-relative or absolute path the failure concerns.
+   * @param detail - Diagnostic detail.
+   * @returns A typed harvest error.
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly new = (reason: HarvestErrorReason, path: string, detail: string): HarvestError =>
+    HarvestError.make({ reason, path, detail });
 }

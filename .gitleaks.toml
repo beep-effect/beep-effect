@@ -177,6 +177,18 @@ paths = [
   '''^(?:/repo/)?explorations/packet-system-redesign/research/grok/raw/2-agent-plan-gates\.jsonl$''',
 ]
 
+[[allowlists]]
+description = "The harvest provenance ledger (beep goals harvest) records the 40-hex git commit each row was read at, and one row's text mentions Sourcegraph, so the Sourcegraph detector reports every commit sha in the file. Scoped to this rule, this generated path, and secrets that are exactly a 40-character lowercase git object name; an sgp_ token or any other detector still fires."
+targetRules = ["sourcegraph-access-token"]
+condition = "AND"
+regexTarget = "secret"
+paths = [
+  '''^(?:/repo/)?explorations/packet-archive-and-alpha-harvest/research/harvest/ledger\.jsonl$''',
+]
+regexes = [
+  '''^[0-9a-f]{40}$''',
+]
+
 # Immutable Boolean-creep evidence: independently reproduced SHA-256 values
 # and one ordinary-prose match. Require exact path AND complete known line.
 # Per-rule syntax also supports Gitleaks 8.24.3.

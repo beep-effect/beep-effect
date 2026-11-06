@@ -86,7 +86,30 @@ class ReflectionFinding extends S.Opaque<ReflectionFinding, { readonly brand: un
   )
 ) {}
 
-class ReflectionFrontmatter extends S.Opaque<ReflectionFrontmatter, { readonly brand: unique symbol }>()(
+/**
+ * Schema-validated YAML frontmatter of a goal-packet reflection artifact.
+ *
+ * **Example** (Decode a minimal frontmatter value)
+ *
+ * ```ts
+ * import { ReflectionFrontmatter } from "@beep/repo-cli/commands/Lint/ReflectionArtifact"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownOption(ReflectionFrontmatter)({
+ *   goal: "demo",
+ *   agent: "codex",
+ *   date: "2026-11-06",
+ *   trigger: "closeout",
+ *   confidence: "high",
+ * })
+ * console.log(O.isSome(decoded)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReflectionFrontmatter extends S.Opaque<ReflectionFrontmatter, { readonly brand: unique symbol }>()(
   S.Struct({
     goal: S.String,
     agent: S.String,
@@ -163,17 +186,41 @@ const { log: logPolicyFinding } = makePolicyFindingLogger({
 
 const decodeReflectionFrontmatter = S.decodeUnknownEffect(ReflectionFrontmatter);
 
-// A non-YAML block fails the codec's format check, so `---json` and `+++` blocks are invalid too.
-const frontmatterIsValid = (raw: string): Effect.Effect<boolean> =>
+/**
+ * Decode a raw reflection file's YAML frontmatter as `ReflectionFrontmatter`.
+ *
+ * **Details**
+ *
+ * Shares the codec with {@link reflectionFrontmatterIsValid}: a missing block,
+ * a non-YAML block or a schema mismatch all yield `None`.
+ *
+ * **Example** (Decode a reflection file)
+ *
+ * ```ts
+ * import { decodeReflectionFrontmatterText } from "@beep/repo-cli/commands/Lint/ReflectionArtifact"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(decodeReflectionFrontmatterText("---\ngoal: demo\n---\n"))) // true
+ * ```
+ *
+ * @param raw - Full reflection file text.
+ * @returns The decoded frontmatter, or `None` when it is missing or invalid.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const decodeReflectionFrontmatterText = (raw: string): Effect.Effect<O.Option<ReflectionFrontmatter>> =>
   O.match(O.fromUndefinedOr(FrontmatterSource.split(raw).frontmatter), {
-    onNone: () => Effect.succeed(false),
+    onNone: () => Effect.succeedNone,
     onSome: (block) =>
       YamlFrontmatter.decode(Frontmatter.make({ format: block.format, value: block.value })).pipe(
         Effect.flatMap(decodeReflectionFrontmatter),
-        Effect.as(true),
-        Effect.orElseSucceed(thunkFalse)
+        Effect.option
       ),
   });
+
+// A non-YAML block fails the codec's format check, so `---json` and `+++` blocks are invalid too.
+const frontmatterIsValid = (raw: string): Effect.Effect<boolean> =>
+  Effect.map(decodeReflectionFrontmatterText(raw), O.isSome);
 
 /**
  * Whether a raw reflection file's YAML frontmatter decodes as
