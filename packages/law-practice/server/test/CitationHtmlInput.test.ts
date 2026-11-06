@@ -248,3 +248,27 @@ it.effect("preflights owned byte jobs before snapshot allocation and keeps the t
     expect(Exit.hasInterrupts(citationResult13)).toBe(true);
   })
 );
+
+it.effect("rejects malformed HTML policy and native storage before transport preflight", () =>
+  Effect.gen(function* () {
+    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
+      const failure = yield* makeCitationHtmlInput(policy).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationHtmlInputFailure", reason: "invalid-input" });
+      expect("cause" in failure).toBe(false);
+    }
+    const policy = yield* defaultCitationEnginePolicy;
+    const input = yield* makeCitationHtmlInput(policy.limits);
+    let preflights = 0;
+    for (const storage of [null, {}, { width: 3, bytes: new Uint8Array([65]) }, { width: 2, bytes: [65, 0] }]) {
+      const failure = yield* input
+        .prepareUnicode(storage, () =>
+          Effect.sync(() => {
+            preflights++;
+          })
+        )
+        .pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationHtmlInputFailure", reason: "invalid-input" });
+    }
+    expect(preflights).toBe(0);
+  })
+);

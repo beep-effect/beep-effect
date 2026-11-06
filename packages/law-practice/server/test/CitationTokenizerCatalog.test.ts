@@ -46,6 +46,12 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("canonical t
         controls.metadata
       ).pipe(Effect.flip);
       expect(patternBudget).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patterns" });
+      const patternTextBudget = yield* makeCitationCanonicalTokenizerCatalog(
+        { ...limits, patternUtf16: 1 },
+        controls.payload,
+        controls.metadata
+      ).pipe(Effect.flip);
+      expect(patternTextBudget).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patternUtf16" });
     })
   );
   it.effect(

@@ -34,6 +34,7 @@ const started = '{"_tag":"Started","version":"citation-html-worker/v1"}\\n';
 const success = '{"_tag":"Success","version":"citation-html-worker/v1","text":"released"}\\n';
 
 import {
+  citationBunTestExecutable,
   makeCitationNativeWorkerFixture as fixture,
   makeCitationNativeSleepClock,
   makeCitationNativeManualClock as manualSleep,
@@ -78,9 +79,10 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const real = yield* ChildProcessSpawner;
         let pids: ReadonlyArray<number> = [];
         const citationResult1 = yield* defaultCitationEnginePolicy;
+        const executable = yield* citationBunTestExecutable;
         const worker = yield* makeCitationHtmlWorker(citationResult1.limits, {
           kind: "bun",
-          executable: process.execPath,
+          executable,
           cwd,
           workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         }).pipe(

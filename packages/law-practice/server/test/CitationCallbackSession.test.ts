@@ -5,6 +5,7 @@ import {
   CitationCallbackDictionary,
   CitationCallbackFailure,
   CitationCallbackList,
+  CitationCallbackResource,
   CitationResolutionCallbacks,
   CitationResolutionWork,
   makeCitationCallbackDictionary,
@@ -80,6 +81,73 @@ const controls = () =>
   );
 
 it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback session", (it) => {
+  it.effect("replaces an existing resource list without changing its aliases", () =>
+    Effect.gen(function* () {
+      const input = yield* controls();
+      const prepared = yield* prepareCitationResolution(input);
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      yield* dictionary.start;
+      const base = yield* resource("replace-base");
+      const alias = yield* resource("retained-alias");
+      const original = yield* dictionary.get(base);
+      const first = member(A.getUnsafe(prepared.mentions, 0).id);
+      const second = member(A.getUnsafe(prepared.mentions, 1).id);
+      yield* dictionary.write(original, [first]);
+      yield* dictionary.set(alias, original);
+      const replacement = yield* dictionary.allocate([second]);
+      yield* dictionary.set(base, replacement);
+      const replaced = yield* dictionary.get(base);
+      const retained = yield* dictionary.get(alias);
+      const groups = yield* dictionary.read;
+      expect(replaced).toBe(replacement);
+      expect(retained).toBe(original);
+      expect(A.map(groups, (group) => group.members)).toEqual([[second], [first]]);
+      yield* dictionary.close;
+    })
+  );
+
+  it.effect("rejects registered resources without a runtime owner and mismatched work budgets", () =>
+    Effect.gen(function* () {
+      const input = yield* controls();
+      const prepared = yield* prepareCitationResolution(input);
+      const wrongWork = yield* makeCitationResolutionWork({
+        ...prepared.limits,
+        resolutionIterations: prepared.limits.resolutionIterations + 1,
+      });
+      const mismatch = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, wrongWork),
+        Effect.flip
+      );
+      expect(mismatch.reason).toBe("invalid-input");
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      yield* dictionary.start;
+      const registered = CitationCallbackResource.cases.Registered.make({
+        scope: prepared.engineArtifact,
+        slot: 0,
+        value: null,
+      });
+      for (const operation of [
+        dictionary.get(registered),
+        dictionary.currentResource(registered),
+        dictionary.validateResource(registered),
+        dictionary.isTruthy(registered),
+        dictionary.hostResource(null),
+      ]) {
+        const failure = yield* operation.pipe(Effect.flip);
+        expect(failure.reason).toBe("invalid-input");
+      }
+      const groups = yield* dictionary.read;
+      expect(groups).toEqual([]);
+      yield* dictionary.close;
+    })
+  );
+
   it.effect("verifies evidence before invoking a callback and enforces exact dispatch budgets", () =>
     Effect.gen(function* () {
       const input = yield* controls();

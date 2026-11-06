@@ -16,6 +16,21 @@ const sameOrder = S.toEquivalence(S.Array(S.Natural));
 it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestServices: true })(
   "static source extractor order",
   (it) => {
+    it.effect("bounds colliding source-set probes during installation", () =>
+      Effect.gen(function* () {
+        const controls = yield* loadCitationExtractorSelectionControls();
+        const limits = { ...(yield* defaultCitationEnginePolicy).limits, patternEvaluations: 1 };
+        const bindings = A.map(A.take(controls.ordering.bindings, 3), (row, id) => ({
+          ...row,
+          id,
+          hash: 0n,
+          equalityClass: id,
+          strings: [],
+        }));
+        const failed = yield* makeCitationExtractorOrdering(limits, bindings).pipe(Effect.flip);
+        expect(failed).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patternEvaluations" });
+      })
+    );
     it.effect("recomputes every synthetic repr hash and matches source set order and first introductions", () =>
       Effect.gen(function* () {
         const controls = yield* loadCitationExtractorSelectionControls();

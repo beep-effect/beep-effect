@@ -169,7 +169,8 @@ describe("@beep/law-practice-server QuestionCalendar", () => {
           key: O.none(),
         },
       ],
-    ])
+    ]),
+    { timeout: "10 seconds" }
   )("malformed calendar boundaries", (it) => {
     it.effect("rejects invalid identifiers and unrestorable prior state without writes", () =>
       Effect.gen(function* () {

@@ -12,10 +12,11 @@ import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Scope from "effect/Scope";
-import { makeCitationObservedSpawner } from "./CitationNativeSpawner.fixtures.ts";
+import { citationBunTestExecutable, makeCitationObservedSpawner } from "./CitationNativeSpawner.fixtures.ts";
 
-const command = () =>
-  ChildProcess.make(process.execPath, ["--no-env-file", "--no-install", "-e", "process.stdin.resume()"], {
+const command = Effect.fn("NativeProcessTest.command")(function* () {
+  const executable = yield* citationBunTestExecutable;
+  return ChildProcess.make(executable, ["--no-env-file", "--no-install", "-e", "process.stdin.resume()"], {
     env: {},
     extendEnv: false,
     shell: false,
@@ -26,6 +27,7 @@ const command = () =>
     killSignal: "SIGKILL",
     forceKillAfter: Duration.zero,
   });
+});
 const failure = (reason: CitationRegexWorkerFailure["reason"]) => CitationRegexWorkerFailure.make({ reason });
 
 it.layer(BunServices.layer, { excludeTestServices: true })("shared native process ownership", (it) => {
@@ -65,7 +67,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("shared native proces
         }).pipe(Effect.andThen(Scope.close(scope, Exit.void)), Effect.andThen(owner.reap()), Effect.orDie)
       );
       const permit = yield* admission.acquireRegex("extract");
-      const started = yield* owner.start(command(), permit);
+      const childCommand = yield* command();
+      const started = yield* owner.start(childCommand, permit);
       yield* started.child;
       const refused = yield* started.process.retire(false).pipe(Effect.flip);
       expect(refused).toMatchObject({ reason: "cleanup-unconfirmed" });
@@ -94,7 +97,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("shared native proces
       );
       const permit = yield* admission.acquireRegex("extract");
       let releases = 0;
-      const started = yield* owner.start(command(), {
+      const childCommand = yield* command();
+      const started = yield* owner.start(childCommand, {
         quarantine: permit.quarantine,
         release: Effect.sync(() => {
           releases++;
@@ -151,7 +155,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("shared native proces
         Effect.provideService(Scope.Scope, scope)
       );
       const citationResult10 = yield* admission.acquireRegex("extract");
-      const started = yield* owner.start(command(), citationResult10);
+      const childCommand = yield* command();
+      const started = yield* owner.start(childCommand, citationResult10);
       yield* started.child;
       yield* Scope.close(scope, Exit.void);
       const citationResult11 = yield* observed.snapshot;

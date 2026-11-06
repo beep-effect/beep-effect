@@ -119,17 +119,25 @@ const assertScanRow = Effect.fn("CaseNameScanTest.row")(function* (
   const result = yield* stage.apply(row.request);
   expect(result.state, `source initialized scan ${row.id}`).toEqual(row.state);
 });
-/** Smoke includes source failures and no-call paths; full original replay is hosted. */
+// Canonical controls retain connectors, digit rejection, combining marks, v/plaintiff boundaries,
+// punctuation, native years/parentheses, special token branches and scalar/surrogate distinctions.
+const smokeBoundaryRows = [
+  5, 6, 9, 13, 14, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 37, 38, 52, 53, 54, 55, 56, 57, 58,
+];
+/** Smoke includes source branch controls, failures and no-call paths; full original replay is hosted. */
 export const replayCitationCaseNameScan = Effect.fn("CaseNameScanTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
   const setup = yield* install(kind);
-  const rows = A.filter(setup.corpus.cases, (row) => full || row.smoke || row.error !== null || row.calls.length === 0);
+  const rows = A.filter(
+    setup.corpus.cases,
+    (row) => full || row.smoke || A.contains(smokeBoundaryRows, row.id) || row.error !== null || row.calls.length === 0
+  );
   yield* Effect.forEach(rows, (row) => assertScanRow(setup.stage, row), { discard: true });
-  expect(rows).toHaveLength(full ? 64 : 24);
+  expect(rows).toHaveLength(full ? 64 : 54);
   const calls = A.reduce(rows, 0, (sum, row) => sum + row.calls.length);
-  expect(calls).toBe(full ? 313 : 25);
+  expect(calls).toBe(full ? 313 : 198);
   yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
 });
 

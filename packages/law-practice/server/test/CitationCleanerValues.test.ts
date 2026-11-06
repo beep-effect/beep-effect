@@ -314,7 +314,7 @@ it.effect("applies the captured operation deadline to native materialization wit
     const values = yield* makeCitationCleanerValues(limits).pipe(
       Effect.provideService(Clock.Clock, {
         ...clock,
-        sleep: () => (expired && ++deadlines === 1 ? Effect.void : Effect.never),
+        sleep: () => (expired && ++deadlines === 2 ? Effect.void : Effect.never),
       })
     );
     const ref = yield* values.text("A");

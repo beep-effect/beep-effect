@@ -10,6 +10,7 @@ import {
 } from "@beep/law-practice-domain/values";
 import {
   CitationCallbackRuntimeIndexFactory,
+  CitationMissingPageIdentityFactory,
   makeCitationCallbackRuntimeIndexFactory,
 } from "@beep/law-practice-server/internal/Citation/CallbackRuntimeIndex";
 import {
@@ -92,6 +93,54 @@ const invalid = () => CitationCallbackFailure.make({ reason: "invalid-input" });
 const Presentation = S.Struct({ mentionId: CitationMentionId });
 
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback runtime dictionary", (it) => {
+  it.effect("refuses failed live models and missing-page identity providers without publishing entries", () =>
+    Effect.gen(function* () {
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(bundle);
+      const input = yield* prepareCallbackObservation(
+        CitationCallbackObservation.make({
+          name: "runtime-model-failure",
+          kinds: ["case", "id"],
+          pages: {},
+          bindings: {},
+          events: [],
+          outcome: { status: "value", groups: [] },
+        })
+      );
+      const first = A.getUnsafe(input.mentions, 0);
+      const ref = CitationGroupMember.cases.Mention.make({ mentionId: first.id });
+      const encoded = yield* S.encodeEffect(Citation)(first.citation);
+      const missingPage = yield* S.decodeEffect(Citation)({
+        ...encoded,
+        components: { ...encoded.components, page: null },
+      });
+      const malformed = yield* S.decodeEffect(Citation)(encoded);
+      Reflect.set(malformed.components, "page", 42);
+      const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+        Effect.provideService(CitationFrozenEditions, frozen),
+        Effect.provideService(CitationMissingPageIdentityFactory, {
+          build: Effect.succeed({ read: () => Effect.fail(invalid()) }),
+        })
+      );
+      for (const read of [
+        Effect.fail(invalid()),
+        Effect.succeed(A.getUnsafe(input.mentions, 1).citation),
+        Effect.succeed(malformed),
+        Effect.succeed(missingPage),
+      ]) {
+        const index = yield* factory.build({ limits: input.limits, step: Effect.void, read: () => read });
+        const resource = yield* index.create(ref);
+        const failure = yield* index.get(resource).pipe(Effect.flip);
+        expect(failure.reason).toBe("identity-failed");
+        const entries = yield* index.read;
+        expect(entries).toEqual([]);
+        yield* index.close;
+        const closed = yield* index.uniqueCount([]).pipe(Effect.flip);
+        expect(closed.reason).toBe("identity-failed");
+      }
+    })
+  );
+
   it.effect("executes all three mutable default-key source scenes with complete callback events and final groups", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

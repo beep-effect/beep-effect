@@ -1,8 +1,15 @@
+import { CitationBuiltinCleaners } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
 import {
   CitationCleanerObject,
   CitationCleanerProduced,
 } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import {
+  CitationCleanerProtocols,
+  makeCitationCleanerRegistry,
+} from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
+import { CitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { CitationPythonUnicodeStorage } from "@beep/law-practice-server/internal/Citation/PythonHash";
+import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
@@ -11,6 +18,7 @@ import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+import { constant } from "effect/Function";
 import * as O from "effect/Option";
 import * as TestClock from "effect/testing/TestClock";
 import { makeCitationCleanerRegistryHarness as setup } from "./CitationCleanerRegistry.fixtures.ts";
@@ -284,3 +292,63 @@ describe("live cleaner registry", () => {
     })
   );
 });
+
+it.effect("rejects malformed registry policy before invoking captured capabilities", () =>
+  Effect.gen(function* () {
+    const h = yield* setup();
+    const unavailable = constant(Effect.die("invalid registry policy reached a capability"));
+    const protocols = CitationCleanerProtocols.of({
+      hash: unavailable,
+      equal: unavailable,
+      callable: unavailable,
+      invoke: unavailable,
+      open: unavailable,
+    });
+    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
+      const failure = yield* makeCitationCleanerRegistry(policy).pipe(
+        Effect.provideService(CitationCleanerValues, h.values),
+        Effect.provideService(CitationBuiltinCleaners, { invoke: unavailable }),
+        Effect.provideService(CitationCleanerProtocols, protocols),
+        Effect.flip
+      );
+      expect(failure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "invalid-input" });
+      expect("cause" in failure).toBe(false);
+    }
+  })
+);
+
+it.effect("closes malformed native snapshots and oversized owned-byte hashing without altering registry entries", () =>
+  Effect.gen(function* () {
+    const h = yield* setup();
+    const before = yield* h.registry.read;
+    const value = yield* h.values.retainHost("registered value");
+    const bytes = yield* h.values.bytes(new Uint8Array(CitationEngineAbsoluteMaxima.producedTextUtf16 * 4 + 1));
+    const byteFailure = yield* h.registry.set(bytes, value).pipe(Effect.flip);
+    expect(byteFailure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "runtime-failed" });
+    const key = yield* h.values.text("private key");
+    const original = h.values.getUnicode;
+    const malformed = yield* original(key).pipe(Effect.flatMap(Effect.fromOption));
+    Reflect.set(malformed.storage, "width", 3);
+    Reflect.set(
+      h.values,
+      "getUnicode",
+      Effect.fn("CleanerRegistryTest.invalidNativeSnapshot")((ref: CitationCleanerObject) =>
+        ref === key ? Effect.succeedSome(malformed) : original(ref)
+      )
+    );
+    const nativeFailure = yield* h.registry.set(key, value).pipe(Effect.flip);
+    expect(nativeFailure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "runtime-failed" });
+    Reflect.set(
+      h.values,
+      "getUnicode",
+      Effect.fn("CleanerRegistryTest.missingNativeSnapshot")((ref: CitationCleanerObject) =>
+        ref === key ? Effect.succeedNone : original(ref)
+      )
+    );
+    const missingFailure = yield* h.registry.set(key, value).pipe(Effect.flip);
+    expect(missingFailure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "unissued-value" });
+    Reflect.set(h.values, "getUnicode", original);
+    const after = yield* h.registry.read;
+    expect(after).toEqual(before);
+  })
+);

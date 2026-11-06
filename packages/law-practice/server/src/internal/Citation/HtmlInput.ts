@@ -87,7 +87,7 @@ export class CitationHtmlInputFailure extends S.TaggedError<
   })
 ) {}
 const whitespace = HashSet.fromIterable(
-  A.map(A.fromIterable(citationPythonTextData.whitespace), (char) => O.getOrElse(Str.codePointAt(char, 0), () => -1))
+  A.map(A.fromIterable(citationPythonTextData.whitespace), (char) => O.getOrThrow(Str.codePointAt(char, 0)))
 );
 type ReadPoint = (index: number) => number;
 const xmlPrefix: ReadonlyArray<number> = [60, 63, 120, 109, 108];

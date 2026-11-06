@@ -292,3 +292,28 @@ it.effect("translates stage and native preparation failures and preserves reserv
     });
   })
 );
+
+it.effect("keeps the enclosing native cleaner deadline active when the preparation timer has not expired", () =>
+  Effect.gen(function* () {
+    const clock = yield* Clock.Clock;
+    let timers = 0;
+    const policy = yield* defaultCitationEnginePolicy;
+    const cleaners = yield* makeCitationLiteralCleaners(policy.limits).pipe(
+      Effect.provideService(Clock.Clock, {
+        ...clock,
+        sleep: () => (++timers === 2 ? Effect.void : Effect.never),
+      })
+    );
+    const work: CitationCleanerWork = {
+      nested: constant(Effect.die("unexpected nested cleaner")),
+      reserveText: constant(Effect.die("deadline should precede reservation")),
+      snapshot: Effect.succeed(CitationCleanerWorkSnapshot.make({ producedTextUtf16: 0, closed: false })),
+      withTextCapacity: constant(Effect.die("unexpected capacity loan")),
+    };
+    const failure = yield* cleaners
+      .stageUnicode("xml", { width: 1, bytes: new Uint8Array(100_000) }, work)
+      .pipe(Effect.flip);
+    expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "cleanDeadline" });
+    expect(timers).toBe(2);
+  })
+);
