@@ -1237,6 +1237,14 @@ accounting checker.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug citation-extraction-engine`; add a `kind: checkpoint` file there, never edit this block._
 
+### Admit source resolution inside verified extraction, 2026-11-06
+
+Compose raw source preparation and verified extraction under the existing metadata operation. Reuse parent admission, total timing and cumulative budget, with resolver active-permit and no-native-refusal controls. Full dual-source/retained-input dispatch and final engine contracts remain open. See history/evidence/2026-11-06-admitted-source-extraction.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Remove the private source-extraction composition and its connected controls; preserve the existing resolver and verified extraction stages.
+
 ### Authenticated source through verified extraction, 2026-11-06
 
 A genuine parent source capability now drives the actual primitive extraction request. Unchanged text retains its existing proof. Changed tokenizer text receives a verified manifestation with preserved artifact/locator/normalization identity and a versioned parent/engine/cleaning-mode/output commitment. Source derivation and occurrence projection share one admitted operation, deadline and cumulative budget with extraction. Plain, Unicode and raw HTML replay pass on both runtimes; output evidence is produced by production code. Determinism, mode/engine changes, malformed-text refusal and shortcut bypass controls pass. Public service/Layer, authenticated runtime asset loading, final document adaptation and full accounting/safety qualification remain open. See history/evidence/2026-11-06-verified-extraction.md.

@@ -3,6 +3,7 @@
  */
 import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/SourceText";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
+import { makeCitationSourceExtraction } from "@beep/law-practice-server/internal/Citation/SourceExtraction";
 import { makeCitationSourceRequestAdapter } from "@beep/law-practice-server/internal/Citation/SourceRequest";
 import { makeCitationVerifiedExtraction } from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
 import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
@@ -77,13 +78,67 @@ const inputForRow = Effect.fnUntraced(function* (
   });
   return { markup, rawText: rawText.text, source: request.source, request };
 });
+const assertResolvedRequest = Effect.fnUntraced(function* (
+  installed: Installed,
+  input: Effect.Success<ReturnType<typeof inputForRow>>,
+  expected: VerifiedResult,
+  row: SourceRow
+) {
+  const { setup, defaultConfiguration, engineArtifact, provided, translated } = installed;
+  let calls = 0;
+  const resolver = SourceTextResolver.of({
+    resolve: Effect.fn("SourceExtractionTest.resolveAdmittedSource")(() =>
+      Effect.gen(function* () {
+        calls++;
+        const admitted = yield* setup.operation.snapshot;
+        expect(admitted).toMatchObject({ active: 1, queued: 0 });
+        return ResolvedSourceText.make({ identity: input.source.source, text: input.rawText });
+      })
+    ),
+  });
+  const stage = yield* makeCitationSourceExtraction(setup.limits, setup.runtime, {
+    engineArtifact,
+    extraction: defaultConfiguration,
+  }).pipe(
+    Effect.provideContext(provided),
+    Effect.provideService(SourceTextResolver, resolver),
+    DateTime.withCurrentZoneOffset(0)
+  );
+  const invocation = stage.extract({
+    ...input.request,
+    source: input.source.source,
+    sourceText: input.rawText,
+  });
+  const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
+  const actual = yield* closed;
+  expect(calls).toBe(1);
+  expect(actual.source).toEqual(expected.source);
+  expect(actual.semantic.citations).toEqual(expected.semantic.citations);
+  expect(actual.reservedUnits).toBe(expected.reservedUnits);
+  if (actual.semantic.raw.outcome._tag !== "Document") return yield* Effect.die("expected resolved Document");
+  yield* assertCitationTokenizedExtractionRow(actual.semantic.raw.outcome.result.extraction, row, translated);
+  yield* assertOutputEvidence(actual, row);
+  const beforeRefusal = yield* setup.observed.snapshot;
+  const refused = yield* stage
+    .extract({
+      source: input.source.source,
+      sourceText: "wrong",
+      role: input.request.role,
+    })
+    .pipe(Effect.flip);
+  expect(refused._tag).toBe("CitationInputError");
+  const afterRefusal = yield* setup.observed.snapshot;
+  expect(afterRefusal).toEqual(beforeRefusal);
+  const released = yield* setup.operation.snapshot;
+  expect(released).toMatchObject({ active: 0, queued: 0 });
+});
 /** No test-generated output evidence: the production composition derives it. */
 export const replayCitationVerifiedExtraction = Effect.fn("VerifiedExtractionTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
-  const { corpus, setup, defaultConfiguration, engineArtifact, translated, provided } =
-    yield* installCitationDefaultConfigurationFixture(kind);
+  const installed = yield* installCitationDefaultConfigurationFixture(kind);
+  const { corpus, setup, defaultConfiguration, engineArtifact, translated, provided } = installed;
   const rows = A.filter(corpus.cases, (row) => full || A.contains([4, 26, 32], row.id));
   const config = { engineArtifact, extraction: defaultConfiguration };
   const stage = yield* makeCitationVerifiedExtraction(setup.limits, setup.runtime, config).pipe(
@@ -123,6 +178,7 @@ export const replayCitationVerifiedExtraction = Effect.fn("VerifiedExtractionTes
     yield* assertOutputEvidence(actual, row);
     expect(actual.reservedUnits).toBe(actual.occurrences.reservedUnits);
     expect(actual.reservedUnits).toBeGreaterThan(actual.semantic.reservedUnits);
+    if (!full) yield* assertResolvedRequest(installed, input, actual, row);
   }
   expect(rows).toHaveLength(full ? 36 : 3);
   yield* assertCitationWorkerCompositionObserved(setup.operation, setup.admission, setup.observed.snapshot);
