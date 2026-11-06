@@ -72,6 +72,7 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { bearers, targetFor } from "./cache-conformance-server.ts";
 import { input as bundleInput, contractInput } from "./helpers/cache-producer-bundle-fixture.ts";
+import { NodeTestLayer } from "./support/CommandTest.ts";
 
 afterEach(() => vi.restoreAllMocks());
 const activationJson = JsonStringCodec(CacheActivationPreview);
@@ -325,7 +326,7 @@ const provisioningFixture = Effect.fn("WorkflowTest.provisioningFixture")(functi
 it.layer(
   Layer.mergeAll(
     NodeCrypto.layer,
-    NodeServices.layer,
+    NodeTestLayer,
     FetchHttpClient.layer,
     FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
     Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64) }))

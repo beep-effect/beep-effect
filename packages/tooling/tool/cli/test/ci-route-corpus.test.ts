@@ -1,6 +1,9 @@
 import * as NodeZlib from "node:zlib";
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { fcRuns } from "@beep/fc-runs";
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { Repo } from "@beep/github/Repo";
+import { RetryPolicy } from "@beep/github/Resilience";
 import {
   HostedJob,
   HostedRun,
@@ -11,18 +14,21 @@ import {
 } from "@beep/repo-cli/commands/Ci";
 import {
   makeRouteCorpus,
+  makeRouteGithubRunner,
   ROUTE_CORPUS_FILE,
   ROUTE_CORPUS_LIST_CAP,
   ROUTE_CORPUS_RECEIPT_FILE,
   RouteCorpusLive,
   RouteGhRateLimited,
 } from "@beep/repo-cli/commands/Ci/RouteCorpus";
+import { GithubTransportFetch, layerGithubRest } from "@beep/repo-cli/test/SharedInternals";
 import { provideScopedLayer } from "@beep/test-utils/Layer";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertInclude, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -34,15 +40,20 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import { completionFetch } from "./support/CompletionFetch.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { RouteGhRunner } from "@beep/repo-cli/commands/Ci/RouteCorpus";
 
+const decodeListedIds = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.Struct({ databaseId: S.Int }))));
+const decodeViewedJobs = S.decodeUnknownEffect(
+  S.fromJsonString(S.Struct({ jobs: S.Array(S.Struct({ name: S.String })) }))
+);
 const FIXTURES = new URL("./fixtures/ci-route/corpus/", import.meta.url);
 const PR_RUN = 18890000101;
 const MAIN_RUN = 18890000102;
@@ -77,13 +88,6 @@ const fixtureRunner = Effect.fn("RouteCorpusTest.fixtureRunner")(function* (call
     );
   };
   return runGh;
-});
-
-const fixtureText = Effect.fn("RouteCorpusTest.fixtureText")(function* (name: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const fromFileUrl1 = yield* path.fromFileUrl(FIXTURES);
-  return yield* fs.readFileString(path.join(fromFileUrl1, name));
 });
 
 const viewedRunIds = (calls: ReadonlyArray<ReadonlyArray<string>>): ReadonlyArray<string> =>
@@ -202,11 +206,19 @@ const repin = Effect.fn("RouteCorpusTest.repin")(function* (
   yield* fs.writeFileString(receiptPath, encodedReceipt);
 });
 
-const captureLive = (spawner: ScriptedSpawner, options: RouteCorpusCaptureOptions) =>
-  Effect.gen(function* () {
-    const corpus = yield* RouteCorpus;
-    return yield* corpus.capture(options);
-  }).pipe(provideScopedLayer(RouteCorpusLive), provideSpawner(spawner));
+const restRunner = (fetch: typeof globalThis.fetch) =>
+  makeRouteGithubRunner.pipe(
+    provideScopedLayer(
+      layerGithubRest.pipe(
+        Layer.provideMerge(
+          Layer.mergeAll(
+            GitHubClient.layerFromToken({ token: Redacted.make("fixture"), fetch, retry: RetryPolicy.none }),
+            Repo.layerFromSlug("example/repo")
+          )
+        )
+      )
+    )
+  );
 
 // Retries and rate-limit waits sleep on the test clock. The capture does real
 // I/O between its sleeps, so keep advancing the clock until it has finished.
@@ -215,9 +227,6 @@ const untilDone = Effect.fn("RouteCorpusTest.untilDone")(function* <A, E, R>(eff
   yield* TestClock.adjust("1 second").pipe(Effect.repeat({ until: () => fiber.pollUnsafe() !== undefined }));
   return yield* Fiber.join(fiber);
 });
-
-const failLive = (spawner: ScriptedSpawner, options: RouteCorpusCaptureOptions) =>
-  captureLive(spawner, options).pipe(Effect.flip, untilDone);
 
 // The corpus stores one encoded HostedRun per line and the receipt as JSON, so
 // every value the schemas admit must survive those exact codecs. Compare by
@@ -864,120 +873,204 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       })
     );
 
-    it.effect("runs gh through the repo capture in the capture's repo root", () =>
+    it.effect("the live corpus uses the gh login and refuses an unavailable login before HTTP", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const madeTempDirectoryScoped53 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
-        const root = yield* fs.realPath(madeTempDirectoryScoped53);
-        yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
-        const list = yield* fixtureText("list.Check.2026-10-28.json");
-        const view = yield* fixtureText(`view.${RERUN}.json`);
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-live-" });
         const options = RouteCorpusCaptureOptions.make({
           repoRoot: root,
           since: "2026-10-28",
           until: O.some("2026-10-28"),
-          workflows: ["Check"],
+          workflows: ["check.yml"],
           outDir: "corpus",
         });
-
-        // A scripted `gh`: answers the list and the view, and records every spawn with its cwd.
-        const spawner = ScriptedSpawner.make((_command, args) => ({ stdout: args[1] === "list" ? list : view }));
-        const receipt = yield* captureLive(spawner, options);
-
-        expect([receipt.runs, receipt.heads]).toEqual([1, 1]);
-        expect(A.map(spawner.spawns, (spawn) => [spawn.cwd, spawn.command, ...spawn.args])).toEqual([
-          [
-            root,
-            "gh",
-            "run",
-            "list",
-            "--workflow",
-            "Check",
-            "--created",
-            "2026-10-28",
-            "--limit",
-            "1000",
-            "--json",
-            LIST_FIELDS,
-          ],
-          [root, "gh", "run", "view", `${RERUN}`, "--json", VIEW_FIELDS],
-        ]);
-      })
-    );
-
-    it.effect("waits for the rate-limit reset gh reports, then finishes the capture", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const madeTempDirectoryScoped54 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
-        const root = yield* fs.realPath(madeTempDirectoryScoped54);
-        yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
-        const list = yield* fixtureText("list.Check.2026-10-28.json");
-        const view = yield* fixtureText(`view.${RERUN}.json`);
-        yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-28T23:00:00Z").pipe(DateTime.toEpochMillis));
-        const options = RouteCorpusCaptureOptions.make({
-          repoRoot: root,
-          since: "2026-10-28",
-          until: O.some("2026-10-28"),
-          workflows: ["Check"],
-          outDir: "corpus",
-        });
-
-        // The first view is refused; the spawn is recorded before the script answers, so it counts itself.
-        const spawner: ScriptedSpawner = ScriptedSpawner.make((_command, args) =>
-          args[0] === "api"
-            ? { stdout: rateLimitPayload("2026-10-28T23:00:30Z") }
-            : args[1] === "list"
-              ? { stdout: list }
-              : A.length(A.filter(spawner.spawns, (spawn) => spawn.args[1] === "view")) === 1
-                ? { exit: 1, stdout: "HTTP 403: API rate limit exceeded for user ID 1." }
-                : { stdout: view }
-        );
-        const receipt = yield* untilDone(captureLive(spawner, options));
-
-        expect([receipt.until, receipt.runs]).toEqual(["2026-10-27", 1]);
-        // The refused view is not retried by the runner; the corpus waits, then retries it once.
-        expect(A.map(spawner.spawns, (spawn) => A.join(A.take([spawn.command, ...spawn.args], 3), " "))).toEqual([
-          "gh run list",
-          "gh run view",
-          "gh api rate_limit",
-          "gh run view",
-        ]);
-      })
-    );
-
-    it.effect("retries a failing gh twice, then fails with the failure in the message", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const madeTempDirectoryScoped55 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
-        const root = yield* fs.realPath(madeTempDirectoryScoped55);
-        yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
-        const options = RouteCorpusCaptureOptions.make({
-          repoRoot: root,
-          since: "2026-10-28",
-          until: O.some("2026-10-28"),
-          workflows: ["Check"],
-          outDir: "corpus",
-        });
-
-        const exits = ScriptedSpawner.make(() => ({ exit: 1, stdout: "HTTP 502: Bad Gateway" }));
-        const exited = yield* failLive(exits, options);
-        expect(exited.reason).toBe("corpus-fetch");
-        assertInclude(exited.message, "exited 1: HTTP 502: Bad Gateway");
-        expect(A.length(exits.spawns)).toBe(3);
-
-        const truncated = yield* failLive(
-          ScriptedSpawner.make(() => ({ stdout: Str.repeat(512 * 1024 + 1)("x") })),
-          options
-        );
-        assertInclude(truncated.message, "overflowed the capture bound");
-
-        const missing = yield* failLive(
-          ScriptedSpawner.make(() =>
-            PlatformError.systemError({ _tag: "NotFound", module: "ChildProcess", method: "spawn" })
+        const transport = completionFetch(() => ({ body: { total_count: 0, workflow_runs: [] } }));
+        const capture = Effect.flatMap(RouteCorpus, (corpus) => corpus.capture(options));
+        const auth = ScriptedSpawner.make((command) => ({
+          stdout: command === "gh" ? "fixture-token" : "git@github.com:example/repo.git",
+        }));
+        const receipt = yield* capture.pipe(
+          Effect.provideServiceEffect(
+            RouteCorpus,
+            RouteCorpusLive.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RouteCorpus)))
           ),
-          options
+          Effect.provideService(GithubTransportFetch, O.some(transport.fetch)),
+          provideSpawner(auth)
         );
-        assertInclude(missing.message, "Failed to spawn gh run list");
+        expect(receipt.runs).toBe(0);
+        expect(A.filter(auth.spawns, (spawn) => spawn.command === "gh")).toHaveLength(1);
+        const before = transport.calls.length;
+        const unavailable = ScriptedSpawner.make((command) =>
+          command === "gh" ? { exit: 1 } : { stdout: "git@github.com:example/repo.git" }
+        );
+        const error = yield* Effect.flatMap(RouteCorpus, (corpus) =>
+          corpus.capture(RouteCorpusCaptureOptions.make({ ...options, outDir: "refused" }))
+        ).pipe(
+          Effect.provideServiceEffect(
+            RouteCorpus,
+            RouteCorpusLive.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RouteCorpus)))
+          ),
+          Effect.provideService(GithubTransportFetch, O.some(transport.fetch)),
+          provideSpawner(unavailable),
+          Effect.flip
+        );
+        expect(error.reason).toBe("corpus-fetch");
+        expect(transport.calls.length).toBe(before);
+        const malformed = completionFetch(() => ({ body: { total_count: 1, workflow_runs: [{}] } }));
+        const invalid = yield* Effect.flatMap(RouteCorpus, (corpus) =>
+          corpus.capture(RouteCorpusCaptureOptions.make({ ...options, outDir: "malformed" }))
+        ).pipe(
+          Effect.provideServiceEffect(
+            RouteCorpus,
+            RouteCorpusLive.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RouteCorpus)))
+          ),
+          Effect.provideService(GithubTransportFetch, O.some(malformed.fetch)),
+          provideSpawner(auth),
+          Effect.flip,
+          untilDone
+        );
+        expect(invalid.reason).toBe("corpus-fetch");
+        expect(invalid.message).toContain("returned an unreadable payload.");
+      })
+    );
+    it.effect("resolves a display name past workflow page one and paginates runs and jobs", () =>
+      Effect.gen(function* () {
+        const wire = {
+          id: 7,
+          name: "Check",
+          event: "pull_request",
+          status: "completed",
+          conclusion: "success",
+          created_at: "2026-10-28T00:00:00Z",
+          head_branch: "feat/demo",
+          head_sha: "abc",
+          run_attempt: 2,
+        };
+        // One paginated route per suffix; the run view itself is the fallback.
+        const pages: ReadonlyArray<readonly [suffix: string, page: (page2: boolean) => unknown]> = [
+          [
+            "/workflows",
+            (page2) => ({
+              total_count: 2,
+              workflows: page2
+                ? [{ id: 42, name: "Check", path: ".github/workflows/check.yml" }]
+                : [{ id: 1, name: "Other", path: ".github/workflows/other.yml" }],
+            }),
+          ],
+          [
+            "/jobs",
+            (page2) => ({
+              total_count: 2,
+              jobs: [{ name: page2 ? "Lint" : "Check", conclusion: "success", started_at: null, completed_at: null }],
+            }),
+          ],
+          ["/runs", (page2) => ({ total_count: 2, workflow_runs: [{ ...wire, id: page2 ? 8 : 7 }] })],
+        ];
+        const transport = completionFetch((url) => {
+          const page2 = url.searchParams.get("page") === "2";
+          return O.match(
+            A.findFirst(pages, ([suffix]) => Str.endsWith(suffix)(url.pathname)),
+            {
+              onNone: () => ({ body: wire }),
+              onSome: ([, page]) => ({ body: page(page2), next: !page2 }),
+            }
+          );
+        });
+        const run = yield* restRunner(transport.fetch);
+        const listed = yield* run(["run", "list", "--workflow", "Check", "--created", "2026-10-28"], ".");
+        const rows = yield* decodeListedIds(listed);
+        expect(A.map(rows, (row) => row.databaseId)).toEqual([7, 8]);
+        const viewed = yield* run(["run", "view", "7"], ".");
+        const view = yield* decodeViewedJobs(viewed);
+        expect(A.map(view.jobs, (job) => job.name)).toEqual(["Check", "Lint"]);
+        expect(A.some(transport.calls, (url) => Str.includes("/workflows/42/runs")(url.pathname))).toBe(true);
+      })
+    );
+    it.effect("accepts workflow filenames and ids directly; refuses an unresolved display name", () =>
+      Effect.gen(function* () {
+        const transport = completionFetch((url) => ({
+          body: Str.endsWith("/workflows")(url.pathname)
+            ? { workflows: [], total_count: 0 }
+            : { workflow_runs: [], total_count: 0 },
+        }));
+        const run = yield* restRunner(transport.fetch);
+        for (const workflow of ["42", "check.yml"]) {
+          const listed = yield* run(["run", "list", "--workflow", workflow, "--created", "2026-10-28"], ".");
+          expect(listed).toBe("[]");
+        }
+        const missing = yield* untilDone(
+          run(["run", "list", "--workflow", "Missing", "--created", "2026-10-28"], ".").pipe(Effect.flip)
+        );
+        expect(missing._tag).toBe("RouteError");
+        expect(A.filter(transport.calls, (url) => Str.endsWith("/workflows")(url.pathname)).length).toBe(3);
+      })
+    );
+    it.effect("normalizes nullable run fields and omitted attempts for lists and views", () =>
+      Effect.gen(function* () {
+        const wire = {
+          id: 7,
+          name: null,
+          event: "push",
+          status: null,
+          conclusion: null,
+          created_at: "2026-10-28T00:00:00Z",
+          head_branch: null,
+          head_sha: "abc",
+        };
+        const transport = completionFetch((url) => ({
+          body: Str.endsWith("/jobs")(url.pathname)
+            ? { total_count: 0, jobs: [] }
+            : Str.endsWith("/runs")(url.pathname)
+              ? { total_count: 1, workflow_runs: [wire] }
+              : wire,
+        }));
+        const run = yield* restRunner(transport.fetch);
+        for (const args of [
+          ["run", "list", "--workflow", "check.yml"],
+          ["run", "view", "7"],
+        ]) {
+          const result = yield* run(args, ".");
+          expect(result).toContain('"workflowName":""');
+          expect(result).toContain('"status":""');
+          expect(result).toContain('"headBranch":""');
+          expect(result).toContain('"attempt":1');
+        }
+        const malformed = completionFetch(() => ({ body: { total_count: 1, workflow_runs: [{}] } }));
+        const refused = yield* restRunner(malformed.fetch);
+        const error = yield* untilDone(refused(["run", "list", "--workflow", "check.yml"], ".").pipe(Effect.flip));
+        expect(error.message).toContain("returned an unreadable payload.");
+        const missing = yield* untilDone(run(["run", "list"], ".").pipe(Effect.flip));
+        expect(missing._tag).toBe("RouteError");
+      })
+    );
+
+    it.effect("maps REST rate limits, reads the core reset, and retries refused or malformed reads twice", () =>
+      Effect.gen(function* () {
+        const limited = completionFetch((url) =>
+          Str.endsWith("/rate_limit")(url.pathname)
+            ? {
+                body: {
+                  resources: {
+                    core: { limit: 5000, remaining: 0, reset: 123 },
+                    graphql: { limit: 5000, remaining: 10, reset: 123 },
+                  },
+                },
+              }
+            : { status: 429, body: { message: "API rate limit exceeded" } }
+        );
+        const run = yield* restRunner(limited.fetch);
+        const error = yield* run(["run", "view", "7"], ".").pipe(Effect.flip);
+        expect(error._tag).toBe("RouteGhRateLimited");
+        expect(limited.calls.length).toBe(1);
+        const rateLimit = yield* run(["api", "rate_limit"], ".");
+        expect(rateLimit).toContain('"reset":123');
+        for (const response of [{ status: 403, body: { message: "Forbidden" } }, { body: { malformed: true } }]) {
+          const transport = completionFetch(() => response);
+          const refused = yield* restRunner(transport.fetch);
+          const failed = yield* untilDone(refused(["run", "view", "7"], ".").pipe(Effect.flip));
+          expect(failed._tag).toBe("RouteError");
+          expect(transport.calls.length).toBe(3);
+        }
       })
     );
   }

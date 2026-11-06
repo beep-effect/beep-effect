@@ -146,3 +146,33 @@ it.layer(NodeCommandTestLayer, { timeout: "30 seconds" })("route git over the ki
     })
   );
 });
+
+// `mergeBase` keeps the capture's two wordings over the kit (W7b, SPEC D-19): a spawn failure, or git's exit code.
+const mergeBaseFailure = (error: GitCommandError | NotARepositoryError | UnknownRefError) =>
+  Effect.gen(function* () {
+    const git = yield* makeRouteGit("/repo");
+    return yield* Effect.flip(git.mergeBase("b2"));
+  }).pipe(Effect.provideService(Git, Git.makeTest({ mergeBase: () => Effect.fail(error) })));
+
+it.layer(NodeCommandTestLayer, { timeout: "30 seconds" })("route merge base over the kit's typed failures", (it) => {
+  it.effect("names a spawn failure with the kit's argv", () =>
+    Effect.gen(function* () {
+      const failure = yield* mergeBaseFailure(
+        GitCommandError.make({ kind: "refused", args: ["merge-base"], cwd: "/repo", stderr: "", detail: "option-like" })
+      );
+      expect(failure.reason).toBe("git");
+      assertInclude(failure.message, "Failed to spawn git merge-base origin/main b2.");
+    })
+  );
+
+  it.effect("names git's exit code, 128 for an unknown object", () =>
+    Effect.gen(function* () {
+      const failed = yield* mergeBaseFailure(
+        GitCommandError.make({ kind: "failed", args: ["merge-base"], cwd: "/repo", exitCode: 1, stderr: "" })
+      );
+      assertInclude(failed.message, "git merge-base origin/main b2 exited 1.");
+      const unknown = yield* mergeBaseFailure(UnknownRefError.make({ ref: "b2", cwd: "/repo" }));
+      assertInclude(unknown.message, "git merge-base origin/main b2 exited 128.");
+    })
+  );
+});

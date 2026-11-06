@@ -47,10 +47,8 @@ import {
   admissionProtocolStatus,
   admissionStatus,
   GITHUB_CHECK_MODE_VALUES,
-  gitPathListFromNulOutput,
   reapAdmissionState,
   reconcileAttemptJournalsForCheckout,
-  runGitRawOutput,
   setAdmissionEvictionProtocol,
 } from "../../internal/repo-run/index.ts";
 import { cachePolicyCommand } from "../Cache/CachePolicy.command.ts";
@@ -90,7 +88,7 @@ import {
 } from "./internal/JSDocRatchet.ts";
 import { pinnedLaneProofBaseSha } from "./internal/LaneProofReuse.ts";
 import { runPackageVerifyCli } from "./internal/PackageVerify.ts";
-import { collectFiles, repoRelative } from "./internal/QualityArtifactSupport.ts";
+import { collectFiles, listGitVisiblePaths, repoRelative } from "./internal/QualityArtifactSupport.ts";
 import { testTsgoPrograms } from "./internal/TestTsgoPrograms.ts";
 import {
   renderTurboConfigProofReport,
@@ -994,6 +992,7 @@ const currentBranch = Effect.fn("QualityScriptCommands.currentBranch")(function*
   QualityScriptCommandError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
+  // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
   return yield* collectSuccessfulOutput(
     QualityTaskStep.make({
       label: "git:branch",
@@ -1016,6 +1015,7 @@ const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(fun
   // reuse), so a battery whose pin still matches leaves the ref alone.
   const pinned = pinnedLaneProofBaseSha();
   if (O.isSome(pinned)) {
+    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
     const current = yield* collectSuccessfulOutput(
       QualityTaskStep.make({
         label: "git:origin-main",
@@ -1035,6 +1035,7 @@ const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(fun
     );
   }
   yield* Console.log("[github-checks] refreshing origin/main");
+  // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
   const shallow = yield* collectSuccessfulOutput(
     QualityTaskStep.make({
       label: "git:shallow",
@@ -1045,9 +1046,11 @@ const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(fun
   );
 
   if (shallow === "true") {
+    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
     yield* runFixedStep(repoRoot, "git:fetch:unshallow", "git", ["fetch", "origin", "--quiet", "--unshallow"]);
   }
 
+  // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
   yield* runFixedStep(repoRoot, "git:fetch:origin-main", "git", [
     "fetch",
     "origin",
@@ -1376,6 +1379,7 @@ const runSecretScan = Effect.fn("QualityScriptCommands.runSecretScan")(function*
   QualityScriptCommandError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
+  // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
   const mergeBase = yield* collectSuccessfulOutput(
     QualityTaskStep.make({
       label: "secrets:merge-base",
@@ -2689,17 +2693,9 @@ const collectGeneratedVitestAliasDiagnostics = (
 // takes no pathspec: an inherited GIT_LITERAL_PATHSPECS would disable glob magic and drop root files.
 const collectGitVisiblePaths = Effect.fn("QualityScriptCommands.collectGitVisiblePaths")(function* (
   repoRoot: string
-): Effect.fn.Return<
-  HashSet.HashSet<string>,
-  QualityScriptCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const resultGitRawOutput = yield* runGitRawOutput(
-    repoRoot,
-    ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
-    jsdocGitErrorAdapter
-  );
-  const visiblePaths = HashSet.fromIterable(gitPathListFromNulOutput(resultGitRawOutput));
+): Effect.fn.Return<HashSet.HashSet<string>, QualityScriptCommandError, Git> {
+  const visible = yield* listGitVisiblePaths(repoRoot, A.empty(), jsdocGitErrorAdapter);
+  const visiblePaths = HashSet.fromIterable(visible);
   // A listing that misses the base config came from the wrong work tree (a git-less copy nested in
   // another checkout), and filtering by it would pass every scan vacuously.
   if (!HashSet.has(visiblePaths, "tsconfig.base.json")) {
@@ -3336,6 +3332,7 @@ export const isModuleTagScannedPathForTesting =
 export const runJSDocModuleTagsCheck = Effect.fn("QualityScriptCommands.runJSDocModuleTagsCheck")(
   function* (): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
     const { fs, path, repoRoot } = yield* qualityFileContext();
+    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
     const result = yield* collectOutput(
       QualityTaskStep.make({
         label: "lint:jsdoc-module-tags:git-ls-files",
@@ -3411,7 +3408,7 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));

@@ -220,6 +220,7 @@ class PilotShadowScenario extends S.Opaque<PilotShadowScenario, { readonly brand
   )
 ) {}
 
+// KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
 const captureHost = Effect.fn("CachePilot.captureHost")(function* (root: string, args: ReadonlyArray<string>) {
   const result = yield* runCapturedStreams({
     command: "/usr/bin/git",
@@ -445,7 +446,9 @@ const runPilot = Effect.fn("CachePilot.run")(
       Order.String
     );
     const context = yield* resolveWorktreeContext(root);
+    // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
     const revision = yield* captureHost(root, ["rev-parse", "HEAD"]).pipe(Effect.flatMap(decodeGitObjectId));
+    // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
     const commonGit = yield* captureHost(root, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
     const sourceRoots = yield* Effect.forEach(request.worktrees, (source) => fs.realPath(source), { concurrency: 1 });
     const verifySourceIssuerExclusion = Effect.fn("CachePilot.verifySourceIssuerExclusion")(function* () {
@@ -474,6 +477,7 @@ const runPilot = Effect.fn("CachePilot.run")(
             "A pilot source is not a distinct registered worktree at the current revision."
           );
         }
+        // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
         if ((yield* captureHost(source, ["status", "--porcelain", "--untracked-files=all"])) !== "") {
           return yield* CacheCommandError.new("Pilot source worktrees must be clean before read-only execution.");
         }
@@ -592,6 +596,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       }
       yield* writeContainedFileString(types, "turbo.json", typesConfig);
       yield* writeContainedFileString(identity, "turbo.json", before);
+      // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
       const gitDirectory = yield* captureHost(source, ["rev-parse", "--absolute-git-dir"]);
       if (path.dirname(gitDirectory) !== path.join(commonGit, "worktrees")) {
         return yield* CacheCommandError.new("Pilot source uses unsupported Git metadata placement.");
@@ -1203,6 +1208,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       }
       for (const source of sourceRoots)
         if (
+          // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
           (yield* captureHost(source, ["status", "--porcelain", "--untracked-files=all"])) !== "" ||
           (yield* captureHost(source, ["rev-parse", "HEAD"])) !== revision
         ) {
