@@ -59,6 +59,18 @@ const fixture = Effect.fn("ObservationOutcomesTest.fixture")(function* (limits =
   const journal = yield* makeTranscriptIntakeJournal(limits);
   return { quota, launches, views, journal };
 });
+const makeRetention = Effect.fn("ObservationOutcomesTest.retention")(() =>
+  makeEvidenceRetention(
+    config,
+    DeliveryLedgerConfig.make({ targetId: id("d"), maxEvents: 64, maxAttempts: 64, maxAttemptsPerEvent: 8 }),
+    EvidenceRetentionPolicy.make({
+      minEpochMillis: 60000,
+      minAttemptQuietMillis: 60000,
+      maxRecords: 64,
+      deadlineMillis: 10000,
+    })
+  )
+);
 
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
   it.effect("keeps a failed process and independent quota report separate", () =>
@@ -291,16 +303,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
       const first = yield* f.quota.record(snapshot(), 0);
       yield* f.launches.record(prepare, 0);
       yield* f.launches.record(ObservationLaunchFact.cases.Finished.make({ launchId: id("7"), outcome: "unknown" }), 0);
-      const retention = yield* makeEvidenceRetention(
-        config,
-        DeliveryLedgerConfig.make({ targetId: id("d"), maxEvents: 64, maxAttempts: 64, maxAttemptsPerEvent: 8 }),
-        EvidenceRetentionPolicy.make({
-          minEpochMillis: 60000,
-          minAttemptQuietMillis: 60000,
-          maxRecords: 64,
-          deadlineMillis: 10000,
-        })
-      );
+      const retention = yield* makeRetention();
       yield* TestClock.adjust(60001);
       const observed21 = yield* retention.seal(0);
       const sealed = O.getOrThrow(observed21);
@@ -315,6 +318,28 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
       const observed22 = yield* f.views.launch(id("7"), 0);
       const view = O.getOrThrow(observed22);
       expect(view.outcome).toBe("unknown");
+    })
+  );
+});
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
+  it.effect("refuses recovery after a new-window quota acknowledgment", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      yield* f.launches.record(prepare, 0);
+      yield* f.launches.record(ObservationLaunchFact.cases.Finished.make({ launchId: id("7"), outcome: "unknown" }), 0);
+      const retention = yield* makeRetention();
+      yield* TestClock.adjust(60001);
+      const retirement = yield* retention.seal(0);
+      const sealed = O.getOrThrow(retirement);
+      const acknowledged = yield* f.quota.record(snapshot("2"), 1);
+      const refused = yield* retention.restore(sealed.digest).pipe(Effect.flip);
+      expect(refused.reason).toBe("conflict");
+      expect((yield* f.journal.evidenceWindow).epoch).toBe(1);
+      const retained = yield* f.quota.read(id("2"), 1);
+      assertSome(retained, acknowledged);
+      const missing = yield* f.views.launch(id("7"), 1);
+      assertNone(missing);
     })
   );
 });
