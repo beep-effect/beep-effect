@@ -79,7 +79,8 @@ const Corpus = S.fromJsonString(
     description: "Actual original helper outputs with prior-state and native point controls.",
   })
 );
-const load = Effect.fn("PostCaseMetadataTest.load")(function* () {
+/** Read authenticated original helper configuration and state observations. */
+export const readCitationPostCaseMetadataCorpus = Effect.fn("PostCaseMetadataTest.load")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const bytes = yield* fs.readFile(
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/post-case-metadata.json", import.meta.url))
@@ -88,7 +89,9 @@ const load = Effect.fn("PostCaseMetadataTest.load")(function* () {
   expect(hash).toBe("cbaab9900587e97522d7a442326ae4604cbed97bc655204cf919baa996d6b48a");
   return yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
 });
-const install = makeCitationMetadataFixtureInstaller(makeCitationPostCaseMetadata)(load());
+const install = makeCitationMetadataFixtureInstaller(makeCitationPostCaseMetadata)(
+  readCitationPostCaseMetadataCorpus()
+);
 /** Full replay is hosted; smoke compares all field writes through both actual runtimes. */
 export const replayCitationPostCaseMetadata = Effect.fn("PostCaseMetadataTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
@@ -172,7 +175,7 @@ export const assertCitationPostCaseLifetime = Effect.fn("PostCaseMetadataTest.li
 
 /** Frozen Python whitespace and literal-surrogate controls stay native. */
 export const assertCitationPostCaseWhitespace = Effect.fn("PostCaseMetadataTest.whitespace")(function* () {
-  const corpus = yield* load();
+  const corpus = yield* readCitationPostCaseMetadataCorpus();
   const policy = yield* defaultCitationEnginePolicy;
   const strings = yield* makeCitationPinCiteCleaner(policy.limits);
   for (const row of corpus.strips) {
@@ -184,7 +187,7 @@ export const assertCitationPostCaseWhitespace = Effect.fn("PostCaseMetadataTest.
 /** Installation rejects malformed policy/configuration and mismatched fixed patterns before spawning. */
 export const assertCitationPostCaseMetadataConfiguration = Effect.fn("PostCaseMetadataTest.configuration")(
   function* () {
-    const corpus = yield* load();
+    const corpus = yield* readCitationPostCaseMetadataCorpus();
     const setup = yield* setupCitationMetadataRuntime("bun");
     const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
     for (const [policy, runtime, configuration] of [

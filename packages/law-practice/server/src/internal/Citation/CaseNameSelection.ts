@@ -93,7 +93,10 @@ const merge = (before: CitationCaseNameProcessPatch, after: CitationCaseNameProc
     numericYear: O.orElse(after.numericYear, () => before.numericYear),
     fullSpanStart: O.orElse(after.fullSpanStart, () => before.fullSpanStart),
   });
-const run = Effect.fn("Citation.selectCaseNameHelpers")(function* (
+/** Reuse the original helper within an enclosing captured metadata operation.
+ * @internal @category operations @since 0.0.0
+ */
+export const selectCitationCaseName = Effect.fn("Citation.selectCaseNameHelpers")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
   config: CitationCaseNameSelectionConfiguration,
@@ -126,7 +129,10 @@ const run = Effect.fn("Citation.selectCaseNameHelpers")(function* (
   const plain = yield* findCitationPlainCaseName(limits, runtime, config.plain, { ...request, short });
   return { patch: merge(patch, plain.patch), usedHtml: O.isSome(request.geometry), usedPlain: true };
 });
-const own = Effect.fn("Citation.ownCaseNameSelection")(function* (
+/** Reuse the original helper within an enclosing captured metadata operation.
+ * @internal @category operations @since 0.0.0
+ */
+export const copyCitationCaseNameSelectionConfiguration = Effect.fn("Citation.ownCaseNameSelection")(function* (
   limits: CitationEngineLimits,
   config: CitationCaseNameSelectionConfiguration
 ) {
@@ -142,7 +148,7 @@ export const makeCitationCaseNameSelection = makeCitationMetadataStage({
   method: "extract",
   schema: S.toType(CitationCaseNameSelectionConfiguration),
   invalid,
-  own,
-  prepare: run,
+  own: copyCitationCaseNameSelectionConfiguration,
+  prepare: selectCitationCaseName,
   project: (result, reservedUnits) => CitationCaseNameSelectionResult.make({ ...result, reservedUnits }),
 });

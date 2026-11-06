@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Connected full-case metadata checkpoint (2026-11-06): post/name/pre/court/edition
+now execute under one captured operation and publish a complete built-in model.
+Both runtime smokes match final original model state with 104 confirmed exits
+each; the one-unit-short budget refuses during final court production after all
+18 preceding children retire. Direct original evidence contains 80 calls and
+150 complete states. Full hosted replay and broader engine acceptance remain
+open. See [full-case evidence](history/evidence/2026-11-06-full-case-metadata.md).
+
 HTML/plain selection checkpoint (2026-11-06): the actual full/short caller
 fallback now composes existing helpers under one captured operation. Source
 capture observes 272 original callers, including assigned and retained empty

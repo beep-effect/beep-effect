@@ -8,6 +8,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
 import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
 import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixtures.ts";
 import {
@@ -32,6 +33,16 @@ export const installCitationHtmlGeometryFixture = Effect.fn("HtmlGeometryPrepara
     discovery: discovery.configuration,
     diffRuntime,
   }).pipe(Effect.provideContext(setup.provided));
+});
+/** Prepare geometry only for source callers that actually supplied markup. */
+export const prepareCitationOptionalHtmlGeometry = Effect.fn("HtmlGeometryPreparationTest.optional")(function* (
+  stage: Effect.Success<ReturnType<typeof installCitationHtmlGeometryFixture>>,
+  source: unknown,
+  enabled: boolean
+) {
+  if (!enabled) return O.none();
+  const prepared = yield* stage.prepare(source);
+  return O.some(prepared.geometry);
 });
 const install = Effect.fn("HtmlGeometryPreparationTest.install")(function* (
   kind: CitationNativeRuntimeKind,

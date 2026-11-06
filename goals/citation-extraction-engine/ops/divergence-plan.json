@@ -186,7 +186,15 @@
         "packages/law-practice/server/src/internal/Citation/CaseNameSelection.ts",
         "packages/law-practice/server/test/CitationCaseNameSelection.fixtures.ts",
         "packages/law-practice/server/test/CitationCaseNameSelection.test.ts",
-        "packages/law-practice/server/test/integration/CitationCaseNameSelection.test.ts"
+        "packages/law-practice/server/test/integration/CitationCaseNameSelection.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-full-case-metadata.md",
+        "goals/citation-extraction-engine/ops/probe-case-metadata.py",
+        "goals/citation-extraction-engine/ops/verify-case-metadata.py",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/case-metadata.json",
+        "packages/law-practice/server/src/internal/Citation/CaseMetadata.ts",
+        "packages/law-practice/server/test/CitationCaseMetadata.fixtures.ts",
+        "packages/law-practice/server/test/CitationCaseMetadata.test.ts",
+        "packages/law-practice/server/test/integration/CitationCaseMetadata.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

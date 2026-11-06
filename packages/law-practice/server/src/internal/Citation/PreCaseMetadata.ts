@@ -102,7 +102,10 @@ const Envelope = S.Struct({ plaintiff: Value, defendant: S.Unknown }).pipe(
   $I.annoteSchema("Envelope", { description: "Read only source guard state before inspecting words or span inputs." })
 );
 const truthy = (value: CitationPythonUnicodeStorage | null) => value !== null && value.bytes.length > 0;
-const prepare = Effect.fn("Citation.preparePreCaseMetadata")(function* (
+/** Reuse the original helper within an enclosing captured metadata operation.
+ * @internal @category operations @since 0.0.0
+ */
+export const extractCitationPreCaseMetadata = Effect.fn("Citation.preparePreCaseMetadata")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
   config: CitationPublicationMetadataConfiguration,
@@ -153,7 +156,7 @@ export const makeCitationPreCaseMetadata = Effect.fn("Citation.makePreCaseMetada
     runtimeInput,
     configurationInput,
     "d151b7a02a061593bb44bd881eee2dc174fff7f1b5449512f25cc2b98fb315b0",
-    prepare,
+    extractCitationPreCaseMetadata,
     () => fail("invalid-configuration")
   );
   const apply = Effect.fn("Citation.addPreCaseMetadata")(

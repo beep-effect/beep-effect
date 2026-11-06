@@ -111,7 +111,10 @@ export class CitationPostCaseMetadataResult extends S.Opaque<
 const Input = S.toType(CitationPostCaseMetadataInput);
 const Config = S.toType(CitationPostCaseMetadataConfiguration);
 const pointLength = (word: CitationPythonUnicodeStorage | null) => (word === null ? 0 : word.bytes.length / word.width);
-const prepare = Effect.fn("Citation.preparePostCaseMetadata")(function* (
+/** Reuse the original helper within an enclosing captured metadata operation.
+ * @internal @category operations @since 0.0.0
+ */
+export const extractCitationPostCaseMetadata = Effect.fn("Citation.preparePostCaseMetadata")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
   config: CitationPublicationMetadataConfiguration,
@@ -195,7 +198,7 @@ export const makeCitationPostCaseMetadata = Effect.fn("Citation.makePostCaseMeta
   );
   const installed = yield* makeCitationMetadataOperation(
     limits,
-    (raw: unknown) => prepare(limits, runtime, config, decoded.courtTable, raw),
+    (raw: unknown) => extractCitationPostCaseMetadata(limits, runtime, config, decoded.courtTable, raw),
     invalidConfiguration
   );
   const apply = Effect.fn("Citation.addPostCaseMetadata")(

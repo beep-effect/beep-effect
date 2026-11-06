@@ -12,7 +12,10 @@ import * as S from "effect/Schema";
 import { readCitationCaseNameCorpus } from "./CitationCaseName.fixtures.ts";
 import { assertCitationCaseNamePatch, CitationCaseNameSnapshot } from "./CitationCaseNameProcess.fixtures.ts";
 import { readCitationHtmlCaseNameCorpus } from "./CitationHtmlCaseName.fixtures.ts";
-import { installCitationHtmlGeometryFixture } from "./CitationHtmlGeometryPreparation.fixtures.ts";
+import {
+  installCitationHtmlGeometryFixture,
+  prepareCitationOptionalHtmlGeometry,
+} from "./CitationHtmlGeometryPreparation.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
   readCitationOracleFixture,
@@ -28,24 +31,29 @@ const Snapshot = S.Struct({
   fullSpanEnd: S.NullOr(S.Int),
   fullSpan: S.Tuple([S.Int, S.Int]),
 });
+/** Native original Document words shared by name and full-model source replays. */
+export const CitationCaseNameDocument = S.Struct({
+  markup: Native,
+  plain: Native,
+  index: S.Int,
+  words: S.Array(
+    S.Struct({
+      kind: S.String,
+      data: Native,
+      start: S.NullOr(S.Int),
+      groups: S.Record(S.String, S.NullOr(Native)),
+    })
+  ),
+}).pipe(
+  $I.annoteSchema("CitationCaseNameDocument", {
+    description: "Original native markup/plain text, token classes, source starts and capture groups.",
+  })
+);
+export type CitationCaseNameDocument = typeof CitationCaseNameDocument.Type;
 const Corpus = S.fromJsonString(
   S.Struct({
     schemaVersion: S.tag("citation-case-name-selection/v1"),
-    documents: S.Array(
-      S.Struct({
-        markup: Native,
-        plain: Native,
-        index: S.Int,
-        words: S.Array(
-          S.Struct({
-            kind: S.String,
-            data: Native,
-            start: S.NullOr(S.Int),
-            groups: S.Record(S.String, S.NullOr(Native)),
-          })
-        ),
-      })
-    ).check(S.isBetweenLength(68, 68)),
+    documents: S.Array(CitationCaseNameDocument).check(S.isBetweenLength(68, 68)),
     cases: S.Array(
       S.Struct({
         id: S.Natural,
@@ -88,11 +96,7 @@ const assertRow = Effect.fn("CaseNameSelectionTest.row")(function* (
 ) {
   const { corpus, prepare, stage } = installed;
   const document = A.getUnsafe(corpus.documents, row.document);
-  const geometry = row.hasMarkup
-    ? yield* prepare
-        .prepare({ plain: document.plain, markup: document.markup })
-        .pipe(Effect.map((result) => O.some(result.geometry)))
-    : O.none();
+  const geometry = yield* prepareCitationOptionalHtmlGeometry(prepare, document, row.hasMarkup);
   const invocation = stage.extract({
     words: A.map(document.words, (word) => ({ ...word, kind: word.kind === "str" ? "Text" : word.kind })),
     index: document.index,

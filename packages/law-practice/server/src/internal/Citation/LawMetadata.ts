@@ -240,7 +240,7 @@ export class CitationFullLawMetadataInput extends S.Opaque<
   CitationFullLawMetadataInput,
   { readonly brand: unique symbol }
 >()(
-  S.Struct({ ...CitationLawMetadataInput.fields, ...CitationEditionInferenceInput.fields }).pipe(
+  S.Struct({ ...CitationEditionInferenceInput.fields, ...CitationLawMetadataInput.fields }).pipe(
     $I.annoteSchema("CitationFullLawMetadataInput", {
       description: "One source year shared by law metadata and edition selection.",
     })

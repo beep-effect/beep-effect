@@ -107,16 +107,18 @@ export const replayCitationEditionGuesses = Effect.fn("EditionInferenceTest.gues
   expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
   const maybe = (index: number | null) => (index === null ? null : ref(index));
   for (const [exact, variation, year, prior, expected, calls, clockReads] of corpus.cases) {
-    reads.length = 0;
-    const guess = yield* inference.guess({
-      exact: A.map(exact, ref),
-      variation: A.map(variation, ref),
-      year,
-      prior: maybe(prior),
-    });
-    expect(guess).toBe(maybe(expected));
-    expect(clockReads).toBe(calls.length);
-    expect(reads).toEqual(year !== null && year <= 2026 ? A.map(calls, ref) : []);
+    for (const yearInput of [year, year === null ? null : BigInt(year)]) {
+      reads.length = 0;
+      const guess = yield* inference.guess({
+        exact: A.map(exact, ref),
+        variation: A.map(variation, ref),
+        year: yearInput,
+        prior: maybe(prior),
+      });
+      expect(guess).toBe(maybe(expected));
+      expect(clockReads).toBe(calls.length);
+      expect(reads).toEqual(year !== null && year <= 2026 ? A.map(calls, ref) : []);
+    }
   }
   const forward = yield* inference.includesYear(ref(0), 2027);
   expect(forward).toBe(false);
