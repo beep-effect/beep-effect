@@ -76,6 +76,7 @@ describe("research library models", () => {
         derivedId: "derived",
         sourceId: "source",
         intakeId: "2026-10-06",
+        rootId: "report-1",
         hopDepth: -1,
         recordedAt: "2026-11-06",
       };

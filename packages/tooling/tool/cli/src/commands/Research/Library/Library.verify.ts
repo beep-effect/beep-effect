@@ -1,3 +1,7 @@
+import { findRepoRoot } from "@beep/repo-utils";
+import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
+import { assembleLibraryOntology, libraryShapes, libraryShapesDataset } from "./Library.ontology.ts";
+import { catalogDataset, libraryTopics } from "./Library.projection.ts";
 /**
  * Read-only integrity and coverage gate.
  *
@@ -16,7 +20,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { removedLibraryWebAdapter, requiredLibraryAdapters } from "./Library.acquire.ts";
-import { encodeLibraryJson, runLibraryCommand } from "./Library.adapter.ts";
+import { encodeLibraryCaptureJson, runLibraryCommand } from "./Library.adapter.ts";
 import { LibraryCaptureCorrection } from "./Library.corrections.ts";
 import { LibraryError } from "./Library.errors.ts";
 import { libraryEffectiveCaptures, libraryEffectiveCategory, librarySourceEvidenceValid } from "./Library.evidence.ts";
@@ -355,14 +359,14 @@ const verifySourceCoverage = Effect.fn("Library.verifySourceCoverage")(function*
         ...capture,
         artifacts: A.filter(capture.artifacts, (item) => item.role !== "capture-correction"),
       });
-      const afterText = yield* encodeLibraryJson(receipt.after);
+      const afterText = yield* encodeLibraryCaptureJson(receipt.after);
       if (
         !(yield* artifactValid(receipt.before)) ||
         O.isNone(before) ||
         !correctionBeforeMatches(before.value, capture, source, receipt) ||
         !correctionDemotionMatches(capture, receipt) ||
         (yield* hashBytes(new TextEncoder().encode(afterText))) !== receipt.afterSha256 ||
-        (yield* encodeLibraryJson(current)) !== afterText ||
+        (yield* encodeLibraryCaptureJson(current)) !== afterText ||
         !correctionRetainedStateMatches(before.value, receipt)
       )
         issue(`${capture.id}: correction does not bind immutable before and demoted after state`);
@@ -651,4 +655,26 @@ export const verifyLibrary = Effect.fn("Research.Library.verify")(function* (roo
   );
   if (A.isReadonlyArrayNonEmpty(problems))
     return yield* LibraryError.make({ message: A.join(problems, "\n"), cause: "Research library gate failed" });
+  const ontology = yield* assembleLibraryOntology().pipe(
+    Effect.mapError((cause) => LibraryError.make({ message: "Cannot assemble library ontology", cause }))
+  );
+  const repoRoot = yield* findRepoRoot().pipe(
+    Effect.mapError((cause) => LibraryError.make({ message: "Cannot locate repository", cause }))
+  );
+  const topics = yield* libraryTopics(repoRoot).pipe(
+    Effect.mapError((cause) => LibraryError.make({ message: "Cannot read library topics", cause }))
+  );
+  const dataset = yield* catalogDataset(context.catalog, topics).pipe(
+    Effect.mapError((cause) => LibraryError.make({ message: "Cannot project catalog", cause }))
+  );
+  const shapes = libraryShapes(ontology);
+  const validator = yield* ShaclValidationService;
+  const result = yield* validator
+    .validate(ShaclValidationRequest.make({ dataset, shapes, shapesDataset: O.some(libraryShapesDataset(shapes)) }))
+    .pipe(Effect.mapError((cause) => LibraryError.make({ message: "Cannot validate library SHACL", cause })));
+  yield* Console.log(`shacl: conforms=${result.conforms} violations=${result.violations.length}`);
+  for (const violation of A.take(result.violations, 20))
+    yield* Console.log(`${violation.focusNode} ${violation.path.value}: ${violation.message}`);
+  if (!result.conforms)
+    return yield* LibraryError.make({ message: "Research library SHACL validation failed", cause: result.violations });
 });

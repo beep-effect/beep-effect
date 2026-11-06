@@ -149,6 +149,19 @@ const render = Command.make(
   Command.provide(ResearchLibraryLive),
   Command.withDescription("Generate report views and searchable Markdown/static HTML source navigation")
 );
+const ontologyRender = Command.make(
+  "render",
+  { library },
+  Effect.fn("ResearchLibrary.ontologyRenderCommand")(function* ({ library }) {
+    const research = yield* ResearchLibrary;
+    const root = yield* resolveLibraryRoot(library);
+    yield* research.renderOntology(root);
+  })
+).pipe(
+  Command.provide(ResearchLibraryLive),
+  Command.withDescription("Generate and parse the library T-Box and SHACL shapes")
+);
+const ontology = Command.make("ontology").pipe(Command.withSubcommands([ontologyRender]));
 const status = Command.make(
   "status",
   { library },
@@ -172,5 +185,5 @@ const status = Command.make(
  */
 export const libraryCommand = Command.make("library").pipe(
   Command.withDescription("Reusable, evidence-backed research source library"),
-  Command.withSubcommands([inventory, qualify, acquire, importResult, verify, render, status])
+  Command.withSubcommands([inventory, qualify, acquire, importResult, verify, render, status, ontology])
 );

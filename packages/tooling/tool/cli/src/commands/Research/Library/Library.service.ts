@@ -3,13 +3,17 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { $RepoCliId } from "@beep/identity/packages";
+import { N3TurtleCodecLive } from "@beep/n3";
+import { ShaclValidationServiceLive } from "@beep/shacl";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { acquireLibrary } from "./Library.acquire.ts";
 import { importLibraryResult } from "./Library.import.ts";
 import { inventoryLibrary } from "./Library.inventory.ts";
+import { renderLibraryOntology } from "./Library.ontology.ts";
 import { qualifyLibrary } from "./Library.qualify.ts";
 import { renderLibrary } from "./Library.render.ts";
 import { LibraryInventoryOptions } from "./Library.schemas.ts";
@@ -31,6 +35,7 @@ export type ResearchLibraryRequirements =
   | Effect.Services<ReturnType<typeof importLibraryResult>>
   | Effect.Services<ReturnType<typeof verifyLibrary>>
   | Effect.Services<ReturnType<typeof renderLibrary>>
+  | Effect.Services<ReturnType<typeof renderLibraryOntology>>
   | Effect.Services<ReturnType<typeof libraryStatus>>;
 
 /**
@@ -61,6 +66,9 @@ export class ResearchLibrary extends Context.Service<
     ) => Provided<ReturnType<typeof importLibraryResult>>;
     readonly verify: (...args: Parameters<typeof verifyLibrary>) => Provided<ReturnType<typeof verifyLibrary>>;
     readonly render: (...args: Parameters<typeof renderLibrary>) => Provided<ReturnType<typeof renderLibrary>>;
+    readonly renderOntology: (
+      ...args: Parameters<typeof renderLibraryOntology>
+    ) => Provided<ReturnType<typeof renderLibraryOntology>>;
     readonly status: (...args: Parameters<typeof libraryStatus>) => Provided<ReturnType<typeof libraryStatus>>;
   }
 >()($I`ResearchLibrary`) {}
@@ -88,6 +96,9 @@ const makeResearchLibrary = Effect.fn("ResearchLibrary.make")(function* () {
     render: Effect.fn("ResearchLibrary.render")((...args) =>
       renderLibrary(...args).pipe(Effect.provide(runtimeContext))
     ),
+    renderOntology: Effect.fn("ResearchLibrary.renderOntology")((...args) =>
+      renderLibraryOntology(...args).pipe(Effect.provide(runtimeContext))
+    ),
     status: Effect.fn("ResearchLibrary.status")((...args) =>
       libraryStatus(...args).pipe(Effect.provide(runtimeContext))
     ),
@@ -106,4 +117,6 @@ const makeResearchLibrary = Effect.fn("ResearchLibrary.make")(function* () {
  * @category layers
  * @since 0.0.0
  */
-export const ResearchLibraryLive = Layer.effect(ResearchLibrary, makeResearchLibrary());
+export const ResearchLibraryLive = Layer.effect(ResearchLibrary, makeResearchLibrary()).pipe(
+  Layer.provide([N3TurtleCodecLive, ShaclValidationServiceLive])
+);

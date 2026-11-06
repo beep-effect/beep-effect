@@ -36,6 +36,7 @@ export { renderLibrary } from "./Library.render.ts";
 export {
   LIBRARY_VALIDATOR_CONTRACT,
   LibraryAccessClass,
+  LibraryAccessClassField,
   LibraryAcquireOptions,
   LibraryArtifact,
   LibraryCapture,

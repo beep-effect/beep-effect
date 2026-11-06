@@ -30,6 +30,7 @@ import {
   librarySourceEvidenceValid,
   runLibraryCommand,
 } from "@beep/repo-cli/test/ResearchLibrary";
+import { ShaclValidationServiceLive } from "@beep/shacl";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
@@ -57,7 +58,7 @@ const libraryArtifactEquivalent = S.toEquivalence(LibraryArtifact);
 const webSourceKinds: ReadonlyArray<LibrarySource["kind"]> = ["web", "docs", "registry", "endpoint"];
 const fixtureJson = S.Unknown.pipe(S.fromJsonString, S.encodeEffect);
 
-const services = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+const services = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, ShaclValidationServiceLive);
 const transcriptApiVariation = (scenario: string) => {
   const captionKind: Record<string, string> = { kind: "asr" };
   const base = {

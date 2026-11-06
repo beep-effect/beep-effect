@@ -8,6 +8,12 @@
     "rootDir": "src"
   },
   "references": [
+    { "path": "../../../drivers/n3/tsconfig.json" },
+    { "path": "../../../drivers/shacl/tsconfig.json" },
+    { "path": "../../../drivers/oxigraph/tsconfig.json" },
+    { "path": "../../../foundation/modeling/ontology/tsconfig.json" },
+    { "path": "../../../foundation/capability/semantic-web/tsconfig.json" },
+
     {
       "path": "../../../drivers/commands/tsconfig.json"
     },

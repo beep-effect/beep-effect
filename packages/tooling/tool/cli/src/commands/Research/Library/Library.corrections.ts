@@ -10,7 +10,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { encodeLibraryJson, saveLibraryText } from "./Library.adapter.ts";
+import { encodeLibraryCaptureJson, encodeLibraryJson, saveLibraryText } from "./Library.adapter.ts";
 import { libraryArtifactsValid, librarySourceEvidenceValid } from "./Library.evidence.ts";
 import { LibraryArtifact, LibraryCapture, LibraryCatalog, LibrarySource } from "./Library.schemas.ts";
 import { hashBytes } from "./Library.store.ts";
@@ -79,7 +79,7 @@ export const correctLibraryCaptures = Effect.fn("Library.correctCaptures")(funct
     const recordedAt = DateTime.formatIso(now1);
     const reason =
       "Reading claim invalidated: original hashes, target identity, revision, or required source evidence failed current semantic validation; new source capture required.";
-    const beforeText = yield* encodeLibraryJson(capture);
+    const beforeText = yield* encodeLibraryCaptureJson(capture);
     const correctionId = yield* hashBytes(new TextEncoder().encode(`${capture.id}\n${recordedAt}\n${beforeText}`));
     const prefix = `corrections/${capture.id}/${correctionId}`;
     const before = yield* saveLibraryText(
@@ -99,7 +99,7 @@ export const correctLibraryCaptures = Effect.fn("Library.correctCaptures")(funct
       reason,
       artifacts: [...retained, before],
     });
-    const afterText = yield* encodeLibraryJson(after);
+    const afterText = yield* encodeLibraryCaptureJson(after);
     const receipt = LibraryCaptureCorrection.make({
       schema: "beep.research.capture-correction/v1",
       captureId: capture.id,

@@ -7,7 +7,10 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.schemas");
 
@@ -150,6 +153,39 @@ export const LibraryAccessClass = LiteralKit(["public", "private"]).pipe(
  */
 export type LibraryAccessClass = typeof LibraryAccessClass.Type;
 
+const isPublicAccess = (value: LibraryAccessClass): boolean => value === LibraryAccessClass.Enum.public;
+const publicAccess: Effect.Effect<LibraryAccessClass> = Effect.succeed(LibraryAccessClass.Enum.public);
+
+/**
+ * Access-class field that defaults to `public` and omits the key when encoding `public`.
+ *
+ * **Details**
+ *
+ * Records persisted before the partition existed carry no `accessClass` key. Correction
+ * receipts bind SHA-256 hashes of those encoded records, so a re-encoded legacy record must
+ * stay byte-identical: the default value is never written, while `private` always is.
+ *
+ * **Example** (Decode a legacy record without an access class)
+ * ```ts
+ * import { LibraryAccessClassField } from "@beep/repo-cli/commands/Research"
+ * import * as S from "effect/Schema"
+ * const Row = S.Struct({ accessClass: LibraryAccessClassField })
+ * console.log(S.decodeUnknownSync(Row)({}).accessClass) // "public"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const LibraryAccessClassField = LibraryAccessClass.pipe(
+  S.toEncoded,
+  S.optionalKey,
+  S.decodeTo(LibraryAccessClass, {
+    decode: SchemaGetter.withDefault(publicAccess),
+    encode: SchemaGetter.transformOptional(O.filter(P.not(isPublicAccess))),
+  }),
+  S.withConstructorDefault(publicAccess)
+);
+
 /**
  * Supported persisted catalog contract versions.
  *
@@ -216,10 +252,7 @@ export type LibraryCitoRelation = typeof LibraryCitoRelation.Type;
  */
 export class LibraryArtifact extends S.Class<LibraryArtifact, { readonly brand: unique symbol }>($I`LibraryArtifact`)(
   {
-    accessClass: LibraryAccessClass.pipe(
-      S.withConstructorDefault(Effect.succeed(LibraryAccessClass.Enum.public)),
-      S.withDecodingDefaultKey(Effect.succeed(LibraryAccessClass.Enum.public))
-    ),
+    accessClass: LibraryAccessClassField,
     path: S.String,
     sha256: S.String.check(S.isPattern(/^[a-f0-9]{64}$/)),
     bytes: S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(0)),
@@ -247,6 +280,7 @@ export class LibraryArtifact extends S.Class<LibraryArtifact, { readonly brand: 
 export class LibraryDocument extends S.Class<LibraryDocument, { readonly brand: unique symbol }>($I`LibraryDocument`)(
   {
     id: S.String,
+    accessClass: LibraryAccessClassField,
     originalPath: S.String,
     snapshotPath: S.String,
     sha256: S.String.check(S.isPattern(/^[a-f0-9]{64}$/)),
@@ -373,10 +407,7 @@ export class LibrarySourceVersion extends S.Class<LibrarySourceVersion, { readon
  */
 export class LibrarySource extends S.Class<LibrarySource, { readonly brand: unique symbol }>($I`LibrarySource`)(
   {
-    accessClass: LibraryAccessClass.pipe(
-      S.withConstructorDefault(Effect.succeed(LibraryAccessClass.Enum.public)),
-      S.withDecodingDefaultKey(Effect.succeed(LibraryAccessClass.Enum.public))
-    ),
+    accessClass: LibraryAccessClassField,
     id: S.String,
     kind: LibrarySourceKind,
     canonicalUrl: S.String,
@@ -665,6 +696,10 @@ export class LibraryFinding extends S.Class<LibraryFinding, { readonly brand: un
       S.withConstructorDefault(Effect.succeed("")),
       S.withDecodingDefaultKey(Effect.succeed(""))
     ),
+    captureId: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultKey(Effect.succeed(""))
+    ),
     citoRelation: LibraryCitoRelation,
     span: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultKey(Effect.succeed(""))),
     summary: S.String,
@@ -707,6 +742,7 @@ export class LibraryDerivation extends S.Class<LibraryDerivation, { readonly bra
     derivedId: S.String,
     sourceId: S.String,
     intakeId: S.String,
+    rootId: S.String,
     hopDepth: S.Int.check(S.isGreaterThanOrEqualTo(0)),
     recordedAt: S.String.pipe($I.key("dcterms:created")),
   },
