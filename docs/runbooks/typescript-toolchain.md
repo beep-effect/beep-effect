@@ -353,7 +353,8 @@ passed. It stays out of hosted checks because it moves daily; the beta excludes
 7.1 beta/stable to the hosted matrix when available. See
 `goals/ts7-tstyche8-type-tests` for the lane-C ruling and migration evidence.
 Commitlint loads its config through jiti; ts-morph vendors its compiler.
-Deprecated API scanning uses oxlint + oxlint-tsgolint's bundled native compiler.
+Deprecated API scanning uses Oxlint with the patched `tsrs-lint` worker by default;
+`BEEP_LINT_TSGOLINT=true` restores the bundled Go worker for rollback.
 
 Circular dependency lint uses oxlint’s native `import/no-cycle` rule on the two
 tooling source roots. It ignores type-only cycles and requires a positive checked
