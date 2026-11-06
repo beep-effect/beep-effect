@@ -1269,6 +1269,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the style helper and shared native search/slice migration together; restore the prior assembly normalizer and retain all open annotation obligations.
 
+### Qualify the pinned XML annotation balance kernel, 2026-11-06
+
+A small authored query links unchanged authenticated libxml2/converter/runtime archives and uses the shared restricted WASI host. All 300 original outcomes compare, including 57 no-angle fast paths and width-dependent surrogate pairs. Two builds are identical. Twenty XML/HTML kernel tests, package/declaration checks, blocking laws and scoped Fallow pass. This component is not installed in the live engine: typed worker/RPC framing and physical retirement remain required before production use. No new parser/process manager, divergence or completed accounting row is claimed. See history/evidence/2026-11-06-annotation-xml-kernel.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the XML query module/assets and its package inclusion together; retain the source observations and all open worker/annotation obligations.
+
 ### Authenticated source through verified extraction, 2026-11-06
 
 A genuine parent source capability now drives the actual primitive extraction request. Unchanged text retains its existing proof. Changed tokenizer text receives a verified manifestation with preserved artifact/locator/normalization identity and a versioned parent/engine/cleaning-mode/output commitment. Source derivation and occurrence projection share one admitted operation, deadline and cumulative budget with extraction. Plain, Unicode and raw HTML replay pass on both runtimes; output evidence is produced by production code. Determinism, mode/engine changes, malformed-text refusal and shortcut bypass controls pass. Public service/Layer, authenticated runtime asset loading, final document adaptation and full accounting/safety qualification remain open. See history/evidence/2026-11-06-verified-extraction.md.

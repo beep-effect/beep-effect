@@ -464,6 +464,7 @@
     {"file":"packages/law-practice/server/src/internal/Citation/VerifiedExtraction.ts","symbol":"CitationVerifiedExtractionConfiguration","kind":"struct-const","owner":"@beep/law-practice-server","identity":"CitationVerifiedExtractionConfiguration","description":"Captured complete extraction configuration and trusted engine artifact identity."},
     {"file":"packages/law-practice/server/src/internal/Citation/VerifiedExtraction.ts","symbol":"CitationVerifiedExtractionFailure","kind":"tagged-error","owner":"@beep/law-practice-server","identity":"CitationVerifiedExtractionFailure"},
     {"file":"packages/law-practice/server/src/internal/Citation/VerifiedExtraction.ts","symbol":"CitationVerifiedExtractionResult","kind":"struct-const","owner":"@beep/law-practice-server","identity":"CitationVerifiedExtractionResult","description":"One atomically completed authenticated source, semantic extraction and verified occurrence adaptation with cumulative allocation accounting."},
+    {"file":"packages/law-practice/server/src/internal/Citation/XmlBalanceKernel.ts","symbol":"CitationXmlKernelFailure","kind":"tagged-error","owner":"@beep/law-practice-server","identity":"CitationXmlKernelFailure"},
     {"file":"packages/law-practice/server/src/internal/JsonlLog.ts","symbol":"makeJsonlLog","kind":"codec","owner":"@beep/law-practice-server"}
   ]
 }

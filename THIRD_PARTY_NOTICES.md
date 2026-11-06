@@ -904,3 +904,16 @@ Info.private_groups behavior from regex/_regex_core.py. Its existing complete
 Apache-2.0/CNRI notices apply. CPython parser control observations retain the
 existing PSF attribution. Full-case/supra pattern observations derive from
 eyecite 2.7.6 regexes.py at the pinned revision (Free Law Project, BSD-2-Clause).
+
+## Annotation XML query — existing libxml2/runtime distribution
+
+`packages/law-practice/server/assets/citation-xml/kernel.c` adapts eyecite 2.7.6
+`utils.is_balanced_html` and lxml 5.1.0 parser defaults/Unicode input handling.
+The Free Law Project BSD-2-Clause and lxml BSD-3-Clause notices above apply.
+The public diagnostic ABI prefix follows unchanged libxml2 2.12.3. This query
+links the same unchanged complete parser, converter and runtime archives as the
+HTML kernel. Their complete licenses, converter source and relink archives ship
+in the adjacent citation-html directory. The XML wrapper source, receipt and
+rebuild/replacement-library recipe accompany the new binary. No upstream library
+source changes are incorporated. See citation-xml/README.md and the existing
+libxml2/libiconv/runtime license texts above.

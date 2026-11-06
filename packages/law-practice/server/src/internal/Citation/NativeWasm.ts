@@ -62,6 +62,14 @@ export const CitationNativeWasmFn1 = S.declare<(value: number) => number>((value
 /** @internal @category models @since 0.0.0 */
 export type CitationNativeWasmFn1 = typeof CitationNativeWasmFn1.Type;
 /** @internal @category models @since 0.0.0 */
+export const CitationNativeWasmFn3 = S.declare<(a: number, b: number, c: number) => number>(
+  (value): value is (a: number, b: number, c: number) => number => P.isFunction(value)
+).pipe(
+  $I.annoteSchema("CitationNativeWasmFn3", { description: "Authenticated three-integer numeric ABI entrypoint." })
+);
+/** @internal @category models @since 0.0.0 */
+export type CitationNativeWasmFn3 = typeof CitationNativeWasmFn3.Type;
+/** @internal @category models @since 0.0.0 */
 export const CitationNativeWasmFn5 = S.declare<(a: number, b: number, c: number, d: number, e: number) => number>(
   (value): value is (a: number, b: number, c: number, d: number, e: number) => number => P.isFunction(value)
 ).pipe($I.annoteSchema("CitationNativeWasmFn5", { description: "Authenticated five-integer numeric ABI entrypoint." }));

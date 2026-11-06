@@ -318,7 +318,14 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-style.md",
         "goals/citation-extraction-engine/ops/probe-annotation-style.py",
         "packages/law-practice/server/src/internal/Citation/AnnotationStyle.ts",
-        "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-style.json"
+        "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-style.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-xml-kernel.md",
+        "goals/citation-extraction-engine/ops/probe-annotation-xml.py",
+        "goals/citation-extraction-engine/ops/build-annotation-xml.py",
+        "packages/law-practice/server/src/internal/Citation/XmlBalanceKernel.ts",
+        "packages/law-practice/server/assets/citation-xml/kernel.c",
+        "packages/law-practice/server/assets/citation-xml/build-receipt.json",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-xml.json"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
