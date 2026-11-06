@@ -568,27 +568,31 @@ const runPilot = Effect.fn("CachePilot.run")(
     });
     yield* verifyTools();
     const census = yield* collectCacheCensus(root, O.some(turbo));
-    const needsProfile = A.some(
-      census.nodes,
-      (node) =>
-        node.id === recipe.selected.computation &&
-        O.isSome(node.command) &&
-        A.contains(node.configuration.passThroughEnv, "BIOME_CONFIG_PATH")
-    );
-    if (recipe.selected.computation === typesRecipe.selected.computation && needsProfile) {
-      return yield* CacheCommandError.new("Types pilot execution does not admit the identity scanner profile.");
-    }
+    const verifySelectedProfile = Effect.fn("CachePilot.verifySelectedProfile")(function* () {
+      const needsProfile = A.some(
+        census.nodes,
+        (node) =>
+          node.id === recipe.selected.computation &&
+          O.isSome(node.command) &&
+          A.contains(node.configuration.passThroughEnv, "BIOME_CONFIG_PATH")
+      );
+      if (recipe.selected.computation === typesRecipe.selected.computation && needsProfile) {
+        return yield* CacheCommandError.new("Types pilot execution does not admit the identity scanner profile.");
+      }
+      if (needsProfile) {
+        yield* verifyCacheIdentityLintProfile(root);
+        yield* collectCacheTaskSelection(
+          root,
+          ["run", "lint", `--filter=${recipe.selected.package}`, "--env-mode=strict"],
+          O.some(turbo)
+        );
+      }
+      return needsProfile;
+    });
+    const needsProfile = yield* verifySelectedProfile();
     const profileObservation = Effect.fn("CachePilot.profileObservation")(function* (guest: string) {
       return `BIOME_CONFIG_PATH=${yield* hashText(path.join(guest, "biome.identity.jsonc"))}`;
     });
-    if (needsProfile) {
-      yield* verifyCacheIdentityLintProfile(root);
-      yield* collectCacheTaskSelection(
-        root,
-        ["run", "lint", `--filter=${recipe.selected.package}`, "--env-mode=strict"],
-        O.some(turbo)
-      );
-    }
     const runtimeExecutables = { bun, biome, node, turbo, bash: "/usr/bin/bash", sh: "/usr/bin/sh" };
     const reviewedLinker = yield* current.source.toolchain.runtimeLinker.pipe(
       Effect.fromOption(() => CacheCommandError.new("Pilot qualification requires startup library identity."))

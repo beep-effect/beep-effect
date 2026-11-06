@@ -399,6 +399,7 @@
     {"name":"CachePilot.verifySandboxLibraries","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.verifySandboxLibrary","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.verifySandboxVersions","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CachePilot.verifySelectedProfile","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.verifySignedCapture","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.verifySourceIssuerExclusion","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.verifySourceWorktree","owner":"@beep/repo-cli","family":"tooling","conforms":true},

@@ -1,8 +1,6 @@
 {
   "$schema": "https://v2-11-10.turborepo.dev/schema.json",
-  "extends": [
-    "//"
-  ],
+  "extends": ["//"],
   "tasks": {
     "lint": {
       "cache": false,
@@ -19,9 +17,7 @@
         "!.beep/**",
         "!.fallow/**"
       ],
-      "env": [
-        "BEEP_CACHE_TOOLCHAIN_DIGEST"
-      ]
+      "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"]
     }
   }
 }

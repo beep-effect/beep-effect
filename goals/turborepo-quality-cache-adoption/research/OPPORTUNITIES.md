@@ -1281,3 +1281,7 @@ and economics inputs for each consumer; hosted CI remains the behavioral proof.
 No computation qualification or production-cache activation follows from this
 repair. Prevent recurrence by auditing the script's full executed suite rather
 than treating property tests or coverage as narrower without source evidence.
+
+## Replay formatting and pilot profile phase complexity, 2026-11-06
+
+Hosted #2824 Lint found expanded singleton arrays in types/turbo.json left by an unpublished replay resolution. Apply the exact formatter diff and keep the environment/input declarations unchanged. Fallow artifact13548435278 attributes one new cognitive/CRAP finding to runPilot. Group its selected-profile discovery, refusal and validation in one named phase, leaving executable pin checks reusable before every execution and preserving validation order. Retain the three failed logs and artifact digests privately. No baseline, threshold, suppression or local quality suite changes.
