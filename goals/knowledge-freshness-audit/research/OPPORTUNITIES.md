@@ -86,3 +86,20 @@ missing evidence.
   with explicit goal-schema, content, and dependency obligations. Preserve
   current gates until that contract is implemented and reviewed; this packet
   does not authorize bypassing them.
+
+## P4 reference context and coverage accounting, 2026-11-06
+
+- Work: reconcile the frozen audit census with the current tracked tree and
+  review reference candidates before changing audited content.
+- Evidence: the read-only Knowledge doctor reported 948 blocking reference
+  candidates. Eleven selected cases were historical, normative, illustrative,
+  package-relative or skill-relative references, not validated content defects.
+  See the dated P4 reconciliation report under `history/`.
+- Impact: raw candidate totals cannot measure accepted defects or semantic
+  coverage. Explicit entry records also repeat paths and do not establish whole
+  reads. No downstream content damage was observed because the candidates were
+  reviewed before mutation.
+- Prevention: retain source context, frozen blob identity, per-entry outcomes and
+  separate accepted-review records. Keep the remaining candidates unresolved; do
+  not suppress a class or assign zero claims from a mechanical count. This audit
+  owns the review; existing gate and content owners retain their code.
