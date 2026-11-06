@@ -95,6 +95,120 @@ export const observeGrokReportedNotSignedIn = Effect.fn("HarnessEnrollment.obser
   }
   return O.none<true>();
 });
+/** Closed native failure reports; these labels never establish account or provider state.
+ * **Example** (Inspect the finite schema)
+ * ```ts
+ * console.log(typeof GrokNativeFailureClass.make)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const GrokNativeFailureClass = S.Literals([
+  "Unknown",
+  "auth",
+  "subscription-or-quota",
+  "model-unavailable-or-config",
+  "network",
+]).pipe(
+  $I.annoteSchema("GrokNativeFailureClass", {
+    description:
+      "Only qualified native error-message literals; absent, conflicting or unsupported reports remain Unknown.",
+  })
+);
+
+/** Closed reasons that a transient error stream cannot support a diagnosis.
+ * **Example** (Inspect the finite reason domain)
+ * ```ts
+ * console.log(GrokNativeFailureUnknownReason.literals.length)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const GrokNativeFailureUnknownReason = S.Literals([
+  "unsupported-exit",
+  "bounds",
+  "no-error",
+  "malformed-stream",
+  "unsupported-envelope",
+  "ambiguous-errors",
+  "unmatched-literal",
+]).pipe(
+  $I.annoteSchema("GrokNativeFailureUnknownReason", {
+    description: "Closed structural/qualification reasons only; no message, field names, code or body is retained.",
+  })
+);
+const unknown = (reason: typeof GrokNativeFailureUnknownReason.Type) => ({
+  classification: "Unknown" as const,
+  unknownReason: O.some(reason),
+});
+/** Classify bounded transient native error envelopes with a closed, case-sensitive literal allowlist.
+ * **Details** Installed 1.0.77 public binary strings qualify `Not signed in`,
+ * `SuperGrok subscription required`, `Model not found in config.toml [model.*]`,
+ * and `Connection to Grok timed out or was interrupted. Please try again. (HTTP <status>).`.
+ * Generic HTTP codes, quota words and OS network tokens also occur in unrelated native subsystems
+ * and are deliberately insufficient. No free message, code, stderr or nested value is returned.
+ * Multiple error rows, malformed rows and unsupported shapes remain Unknown.
+ * **Example** (Inspect the bounded observer)
+ * ```ts
+ * console.log(typeof observeGrokNativeFailure)
+ * ```
+ * @param stdout - Transient native NDJSON; never retained.
+ * @param exitStatus - Known nonzero native exit.
+ * @returns One finite report class; Unknown is never a negative account-state claim.
+ * @category decoding
+ * @since 0.0.0
+ */
+export const observeGrokNativeFailure = Effect.fn("HarnessEnrollment.observeGrokNativeFailure")(function* (
+  stdout: string,
+  exitStatus: number
+) {
+  if (!Number.isInteger(exitStatus) || exitStatus === 0 || Math.abs(exitStatus) > 4096)
+    return unknown("unsupported-exit");
+  if (Buffer.byteLength(stdout) > 1048576) return unknown("bounds");
+  const lines = A.filter(Str.split(stdout, "\n"), Str.isNonEmpty);
+  if (lines.length === 0) return unknown("no-error");
+  if (lines.length > 2048 || A.some(lines, (line) => Buffer.byteLength(line) > 65536)) return unknown("bounds");
+  let report: typeof GrokNativeFailureClass.Type = "Unknown";
+  let errors = 0;
+  for (const line of lines) {
+    const envelope = yield* S.decodeEffect(S.fromJsonString(S.Struct({ type: S.String })))(line).pipe(Effect.option);
+    if (O.isNone(envelope)) return unknown("malformed-stream");
+    if (envelope.value.type !== "error") continue;
+    errors++;
+    if (errors > 1) return unknown("ambiguous-errors");
+    const event = yield* S.decodeEffect(S.fromJsonString(reportedError))(line).pipe(Effect.option);
+    if (O.isNone(event)) return unknown("unsupported-envelope");
+    const message = event.value.message;
+    if (
+      message === "Not signed in" ||
+      message ===
+        "Not signed in. Run `grok login` to authenticate (or `grok login --device-code` if no browser is available)."
+    )
+      report = "auth";
+    else if (message === "SuperGrok subscription required") report = "subscription-or-quota";
+    else if (message === "Model not found in config.toml [model.*]") report = "model-unavailable-or-config";
+    else if (
+      /^Connection to Grok timed out or was interrupted\. Please try again\. \(HTTP [1-5][0-9]{2}\)\.$/.test(message)
+    )
+      report = "network";
+  }
+  return report === "Unknown"
+    ? unknown(errors === 0 ? "no-error" : "unmatched-literal")
+    : { classification: report, unknownReason: O.none<typeof GrokNativeFailureUnknownReason.Type>() };
+});
+/** Read only the finite class from the bounded structural observer.
+ * **Example** (Inspect the class-only compatibility observer)
+ * ```ts
+ * console.log(typeof observeGrokNativeFailureClass)
+ * ```
+ * @param stdout - Bounded transient native NDJSON.
+ * @param exitStatus - Known native exit.
+ * @returns Finite class only; structural reasons remain in the richer observer.
+ * @category decoding
+ * @since 0.0.0
+ */
+export const observeGrokNativeFailureClass = (stdout: string, exitStatus: number) =>
+  observeGrokNativeFailure(stdout, exitStatus).pipe(Effect.map((value) => value.classification));
 const wire = S.Union([
   S.Struct({
     type: S.tag("available_commands"),

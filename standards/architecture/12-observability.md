@@ -24,7 +24,7 @@ Rules:
 
 - Concept segments are PascalCase and the action is camelCase. Span identity is the owning package plus the name; the instrumentation catalog records `beep.package` and `beep.family` for each declared span.
 - Names are static literals and unique across packages. A name built from input is a leak path: put the variable part in a bounded attribute (`Box.invoke` with `box.method`, not `` `box.${method}` ``).
-- Protocol spans follow OpenTelemetry semantic conventions (`GET /v1/iam/memberships/:id/revoke`, `gen_ai.*`, `mcp.method.name`) and are declared with `protocol: true` in the owning package's `*.instruments.ts` file. The use-case span inside a protocol span still carries the domain name.
+- Protocol spans follow OpenTelemetry semantic conventions (`POST /v1/iam/memberships/:id/revoke`, `gen_ai.*`, `mcp.method.name`) and are declared with `protocol: true` in the owning package's `*.instruments.ts` file. The use-case span inside a protocol span still carries the domain name.
 - Names that predate this form stay as they are; the catalog records them with `conforms: false` and there is no mass rename. New spans use the domain form.
 - `bun run beep observability catalog --check` enforces the rules; the section below is generated from the catalog.
 
@@ -112,13 +112,14 @@ void $I
  * Wraps the protocol operation in a span, parses the request into the
  * use-case command, then opens the use-case span around `revoke`.
  *
- * @category combinators
- * @since 0.0.0
+ * **Details**
  *
- * @remarks
  * The outer `Effect.fn` span is the protocol layer. The inner
  * `Effect.withSpan` span is the architectural use-case layer. Domain
  * attributes attach inside, where the layer knows what they mean.
+ *
+ * @category combinators
+ * @since 0.0.0
  */
 export const revokeHandler = Effect.fn("POST /v1/iam/memberships/:id/revoke")(
   function* (req: RevokeMembershipRequest) {
@@ -161,12 +162,13 @@ void $I
  * Use-case command. Opens a child span around the port call and records
  * the final outcome via `Effect.annotateCurrentSpan` on the success path.
  *
- * @category services
- * @since 0.0.0
+ * **Details**
  *
- * @remarks
  * Domain-semantic attributes attach here. The failure-path translator
  * attaches `iam.membership.outcome=denied` via `Effect.tapError` (see 09).
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const revoke = Effect.fn("MembershipService.revoke")(function* (cmd: RevokeMembership) {
   const m = yield* repo.findById(cmd.membershipId).pipe(
@@ -203,13 +205,14 @@ void $I
  * Adapter port operation. Opens a `MembershipDrizzle.findById` span carrying
  * technical attributes only — never domain attribute keys.
  *
- * @category combinators
- * @since 0.0.0
+ * **Details**
  *
- * @remarks
  * The `MembershipDrizzle.findById` span is a grandchild of the use-case span by virtue of
  * the call stack. Effect threads the parent span through the fiber; no
  * manual parenting is required.
+ *
+ * @category combinators
+ * @since 0.0.0
  */
 export const findById = (id: MembershipId) =>
   runDrizzleQuery(id).pipe(
@@ -250,12 +253,13 @@ void $I
  * Logs only the `PostgresError` branch — the branch that drops the
  * underlying technical detail when translating to a port-declared error.
  *
- * @category combinators
- * @since 0.0.0
+ * **Details**
  *
- * @remarks
  * The span carries the structural record; the log carries the dropped
  * diagnostic. They are co-located so the original detail is never lost.
+ *
+ * @category combinators
+ * @since 0.0.0
  */
 export const findByIdTranslated = (id: MembershipId) =>
   findById(id).pipe(

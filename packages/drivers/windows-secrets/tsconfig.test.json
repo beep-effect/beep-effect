@@ -12,5 +12,13 @@
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
-  }
+  },
+  "references": [
+    {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/schema/tsconfig.json"
+    }
+  ]
 }

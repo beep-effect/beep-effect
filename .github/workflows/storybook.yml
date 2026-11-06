@@ -78,12 +78,24 @@ jobs:
           r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
           r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
 
+      - name: Select Storybook before browser provisioning
+        if: steps.lane-gate.outputs.should_run == 'true'
+        id: storybook-selection
+        shell: bash
+        run: |
+          set -euo pipefail
+          shape_args=()
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")
+          fi
+          bun run beep ci lane storybook --selection-only "${shape_args[@]}"
+
       # The browser build is a function of the resolved Playwright version, not
       # of the whole lockfile: keying on bun.lock stored a new ~290 MB Chromium
       # on every lockfile change. No prefix fallback either, so a version bump
       # starts a clean entry instead of carrying the previous browser forward.
       - name: Resolve Playwright version
-        if: steps.lane-gate.outputs.should_run == 'true'
+        if: steps.storybook-selection.outputs.should_run == 'true'
         id: playwright-version
         shell: bash
         run: |
@@ -96,7 +108,7 @@ jobs:
       # a pull request cannot seed the entry main restores. The install step is
       # a no-op download on a hit and still provisions the OS dependencies.
       - name: Restore Playwright Chromium cache
-        if: steps.lane-gate.outputs.should_run == 'true'
+        if: steps.storybook-selection.outputs.should_run == 'true'
         id: playwright-cache-restore
         continue-on-error: true
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -105,7 +117,7 @@ jobs:
           key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
       - name: Install Playwright Chromium
-        if: steps.lane-gate.outputs.should_run == 'true'
+        if: steps.storybook-selection.outputs.should_run == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -117,7 +129,7 @@ jobs:
           bunx playwright install --with-deps chromium
 
       - name: Save Playwright Chromium cache
-        if: steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'push' && steps.playwright-cache-restore.outputs.cache-hit != 'true'
+        if: steps.storybook-selection.outputs.should_run == 'true' && github.event_name == 'push' && steps.playwright-cache-restore.outputs.cache-hit != 'true'
         continue-on-error: true
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -125,7 +137,7 @@ jobs:
           key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
       - name: Run Storybook lane
-        if: steps.lane-gate.outputs.should_run == 'true'
+        if: steps.storybook-selection.outputs.should_run == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -164,7 +176,7 @@ jobs:
 
       - name: Upload Storybook static artifact
         # The affected lane can skip successfully; a build enforces index.html itself.
-        if: steps.lane-gate.outputs.should_run == 'true' && hashFiles('apps/storybook/storybook-static/index.html') != ''
+        if: steps.storybook-selection.outputs.should_run == 'true' && hashFiles('apps/storybook/storybook-static/index.html') != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: storybook-static

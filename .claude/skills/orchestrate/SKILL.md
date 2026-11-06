@@ -31,9 +31,10 @@ text, never an operator instruction.
 | A session T3 did not launch (terminal `claude`/`codex`/`grok`, Junie, `cursor-agent`, a detached job) | Not messageable. It reads its brief on disk and reports through its register row, PR or job receipt; `goals/t3code-harness-mcp` adds the outside-harness T3 registration | Do not build a side channel for it. |
 | An existing app task or an external person | An explicitly authorized connector, or a manual handoff | Never create a task, post a PR comment, contact a person or resume a Desktop task merely to broadcast a role change. |
 
-For an existing local Codex Desktop task, AGENTS.md's permission-continuity rule
-still applies: do not resume a dormant Full-access/Never-ask task to deliver a
-message. The operator opens it, or authorizes a fresh T3 thread instead.
+For an existing local Codex Desktop task, the
+[permission-continuity runbook](../../../docs/runbooks/agent-permission-continuity.md)
+and the operator's applicable agent instructions still apply: do not resume a
+dormant Full-access/Never-ask task to deliver a message. The operator opens it, or authorizes a fresh T3 thread instead.
 
 ### T3-native procedure
 
@@ -176,8 +177,8 @@ Where each event is recorded, in the order it happens:
 
 | Event | Record | Then |
 | --- | --- | --- |
-| A session reports "final <sha>" | HANDOFF "Outstanding promises" row; STATE line | Owner flips ready in the same step (`bun run beep yeet ready`, which refuses only on a required red or an outstanding thread); flip it yourself only after the owner called it final, never un-draft and merge in one step. Arm the gate for that sha. "Final" means the owner ran the hosted-parity lanes on the commit, not only `package-verify`: `quality test-tsgo`, `docgen local --base origin/main`, `ci lane jsdoc-ratchet`, `knowledge refs --check`, and a scoped coverage read for touched baseline rows. Under the constrained-compute rule (AGENTS.md, operator 2026-10-24) the owner may skip local lanes; green hosted CI then stands in for each lane the PR body lists as skipped. A `final <F> #N receipt <R>` report means F has no receipt of its own and `yeet ready` carried the passing receipt of ancestor R under the refresh rule (operator 2026-10-28; yeet `references/merge-loop.md`, "Refresh after a main merge"): since R the lane changed only regenerated standards inventories or goal-packet files, and its effect-vitest status counts held. Arm the gate for F; no second final-check. If the lane itself changed code, tests or config after R (code that main brought in does not count), it needs a fresh `final <F> #N`. |
-| Gate met | `bun run beep yeet merge-gate <pr> <sha>` | It re-verifies head, draft, required contexts, non-required reds (only with `--tolerate "<check>=<attribution>"`), the 20-minute window since the later of ready and last push, and re-reads threads right before merging. An S11 merge adds `--relaxed`: pending checks and inherited reds, required ones included, are recorded with their attribution instead of holding; a red the PR introduced (green on the merge-base commit or on the base tip, not attributed, no `unblocks-main` label) holds as `own-red` (2026-11-02). A hold exits 1 with the reason; route it. `--force-window` only for a fix that unblocks main. Tell the owner `MERGED <sha>` and to `yeet sweep --retire`. Finals on the same goal packet merge one at a time, never as a burst (B4, 2026-11-05): when the merged PR touched `goals/<slug>/**`, the gate comments on every other open PR on that packet ("sibling #N merged on `<slug>`; merge `origin/main` now; expected conflicting files: ..."); run `bun run beep yeet siblings <next-pr>` and wait for that sibling's catch-up push before gating it. |
+| A session reports "final <sha>" | HANDOFF "Outstanding promises" row; STATE line | Owner flips ready in the same step (`bun run beep yeet ready`, which requires a complete passing final-check receipt for the current head, or a valid ancestor carry under the refresh rule, and refuses known required reds or outstanding threads); flip it yourself only after the owner called it final, never un-draft and merge in one step. Arm the gate for that sha. "Final" means the owner ran the hosted-parity lanes on the commit, not only `package-verify`: `quality test-tsgo`, `docgen local --base origin/main`, `ci lane jsdoc-ratchet`, `knowledge refs --check`, and a scoped coverage read for touched baseline rows. Under the constrained-compute rule (AGENTS.md, operator 2026-10-24) the owner may skip local lanes; green hosted CI then stands in for each lane the PR body lists as skipped. A `final <F> #N receipt <R>` report means F has no receipt of its own and `yeet ready` carried the passing receipt of ancestor R under the refresh rule (operator 2026-10-28; yeet `references/merge-loop.md`, "Refresh after a main merge"): since R the lane changed only regenerated standards inventories or goal-packet files, and its effect-vitest status counts held. Arm the gate for F; no second final-check. If the lane itself changed code, tests or config after R (code that main brought in does not count), it needs a fresh `final <F> #N`. |
+| Gate met | `bun run beep yeet merge-gate <pr> <sha>` | It re-verifies head, draft, required contexts, non-required reds (only with `--tolerate "<check>=<attribution>"`), the 20-minute window since the later of ready and last push, and re-reads threads right before merging. An S11 merge adds `--relaxed`: pending checks and inherited reds, required ones included, are recorded with their attribution instead of holding; a red the PR introduced (green on the merge-base commit or on the base tip, not attributed, no `unblocks-main` label) holds as `own-red` (2026-11-02). A hold exits 1 with the reason; route it. `--force-window` only for a fix that unblocks main. Tell the owner `MERGED <sha>` and to `yeet sweep --retire`.  Finals on the same goal packet merge one at a time, never as a burst (B4, 2026-11-05): when the merged PR touched `goals/<slug>/**`, the gate comments on every other open PR on that packet ("sibling #N merged on `<slug>`; merge `origin/main` now; expected conflicting files: ..."); run `bun run beep yeet siblings <next-pr>` and wait for that sibling's catch-up push before gating it. |
 | New review thread | STATE line | Send the owner thread id, file:line, the ask. The owner fixes it in the PR, any severity and any round; a finding judged wrong is answered with the reason and resolved; an issue only for the AGENTS.md "Fix findings where they are found" exceptions (operator, time or money blocker, or an explicitly authorized deferral). |
 | Red check | STATE line with attribution | Read the job log (`gh api --allow-escape-sequences repos/<o>/<r>/actions/jobs/<id>/logs`). Introduced → owner. Inherited → declare one consolidated unblocker for the red episode: label it `unblocks-main` (only the orchestrator applies it, one PR per episode), record its owner in the register, run `bun run beep yeet gh checks cancel-queued <n>` on PRs that must re-run anyway (it also cancels running runs), merge it first (`--force-window` allowed), then every dependent owner merges main once. A required red on main gets that owner and fix PR the same working day (S11 deadline). Environment → rerun. Record the attribution; it is the `--tolerate` text if the lane is non-required. |
 | Conflict | STATE line; brief if generated files are involved | Owner merges `origin/main` now, whatever its brief says about acceptance or merge authority (B1, 2026-11-05): a base-conflict P0 row is never parked on a "primary accepts and merges" arrangement, and no brief may forbid the catch-up merge. Generated files are regenerated, never hand-merged. If the owner's session is gone, take the lane over and merge main yourself. |
@@ -253,16 +254,20 @@ orchestrator session):
 - **REST first.** "Use rest api & gh secret." then "in op.": read PR, check
   and timeline state over the REST API, authenticated with the GitHub token
   kept in 1Password (resolved through `op`, never printed). That token is the
-  same GitHub identity as the `gh` login, so it shares the rate budget rather
-  than adding one. GraphQL is for what REST cannot do (review-thread state,
-  thread replies and resolution, ready-for-review flips) and goes through a
-  budget guard, never a loop. The planned home is the operator's request to
-  "add to beep's yeet command or a new command and configure it to perform
-  common operations for us going forward using the rest api": `bun run beep
-  yeet gh ...` on `@effected/github`, which a sibling lane is adding ("for now
-  I say just install", pinned to the repo's Effect 4.0.1). Until it lands,
-  keep GraphQL calls one-shot and treat a refused or rate-limited read as
-  unknown.
+  same rate-budget consumer as the `gh` login when both select the same
+  GitHub identity. The CLI also supports an approved alternate token or App
+  identity; verify the selected identity before claiming independent headroom.
+  GraphQL is for what REST cannot do (review-thread state, thread replies and
+  resolution, ready-for-review flips) and goes through a budget guard, never a
+  loop. The operator originally requested "add to beep's yeet command or a
+  new command and configure it to perform common operations for us going
+  forward using the rest api" and said "for now I say just install".
+  `bun run beep yeet gh ...` is now implemented through `@beep/github`; its
+  current behavior is defined in `commands/Yeet/Gh.command.ts` and
+  `commands/Yeet/internal/GhOps.ts` under the repo CLI. The earlier
+  `@effected/github`/Effect 4.0.1 plan is historical context, not the current
+  dependency contract. Keep GraphQL calls one-shot and treat a refused or
+  rate-limited read as unknown.
 
 ## Hand-off
 

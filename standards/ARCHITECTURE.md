@@ -137,11 +137,11 @@ cases, decode or normalize the boundary value into an internal tagged model
 before case-specific behavior branches.
 
 Persisted entities follow the same law. A persisted product entity starts with
-`ProductEntity.make(EntityId)` from
-`@beep/shared-domain/entity/ProductEntity`. The returned effect-drizzle kit
-owns the schema class constructor, shared audit and identity fields, SQL table
-name, and shared indexes. The entity schema's decoded side is domain language,
-and its encoded side is the persistence row shape. Entity fields use normal
+`ProductEntity.Entity<Self>()(EntityId)(fields, annotations)` from
+`@beep/shared-domain/entity/ProductEntity`. This factory supplies the schema
+class constructor, shared audit and identity fields, SQL table name, and shared
+indexes from the product-tier kit and the entity id. The entity schema's
+decoded side is domain language, and its encoded side is the persistence row shape. Entity fields use normal
 Effect Schema optional/nullish codecs
 (`S.OptionFromNullOr`, `S.OptionFromOptionalKey`, `S.optionalKey`, and related
 variants) instead of bespoke nullable wrappers. Table projection code reads the
@@ -149,9 +149,9 @@ Schema AST and rejects persisted selected-row fields whose encoded absence is
 optional, `undefined`, or ambiguous; SQL row absence must encode as `null`.
 
 Entity roles stay explicit. `.model.ts` calls the product kit, declares the
-schema class, colocates SQL column/index metadata through effect-drizzle, and
-spreads identity fields last. `.values.ts` owns reusable supporting schemas and
-literal domains. `.behavior.ts` owns pure behavior and derived guards that do
+schema class and colocates SQL column/index metadata through effect-drizzle.
+The product factory appends identity fields after the entity's own fields.
+`.values.ts` owns reusable supporting schemas and literal domains. `.behavior.ts` owns pure behavior and derived guards that do
 not belong in the persistence declaration.
 
 Drizzle tables are projected, not hand-mapped. Slice/shared `tables` packages
@@ -317,10 +317,10 @@ Client/UI dependency caveats:
 - `shared/domain` and any future `shared/config` package follow the same inward
   rules as slice `domain` and `config`. High-bar shared packages never own
   drivers.
-- `shared/tables` may import `@beep/drizzle` only for metadata-only table
-  projection from shared-kernel entity schemas. This exception does not permit
-  live driver capability, query execution, migrations, repositories, seeders, or
-  database transactions in shared packages.
+- `shared/tables` may import `@beep/effect-drizzle/pg` for metadata-only table
+  projection from shared-kernel entity schemas. This projection dependency
+  does not permit live driver capability, query execution, migrations,
+  repositories, seeders, or database transactions in shared packages.
 
 ## Slice Package Topology
 

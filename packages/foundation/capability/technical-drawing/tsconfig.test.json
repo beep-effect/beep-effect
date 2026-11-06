@@ -17,5 +17,22 @@
         "./src/internal/LabelOutline.ts"
       ]
     }
-  }
+  },
+  "references": [
+    {
+      "path": "../../modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../../tooling/library/codegen-kit/tsconfig.json"
+    },
+    {
+      "path": "../../../tooling/test-kit/test-runner/tsconfig.json"
+    }
+  ]
 }

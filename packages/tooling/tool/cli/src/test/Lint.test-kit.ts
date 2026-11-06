@@ -6,6 +6,8 @@
  */
 
 export * from "@beep/repo-cli/commands/Lint";
+/** @internal @category testing @since 0.0.0 */
+export { validateLintProgramAssignment } from "../commands/Lint/internal/LintProgramAssignment.ts";
 /**
  * Policy fingerprint graph internals, for focused tests.
  *

@@ -427,10 +427,10 @@ bundles.
 The DDD meaning of the `shared` package family: deliberately shared
 cross-cutting language, value objects, schemas, config contracts, and a small
 number of high-bar cross-slice adapters. `shared/domain` is the active normal
-home today; `shared/config` is a reserved normal role. `shared/use-cases`,
-`shared/client`, `shared/server`, and `shared/ui` are reserved high-bar roles,
-not package directories today. `shared/tables` exists but remains exceptional.
-A future `shared/use-cases` package is contract-only: it may hold cross-slice
+home today; `shared/config` is a reserved normal role. `shared/client`,
+`shared/server`, and `shared/ui` are reserved high-bar roles, not package
+directories today. `shared/tables` exists but remains exceptional.
+`shared/use-cases` exists as a high-bar contract-only package: it may hold cross-slice
 commands, queries, driver-neutral DTOs, driver-neutral boundary contracts,
 client-safe application errors, facade interfaces, and ultra-high-bar product
 ports, but not workflows, process managers, schedulers, handlers, concrete
