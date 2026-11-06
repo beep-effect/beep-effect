@@ -5,20 +5,18 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
-import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
-  copyCitationMetadataPatterns,
-  decodeCitationMetadataRuntimeConfiguration,
-  makeCitationMetadataOperation,
+  copyCitationMetadataPatternConfiguration,
+  makeCitationMetadataStage,
   substituteCitationMetadataMatches,
 } from "./MetadataComposition.ts";
 import { citationMetadataWhitespaceBoundary, trimCitationMetadataBoundary } from "./MetadataStrings.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
-import { CitationRegexPatternDescriptor, copyCitationRegexDescriptor } from "./RegexDescriptors.ts";
+import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { makeCitationRegexWorker } from "./RegexWorker.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
@@ -145,48 +143,24 @@ export const copyCitationStopWordsConfiguration = Effect.fn("Citation.copyStopWo
   limits: CitationEngineLimits,
   decoded: CitationStopWordsConfiguration
 ) {
-  const patterns = yield* copyCitationMetadataPatterns(limits, decoded.patterns, fingerprints, () =>
-    fail("invalid-configuration")
+  const owned = yield* copyCitationMetadataPatternConfiguration(
+    limits,
+    Patterns,
+    decoded.patterns,
+    decoded.bindings,
+    fingerprints,
+    () => fail("invalid-configuration")
   );
-  const owned = yield* S.decodeUnknownEffect(Patterns)(patterns).pipe(
-    Effect.mapError(() => fail("invalid-configuration"))
-  );
-  return CitationStopWordsConfiguration.make({
-    patterns: owned,
-    bindings: A.map(decoded.bindings, copyCitationRegexDescriptor),
-  });
+  return CitationStopWordsConfiguration.make(owned);
 });
 /** Install the standalone admitted cleaner with captured services and timing.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationStopWords = Effect.fn("Citation.makeStopWords")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
-) {
-  const {
-    limits,
-    configuration: decoded,
-    runtime,
-  } = yield* decodeCitationMetadataRuntimeConfiguration(policy, runtimeInput, configurationInput, Config, () =>
-    fail("invalid-configuration")
-  );
-  const config = yield* copyCitationStopWordsConfiguration(limits, decoded);
-  const installed = yield* makeCitationMetadataOperation(
-    limits,
-    (raw: unknown) => cleanCitationStopWords(limits, runtime, config, raw),
-    () => fail("invalid-configuration")
-  );
-  const clean = Effect.fn("Citation.stripStopWords")(
-    (raw: unknown) =>
-      installed.operation.run(
-        "extract",
-        Effect.gen(function* () {
-          const [text, reservedUnits] = yield* installed.run(raw);
-          return CitationStopWordsResult.make({ text, reservedUnits });
-        })
-      ),
-    installed.timing.timed
-  );
-  return { clean };
+export const makeCitationStopWords = makeCitationMetadataStage({
+  method: "clean",
+  schema: Config,
+  invalid: () => fail("invalid-configuration"),
+  own: copyCitationStopWordsConfiguration,
+  prepare: cleanCitationStopWords,
+  project: (text, reservedUnits) => CitationStopWordsResult.make({ text, reservedUnits }),
 });

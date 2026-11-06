@@ -24,6 +24,76 @@ const standardPredicates: Readonly<Record<string, string>> = {
 const quad = (subject: string, predicate: string, object: string, graph: string): string =>
   `${subject} ${O.getOrElse(R.get(standardPredicates, predicate), () => term(predicate))} ${object} ${term(`graph:${graph}`)} .`;
 
+type Selector = Assertion["selector"];
+
+// A claim enters the current graph only when accepted, unexpired, not superseded and backed by captured evidence.
+const isCurrent = (c: KbClaim, claims: ReadonlyArray<KbClaim>, evidence: ReadonlyArray<Assertion>): boolean =>
+  c.review._tag === "Accepted" &&
+  c.knowledge.expiredAt._tag === "None" &&
+  !A.some(claims, (candidate) => O.exists(candidate.supersedes, (id) => id === c.id)) &&
+  A.some(
+    evidence,
+    (a) => a.claimId === c.id && A.contains(c.supportedBy, a.id) && a.review === "accepted" && a.outcome === "captured"
+  );
+const claimQuads = (
+  c: KbClaim,
+  claims: ReadonlyArray<KbClaim>,
+  evidence: ReadonlyArray<Assertion>
+): ReadonlyArray<string> => {
+  const id = iri(c.id);
+  const p = c.proposition;
+  const base = [
+    quad(id, "type", term("Claim"), "claims"),
+    quad(id, "review", literal(c.review._tag), "claims"),
+    quad(id, "text", literal(p.text), "claims"),
+    quad(id, "assertsSubject", iri(p.subject), "claims"),
+    quad(id, "assertsPredicate", term(p._tag), "claims"),
+    quad(id, "assertsObject", iri(p.object), "claims"),
+  ];
+  return isCurrent(c, claims, evidence)
+    ? A.appendAll(base, [
+        `${iri(p.subject)} ${term(p._tag)} ${iri(p.object)} ${term("graph:current")} .`,
+        quad(id, "authorizedBy", id, "current"),
+      ])
+    : base;
+};
+const selectorQuads = (id: string, selector: Selector): ReadonlyArray<string> =>
+  A.appendAll(
+    selector._tag === "TextQuote"
+      ? [
+          quad(id, "exact", literal(selector.exact), "provenance"),
+          quad(id, "prefix", literal(selector.prefix), "provenance"),
+          quad(id, "suffix", literal(selector.suffix), "provenance"),
+          quad(id, "offsetUnit", literal("UTF-16"), "provenance"),
+        ]
+      : [],
+    [
+      quad(id, "selectorKind", literal(selector._tag), "provenance"),
+      quad(id, "start", literal(`${selector.start}`), "provenance"),
+      quad(id, "end", literal(`${selector.end}`), "provenance"),
+    ]
+  );
+const assertionQuads = (a: Assertion): ReadonlyArray<string> => {
+  const id = iri(a.id);
+  return A.appendAll(
+    [
+      quad(id, "claim", iri(a.claimId), "provenance"),
+      quad(id, "capture", iri(a.captureId), "provenance"),
+      quad(id, "quote", literal(a.quote), "provenance"),
+      quad(id, "audience", literal(a.audience), "provenance"),
+      quad(id, "locator", literal(a.sourceRef.locator), "provenance"),
+      quad(id, "sha256", literal(a.sourceRef.sha256), "provenance"),
+      quad(id, "quoteDigest", literal(a.quoteDigest), "provenance"),
+      quad(id, "sourceKind", literal(a.sourceRef.kind), "provenance"),
+      quad(id, "review", literal(a.review), "provenance"),
+      quad(id, "outcome", literal(a.outcome), "provenance"),
+      quad(id, "derivationBasis", literal(a.derivation.basis), "provenance"),
+      quad(id, "derivationRef", literal(a.derivation.ref), "provenance"),
+    ],
+    selectorQuads(id, a.selector)
+  );
+};
+
 /**
  * Render an already validated ledger, filtering claims and evidence before constructing artifacts.
  * **Example** (Project an empty outward ledger)
@@ -52,70 +122,15 @@ export const projectKb: {
     view: KbView
   ): Readonly<Record<string, string>> => {
     const { claims: selected, assertions: evidence } = selectKb(claims, assertions, view);
-    let lines = A.empty<string>();
     const terms = HashSet.fromIterable(A.map(selected, (c) => c.proposition._tag));
-    for (const graph of ["claims", "provenance", "current", "schema"]) {
-      lines = A.append(lines, quad(term(`graph:${graph}`), "graphKind", literal(graph), graph));
-    }
-    for (const c of selected) {
-      const id = iri(c.id);
-      const p = c.proposition;
-      lines = A.appendAll(lines, [
-        quad(id, "type", term("Claim"), "claims"),
-        quad(id, "review", literal(c.review._tag), "claims"),
-        quad(id, "text", literal(p.text), "claims"),
-        quad(id, "assertsSubject", iri(p.subject), "claims"),
-        quad(id, "assertsPredicate", term(p._tag), "claims"),
-        quad(id, "assertsObject", iri(p.object), "claims"),
-      ]);
-      if (
-        c.review._tag === "Accepted" &&
-        c.knowledge.expiredAt._tag === "None" &&
-        !A.some(claims, (candidate) => candidate.supersedes._tag === "Some" && candidate.supersedes.value === c.id) &&
-        A.some(
-          evidence,
-          (a) =>
-            a.claimId === c.id && A.contains(c.supportedBy, a.id) && a.review === "accepted" && a.outcome === "captured"
-        )
-      ) {
-        lines = A.appendAll(lines, [
-          `${iri(p.subject)} ${term(p._tag)} ${iri(p.object)} ${term("graph:current")} .`,
-          quad(id, "authorizedBy", id, "current"),
-        ]);
-      }
-    }
-    for (const a of evidence) {
-      const id = iri(a.id);
-      lines = A.appendAll(lines, [
-        quad(id, "claim", iri(a.claimId), "provenance"),
-        quad(id, "capture", iri(a.captureId), "provenance"),
-        quad(id, "quote", literal(a.quote), "provenance"),
-        quad(id, "audience", literal(a.audience), "provenance"),
-        quad(id, "locator", literal(a.sourceRef.locator), "provenance"),
-        quad(id, "sha256", literal(a.sourceRef.sha256), "provenance"),
-        quad(id, "quoteDigest", literal(a.quoteDigest), "provenance"),
-        quad(id, "sourceKind", literal(a.sourceRef.kind), "provenance"),
-        quad(id, "review", literal(a.review), "provenance"),
-        quad(id, "outcome", literal(a.outcome), "provenance"),
-        quad(id, "derivationBasis", literal(a.derivation.basis), "provenance"),
-        quad(id, "derivationRef", literal(a.derivation.ref), "provenance"),
-      ]);
-      const selector = a.selector;
-      if (selector._tag === "TextQuote")
-        lines = A.appendAll(lines, [
-          quad(id, "exact", literal(selector.exact), "provenance"),
-          quad(id, "prefix", literal(selector.prefix), "provenance"),
-          quad(id, "suffix", literal(selector.suffix), "provenance"),
-          quad(id, "offsetUnit", literal("UTF-16"), "provenance"),
-        ]);
-      lines = A.appendAll(lines, [
-        quad(id, "selectorKind", literal(selector._tag), "provenance"),
-        quad(id, "start", literal(`${selector.start}`), "provenance"),
-        quad(id, "end", literal(`${selector.end}`), "provenance"),
-      ]);
-    }
-    for (const t of terms)
-      lines = A.append(lines, quad(term(t), "comment", literal(`Reviewed ${t} relationship.`), "schema"));
+    const lines = A.flatten([
+      A.map(["claims", "provenance", "current", "schema"], (graph) =>
+        quad(term(`graph:${graph}`), "graphKind", literal(graph), graph)
+      ),
+      A.flatMap(selected, (c) => claimQuads(c, claims, evidence)),
+      A.flatMap(evidence, assertionQuads),
+      A.map(A.fromIterable(terms), (t) => quad(term(t), "comment", literal(`Reviewed ${t} relationship.`), "schema")),
+    ]);
     return {
       "dataset.nq": `${A.join(A.sort(A.fromIterable(HashSet.fromIterable(lines)), Str.Order), "\n")}\n`,
       "INDEX.md": `# Knowledge ledger\n\nView: ${view}\n\n${A.join(

@@ -29,6 +29,50 @@ const printReport = Effect.fn("Kb.printReport")(function* (report: KbReport) {
   yield* Console.log(json);
 });
 
+const outputReplacesSource = () =>
+  KbError.make({ message: "Output cannot replace the source; outward output must be outside the ledger root" });
+const outwardCanaryFailed = (where: string) => KbError.make({ message: `Outward canary check failed${where}` });
+
+/** Resolve the output through its real parent and refuse targets that would replace or enclose the source. */
+const resolveBuildTarget = Effect.fnUntraced(function* (root: string, view: KbView, out: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const isWithin = (relative: string): boolean =>
+    !Str.startsWith(`..${path.sep}`)(relative) && relative !== ".." && !path.isAbsolute(relative);
+  const source = yield* fs.realPath(root);
+  yield* fs.makeDirectory(path.dirname(path.resolve(out)), { recursive: true });
+  const parent = yield* fs.realPath(path.dirname(path.resolve(out)));
+  const target = path.join(parent, path.basename(path.resolve(out)));
+  const relative = path.relative(source, target);
+  const insideSource = isWithin(relative);
+  const ancestorOfSource = isWithin(path.relative(target, source));
+  if (Str.isEmpty(relative) || ancestorOfSource || (view === "outward" && insideSource))
+    return yield* outputReplacesSource();
+  return target;
+});
+
+/** An existing target must be an empty real directory, so no stale artifact survives a rebuild. */
+const requireEmptyTarget = Effect.fnUntraced(function* (target: string) {
+  const fs = yield* FileSystem.FileSystem;
+  if (!(yield* fs.exists(target))) return;
+  const entries = yield* fs.readDirectory(target);
+  if (A.isReadonlyArrayNonEmpty(entries))
+    return yield* KbError.make({ message: "Output directory must be empty; use a fresh view directory" });
+  const actual = yield* fs.realPath(target);
+  if (actual !== target) return yield* KbError.make({ message: "Output directory cannot be a symbolic link" });
+});
+
+/** Inspect the bytes on disk as well as the in-memory projection. */
+const requireNoCanaryOnDisk = Effect.fnUntraced(function* (target: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const names = yield* fs.readDirectory(target, { recursive: true });
+  for (const name of names) {
+    const content = yield* fs.readFileString(path.join(target, name));
+    if (Str.includes("CANARY-INTERNAL-")(content)) return yield* outwardCanaryFailed(" on disk");
+  }
+});
+
 /**
  * Build into a fresh or empty directory, rejecting invalid ledgers and canaries before writing.
  * **Details**
@@ -50,39 +94,13 @@ export const buildKb = Effect.fn("Kb.build")(
     const path = yield* Path.Path;
     const loaded = yield* ledger.read(root);
     if (!loaded.report.valid) return yield* KbError.make({ message: "Ledger validation failed; run kb validate" });
-    const source = yield* fs.realPath(root);
-    yield* fs.makeDirectory(path.dirname(path.resolve(out)), { recursive: true });
-    const parent = yield* fs.realPath(path.dirname(path.resolve(out)));
-    const target = path.join(parent, path.basename(path.resolve(out)));
-    const relative = path.relative(source, target);
-    const reverse = path.relative(target, source);
-    const insideSource = !Str.startsWith(`..${path.sep}`)(relative) && relative !== ".." && !path.isAbsolute(relative);
-    const ancestorOfSource = !Str.startsWith(`..${path.sep}`)(reverse) && reverse !== ".." && !path.isAbsolute(reverse);
-    if (Str.isEmpty(relative) || ancestorOfSource || (view === "outward" && insideSource))
-      return yield* KbError.make({
-        message: "Output cannot replace the source; outward output must be outside the ledger root",
-      });
-    if (yield* fs.exists(target)) {
-      const entries = yield* fs.readDirectory(target);
-      if (A.isReadonlyArrayNonEmpty(entries))
-        return yield* KbError.make({ message: "Output directory must be empty; use a fresh view directory" });
-      const actual = yield* fs.realPath(target);
-      if (actual !== target) return yield* KbError.make({ message: "Output directory cannot be a symbolic link" });
-    }
+    const target = yield* resolveBuildTarget(root, view, out);
+    yield* requireEmptyTarget(target);
     const artifacts = projectKb(loaded.claims, loaded.assertions, view);
-    if (view === "outward" && hasKbCanary(artifacts))
-      return yield* KbError.make({ message: "Outward canary check failed" });
+    if (view === "outward" && hasKbCanary(artifacts)) return yield* outwardCanaryFailed("");
     yield* fs.makeDirectory(target, { recursive: true });
     for (const [name, content] of R.toEntries(artifacts)) yield* fs.writeFileString(path.join(target, name), content);
-    // Inspect the bytes on disk as well as the in-memory projection.
-    if (view === "outward") {
-      const names = yield* fs.readDirectory(target, { recursive: true });
-      for (const name of names) {
-        const content = yield* fs.readFileString(path.join(target, name));
-        if (Str.includes("CANARY-INTERNAL-")(content))
-          return yield* KbError.make({ message: "Outward canary check failed on disk" });
-      }
-    }
+    if (view === "outward") yield* requireNoCanaryOnDisk(target);
     return loaded.report;
   },
   Effect.mapError((error) => (S.is(KbError)(error) ? error : KbError.make({ message: "Cannot create knowledge view" })))

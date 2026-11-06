@@ -13,6 +13,7 @@ import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
+import * as ByteSize from "effect/ByteSize";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -71,6 +72,8 @@ const encodeWorkflow = S.encodeEffect(S.fromJsonString(CacheProducerWorkflow));
 const approvalCodec = JsonStringCodec(CacheProducerApproval);
 const executionProfileCodec = JsonStringCodec(CacheProducerExecutionProfile);
 const pathsEquivalent = S.toEquivalence(S.Array(S.String));
+const sourceFileByteLimit = ByteSize.mebibytes(64);
+const sourceInventoryByteLimit = ByteSize.gibibytes(1);
 const directoryEntry = S.Tuple([S.String, S.Natural]).pipe(
   $I.annoteSchema("WorkflowDirectoryEntry", {
     description: "Canonical checkout-relative entry and complete POSIX mode, including its filesystem type.",
@@ -280,9 +283,9 @@ export const collectCacheProducerWorkflowFiles = Effect.fn("CacheWorkflow.files"
   const canonicalRoot = yield* fs.realPath(root);
   const paths = yield* listSources(root);
   const declared = HashSet.fromIterable(paths);
-  const files = yield* Effect.forEach(
+  const sources = yield* Effect.forEach(
     paths,
-    Effect.fn("CacheWorkflow.file")(function* (relative) {
+    Effect.fn("CacheWorkflow.fileMetadata")(function* (relative) {
       const file = path.resolve(canonicalRoot, relative);
       const linkTarget = yield* fs.readLink(file).pipe(Effect.option);
       if (O.exists(linkTarget, path.isAbsolute)) {
@@ -296,12 +299,38 @@ export const collectCacheProducerWorkflowFiles = Effect.fn("CacheWorkflow.files"
       if (info.type === "Directory" && O.isNone(linkTarget)) {
         return yield* CacheCommandError.new("Workflow source directory requires a declared relative alias.");
       }
+      if (info.type !== "Directory" && ByteSize.isGreaterThan(info.size, sourceFileByteLimit)) {
+        return yield* CacheCommandError.new("Workflow source file exceeded its byte bound.");
+      }
+      return { relative, target, info, linkTarget };
+    }),
+    { concurrency: 4 }
+  );
+  const sourceBytes = A.reduce(sources, ByteSize.bytes(0), (total, { info }) =>
+    info.type === "Directory" ? total : ByteSize.sum(total, info.size)
+  );
+  if (ByteSize.isGreaterThan(sourceBytes, sourceInventoryByteLimit)) {
+    return yield* CacheCommandError.new("Workflow source inventory exceeded its byte bound.");
+  }
+  const files = yield* Effect.forEach(
+    sources,
+    Effect.fn("CacheWorkflow.file")(function* ({ relative, target, info, linkTarget }) {
+      const sha256 = yield* Match.value(info.type).pipe(
+        Match.when("Directory", () => hashDirectoryAlias(canonicalRoot, target, declared)),
+        Match.orElse(() =>
+          // Metadata preflight limits every read to an exactly representable size.
+          readCacheExperimentBytes(root, target, ByteSize.toNumberUnsafe(info.size)).pipe(
+            Effect.flatMap((bytes) =>
+              ByteSize.equals(ByteSize.bytes(bytes.byteLength), info.size)
+                ? digest(bytes)
+                : CacheCommandError.new("Workflow source size changed during inspection.")
+            )
+          )
+        )
+      );
       return CacheProducerWorkflowFile.make({
         path: relative,
-        sha256:
-          info.type === "Directory"
-            ? yield* hashDirectoryAlias(canonicalRoot, target, declared)
-            : yield* readCacheExperimentBytes(root, target, 8 * 1024 * 1024).pipe(Effect.flatMap(digest)),
+        sha256,
         mode: S.Natural.make(info.mode),
         linkTarget,
       });

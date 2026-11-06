@@ -755,3 +755,8 @@ protected producer provenance, current-main qualification or production rollout.
 - [OpenSSL prerequisites](https://github.com/openssl/openssl/blob/openssl-3.5.4/INSTALL.md) require Make and Perl with core modules. [OpenSSL Perl notes](https://github.com/openssl/openssl/blob/openssl-3.5.4/NOTES-PERL.md) name `perl-core` for RPM-based distributions and `perl` for Debian-based distributions. This is prerequisite guidance, not proof that the Beep candidate has compiled.
 
 - `installed-dependency-refusal-retention-2026-11-05.json`: authenticated accepted-main run42126399874 failed its dependency diagnostic; the retained fixed refusal and skipped source upload establish an evidence-retention gap. Runtime cause and dependency drift remain unknown. Repair regressions are authored for hosted CI, not locally executed.
+
+### Source-reader byte-budget repair, 2026-11-06
+
+- [Failed accepted-source inspection](https://github.com/beep-effect/beep-effect/actions/runs/42142818104/job/127647045003): source binding failed before diagnostics; no artifacts.
+- `source-inspection-byte-budget-repair-2026-11-06.json`: immutable Git metadata, exact failed-log digest, bounded complete-byte repair and authored hosted controls. This grants no producer approval, signing activation or qualification.

@@ -15,6 +15,7 @@ import {
   CacheToolchainSnapshot,
 } from "@beep/repo-cli/commands/Cache";
 import * as Adapter from "@beep/repo-cli/commands/Cache/Cache.adapter";
+import * as Evidence from "@beep/repo-cli/commands/Cache/Cache.evidence";
 import * as Fingerprint from "@beep/repo-cli/commands/Cache/Cache.fingerprint";
 import * as Linker from "@beep/repo-cli/commands/Cache/Cache.linker";
 import * as SignedRunner from "@beep/repo-cli/commands/Cache/Cache.pilot.runner";
@@ -55,6 +56,7 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { afterEach, expect, it, vi } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as ByteSize from "effect/ByteSize";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -114,6 +116,7 @@ const fixture = Effect.fn("WorkflowTest.fixture")(function* () {
   return { root, fs, path, source, git };
 });
 const encodeExecutionProfile = S.encodeEffect(S.fromJsonString(CacheProducerExecutionProfile));
+const hashSourceBytes = S.decodeEffect(Sha256HexFromBytes);
 const inspectedFixture = Effect.fn("WorkflowTest.inspectedFixture")(function* () {
   const base = yield* fixture();
   const bundle = yield* S.decodeUnknownEffect(CacheProducerBundle)(bundleInput);
@@ -839,6 +842,58 @@ it.layer(
         "packages/fixture/src/main.ts",
         "packages/fixture/src/new.ts",
       ]);
+    })
+  );
+  it.effect("hashes complete source files larger than the former eight-MiB cap", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      const relative = "packages/fixture/large.bin";
+      const bytes = new Uint8Array(8 * 1024 * 1024 + 1);
+      bytes[bytes.length - 1] = 1;
+      yield* fs.writeFile(path.join(root, relative), bytes);
+      const files = yield* collectCacheProducerWorkflowFiles(root);
+      const actual = A.findFirst(files, (file) => file.path === relative);
+      assertSome(
+        O.map(actual, (file) => file.sha256),
+        yield* hashSourceBytes(bytes)
+      );
+    })
+  );
+  it.effect("rejects an oversized source before opening any payload", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      const file = path.join(root, "packages/fixture/oversized.bin");
+      yield* fs.writeFile(file, new Uint8Array());
+      yield* fs.truncate(file, 64 * 1024 * 1024 + 1);
+      const open = vi.spyOn(fs, "open");
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toBe("Workflow source file exceeded its byte bound.");
+      expect(open).not.toHaveBeenCalled();
+    })
+  );
+  it.effect("rejects an aggregate source overflow before opening any payload", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      const files = A.map(A.range(0, 16), (index) => path.join(root, `packages/fixture/budget-${index}.bin`));
+      yield* Effect.forEach(files, (file) => fs.writeFileString(file, "x"), { concurrency: 4 });
+      const stat = fs.stat;
+      vi.spyOn(fs, "stat").mockImplementation((file) =>
+        stat(file).pipe(
+          Effect.map((info) => (A.contains(files, file) ? { ...info, size: ByteSize.mebibytes(64) } : info))
+        )
+      );
+      const open = vi.spyOn(fs, "open");
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toBe("Workflow source inventory exceeded its byte bound.");
+      expect(open).not.toHaveBeenCalled();
+    })
+  );
+  it.effect("refuses source size drift after the metadata preflight", () =>
+    Effect.gen(function* () {
+      const { root } = yield* fixture();
+      vi.spyOn(Evidence, "readCacheExperimentBytes").mockReturnValue(Effect.succeed(new Uint8Array()));
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toBe("Workflow source size changed during inspection.");
     })
   );
   it.effect("preserves whitespace in Git paths instead of hashing a different file", () =>

@@ -14,14 +14,10 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeCitationCaseNamePredicates } from "./CaseNamePredicates.ts";
-import {
-  copyCitationMetadataPatterns,
-  decodeCitationMetadataRuntimeConfiguration,
-  makeCitationMetadataOperation,
-} from "./MetadataComposition.ts";
+import { copyCitationMetadataPatternConfiguration, makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { citationPythonPointAt, concatCitationPythonRanges } from "./PythonUnicode.ts";
-import { CitationRegexPatternDescriptor, copyCitationRegexDescriptor } from "./RegexDescriptors.ts";
+import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { makeCitationRegexWorker } from "./RegexWorker.ts";
 import { CitationTextBudget } from "./TextBudget.ts";
@@ -342,53 +338,34 @@ const runScan = Effect.fn("Citation.runCaseNameScan")(function* (
   }
   return yield* Ref.get(state);
 });
+const copyConfiguration = Effect.fn("Citation.copyCaseNameScanConfiguration")(function* (
+  limits: CitationEngineLimits,
+  decoded: CitationCaseNameScanConfiguration
+) {
+  const owned = yield* copyCitationMetadataPatternConfiguration(
+    limits,
+    Patterns,
+    decoded.patterns,
+    decoded.bindings,
+    fingerprints,
+    () => fail("invalid-configuration")
+  );
+  return CitationCaseNameScanConfiguration.make(owned);
+});
 /** Capture fixed patterns and existing operation/runtime ownership. Every scan
  * gets fresh Ref state and a native Scope under one budget/admission/deadline.
  * Returned methods have R = never. Custom initial dict/protocol behavior remains
  * separate from this built-in default-initialization path.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationCaseNameScan = Effect.fn("Citation.makeCaseNameScan")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
-) {
-  const {
-    limits,
-    configuration: decoded,
-    runtime,
-  } = yield* decodeCitationMetadataRuntimeConfiguration(policy, runtimeInput, configurationInput, Config, () =>
-    fail("invalid-configuration")
-  );
-  const patterns = yield* copyCitationMetadataPatterns(limits, decoded.patterns, fingerprints, () =>
-    fail("invalid-configuration")
-  );
-  const ownedPatterns = yield* S.decodeUnknownEffect(Patterns)(patterns).pipe(
-    Effect.mapError(() => fail("invalid-configuration"))
-  );
-  const config = CitationCaseNameScanConfiguration.make({
-    patterns: ownedPatterns,
-    bindings: A.map(decoded.bindings, copyCitationRegexDescriptor),
-  });
-  const installed = yield* makeCitationMetadataOperation(
-    limits,
-    (raw: unknown) => runScan(limits, runtime, config, raw),
-    () => fail("invalid-configuration")
-  );
-  const scan = Effect.fn("Citation.scanCaseNameBoundaries")(
-    (raw: unknown) =>
-      installed.operation.run(
-        "extract",
-        Effect.gen(function* () {
-          const [state, reservedUnits] = yield* installed.run(raw);
-          return CitationCaseNameScanResult.make({ state, reservedUnits });
-        })
-      ),
-    (body) =>
-      body.pipe(
-        Effect.mapError((error) => (error._tag === "CitationCaseNamePredicateFailure" ? fail("empty-word") : error)),
-        installed.timing.timed
-      )
-  );
-  return { scan };
+export const makeCitationCaseNameScan = makeCitationMetadataStage({
+  method: "scan",
+  schema: Config,
+  invalid: () => fail("invalid-configuration"),
+  own: copyConfiguration,
+  prepare: (limits, runtime, config, raw) =>
+    runScan(limits, runtime, config, raw).pipe(
+      Effect.catchTag("CitationCaseNamePredicateFailure", () => Effect.fail(fail("empty-word")))
+    ),
+  project: (state, reservedUnits) => CitationCaseNameScanResult.make({ state, reservedUnits }),
 });
