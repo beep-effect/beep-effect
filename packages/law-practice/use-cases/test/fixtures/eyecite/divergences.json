@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "846de8725ad1fabf52957dfd165c63891c520c7be6e37cb92a187745f30cd74d",
+  "planSha256": "87bb4ccc7e5a0b03de4a2ed6b967e1300b39fcbd353afbc55dce4ce2ec1b45f3",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1176,7 +1176,11 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-document-services.md",
-          "sha256": "d2b3e8ce2ae2e9bdd6712d5a0dbc4be7862d1981fa2bbafa2d951732fc18ae23"
+          "sha256": "cb321ac179609672229b9b64290353a86fc74575ed5d58b116a266d44ec92a2a"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-server-failure-contract.md",
+          "sha256": "8e8490c1953ebb18ccd950cc9f014200d33c7d6fa8c2e7574fa5151724b2e519"
         }
       ],
       "workflowState": "audit",
@@ -1513,7 +1517,7 @@
         },
         {
           "path": "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.safety.ts",
-          "sha256": "0a30e5e30b6cc996d8911297d1801eddbf57e09f13a33c527aec2be15361bad6"
+          "sha256": "e69662a21dbf5b9940aa9c56018dab43f07bb082fe619928a1f78c30b1bbcbb2"
         },
         {
           "path": "packages/law-practice/use-cases/test/CitationSafetyFailure.test.ts",

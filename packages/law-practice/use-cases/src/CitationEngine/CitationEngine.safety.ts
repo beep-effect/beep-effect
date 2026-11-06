@@ -8,6 +8,7 @@ import { LiteralKit } from "@beep/schema";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { CitationEngineLimits } from "./CitationEngine.limits.ts";
+import { CitationEngineOperation } from "./CitationEngine.operations.ts";
 
 const $I = $LawPracticeUseCasesId.create("CitationEngine/CitationEngine.safety");
 /**
@@ -35,9 +36,6 @@ export const CitationSafetyBudget = LiteralKit([
  * @since 0.0.0
  */
 export type CitationSafetyBudget = typeof CitationSafetyBudget.Type;
-const Operation = LiteralKit(["clean", "extract", "resolve", "annotate"]).pipe(
-  $I.annoteSchema("Operation", { description: "Server citation operation whose result is withheld after exhaustion." })
-);
 /**
  * A citation operation exhausted a count, deadline or native parser resource.
  * **Details**
@@ -57,7 +55,7 @@ export class CitationSafetyLimitExceeded extends S.TaggedError<
   { readonly brand: unique symbol }
 >($I`CitationSafetyLimitExceeded`)(
   "CitationSafetyLimitExceeded",
-  { operation: Operation, limit: CitationSafetyBudget },
+  { operation: CitationEngineOperation, limit: CitationSafetyBudget },
   $I.annoteError<CitationSafetyLimitExceeded>("CitationSafetyLimitExceeded", {
     description: "Closed redacted citation resource/deadline exhaustion; a partial result is never returned.",
   })

@@ -157,7 +157,10 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-06-engine-artifact.md",
     "packages/law-practice/server/src/internal/Citation/EngineArtifact.ts",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-document-services.md",
-    "packages/law-practice/server/src/internal/Citation/DocumentServices.ts"
+    "packages/law-practice/server/src/internal/Citation/DocumentServices.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-server-failure-contract.md",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.errors.ts",
+    "packages/law-practice/server/src/internal/Citation/EngineFailure.ts"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

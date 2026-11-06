@@ -261,6 +261,7 @@
     {"name":"Citation.extractSingleElementHtmlName","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.extractVerifiedPrimitiveSource","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.extractorOrderKey","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.failExtractionBoundary","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.filterExtraction","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.filterNativeStorage","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.findHtmlTagsAtPosition","owner":"@beep/law-practice-server","family":"slice","conforms":true},

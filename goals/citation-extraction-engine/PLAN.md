@@ -1309,6 +1309,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the composition wave; retain separately qualified raw entry and semantic projection.
 
+### Publish the closed server citation failure union, 2026-11-06
+
+Publish exactly the five SPEC failure classes from the use-case server subpath and share the four-operation schema with safety. The typed extraction translator reconstructs declared data, emits closed debug labels and tests private-payload redaction. It accepts only established input/source/vocabulary/safety families, never arbitrary native errors or missing canonical capabilities as unsupported modes. Root/client surfaces remain empty. Full service/Layer and remaining translators/acceptance remain open. See history/evidence/2026-11-06-server-failure-contract.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert server-only failure/operation exports and the narrow translator; preserve safety payloads and all goal requirements.
+
 ### Verified primary occurrence adaptation, 2026-11-06
 
 Builtin semantic results now produce primary mentions only against genuine source capabilities for the exact tokenizer text. Existing canonical offset conversion, provenance verification and cm1 production are reused. Shortcut, invalid spans and native/JavaScript point-layout differences retain explicit unverified semantic data. Shared code-point conversion now scans cooperatively without whole-source arrays or prefix joins, with unchanged public contract. Forty prerequisite tests and both-runtime source/mention regression pass. Full-span/component evidence, warning translation, canonical source production for cleaning and the public service/Layer remain open. See history/evidence/2026-11-06-occurrence-projection.md.

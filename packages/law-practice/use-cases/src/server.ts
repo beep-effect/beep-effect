@@ -7,6 +7,18 @@
  */
 
 /**
+ * Closed server citation failures; raw sources and private causes are excluded.
+ * @category errors
+ * @since 0.0.0
+ */
+export {
+  CitationAnnotationError,
+  CitationEngineFailure,
+  CitationInputError,
+  CitationOperationUnsupported,
+  CitationPrerequisiteError,
+} from "./CitationEngine/CitationEngine.errors.ts";
+/**
  * Schema-owned citation safety ceilings and explicitly supplied execution policy.
  *
  * @category schemas
@@ -18,6 +30,12 @@ export {
   CitationEngineLimits,
   CitationEngineLimitTightening,
 } from "./CitationEngine/CitationEngine.limits.ts";
+/**
+ * Closed server citation operations and failure boundary; no client export.
+ * @category errors
+ * @since 0.0.0
+ */
+export { CitationEngineOperation } from "./CitationEngine/CitationEngine.operations.ts";
 /**
  * Closed citation resource names and nontruncating safety failures.
  * @category errors

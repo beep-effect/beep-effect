@@ -20,7 +20,16 @@ This is the slice's documented cross-slice bounded exception: importing
 Exception Ledger and `DECISIONS.md`. The law-practice DOMAIN tier stays clean —
 no epistemic dependency there.
 
-Citation policy schemas export from `/server`. Citation oracle corpus,
+Citation policy, operation names and the closed `CitationEngineFailure` union
+export only from `/server`. Its five error families are `CitationInputError`,
+`CitationPrerequisiteError`, `CitationSafetyLimitExceeded`,
+`CitationAnnotationError` and `CitationOperationUnsupported`. Raw text, private
+causes and caller-controlled mode labels are excluded from these failure
+payloads. Unknown/ambiguous/unresolved citation meanings remain domain data.
+These contracts do not publish a live `CitationEngine` service yet. Root and
+`/public` do not re-export them.
+
+Citation oracle corpus,
 accounting, divergence and benchmark schemas export only from `/test`;
 production code must not import that subpath. These test schemas are evidence
 contracts and do not provide a live citation engine or imply parity.
