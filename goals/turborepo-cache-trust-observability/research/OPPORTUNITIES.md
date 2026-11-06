@@ -2471,3 +2471,15 @@ but established no TCP connection. Preserve the local commit, failed transport
 receipts and observation artifacts; retry publication only after connectivity
 returns. A short connection deadline and explicit network attribution would
 avoid treating these waits as local proof or repeated code failures.
+### 2026-11-06 — Inherited coverage failures consume unrelated cache qualification runs
+
+The diagnostic PR #2757 passed every unit shard, but hosted Coverage Regression
+job 127893464505 failed on two lint production files unchanged from accepted
+main. The existing consolidated repair #2758 adds failure-path and worker tests
+without lowering floors. The repair is merged into main and present in this
+branch. Its earlier head has a successful hosted coverage receipt; current-head
+coverage proof remains required. Reuse the repair rather than copying its tests
+into both Turbo lanes. The obsolete owned #2760 Check run was cancelled to
+release runners.
+Expose known main coverage dependencies before admitting downstream coverage
+work, and preserve introduced, inherited and intentional cancellation causes.
