@@ -1,5 +1,20 @@
 # Friction receipts
 
+## P4 local skill metadata blocked by unrelated upstream fetch, 2026-11-06
+
+- Work: verify the local atom service guidance after changed-path review.
+- Evidence: the broad skills update check failed on an unrelated held import's
+  upstream HTTP 504 before completing its local checks. No retry or provenance
+  acceptance followed.
+- Impact: the broad check is failed, not passed; remote failure did not establish
+  local content drift. No external service impact was measured.
+- Workaround: use the existing local-entry hash service and canonical lock
+  serializer for the one changed local skill, preserve every other entry, then
+  run its scoped materialization check. Both installed targets match.
+- Prevention: a local-only update/check mode could avoid coupling local metadata
+  verification to unrelated floating imports. This delivery adds no new CLI mode
+  and leaves the held import and existing Skills owner unchanged.
+
 ## 2026-09-24: scheduler status example omits a required flag
 
 While inspecting proof admission, the Yeet skill's scheduler status example
@@ -86,3 +101,34 @@ missing evidence.
   with explicit goal-schema, content, and dependency obligations. Preserve
   current gates until that contract is implemented and reviewed; this packet
   does not authorize bypassing them.
+
+## P4 reference context and coverage accounting, 2026-11-06
+
+- Work: reconcile the frozen audit census with the current tracked tree and
+  review reference candidates before changing audited content.
+- Evidence: the read-only Knowledge doctor reported 948 blocking reference
+  candidates. Eleven selected cases were historical, normative, illustrative,
+  package-relative or skill-relative references, not validated content defects.
+  See the dated P4 reconciliation report under `history/`.
+- Impact: raw candidate totals cannot measure accepted defects or semantic
+  coverage. Explicit entry records also repeat paths and do not establish whole
+  reads. No downstream content damage was observed because the candidates were
+  reviewed before mutation.
+- Prevention: retain source context, frozen blob identity, per-entry outcomes and
+  separate accepted-review records. Keep the remaining candidates unresolved; do
+  not suppress a class or assign zero claims from a mechanical count. This audit
+  owns the review; existing gate and content owners retain their code.
+
+## P4 effective-tree hash omitted after main integration, 2026-11-06
+
+- Work: verify the skill reconciliation boundary after integrating newer main.
+- Evidence: `bun run beep skills update --check` reported one stale file,
+  `skills-lock.json`. Canonical regeneration changed only Yeet's
+  `installedTreeHash`; the same check then passed.
+- Attribution: newer main changed Yeet reference content. The generated local
+  hash had not followed that content change. All other skill entries, ADHD
+  provenance and skill source files were preserved.
+- Impact: one stale effective-tree receipt; no runtime or user impact measured.
+- Prevention: run the existing canonical update/check after skill edits and
+  base integration. The audit repaired the generated field in this delivery;
+  no duplicate content fix, manual hash or new gate was introduced.

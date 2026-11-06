@@ -6,28 +6,20 @@
  */
 
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
-import * as A from "effect/Array";
-import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
-import * as Path from "effect/Path";
-import { acquireLibrary } from "./Library.acquire.ts";
 import { LibraryError } from "./Library.errors.ts";
-import { importLibraryResult } from "./Library.import.ts";
-import { inventoryLibrary } from "./Library.inventory.ts";
-import { LibraryQualifyOptions, qualifyLibrary } from "./Library.qualify.ts";
-import { renderLibrary } from "./Library.render.ts";
+import { resolveLibraryInputRoots, resolveLibraryRoot } from "./Library.paths.ts";
+import { LibraryQualifyOptions } from "./Library.qualify.ts";
 import { LibraryAcquireOptions, LibraryInventoryOptions } from "./Library.schemas.ts";
-import { resolveLibraryRoot } from "./Library.service.ts";
-import { libraryStatus } from "./Library.status.ts";
-import { verifyLibrary } from "./Library.verify.ts";
+import { ResearchLibrary, ResearchLibraryLive } from "./Library.service.ts";
 
 const library = Flag.String("library").pipe(
   Flag.optional,
-  Flag.withDescription("Reusable source library; default ~/YeeBois/research/beep-effect")
+  Flag.withDescription("Reusable source library; default: BEEP_RESEARCH_LIBRARY or XDG data home")
 );
 const inventory = Command.make(
   "inventory",
@@ -39,21 +31,18 @@ const inventory = Command.make(
     ),
   },
   Effect.fn("ResearchLibrary.inventoryCommand")(function* ({ library, input }) {
+    const research = yield* ResearchLibrary;
     const libraryRoot = yield* resolveLibraryRoot(library);
-    const path = yield* Path.Path;
-    const home = yield* Config.String("HOME").pipe(
-      Effect.mapError((cause) => LibraryError.make({ message: "Cannot resolve default corpus roots.", cause }))
-    );
-    const inputRoots = A.match(input, {
-      onEmpty: () => [path.resolve("research"), path.join(home, "Downloads/Research-10-6-26")],
-      onNonEmpty: A.fromIterable,
-    });
-    const catalog = yield* inventoryLibrary(LibraryInventoryOptions.make({ libraryRoot, inputRoots }));
+    const inputRoots = yield* resolveLibraryInputRoots(input);
+    const catalog = yield* research.inventory(libraryRoot, LibraryInventoryOptions.make({ libraryRoot, inputRoots }));
     yield* Console.log(
       `Inventoried ${catalog.documents.length} documents, ${catalog.sources.length} source identities, ${catalog.occurrences.length} citations in ${libraryRoot}`
     );
   })
-).pipe(Command.withDescription("Snapshot all input documents and record citation provenance without fetching sources"));
+).pipe(
+  Command.provide(ResearchLibraryLive),
+  Command.withDescription("Snapshot all input documents and record citation provenance without fetching sources")
+);
 const acquire = Command.make(
   "acquire",
   {
@@ -66,13 +55,15 @@ const acquire = Command.make(
     retryFailed: Flag.Boolean("retry-failed").pipe(Flag.withDefault(false)),
   },
   Effect.fn("ResearchLibrary.acquireCommand")(function* ({ library, source, concurrency, retryFailed }) {
+    const research = yield* ResearchLibrary;
     if (concurrency < 1 || concurrency > 8)
       return yield* LibraryError.make({ message: "Concurrency must be between 1 and 8.", cause: concurrency });
     const root = yield* resolveLibraryRoot(library);
-    yield* acquireLibrary(root, LibraryAcquireOptions.make({ sourceIds: source, concurrency, retryFailed }));
+    yield* research.acquire(root, LibraryAcquireOptions.make({ sourceIds: source, concurrency, retryFailed }));
     yield* Console.log(`Acquisition receipts recorded in ${root}; run verify for coverage.`);
   })
 ).pipe(
+  Command.provide(ResearchLibraryLive),
   Command.withDescription("Acquire referenced sources, clone every external repository, and retain per-source receipts")
 );
 const qualify = Command.make(
@@ -84,11 +75,15 @@ const qualify = Command.make(
     maxProbes: Flag.Int("max-probes").pipe(Flag.withDefault(3)),
   },
   Effect.fn("ResearchLibrary.qualifyCommand")(function* ({ library, adapter, source, maxProbes }) {
+    const research = yield* ResearchLibrary;
     const root = yield* resolveLibraryRoot(library);
-    yield* qualifyLibrary(root, LibraryQualifyOptions.make({ adapters: adapter, sourceIds: source, maxProbes }));
+    yield* research.qualify(root, LibraryQualifyOptions.make({ adapters: adapter, sourceIds: source, maxProbes }));
     yield* Console.log(`Operational qualification receipts recorded in ${root}.`);
   })
-).pipe(Command.withDescription("Probe actual adapter routes and record verified evidence or failures"));
+).pipe(
+  Command.provide(ResearchLibraryLive),
+  Command.withDescription("Probe actual adapter routes and record verified evidence or failures")
+);
 const importResult = Command.make(
   "import-result",
   {
@@ -96,11 +91,15 @@ const importResult = Command.make(
     result: Argument.String("result-file"),
   },
   Effect.fn("ResearchLibrary.importCommand")(function* ({ library, result }) {
+    const research = yield* ResearchLibrary;
     const root = yield* resolveLibraryRoot(library);
-    yield* importLibraryResult(root, result);
+    yield* research.importResult(root, result);
     yield* Console.log(`Imported source-bound result into ${root}.`);
   })
-).pipe(Command.withDescription("Import validated Grok, alphaXiv, transcript, or explicit disposition results"));
+).pipe(
+  Command.provide(ResearchLibraryLive),
+  Command.withDescription("Import validated Grok, alphaXiv, transcript, or explicit disposition results")
+);
 /**
  * Render verification diagnostics and fail the process gate on incomplete coverage.
  * **Example** (Prepare the process failure gate)
@@ -117,11 +116,14 @@ const importResult = Command.make(
 export const runLibraryVerificationCommand = Effect.fn("ResearchLibrary.runVerificationCommand")(function* (
   root: string
 ) {
-  yield* verifyLibrary(root).pipe(
-    Effect.catchTag("LibraryError", (error) =>
-      Console.error(error.message).pipe(Effect.andThen(failWithReportedExit("Research library gate failed", 1)))
-    )
-  );
+  const research = yield* ResearchLibrary;
+  yield* research
+    .verify(root)
+    .pipe(
+      Effect.catchTag("LibraryError", (error) =>
+        Console.error(error.message).pipe(Effect.andThen(failWithReportedExit("Research library gate failed", 1)))
+      )
+    );
 });
 const verify = Command.make(
   "verify",
@@ -131,24 +133,60 @@ const verify = Command.make(
     yield* runLibraryVerificationCommand(root);
   })
 ).pipe(
+  Command.provide(ResearchLibraryLive),
   Command.withDescription("Verify immutable bytes, citation coverage, repository clones, and qualification evidence")
+);
+const includePrivate = Flag.Boolean("include-private").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Include the private partition")
+);
+const migrate = Command.make(
+  "migrate",
+  { library, dryRun: Flag.Boolean("dry-run").pipe(Flag.withDefault(false)) },
+  Effect.fn("ResearchLibrary.migrateCommand")(function* ({ library, dryRun }) {
+    const research = yield* ResearchLibrary;
+    const root = yield* resolveLibraryRoot(library);
+    yield* research.migrate(root, dryRun);
+  })
+).pipe(
+  Command.provide(ResearchLibraryLive),
+  Command.withDescription("Migrate to catalog v2 after SHACL and hash-equal index checks")
 );
 const render = Command.make(
   "render",
-  { library },
-  Effect.fn("ResearchLibrary.renderCommand")(function* ({ library }) {
+  { library, includePrivate },
+  Effect.fn("ResearchLibrary.renderCommand")(function* ({ library, includePrivate }) {
+    const research = yield* ResearchLibrary;
     const root = yield* resolveLibraryRoot(library);
-    yield* renderLibrary(root);
+    yield* research.render(root, includePrivate);
     yield* Console.log(`Rendered Markdown and static HTML navigation in ${root}.`);
   })
-).pipe(Command.withDescription("Generate report views and searchable Markdown/static HTML source navigation"));
+).pipe(
+  Command.provide(ResearchLibraryLive),
+  Command.withDescription("Generate report views and searchable Markdown/static HTML source navigation")
+);
+const ontologyRender = Command.make(
+  "render",
+  { library },
+  Effect.fn("ResearchLibrary.ontologyRenderCommand")(function* ({ library }) {
+    const research = yield* ResearchLibrary;
+    const root = yield* resolveLibraryRoot(library);
+    yield* research.renderOntology(root);
+  })
+).pipe(
+  Command.provide(ResearchLibraryLive),
+  Command.withDescription("Generate and parse the library T-Box and SHACL shapes")
+);
+const ontology = Command.make("ontology").pipe(Command.withSubcommands([ontologyRender]));
 const status = Command.make(
   "status",
-  { library },
-  Effect.fn("ResearchLibrary.statusCommand")(function* ({ library }) {
-    yield* resolveLibraryRoot(library).pipe(Effect.flatMap(libraryStatus));
+  { library, includePrivate },
+  Effect.fn("ResearchLibrary.statusCommand")(function* ({ library, includePrivate }) {
+    const research = yield* ResearchLibrary;
+    const root = yield* resolveLibraryRoot(library);
+    yield* research.status(root, includePrivate);
   })
-).pipe(Command.withDescription("Report coverage and provider health separately"));
+).pipe(Command.provide(ResearchLibraryLive), Command.withDescription("Report coverage and provider health separately"));
 
 /**
  * Source library command group, independent of the knowledge vault.
@@ -163,5 +201,5 @@ const status = Command.make(
  */
 export const libraryCommand = Command.make("library").pipe(
   Command.withDescription("Reusable, evidence-backed research source library"),
-  Command.withSubcommands([inventory, qualify, acquire, importResult, verify, render, status])
+  Command.withSubcommands([inventory, qualify, acquire, importResult, verify, render, status, ontology, migrate])
 );

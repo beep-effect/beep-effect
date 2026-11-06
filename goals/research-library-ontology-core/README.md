@@ -31,11 +31,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P3 Yeet / P4 Close. Final PR #2771 carries the reflection and `proposedCloseout` (completed-retained). After merge: run the real-library `migrate` and `ontology render`, run `goals completion refresh`, then adopt the status in a packet-state PR. Everything in scope has landed: S.Opaque models with ontology annotations, the `ResearchLibrary`
+service, the DCAT vocabulary, the T-Box/SHACL fold, the A-Box projection, SPARQL-backed render/status with a
+private partition, the hash-gated v2 `migrate` command, golden replay of both intakes, and the runbook.
 
 ## Latest Evidence
 
-Not started.
+- Real-library `research library migrate --dry-run`: SHACL `conforms=true violations=0`, and the in-memory `index.md` hash equals the on-disk pre-migration render.
+- `bun run beep yeet verify --tier cheap-gates`: all lanes green after the schema-first, oxlint, Fallow, tsconfig-sync and cache-baseline repairs.
+- Real-library `research library verify` (read-only) matches `main` failure-for-failure. It reports 10 inherited data-gap issues; the 104 introduced correction-hash failures were fixed (see [research/OPPORTUNITIES.md](./research/OPPORTUNITIES.md)).
 
 ## Notes
 
