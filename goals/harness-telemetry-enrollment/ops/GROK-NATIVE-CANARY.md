@@ -39,8 +39,18 @@ Authentication uses the existing normal native login-store consumer through
 `GROK_AUTH_PATH`. The adapter reads only the authentication file's owner, mode,
 inode and timestamp metadata. It never opens, copies or serializes its contents.
 The child inherits only the fixed environment: no API key, provider command,
-transport/endpoint override or ambient environment is passed. Native credential
-refresh may change metadata; such drift causes Unknown and never grants replay.
+transport/endpoint override or ambient environment is passed. The initial admitted credential metadata stays bound to the request. Before each
+native operation, the last accepted metadata must still match. Immediately after
+one bounded pinned native operation, the adapter may observe a changed credential
+file only at the same canonical location, with an owned regular single-link 0600
+file, bounded nonempty size, a no-follow metadata descriptor and unchanged owned
+parent identity. Binary, profile, MCP, original policy and session pins remain
+strict. This supports native automatic credential replacement without reading
+credential bytes. An additive optional isolation field records at most three
+`changed-during-native-phase` transitions, with cause and auth health `Unknown`;
+it does not prove which writer changed the file or that a refresh was legitimate.
+Unexpected pre-operation drift, unsafe structure or changed parent still refuses.
+No transition grants a new source attempt or permits replay of a failed run.
 The owner separately binds the authorized existing native subscription route.
 
 The implementation uses a direct native executable in the owned pilot worktree,
