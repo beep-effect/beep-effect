@@ -3045,6 +3045,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "missing base",
         "disabled",
         "pinned base mismatch",
+        "assume-unchanged hidden source",
+        "skip-worktree hidden source",
       ] as const) {
         it.effect(`runs full lanes for ${control}`, () =>
           Effect.gen(function* () {
@@ -3077,12 +3079,19 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const dirtySource = fs.writeFileString(path.join(root, "source.ts"), "changed\n");
             yield* Match.value(control).pipe(
               Match.when("dirty source", () => dirtySource),
+              Match.when("assume-unchanged hidden source", () =>
+                runGit(root, ["update-index", "--assume-unchanged", "source.ts"]).pipe(Effect.andThen(dirtySource))
+              ),
+              Match.when("skip-worktree hidden source", () =>
+                runGit(root, ["update-index", "--skip-worktree", "source.ts"]).pipe(Effect.andThen(dirtySource))
+              ),
               Match.when("staged source", () => dirtySource.pipe(Effect.andThen(runGit(root, ["add", "source.ts"])))),
               Match.when("untracked source", () => fs.writeFileString(path.join(root, "unknown.ts"), "changed\n")),
               Match.when("dirty report", () => fs.writeFileString(path.join(root, "docs/reports/probe.md"), "dirty\n")),
               Match.when("missing base", () => runGit(root, ["update-ref", "-d", "refs/remotes/origin/main"])),
               Match.orElse(() => Effect.void)
             );
+            const indexBefore = yield* fs.readFile(path.join(root, ".git/index"));
             const lanes = [reportLane(root, "lint:effect-vitest"), reportLane(root, "lint:schema-first")];
             const run = collectGithubCheckLaneWavesForTesting(
               "reports",
@@ -3102,6 +3111,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual(["failed", "not-run-early-stop"]);
             assertSome(result.report.firstRed, "lint:effect-vitest");
             expect(result.report.skippedAfterRed).toBe(1);
+            const indexAfter = yield* fs.readFile(path.join(root, ".git/index"));
+            expect(indexAfter).toEqual(indexBefore);
           }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
         );
       }

@@ -47,7 +47,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
-import { dual, flow, pipe } from "effect/Function";
+import { dual, flow, identity, pipe } from "effect/Function";
 import * as Inspectable from "effect/Inspectable";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -109,6 +109,7 @@ import {
 import {
   explainLaneProofRefusal,
   hasReusableLaneProof,
+  laneProofVirtualTreeSha,
   persistLaneProofs,
   pinnedLaneProofBaseSha,
   prepareLaneProofSession,
@@ -2255,10 +2256,18 @@ const cleanReportOnlyDiff = Effect.fn("QualityTasks.cleanReportOnlyDiff")(functi
       ))
     )
       return false;
+    // A fresh temporary index reads actual tracked contents, including edits
+    // hidden from status by assume-unchanged or skip-worktree. The user's index
+    // and its flags are never copied, refreshed or cleared.
+    const headTree = yield* git.revParse(repoRoot, `${head}^{tree}`);
+    const materializedTree = yield* laneProofVirtualTreeSha(repoRoot);
     const finalHead = yield* git.revParse(repoRoot, "HEAD", { peel: "commit" });
     const finalBase = yield* git.revParse(repoRoot, "origin/main", { peel: "commit" });
     const finalStatus = yield* git.status(repoRoot, { untrackedFiles: "all", noOptionalLocks: true });
-    return finalHead === head && finalBase === base && A.isReadonlyArrayEmpty(finalStatus);
+    return A.every(
+      [materializedTree === headTree, finalHead === head, finalBase === base, A.isReadonlyArrayEmpty(finalStatus)],
+      identity
+    );
   }).pipe(Effect.orElseSucceed(thunkFalse));
 });
 
