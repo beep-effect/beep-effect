@@ -1,13 +1,3 @@
+# Local docgen output only (Docgen/internal/Workspace.ts reads .jsdoc-loop/generated-docs/modules).
 generated-docs/
 *.log
-# S2 lane example probes (effected-port): per-lane run-and-check scratch, never committed.
-# Everything at the top level is ignored except the tracked loop artefacts below.
-/*
-!/.gitignore
-!/FIXER-BRIEF.md
-!/REVIEW-BRIEF.md
-!/census*
-!/packs.json
-!/round-log.md
-!/inventory/
-!/packs/

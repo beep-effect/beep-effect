@@ -93,9 +93,6 @@
     name = "ontology-validator"
     enabled = true
   [[skills.config]]
-    name = "oracle"
-    enabled = true
-  [[skills.config]]
     name = "orchestrate"
     enabled = true
   [[skills.config]]
