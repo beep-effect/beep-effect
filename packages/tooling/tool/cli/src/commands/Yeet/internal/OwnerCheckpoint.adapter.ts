@@ -47,7 +47,7 @@ const MAX_NATIVE_ROWS = 2000;
 const NativePullBase = S.Struct({
   base: S.Struct({ ref: S.NonEmptyString, repo: S.Struct({ full_name: S.NonEmptyString }) }),
 });
-const NativeBaseRef = S.Struct({ object: S.Struct({ type: S.Literal("commit"), sha: OwnerCheckpointHead }) });
+const NativeBaseRef = S.Struct({ object: S.Struct({ type: S.tag("commit"), sha: OwnerCheckpointHead }) });
 
 const NativeRequiredContext = S.Struct({
   context: S.NonEmptyString,

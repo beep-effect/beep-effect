@@ -57,7 +57,7 @@ export class OwnerCheckpointReceiptRef extends S.Opaque<OwnerCheckpointReceiptRe
 ) {}
 
 const Manifest = S.Struct({
-  version: S.Literal("owner-checkpoint-receipts/v1"),
+  version: S.tag("owner-checkpoint-receipts/v1"),
   binding: OwnerCheckpointBinding,
   checkout: Sha256Hex,
   observer: OwnerCheckpointReceiptRef,
