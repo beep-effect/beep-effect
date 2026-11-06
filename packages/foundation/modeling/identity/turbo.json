@@ -28,6 +28,7 @@
         "!$TURBO_ROOT$/.fallow/**",
         "!$TURBO_ROOT$/**/.turbo/**",
         "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/.repos/**",
         "!$TURBO_ROOT$/.claude/worktrees/**"
       ],
       "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
