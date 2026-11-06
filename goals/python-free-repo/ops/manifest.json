@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "python-free-repo",
+    "packetId": "goal-packet/v1:e03830a545f730500b63ddcb49c2a7c591ae16c4435af3e10eb7cc6a403e3b16",
+    "title": "Remove Python from the repo, port photo-face to onnxruntime-node, and ban Python in tracked source",
+    "status": "active",
+    "created": "2026-11-06",
+    "updated": "2026-11-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/python-free-repo",
+  "lifecycle": "active",
+  "mission": "Remove Python from the repo, port photo-face to onnxruntime-node, and ban Python in tracked source (graduated from explorations/pulumi-to-alchemy).",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/pulumi-to-alchemy",
+    "graduated": "2026-11-06"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/python-free-repo/README.md",
+    "goals/python-free-repo/SPEC.md",
+    "goals/python-free-repo/PLAN.md",
+    "goals/python-free-repo/GOAL.md",
+    "goals/python-free-repo/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/python-free-repo/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/python-free-repo/GOAL.md)\" -le 4000",
+    "jq . goals/python-free-repo/ops/manifest.json",
+    "rg -n \"python-free-repo|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/python-free-repo",
+    "git diff --check -- goals/python-free-repo",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

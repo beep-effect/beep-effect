@@ -3,8 +3,8 @@
   "exploration": {
     "slug": "pulumi-to-alchemy",
     "title": "Pulumi to Alchemy",
-    "status": "active",
-    "stage": "align",
+    "status": "graduated",
+    "stage": "graduate",
     "openQuestions": [
       "Target: no TypeScript 6 in infra/ (option C suffices) or no Pulumi (A, or B converging on A)?",
       "Policy: new infrastructure Alchemy-first? Canonical Alchemy state store (Cloudflare store vs S3 lease state), and do the r2-cache stacks leave local state?",
@@ -17,11 +17,15 @@
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": [
+        "goals/infra-alchemy-rebuild",
+        "goals/scripts-to-beep-cli",
+        "goals/python-free-repo"
+      ],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-10-15",
-    "updated": "2026-11-02"
+    "updated": "2026-11-06"
   }
 }

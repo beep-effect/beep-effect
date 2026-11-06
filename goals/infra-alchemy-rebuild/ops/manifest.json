@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "infra-alchemy-rebuild",
+    "packetId": "goal-packet/v1:27553117a9c5b24fb276b8ff69509ff5c4df2eb1558704ab2e059a1685b2c00c",
+    "title": "Rebuild beep-effect infrastructure on Alchemy and distilled, Pulumi retired",
+    "status": "active",
+    "created": "2026-11-06",
+    "updated": "2026-11-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/infra-alchemy-rebuild",
+  "lifecycle": "active",
+  "mission": "Rebuild beep-effect infrastructure on Alchemy and distilled, Pulumi retired (graduated from explorations/pulumi-to-alchemy).",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/pulumi-to-alchemy",
+    "graduated": "2026-11-06"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/infra-alchemy-rebuild/README.md",
+    "goals/infra-alchemy-rebuild/SPEC.md",
+    "goals/infra-alchemy-rebuild/PLAN.md",
+    "goals/infra-alchemy-rebuild/GOAL.md",
+    "goals/infra-alchemy-rebuild/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/infra-alchemy-rebuild/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/infra-alchemy-rebuild/GOAL.md)\" -le 4000",
+    "jq . goals/infra-alchemy-rebuild/ops/manifest.json",
+    "rg -n \"infra-alchemy-rebuild|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/infra-alchemy-rebuild",
+    "git diff --check -- goals/infra-alchemy-rebuild",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
