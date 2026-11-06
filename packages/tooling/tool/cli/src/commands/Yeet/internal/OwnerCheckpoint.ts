@@ -3,6 +3,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -22,6 +23,7 @@ import {
   OwnerCheckpointRecord,
   OwnerCheckpointState,
 } from "./OwnerCheckpoint.schemas.ts";
+import type { Sha256Hex } from "@beep/schema";
 import type {
   OwnerCheckpointEvidence,
   OwnerCheckpointPolicy,
@@ -203,6 +205,83 @@ const mutation = (
   });
 };
 
+const releaseOwner = Effect.fnUntraced(function* (
+  current: OwnerCheckpointRecord,
+  releaseId: Sha256Hex,
+  evidence: OwnerCheckpointEvidence,
+  policy: OwnerCheckpointPolicy,
+  now: DateTime.Utc
+) {
+  if (current.state._tag !== "Held") return yield* refuse("state");
+  yield* qualifyOwnerCheckpointEvidence(current.binding, evidence, policy, now);
+  return mutation(
+    current,
+    OwnerCheckpointState.cases.Released.make({ releaseId, evidenceDigest: evidence.digest }),
+    OwnerCheckpointIntent.cases.CheckReleased.make({ releaseId })
+  );
+});
+const synchronizeOwner = Effect.fnUntraced(function* (current: OwnerCheckpointRecord, head: string) {
+  if (
+    current.state._tag === "Merged" ||
+    current.state._tag === "Claimed" ||
+    current.state._tag === "Uncertain" ||
+    current.binding.generation >= Number.MAX_SAFE_INTEGER - 1
+  )
+    return yield* refuse("state");
+  if (head === current.binding.head) return yield* refuse("state");
+  return mutation(
+    current,
+    OwnerCheckpointState.cases.Held.make({ reason: "synchronized" }),
+    OwnerCheckpointIntent.cases.CheckHeld.make({}),
+    OwnerCheckpointBinding.make({ ...current.binding, head, generation: current.binding.generation + 1 })
+  );
+});
+const revokeOwner = Effect.fnUntraced(function* (current: OwnerCheckpointRecord) {
+  if (current.state._tag === "Claimed" || current.state._tag === "Uncertain" || current.state._tag === "Merged")
+    return yield* refuse("state");
+  return mutation(
+    current,
+    OwnerCheckpointState.cases.Held.make({ reason: "revoked" }),
+    OwnerCheckpointIntent.cases.CheckHeld.make({})
+  );
+});
+const claimOwner = Effect.fnUntraced(function* (
+  current: OwnerCheckpointRecord,
+  claimId: Sha256Hex,
+  snapshot: OwnerCheckpointSnapshot,
+  policy: OwnerCheckpointPolicy,
+  now: DateTime.Utc
+) {
+  if (current.state._tag !== "Released") return yield* refuse("state");
+  yield* qualifyOwnerCheckpointSnapshot(current.binding, snapshot, policy, now);
+  return mutation(
+    current,
+    OwnerCheckpointState.cases.Claimed.make({ releaseId: current.state.releaseId, claimId }),
+    OwnerCheckpointIntent.cases.Merge.make({ claimId })
+  );
+});
+const markUnknownOwner = Effect.fnUntraced(function* (current: OwnerCheckpointRecord, claimId: Sha256Hex) {
+  if (current.state._tag !== "Claimed" || current.state.claimId !== claimId) return yield* refuse("state");
+  return mutation(
+    current,
+    OwnerCheckpointState.cases.Uncertain.make({ releaseId: current.state.releaseId, claimId }),
+    OwnerCheckpointIntent.cases.CheckHeld.make({})
+  );
+});
+const confirmOwner = Effect.fnUntraced(function* (
+  current: OwnerCheckpointRecord,
+  claimId: Sha256Hex,
+  mergeCommit: O.Option<string>
+) {
+  if ((current.state._tag !== "Claimed" && current.state._tag !== "Uncertain") || current.state.claimId !== claimId)
+    return yield* refuse("state");
+  return mutation(
+    current,
+    OwnerCheckpointState.cases.Merged.make({ claimId, mergeCommit }),
+    OwnerCheckpointIntent.cases.CheckHeld.make({})
+  );
+});
+
 /**
  * Decide one exact owner revision transition without any external side effect.
  *
@@ -235,71 +314,17 @@ export const transitionOwnerCheckpoint = Effect.fn("OwnerCheckpoint.transition")
   if (current.revision !== request.expectedRevision) return yield* refuse("conflict");
   const command = request.command;
   switch (command._tag) {
-    case "Release": {
-      if (current.state._tag !== "Held") return yield* refuse("state");
-      yield* qualifyOwnerCheckpointEvidence(current.binding, command.evidence, policy, now);
-      return mutation(
-        current,
-        OwnerCheckpointState.cases.Released.make({
-          releaseId: command.releaseId,
-          evidenceDigest: command.evidence.digest,
-        }),
-        OwnerCheckpointIntent.cases.CheckReleased.make({ releaseId: command.releaseId })
-      );
-    }
+    case "Release":
+      return yield* releaseOwner(current, command.releaseId, command.evidence, policy, now);
     case "Synchronize":
-      if (
-        current.state._tag === "Merged" ||
-        current.state._tag === "Claimed" ||
-        current.state._tag === "Uncertain" ||
-        current.binding.generation >= Number.MAX_SAFE_INTEGER - 1
-      )
-        return yield* refuse("state");
-      if (command.head === current.binding.head) return yield* refuse("state");
-      return mutation(
-        current,
-        OwnerCheckpointState.cases.Held.make({ reason: "synchronized" }),
-        OwnerCheckpointIntent.cases.CheckHeld.make({}),
-        OwnerCheckpointBinding.make({
-          ...current.binding,
-          head: command.head,
-          generation: current.binding.generation + 1,
-        })
-      );
+      return yield* synchronizeOwner(current, command.head);
     case "Revoke":
-      if (current.state._tag === "Claimed" || current.state._tag === "Uncertain" || current.state._tag === "Merged")
-        return yield* refuse("state");
-      return mutation(
-        current,
-        OwnerCheckpointState.cases.Held.make({ reason: "revoked" }),
-        OwnerCheckpointIntent.cases.CheckHeld.make({})
-      );
-    case "Claim": {
-      if (current.state._tag !== "Released") return yield* refuse("state");
-      yield* qualifyOwnerCheckpointSnapshot(current.binding, command.snapshot, policy, now);
-      return mutation(
-        current,
-        OwnerCheckpointState.cases.Claimed.make({ releaseId: current.state.releaseId, claimId: command.claimId }),
-        OwnerCheckpointIntent.cases.Merge.make({ claimId: command.claimId })
-      );
-    }
+      return yield* revokeOwner(current);
+    case "Claim":
+      return yield* claimOwner(current, command.claimId, command.snapshot, policy, now);
     case "Unknown":
-      if (current.state._tag !== "Claimed" || current.state.claimId !== command.claimId) return yield* refuse("state");
-      return mutation(
-        current,
-        OwnerCheckpointState.cases.Uncertain.make({ releaseId: current.state.releaseId, claimId: command.claimId }),
-        OwnerCheckpointIntent.cases.CheckHeld.make({})
-      );
+      return yield* markUnknownOwner(current, command.claimId);
     case "Confirm":
-      if (
-        (current.state._tag !== "Claimed" && current.state._tag !== "Uncertain") ||
-        current.state.claimId !== command.claimId
-      )
-        return yield* refuse("state");
-      return mutation(
-        current,
-        OwnerCheckpointState.cases.Merged.make({ claimId: command.claimId, mergeCommit: command.mergeCommit }),
-        OwnerCheckpointIntent.cases.CheckHeld.make({})
-      );
+      return yield* confirmOwner(current, command.claimId, command.mergeCommit);
   }
 });

@@ -22,6 +22,7 @@ import type {
   OwnerCheckpointBinding,
   OwnerCheckpointPolicy,
   OwnerCheckpointRequest,
+  OwnerCheckpointSnapshot,
 } from "./OwnerCheckpoint.schemas.ts";
 
 const RecordJson = S.fromJsonString(OwnerCheckpointRecord);
@@ -133,6 +134,44 @@ export const makeOwnerCheckpointStore = Effect.fn("OwnerCheckpoint.makeStore")(f
       )
       .pipe(Effect.mapError((error) => (S.is(OwnerCheckpointError)(error) ? error : storage())));
   });
+  const qualifyPublishedClaim = Effect.fnUntraced(function* (
+    current: OwnerCheckpointRecord,
+    snapshot: OwnerCheckpointSnapshot
+  ) {
+    const published = yield* outbox(current.binding, current.revision);
+    if (
+      !O.exists(
+        published,
+        (entry) =>
+          entry.intent._tag === "CheckReleased" &&
+          entry.delivery._tag === "Published" &&
+          entry.delivery.checkRunId === snapshot.selfCheck.id
+      )
+    )
+      return yield* OwnerCheckpointError.make({ reason: "publication" });
+    const own = A.findFirst(snapshot.read.checkRuns, (run) => run.id === snapshot.selfCheck.id);
+    if (!O.exists(own, (run) => run.status === "completed" && run.conclusion === "success"))
+      return yield* OwnerCheckpointError.make({ reason: "publication" });
+  });
+  const recordMergeDelivery = Effect.fnUntraced(function* (
+    current: OwnerCheckpointRecord,
+    claimId: OwnerCheckpointBinding["owner"],
+    delivery: OwnerCheckpointDelivery
+  ) {
+    const entries = yield* sql<{ payload: string }>`SELECT payload FROM yeet_owner_checkpoint_outbox
+      WHERE repository=${current.binding.repository} AND pr=${current.binding.prNumber} AND revision <= ${current.revision}
+      ORDER BY revision DESC LIMIT 2`.pipe(Effect.mapError(storage));
+    // Claimed -> Uncertain adds one metadata row; confirmation may follow it.
+    for (const row of entries) {
+      const entry = yield* decodeOutbox(row.payload).pipe(Effect.mapError(storage));
+      if (entry.intent._tag === "Merge" && entry.intent.claimId === claimId) yield* replaceDelivery(entry, delivery);
+    }
+  });
+  const readRevision = Effect.fnUntraced(function* (binding: OwnerCheckpointBinding, revision: number) {
+    const current = yield* read(binding).pipe(Effect.flatMap(requiredValue));
+    if (!sameBinding(current.binding, binding) || current.revision !== revision) return yield* conflict();
+    return current;
+  });
   const apply = Effect.fn("OwnerCheckpoint.apply")(function* (
     request: OwnerCheckpointRequest,
     policy: OwnerCheckpointPolicy,
@@ -142,23 +181,7 @@ export const makeOwnerCheckpointStore = Effect.fn("OwnerCheckpoint.makeStore")(f
       .withTransaction(
         Effect.gen(function* () {
           const current = yield* read(request.binding).pipe(Effect.flatMap(requiredValue));
-          if (request.command._tag === "Claim") {
-            const snapshot = request.command.snapshot;
-            const published = yield* outbox(current.binding, current.revision);
-            if (
-              !O.exists(
-                published,
-                (entry) =>
-                  entry.intent._tag === "CheckReleased" &&
-                  entry.delivery._tag === "Published" &&
-                  entry.delivery.checkRunId === snapshot.selfCheck.id
-              )
-            )
-              return yield* OwnerCheckpointError.make({ reason: "publication" });
-            const own = A.findFirst(snapshot.read.checkRuns, (run) => run.id === snapshot.selfCheck.id);
-            if (!O.exists(own, (run) => run.status === "completed" && run.conclusion === "success"))
-              return yield* OwnerCheckpointError.make({ reason: "publication" });
-          }
+          if (request.command._tag === "Claim") yield* qualifyPublishedClaim(current, request.command.snapshot);
           const next = yield* transitionOwnerCheckpoint(current, request, policy, now);
           const encoded = yield* encodeRecord(next.record).pipe(Effect.mapError(storage));
           const changed =
@@ -168,21 +191,11 @@ export const makeOwnerCheckpointStore = Effect.fn("OwnerCheckpoint.makeStore")(f
           if (changed.length !== 1) return yield* conflict();
           yield* append(next.outbox);
           if (request.command._tag === "Unknown" || request.command._tag === "Confirm") {
-            const entries = yield* sql<{ payload: string }>`SELECT payload FROM yeet_owner_checkpoint_outbox
-          WHERE repository=${request.binding.repository} AND pr=${request.binding.prNumber} AND revision <= ${current.revision}
-          ORDER BY revision DESC LIMIT 2`.pipe(Effect.mapError(storage));
-            // Claimed -> Uncertain adds one metadata row; confirmation may follow it.
-            for (const row of entries) {
-              const entry = yield* decodeOutbox(row.payload).pipe(Effect.mapError(storage));
-              if (entry.intent._tag === "Merge" && entry.intent.claimId === request.command.claimId) {
-                yield* replaceDelivery(
-                  entry,
-                  request.command._tag === "Unknown"
-                    ? OwnerCheckpointDelivery.cases.Uncertain.make({})
-                    : OwnerCheckpointDelivery.cases.Confirmed.make({})
-                );
-              }
-            }
+            const delivery =
+              request.command._tag === "Unknown"
+                ? OwnerCheckpointDelivery.cases.Uncertain.make({})
+                : OwnerCheckpointDelivery.cases.Confirmed.make({});
+            yield* recordMergeDelivery(current, request.command.claimId, delivery);
           }
           return next.record;
         })
@@ -199,13 +212,8 @@ export const makeOwnerCheckpointStore = Effect.fn("OwnerCheckpoint.makeStore")(f
     return yield* sql
       .withTransaction(
         Effect.gen(function* () {
-          const current = yield* read(binding).pipe(Effect.flatMap(requiredValue));
-          if (
-            !sameBinding(current.binding, binding) ||
-            current.revision !== revision ||
-            current.state._tag !== "Released"
-          )
-            return yield* conflict();
+          const current = yield* readRevision(binding, revision);
+          if (current.state._tag !== "Released") return yield* conflict();
           const entry = yield* outbox(binding, revision).pipe(Effect.flatMap(requiredValue));
           if (entry.intent._tag !== "CheckReleased" || entry.delivery._tag !== "Pending") return yield* conflict();
           return yield* replaceDelivery(entry, OwnerCheckpointDelivery.cases.Published.make({ checkRunId }));
@@ -221,13 +229,8 @@ export const makeOwnerCheckpointStore = Effect.fn("OwnerCheckpoint.makeStore")(f
     return yield* sql
       .withTransaction(
         Effect.gen(function* () {
-          const current = yield* read(binding).pipe(Effect.flatMap(requiredValue));
-          if (
-            !sameBinding(current.binding, binding) ||
-            current.revision !== revision ||
-            current.state._tag !== "Claimed"
-          )
-            return yield* conflict();
+          const current = yield* readRevision(binding, revision);
+          if (current.state._tag !== "Claimed") return yield* conflict();
           const entry = yield* outbox(binding, revision).pipe(Effect.flatMap(requiredValue));
           if (
             entry.intent._tag !== "Merge" ||
