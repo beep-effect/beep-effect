@@ -15,5 +15,52 @@
     "paths": {
       "@beep/law-practice-use-cases/internal/*": ["../src/internal/*.ts"]
     }
-  }
+  },
+  "references": [
+    {
+      "path": "../../../epistemic/domain/tsconfig.json"
+    },
+    {
+      "path": "../../../epistemic/use-cases/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/capability/file-processing/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/capability/langextract/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/capability/mcp-kit/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/epistemics/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/nlp/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/provenance/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../domain/tsconfig.json"
+    },
+    {
+      "path": "../../../shared/domain/tsconfig.json"
+    },
+    {
+      "path": "../../../tooling/test-kit/test-runner/tsconfig.json"
+    },
+    {
+      "path": "../../../tooling/test-kit/test-utils/tsconfig.json"
+    }
+  ]
 }
