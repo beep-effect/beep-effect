@@ -19,3 +19,7 @@ Accepted main PR2594 removes three selected telemetry files. The retained470d609
 Preparation and the separate actual-root observation bind source d6ad0d2; backend stage review compared the unchanged selected telemetry bytes against9d3ca8b5. No whole-repository equivalence or transitive import closure is claimed. Independent22-check real-root review again verifies shared repository/owning-clone identity and distinct worktrees. These remain identity observations, not real runtime launches.
 
 The first live guard refused insufficient initial headroom before creating any workload (peak0; inner exit null; outer wrapper75). The refusal is retained. A separate admitted run passed under unchanged limits; no ambiguous producer send was replayed. Both held units remain masked/inactive. Original historical receipts remain unchanged. The [new sanitized receipt](../ops/history/post-t3-source-admission-20261103.json) and [coverage table](COVERAGE.md) retain these boundaries.
+
+## Native extension requires fresh admission
+
+The fixed native producer, private config generator and retained-core managed provenance extension are a new source surface. Their local synthetic/compiler/review proof is summarized in [native source preparation](NATIVE-ONE-SHOT.md). Fresh current-source root admission remains pending for this extension. The81/87/86 historical selected-source maps and separate older root observation are not admission for these new bytes, their actual cwd or a real native session. All real collection and backend-visibility gates remain open.
