@@ -1,4 +1,8 @@
-/** Shared schema constructor for point observations with unknown source time and usage. */
+/**
+ * Private schema constructor for lifecycle points with unknown source time and usage.
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import * as O from "effect/Option";
 import { NativeTraceMetadata } from "../native-trace.ts";
 
@@ -7,7 +11,21 @@ type LifecyclePointFields = Pick<
   "eventId" | "namespaceId" | "routeId" | "traceId" | "spanId" | "sessionHash" | "nativeLifecycle"
 >;
 
-/** Preserve the common lifecycle evidence constraints at both native source boundaries. */
+/**
+ * Constructs a lifecycle point while fixing source time, model activity and usage as unknown.
+ * Source-specific identifiers and lifecycle metadata remain supplied by the owned projector.
+ *
+ * **Example** (Inspect the constructor from a colocated private module)
+ *
+ * ```ts
+ * import { makeLifecyclePoint } from "./lifecycle-point.ts"
+ *
+ * console.log(typeof makeLifecyclePoint)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const makeLifecyclePoint = (fields: LifecyclePointFields) =>
   NativeTraceMetadata.make({
     ...fields,

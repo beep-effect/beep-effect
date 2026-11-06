@@ -1,4 +1,8 @@
-/** Private bounded exchange shared by native lifecycle forwarders. */
+/**
+ * Private bounded callback validation and exchange shared by native lifecycle forwarders.
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import * as NodeNet from "node:net";
 import * as Effect from "effect/Effect";
 import * as Str from "effect/String";
@@ -6,7 +10,21 @@ import { CursorLifecycleCodecs, failure } from "./cursor-lifecycle-schemas.ts";
 import type { CursorLifecycleError } from "./cursor-lifecycle-schemas.ts";
 
 const { decodeAcknowledgement } = CursorLifecycleCodecs;
-/** Validate common fixed byte ceilings before either source-specific decoder runs. */
+/**
+ * Checks the fixed callback byte ceiling and absolute socket path bounds.
+ * This check performs no decoding, socket connection or source admission.
+ *
+ * **Example** (Inspect the validator from a colocated private module)
+ *
+ * ```ts
+ * import { validateLifecycleCallbackInput } from "./lifecycle-exchange.ts"
+ *
+ * console.log(typeof validateLifecycleCallbackInput)
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export const validateLifecycleCallbackInput = Effect.fnUntraced(function* (socketPath: string, body: string) {
   if (
     new TextEncoder().encode(body).byteLength > 8192 ||
@@ -15,6 +33,21 @@ export const validateLifecycleCallbackInput = Effect.fnUntraced(function* (socke
   )
     return yield* failure("callback");
 });
+/**
+ * Exchanges one projected callback for its bounded durable-intake acknowledgement.
+ * A transport failure does not prove that the journal did not commit.
+ *
+ * **Example** (Inspect the transport from a colocated private module without connecting)
+ *
+ * ```ts
+ * import { exchangeLifecycle } from "./lifecycle-exchange.ts"
+ *
+ * console.log(typeof exchangeLifecycle)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export const exchangeLifecycle = Effect.fn("AiMetrics.lifecycle.exchange")(function* (
   socketPath: string,
   projected: string,
