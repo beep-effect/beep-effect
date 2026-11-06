@@ -296,8 +296,11 @@ emit_context() {
 
 first_p0="$(printf '%s' "$entries" | jq -c '[.[] | select(.severity == "P0")][0] // empty')"
 if [ -z "$first_p0" ]; then
+  previous_state="$state"
   state="$(printf '%s' "$state" | jq -c '.incidentId = null')"
-  write_state
+  # Clearing a real incident still persists immediately. A clear session has
+  # no changed bookkeeping to write; P1 delivery below keeps its own write.
+  [ "$state" = "$previous_state" ] || write_state
 fi
 
 case "$harness:$event" in

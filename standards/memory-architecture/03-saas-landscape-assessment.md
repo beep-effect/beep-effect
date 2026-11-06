@@ -1,5 +1,15 @@
 # 03 — SaaS Landscape Assessment
 
+> Reading scope (2026-11-06): These are selected assessments retained as
+> research history, with their original observations and verdicts preserved.
+> See the [later capability assessment](./05-context-graph-capability-assessment.md)
+> for broader coverage and the [decision log](./04-decision-log.md) for dated
+> applicability and the binding framework principles.
+>
+> The July 8 Graphiti note below records a then-pending condition; the July 25
+> decision records retirement. The June 17 decision archives repo-memory v0.
+> Current agent memory setup follows [root agent guidance](../../AGENTS.md#agent-memory).
+
 > Condensed evaluations of every external agent memory solution the project has assessed.
 > Verdicts are final: USE, LEARN, or IGNORE.
 

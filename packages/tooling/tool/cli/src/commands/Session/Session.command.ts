@@ -21,7 +21,7 @@ import { readGoalCloseoutViews } from "../Goals/Completion.ts";
 import { renderGoalCloseoutView } from "../Goals/Goals.schemas.ts";
 import { HOT_PARCELS_TIMEOUT, printHotParcels } from "../Palantiri/Palantiri.hot.ts";
 import { layerPalantiriRuntime } from "../Palantiri/Palantiri.runtime.ts";
-import { layerPalantiriSourcesLive } from "../Palantiri/Palantiri.service.ts";
+import { layerPalantiriSourcesHot } from "../Palantiri/Palantiri.service.ts";
 import { PrNumber } from "../Yeet/internal/Provenance.ts";
 import { sessionContinuityCommand } from "./Continuity.command.ts";
 import { sessionRegisterCommand } from "./Register.command.ts";
@@ -253,7 +253,7 @@ export const sessionOpenCommand = Command.make(
     // own memory reader and HTTP client, so `session open` needs nothing more
     // than the ledger does.
     if (!json) {
-      yield* layerPalantiriSourcesLive.pipe(
+      yield* layerPalantiriSourcesHot.pipe(
         Layer.provide(Layer.mergeAll(MemoryStatsLive, FetchHttpClient.layer)),
         layerPalantiriRuntime(Layer.empty),
         printHotParcels(HOT_PARCELS_TIMEOUT)

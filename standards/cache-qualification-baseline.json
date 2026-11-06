@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Fable 5.1 (repo-cli-gh-git-consolidation runner retirement, feat/gh-git-w7-retire)",
-      "reason": "Record the runner-retirement seal drift: Goals/Doctor.ts moved its ls-files --others --ignored read onto runRepoCommandCaptureRaw and dropped the GoalsGitError adapter, so Goals.errors.ts leaves the goals-doctor and knowledge policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (fix/coverage-ownercheckpoint-rows)",
+      "reason": "Re-record @beep/repo-cli and the root after #2777 added test inputs and root research sources on top of the #2771 record; inputs only, no qualification granted.",
       "basis": {
-        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7-retire.md",
-        "sha256": "c14e38648002c31df4e58392feb338f33a97457f0a78205e3d21288bbe76f170"
+        "path": "goals/research-library-ontology-core/research/cache-baseline-review-2777.md",
+        "sha256": "cd648743325e3d862b80751e9918551102fb9fbee5ec017f175b005668379158"
       }
     },
     "@beep/acp": {
@@ -1162,11 +1162,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (feat/research-library-ontology-core)",
-      "reason": "Re-record @beep/repo-cli after it gains the ontology, semantic-web, shacl, oxigraph and n3 workspace dependencies; standard upstream build edges, no qualification granted.",
+      "reviewer": "Claude Opus 5.5 (fix/coverage-ownercheckpoint-rows)",
+      "reason": "Re-record @beep/repo-cli and the root after #2777 added test inputs and root research sources on top of the #2771 record; inputs only, no qualification granted.",
       "basis": {
-        "path": "goals/research-library-ontology-core/research/cache-baseline-review.md",
-        "sha256": "cf7a5a6e7d7023871b129cb7cc874998a289a9883d3250e9df049dc8d3f0cf88"
+        "path": "goals/research-library-ontology-core/research/cache-baseline-review-2777.md",
+        "sha256": "cd648743325e3d862b80751e9918551102fb9fbee5ec017f175b005668379158"
       }
     },
     "@beep/repo-cli-kit": {
@@ -92625,12 +92625,32 @@
           "cache": false,
           "inputs": [
             "!**/src-tauri/target/**",
+            "!../../../../apps/architecture-lab-proof/**/.turbo/**",
+            "!../../../../apps/architecture-lab-proof/**/dist/**",
+            "!../../../../apps/architecture-lab-proof/**/docs/**",
+            "!../../../../apps/architecture-lab-proof/**/node_modules/**",
+            "!../../../../packages/_internal/db-admin/**/.turbo/**",
+            "!../../../../packages/_internal/db-admin/**/dist/**",
+            "!../../../../packages/_internal/db-admin/**/docs/**",
+            "!../../../../packages/_internal/db-admin/**/node_modules/**",
+            "!../../../../packages/architecture-lab/**/.turbo/**",
+            "!../../../../packages/architecture-lab/**/dist/**",
+            "!../../../../packages/architecture-lab/**/docs/**",
+            "!../../../../packages/architecture-lab/**/node_modules/**",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../apps/architecture-lab-proof/**",
+            "../../../../goals/time-to-certainty/research/economics.json",
+            "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
+            "../../../../goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
+            "../../../../goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
             "../../../../package.json",
+            "../../../../packages/_internal/db-admin/**",
+            "../../../../packages/architecture-lab/**",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
+            "../../../../turbo.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
             "../../../../vitest.setup.ts",
@@ -93328,6 +93348,8 @@
             "../../../../apps/architecture-lab-proof/**",
             "../../../../goals/time-to-certainty/research/economics.json",
             "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
+            "../../../../goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
+            "../../../../goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
             "../../../../package.json",
             "../../../../packages/_internal/db-admin/**",
             "../../../../packages/architecture-lab/**",
@@ -93441,6 +93463,18 @@
         "configuration": {
           "cache": true,
           "inputs": [
+            "!../../../../apps/architecture-lab-proof/**/.turbo/**",
+            "!../../../../apps/architecture-lab-proof/**/dist/**",
+            "!../../../../apps/architecture-lab-proof/**/docs/**",
+            "!../../../../apps/architecture-lab-proof/**/node_modules/**",
+            "!../../../../packages/_internal/db-admin/**/.turbo/**",
+            "!../../../../packages/_internal/db-admin/**/dist/**",
+            "!../../../../packages/_internal/db-admin/**/docs/**",
+            "!../../../../packages/_internal/db-admin/**/node_modules/**",
+            "!../../../../packages/architecture-lab/**/.turbo/**",
+            "!../../../../packages/architecture-lab/**/dist/**",
+            "!../../../../packages/architecture-lab/**/docs/**",
+            "!../../../../packages/architecture-lab/**/node_modules/**",
             "!.beep/**",
             "!.fallow/**",
             "!CHANGELOG.md",
@@ -93448,9 +93482,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../apps/architecture-lab-proof/**",
             "../../../../goals/time-to-certainty/research/economics.json",
             "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
+            "../../../../goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
+            "../../../../goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
             "../../../../package.json",
+            "../../../../packages/_internal/db-admin/**",
+            "../../../../packages/architecture-lab/**",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
@@ -121809,7 +121848,7 @@
       },
       {
         "path": "packages/tooling/tool/cli/turbo.json",
-        "sha256": "c52155e26db44b552bf3462bf1da200496fb5792050908fd2f16dd80f2483f8d"
+        "sha256": "ea1a08f5c9367e49b3a70a2ae771f3f5f2fb40492e517b2f028d3aac08c12fc6"
       },
       {
         "path": "turbo.json",
