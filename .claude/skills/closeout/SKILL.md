@@ -74,6 +74,9 @@ Prefer these, so prompts read the same across sessions:
 - `Open the follow-up PR for <x>` — when the next step is a separate branch.
 - `Run /grill-with-docs on <decision>` — when direction, not execution, is next.
 - `Retire the lane` / `Sweep the clone` — post-merge closeout.
+- `Adopt the <slug> closeout (Recommended)` — after a goal's final PR merges:
+  `goals completion refresh`, then `goals set-status` in a packet-state PR. A
+  goal is not done, and `/goal` must not stop, until that PR merges.
 - `Park it: record state and stop` — writes the state to memory or the packet
   and ends the turn.
 

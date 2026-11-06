@@ -1,0 +1,11 @@
+[Unit]
+Description=Pull the T3 Code fork build from the DankStation mirror and update the t3 service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/t3code-fork-pull
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=20min

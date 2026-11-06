@@ -4,13 +4,13 @@
     "id": "t3-native-orchestration",
     "packetId": "goal-packet/v1:0442bd7373c1a9c86fc72b85c93f0e11da03a78898bc0558f6a59c598df41676",
     "title": "T3-Native Orchestration",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-01",
-    "updated": "2026-11-03",
+    "updated": "2026-11-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/t3-native-orchestration",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Make T3 Code the only cross-session messaging route: delete beep's agent-to-agent stack and its packets, and rewrite the orchestrator, handoff, remote-worker and closeout guidance around T3's MCP tools.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -31,10 +31,6 @@
         "gating": true
       }
     ]
-  },
-  "proposedCloseout": {
-    "status": "completed-retained",
-    "finalPullRequest": 2696
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -95,5 +91,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2696
+  }
 }

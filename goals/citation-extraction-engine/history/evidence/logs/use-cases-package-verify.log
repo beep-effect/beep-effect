@@ -1,0 +1,3 @@
+$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/law-practice-use-cases --quick
+pkg-verify @beep/law-practice-use-cases (~/YeeBois/projects/beep-effect-worktrees/citation-extraction-engine/packages/law-practice/use-cases) [quick]
+  ok lint 9.0s   ok check 7.9s

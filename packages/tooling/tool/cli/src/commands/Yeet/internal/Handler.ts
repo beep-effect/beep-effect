@@ -161,7 +161,7 @@ import {
   validatePublishBranch,
   warnOnMismatchedPublishUpstream,
 } from "./PublishScope.ts";
-import { applyHeavyAdmissionLabel, ensurePullRequest } from "./PullRequest.ts";
+import { applyHeavyAdmissionLabel, ensurePullRequest, YeetPrBodyRequest } from "./PullRequest.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { collectRemoteChecks, collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
@@ -764,12 +764,14 @@ const runRequiredPhase = Effect.fn("Yeet.runRequiredPhase")(function* (
 });
 
 // The `--message` first line titles the pull request (and so its squash-merge
-// commit); without one the branch's first non-merge commit subject does.
+// commit); without one the branch's first non-merge commit subject does. The
+// body request carries `--body-file` and the `yeet open` proof route.
 const ensureRequestedPullRequest = Effect.fn("Yeet.ensureRequestedPullRequest")(function* (
   context: RepoRunContext,
   steps: ReadonlyArray<RepoPlanStep>,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
-  message: O.Option<string> = O.none()
+  message: O.Option<string> = O.none(),
+  bodyRequest: YeetPrBodyRequest = YeetPrBodyRequest.make({})
 ) {
   return yield* ensurePullRequest(
     context,
@@ -777,12 +779,46 @@ const ensureRequestedPullRequest = Effect.fn("Yeet.ensureRequestedPullRequest")(
     A.findFirst(steps, (step) => step.id === "publish:02-pr-create"),
     A.findFirst(steps, (step) => step.id === "publish:03-pr-provenance-stamp"),
     {},
-    message
+    message,
+    bodyRequest
   );
 });
 
+// `--body-file`, read relative to the invoking directory. `runYeet` reads it
+// once before anything runs so a bad path fails before the push.
+const readPrBodySummary = Effect.fn("Yeet.readPrBodySummary")(function* (
+  context: RepoRunContext,
+  bodyFile: string
+): Effect.fn.Return<O.Option<string>, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+  if (Str.isEmpty(Str.trim(bodyFile))) return O.none();
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const file = path.resolve(context.cwd, bodyFile);
+  const text = yield* fs
+    .readFileString(file)
+    .pipe(Effect.mapError(YeetCommandError.new(`yeet could not read --body-file ${file}.`, { exitCode: 1 })));
+  if (Str.isEmpty(Str.trim(text))) {
+    return yield* YeetCommandError.make({ message: `yeet --body-file ${file} is empty.`, exitCode: 1 });
+  }
+  return O.some(text);
+});
+
+// The branch is already pushed when the body is built, so a body file that
+// vanished since `runYeet` read it costs only the custom summary.
+const prBodyRequestFor = Effect.fn("Yeet.prBodyRequestFor")(function* (
+  context: RepoRunContext,
+  options: YeetRunOptions
+) {
+  const summary = yield* readPrBodySummary(context, options.bodyFile).pipe(
+    Effect.catchTag("YeetCommandError", (error) =>
+      Console.error(`[yeet] warning: ${error.message} Using the generated summary.`).pipe(Effect.as(O.none<string>()))
+    )
+  );
+  return YeetPrBodyRequest.make({ summary, hostedProof: options.hostedProof });
+});
+
 const reusablePublishMaySkipCommit = (options: YeetRunOptions): boolean =>
-  options.pushOnly || (options.reuseVerified && options.amend && options.noEdit);
+  options.pushOnly || options.hostedProof || (options.reuseVerified && options.amend && options.noEdit);
 
 const reusablePublishStagingIsClean = Effect.fn("Yeet.reusablePublishStagingIsClean")(function* (
   context: RepoRunContext,
@@ -794,6 +830,14 @@ const reusablePublishStagingIsClean = Effect.fn("Yeet.reusablePublishStagingIsCl
   SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (A.isReadonlyArrayEmpty(stagedPaths)) return true;
+  if (options.hostedProof) {
+    return yield* failPublishScopeWithPacket(context, {
+      message: "yeet open refuses staged changes: it pushes the committed HEAD and never creates a commit.",
+      paths: stagedPaths,
+      remediation: "Commit the staged files (git commit), or unstage them, then retry yeet open.",
+      subCategory: "reuse-staged",
+    });
+  }
   if (!options.pushOnly) return false;
   return yield* failPublishScopeWithPacket(context, {
     message: options.reuseVerified
@@ -815,6 +859,14 @@ const requireCleanReusablePublishWorktree = Effect.fn("Yeet.requireCleanReusable
   SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (A.isReadonlyArrayEmpty(changedPaths)) return;
+  if (options.hostedProof) {
+    return yield* failPublishScopeWithPacket(context, {
+      message: "yeet open found uncommitted or untracked changes; only the committed HEAD would be pushed.",
+      paths: changedPaths,
+      remediation: "Commit, stash, or remove these changes so the pull request carries all of the work, then retry.",
+      subCategory: "reuse-dirty",
+    });
+  }
   return yield* failPublishScopeWithPacket(context, {
     message: options.pushOnly
       ? options.reuseVerified
@@ -951,9 +1003,11 @@ const preparePublishCommit = Effect.fn("Yeet.preparePublishCommit")(function* (
 > {
   if (skipCommit) {
     yield* Console.log(
-      options.reuseVerified
-        ? "[yeet] skipped commit; exact reusable proof state matches the current clean commit"
-        : "[yeet] skipped commit; clean base-sync merge will run cheap gates and head-install preflight"
+      options.hostedProof
+        ? "[yeet] open: pushing the committed HEAD without local gates; hosted CI is the proof"
+        : options.reuseVerified
+          ? "[yeet] skipped commit; exact reusable proof state matches the current clean commit"
+          : "[yeet] skipped commit; clean base-sync merge will run cheap gates and head-install preflight"
     );
     return [true, O.none()];
   }
@@ -1205,13 +1259,15 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
     return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
   }
   const message = yield* validateRequiredMessage(options);
+  const bodyRequest = yield* prBodyRequestFor(plan.context, options);
   // One gh login for the pull request create (or reuse), its provenance stamp and its label.
   const pullRequest = yield* Effect.gen(function* () {
     const ensured = yield* (dependencies.ensurePullRequest ?? ensureRequestedPullRequest)(
       plan.context,
       plan.steps,
       recorder,
-      message
+      message,
+      bodyRequest
     );
     yield* applyHeavyAdmissionLabel(
       plan.context,
@@ -1354,6 +1410,50 @@ const submitDetachedReadyMonitor = Effect.fn("Yeet.submitDetachedReadyMonitor")(
   return pipe(A.head(results), O.flatMap(submittedProofJob));
 });
 
+// `yeet open` (hostedProof): no local gate and no head-install preflight. The
+// committed HEAD is pushed, then the shared tail opens or reuses the draft,
+// labels it, stamps its provenance footer and submits the readiness monitor.
+// No scheduler admission is taken, so a saturated host cannot hold it.
+const runHostedProofPublishPhases = Effect.fn("Yeet.runHostedProofPublishPhases")(function* (
+  plan: RepoRunPlan,
+  options: YeetRunOptions,
+  publishSteps: ReadonlyArray<RepoPlanStep>,
+  monitorSteps: ReadonlyArray<RepoPlanStep>,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  extras: Ref.Ref<YeetVerdictExtras>,
+  skipCommit: boolean
+): Effect.fn.Return<
+  YeetRunResult,
+  YeetCommandError,
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
+  | Git
+> {
+  const preparedHead = yield* readPublishedHead(plan.context);
+  yield* runPublishPushPhase(plan.context, publishSteps, recorder, extras, preparedHead);
+  return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
+});
+
+/**
+ * Run the `yeet open` tail — push, pull request, label, provenance stamp and
+ * the readiness-monitor submit — in isolation.
+ *
+ * **Example** (Reference the tail for a wiring test)
+ *
+ * ```ts
+ * import { runHostedProofPublishPhasesForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof runHostedProofPublishPhasesForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const runHostedProofPublishPhasesForTesting = runHostedProofPublishPhases;
+
 // Push-first publish (push-first-publish D1-D8): the cheap-gates tier and the
 // head-install preflight are the whole local gate. Cheap gates hold a weighted
 // lease because the schema-catalog scan peaks near 12.6 GiB. Hosted CI and
@@ -1481,6 +1581,64 @@ export const assertMergeOnlyPublish = Effect.fn("Yeet.assertMergeOnlyPublish")(f
   if (O.isNone(clean) || clean.value !== tree) return yield* refuse();
 });
 
+// The route a publish takes once its commit exists: `yeet open` pushes with no
+// gate, `--prove-first` and verified push-only reuse prove before the push, and
+// every other publish is push-first (cheap-gates, then the push).
+const publishPostCommitPhases = (
+  plan: RepoRunPlan,
+  options: YeetRunOptions,
+  fullSteps: ReadonlyArray<RepoPlanStep>,
+  publishSteps: ReadonlyArray<RepoPlanStep>,
+  monitorSteps: ReadonlyArray<RepoPlanStep>,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  extras: Ref.Ref<YeetVerdictExtras>,
+  skipCommit: boolean,
+  committedAttempt: YeetAttemptStarted
+): Effect.Effect<
+  YeetRunResult,
+  YeetCommandError,
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | MemoryStats
+  | Digest.Digest
+  | Git
+> =>
+  Match.value(options).pipe(
+    Match.when({ hostedProof: true }, () =>
+      runHostedProofPublishPhases(plan, options, publishSteps, monitorSteps, recorder, extras, skipCommit)
+    ),
+    Match.when(
+      ({ proveFirst, pushOnly, reuseVerified }) => proveFirst || (pushOnly && reuseVerified),
+      () =>
+        runStandardPublishPhases(
+          plan,
+          options,
+          fullSteps,
+          publishSteps,
+          monitorSteps,
+          recorder,
+          extras,
+          skipCommit,
+          committedAttempt
+        )
+    ),
+    Match.orElse(() =>
+      runPushFirstPublishPhases(
+        plan,
+        options,
+        fullSteps,
+        publishSteps,
+        monitorSteps,
+        recorder,
+        extras,
+        skipCommit,
+        O.some(committedAttempt)
+      )
+    )
+  );
+
 const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
   plan: RepoRunPlan,
   message: O.Option<string>,
@@ -1526,30 +1684,17 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
       "[yeet] warning: --no-pr: no pull request will be opened. check.yml runs only on pull_request events, so no hosted checks will run until this branch has a pull request."
     );
   }
-  const runPostCommitPhases =
-    options.proveFirst || (options.pushOnly && options.reuseVerified)
-      ? runStandardPublishPhases(
-          plan,
-          options,
-          fullSteps,
-          publishSteps,
-          monitorSteps,
-          recorder,
-          extras,
-          skipCommit,
-          committedAttempt
-        )
-      : runPushFirstPublishPhases(
-          plan,
-          options,
-          fullSteps,
-          publishSteps,
-          monitorSteps,
-          recorder,
-          extras,
-          skipCommit,
-          O.some(committedAttempt)
-        );
+  const runPostCommitPhases = publishPostCommitPhases(
+    plan,
+    options,
+    fullSteps,
+    publishSteps,
+    monitorSteps,
+    recorder,
+    extras,
+    skipCommit,
+    committedAttempt
+  );
 
   return yield* pipe(
     stash,
@@ -2468,10 +2613,15 @@ const attemptEnvProfileFor = (options: YeetRunOptions): ProofEnvProfile => (opti
 
 // A push-first publish proves only the cheap-gates tier before it pushes, so its
 // attempt facts say so; `--prove-first` and verified push-only reuse keep the full tier.
-const attemptProofTierFor = (options: YeetRunOptions): YeetProofTier =>
-  options.mode === "publish" && !options.proveFirst && !(options.pushOnly && options.reuseVerified)
-    ? "cheap-gates"
-    : options.tier;
+// `yeet open` proves nothing locally, so its attempt records no tier at all.
+const attemptProofTierFor = (options: YeetRunOptions): O.Option<YeetProofTier> =>
+  options.hostedProof
+    ? O.none()
+    : O.some(
+        options.mode === "publish" && !options.proveFirst && !(options.pushOnly && options.reuseVerified)
+          ? "cheap-gates"
+          : options.tier
+      );
 
 /**
  * Test-only stage classifier used by attempt-fact writer coverage.
@@ -2537,7 +2687,7 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
     ownerProcStart,
     resolvedHeadSha: O.some(resolvedHeadSha),
     diffFingerprint: O.some(diffFingerprint),
-    proofTier: O.some(attemptProofTierFor(options)),
+    proofTier: attemptProofTierFor(options),
     envProfile: O.some(attemptEnvProfileFor(options)),
     stage: O.some(attemptStageFor(options)),
   });
@@ -2876,6 +3026,8 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
   const context = yield* hydrateYeetRunContext(options);
   yield* validatePublishBranch(context, options);
   yield* validateMonitorGuards(context, options);
+  // A bad --body-file fails here, before anything is committed or pushed.
+  yield* readPrBodySummary(context, options.bodyFile);
   const forceTurbo =
     options.mode === "repair" || options.mode === "verify" || options.mode === "publish"
       ? yield* lockfileChangedSinceBase(context)
@@ -2890,6 +3042,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
     ciParity: options.ciParity,
     collectAll: options.collectAll,
     forceTurbo,
+    hostedProof: options.hostedProof,
     mode: options.mode,
     monitor: options.monitor,
     noEdit: options.noEdit,
@@ -2929,6 +3082,7 @@ export class BuildYeetRunPlanTestOptions extends S.Opaque<
     collectAll: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     context: RepoRunContext,
     forceTurbo: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    hostedProof: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     message: S.Option(S.String),
     mode: YeetRunMode.pipe(S.withConstructorDefault(Effect.succeed("publish"))),
     monitor: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
@@ -2966,6 +3120,7 @@ export const buildYeetRunPlanForTesting = (
       ciParity: normalized.ciParity,
       collectAll: normalized.collectAll,
       forceTurbo: normalized.forceTurbo,
+      hostedProof: normalized.hostedProof,
       mode: normalized.mode,
       monitor: normalized.monitor,
       noEdit: normalized.noEdit,

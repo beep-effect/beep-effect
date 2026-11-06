@@ -46,6 +46,7 @@ import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -55,7 +56,12 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { finalCheckRefusal, readFinalCheckReceipt } from "./FinalCheck.ts";
 import { FinalCheckRefreshVerdict } from "./FinalCheckRefresh.schemas.ts";
 import { checkFinalCheckRefresh } from "./FinalCheckRefresh.ts";
-import { flipPullRequestReady, recordInheritedRedsInPullRequestBody, withYeetGh } from "./GhOps.ts";
+import {
+  flipPullRequestReady,
+  recordInheritedRedsInPullRequestBody,
+  recordMonitoredPrSessionAsGhLogin,
+  withYeetGh,
+} from "./GhOps.ts";
 import { currentCommitSha, yeetGitKitError } from "./GitExec.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { decodeAttributedCheckFlags, parseAttributedCheck } from "./MergeGate.ts";
@@ -602,7 +608,12 @@ interface YeetReadyGateDependencies {
   ) => Effect.Effect<
     YeetReadyPullRequestRead,
     YeetCommandError,
-    SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    | SecureRandom.SecureRandom
+    | FileSystem.FileSystem
+    | Path.Path
+    | ChildProcessSpawner.ChildProcessSpawner
+    | Digest.Digest
+    | Git
   >;
   readonly readAuthor?: (
     context: RepoRunContext,
@@ -1058,5 +1069,58 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
 export const runYeetReady = Effect.fn("Yeet.runYeetReady")(function* (options: YeetReadyOptions) {
   const inherited = yield* decodeAttributedCheckFlags("inherited", options.inherited, parseYeetReadyInheritedRed);
   const context = yield* hydrateYeetReadOnlyContext(options);
-  yield* runYeetReadyGate(context, {}, inherited);
+  const stamped = yield* Ref.make(false);
+  yield* runYeetReadyGate(
+    context,
+    {
+      read: readPullRequestForReadyStampingFooter({
+        read: readPullRequestForReady,
+        stamp: recordMonitoredPrSessionAsGhLogin,
+        stamped,
+      }),
+    },
+    inherited
+  );
 });
+
+// Every owner runs `yeet ready` at content-final, whether the flip goes
+// through or is refused, so its first pull-request read records this session
+// and re-asserts the provenance footer a body rewrite may have dropped. The
+// gate reads twice; the Ref keeps the stamp to one. A failed stamp only warns.
+const readPullRequestForReadyStampingFooter =
+  <E, R, R2>({
+    read,
+    stamp,
+    stamped,
+  }: {
+    readonly read: (context: RepoRunContext) => Effect.Effect<YeetReadyPullRequestRead, E, R>;
+    readonly stamp: (context: RepoRunContext, prNumber: number) => Effect.Effect<unknown, never, R2>;
+    readonly stamped: Ref.Ref<boolean>;
+  }) =>
+  (context: RepoRunContext) =>
+    read(context).pipe(
+      Effect.tap((value) =>
+        Effect.flatMap(Ref.getAndSet(stamped, true), (alreadyStamped) =>
+          alreadyStamped || value.remote.number === undefined
+            ? Effect.void
+            : Effect.asVoid(stamp(context, value.remote.number))
+        )
+      )
+    );
+
+/**
+ * The `yeet ready` pull-request read that records the session and re-asserts
+ * the provenance footer once, with the read and the stamp injected.
+ *
+ * **Example** (Reference the wrapper)
+ *
+ * ```ts
+ * import { readPullRequestForReadyStampingFooterForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof readPullRequestForReadyStampingFooterForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const readPullRequestForReadyStampingFooterForTesting = readPullRequestForReadyStampingFooter;

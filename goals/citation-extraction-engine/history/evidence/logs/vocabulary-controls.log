@@ -1,0 +1,21 @@
+PASS wrong-public-version
+PASS wrong-source-corpus-hash
+PASS missing-publication
+PASS duplicate-publication
+PASS unissued-case-identity
+PASS wrong-ambiguous-alias-identity
+PASS current-date-substituted-for-legacy
+PASS noncase-forged-reporter-id
+PASS unreviewed-transition
+PASS unrecorded-reporter-drift
+PASS missing-edition
+PASS wrong-edition-parent
+PASS unrecorded-edition-drift
+PASS missing-court
+PASS duplicate-court
+PASS changed-court-selection-order
+PASS changed-court-citation-string
+PASS unrecorded-court-drift
+PASS missing-new-reporter
+PASS missing-new-court
+baseline passed; 20 vocabulary corruption controls passed

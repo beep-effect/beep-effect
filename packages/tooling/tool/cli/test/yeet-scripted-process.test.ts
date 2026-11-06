@@ -49,6 +49,7 @@ import {
   withYeetGithubCredentialHint,
   YeetEnsuredPullRequest,
   YeetExecutedStep,
+  YeetPrBodyRequest,
   YeetPullRequestTitle,
   YeetReadyOptions,
   YeetReadyPullRequestRead,
@@ -272,6 +273,11 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet guards", (it) 
         [{ reuseVerified: true, stagedOnly: true }, "yeet publish --staged-only cannot be combined"],
         [{ amend: true, stagedOnly: true }, "yeet publish --staged-only cannot be combined"],
         [{ pushOnly: true, reuseVerified: true, stagedOnly: true }, "yeet publish --staged-only cannot be combined"],
+        [{ hostedProof: true, mode: "verify" }, "yeet open is a publish that always opens or reuses a pull request."],
+        [{ hostedProof: true, pr: false }, "yeet open is a publish that always opens or reuses a pull request."],
+        [{ hostedProof: true, proveFirst: true }, "yeet open pushes the committed HEAD without a local proof"],
+        [{ hostedProof: true, stagedOnly: true }, "yeet open pushes the committed HEAD without a local proof"],
+        [{ bodyFile: "body.md", mode: "verify" }, "yeet --body-file is only valid for publish and open."],
       ];
       const messages = yield* Effect.forEach(cases, ([options]) => guardFailure(options));
       A.forEach(A.zip(messages, cases), ([message, [, expected]]) => expect(message).toContain(expected));
@@ -580,6 +586,23 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         );
         expect(body).toContain("- no local proof lane ran before the push; hosted CI is the authoritative proof");
         expect(A.some(commandLines(commands), Str.endsWith("--end-of-options HEAD --"))).toBe(true);
+      })
+    );
+
+    it.effect("uses the --body-file summary and names the yeet open route without reading git", () =>
+      Effect.gen(function* () {
+        const commands = yield* makeCommands;
+        const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([executedStep(0)]);
+        const request = YeetPrBodyRequest.make({
+          summary: O.some("## Summary\n\nWhy it changed.\n"),
+          hostedProof: true,
+        });
+        const body = yield* buildPrBody(contextAt("/repo"), recorder, request).pipe(withProcesses([], commands));
+        expect(body).toContain(
+          "## Summary\n\nWhy it changed.\n\n## Local proof\n\n- none: `yeet open` pushed without local gates; hosted CI is the authoritative proof\n\nVerdict: .beep/yeet/runs/"
+        );
+        expect(body).not.toContain("full:cheap-gates");
+        expect(commandLines(commands)).toEqual([]);
       })
     );
 

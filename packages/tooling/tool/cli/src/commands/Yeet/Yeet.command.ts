@@ -78,6 +78,7 @@ import { runYeetProofReportCommand } from "./internal/ProofShadow.ts";
 import { runYeetReady } from "./internal/ReadyGate.ts";
 import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
 import { parsePrRef, runYeetResume } from "./internal/Resume.ts";
+import { runYeetSiblings, SiblingsCommandOptions } from "./internal/Siblings.ts";
 import { YeetCommandError } from "./Yeet.errors.ts";
 import { YeetReadyOptions, YeetRunOptions } from "./Yeet.schemas.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
@@ -252,6 +253,18 @@ const allowStaleBaseFlag = Flag.Boolean("allow-stale-base").pipe(
   Flag.withDescription(
     "Proceed with publish even when branch files overlap commits landed on the base since merge-base"
   )
+);
+
+const bodyFileFlag = Flag.String("body-file").pipe(
+  Flag.withDefault(""),
+  Flag.withDescription(
+    "Markdown file that replaces the generated commit-log summary of a pull request this run creates; an existing pull request keeps its body (use `yeet gh pr body`)"
+  )
+);
+
+const titleFlag = Flag.String("title").pipe(
+  Flag.withDefault(""),
+  Flag.withDescription("Pull request title (default: the branch's first non-merge commit subject)")
 );
 
 const prFlag = Flag.Boolean("pr").pipe(
@@ -447,6 +460,7 @@ const publishFlags = {
   ...sharedFlags,
   allowStaleBase: allowStaleBaseFlag,
   amend: amendFlag,
+  bodyFile: bodyFileFlag,
   message: messageFlag,
   monitor: monitorFlag,
   noEdit: noEditFlag,
@@ -457,6 +471,21 @@ const publishFlags = {
   stagedOnly: stagedOnlyFlag,
   stateRoot: yeetStateRootFlag,
   summary: summaryFlag,
+} as const;
+
+// `yeet open` takes no proof, commit or detach flags: it pushes the committed
+// HEAD and opens the pull request, nothing else.
+const openFlags = {
+  allowStaleBase: allowStaleBaseFlag,
+  base: baseFlag,
+  bodyFile: bodyFileFlag,
+  head: headFlag,
+  json: jsonFlag,
+  monitor: monitorFlag,
+  packetDir: packetDirFlag,
+  plan: planFlag,
+  stateRoot: yeetStateRootFlag,
+  title: titleFlag,
 } as const;
 
 const watchFlag = Flag.Boolean("watch").pipe(
@@ -589,6 +618,10 @@ class SharedOptions extends S.Opaque<SharedOptions, { readonly brand: unique sym
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
     base: S.String,
+    bodyFile: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultTypeKey(Effect.succeed(""))
+    ),
     bots: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("greptile")),
       S.withDecodingDefaultTypeKey(Effect.succeed("greptile"))
@@ -602,6 +635,10 @@ class SharedOptions extends S.Opaque<SharedOptions, { readonly brand: unique sym
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
     head: S.String,
+    hostedProof: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     json: S.Boolean,
     merged: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
@@ -694,9 +731,11 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
       ...sharedOptions,
       allowStaleBase: sharedOptions.allowStaleBase,
       amend: sharedOptions.amend,
+      bodyFile: sharedOptions.bodyFile,
       bots: sharedOptions.bots,
       ciParity: sharedOptions.ciParity,
       collectAll: sharedOptions.collectAll || sharedOptions.noFailFast,
+      hostedProof: sharedOptions.hostedProof,
       merged: sharedOptions.merged,
       message: options.message ?? "",
       mode,
@@ -1001,6 +1040,14 @@ const yeetPublishCommand = Command.make("publish", publishFlags, ({ stateRoot, .
   )
 );
 
+const yeetOpenCommand = Command.make("open", openFlags, ({ stateRoot, title, ...options }) =>
+  provideYeetStateRoot(runYeetMode("publish", { ...options, hostedProof: true, message: title, pr: true }), stateRoot)
+).pipe(
+  Command.withDescription(
+    "Push the committed HEAD and open (or reuse) its draft PR with the heavy-admission label, provenance footer and detached readiness monitor, running no local gate; hosted CI is the proof"
+  )
+);
+
 const YeetMonitorCommandRoute = LiteralKit([
   "classic",
   "invalid-until-event",
@@ -1207,6 +1254,20 @@ const yeetMergeGateCommand = Command.make(
 ).pipe(
   Command.withDescription(
     "Orchestrator merge gate: re-verify one PR at a pinned head (required checks, attributed tolerances, 20-minute review window, re-read threads, the predicted squash message under the repo's commitlint) and squash-merge it; --relaxed is the S11 merge over attributed reds"
+  )
+);
+
+const siblingsPrArgument = Argument.Int("pr").pipe(
+  Argument.withDescription("Pull request number whose goal-packet siblings to list")
+);
+
+const yeetSiblingsCommand = Command.make(
+  "siblings",
+  { ...porcelainFlags, pr: siblingsPrArgument },
+  flow(SiblingsCommandOptions.make, runYeetSiblings)
+).pipe(
+  Command.withDescription(
+    "List the open PRs that share a goals/<slug>/ packet with this PR and the files each would conflict on against the base (git merge-tree); the merge gate posts the same report to every sibling when a packet PR merges"
   )
 );
 
@@ -1426,6 +1487,7 @@ export const yeetCommand = Command.make("yeet", publishFlags, ({ stateRoot, ...o
     yeetVerifyCommand,
     yeetRepairCommand,
     yeetPublishCommand,
+    yeetOpenCommand,
     yeetMonitorCommand,
     yeetCloseoutCommand,
     yeetStatusCommand,
@@ -1433,6 +1495,7 @@ export const yeetCommand = Command.make("yeet", publishFlags, ({ stateRoot, ...o
     yeetSweepCommand,
     yeetMergeCommand,
     yeetMergeGateCommand,
+    yeetSiblingsCommand,
     yeetReplyCommand,
     yeetReadyCommand,
     yeetFinalCheckCommand,

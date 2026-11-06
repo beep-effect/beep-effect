@@ -118,6 +118,10 @@ export class YeetRunPlanModeOptions extends S.Opaque<YeetRunPlanModeOptions, { r
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultKey(Effect.succeed(false))
     ),
+    hostedProof: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultKey(Effect.succeed(false))
+    ),
   }).pipe(
     $I.annoteSchema("YeetRunPlanModeOptions", {
       description: "Options for building a Yeet run plan in a specific mode.",
@@ -875,12 +879,25 @@ const pushFirstPublishSteps = (
   ...pullRequestTailSteps(context, options),
 ];
 
+// `yeet open` (the constrained-compute escape, operator 2026-10-24): push the
+// committed HEAD and run the shared pull-request tail with no local gate, so
+// the draft, its heavy-admission label and its provenance footer come from Yeet
+// even when local admission is saturated. Hosted CI is the whole proof.
+const hostedProofPublishSteps = (
+  context: RepoRunContext,
+  options: YeetRunPlanModeOptions
+): ReadonlyArray<RepoPlanStep> => [pushStep(context, false), ...pullRequestTailSteps(context, options)];
+
 const publishSteps = (
   context: RepoRunContext,
   message: O.Option<string>,
   options: YeetRunPlanModeOptions
 ): ReadonlyArray<RepoPlanStep> =>
   Match.value(options).pipe(
+    Match.when(
+      ({ hostedProof }) => hostedProof,
+      () => hostedProofPublishSteps(context, options)
+    ),
     Match.when(
       ({ pushOnly }) => pushOnly,
       () =>

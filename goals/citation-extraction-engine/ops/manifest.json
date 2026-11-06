@@ -5,13 +5,13 @@
     "title": "Citation Extraction Engine",
     "status": "active",
     "created": "2026-07-14",
-    "updated": "2026-07-30",
+    "updated": "2026-10-31",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, schema-first legal models, lawful transformations, and proven TypeScript-port extensions.",
-  "statusNote": "Official eyecite is cloned, pinned, licensed, and green under Python 3.11. P0 case-level accounting and regex evidence remain; production phases are blocked by verified-span and public reporter-vocabulary contracts.",
+  "statusNote": "P0/P1 remain in progress. The existing Citation union contains only eight canonical semantic families after retirement of 37 provisional mixed/locator/relationship/extension directories. Shared persisted citation identity is distinct; SourceRef quote-selector encoding is preserved. No donor disposition or behavior parity is completed by removing obsolete APIs/tests. Verified mention composition and explicit receipt restoration pass local package gates; they do not attest semantic classification. Private ca1 production matches focused oracle equality and protocol vectors; artifact integration and full grouping remain open. Stable-ID document/resolution schemas validate graph coherence and structural receipt round-trips. Authority examples are optional mention/detached references. Receipt v2 separates decisions from ordered, repeated membership and explicit shared list IDs; detached semantic objects contain no source proof. Private persistence binds decisions and optional exact list nodes separately and rejects unverified custom keys. A private callback session now executes all five captured callbacks and matches 18 focused source contexts / 53 events through test adapters; production defaults now pass all 76 default contexts through that session and also serve the 18 custom traces. Work accounting is shared and operation-local. General host/alias/model mutation and final document/service integration remain open. Private document projection/restoration validates occurrence/default authority keys and shares source verification. Private resolver text helpers preserve frozen Unicode/punctuation and arbitrary-precision Id. pin behavior. The private default resolver matches 46 focused scenes and all 30 committed default resolution calls over all canonical families, totaling 76 semantic contexts and 210 mentions; original-source span/extraction proof stays separate. Exhaustive resolver/custom-resource proof, live artifact integration, Bluebook codecs, extension proof and the bounded parser remain unfinished. Sixteen additional callback mutation scenes expose empty/ordered/repeated/cross-group values and alias/detached requirements. All sixteen group/alias/retained-dictionary/detached scenes now match all thirty-eight events and final groups, including list slots and detached prior-full/member references. An operation-owned captured dictionary service serializes updates, preserves owned list handles and closes on success/failure/interruption. All sixteen final source snapshots have structural codec representation proof, including list sharing and detached nodes. Private scoped detached object issuance preserves registered object identity without source capabilities. Eight additional prior-full-list/pair scenes now match all thirty-one events and final groups/context. The captured owner preserves retained prior-full state and immutable pair-node identities, including equal-valued replacement. Eleven additional semantic/default-key mutation scenes are frozen. Eight stable-resource scenes now match complete event and semantic snapshots through owned writes; source anchors and mention IDs remain unchanged. Three mutable default-key scenes remain open, including duplicate entries for one resource object and an alternate edit that retains one group. A private bounded combined/general-key table now matches eight frozen CPython histories / sixty-two events, including exact comparison calls, duplicate key-object entries, deletion, growth and stored-hash resize. Full live hash production and callback-owner integration remain open, so the three mutable default-key engine cases are not promoted. General host/model mutation, comparison reentrancy, document identity integration and final projection remain open. The owned HTML worker now replays all 1,097 frozen outcomes and independently confirms all 859 launched child exits. A source-only cleaner sequence corpus adds 1,155 cases and 51 custom scenes covering lazy steps, live registry dispatch, retained callback state and non-string host values. The eleventh portable source component does not qualify target cleaner composition or complete canonical parity. Direct same-fiber comparison mutation now passes thirteen additional general-key dictionary histories, preserving lookup restarts, current values, retained side effects and bounded work. Unicode tables, retained registry work ownership and composed cleaner integration remain open. A private lazy cleaner executor now captures runtime/Clock, preserves host values, shares nested text reservations and rejects unissued/reused/restored spending handles. All 440 primitive text vectors run through reserved stages without reapplying the raw-source ceiling to intermediate text. Global admission, default runtime ownership, full custom replay, maps and public Layer remain open. The private cleaner ledger now lends exclusive remaining capacity to captured bounded producers, including zero-capacity empty output and cleanup before waiting reservations resume. Global admission and full cleaner ownership remain open. The native HTML stage now borrows shared remaining output capacity, including zero, accepts intermediate text and preflights complete framing before payload allocation. Reproducible authenticated ABI/host/protocol input bounds cover the existing produced-text ceiling; full live cleaner ownership/replay and global admission remain open. Native byte detection and stage composition now use the pinned oracle GNU libiconv 1.17 backend with matching full encoding inventory and UTF-8 locale. A supplemental source report retains 589 byte cases and 45 non-text dispatch controls; direct byte outcomes match without new waivers. Complete LGPL source, reproducible relink objects and sixteen notices accompany the native asset. Full live value/registry/identity ownership, complete sequence/non-text replay and global admission remain open. Captured cleaner values now preserve 340 pinned text identity/subclass observations, and concrete builtin invocation replays all 45 input-kind controls without coercion. Original/frozen handle ownership, bounded empty/space caches, scoped retirement and unchanged-value production charges are verified. Live Python registry/cursor ownership, all 1155 sequence cases and global engine admission remain open. The captured dictionary backend now preserves thirteen combined Unicode/general-key histories and forty complete outcomes, including conversion before lookup and mutation restart. Local probe guards reset per outer call while captured aggregate work remains enforced; retained insertion identities use the safe-integer ceiling. Production string/byte hashes, live cleaner registry/cursors and full sequence replay remain open. Frozen Python primitive hashes now preserve 1056 complete vectors, including explicit one/two/four-byte Unicode storage and two surrogate-pair controls. Captured methods stream bounded inputs and preserve Clock/deadline/cancellation behavior; complete SipHash MIT attribution is retained. Source Unicode value ownership, object protocols, live cleaner registry/cursors and full sequence replay remain open. Exact Unicode source composition now retains 2016 histories and 6412 native-storage/identity snapshots; portable audit has twelve components. Target Unicode ownership remains unfinished.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -43,13 +43,65 @@
     "goals/citation-extraction-engine/research/PARITY_METHOD.md",
     "goals/citation-extraction-engine/research/SOURCES.md",
     "goals/citation-verified-span-substrate/SPEC.md",
-    "goals/court-reporter-vocabulary/SPEC.md"
+    "goals/court-reporter-vocabulary/SPEC.md",
+    "goals/citation-extraction-engine/history/evidence/prerequisite-compatibility.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-operation-corpus.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-assertion-corpus.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-source-case-ledgers.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-typescript-donor-accounting.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-vocabulary-version-mapping.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-limits-isolation-contract.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-evidence-presence-audit.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-portable-parity-command.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-supplemental-extraction.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-supplemental-text.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-warning-and-p0-audit.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-divergence-ledger.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-regex-benchmark-contract.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-identity-foundations.md",
+    "goals/citation-extraction-engine/ops/citation-migration-surface.json",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-mention-identity-producer.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-law-schema.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-canonical-models.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-provisional-retirement.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-verified-mentions.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-authority-identity.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-document-relationships.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-document-persistence.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-resolver-text.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-default-resolution.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-resolution-operation-contexts.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-custom-resolution-contract.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-authority-representatives.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-resource-identity-bindings.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-callback-session.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-production-default-callbacks.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-callback-mutation-shapes.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-29-ordered-document-membership.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-29-callback-dictionary.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-29-detached-callback-objects.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-29-retained-prior-fulls.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-29-semantic-model-mutations.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-29-runtime-dictionary.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-31-cleaner-pipeline-source.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-31-dictionary-reentrancy.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-31-cleaner-execution-core.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-31-cleaner-capacity.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-31-html-cleaner-stage.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-31-html-byte-stage.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-31-cleaner-value-ownership.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-31-unicode-dictionary.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-31-python-hashes.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-02-cleaner-unicode.md"
   ],
   "researchReports": [
-    "research/EYECITE_BASELINE.md",
+    "research/2026-07-25-academia-corpus-mining-note.md",
+    "research/2026-08-17-academia-wave2-findings.md",
     "research/CAPABILITY_LEDGER.md",
-    "research/SCHEMA_DISPOSITION.md",
+    "research/EYECITE_BASELINE.md",
+    "research/OPPORTUNITIES.md",
     "research/PARITY_METHOD.md",
+    "research/SCHEMA_DISPOSITION.md",
     "research/SOURCES.md"
   ],
   "agentLaunchers": [
@@ -70,7 +122,7 @@
     {
       "id": "P1",
       "name": "Schema rebaseline and transformation proof",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -97,12 +149,29 @@
     "test \"$(wc -m < goals/citation-extraction-engine/GOAL.md)\" -le 4000",
     "jq -e . goals/citation-extraction-engine/ops/manifest.json >/dev/null",
     "bun run beep goals index --check",
+    "bun run goals/citation-extraction-engine/ops/check-operations.ts",
+    "bun run goals/citation-extraction-engine/ops/check-assertions.ts",
+    "bun run goals/citation-extraction-engine/ops/check-ledgers.ts",
+    "bun run goals/citation-extraction-engine/ops/check-typescript-donors.ts",
+    "bun run goals/citation-extraction-engine/ops/check-vocabulary-mapping.ts",
+    "bun run goals/citation-extraction-engine/ops/check-safety-contract.ts",
+    "python goals/citation-extraction-engine/ops/verify-evidence-presence.py --scratch-root \"$HOME/.cache/beep/citation-extraction-engine\"",
+    "python goals/citation-extraction-engine/ops/verify-regex-benchmark-controls.py --scratch-root \"$HOME/.cache/beep/citation-extraction-engine\"",
+    "bun run goals/citation-extraction-engine/ops/check-regex-benchmarks.ts --audit",
+    "python goals/citation-extraction-engine/ops/verify-divergence-controls.py --scratch-root \"$HOME/.cache/beep/citation-extraction-engine\"",
+    "bun run goals/citation-extraction-engine/ops/check-divergences.ts --audit",
+    "python goals/citation-extraction-engine/ops/verify-parity-controls.py --scratch-root \"$HOME/.cache/beep/citation-extraction-engine\"",
+    "python goals/citation-extraction-engine/ops/verify-supplemental-controls.py --scratch-root \"$HOME/.cache/beep/citation-extraction-engine\"",
+    "bun run --cwd packages/law-practice/use-cases citation:parity-check",
+    "bun run --cwd packages/law-practice/use-cases citation:parity-check --audit",
     "bun run beep goals doctor",
     "bunx markdownlint-cli2 'goals/citation-extraction-engine/**/*.md'",
     "git diff --check origin/main...HEAD -- goals/citation-extraction-engine goals/INDEX.md THIRD_PARTY_NOTICES.md",
     "git diff --check -- goals/citation-extraction-engine goals/INDEX.md THIRD_PARTY_NOTICES.md",
     "bun run beep yeet verify",
-    "bun run beep lint reflection-artifacts"
+    "bun run beep lint reflection-artifacts",
+    "bun run goals/citation-extraction-engine/ops/check-cleaner-pipeline.ts",
+    "python3 goals/citation-extraction-engine/ops/verify-cleaner-unicode.py"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
@@ -110,5 +179,243 @@
     "Parity would require a second public citation hierarchy, hosted truth, weakened exact-source fidelity, or unbounded execution.",
     "A claimed reversible transform would need to invent missing information.",
     "Verification requires unnamed credentials, unauthorized cost, destructive side effects, or broader product authority."
+  ],
+  "opsScripts": [
+    {
+      "path": "ops/check-discovery.ts",
+      "purpose": "Validate pinned source/runtime discovery through the test-only schema; does not assert semantic parity."
+    },
+    {
+      "path": "ops/check-operations.ts",
+      "purpose": "Validate portable public-operation payload/artifact hashes, source accounting, coordinate and membership evidence; not a final parity gate."
+    },
+    {
+      "path": "ops/check-parity.ts",
+      "purpose": "Run the fixed portable evidence composition; audit mode validates current evidence, default mode requires full completion proof."
+    },
+    {
+      "path": "ops/check-supplemental.ts",
+      "purpose": "Validate focused supplemental extraction/resolution/text/warning evidence and reject unfinished target proof in default mode."
+    },
+    {
+      "path": "ops/export-supplemental.py",
+      "purpose": "Generate synthetic supplemental observations only from the clean pinned official oracle."
+    },
+    {
+      "path": "ops/observe-supplemental-text.py",
+      "purpose": "Source-bound observation helper for public text operations, mapping traces and warnings; invoked by the supplemental exporter."
+    },
+    {
+      "path": "ops/verify-parity-controls.py",
+      "purpose": "Prove package-command baselines and rejection paths with isolated copies."
+    },
+    {
+      "path": "ops/verify-supplemental-controls.py",
+      "purpose": "Prove supplemental semantic and presence rejection paths using rehashed temporary payloads."
+    },
+    {
+      "path": "ops/check-assertions.ts",
+      "purpose": "Validate official assertion/loop payloads, producer references and source ownership."
+    },
+    {
+      "path": "ops/check-ledgers.ts",
+      "purpose": "Reconcile source, capability, canonical case and expanded regex projections, with strict completion mode."
+    },
+    {
+      "path": "ops/check-safety-contract.ts",
+      "purpose": "Validate the frozen limits/default contract and owned-process isolation control evidence."
+    },
+    {
+      "path": "ops/check-typescript-donors.ts",
+      "purpose": "Validate both pinned donor export/test inventories and disposition proof, with strict completion mode."
+    },
+    {
+      "path": "ops/check-vocabulary-mapping.ts",
+      "purpose": "Validate frozen oracle identity mapping against public vocabulary identities and version differences."
+    },
+    {
+      "path": "ops/export-policy-contract.ts",
+      "purpose": "Export the annotated absolute maxima and explicit default policy as hash-bound maintainer evidence."
+    },
+    {
+      "path": "ops/export-public-vocabulary.ts",
+      "purpose": "Export the versioned public court/reporter vocabulary API for pinned oracle compatibility mapping."
+    },
+    {
+      "path": "ops/check-divergences.ts",
+      "purpose": "Validate source/case-bound representation laws and fidelity questions; strict mode rejects incomplete proof and semantic waivers."
+    },
+    {
+      "path": "ops/export-divergences.py",
+      "purpose": "Reproducibly bind the reviewed divergence plan to source references and supplemental observations without completing target proof."
+    },
+    {
+      "path": "ops/verify-divergence-controls.py",
+      "purpose": "Prove rejection of missing laws/questions, stale evidence, semantic waivers and premature proof in isolated copies."
+    },
+    {
+      "path": "ops/check-regex-benchmarks.ts",
+      "purpose": "Validate the adversarial corpus, complete source projections, synthetic geometric controls and strict family execution requirements."
+    },
+    {
+      "path": "ops/export-regex-contract.py",
+      "purpose": "Generate exact UTF-16 synthetic inputs and source-only family/instance fingerprints without transferring approval states."
+    },
+    {
+      "path": "ops/probe-regex-benchmark.py",
+      "purpose": "Run serialized owned Node/Bun synthetic benchmarks with watchdog kill and confirmed cleanup."
+    },
+    {
+      "path": "ops/regex-benchmark-control.child.mjs",
+      "purpose": "Execute only the fixed linear/catastrophic synthetic controls with warmups and monotonic samples; never a production worker."
+    },
+    {
+      "path": "ops/verify-regex-benchmark-controls.py",
+      "purpose": "Prove corpus/control rejection paths and the exact threshold/consecutive-growth boundary rules using isolated copies."
+    },
+    {
+      "path": "ops/scan-citation-consumers.mjs",
+      "purpose": "Maintainer-only pinned TypeScript AST scan of frozen legacy citation exports; retains conservative manual-review findings before migration."
+    },
+    {
+      "path": "ops/verify-consumer-scan.py",
+      "purpose": "Exercise eight consumer use forms and unrelated-import rejection with an owned transient source fixture, then remove it and scan the clean source tree."
+    },
+    {
+      "path": "ops/probe-law-schema.py",
+      "purpose": "Audit pinned canonical law extractor capture names and focused field/metadata observations for semantic ownership; not a target parity gate."
+    },
+    {
+      "path": "ops/probe-canonical-models.py",
+      "purpose": "Record all eight canonical model/metadata field projections and focused oracle observations for semantic ownership; not target parser or formatter parity."
+    },
+    {
+      "path": "ops/probe-authority-identity.py",
+      "purpose": "Capture focused pinned resource equality and independent ca1 protocol vectors; not extraction or full resolution parity."
+    },
+    {
+      "path": "ops/probe-resolver-text.py",
+      "purpose": "Capture frozen Python character facts and focused punctuation/Id. numeric behavior with typed exception observations; not complete resolver proof."
+    },
+    {
+      "path": "ops/probe-default-resolution.py",
+      "purpose": "Capture default resource groups and exceptions for extracted and synthetic semantic contexts; not target extraction or exhaustive resolver proof."
+    },
+    {
+      "path": "ops/probe-custom-resolution.py",
+      "purpose": "Capture pinned custom callback dispatch, resource truthiness/equality and mutable-state observations; not target parity."
+    },
+    {
+      "path": "ops/verify-custom-resolution-controls.py",
+      "purpose": "Validate focused custom-resolution observations and optionally replay all decoded values with the pinned oracle; not target proof."
+    },
+    {
+      "path": "ops/probe-callback-mutations.py",
+      "purpose": "Capture sixteen pinned callback-mutated group values, aliases and detached object references without inventing source evidence; not target parity."
+    },
+    {
+      "path": "ops/verify-callback-mutation-controls.py",
+      "purpose": "Validate all sixteen mutation source observations and optional exact decoded-value replay; target completion is separate."
+    },
+    {
+      "path": "ops/probe-prior-fulls.py",
+      "purpose": "Capture eight pinned retained prior-full list and immutable-pair identity scenes; not target parity or extraction proof."
+    },
+    {
+      "path": "ops/verify-prior-full-controls.py",
+      "purpose": "Validate all eight prior-full source scenes, eight corruption controls and optional frozen replay; target completion is separate."
+    },
+    {
+      "path": "ops/probe-model-mutations.py",
+      "purpose": "Capture eleven pinned semantic mutation and mutable default-resource key scenes without waiving the live-key identity requirements."
+    },
+    {
+      "path": "ops/verify-model-mutation-controls.py",
+      "purpose": "Validate all eleven model mutation source scenes, eight corruption controls and optional frozen replay; three mutable-key target scenes remain open."
+    },
+    {
+      "path": "ops/probe-runtime-dictionary.py",
+      "purpose": "Capture eight frozen combined/general-key dictionary histories, exact comparison calls and canonical resource hash facts; not engine parity."
+    },
+    {
+      "path": "ops/verify-runtime-dictionary-controls.py",
+      "purpose": "Validate eight dictionary histories / sixty-two events, eight corruption controls, exact redistributed CPython license and optional frozen replay."
+    },
+    {
+      "path": "ops/check-cleaner-pipeline.ts",
+      "purpose": "Validate 1,155 pinned source cleaner cases, all value references and exact producer/runtime identity; target contracts and composition remain open."
+    },
+    {
+      "path": "ops/probe-cleaner-pipeline.py",
+      "purpose": "Capture named sequences and controlled lazy-step, registry, callback and host-value source behavior without narrowing the callable capability."
+    },
+    {
+      "path": "ops/verify-cleaner-pipeline-controls.py",
+      "purpose": "Validate cleaner source data, sixteen portable corruption controls and optional byte-identical pinned replay; no target parity claim."
+    },
+    {
+      "path": "ops/probe-dictionary-reentrancy.py",
+      "purpose": "Capture thirteen pinned direct equality-mutation histories and exact lookup restart outcomes for the private general-key backend."
+    },
+    {
+      "path": "ops/verify-dictionary-reentrancy.py",
+      "purpose": "Validate all thirteen histories, ten corruption controls and optional pinned replay; Unicode tables and cleaner completion remain open."
+    },
+    {
+      "path": "ops/probe-html-bytes.py",
+      "purpose": "Capture complete pinned byte parsing, non-text builtin dispatch and GNU converter/locale identity without claiming target completion."
+    },
+    {
+      "path": "ops/verify-html-bytes.py",
+      "purpose": "Seal all 589 byte cases, 45 non-text controls, complete strings and converter inventory; reject twelve corruptions and optionally regenerate byte-identical source evidence."
+    },
+    {
+      "path": "ops/probe-cleaner-identities.py",
+      "purpose": "Capture 340 complete pinned builtin text identity/subclass observations with retained references, no coercion hooks and exact CPython source/license identity."
+    },
+    {
+      "path": "ops/verify-cleaner-identities.py",
+      "purpose": "Seal all text identity relations and 40 full strings, reject twelve corruptions and optionally regenerate byte-identical pinned observations; full live registry/sequence proof remains open."
+    },
+    {
+      "path": "ops/probe-unicode-dictionary.py",
+      "purpose": "Capture thirteen pinned combined Unicode/general dictionary histories and forty complete outcomes with all custom hash/equality calls and ordered state."
+    },
+    {
+      "path": "ops/verify-unicode-dictionary.py",
+      "purpose": "Seal complete Unicode dictionary observations, reject twelve corruptions and optionally regenerate byte-identical pinned source; full cleaner registry proof remains open."
+    },
+    {
+      "path": "ops/probe-python-hashes.py",
+      "purpose": "Capture 1056 pinned byte/Unicode-storage hashes, exact source code points and paired-surrogate controls with frozen interpreter/source/license identity."
+    },
+    {
+      "path": "ops/verify-python-hashes.py",
+      "purpose": "Seal full hash vectors and complete SipHash attribution, reject fourteen corruptions and optionally replay byte-identical source; live registry/object protocol proof remains open."
+    },
+    {
+      "path": "ops/probe-cleaner-unicode.py",
+      "purpose": "Capture 2016 exact source Unicode composition histories and 6412 snapshots, checking actual retained CPython native bytes, full identity relationships and pinned provenance."
+    },
+    {
+      "path": "ops/verify-cleaner-unicode.py",
+      "purpose": "Seal every native word/width/identity and full source report, reject twenty corruptions and optionally require byte-identical oracle replay; target ownership remains open."
+    },
+    {
+      "path": "ops/check-cleaner-unicode.ts",
+      "purpose": "Portable Bun validation of complete Unicode source evidence; mandatory twelfth audit component, with no target-parity claim."
+    },
+    {
+      "path": "ops/probe-court-lookup.py",
+      "purpose": "Capture the complete pinned 2798-row court order, every original court/prefix lookup, native Unicode controls and all-point normalization scalar law."
+    },
+    {
+      "path": "ops/probe-post-case-metadata.py",
+      "purpose": "Execute original full-case post-citation field processing, preserve all prior/conditional/native outputs and count exact source regex calls; record frozen native whitespace observations."
+    },
+    {
+      "path": "ops/probe-case-name-predicates.py",
+      "purpose": "Observe every Python upper/lower/alpha code point and execute all three original case-name boundary predicates with exact native words, short circuits and source errors."
+    }
   ]
 }

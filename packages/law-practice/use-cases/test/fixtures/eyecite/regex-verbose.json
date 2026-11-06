@@ -1,0 +1,3419 @@
+{
+  "coreSha256": "e8edce03aef921b503080f55b16b46afa15fc2ea3e16deb5f52f895d51a698b0",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "patterns": [
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 0]]],
+                "match": [[[0, 0]]],
+                "search": [[[0, 0]]]
+              },
+              "source": {
+                "bytes": "",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 0]], [[1, 1]]],
+                "match": [[[0, 0]]],
+                "search": [[[0, 0]]]
+              },
+              "source": {
+                "bytes": "78",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 0,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 0]]],
+                "match": [[[0, 0]]],
+                "search": [[[0, 0]]]
+              },
+              "source": {
+                "bytes": "",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 0]], [[1, 1]]],
+                "match": [[[0, 0]]],
+                "search": [[[0, 0]]]
+              },
+              "source": {
+                "bytes": "78",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 0,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 0,
+      "pattern": {
+        "bytes": "",
+        "width": 1
+      },
+      "patternSha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "612362",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 2,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "612362",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 2,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 1,
+      "pattern": {
+        "bytes": "2061202320636f6d6d656e740a206220",
+        "width": 1
+      },
+      "patternSha256": "959d81a9c619be5141e9d50b6fe97e3d840336eedd748cb6402be41b688aa218",
+      "smoke": true
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 0]]],
+                "match": [[[0, 0]]],
+                "search": [[[0, 0]]]
+              },
+              "source": {
+                "bytes": "",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 0]], [[1, 1]]],
+                "match": [[[0, 0]]],
+                "search": [[[0, 0]]]
+              },
+              "source": {
+                "bytes": "78",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 0,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 0]]],
+                "match": [[[0, 0]]],
+                "search": [[[0, 0]]]
+              },
+              "source": {
+                "bytes": "",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 0]], [[1, 1]]],
+                "match": [[[0, 0]]],
+                "search": [[[0, 0]]]
+              },
+              "source": {
+                "bytes": "78",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 0,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 2,
+      "pattern": {
+        "bytes": "202320636f6d6d656e74206f6e6c79",
+        "width": 1
+      },
+      "patternSha256": "c063faabd38f0f3175f9dd1e0c7cf1913cd0e52c69807a446131dd3cab0da458",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "612362",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 3,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "612362",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 3,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 3,
+      "pattern": {
+        "bytes": "615c2362",
+        "width": 1
+      },
+      "patternSha256": "4fa4f055cdd4280b00fc01e1c761c33f8ae31cd4645b9ba3bda1751c13776369",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "612062",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 3,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "612062",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 3,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 4,
+      "pattern": {
+        "bytes": "615c2062",
+        "width": 1
+      },
+      "patternSha256": "8c9962e3fad7ac71868309ca7c9c69d49079db778260aecc6b4626823cf93f22",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "202323",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "202323",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 5,
+      "pattern": {
+        "bytes": "5b20235d2b",
+        "width": 1
+      },
+      "patternSha256": "9574ef12ea83c880a91934ab279d613d2a8806dce60caaa0d578ae7f00ffae38",
+      "smoke": true
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]], [[1, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 1]], [[1, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "23",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 0,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]], [[1, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 1]], [[1, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "23",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 0,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 6,
+      "pattern": {
+        "bytes": "5b6120235c745d203f",
+        "width": 1
+      },
+      "patternSha256": "d357ef39c8e458ab305c945b669465d1274802f659215b09d7493295f227f4aa",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 3]], [[3, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "616161",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 0]], [[1, 1]]],
+                "match": [[[0, 0]]],
+                "search": [[[0, 0]]]
+              },
+              "source": {
+                "bytes": "62",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 0,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 3]], [[3, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "616161",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 0]], [[1, 1]]],
+                "match": [[[0, 0]]],
+                "search": [[[0, 0]]]
+              },
+              "source": {
+                "bytes": "62",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 0,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 7,
+      "pattern": {
+        "bytes": "61202320636f6d6d656e740a202a",
+        "width": 1
+      },
+      "patternSha256": "299f61248b3b89cb95a3a71ead391c4be18755aaf76a8eaa76942484fda50e2b",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [],
+          "failure": {
+            "message": "multiple repeat at position 4",
+            "position": 4,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [
+                  [[0, 0]],
+                  [[0, 1]],
+                  [[1, 1]],
+                  [[1, 2]],
+                  [[2, 2]],
+                  [[2, 3]],
+                  [[3, 3]]
+                ],
+                "match": [[[0, 0]]],
+                "search": [[[0, 0]]]
+              },
+              "source": {
+                "bytes": "616161",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 0]], [[1, 1]]],
+                "match": [[[0, 0]]],
+                "search": [[[0, 0]]]
+              },
+              "source": {
+                "bytes": "62",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 0,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 8,
+      "pattern": {
+        "bytes": "61202a203f",
+        "width": 1
+      },
+      "patternSha256": "fd4b22e8c1f6c685086064439ebd0ae871fa2fe1562f26a934840b97e29fd8be",
+      "smoke": true
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 6]]],
+                "match": [[[0, 6]]],
+                "search": [[[0, 6]]]
+              },
+              "source": {
+                "bytes": "617b312c327d",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6161",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 6,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "617b312c327d",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "6161",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 9,
+      "pattern": {
+        "bytes": "617b20312c20327d",
+        "width": 1
+      },
+      "patternSha256": "df42d5a4f8fe4611fa5615c0190fdac58540e6a7602318b7bab27531964307e6",
+      "smoke": true
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 6]]],
+                "match": [[[0, 6]]],
+                "search": [[[0, 6]]]
+              },
+              "source": {
+                "bytes": "617b312c327d",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6161",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 6,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "617b312c327d",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "6161",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 10,
+      "pattern": {
+        "bytes": "617b312c20327d",
+        "width": 1
+      },
+      "patternSha256": "deddf1ef64719af9e5f51e4c192087f4dd02b4efe2fbd77199b89ed2e2ee1745",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 5]]],
+                "match": [[[0, 5]]],
+                "search": [[[0, 5]]]
+              },
+              "source": {
+                "bytes": "617b2c327d",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6161",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 5,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [
+                  [[0, 1]],
+                  [[1, 1]],
+                  [[2, 2]],
+                  [[3, 3]],
+                  [[4, 4]],
+                  [[5, 5]]
+                ],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "617b2c327d",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 2]], [[2, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "6161",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 0,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 11,
+      "pattern": {
+        "bytes": "617b2c20327d",
+        "width": 1
+      },
+      "patternSha256": "62956fbf93644cb66e7fe8488dabfa7d32ecfedd80e3672b442e6cd27c49747f",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 6]]],
+                "match": [[[0, 6]]],
+                "search": [[[0, 6]]]
+              },
+              "source": {
+                "bytes": "617b312c327d",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6161",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 6,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "617b312c327d",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "6161",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 12,
+      "pattern": {
+        "bytes": "617b312c2320636f6d6d656e740a327d",
+        "width": 1
+      },
+      "patternSha256": "234d16cc3194d8c989c13c1ce3cb1f2aa80fddabad1f3a55b8f6c6ecf7c30481",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [],
+          "failure": {
+            "message": "multiple repeat at position 6",
+            "position": 6,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "62",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 13,
+      "pattern": {
+        "bytes": "61207b317d203f",
+        "width": 1
+      },
+      "patternSha256": "f7c4e7eb86a6d3f2cad50e3dff8c3c47ceb255aca33067e95f6281459f296a9e",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [],
+          "failure": {
+            "message": "bad character in group name ' x ' at position 4",
+            "position": 4,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1], [0, 1]]],
+                "match": [[[0, 1], [0, 1]]],
+                "search": [[[0, 1], [0, 1]]]
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "62",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 1,
+            "names": {
+              "x": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 14,
+      "pattern": {
+        "bytes": "283f503c2078203e206129",
+        "width": 1
+      },
+      "patternSha256": "12a9119a8544aaf79357232e12b64920fcd75c8a9dc4360ec83ce6da70374b06",
+      "smoke": true
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [],
+          "failure": {
+            "message": "bad character in group name 'x y' at position 4",
+            "position": 4,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1], [0, 1]]],
+                "match": [[[0, 1], [0, 1]]],
+                "search": [[[0, 1], [0, 1]]]
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "62",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 1,
+            "names": {
+              "xy": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 15,
+      "pattern": {
+        "bytes": "283f503c7820793e6129",
+        "width": 1
+      },
+      "patternSha256": "38c3a0076a6cfa3b3e3d2495f1961e9d5789cad51a129fbeae34819858c2e67c",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [],
+          "failure": {
+            "message": "unknown extension ?P  at position 1 (line 1, column 2)",
+            "position": 1,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1], [0, 1]]],
+                "match": [[[0, 1], [0, 1]]],
+                "search": [[[0, 1], [0, 1]]]
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "62",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 1,
+            "names": {
+              "x": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 16,
+      "pattern": {
+        "bytes": "283f50202320636f6d6d656e740a203c783e206129",
+        "width": 1
+      },
+      "patternSha256": "0341eab9d4b2af49b153142992d4a393daf97b9a14ee275eb48d8dd167ce9f9a",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [],
+          "failure": {
+            "message": "unknown extension ?  at position 1",
+            "position": 1,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        },
+        "python-regex-v0": {
+          "cases": [],
+          "failure": {
+            "message": "unknown extension at position 2",
+            "position": 2,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        }
+      },
+      "flags": 64,
+      "id": 17,
+      "pattern": {
+        "bytes": "283f20503c783e6129",
+        "width": 1
+      },
+      "patternSha256": "1521d9778ca060e187ac2147880d5d5cdaec1ed223e2f154b5af10d9c244c3f3",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [],
+          "failure": {
+            "message": "unknown extension ?  at position 1",
+            "position": 1,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "62",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 18,
+      "pattern": {
+        "bytes": "283f203a6129",
+        "width": 1
+      },
+      "patternSha256": "6b21d57c37ea226e2a0f05ee71e06fee7713da1857f0829bd5f347a14b560638",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 2], [1, 2]]],
+                "match": [[[0, 2], [1, 2]]],
+                "search": [[[0, 2], [1, 2]]]
+              },
+              "source": {
+                "bytes": "6161",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "62",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "parser-only",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": true
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 2], [1, 2]]],
+                "match": [[[0, 2], [1, 2]]],
+                "search": [[[0, 2], [1, 2]]]
+              },
+              "source": {
+                "bytes": "6161",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "62",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "parser-only",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": true
+          }
+        }
+      },
+      "flags": 64,
+      "id": 19,
+      "pattern": {
+        "bytes": "2820612029202b",
+        "width": 1
+      },
+      "patternSha256": "8d9b9c02e9d33fd4537c39bef90360a904a06ddce7cc0a2e70b0d72e98245c29",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 2], [0, 1]]],
+                "match": [[[0, 2], [0, 1]]],
+                "search": [[[0, 2], [0, 1]]]
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 2,
+            "names": {
+              "x": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 2], [0, 1]]],
+                "match": [[[0, 2], [0, 1]]],
+                "search": [[[0, 2], [0, 1]]]
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 1,
+            "minimumWidthFloor": 2,
+            "names": {
+              "x": 1
+            },
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 20,
+      "pattern": {
+        "bytes": "283f503c783e61202320636f6d6d656e740a292062",
+        "width": 1
+      },
+      "patternSha256": "46309bccef06adfec566acf5f55bc2d3630b37c9c5d95585b1af5b75b12dc3fa",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "63",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "63",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 21,
+      "pattern": {
+        "bytes": "283f3a2061207c20622029202b",
+        "width": 1
+      },
+      "patternSha256": "f9420bb855934e361cc5217e1555be9908cee2958fc1b8ef0ac773dc02f611dc",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [],
+          "failure": {
+            "message": "incomplete escape \\x at position 0",
+            "position": 0,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "62",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 22,
+      "pattern": {
+        "bytes": "5c7820362031",
+        "width": 1
+      },
+      "patternSha256": "81ab3ea59a974716763564ad4bc2863b99725eaa0d1fbfc63435875213237a20",
+      "smoke": true
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [],
+          "failure": {
+            "message": "incomplete escape \\x at position 1",
+            "position": 1,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        },
+        "python-regex-v0": {
+          "cases": [],
+          "failure": {
+            "message": "incomplete escape \\x at position 3",
+            "position": 3,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        }
+      },
+      "flags": 64,
+      "id": 23,
+      "pattern": {
+        "bytes": "5b5c78203620315d",
+        "width": 1
+      },
+      "patternSha256": "81ab4689ae81f7cf13bb55efd6c83bc3bdc15ff0edf03c2abad64defee359337",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [],
+          "failure": {
+            "message": "incomplete escape \\x6 at position 1 (line 1, column 2)",
+            "position": 1,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "6161",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 2,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 24,
+      "pattern": {
+        "bytes": "615c7836202320636f6d6d656e740a31",
+        "width": 1
+      },
+      "patternSha256": "b8bbebc45ae91f69f12037285130db7c84049f15ec8b9c7f9f37ca137567854e",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "61a062",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 3,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "61a062",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 2,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 25,
+      "pattern": {
+        "bytes": "61a062",
+        "width": 1
+      },
+      "patternSha256": "12ac6d86121421c67f3aabadb92c6d1c14afadc1572a4bcc9c4390325c547f05",
+      "smoke": true
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "611c62",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 3,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "611c62",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 2,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 26,
+      "pattern": {
+        "bytes": "611c62",
+        "width": 1
+      },
+      "patternSha256": "79789ef5441f9060c903fc78bd98edab0d33fe82f65008b5d61ceb1dcfc33192",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "610003206200",
+                "width": 2
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 3,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "610003206200",
+                "width": 2
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 2,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 27,
+      "pattern": {
+        "bytes": "610003206200",
+        "width": 2
+      },
+      "patternSha256": "1701a3d7a25ffd145305a6f7a6db30c480927f7835f13faeda1ef0eb7357fedd",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 2,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 28,
+      "pattern": {
+        "bytes": "61202320636f6d6d656e745c0a2062",
+        "width": 1
+      },
+      "patternSha256": "18d6a4a4b3d870044b71747ec136b9f07cf6c4d2c240e8c8302d8b51886a5939",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 29,
+      "pattern": {
+        "bytes": "61202320636f6d6d656e740d2062",
+        "width": 1
+      },
+      "patternSha256": "3fca39c1e824649350faa3c1ac526c1f8b76352148ed90551bb5afb35b563c7a",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "612362",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 3,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "612362",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6162",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 3,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 30,
+      "pattern": {
+        "bytes": "615c23202320636f6d6d656e740a62",
+        "width": 1
+      },
+      "patternSha256": "e6e8e64285da58691f65c8e32acd40aad04e17ac9d81ec2fa9fb2a7cbe64f168",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "310144002e00",
+                "width": 2
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "300144002e00",
+                "width": 2
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 3,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "310144002e00",
+                "width": 2
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 3]]],
+                "match": [[[0, 3]]],
+                "search": [[[0, 3]]]
+              },
+              "source": {
+                "bytes": "300144002e00",
+                "width": 2
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 3,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 66,
+      "id": 31,
+      "pattern": {
+        "bytes": "20692064205c2e",
+        "width": 1
+      },
+      "patternSha256": "7e28505eca12aed54574e47d4d924daa00ec64a24915aeb92eb6c1ec23e5e074",
+      "smoke": true
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "3101",
+                "width": 2
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "20",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "3101",
+                "width": 2
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "20",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 66,
+      "id": 32,
+      "pattern": {
+        "bytes": "205b612d7a5d20",
+        "width": 1
+      },
+      "patternSha256": "e11b470347240a3255caf7d1f56d94119720f48a1397bc8a0561ae53c62605e4",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "20000103",
+                "width": 2
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "1c61",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 2,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "20000103",
+                "width": 2
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "1c61",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 2,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 33,
+      "pattern": {
+        "bytes": "205c73205c7720",
+        "width": 1
+      },
+      "patternSha256": "209f66c78a431cda8dd832aa22589ed4d75625bb8c87d25d8585362f29ce16b4",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 2]]],
+                "match": [[[0, 2]]],
+                "search": [[[0, 2]]]
+              },
+              "source": {
+                "bytes": "20a0",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "20",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 2,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "20a0",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "20",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 34,
+      "pattern": {
+        "bytes": "5c20a0",
+        "width": 1
+      },
+      "patternSha256": "a838241a5adaed30841f744320e380d77d3bb58c3e43faf052252053976319d3",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "a0",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "a0",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 35,
+      "pattern": {
+        "bytes": "5ca0",
+        "width": 1
+      },
+      "patternSha256": "20830ea6cb4ba9b0815637778ffacfaf74e5b84006cd72d60a57d9132f223fbd",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 9]]],
+                "match": [[[0, 9]]],
+                "search": [[[0, 9]]]
+              },
+              "source": {
+                "bytes": "6123636f6d6d656e74",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 9,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 9]]],
+                "match": [[[0, 9]]],
+                "search": [[[0, 9]]]
+              },
+              "source": {
+                "bytes": "6123636f6d6d656e74",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 9,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 0,
+      "id": 36,
+      "pattern": {
+        "bytes": "6123636f6d6d656e74",
+        "width": 1
+      },
+      "patternSha256": "824cfa7909e599434be0fa108e8347daed2a2a471f8e9345c5e534954ec1f541",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 8]]],
+                "match": [[[0, 8]]],
+                "search": [[[0, 8]]]
+              },
+              "source": {
+                "bytes": "617b20312c20327d",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6161",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 8,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 8]]],
+                "match": [[[0, 8]]],
+                "search": [[[0, 8]]]
+              },
+              "source": {
+                "bytes": "617b20312c20327d",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "6161",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 8,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 0,
+      "id": 37,
+      "pattern": {
+        "bytes": "617b20312c20327d",
+        "width": 1
+      },
+      "patternSha256": "df42d5a4f8fe4611fa5615c0190fdac58540e6a7602318b7bab27531964307e6",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 7]]],
+                "match": [[[0, 7]]],
+                "search": [[[0, 7]]]
+              },
+              "source": {
+                "bytes": "617b653c3d317d",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 7,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]], [[1, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [
+                  [[0, 1]],
+                  [[1, 2]],
+                  [[2, 3]],
+                  [[3, 4]],
+                  [[4, 5]],
+                  [[5, 6]],
+                  [[6, 7]],
+                  [[7, 7]]
+                ],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "617b653c3d317d",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "unqualified",
+          "profile": null
+        }
+      },
+      "flags": 64,
+      "id": 38,
+      "pattern": {
+        "bytes": "617b653c3d317d",
+        "width": 1
+      },
+      "patternSha256": "82c4298e3f2fb36e9f4f45a1ab446446d740bc03d88f4a6398353a5d018c28b3",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 8]]],
+                "match": [[[0, 8]]],
+                "search": [[[0, 8]]]
+              },
+              "source": {
+                "bytes": "617b31693c3d327d",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 8,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "617b31693c3d327d",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "unqualified",
+          "profile": null
+        }
+      },
+      "flags": 0,
+      "id": 39,
+      "pattern": {
+        "bytes": "617b31693c3d327d",
+        "width": 1
+      },
+      "patternSha256": "66390149066c4a4711aec65c8369a0ea04549a185aa686c2ce899db3ceea4b33",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 6]]],
+                "match": [[[0, 6]]],
+                "search": [[[0, 6]]]
+              },
+              "source": {
+                "bytes": "617b666f6f7d",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 6,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 6]]],
+                "match": [[[0, 6]]],
+                "search": [[[0, 6]]]
+              },
+              "source": {
+                "bytes": "617b666f6f7d",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 6,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 40,
+      "pattern": {
+        "bytes": "617b666f6f7d",
+        "width": 1
+      },
+      "patternSha256": "a70bbaf58a8737ccab428878171a3c3bc5228cb9f658e750bb6f018518e665e4",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 5]]],
+                "match": [[[0, 5]]],
+                "search": [[[0, 5]]]
+              },
+              "source": {
+                "bytes": "617b31787d",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 5,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 5]]],
+                "match": [[[0, 5]]],
+                "search": [[[0, 5]]]
+              },
+              "source": {
+                "bytes": "617b31787d",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 5,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 41,
+      "pattern": {
+        "bytes": "617b31787d",
+        "width": 1
+      },
+      "patternSha256": "5f9ffb9174315ab2911f39161a6e90774b5fa6d1523f879e3252a2a9f678a2af",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 6]]],
+                "match": [[[0, 6]]],
+                "search": [[[0, 6]]]
+              },
+              "source": {
+                "bytes": "617b653e317d",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [],
+                "match": [],
+                "search": []
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 6,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [],
+          "failure": {
+            "message": "expected } at position 3",
+            "position": 3,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        }
+      },
+      "flags": 64,
+      "id": 42,
+      "pattern": {
+        "bytes": "617b653e317d",
+        "width": 1
+      },
+      "patternSha256": "958eefb6244c2d340485858c9a1acddd25e8e8f887b5ce0b4d3a277503e84903",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [],
+          "failure": {
+            "message": "multiple repeat at position 4",
+            "position": 4,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        },
+        "python-regex-v0": {
+          "cases": [],
+          "failure": {
+            "message": "multiple repeat at position 3",
+            "position": 3,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        }
+      },
+      "flags": 64,
+      "id": 43,
+      "pattern": {
+        "bytes": "61202a202a",
+        "width": 1
+      },
+      "patternSha256": "3d90d71e7def86bd7ecc245acfbd66f52584397ee486908f54c4233e4c8fbc9e",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [],
+          "failure": {
+            "message": "missing ), unterminated subpattern at position 0",
+            "position": 0,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        },
+        "python-regex-v0": {
+          "cases": [],
+          "failure": {
+            "message": "missing ) at position 7",
+            "position": 7,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        }
+      },
+      "flags": 64,
+      "id": 44,
+      "pattern": {
+        "bytes": "283f503c783e61",
+        "width": 1
+      },
+      "patternSha256": "60c5d19ae43e58ced6e31b05d2f3eeda14c51551294b3ddbae56407f9aa87b3c",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [],
+          "failure": {
+            "message": "unterminated character set at position 0",
+            "position": 0,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        },
+        "python-regex-v0": {
+          "cases": [],
+          "failure": {
+            "message": "unterminated character set at position 3",
+            "position": 3,
+            "type": "error"
+          },
+          "kind": "source-error",
+          "profile": null
+        }
+      },
+      "flags": 64,
+      "id": 45,
+      "pattern": {
+        "bytes": "5b2023",
+        "width": 1
+      },
+      "patternSha256": "25cd417055af8f7bf33718f28f4b9c42f9017f48dbea0b74425452893e682b69",
+      "smoke": false
+    },
+    {
+      "engines": {
+        "python-re": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "610a",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        },
+        "python-regex-v0": {
+          "cases": [
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "61",
+                "width": 1
+              }
+            },
+            {
+              "modes": {
+                "finditer": [[[0, 1]]],
+                "match": [[[0, 1]]],
+                "search": [[[0, 1]]]
+              },
+              "source": {
+                "bytes": "610a",
+                "width": 1
+              }
+            }
+          ],
+          "failure": null,
+          "kind": "single-match",
+          "profile": {
+            "groups": 0,
+            "minimumWidthFloor": 1,
+            "names": {},
+            "nullableMultiRepeat": false,
+            "repeatedCaptures": false
+          }
+        }
+      },
+      "flags": 64,
+      "id": 46,
+      "pattern": {
+        "bytes": "205e2061202320636f6d6d656e740a202420",
+        "width": 1
+      },
+      "patternSha256": "d36123efcf9c4cea118a2a8419e92a3b7f3df47e958e2560ceb11558e7c47c7d",
+      "smoke": false
+    }
+  ],
+  "producerSha256": "c86c958858149b6b74f8b8b594e72123e65da2b1a71eeaac1ab8a806452834a1",
+  "python": "3.11.15",
+  "regex": "2023.12.25",
+  "schemaVersion": "citation-regex-verbose/v1",
+  "totals": {
+    "parserOnly": 2,
+    "singleMatch": 71,
+    "sourceErrors": 19,
+    "sourceObservations": 450,
+    "unqualified": 2
+  }
+}

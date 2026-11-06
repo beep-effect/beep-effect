@@ -250,5 +250,6 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "A proposed enforcement rule produces unresolved false positives across unrelated packages.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "researchReports": ["research/reports/effect-v4-schema-capabilities.md"]
 }

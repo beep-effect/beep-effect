@@ -36,7 +36,12 @@
     "goals/practice-m365-contacts/GOAL.md",
     "goals/practice-m365-contacts/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/cache-baseline-request.json",
+    "research/cache-baseline-review.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

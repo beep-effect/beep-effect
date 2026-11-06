@@ -1529,6 +1529,7 @@ const optionalCount = (value: number | undefined): number =>
 
 const renderCheckLine = (remote: YeetStatusRemote): string => {
   if (!remote.checked) return "checks: not checked";
+  if (O.isSome(remote.readFailure)) return "checks: incomplete remote read; retry before assessing readiness";
   if (remote.requiredCheckCount !== undefined) {
     return `checks: ${remote.requiredCheckCount} required (${optionalCount(remote.failingRequiredCheckCount)} failing, ${optionalCount(remote.pendingRequiredCheckCount)} pending); ${optionalCount(remote.optionalCheckCount)} optional (${optionalCount(remote.failingOptionalCheckCount)} failing, ${optionalCount(remote.pendingOptionalCheckCount)} pending)`;
   }

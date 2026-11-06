@@ -1,0 +1,206 @@
+{
+  "schemaVersion": "citation-law-field-audit/v1",
+  "scope": "Source/field ownership and focused observations only; no target parser or donor disposition proof.",
+  "commit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "operationCorpusSha256": "ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1",
+  "publicationMappingSha256": "b5aca44dc69f05b82c41decf327863a52c151eeb231bdb4df96e5cf7e85351c5",
+  "python": "3.11.15",
+  "reportersVersion": "3.2.53",
+  "clockDate": "2026-10-28",
+  "hashSeed": "0",
+  "producerSha256": "357372a598190a51181821f3aad5ee797c7187d45cd0b3ac4d0c54d404962f9b",
+  "sources": [
+    {
+      "path": "eyecite/models.py",
+      "sha256": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a"
+    },
+    {
+      "path": "eyecite/helpers.py",
+      "sha256": "3d3431db232be2f3d7320125528975d57797372a9c4c21d524927fc1ccf0a297"
+    },
+    {
+      "path": "eyecite/tokenizers.py",
+      "sha256": "de2d345fe0211aa4f48d633035567ec941f113e48c41990b0b036db63d984a01"
+    },
+    {
+      "path": "eyecite/regexes.py",
+      "sha256": "73f2508f914bda85bfddab8d5c3821c5c13fbf778b09415f2c32db22fdbe23df"
+    },
+    {
+      "path": "eyecite/find.py",
+      "sha256": "64415ffe6a5fc39713a1ad1d6585ae673fb175b32c53820185237a174416dd3d"
+    }
+  ],
+  "lawExtractorCount": 575,
+  "captureKeyInstanceCounts": {
+    "act": 2,
+    "agency": 1,
+    "article": 10,
+    "chapter": 18,
+    "docket_number": 5,
+    "issue": 40,
+    "kind_code": 1,
+    "law": 2,
+    "number": 4,
+    "page": 394,
+    "pamphlet": 52,
+    "reg": 3,
+    "reporter": 575,
+    "rule": 13,
+    "section": 145,
+    "subject": 7,
+    "title": 46,
+    "volume": 79,
+    "year": 272
+  },
+  "cases": [
+    {
+      "text": "35 U.S.C. § 101 (2018)",
+      "kind": "FullLawCitation",
+      "groups": {
+        "title": "35",
+        "reporter": "U.S.C.",
+        "section": "101"
+      },
+      "metadata": {
+        "parenthetical": null,
+        "pin_cite": null,
+        "pin_cite_span_start": null,
+        "pin_cite_span_end": null,
+        "year": "2018",
+        "month": null,
+        "day": null,
+        "publisher": null
+      },
+      "parsedYear": 2018,
+      "correctedCitation": "35 U.S.C. § 101",
+      "correctedFullCitation": "35 U.S.C. § 101 (2018)",
+      "span": [0, 15],
+      "fullSpan": [0, 22]
+    },
+    {
+      "text": "37 C.F.R. § 1.56 (2020)",
+      "kind": "FullLawCitation",
+      "groups": {
+        "chapter": "37",
+        "reporter": "C.F.R.",
+        "section": "1.56"
+      },
+      "metadata": {
+        "parenthetical": null,
+        "pin_cite": null,
+        "pin_cite_span_start": null,
+        "pin_cite_span_end": null,
+        "year": "2020",
+        "month": null,
+        "day": null,
+        "publisher": null
+      },
+      "parsedYear": 2020,
+      "correctedCitation": "37 C.F.R. § 1.56",
+      "correctedFullCitation": "37 C.F.R. § 1.56 (2020)",
+      "span": [0, 16],
+      "fullSpan": [0, 23]
+    },
+    {
+      "text": "37 C.F.R. § 1.56(a) (West Jan. 2, 2020) (disclosure)",
+      "kind": "FullLawCitation",
+      "groups": {
+        "chapter": "37",
+        "reporter": "C.F.R.",
+        "section": "1.56"
+      },
+      "metadata": {
+        "parenthetical": "disclosure",
+        "pin_cite": "(a)",
+        "pin_cite_span_start": null,
+        "pin_cite_span_end": null,
+        "year": "2020",
+        "month": "Jan.",
+        "day": "2",
+        "publisher": "West"
+      },
+      "parsedYear": 2020,
+      "correctedCitation": "37 C.F.R. § 1.56",
+      "correctedFullCitation": "37 C.F.R. § 1.56(a) (West Jan. 2 2020) (disclosure)",
+      "span": [0, 16],
+      "fullSpan": [0, 52]
+    },
+    {
+      "text": "42 C.F.R. §§ 405.1-405.2",
+      "kind": "FullLawCitation",
+      "groups": {
+        "chapter": "42",
+        "reporter": "C.F.R.",
+        "section": "405.1-405.2"
+      },
+      "metadata": {
+        "parenthetical": null,
+        "pin_cite": null,
+        "pin_cite_span_start": null,
+        "pin_cite_span_end": null,
+        "year": null,
+        "month": null,
+        "day": null,
+        "publisher": null
+      },
+      "parsedYear": null,
+      "correctedCitation": "42 C.F.R. §§ 405.1-405.2",
+      "correctedFullCitation": "42 C.F.R. §§ 405.1-405.2",
+      "span": [0, 24],
+      "fullSpan": [0, 24]
+    },
+    {
+      "text": "35 U.S.C. § 101 et seq.",
+      "kind": "FullLawCitation",
+      "groups": {
+        "title": "35",
+        "reporter": "U.S.C.",
+        "section": "101"
+      },
+      "metadata": {
+        "parenthetical": null,
+        "pin_cite": "et seq.",
+        "pin_cite_span_start": null,
+        "pin_cite_span_end": null,
+        "year": null,
+        "month": null,
+        "day": null,
+        "publisher": null
+      },
+      "parsedYear": null,
+      "correctedCitation": "35 U.S.C. § 101",
+      "correctedFullCitation": "35 U.S.C. § 101et seq.",
+      "span": [0, 15],
+      "fullSpan": [0, 23]
+    },
+    {
+      "text": "37 C.F.R. §§ 1.56-1.58(a)-(c)",
+      "kind": "FullLawCitation",
+      "groups": {
+        "chapter": "37",
+        "reporter": "C.F.R.",
+        "section": "1.56-1.58"
+      },
+      "metadata": {
+        "parenthetical": null,
+        "pin_cite": "(a)",
+        "pin_cite_span_start": null,
+        "pin_cite_span_end": null,
+        "year": null,
+        "month": null,
+        "day": null,
+        "publisher": null
+      },
+      "parsedYear": null,
+      "correctedCitation": "37 C.F.R. §§ 1.56-1.58",
+      "correctedFullCitation": "37 C.F.R. §§ 1.56-1.58(a)",
+      "span": [0, 22],
+      "fullSpan": [0, 25]
+    }
+  ]
+}

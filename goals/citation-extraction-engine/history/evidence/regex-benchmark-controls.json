@@ -1,0 +1,378 @@
+{
+  "schemaVersion": "citation-regex-benchmark-controls/v1",
+  "scope": "Synthetic linear/catastrophic controls only; no oracle family approval.",
+  "planSha256": "8de6807cbcaf6758f98f17dd4067642e67f5fd2bd13237c986df6522291f6dfc",
+  "parentSha256": "02b0c87e1dd85e054e274d799078d20ab009fb9cffa0abbc7b9fab9bf83e70e0",
+  "childSha256": "c9aafde56c966a0463415d602d6ba2ece028d49245bd325883707834f950907e",
+  "python": "3.15.1",
+  "platform": "Linux",
+  "architecture": "x86_64",
+  "cpuModel": "AMD Ryzen Threadripper 9970X 32-Cores",
+  "watchdogScope": "Child lifetime including startup; regex samples exclude startup.",
+  "runs": [
+    {
+      "runtimeKind": "node",
+      "control": "safe-linear",
+      "decision": "accepted",
+      "rows": [
+        {
+          "size": 8,
+          "outcome": "measured",
+          "sample": {
+            "control": "safe-linear",
+            "size": 8,
+            "matched": true,
+            "samplesNanos": [42325, 17286, 15574, 8854, 17207],
+            "runtime": "v24.22.1",
+            "bunVersion": null,
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 16,
+          "outcome": "measured",
+          "sample": {
+            "control": "safe-linear",
+            "size": 16,
+            "matched": true,
+            "samplesNanos": [45851, 21843, 16375, 11667, 10346],
+            "runtime": "v24.22.1",
+            "bunVersion": null,
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 32,
+          "outcome": "measured",
+          "sample": {
+            "control": "safe-linear",
+            "size": 32,
+            "matched": true,
+            "samplesNanos": [41244, 17878, 17807, 11247, 11898],
+            "runtime": "v24.22.1",
+            "bunVersion": null,
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 64,
+          "outcome": "measured",
+          "sample": {
+            "control": "safe-linear",
+            "size": 64,
+            "matched": true,
+            "samplesNanos": [43517, 21383, 17758, 14022, 11838],
+            "runtime": "v24.22.1",
+            "bunVersion": null,
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 128,
+          "outcome": "measured",
+          "sample": {
+            "control": "safe-linear",
+            "size": 128,
+            "matched": true,
+            "samplesNanos": [44749, 25349, 21213, 16365, 19340],
+            "runtime": "v24.22.1",
+            "bunVersion": null,
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 256,
+          "outcome": "measured",
+          "sample": {
+            "control": "safe-linear",
+            "size": 256,
+            "matched": true,
+            "samplesNanos": [59261, 38970, 35495, 34974, 31228],
+            "runtime": "v24.22.1",
+            "bunVersion": null,
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 512,
+          "outcome": "measured",
+          "sample": {
+            "control": "safe-linear",
+            "size": 512,
+            "matched": true,
+            "samplesNanos": [73473, 47163, 51169, 49787, 39080],
+            "runtime": "v24.22.1",
+            "bunVersion": null,
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        }
+      ]
+    },
+    {
+      "runtimeKind": "node",
+      "control": "catastrophic-backtracking",
+      "decision": "rejected-deadline",
+      "rows": [
+        {
+          "size": 8,
+          "outcome": "measured",
+          "sample": {
+            "control": "catastrophic-backtracking",
+            "size": 8,
+            "matched": false,
+            "samplesNanos": [149891, 107225, 120926, 94435, 101156],
+            "runtime": "v24.22.1",
+            "bunVersion": null,
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 16,
+          "outcome": "measured",
+          "sample": {
+            "control": "catastrophic-backtracking",
+            "size": 16,
+            "matched": false,
+            "samplesNanos": [24828735, 24357300, 24936271, 24561544, 24450432],
+            "runtime": "v24.22.1",
+            "bunVersion": null,
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 32,
+          "outcome": "deadline",
+          "exitSignal": "SIGKILL",
+          "exitConfirmed": true
+        }
+      ]
+    },
+    {
+      "runtimeKind": "bun",
+      "control": "safe-linear",
+      "decision": "accepted",
+      "rows": [
+        {
+          "size": 8,
+          "outcome": "measured",
+          "sample": {
+            "control": "safe-linear",
+            "size": 8,
+            "matched": true,
+            "samplesNanos": [20151, 7862, 6069, 9054, 19861],
+            "runtime": "v26.3.0",
+            "bunVersion": "1.4.4",
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 16,
+          "outcome": "measured",
+          "sample": {
+            "control": "safe-linear",
+            "size": 16,
+            "matched": true,
+            "samplesNanos": [23356, 8483, 7331, 10346, 11528],
+            "runtime": "v26.3.0",
+            "bunVersion": "1.4.4",
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 32,
+          "outcome": "measured",
+          "sample": {
+            "control": "safe-linear",
+            "size": 32,
+            "matched": true,
+            "samplesNanos": [24347, 8593, 6951, 11107, 11438],
+            "runtime": "v26.3.0",
+            "bunVersion": "1.4.4",
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 64,
+          "outcome": "measured",
+          "sample": {
+            "control": "safe-linear",
+            "size": 64,
+            "matched": true,
+            "samplesNanos": [26381, 10937, 8854, 12148, 12128],
+            "runtime": "v26.3.0",
+            "bunVersion": "1.4.4",
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 128,
+          "outcome": "measured",
+          "sample": {
+            "control": "safe-linear",
+            "size": 128,
+            "matched": true,
+            "samplesNanos": [30167, 14122, 12369, 15724, 15214],
+            "runtime": "v26.3.0",
+            "bunVersion": "1.4.4",
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 256,
+          "outcome": "measured",
+          "sample": {
+            "control": "safe-linear",
+            "size": 256,
+            "matched": true,
+            "samplesNanos": [41564, 28083, 26551, 30537, 33962],
+            "runtime": "v26.3.0",
+            "bunVersion": "1.4.4",
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 512,
+          "outcome": "measured",
+          "sample": {
+            "control": "safe-linear",
+            "size": 512,
+            "matched": true,
+            "samplesNanos": [55215, 40573, 39091, 42666, 43066],
+            "runtime": "v26.3.0",
+            "bunVersion": "1.4.4",
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        }
+      ]
+    },
+    {
+      "runtimeKind": "bun",
+      "control": "catastrophic-backtracking",
+      "decision": "rejected-deadline",
+      "rows": [
+        {
+          "size": 8,
+          "outcome": "measured",
+          "sample": {
+            "control": "catastrophic-backtracking",
+            "size": 8,
+            "matched": false,
+            "samplesNanos": [104091, 89608, 88216, 96619, 96659],
+            "runtime": "v26.3.0",
+            "bunVersion": "1.4.4",
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 16,
+          "outcome": "measured",
+          "sample": {
+            "control": "catastrophic-backtracking",
+            "size": 16,
+            "matched": false,
+            "samplesNanos": [20845755, 21151967, 20893030, 20949224, 20877374],
+            "runtime": "v26.3.0",
+            "bunVersion": "1.4.4",
+            "warmups": 2,
+            "repetitions": 5,
+            "evaluationsPerSample": 256,
+            "totalEvaluations": 1792
+          },
+          "exitCode": 0,
+          "exitConfirmed": true
+        },
+        {
+          "size": 32,
+          "outcome": "deadline",
+          "exitSignal": "SIGKILL",
+          "exitConfirmed": true
+        }
+      ]
+    }
+  ]
+}

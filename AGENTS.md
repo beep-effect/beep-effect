@@ -254,6 +254,14 @@ needed only for the escalation list below.
   lane. The orchestrator declares one consolidated unblocker per red episode
   (`unblocks-main` label) and cancels runs, running ones included, on PRs
   that must re-run anyway so the unblocker gets runners and merges first.
+- A base-conflict P0 inbox row is an unconditional "merge `origin/main` into
+  the lane now" for the lane owner, whatever the acceptance or merge
+  arrangement says; no brief or delegation model may forbid a lane from
+  merging main. A goal packet has at most three concurrently open PRs (a
+  fourth is sequenced through one lane or stacked), and the gate merges
+  finals one at a time as they arrive, telling the remaining siblings to
+  merge main between merges (operator 2026-11-05,
+  `goals/agent-pool-doctrine/history/2026-11-05-base-conflict-merge-main.md`).
 - One orchestrator session coordinates the rest: it routes threads, reds and
   conflicts to the owning session, merges at the gate, and relays the
   operator's answers. Sessions report blockers to it, not to the operator.
@@ -297,10 +305,14 @@ needed only for the escalation list below.
   hosted CI instead of queueing: if scheduler admission or a local gate has
   waited 10 minutes, stop that local run, keep the package-scoped checks that
   already passed (`quality package-verify`, or lint and check of the touched
-  packages), `git push`, and open the PR with
-  `gh pr create --draft --label ready-for-heavy`, then flip it with
-  `bun run beep yeet ready` at content-final as usual. Hosted CI is the
-  proof; record in the PR body which local checks ran and which were skipped.
+  packages), and run `bun run beep yeet open --body-file <md>` on the
+  committed HEAD. It pushes and opens the draft with `ready-for-heavy`, the
+  provenance footer and the readiness monitor, and runs no local gate. Flip it
+  with `bun run beep yeet ready` at content-final as usual. Hosted CI is the
+  proof; the body file records which local checks ran and which were skipped.
+  Never open a PR with raw `gh pr create` or replace a body with
+  `gh pr edit --body*`: both drop the Yeet provenance footer. Use
+  `bun run beep yeet gh pr body <n> --body-file <md>`, which keeps it.
 - Draft means only "the owner is still pushing". "Final" means the pushed
   head passed `bun run beep yeet final-check`: the scoped local replay of
   every hosted gate the cheap tier skips (Lint Policy, Lint, Effect
@@ -442,6 +454,7 @@ If you touch this, load or run this first. Do not hand-author around it.
 | --- | --- |
 | New workspace package or app | `bun run beep create-package` (the only bootstrap path; no `mkdir`, no copied sibling) |
 | New slice / concept / role file | `bun run beep architecture` |
+| Files under `goals/<slug>/research/` | `bun run beep goals manifest --write` (`researchReports` is a generated projection; never hand-edit it) |
 | `packages/*/domain` or schemas | schema-first-development skill |
 | Effect service / Layer | effect-first-development skill |
 | JSDoc on exports | `.patterns/jsdoc-documentation.md` |
@@ -485,8 +498,14 @@ If you touch this, load or run this first. Do not hand-author around it.
   is per-packet `claims.jsonl` + single-writer `research/ledger/`, and the
   machine proposes via `SUGGESTED_ACTIONS.md` — agents never auto-append to
   `explorations/INBOX.md` or `goals/` from research output.
-- same-PR packet-state flips: flip goal manifest/lifecycle status and land the
-  closeout reflection in the same PR as the final work.
+- Goal closeout is two PRs: the final PR lands the work, the reflection and
+  `proposedCloseout` (status stays active or paused); after it merges,
+  `goals completion refresh --slug <slug>` verifies it and
+  `goals set-status <slug> <status>` adopts it in a packet-state PR that also
+  rewrites the packet's status prose (README, `statusNote`). A goal is
+  done only once that PR merges and `origin/main`'s manifest has
+  `closeout.status == initiative.status`; `goals doctor` reports a verified,
+  unadopted proposal as `closeout-adoption-pending`.
 - Friction is a first-class output: when work is slower, harder, or riskier
   than it should be, record a receipt — what you were doing, the evidence
   (command, error text, PR/file), what would have prevented it — in the

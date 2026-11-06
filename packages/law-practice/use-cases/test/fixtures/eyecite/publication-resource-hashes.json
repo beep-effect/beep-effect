@@ -1,0 +1,1159 @@
+{
+  "schemaVersion": "citation-publication-resource-hashes/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "python": "3.11.15",
+  "pythonHashSeed": "0",
+  "hashWidth": 64,
+  "versions": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22"
+  },
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "producerSha256": "6d645a7401609b55792f600b2b64d274a931b75fb51232416bfe2a6b18f07f25",
+  "normalizerSha256": "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8",
+  "sources": {
+    "models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a",
+    "utils.py": "8e27eb1207f6c0fdb695530e3677a3e9f039986b2baf68461ba680ee2bff902e"
+  },
+  "scope": "Exact law/journal resource hashes with actual and controlled dataclass editions; no live artifact-adapter or full engine proof.",
+  "cases": [
+    {
+      "name": "law",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101"
+          },
+          "publication": {
+            "editions": [
+              "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            ],
+            "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "U.S.C.",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "1362356665826160314",
+        "resourceHash": "1337401405081846410"
+      }
+    },
+    {
+      "name": "journal",
+      "input": {
+        "citation": {
+          "type": "journal",
+          "components": {
+            "volume": "93",
+            "reporter": "Harv. L. Rev.",
+            "page": "518"
+          },
+          "publication": {
+            "editions": [
+              "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            ],
+            "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636",
+            "value": {
+              "reporter": {
+                "short_name": "Harv. L. Rev.",
+                "name": "Harvard Law Review",
+                "cite_type": "journal",
+                "source": "journals",
+                "is_scotus": false
+              },
+              "short_name": "Harv. L. Rev.",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "770254685278574807",
+        "resourceHash": "1596664220133016073"
+      }
+    },
+    {
+      "name": "law-metadata",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101"
+          },
+          "publication": {
+            "editions": [
+              "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            ],
+            "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": "2020",
+            "month": null,
+            "day": null,
+            "publisher": "Ignored"
+          }
+        },
+        "editions": [
+          {
+            "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "U.S.C.",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "1362356665826160314",
+        "resourceHash": "1337401405081846410"
+      }
+    },
+    {
+      "name": "selected-ignored",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101"
+          },
+          "publication": {
+            "editions": [
+              "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            ],
+            "selectedEdition": null
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "U.S.C.",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "1362356665826160314",
+        "resourceHash": "1337401405081846410"
+      }
+    },
+    {
+      "name": "no-editions",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101"
+          },
+          "publication": {
+            "editions": [],
+            "selectedEdition": null
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": []
+      },
+      "expected": {
+        "citationHash": "1279268154435630885",
+        "resourceHash": "566441340505142062"
+      }
+    },
+    {
+      "name": "duplicate-edition",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101"
+          },
+          "publication": {
+            "editions": [
+              "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+              "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            ],
+            "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "U.S.C.",
+              "start": null,
+              "end": null
+            }
+          },
+          {
+            "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "U.S.C.",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "1395031614120153595",
+        "resourceHash": "1186505333336885700"
+      }
+    },
+    {
+      "name": "edition-order",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101"
+          },
+          "publication": {
+            "editions": [
+              "15977e2fba0cf16135d5641b9cacec224511e64c4097e4a0f14356aec82ae87a",
+              "981383422c67dc6ea4e82f09bcd383e31e3fd3f3d1f556f367b1062ff651b660"
+            ],
+            "selectedEdition": "15977e2fba0cf16135d5641b9cacec224511e64c4097e4a0f14356aec82ae87a"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "15977e2fba0cf16135d5641b9cacec224511e64c4097e4a0f14356aec82ae87a",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "A",
+              "start": "1900-01-02 00:00:00",
+              "end": null
+            }
+          },
+          {
+            "edition": "981383422c67dc6ea4e82f09bcd383e31e3fd3f3d1f556f367b1062ff651b660",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "Changed",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": true
+              },
+              "short_name": "Z",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "705286944076276926",
+        "resourceHash": "1912868895636876736"
+      }
+    },
+    {
+      "name": "edition-order-reversed",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101"
+          },
+          "publication": {
+            "editions": [
+              "981383422c67dc6ea4e82f09bcd383e31e3fd3f3d1f556f367b1062ff651b660",
+              "15977e2fba0cf16135d5641b9cacec224511e64c4097e4a0f14356aec82ae87a"
+            ],
+            "selectedEdition": "981383422c67dc6ea4e82f09bcd383e31e3fd3f3d1f556f367b1062ff651b660"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "981383422c67dc6ea4e82f09bcd383e31e3fd3f3d1f556f367b1062ff651b660",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "Changed",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": true
+              },
+              "short_name": "Z",
+              "start": null,
+              "end": null
+            }
+          },
+          {
+            "edition": "15977e2fba0cf16135d5641b9cacec224511e64c4097e4a0f14356aec82ae87a",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "A",
+              "start": "1900-01-02 00:00:00",
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "705286944076276926",
+        "resourceHash": "1912868895636876736"
+      }
+    },
+    {
+      "name": "tied-abbreviation",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101"
+          },
+          "publication": {
+            "editions": [
+              "15977e2fba0cf16135d5641b9cacec224511e64c4097e4a0f14356aec82ae87a",
+              "5bc5215a16336247b99717fc3c71b216ed02c640106c7952a3a9d25a2ccf4ef9"
+            ],
+            "selectedEdition": "15977e2fba0cf16135d5641b9cacec224511e64c4097e4a0f14356aec82ae87a"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "15977e2fba0cf16135d5641b9cacec224511e64c4097e4a0f14356aec82ae87a",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "A",
+              "start": "1900-01-02 00:00:00",
+              "end": null
+            }
+          },
+          {
+            "edition": "5bc5215a16336247b99717fc3c71b216ed02c640106c7952a3a9d25a2ccf4ef9",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "Tie",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "A",
+              "start": "1900-01-02 00:00:00",
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "1884604483867462101",
+        "resourceHash": "1688041276245499301"
+      }
+    },
+    {
+      "name": "tied-abbreviation-reversed",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101"
+          },
+          "publication": {
+            "editions": [
+              "5bc5215a16336247b99717fc3c71b216ed02c640106c7952a3a9d25a2ccf4ef9",
+              "15977e2fba0cf16135d5641b9cacec224511e64c4097e4a0f14356aec82ae87a"
+            ],
+            "selectedEdition": "5bc5215a16336247b99717fc3c71b216ed02c640106c7952a3a9d25a2ccf4ef9"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "5bc5215a16336247b99717fc3c71b216ed02c640106c7952a3a9d25a2ccf4ef9",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "Tie",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "A",
+              "start": "1900-01-02 00:00:00",
+              "end": null
+            }
+          },
+          {
+            "edition": "15977e2fba0cf16135d5641b9cacec224511e64c4097e4a0f14356aec82ae87a",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "A",
+              "start": "1900-01-02 00:00:00",
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "184371842494382189",
+        "resourceHash": "299135432516611241"
+      }
+    },
+    {
+      "name": "date-strings",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101"
+          },
+          "publication": {
+            "editions": [
+              "010c584206a0cc18dbd34e12dfad6f01b8f4368a2226b96ab8bf51c91f66bf3a"
+            ],
+            "selectedEdition": "010c584206a0cc18dbd34e12dfad6f01b8f4368a2226b96ab8bf51c91f66bf3a"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "010c584206a0cc18dbd34e12dfad6f01b8f4368a2226b96ab8bf51c91f66bf3a",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "U.S.C.",
+              "start": "1900-01-02 03:04:05.006000+00:00",
+              "end": "2000-12-31 00:00:00"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "2305692985368443603",
+        "resourceHash": "236914999215704696"
+      }
+    },
+    {
+      "name": "unicode-edition-order",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101"
+          },
+          "publication": {
+            "editions": [
+              "0f8d63beabe1d49b08a0f8abae738a77455211e575896fb8f344a05afff962ff",
+              "8535d67f2fc0757c3e658e7375e90988b158ddadcd3d654c4240a4e8590635c5"
+            ],
+            "selectedEdition": "0f8d63beabe1d49b08a0f8abae738a77455211e575896fb8f344a05afff962ff"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "0f8d63beabe1d49b08a0f8abae738a77455211e575896fb8f344a05afff962ff",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "\ud83d\ude00",
+              "start": null,
+              "end": null
+            }
+          },
+          {
+            "edition": "8535d67f2fc0757c3e658e7375e90988b158ddadcd3d654c4240a4e8590635c5",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "\ue000",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "1737851221516744512",
+        "resourceHash": "1540238744510437868"
+      }
+    },
+    {
+      "name": "unicode-edition-order-reversed",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101"
+          },
+          "publication": {
+            "editions": [
+              "8535d67f2fc0757c3e658e7375e90988b158ddadcd3d654c4240a4e8590635c5",
+              "0f8d63beabe1d49b08a0f8abae738a77455211e575896fb8f344a05afff962ff"
+            ],
+            "selectedEdition": "8535d67f2fc0757c3e658e7375e90988b158ddadcd3d654c4240a4e8590635c5"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "8535d67f2fc0757c3e658e7375e90988b158ddadcd3d654c4240a4e8590635c5",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "\ue000",
+              "start": null,
+              "end": null
+            }
+          },
+          {
+            "edition": "0f8d63beabe1d49b08a0f8abae738a77455211e575896fb8f344a05afff962ff",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "\ud83d\ude00",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "1737851221516744512",
+        "resourceHash": "1540238744510437868"
+      }
+    },
+    {
+      "name": "extra-group",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101",
+            "extra": "retained"
+          },
+          "publication": {
+            "editions": [
+              "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            ],
+            "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "U.S.C.",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "1932622398798772986",
+        "resourceHash": "984581102347583693"
+      }
+    },
+    {
+      "name": "extra-null",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101",
+            "extra": null
+          },
+          "publication": {
+            "editions": [
+              "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            ],
+            "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "U.S.C.",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "871774444514229882",
+        "resourceHash": "2195919718186610258"
+      }
+    },
+    {
+      "name": "extra-empty",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101",
+            "extra": ""
+          },
+          "publication": {
+            "editions": [
+              "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            ],
+            "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "U.S.C.",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "1773706988469979169",
+        "resourceHash": "869283429839844751"
+      }
+    },
+    {
+      "name": "reserved-groups",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101",
+            "class": "overwritten",
+            "all_editions": "overwritten"
+          },
+          "publication": {
+            "editions": [
+              "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            ],
+            "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "U.S.C.",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "1362356665826160314",
+        "resourceHash": "1337401405081846410"
+      }
+    },
+    {
+      "name": "unicode-group-keys",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101",
+            "\ud83d\ude00": "astral",
+            "\ue000": "bmp",
+            "\u00e9": "\u007f\ud800"
+          },
+          "publication": {
+            "editions": [
+              "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            ],
+            "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "U.S.C.",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "371064835733155806",
+        "resourceHash": "2293996316359068855"
+      }
+    },
+    {
+      "name": "absent-groups",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {},
+          "publication": {
+            "editions": [
+              "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            ],
+            "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "U.S.C.",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "402241635109880361",
+        "resourceHash": "1021098819130720003"
+      }
+    },
+    {
+      "name": "null-reporter",
+      "input": {
+        "citation": {
+          "type": "law",
+          "components": {
+            "title": "35",
+            "reporter": null,
+            "section": "101"
+          },
+          "publication": {
+            "editions": [
+              "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+            ],
+            "selectedEdition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "publisher": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
+            "value": {
+              "reporter": {
+                "short_name": "U.S.C.",
+                "name": "United States Code; United States Code Annotated; United States Code Service; Gould\u2019s United States Code Unannotated",
+                "cite_type": "leg_statute",
+                "source": "laws",
+                "is_scotus": false
+              },
+              "short_name": "U.S.C.",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "333126621256015298",
+        "resourceHash": "65916507780223427"
+      }
+    },
+    {
+      "name": "journal-extra",
+      "input": {
+        "citation": {
+          "type": "journal",
+          "components": {
+            "volume": "93",
+            "reporter": "Harv. L. Rev.",
+            "page": "518",
+            "extra": "retained"
+          },
+          "publication": {
+            "editions": [
+              "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+            ],
+            "selectedEdition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null
+          }
+        },
+        "editions": [
+          {
+            "edition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636",
+            "value": {
+              "reporter": {
+                "short_name": "Harv. L. Rev.",
+                "name": "Harvard Law Review",
+                "cite_type": "journal",
+                "source": "journals",
+                "is_scotus": false
+              },
+              "short_name": "Harv. L. Rev.",
+              "start": null,
+              "end": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "citationHash": "274105331762336429",
+        "resourceHash": "952768114868963547"
+      }
+    },
+    {
+      "name": "journal-no-editions",
+      "input": {
+        "citation": {
+          "type": "journal",
+          "components": {
+            "volume": "93",
+            "reporter": "Harv. L. Rev.",
+            "page": "518"
+          },
+          "publication": {
+            "editions": [],
+            "selectedEdition": null
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null
+          }
+        },
+        "editions": []
+      },
+      "expected": {
+        "citationHash": "1190833950020991401",
+        "resourceHash": "783394828206842521"
+      }
+    }
+  ]
+}

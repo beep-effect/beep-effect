@@ -40,9 +40,9 @@ import {
   makePrProvenanceServiceLive,
   PrRepository,
   PrSessionRecord,
-  parsePrProvenanceFooter,
   renderPrProvenance,
   splicePrProvenanceFooter,
+  stripPrProvenanceFooter,
   toPublicPrProvenance,
 } from "./Provenance.ts";
 import { makePrSessionRegistryLive } from "./PrSessionRegistry.ts";
@@ -397,7 +397,7 @@ const verifyReconciledBody = Effect.fn("ProvenanceFooter.verifyReconciledBody")(
   ReconcileRequirements | SecureRandom.SecureRandom
 > {
   const readback = yield* readPrBody(prNumber);
-  const bodyDrifted = !Str.Equivalence(bodyWithoutProvenanceFooter(readback), bodyWithoutProvenanceFooter(sourceBody));
+  const bodyDrifted = !Str.Equivalence(stripPrProvenanceFooter(readback), stripPrProvenanceFooter(sourceBody));
   const footerMissing = !Str.Equivalence(splicePrProvenanceFooter(readback, rendered), readback);
   const outcome = bodyDrifted
     ? ProvenanceStampOutcome.make({
@@ -468,12 +468,6 @@ const readPrBody = Effect.fn("ProvenanceFooter.readPrBody")(function* (
   const pull = yield* GithubRest.use((rest) => rest.pullRequest(prNumber)).pipe(Effect.mapError(githubBodyFailure));
   return pull.body;
 });
-
-const bodyWithoutProvenanceFooter = (body: string): string =>
-  O.match(parsePrProvenanceFooter(body), {
-    onNone: () => Str.trimEnd(body),
-    onSome: ({ start, end }) => `${Str.trimEnd(Str.slice(0, start)(body))}${Str.slice(end)(body)}`,
-  });
 
 /**
  * Independent persistence outcomes for a locally detected PR session row.

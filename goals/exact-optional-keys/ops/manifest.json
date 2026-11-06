@@ -57,11 +57,11 @@
     "research/classification-ledger.md",
     "research/codemod-dry-run.jsonc",
     "research/codemod-write.jsonc",
-    "research/optional-vs-optional-key.md",
-    "research/verification.md",
     "research/completion-audit-2026-10-28.md",
+    "research/detection-reconciliation-2026-10-28.jsonc",
+    "research/optional-vs-optional-key.md",
     "research/package-verification-2026-10-28.md",
-    "research/detection-reconciliation-2026-10-28.jsonc"
+    "research/verification.md"
   ],
   "agentLaunchers": [
     {

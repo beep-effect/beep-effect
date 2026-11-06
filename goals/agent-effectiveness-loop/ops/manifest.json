@@ -112,12 +112,12 @@
     "goals/agent-effectiveness-loop/research/SOURCES.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
     "research/README.md",
-    "research/phoenix-capability-map.md",
-    "research/live-phoenix-state-audit.md",
-    "research/repo-eval-metrics-surface-audit.md",
+    "research/SOURCES.md",
     "research/agent-effectiveness-opportunity-map.md",
+    "research/live-phoenix-state-audit.md",
+    "research/phoenix-capability-map.md",
+    "research/repo-eval-metrics-surface-audit.md",
     "research/synthesis-ranked-execution-plan.md"
   ],
   "agentLaunchers": [],

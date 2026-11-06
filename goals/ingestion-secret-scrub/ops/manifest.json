@@ -37,7 +37,12 @@
     "explorations/ingestion-security-secret-governance/MAP.md",
     "explorations/ingestion-security-secret-governance/DECISIONS.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/2026-07-25-academia-corpus-mining-note.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/p0-bank-inventory.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

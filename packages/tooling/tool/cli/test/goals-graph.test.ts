@@ -460,7 +460,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
             verification: "verified",
           }),
         });
-        assertTrue(Str.includes("  closeout: completed-retained (verified via #2320)")(renderExplainHuman(verified)));
+        assertTrue(
+          Str.includes("  closeout: completed-retained (verified via #2320, adoption pending)")(
+            renderExplainHuman(verified)
+          )
+        );
         const flatMap7 = yield* Effect.flatMap(
           S.encodeUnknownEffect(GoalExplainReport)(verified),
           S.decodeUnknownEffect(GoalExplainReport)

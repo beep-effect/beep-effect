@@ -3,7 +3,8 @@
  *
  * Blocking findings (manifest missing/invalid, status↔lifecycle mismatch,
  * README status-line drift, oversized `GOAL.md`, all-phases-terminal-but-
- * active, invalid reflection frontmatter in any packet) are checked against
+ * active, invalid reflection frontmatter in any packet, a `researchReports`
+ * array that drifts from the packet's `research/` listing) are checked against
  * the committed baseline `goals/goals-doctor.baseline.jsonc` following the
  * fallow ratchet pattern: inherited findings are advisory, new findings
  * block, and the baseline may only shrink. Advisory findings (staleness,
@@ -47,6 +48,7 @@ import {
 import { GoalsGitError } from "./Goals.errors.ts";
 import {
   decodeGoalManifest,
+  GoalCloseoutVerification,
   GoalOpsScriptPath,
   GoalPhaseStatus,
   GoalStatus,
@@ -56,12 +58,14 @@ import {
 } from "./Goals.schemas.ts";
 import { capabilityProviderRows, compileCapabilityProjection, isStrandedProviderSet } from "./Graph.projection.ts";
 import {
+  GOALS_DIR,
   goalManifestPhases,
   isJsonRecord,
   listGoalPackets,
   parseGoalManifestText,
   readmeLifecycleToken,
 } from "./Inventory.ts";
+import { diffResearchReports, projectResearchReports, renderResearchReportsDrift } from "./ManifestProjection.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 import type { GoalCompletionReceipt, GoalManifest, GoalPullRequestRef } from "./Goals.schemas.ts";
 import type { CapabilityProjection } from "./Graph.schemas.ts";
@@ -131,6 +135,7 @@ export const GoalDoctorFindingKind = LiteralKit([
   "schema-version-upgrade",
   "completion-gate-unsatisfied",
   "completion-gate-unknown",
+  "closeout-adoption-pending",
   "superseded-without-pointer",
   "exploration-backlink-missing",
   "packet-stream-fork",
@@ -151,6 +156,7 @@ export const GoalDoctorFindingKind = LiteralKit([
   "ops-script-unregistered",
   "ops-script-unregistrable",
   "ops-script-duplicate",
+  "research-reports-drift",
 ]).pipe(
   $I.annoteSchema("GoalDoctorFindingKind", {
     description:
@@ -382,7 +388,9 @@ export type GoalExplorationPathState = typeof GoalExplorationPathState.Type;
  * directly under `<packetPath>/history/reflections` (empty when the directory is absent).
  * `opsFiles` lists every file under `<packetPath>/ops`, at any depth, as a packet-relative
  * `ops/...` path (empty when the directory is absent); it is read only for a manifest that
- * declares `opsScripts`.
+ * declares `opsScripts`. `researchFiles` lists every file under `<packetPath>/research` the same
+ * way, as `research/...` paths; it is read for every packet, because `researchReports` is a
+ * generated projection of that directory.
  *
  * @category services
  * @since 0.0.0
@@ -392,6 +400,7 @@ export interface GoalPacketReader<E, R> {
   readonly opsFiles: (packetPath: string) => Effect.Effect<ReadonlyArray<string>, E, R>;
   readonly readReflection: (packetPath: string, file: string) => Effect.Effect<string, E, R>;
   readonly reflectionFiles: (packetPath: string) => Effect.Effect<ReadonlyArray<string>, E, R>;
+  readonly researchFiles: (packetPath: string) => Effect.Effect<ReadonlyArray<string>, E, R>;
 }
 
 const filesystemExplorationPath = Effect.fn("Goals.filesystemExplorationPath")(function* (exploration: string) {
@@ -425,21 +434,34 @@ const isRegisterableOpsScript = S.is(GoalOpsScriptPath);
 
 const isUnderDotSegment = (file: string): boolean => A.some(Str.split(file, "/"), Str.startsWith("."));
 
-const filesystemOpsFiles = Effect.fn("Goals.filesystemOpsFiles")(function* (packetPath: string) {
+// Lists the regular files under one packet subdirectory, at any depth, as sorted packet-relative
+// `<directory>/...` paths; an absent or unreadable directory lists as empty.
+const filesystemPacketFiles = Effect.fn("Goals.filesystemPacketFiles")(function* (
+  packetPath: string,
+  directory: string
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const opsDir = path.join(packetPath, "ops");
-  const entries = yield* fs.readDirectory(opsDir, { recursive: true }).pipe(Effect.orElseSucceed(A.empty<string>));
+  const root = path.join(packetPath, directory);
+  const entries = yield* fs.readDirectory(root, { recursive: true }).pipe(Effect.orElseSucceed(A.empty<string>));
   const files = yield* Effect.filter(entries, (entry) =>
-    fs.stat(path.join(opsDir, entry)).pipe(
+    fs.stat(path.join(root, entry)).pipe(
       Effect.map((info) => info.type === "File"),
       Effect.orElseSucceed(thunkFalse)
     )
   );
   return A.sort(
-    A.map(files, (entry) => `ops/${pipe(entry, Str.split(path.sep), A.join("/"))}`),
+    A.map(files, (entry) => `${directory}/${pipe(entry, Str.split(path.sep), A.join("/"))}`),
     Order.String
   );
+});
+
+const filesystemOpsFiles = Effect.fn("Goals.filesystemOpsFiles")(function* (packetPath: string) {
+  return yield* filesystemPacketFiles(packetPath, "ops");
+});
+
+const filesystemResearchFiles = Effect.fn("Goals.filesystemResearchFiles")(function* (packetPath: string) {
+  return yield* filesystemPacketFiles(packetPath, "research");
 });
 
 const filesystemReadReflection = Effect.fn("Goals.filesystemReadReflection")(function* (
@@ -478,8 +500,89 @@ const filesystemReadReflection = Effect.fn("Goals.filesystemReadReflection")(fun
 export const makeGoalPacketFilesystemReader = () => ({
   explorationPath: filesystemExplorationPath,
   opsFiles: filesystemOpsFiles,
+  researchFiles: filesystemResearchFiles,
   readReflection: filesystemReadReflection,
   reflectionFiles: filesystemReflectionFiles,
+});
+
+/**
+ * Builds the goal-packet reader over the working tree as Git sees it: the filesystem reader with
+ * every git-ignored file under `goals/` removed from `opsFiles` and `researchFiles`.
+ *
+ * **Details**
+ *
+ * `researchReports` is a projection of the tracked tree, and hosted CI checks it from the tracked
+ * tree, so a local `__pycache__` or other ignored residue must not enter the projection or report
+ * drift. Untracked files that are not ignored stay listed: a research file written but not yet
+ * added is still part of the packet. When Git is unavailable the reader degrades to the plain
+ * filesystem listing.
+ *
+ * **Example** (Build the working-tree reader)
+ *
+ * ```ts
+ * import { makeGoalPacketWorkingTreeReader } from "@beep/repo-cli/commands/Goals/Doctor"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(makeGoalPacketWorkingTreeReader())) // true
+ * ```
+ *
+ * @param repoRoot - Directory Git runs in; packet paths resolve against the process working directory.
+ * @returns A reader whose reads need `FileSystem` and `Path`.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeGoalPacketWorkingTreeReader = Effect.fn("Goals.makeGoalPacketWorkingTreeReader")(function* (
+  repoRoot = "."
+) {
+  const path = yield* Path.Path;
+  const base = makeGoalPacketFilesystemReader();
+  const listed = yield* runGitOutput(
+    repoRoot,
+    ["ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--", GOALS_DIR],
+    gitAdapter
+  ).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
+  const ignored = HashSet.fromIterable(
+    pipe(
+      O.getOrElse(listed, thunkEmptyStr),
+      Str.split("\0"),
+      A.filter(Str.isNonEmpty),
+      A.map((file) => path.resolve(repoRoot, file))
+    )
+  );
+  const dropIgnored =
+    (list: (packetPath: string) => Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path>) =>
+    (packetPath: string) =>
+      Effect.map(
+        list(packetPath),
+        A.filter((entry) => !HashSet.has(ignored, path.resolve(packetPath, entry)))
+      );
+  return {
+    ...base,
+    opsFiles: dropIgnored(base.opsFiles),
+    researchFiles: dropIgnored(base.researchFiles),
+  };
+});
+
+const researchReportFindings = Effect.fn("Goals.researchReportFindings")(function* <E, R>(
+  record: GoalPacketRecord,
+  manifest: GoalManifest,
+  reader: GoalPacketReader<E, R>
+) {
+  // `researchReports` is a generated projection of research/: every packet is checked, and the
+  // only remedy is to rerun the writer (bun run beep goals manifest --write).
+  const files = yield* reader.researchFiles(record.packetPath);
+  const drift = diffResearchReports(manifest.researchReports, projectResearchReports(files));
+  return O.match(drift, {
+    onNone: A.empty<GoalDoctorFinding>,
+    onSome: (value) => [
+      finding(
+        record.slug,
+        "research-reports-drift",
+        "blocking",
+        `${renderResearchReportsDrift(value)}; run bun run beep goals manifest --write.`
+      ),
+    ],
+  });
 });
 
 const reflectionArtifactFindings = Effect.fn("Goals.reflectionArtifactFindings")(function* <E, R>(
@@ -819,6 +922,8 @@ export const goalPacketFindings = Effect.fn("Goals.packetFindings")(function* <E
   findings = A.appendAll(findings, explorationBacklinkFindings1);
   const opsScriptFindings2 = yield* opsScriptFindings(record, decoded.value, reader);
   findings = A.appendAll(findings, opsScriptFindings2);
+  const researchReportFindings1 = yield* researchReportFindings(record, decoded.value, reader);
+  findings = A.appendAll(findings, researchReportFindings1);
   return { findings, manifest: O.some(decoded.value) };
 });
 
@@ -1244,7 +1349,24 @@ const completionEvidenceAdvisory = Effect.fn("Goals.completionEvidenceAdvisory")
     A.getSomes([O.map(view, renderGoalCloseoutView), committed]),
     (line) => `${packet.record.slug}: ${line}`
   );
-  return O.some({ slug: packet.record.slug, findings, notes });
+  // A verified proposal is proof, not closeout: the packet is done only once
+  // `set-status` adopts it as a committed record that merges to main.
+  const adoption = O.match(
+    O.filter(view, (value) => GoalCloseoutVerification.is.verified(value.verification)),
+    {
+      onNone: A.empty<GoalDoctorFinding>,
+      onSome: (value) =>
+        A.of(
+          finding(
+            packet.record.slug,
+            "closeout-adoption-pending",
+            "advisory",
+            `Proposed closeout via #${value.proposedCloseout.finalPullRequest} verified but is not adopted; run \`bun run beep goals set-status ${packet.record.slug} ${value.proposedCloseout.status}\` and merge that packet-state PR.`
+          )
+        ),
+    }
+  );
+  return O.some({ slug: packet.record.slug, findings: A.appendAll(findings, adoption), notes });
 });
 
 type StructuredCompletionAdvisory = {
@@ -1383,7 +1505,7 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
   readonly online?: boolean;
 }) {
   const records = yield* listGoalPackets();
-  const reader = makeGoalPacketFilesystemReader();
+  const reader = yield* makeGoalPacketWorkingTreeReader();
 
   const packets: Array<DoctorPacket & { readonly findings: ReadonlyArray<GoalDoctorFinding> }> = [];
   for (const record of records) {

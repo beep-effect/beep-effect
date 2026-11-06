@@ -33,17 +33,31 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
-    "research/p0-site-inventory-2026-11-02.md",
-    "research/is-ancestor-prune-differential-w0.json",
-    "research/git-readers-differential-w1a.json",
-    "research/yeet-git-differential-w1b.json",
+    "research/cache-baseline-request-w0.json",
+    "research/cache-baseline-request-w1b.json",
+    "research/cache-baseline-request-w2b.json",
+    "research/cache-baseline-request-w3-kit.json",
+    "research/cache-baseline-request-w3-sites.json",
+    "research/cache-baseline-request-w6.json",
+    "research/cache-baseline-request-w7-kit.json",
+    "research/cache-baseline-review-w0.md",
+    "research/cache-baseline-review-w1b.md",
+    "research/cache-baseline-review-w2b.md",
+    "research/cache-baseline-review-w3-kit.md",
+    "research/cache-baseline-review-w3-sites.md",
+    "research/cache-baseline-review-w6.md",
+    "research/cache-baseline-review-w7-kit.md",
     "research/dirty-axis-differential-w2.json",
-    "research/yeet-remainder-differential-w2b.json",
-    "research/reviewer-ci-github-differential-w3.json",
+    "research/git-readers-differential-w1a.json",
+    "research/is-ancestor-prune-differential-w0.json",
+    "research/p0-site-inventory-2026-11-02.md",
     "research/review-thread-differential-w4.json",
-    "research/yeet-gh-seams-differential-w6.json",
+    "research/reviewer-ci-github-differential-w3.json",
+    "research/site-list.md",
     "research/w7-site-census-2026-11-03.md",
-    "research/yeet-differential-w7.json"
+    "research/yeet-gh-seams-differential-w6.json",
+    "research/yeet-git-differential-w1b.json",
+    "research/yeet-remainder-differential-w2b.json"
   ],
   "agentLaunchers": [
     {
@@ -227,50 +241,6 @@
     {
       "path": "ops/frozen-w6/Merge.old.ts",
       "purpose": "Frozen pre-W6 merge phase of mergePr (the gh pr merge --squash --match-head-commit call and its bounded MERGED confirmation, lane base 641180ade6), lifted below the reviewer gate and replayed by ops/yeet-gh-seams-differential-w6.ts."
-    },
-    {
-      "path": "ops/yeet-differential-w7.ts",
-      "purpose": "W7a differential: the frozen pre-W7 Yeet git bodies (ops/frozen-w7a: PublishScope's stash park and restore, base freshness, upstream warning, existing-commit intent and reviewed restage; Handler's proof base and merge-only guard; FinalCheck and FinalCheckRefresh's dirty tree, heads, merge bases, changed paths and counts; ProofState's lock path and diff fingerprint; Provenance's clone paths and workspace label; ExpectationRewrite's collector and merge-base worktree; HeadInstallReceipt's install inputs; MergedPreview's materializer; GateStaleness, PortfolioIndexGuard, ProvenanceFooter, PullRequestTitle, the PullRequest body, Yeet.command's detached-job coordinates and Sweep's ls-remote and fetch --prune) compared with their Git-backed replacements over twin scratch repositories with pinned commit dates (a bare origin, staged, unstaged and untracked residue, a stash conflict, ignored files and an ignored directory, a gone upstream, clean, extra-edit and octopus merges, renames, deletions, a non-ASCII and a spaced path, status.branch, linked worktrees, an overflowing test diff, a non-ASCII manifest directory, a 600 KiB subject, a detached HEAD, an unborn repository and a non-repository)."
-    },
-    {
-      "path": "ops/frozen-w7a/GitRunners.old.ts",
-      "purpose": "Frozen pre-W7 the retiring Yeet runGitOutput and runGitPathList wrappers, inlined over the StepExec captures that survive the runner retirement (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
-    },
-    {
-      "path": "ops/frozen-w7a/PublishScope.old.ts",
-      "purpose": "Frozen pre-W7 PublishScope stash, base-freshness, upstream, existing-commit and restage bodies (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
-    },
-    {
-      "path": "ops/frozen-w7a/Handler.old.ts",
-      "purpose": "Frozen pre-W7 Handler merge-only publish guard (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
-    },
-    {
-      "path": "ops/frozen-w7a/ProofState.old.ts",
-      "purpose": "Frozen pre-W7 ProofState lock path and diff fingerprint bodies (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
-    },
-    {
-      "path": "ops/frozen-w7a/ExpectationRewrite.old.ts",
-      "purpose": "Frozen pre-W7 ExpectationRewrite collector and per-file diff bodies (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
-    },
-    {
-      "path": "ops/frozen-w7a/HeadInstallReceipt.old.ts",
-      "purpose": "Frozen pre-W7 HeadInstallReceipt install-input reader (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
-    },
-    {
-      "path": "ops/frozen-w7a/MergedPreview.old.ts",
-      "purpose": "Frozen pre-W7 MergedPreview materializer and captures (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
-    },
-    {
-      "path": "ops/frozen-w7a/GateStaleness.old.ts",
-      "purpose": "Frozen pre-W7 GateStaleness gate-input path collector (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
-    },
-    {
-      "path": "ops/frozen-w7a/PullRequestTitle.old.ts",
-      "purpose": "Frozen pre-W7 PullRequestTitle title resolver (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
-    },
-    {
-      "path": "ops/frozen-w7a/PullRequest.old.ts",
-      "purpose": "Frozen pre-W7 PullRequest body builder and commit range (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
     }
   ]
 }

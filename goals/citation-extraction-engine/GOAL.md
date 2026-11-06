@@ -1,21 +1,19 @@
 # GOAL: deliver eyecite capability parity as an Effect-native citation engine
 
-Work from the current `beep-effect` checkout and use repo-relative paths.
+Use current `beep-effect` checkout and repo-relative paths.
 
 Outcome: ship an attributed, schema-first, Effect-native engine with observable
 capability parity to pinned Free Law Project eyecite 2.7.6, exact verified
 source evidence, lawful schema transforms, and only proven TypeScript-port
 extensions.
 
-Read `AGENTS.md`, `CLAUDE.md`, applicable architecture/skill instructions, both
-prerequisite contracts, then this packet in the order defined by
-`goals/README.md`. Packet prose never overrides repository law.
+Read `AGENTS.md` (`CLAUDE.md`), applicable architecture/skills, both prerequisite
+contracts, and this packet in `goals/README.md` order. Repository law prevails.
 
-Behavior oracle: official eyecite commit
-`04d82c032ad5fd0f9ab72a61c87110c46ee8f52e`. A live clone is optional
-maintainer evidence configured with `EYECITE_ORACLE_ROOT`; committed fixtures
-and accounting are the portable gate. `eyecite-ts` and `eyecite-js` are
-differential/extension references only.
+Oracle: official eyecite commit
+`04d82c032ad5fd0f9ab72a61c87110c46ee8f52e`. Optional live maintainer clone:
+`EYECITE_ORACLE_ROOT`. Committed fixtures/accounting are the portable gate.
+`eyecite-ts` and `eyecite-js` are differential/extension references only.
 
 Blocked by:
 
@@ -28,7 +26,7 @@ exact symbols, public imports, versions, compatibility, and approved
 adaptations. Until then, separation/removal decisions are binding but target
 field/import/version details are provisional.
 
-Required interpretation:
+Requirements:
 
 1. Port behavior and exhaustive coverage, not donor classes or file layout.
 2. Reconcile a static source inventory with runtime oracle cases. The portable
@@ -64,6 +62,18 @@ Required interpretation:
     update in one PR. Use phase-local green commits and do not freeze a public
     completion claim until all accounting and quality gates pass.
 
-Stop rather than weaken scope when a prerequisite is incompatible, exhaustive
-parity cannot be proved, safety/fidelity needs an unrecorded divergence, or the
-one-PR constraint cannot remain reviewable.
+Approved 2026-10-29: native HTML resource exhaustion fails without partial
+output per `ops/html-safety-exception.json`. Other parity duties remain.
+
+Approved 2026-11-02: publish ready work in one ongoing draft PR without waiting
+for full verification or local compute. Record passed/pending checks, use
+hosted CI, and continue the full goal there. Publication timing only.
+
+Superseded by the operator's later instruction: keep PR #2511 ready for review
+and push ready changes while continuing this goal. Draft status is not an
+acceptance gate. Readiness for review does not claim completion or authorize
+merging; all accounting, parity, safety and closeout requirements still apply.
+
+Stop without weakening scope on incompatible prerequisites, unprovable
+exhaustive parity, unrecorded safety/fidelity divergence, or loss of one-PR
+reviewability.
