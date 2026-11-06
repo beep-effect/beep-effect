@@ -1,5 +1,12 @@
 # Citation Extraction Engine Plan
 
+Full-token construction checkpoint (2026-11-06): original edition-source dispatch
+now connects to complete fresh case/law/journal models through existing family
+services. All fifteen direct constructor examples match on both runtimes, with
+91 independently confirmed exits each. Incoherent token and unknown-source
+controls refuse without another child. The complete get_citations loop and all
+broader acceptance remain open. See [constructor evidence](history/evidence/2026-11-06-full-citation-extraction.md).
+
 Connected full-case metadata checkpoint (2026-11-06): post/name/pre/court/edition
 now execute under one captured operation and publish a complete built-in model.
 Both runtime smokes match final original model state with 104 confirmed exits

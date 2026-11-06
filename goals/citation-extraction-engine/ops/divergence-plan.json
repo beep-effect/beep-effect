@@ -194,7 +194,14 @@
         "packages/law-practice/server/src/internal/Citation/CaseMetadata.ts",
         "packages/law-practice/server/test/CitationCaseMetadata.fixtures.ts",
         "packages/law-practice/server/test/CitationCaseMetadata.test.ts",
-        "packages/law-practice/server/test/integration/CitationCaseMetadata.test.ts"
+        "packages/law-practice/server/test/integration/CitationCaseMetadata.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-full-citation-extraction.md",
+        "goals/citation-extraction-engine/ops/probe-full-citation.py",
+        "goals/citation-extraction-engine/ops/verify-full-citation.py",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/full-extraction.json",
+        "packages/law-practice/server/src/internal/Citation/FullExtraction.ts",
+        "packages/law-practice/server/test/CitationFullExtraction.fixtures.ts",
+        "packages/law-practice/server/test/CitationFullExtraction.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

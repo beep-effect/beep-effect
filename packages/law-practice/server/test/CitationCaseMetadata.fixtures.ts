@@ -19,7 +19,6 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { readCitationCaseNameCorpus } from "./CitationCaseName.fixtures.ts";
-import { CitationCaseNameDocument } from "./CitationCaseNameSelection.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import { readCitationHtmlCaseNameCorpus } from "./CitationHtmlCaseName.fixtures.ts";
 import {
@@ -33,7 +32,7 @@ import {
   readCitationOracleFixture,
   setupCitationMetadataRuntime,
 } from "./CitationRegexWorker.fixtures.ts";
-import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
+import { CitationCaseNameDocument, CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationCaseMetadata");
@@ -107,15 +106,24 @@ const metadataOf = (source: typeof Metadata.Type) =>
     resolvedCaseName: source.resolved_case_name,
     resolvedCaseNameShort: source.resolved_case_name_short,
   });
+/** Reuse authenticated case helper installation data in enclosing extraction. */
+export const readCitationCaseMetadataConfiguration = Effect.fn("CaseMetadataTest.configuration")(function* () {
+  const names = yield* readCitationCaseNameCorpus();
+  const html = yield* readCitationHtmlCaseNameCorpus();
+  const post = yield* readCitationPostCaseMetadataCorpus();
+  const pre = yield* readCitationPreCaseMetadataCorpus();
+  return {
+    post: post.configuration,
+    pre: pre.configuration,
+    names: { plain: names.configuration, html: html.configuration },
+  };
+});
 const install = Effect.fn("CaseMetadataTest.install")(function* (
   kind: CitationNativeRuntimeKind,
   maximum?: number,
   enclosing = false
 ) {
-  const names = yield* readCitationCaseNameCorpus();
-  const html = yield* readCitationHtmlCaseNameCorpus();
-  const post = yield* readCitationPostCaseMetadataCorpus();
-  const pre = yield* readCitationPreCaseMetadataCorpus();
+  const configuration = yield* readCitationCaseMetadataConfiguration();
   const corpus = yield* readCitationOracleFixture(
     "case-metadata",
     "a374a736cc27a3954165e0acfeca926a2adb92e7eacdbe6180794017afcd77a9"
@@ -134,11 +142,10 @@ const install = Effect.fn("CaseMetadataTest.install")(function* (
   };
   const provided = setup.provided.pipe(Context.add(Clock.Clock, clock), Context.add(CitationFrozenEditions, owner));
   const prepare = yield* installCitationHtmlGeometryFixture(kind, { ...setup, provided });
-  const stage = yield* makeCitationCaseMetadata(setup.limits, setup.runtime, {
-    post: post.configuration,
-    pre: pre.configuration,
-    names: { plain: names.configuration, html: html.configuration },
-  }).pipe(Effect.provideContext(provided), DateTime.withCurrentZoneOffset(0));
+  const stage = yield* makeCitationCaseMetadata(setup.limits, setup.runtime, configuration).pipe(
+    Effect.provideContext(provided),
+    DateTime.withCurrentZoneOffset(0)
+  );
   return { corpus, setup, prepare, stage };
 });
 type Row = (typeof Corpus.Type.cases)[number];

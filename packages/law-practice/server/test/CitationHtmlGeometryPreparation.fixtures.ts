@@ -17,6 +17,7 @@ import {
 } from "./CitationRegexWorker.fixtures.ts";
 import { readCitationSpanOffsetsCorpus } from "./CitationSpanOffsets.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import type { CitationCaseNameDocument } from "./CitationTokenSeed.fixtures.ts";
 
 /** Install connected geometry using the existing runtime, timing and physical owners. */
 export const installCitationHtmlGeometryFixture = Effect.fn("HtmlGeometryPreparationTest.installConnected")(function* (
@@ -37,7 +38,7 @@ export const installCitationHtmlGeometryFixture = Effect.fn("HtmlGeometryPrepara
 /** Prepare geometry only for source callers that actually supplied markup. */
 export const prepareCitationOptionalHtmlGeometry = Effect.fn("HtmlGeometryPreparationTest.optional")(function* (
   stage: Effect.Success<ReturnType<typeof installCitationHtmlGeometryFixture>>,
-  source: unknown,
+  source: Pick<CitationCaseNameDocument, "plain" | "markup">,
   enabled: boolean
 ) {
   if (!enabled) return O.none();

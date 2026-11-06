@@ -110,7 +110,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-06-html-case-name-target.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-plain-case-name-composition.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-case-name-selection.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-06-full-case-metadata.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-full-case-metadata.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-full-citation-extraction.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -196,7 +197,8 @@
     "python3 goals/citation-extraction-engine/ops/verify-html-case-names.py --self-test",
     "python3 goals/citation-extraction-engine/ops/verify-plain-case-name.py --self-test",
     "python3 goals/citation-extraction-engine/ops/verify-case-name-selection.py --self-test",
-    "python3 goals/citation-extraction-engine/ops/verify-case-metadata.py --self-test"
+    "python3 goals/citation-extraction-engine/ops/verify-case-metadata.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-full-citation.py --self-test"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
@@ -533,6 +535,14 @@
     {
       "path": "ops/verify-case-metadata.py",
       "purpose": "Seal full-case transition evidence, reject corruption and optionally replay the pinned oracle; not target proof."
+    },
+    {
+      "path": "ops/probe-full-citation.py",
+      "purpose": "Capture actual original full-citation construction from default-tokenized case/law/journal Documents, preserving selected class, complete state and native source words."
+    },
+    {
+      "path": "ops/verify-full-citation.py",
+      "purpose": "Seal full-citation constructor evidence, reject corruption and optionally replay the clean pinned oracle; not exhaustive target extraction proof."
     }
   ]
 }

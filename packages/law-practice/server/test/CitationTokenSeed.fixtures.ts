@@ -23,3 +23,23 @@ export const CitationTokenSeedHex = S.Struct({
   data: Native,
   groups: S.Record(S.String, Native),
 });
+
+/** Native original Document words shared by name and full-model source replays. */
+export const CitationCaseNameDocument = S.Struct({
+  markup: CitationNativeUnicodeHex,
+  plain: CitationNativeUnicodeHex,
+  index: S.Int,
+  words: S.Array(
+    S.Struct({
+      kind: S.String,
+      data: CitationNativeUnicodeHex,
+      start: S.NullOr(S.Int),
+      groups: S.Record(S.String, S.NullOr(CitationNativeUnicodeHex)),
+    })
+  ),
+}).pipe(
+  $I.annoteSchema("CitationCaseNameDocument", {
+    description: "Original native markup/plain text, token classes, source starts and capture groups.",
+  })
+);
+export type CitationCaseNameDocument = typeof CitationCaseNameDocument.Type;

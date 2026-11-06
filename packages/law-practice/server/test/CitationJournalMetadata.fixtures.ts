@@ -83,7 +83,8 @@ const Corpus = S.fromJsonString(
     description: "Actual full journal method observations, exact helper patches, calls and edition predicates.",
   })
 );
-const load = Effect.fn("JournalMetadataTest.load")(function* () {
+/** Read the sealed source journal configuration and full-method observations. */
+export const readCitationJournalMetadataCorpus = Effect.fn("JournalMetadataTest.load")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const bytes = yield* fs.readFile(
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/journal-metadata.json", import.meta.url))
@@ -98,7 +99,7 @@ const install = Effect.fn("JournalMetadataTest.install")(function* (
   enclosing = false,
   controlled = false
 ) {
-  const corpus = yield* load();
+  const corpus = yield* readCitationJournalMetadataCorpus();
   const setup = yield* setupCitationRegexRuntime(kind, budget);
   const limits = controlled === true ? { ...setup.limits, extractDeadline: Duration.millis(997) } : setup.limits;
   const { bundle } = yield* loadCitationFrozenEditionFixtures();
@@ -203,7 +204,7 @@ export const assertCitationJournalMetadataLifetime = Effect.fn("JournalMetadataT
 
 /** Installation rejects malformed policy/configuration and mismatched fixed patterns before spawning. */
 export const assertCitationJournalMetadataConfiguration = Effect.fn("JournalMetadataTest.configuration")(function* () {
-  const corpus = yield* load();
+  const corpus = yield* readCitationJournalMetadataCorpus();
   const setup = yield* setupCitationMetadataRuntime("bun");
   const { bundle } = yield* loadCitationFrozenEditionFixtures();
   const editions = yield* makeCitationFrozenEditions(bundle);

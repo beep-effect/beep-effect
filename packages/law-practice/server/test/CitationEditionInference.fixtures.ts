@@ -75,6 +75,27 @@ const controlOwner = (values: ReadonlyArray<CitationRuntimeEdition>, reads: Arra
     lookupMany: Effect.fn("EditionInferenceTest.unusedBulkLookup")(() => Effect.die("Unexpected bulk edition lookup")),
   });
 };
+const assertEditionChoice = Effect.fn("EditionInferenceTest.choice")(function* (
+  inference: Effect.Success<ReturnType<typeof makeCitationEditionInference>>,
+  reads: Array<CitationEditionRef>,
+  ref: (index: number) => CitationEditionRef,
+  row: (typeof Corpus.Type.cases)[number]
+) {
+  const [exact, variation, year, prior, expected, calls, clockReads] = row;
+  const maybe = (index: number | null) => (index === null ? null : ref(index));
+  for (const yearInput of [year, year === null ? null : BigInt(year)]) {
+    reads.length = 0;
+    const guess = yield* inference.guess({
+      exact: A.map(exact, ref),
+      variation: A.map(variation, ref),
+      year: yearInput,
+      prior: maybe(prior),
+    });
+    expect(guess).toBe(maybe(expected));
+    expect(clockReads).toBe(calls.length);
+    expect(reads).toEqual(year !== null && year <= 2026 ? A.map(calls, ref) : []);
+  }
+});
 /** All source candidate choices, duplicates and retained prior state. */
 export const replayCitationEditionGuesses = Effect.fn("EditionInferenceTest.guesses")(function* () {
   const corpus = yield* load();
@@ -105,21 +126,7 @@ export const replayCitationEditionGuesses = Effect.fn("EditionInferenceTest.gues
     Effect.flip
   );
   expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
-  const maybe = (index: number | null) => (index === null ? null : ref(index));
-  for (const [exact, variation, year, prior, expected, calls, clockReads] of corpus.cases) {
-    for (const yearInput of [year, year === null ? null : BigInt(year)]) {
-      reads.length = 0;
-      const guess = yield* inference.guess({
-        exact: A.map(exact, ref),
-        variation: A.map(variation, ref),
-        year: yearInput,
-        prior: maybe(prior),
-      });
-      expect(guess).toBe(maybe(expected));
-      expect(clockReads).toBe(calls.length);
-      expect(reads).toEqual(year !== null && year <= 2026 ? A.map(calls, ref) : []);
-    }
-  }
+  for (const row of corpus.cases) yield* assertEditionChoice(inference, reads, ref, row);
   const forward = yield* inference.includesYear(ref(0), 2027);
   expect(forward).toBe(false);
   const boundary = yield* Effect.fromOption(DateTime.make("2026-12-31T23:30:00Z"));

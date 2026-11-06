@@ -21,35 +21,15 @@ import {
   readCitationOracleFixture,
   setupCitationMetadataRuntime,
 } from "./CitationRegexWorker.fixtures.ts";
-import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
+import { CitationCaseNameDocument } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationCaseNameSelection");
-const Native = CitationNativeUnicodeHex;
 const Snapshot = S.Struct({
   ...CitationCaseNameSnapshot.fields,
   fullSpanEnd: S.NullOr(S.Int),
   fullSpan: S.Tuple([S.Int, S.Int]),
 });
-/** Native original Document words shared by name and full-model source replays. */
-export const CitationCaseNameDocument = S.Struct({
-  markup: Native,
-  plain: Native,
-  index: S.Int,
-  words: S.Array(
-    S.Struct({
-      kind: S.String,
-      data: Native,
-      start: S.NullOr(S.Int),
-      groups: S.Record(S.String, S.NullOr(Native)),
-    })
-  ),
-}).pipe(
-  $I.annoteSchema("CitationCaseNameDocument", {
-    description: "Original native markup/plain text, token classes, source starts and capture groups.",
-  })
-);
-export type CitationCaseNameDocument = typeof CitationCaseNameDocument.Type;
 const Corpus = S.fromJsonString(
   S.Struct({
     schemaVersion: S.tag("citation-case-name-selection/v1"),

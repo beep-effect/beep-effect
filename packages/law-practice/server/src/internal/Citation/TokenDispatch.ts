@@ -29,7 +29,17 @@ const Action = LiteralKit([
 ]).pipe(
   $I.annoteSchema("Action", { description: "Exact built-in extraction branch; not a completed semantic citation." })
 );
-const Bindings = S.Array(S.Struct({ id: S.Natural, ref: CitationEditionRef })).check(S.isMaxLength(2533));
+/** Frozen source token edition ordinals and authenticated artifact references.
+ * @internal @category models @since 0.0.0
+ */
+export const CitationTokenDispatchBindings = S.Array(S.Struct({ id: S.Natural, ref: CitationEditionRef }))
+  .check(S.isMaxLength(2533))
+  .pipe(
+    $I.annoteSchema("CitationTokenDispatchBindings", {
+      description: "Shared immutable token-to-model edition identity mapping.",
+    })
+  );
+export type CitationTokenDispatchBindings = typeof CitationTokenDispatchBindings.Type;
 const Seed = S.toType(CitationTokenSeed);
 const Input = S.toType(CitationTokenizerResult);
 const Reason = LiteralKit(["invalid-input", "invalid-bindings", "missing-edition", "unknown-source"]).pipe(
@@ -76,9 +86,9 @@ export const makeCitationTokenDispatch = Effect.fn("Citation.makeTokenDispatch")
   const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-input"));
   const timing = yield* makeCitationRegexTiming(limits, true);
   const editions = yield* CitationFrozenEditions;
-  const bindings = yield* S.decodeUnknownEffect(Bindings)(bindingsInput).pipe(
-    Effect.mapError(() => fail("invalid-bindings"))
-  );
+  const bindings: CitationTokenDispatchBindings = yield* S.decodeUnknownEffect(CitationTokenDispatchBindings)(
+    bindingsInput
+  ).pipe(Effect.mapError(() => fail("invalid-bindings")));
   const rows = HashMap.fromIterable(A.map(bindings, (row) => Tuple.make(row.id, row.ref)));
   if (HashMap.size(rows) !== bindings.length) return yield* fail("invalid-bindings");
   const full = Effect.fn("Citation.selectFullCitationClass")(function* (seed: CitationTokenSeed) {
