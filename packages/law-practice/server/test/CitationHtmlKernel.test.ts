@@ -11,14 +11,17 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/internal/Citation/HtmlCompletion";
 import type { CitationHtmlKernelFailure } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
@@ -91,6 +94,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
       );
       expect(A.fromIterable(bytes)).toEqual(A.replicate(7, 32));
       expect(host.imports.environ_get()).toBe(0);
+      expect(host.imports.proc_exit()).toBeUndefined();
       expect(host.imports.environ_sizes_get(0, 4)).toBe(0);
       expect(host.imports.clock_time_get(0, BigInt(1), 8)).toBe(0);
       expect(A.fromIterable(bytes)).toEqual([...A.replicate(0, 16), ...A.replicate(7, 16)]);
@@ -187,6 +191,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
   it.effect("rejects altered assets and enforces exact output ceilings without poisoning later instances", () =>
     Effect.gen(function* () {
       const bytes = yield* loadAsset();
+      const malformed = yield* makeCitationHtmlKernel({}).pipe(Effect.flip);
+      expect(malformed).toMatchObject({ reason: "invalid-asset" });
       const changed = new Uint8Array(bytes);
       changed[0] = 1;
       const citationResult11 = yield* Effect.flip(makeCitationHtmlKernel(changed));
@@ -210,6 +216,33 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
       expect(citationResult16).toBe("😀AB");
       const citationResult17 = yield* Effect.flip(kernel.run({ input, outputUtf16: -1 }));
       expect(citationResult17._tag).toBe("CitationHtmlKernelFailure");
+    })
+  );
+
+  it.effect("sanitizes invalid digest output and defects during asset and runtime inventory authentication", () =>
+    Effect.gen(function* () {
+      const bytes = yield* loadAsset();
+      const crypto = yield* Digest.Digest;
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const prep = yield* makeCitationHtmlInput(limits);
+      const input = yield* prep.prepare("<p>Example</p>");
+      for (const broken of [Effect.succeed(new Uint8Array(1)), Effect.die("synthetic-digest-defect")]) {
+        for (const successfulReads of [0, 1]) {
+          const reads = yield* Ref.make(0);
+          const digest = makeTestCitationDigest((algorithm, value) =>
+            Ref.getAndUpdate(reads, (count) => count + 1).pipe(
+              Effect.flatMap((count) => (count < successfulReads ? crypto.digest(algorithm, value) : broken))
+            )
+          );
+          const failure = yield* makeCitationHtmlKernel(bytes).pipe(
+            Effect.flatMap((kernel) => kernel.run({ input, outputUtf16: 100 })),
+            Effect.provideService(Digest.Digest, digest),
+            Effect.flip
+          );
+          expect(failure).toMatchObject({ _tag: "CitationHtmlKernelFailure", reason: "invalid-asset" });
+          expect("cause" in failure).toBe(false);
+        }
+      }
     })
   );
 });
