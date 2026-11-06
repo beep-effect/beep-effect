@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "tracked-membership-metadata-observation/v1",
+  "at": "2026-11-06T22:38:47.921977+00:00",
+  "sourceRevision": "894a8613d8222c7eb2b9cf7bb03109df4eb517f4",
+  "clients": {
+    "stable": {
+      "version": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "version": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+    }
+  },
+  "observations": [
+    {
+      "channel": "stable",
+      "candidateTracked": false,
+      "trackedTests": ["base.test.ts"],
+      "hash": "d10d074d35bb9491",
+      "inputPaths": [
+        "base.test.ts",
+        "candidate.test.ts",
+        "package.json",
+        "turbo.json"
+      ],
+      "rawSha256": "ec059f9ec5191727562ef31f21fe8f1bfba66abfd8a0d443dbe7fd6fc9f14690",
+      "rawBytes": 2265
+    },
+    {
+      "channel": "canary",
+      "candidateTracked": false,
+      "trackedTests": ["base.test.ts"],
+      "hash": "d10d074d35bb9491",
+      "inputPaths": [
+        "base.test.ts",
+        "candidate.test.ts",
+        "package.json",
+        "turbo.json"
+      ],
+      "rawSha256": "21cbfb8790bd7b44a003b40f323bac44069eaaf4a6b930be4e48572e1af423ea",
+      "rawBytes": 2274
+    },
+    {
+      "channel": "stable",
+      "candidateTracked": true,
+      "trackedTests": ["base.test.ts", "candidate.test.ts"],
+      "hash": "d10d074d35bb9491",
+      "inputPaths": [
+        "base.test.ts",
+        "candidate.test.ts",
+        "package.json",
+        "turbo.json"
+      ],
+      "rawSha256": "706d0461d9105a492f13dbc1992f42643b139e2658c97bd22eb6ab82fdc17e2c",
+      "rawBytes": 2265
+    },
+    {
+      "channel": "canary",
+      "candidateTracked": true,
+      "trackedTests": ["base.test.ts", "candidate.test.ts"],
+      "hash": "d10d074d35bb9491",
+      "inputPaths": [
+        "base.test.ts",
+        "candidate.test.ts",
+        "package.json",
+        "turbo.json"
+      ],
+      "rawSha256": "735a58112a1cff6dcd7c193bf00d83b19e68ba9affefae5189ff5579a8521607",
+      "rawBytes": 2274
+    }
+  ],
+  "hashChanged": {
+    "stable": false,
+    "canary": false
+  },
+  "taskBodiesExecuted": false,
+  "qualitySuitesRun": false,
+  "secretsLoaded": false,
+  "authority": "Source-bound key-risk diagnosis plus four isolated native metadata observations. Does not demonstrate an actual stale repository scan, execute lint, or qualify a remedy.",
+  "fixtureSourceRevision": "9e8d0c204d9e36ff84f70f8df7612e42057a99ec",
+  "sourceBindingsBefore": {
+    "package.json": "738764eb820b7d9e2b532ce180420d2988196c9cede4e81c5c6de6a6388bd02f",
+    "turbo.json": "4f8e35a6e90c9d1d6b1eb57180fb0f8079d1bafe9224e3207630410b204bca05",
+    "packages/tooling/tool/cli/src/commands/Lint/OpaqueRoundtrips.ts": "b912de5f7a50ee58fdae870b26ab68906989aa02eddac57360883646a2903d67",
+    "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts": "69ac96b0c3a367386129989145527bc3a71f22a2bb57e0edc1b2833d7cb960db"
+  },
+  "sourceBasis": [
+    "OpaqueRoundtrips.scan calls git.lsFiles for tracked *.test.ts and *.test.tsx before reading files.",
+    "Its native Turbo inputs declare file content but no Git tracking-membership input.",
+    "The task-specific and shared scriptless policy seals contain no Git index inputs or environment declarations."
+  ],
+  "candidateChange": {
+    "task": "//#lint:opaque-roundtrips",
+    "cache": false,
+    "candidateTurboSha256": "80adfdc133934221fe8e659e0e12c9ce27fff82b30d3e103be479e86aa657765"
+  },
+  "remaining": "Implement and qualify a portable tracked-file discovery binding or equivalent reviewed scanner semantics before restoring reuse. This temporary fresh boundary remains unfinished adoption work.",
+  "completeRepositoryTaskExecuted": false,
+  "repositoryFingerprintChainExecuted": false,
+  "qualificationGranted": false
+}

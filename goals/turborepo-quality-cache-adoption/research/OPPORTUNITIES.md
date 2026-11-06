@@ -1270,3 +1270,7 @@ and economics inputs for each consumer; hosted CI remains the behavioral proof.
 No computation qualification or production-cache activation follows from this
 repair. Prevent recurrence by auditing the script's full executed suite rather
 than treating property tests or coverage as narrower without source evidence.
+
+## Tracked membership is missing from a cached scanner key, 2026-11-06
+
+Source review found that opaque-roundtrip discovery uses Git tracking membership. An isolated metadata fixture changes that membership without changing task hash in either pinned client. A temporary fresh boundary and retained receipt prevent treating this as qualified reuse; a portable discovery-state contract would prevent the gap. No lint/scanner task was executed.

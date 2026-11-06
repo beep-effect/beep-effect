@@ -1094,6 +1094,12 @@ links together to reverse this component; runtime configuration is unchanged.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-quality-cache-adoption`; add a `kind: decision` file there, never edit this block._
 
+### Keep tracked-test discovery fresh until membership is bound, 2026-11-06
+
+The scanner selects tracked tests through git ls-files. Four native metadata fixture observations show that index membership can change while task inputs and hash stay equal in both pinned clients. Keep only this command fresh until portable discovery identity and membership perturbation controls are qualified. Preserve scanner behavior, dependency edges and every whole-goal obligation; this temporary hold is unfinished adoption work, not a final exclusion. No local task or quality suite ran; hosted CI and primary acceptance remain required.
+
+Reverse: Restore reuse only after portable discovery-state identity and membership controls are implemented and qualified; retain the failed-key evidence.
+
 ### Preserve external suite inputs across all CLI test consumers, 2026-11-06
 
 All three CLI test consumers execute the architecture proof suite, which reads

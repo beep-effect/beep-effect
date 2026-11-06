@@ -5703,7 +5703,7 @@
       ]
     },
     "//#lint:opaque-roundtrips": {
-      "cache": true,
+      "cache": false,
       "outputs": [],
       "dependsOn": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-opaque-roundtrips"
