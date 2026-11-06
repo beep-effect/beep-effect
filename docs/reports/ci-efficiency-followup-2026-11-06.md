@@ -92,6 +92,14 @@ emitted by the existing goal bootstrap are now recognized: `history/.gitkeep`,
 goal packet. Arbitrary goal scripts, JSON fixtures, unknown marker locations and
 code-root files still require their normal checks.
 
+On #2750, [unit-d](https://github.com/beep-effect/beep-effect/actions/runs/42208336557/job/127861012704)
+ran for 19m54s (11:15:57–11:35:51 UTC), despite the docs-only diff. Its
+[integration job](https://github.com/beep-effect/beep-effect/actions/runs/42208336557/job/127862774529)
+also occupied a runner for 2m11s. These are observed before-change job durations,
+including setup, not a measured after-change speedup or an additive estimate of
+PR wall-clock savings. The regression proves these paths now select docs-only;
+a subsequent equivalent docs-only PR supplies the hosted after-change receipt.
+
 The typed classifier, generated pre-runtime JSON and shell fallback stay aligned.
 Tests replay the complete #2750 path list, check mixed script/fixture/code
 counterexamples, and compare the shell adapter with the typed CLI against real
