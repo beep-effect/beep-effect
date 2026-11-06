@@ -85,6 +85,7 @@ export class CitationPythonUnicode extends Context.Service<
   }
 >()($I`CitationPythonUnicode`) {}
 const fail = (reason: typeof Reason.Type) => CitationPythonUnicodeFailure.make({ reason });
+const invalidInput = () => fail("invalid-input");
 const widthOf = (largest: number): 1 | 2 | 4 => (largest <= 255 ? 1 : largest <= 65535 ? 2 : 4);
 const readPoint = (bytes: Uint8Array, index: number, width: number) => {
   let point = 0;
@@ -384,7 +385,7 @@ export const replaceCitationPythonStorage = Effect.fn("Citation.replaceNativeSto
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")(function* (input: unknown) {
-  const limits = yield* S.decodeUnknownEffect(Limits)(input).pipe(Effect.mapError(() => fail("invalid-input")));
+  const limits = yield* S.decodeUnknownEffect(Limits)(input).pipe(Effect.mapError(invalidInput));
   const maximum = limits.producedTextUtf16;
   const clock = yield* Clock.Clock;
   const deadline = Duration.min(limits.cleanDeadline, limits.operationDeadline).pipe(
@@ -397,7 +398,7 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
       Effect.provideService(Clock.Clock, clock)
     );
   const decodeStorage = Effect.fn("Citation.decodeNativeUnicodeStorage")(function* (input: unknown) {
-    const decoded = yield* S.decodeUnknownEffect(Storage)(input).pipe(Effect.mapError(() => fail("invalid-input")));
+    const decoded = yield* S.decodeUnknownEffect(Storage)(input).pipe(Effect.mapError(invalidInput));
     if (decoded.bytes.length % decoded.width !== 0) return yield* fail("invalid-input");
     if (decoded.bytes.length / decoded.width > maximum) return yield* fail("limit-exceeded");
     return decoded;
@@ -406,12 +407,8 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
     const decoded = yield* decodeStorage(input);
     const width = decoded.width;
     const bytes = new Uint8Array(decoded.bytes);
-    const units = yield* validateCitationPythonStorage(
-      bytes,
-      width,
-      maximum,
-      () => fail("invalid-input"),
-      () => fail("limit-exceeded")
+    const units = yield* validateCitationPythonStorage(bytes, width, maximum, invalidInput, () =>
+      fail("limit-exceeded")
     );
     const text = yield* projectStorage(bytes, width);
     return CitationPythonUnicodeValue.make({
@@ -422,7 +419,7 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
     });
   });
   const fromText = Effect.fn("Citation.prepareJavaScriptUnicode")(function* (input: unknown) {
-    const text = yield* S.decodeUnknownEffect(Text)(input).pipe(Effect.mapError(() => fail("invalid-input")));
+    const text = yield* S.decodeUnknownEffect(Text)(input).pipe(Effect.mapError(invalidInput));
     const units = Str.length(text);
     if (units > maximum) return yield* fail("limit-exceeded");
     const [largest, points] = yield* measureCitationPythonText(text);
@@ -443,12 +440,8 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
     beforeAllocate: (units: number) => Effect.Effect<void, E>
   ) {
     const decoded = yield* decodeStorage(input);
-    const units = yield* validateCitationPythonStorage(
-      decoded.bytes,
-      decoded.width,
-      maximum,
-      () => fail("invalid-input"),
-      () => fail("limit-exceeded")
+    const units = yield* validateCitationPythonStorage(decoded.bytes, decoded.width, maximum, invalidInput, () =>
+      fail("limit-exceeded")
     );
     yield* beforeAllocate(units);
     const value = yield* fromStorage(decoded);
@@ -459,7 +452,7 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
     input: unknown,
     beforeAllocate: (units: number) => Effect.Effect<void, E>
   ) {
-    const text = yield* S.decodeUnknownEffect(Text)(input).pipe(Effect.mapError(() => fail("invalid-input")));
+    const text = yield* S.decodeUnknownEffect(Text)(input).pipe(Effect.mapError(invalidInput));
     if (Str.length(text) > maximum) return yield* fail("limit-exceeded");
     yield* beforeAllocate(Str.length(text));
     return yield* fromText(text);

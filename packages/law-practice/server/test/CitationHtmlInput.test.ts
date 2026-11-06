@@ -272,3 +272,21 @@ it.effect("rejects malformed HTML policy and native storage before transport pre
     expect(preflights).toBe(0);
   })
 );
+
+it.effect("returns independent sanitized errors when the same malformed native input is retried", () =>
+  Effect.gen(function* () {
+    const policy = yield* defaultCitationEnginePolicy;
+    const input = yield* makeCitationHtmlInput(policy.limits);
+    const malformed = { width: 3, bytes: new Uint8Array([65]) };
+    const first = yield* input
+      .prepareUnicode(malformed, () => Effect.die("invalid input reached preflight"))
+      .pipe(Effect.flip);
+    const retried = yield* input
+      .prepareUnicode(malformed, () => Effect.die("invalid input reached preflight"))
+      .pipe(Effect.flip);
+    expect(first).toMatchObject({ _tag: "CitationHtmlInputFailure", reason: "invalid-input" });
+    expect(retried).toEqual(first);
+    expect(retried).not.toBe(first);
+    expect("cause" in retried).toBe(false);
+  })
+);

@@ -69,6 +69,7 @@ export class CitationCaseNameScanFailure extends S.TaggedError<
   })
 ) {}
 const fail = (reason: typeof Reason.Type) => CitationCaseNameScanFailure.make({ reason });
+const invalidConfiguration = () => fail("invalid-configuration");
 /** @internal @category models @since 0.0.0 */
 export class CitationCaseNameScanConfiguration extends S.Opaque<
   CitationCaseNameScanConfiguration,
@@ -349,7 +350,7 @@ const copyConfiguration = Effect.fn("Citation.copyCaseNameScanConfiguration")(fu
     decoded.patterns,
     decoded.bindings,
     fingerprints,
-    () => fail("invalid-configuration")
+    invalidConfiguration
   );
   return CitationCaseNameScanConfiguration.make(owned);
 });
@@ -362,7 +363,7 @@ const copyConfiguration = Effect.fn("Citation.copyCaseNameScanConfiguration")(fu
 export const makeCitationCaseNameScan = makeCitationMetadataStage({
   method: "scan",
   schema: Config,
-  invalid: () => fail("invalid-configuration"),
+  invalid: invalidConfiguration,
   own: copyConfiguration,
   prepare: (limits, runtime, config, raw) =>
     runScan(limits, runtime, config, raw).pipe(

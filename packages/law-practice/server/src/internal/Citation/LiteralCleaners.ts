@@ -115,6 +115,7 @@ export class CitationLiteralCleanerFailure extends S.TaggedError<
   })
 ) {}
 const failure = (reason: typeof Reason.Type) => CitationLiteralCleanerFailure.make({ reason });
+const invalidInput = () => failure("invalid-input");
 const whitespace = HashSet.fromIterable(citationPythonTextData.whitespace);
 const at = (text: string, index: number) => O.getOrElse(Str.charAt(text, index), () => "");
 const literalMatch = (cleaner: CitationLiteralCleaner, char: string) => {
@@ -253,9 +254,7 @@ const encodeSelection = Effect.fnUntraced(function* (
  * @since 0.0.0
  */
 export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleaners")(function* (input: unknown) {
-  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(input).pipe(
-    Effect.mapError(() => failure("invalid-input"))
-  );
+  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(input).pipe(Effect.mapError(invalidInput));
   const sourceCeiling = limits.sourceUtf16;
   const outputCeiling = limits.producedTextUtf16;
   const deadline = limits.cleanDeadline.pipe(Duration.toMillis, Duration.millis);
@@ -264,7 +263,7 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
   const cleanMillis = Duration.toMillis(limits.cleanDeadline);
   const nativeDeadline = Duration.millis(cleanMillis <= operationMillis ? cleanMillis : operationMillis);
   const timeLimit = cleanMillis <= operationMillis ? "cleanDeadline" : "operationDeadline";
-  const unicode = yield* makeCitationPythonUnicode(limits).pipe(Effect.mapError(() => failure("invalid-input")));
+  const unicode = yield* makeCitationPythonUnicode(limits).pipe(Effect.mapError(invalidInput));
   const makeApply = <E>(
     schema: typeof Input,
     maximumInput: number,
@@ -273,9 +272,7 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
   ) =>
     Effect.fn("Citation.applyLiteralCleaner")(
       function* (input: unknown) {
-        const { cleaner, text } = yield* S.decodeUnknownEffect(schema)(input).pipe(
-          Effect.mapError(() => failure("invalid-input"))
-        );
+        const { cleaner, text } = yield* S.decodeUnknownEffect(schema)(input).pipe(Effect.mapError(invalidInput));
         const length = Str.length(text);
         if (length > maximumInput) return yield* failure("limit-exceeded");
         return yield* Effect.gen(function* () {
@@ -350,9 +347,7 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
   );
   const stageUnicode = Effect.fn("Citation.applyNativeLiteralCleaner")(
     function* (cleaner: unknown, storage: unknown, work: CitationCleanerWork) {
-      const name = yield* S.decodeUnknownEffect(CitationLiteralCleaner)(cleaner).pipe(
-        Effect.mapError(() => failure("invalid-input"))
-      );
+      const name = yield* S.decodeUnknownEffect(CitationLiteralCleaner)(cleaner).pipe(Effect.mapError(invalidInput));
       const source = yield* unicode.fromStorage(storage).pipe(
         Effect.mapError((error) =>
           error.reason === "invalid-input"

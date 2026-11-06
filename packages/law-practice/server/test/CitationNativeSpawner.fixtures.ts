@@ -164,12 +164,9 @@ export const makeCitationRegexTestRuntime = Effect.fn("NativeSourceTest.regexRun
     makeCitationBundledTestRuntime(
       kind,
       NodeURL.fileURLToPath(
-        new URL(
-          kind === "node"
-            ? "../src/internal/Citation/RegexWorker.node.entry.ts"
-            : "../src/internal/Citation/RegexWorker.entry.ts",
-          import.meta.url
-        )
+        kind === "node"
+          ? new URL("../src/internal/Citation/RegexWorker.node.entry.ts", import.meta.url)
+          : new URL("../src/internal/Citation/RegexWorker.entry.ts", import.meta.url)
       ),
       cwd
     )
