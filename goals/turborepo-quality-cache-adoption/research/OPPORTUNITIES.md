@@ -1,5 +1,9 @@
 # Friction and opportunities
 
+## Scoped integration routing omits plain-only script owners, 2026-11-06
+
+While following the remaining hosted Integration jobs, source review found that the root Quality runner sets its plain integration bucket empty for every affected or explicit-filter invocation. Seven current plain-only owners contain integration source files. Preserve those owners under the original caller scope and exclude split owners to avoid duplicate execution. Native stable/canary metadata fixtures confirm that negative exclusions preserve both explicit and affected selection; the source resolver and helper regression are prepared in the unpublished integration-scope lane, with hosted correctness still required. This is a fresh-test coverage repair, not a reason to cache live integration verdicts.
+
 ## Captured output lost at timeout, 2026-11-03
 
 Heavy / Lint Policy on #2686 timed out in `knowledge doctor ci` after its
