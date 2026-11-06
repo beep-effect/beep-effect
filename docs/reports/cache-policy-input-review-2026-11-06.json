@@ -1,0 +1,20 @@
+{
+  "previous": "30f4d7121afbc710049738bd11752c45d1647b802ed315be49b5ec47f0cad038",
+  "review": {
+    "reviewer": "GPT-6.1-Sol medium, consolidated main repair",
+    "reason": "Review merged #2777 additive CLI test input declarations; preserve existing cache posture and qualification scope.",
+    "basis": {
+      "path": "docs/reports/cache-policy-input-review-2026-11-06.md",
+      "sha256": "261d6e740b66a993356136c40efce9a954f9a286626b1d3008fffdfbc7f6a70f"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/repo-cli"]
+}
