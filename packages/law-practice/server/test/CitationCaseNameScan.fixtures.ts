@@ -119,17 +119,25 @@ const assertScanRow = Effect.fn("CaseNameScanTest.row")(function* (
   const result = yield* stage.apply(row.request);
   expect(result.state, `source initialized scan ${row.id}`).toEqual(row.state);
 });
-/** Smoke includes source failures and no-call paths; full original replay is hosted. */
+// Canonical controls retain connectors, digit rejection, combining marks, v/plaintiff boundaries,
+// punctuation, native years/parentheses, special token branches and scalar/surrogate distinctions.
+const smokeBoundaryRows = [
+  5, 6, 9, 13, 14, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 37, 38, 52, 53, 54, 55, 56, 57, 58,
+];
+/** Smoke includes source branch controls, failures and no-call paths; full original replay is hosted. */
 export const replayCitationCaseNameScan = Effect.fn("CaseNameScanTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
   const setup = yield* install(kind);
-  const rows = A.filter(setup.corpus.cases, (row) => full || row.smoke || row.error !== null || row.calls.length === 0);
+  const rows = A.filter(
+    setup.corpus.cases,
+    (row) => full || row.smoke || A.contains(smokeBoundaryRows, row.id) || row.error !== null || row.calls.length === 0
+  );
   yield* Effect.forEach(rows, (row) => assertScanRow(setup.stage, row), { discard: true });
-  expect(rows).toHaveLength(full ? 64 : 24);
+  expect(rows).toHaveLength(full ? 64 : 54);
   const calls = A.reduce(rows, 0, (sum, row) => sum + row.calls.length);
-  expect(calls).toBe(full ? 313 : 25);
+  expect(calls).toBe(full ? 313 : 198);
   yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
 });
 
@@ -140,6 +148,13 @@ export const assertCitationCaseNameScanBudget = Effect.fn("CaseNameScanTest.budg
   const accepted = yield* exact.stage.apply(row.request);
   expect(accepted.state).toEqual(row.state);
   expect(accepted.reservedUnits).toBe(22);
+  const bounded = yield* makeCitationCaseNameScan(
+    { ...exact.limits, tokens: 1 },
+    exact.runtime,
+    exact.configuration
+  ).pipe(Effect.provideContext(exact.provided));
+  const tokens = yield* bounded.scan(row.request).pipe(Effect.flip);
+  expect(tokens).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "tokens" });
   exact.configuration.patterns.year.bytes.fill(0);
   exact.configuration.patterns.trailingDigits.bytes.fill(0);
   const repeated = yield* exact.stage.apply(row.request);
@@ -166,6 +181,19 @@ export const assertCitationCaseNameScanLifetime = Effect.fn("CaseNameScanTest.li
 export const assertCitationCaseNameScanDefaultPolicy = Effect.fn("CaseNameScanTest.defaultPolicy")(function* () {
   const corpus = yield* load();
   const setup = yield* setupCitationMetadataRuntime("bun");
+  for (const configuration of [
+    null,
+    {
+      ...corpus.configuration,
+      patterns: { ...corpus.configuration.patterns, year: { width: 1, bytes: new Uint8Array([88]) } },
+    },
+  ]) {
+    const rejected = yield* makeCitationCaseNameScan(setup.limits, setup.runtime, configuration).pipe(
+      Effect.provideContext(setup.provided),
+      Effect.flip
+    );
+    expect(rejected).toMatchObject({ reason: "invalid-configuration" });
+  }
   const scanner = yield* makeCitationCaseNameScan(setup.limits, setup.runtime, corpus.configuration).pipe(
     Effect.provideContext(setup.provided)
   );

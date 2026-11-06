@@ -210,4 +210,30 @@ it.layer(BunCrypto.layer)("citation occurrence identity production", (it) => {
       expect(failure.message).not.toContain("sensitive");
     })
   );
+  it.effect("rejects malformed digest bytes without returning a partial occurrence token", () =>
+    Effect.gen(function* () {
+      const source = yield* sourceIdentity(sourceText);
+      const anchor = yield* verifiedAnchor(sourceText, 3, source);
+      const input = CitationMentionIdentityInput.make({ anchor, engineArtifact: artifact, semanticKind: "case" });
+      for (const length of [0, 1, 31, 33]) {
+        let calls = 0;
+        const digest = makeTestCitationDigest(() =>
+          Effect.sync(() => {
+            calls++;
+            return new Uint8Array(length);
+          })
+        );
+        const failure = yield* makeCitationMentionId(input).pipe(
+          Effect.provideService(Digest.Digest, digest),
+          Effect.flip
+        );
+        expect(calls).toBe(1);
+        expect(failure).toMatchObject({ _tag: "CitationMentionIdentityFailure", reason: "digest-failed" });
+        expect("cause" in failure).toBe(false);
+        expect(failure.message).not.toContain("1 U.S.");
+      }
+      const recovered = yield* makeCitationMentionId(input);
+      expect(recovered).toBe("cm1:dc70e426b0b9aa61caf21a5e6e0c7274720c7e674ff2b06a8cdfd82ee0346ae9");
+    })
+  );
 });

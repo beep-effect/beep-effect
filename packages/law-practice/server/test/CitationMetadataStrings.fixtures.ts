@@ -92,6 +92,9 @@ export const replayCitationMetadataStrings = Effect.fn("MetadataStringsTest.repl
 const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
 /** Additional retained copy refusal precedes matching; early source return is distinct. */
 export const assertCitationMetadataStringBudget = Effect.fn("MetadataStringsTest.budget")(function* () {
+  const invalidPolicy = yield* makeCitationMetadataStrings(null, null, null, null).pipe(Effect.flip);
+  expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
+
   const corpus = yield* loadCitationMetadataStrings();
   const refused = yield* install(corpus, "bun", 11);
   const failure = yield* refused.helpers.parenthetical(native("abc")).pipe(Effect.flip);
