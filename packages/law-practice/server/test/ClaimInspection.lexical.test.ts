@@ -45,6 +45,130 @@ const heads = (report: ClaimInputInspectionReport) =>
 
 it.layer(live, { timeout: "30 seconds" })("fixed lexical inspection runtime", (it) => {
   it.effect(
+    "declines contradictory relative agreement through licensed adjunct and negation plans",
+    Effect.fnUntraced(function* () {
+      for (const predicate of [
+        "reliably detects a signal",
+        "reliably does not detect a signal",
+        "reliably does not reliably detect a signal",
+        "does not reliably detect a signal",
+        "reliably is not mounted",
+      ]) {
+        const report = yield* inspect([`A system comprising sensors that ${predicate}; the sensors.`]);
+        const row = O.getOrThrow(A.head(report.records));
+        assert.strictEqual(row.status, "partial");
+        assert.isTrue(row.status === "partial" && A.some(row.findings, (f) => f.rule === "unsupported-determiner"));
+        assert.isTrue(row.status === "partial" && A.some(row.findings, (f) => f.rule === "source-role-unresolved"));
+      }
+      for (const predicate of [
+        "reliably detect a signal",
+        "reliably do not detect a signal",
+        "reliably do not reliably detect a signal",
+        "do not reliably detect a signal",
+        "reliably are not mounted",
+      ]) {
+        const report = yield* inspect([`A system comprising sensors that ${predicate}; the sensors.`]);
+        const row = O.getOrThrow(A.head(report.records));
+        assert.strictEqual(row.status, "complete");
+        assert.isTrue(row.status !== "unchecked" && row.findings.length === 0);
+      }
+      const independent = yield* inspect([
+        "A system comprising sensors; a controller reliably detects a signal; the sensors.",
+      ]);
+      const row = O.getOrThrow(A.head(independent.records));
+      assert.strictEqual(row.status, "complete");
+      assert.isTrue(row.status !== "unchecked" && row.findings.length === 0);
+    })
+  );
+  it.effect(
+    "bounds repeated route-local alias candidate scans under the existing work ceiling",
+    Effect.fnUntraced(function* () {
+      const references = A.join(A.replicate("ETE CRC flit", 8), "; ");
+      const report = yield* inspect([`A system comprising an ETE cyclic redundancy check (CRC) flit; ${references}.`]);
+      const row = O.getOrThrow(A.head(report.records));
+      assert.strictEqual(row.status, "partial");
+      assert.isTrue(row.status === "partial" && A.some(row.findings, (f) => f.rule === "chain-work-limit"));
+    })
+  );
+  it.effect(
+    "binds alias proof to earlier source terms on each actual route",
+    Effect.fnUntraced(function* () {
+      const declaration = "A system comprising an ETE cyclic redundancy check (CRC) flit.";
+      const unsupported = "A system comprising a module; ETE CRC flit.";
+      const control = yield* inspect(["A system comprising an unrelated flit.", unsupported]);
+      const sibling = yield* inspect([declaration, unsupported]);
+      assert.deepStrictEqual(O.getOrThrow(A.get(sibling.records, 1)), O.getOrThrow(A.get(control.records, 1)));
+      const later = yield* inspect([
+        "A system comprising a module; ETE CRC flit; an ETE cyclic redundancy check (CRC) flit.",
+      ]);
+      const laterRow = O.getOrThrow(A.head(later.records));
+      assert.strictEqual(laterRow.status, "partial");
+      assert.isTrue(
+        laterRow.status === "partial" && A.some(laterRow.findings, (f) => f.rule === "unsupported-determiner")
+      );
+      const earlier = yield* inspect(["A system comprising an ETE cyclic redundancy check (CRC) flit; ETE CRC flit."]);
+      const earlierRow = O.getOrThrow(A.head(earlier.records));
+      assert.strictEqual(earlierRow.status, "complete");
+      assert.isTrue(earlierRow.status !== "unchecked" && earlierRow.findings.length === 0);
+      const inherited = yield* inspect([declaration, "The system of claim 1 wherein ETE CRC flit detects a signal."]);
+      const inheritedRow = O.getOrThrow(A.get(inherited.records, 1));
+      assert.strictEqual(inheritedRow.status, "complete");
+      assert.isTrue(inheritedRow.status !== "unchecked" && inheritedRow.findings.length === 0);
+    })
+  );
+  it.effect(
+    "keeps unsupported alternative alias routes adverse and preserves supported-route findings",
+    Effect.fnUntraced(function* () {
+      const declaration = "A system comprising an ETE cyclic redundancy check (CRC) flit.";
+      const dependent = "The system of claims 1 or 2 wherein ETE CRC flit detects a signal.";
+      const one = yield* inspect([declaration, "A system comprising a module.", dependent]);
+      const oneRow = O.getOrThrow(A.get(one.records, 2));
+      assert.strictEqual(oneRow.status, "partial");
+      assert.isTrue(oneRow.status === "partial" && A.some(oneRow.findings, (f) => f.rule === "unsupported-determiner"));
+      assert.isFalse(oneRow.status !== "unchecked" && A.some(oneRow.findings, (f) => f.kind === "missing-antecedent"));
+      const both = yield* inspect([declaration, declaration, dependent]);
+      const bothRow = O.getOrThrow(A.get(both.records, 2));
+      assert.strictEqual(bothRow.status, "complete");
+      assert.isTrue(bothRow.status !== "unchecked" && bothRow.findings.length === 0);
+      const ambiguous = yield* inspect([
+        "A system comprising an ETE cyclic redundancy check (CRC) flit; an ETE cyclic redundancy check (CRC) flit; ETE CRC flit.",
+      ]);
+      const ambiguousRow = O.getOrThrow(A.head(ambiguous.records));
+      assert.isTrue(
+        ambiguousRow.status !== "unchecked" && A.some(ambiguousRow.findings, (f) => f.kind === "ambiguous-antecedent")
+      );
+    })
+  );
+  it.effect(
+    "declines generic plural proof for contradictory directly attached relative agreement",
+    Effect.fnUntraced(function* () {
+      for (const predicate of [
+        "is mounted",
+        "was mounted",
+        "has detected a signal",
+        "does detect a signal",
+        "detects a signal",
+      ]) {
+        const report = yield* inspect([`A system comprising sensors that ${predicate}; the sensors.`]);
+        const row = O.getOrThrow(A.head(report.records));
+        assert.strictEqual(row.status, "partial");
+        assert.isTrue(row.status === "partial" && A.some(row.findings, (f) => f.rule === "unsupported-determiner"));
+        assert.isTrue(row.status === "partial" && A.some(row.findings, (f) => f.rule === "source-role-unresolved"));
+      }
+      for (const text of [
+        "A system comprising sensors that are mounted; the sensors.",
+        "A system comprising sensors which were mounted; the sensors.",
+        "A system comprising sensors that detect a signal; the sensors.",
+        "A system comprising sensors; a controller is mounted; the sensors.",
+      ]) {
+        const report = yield* inspect([text]);
+        const row = O.getOrThrow(A.head(report.records));
+        assert.strictEqual(row.status, "complete");
+        assert.isTrue(row.status !== "unchecked" && row.findings.length === 0);
+      }
+    })
+  );
+  it.effect(
     "covers many independent plural objects without charging unused alias comparisons",
     Effect.fnUntraced(function* () {
       const text = "A fixture comprising sensors.";

@@ -49,7 +49,7 @@ import {
   pluralityReferenceContent,
 } from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
-import type { ClaimBoundRolePlan, ClaimNominalPolicyRole, ClaimNominalSpan } from "./ClaimClauseRole.model.ts";
+import type { ClaimBoundRolePlan, ClaimNominalPolicyRole } from "./ClaimClauseRole.model.ts";
 import type { ClaimInputCollection } from "./ClaimElement.input.model.ts";
 import type { ClaimTerm } from "./ClaimElement.model.ts";
 import type { ClaimElementTree } from "./ClaimElement.tree.model.ts";
@@ -184,6 +184,8 @@ const isIdiom = ({ term }: LocatedTerm): boolean =>
   ClaimTermDeterminer.is.the(term.determiner) && HashSet.has(idiomWords, A.headNonEmpty(Str.split(term.head, " ")));
 
 type RoleFor = (claimNumber: number, term: ClaimTerm) => ClaimNominalPolicyRole;
+type AliasEligible = (claimNumber: number, term: ClaimTerm) => boolean;
+const noAliasEvidence: AliasEligible = () => false;
 const legacyRole: RoleFor = () => "legacy";
 const unknownBareRole: RoleFor = (_, term) => (ClaimTermDeterminer.is.bare(term.determiner) ? "unknown" : "legacy");
 const locatedTerms = (tree: ClaimElementTree, roleFor: RoleFor = legacyRole): ReadonlyArray<LocatedTerm> =>
@@ -543,28 +545,68 @@ const cachedChainTerms =
     if (O.isSome(terms)) prepared[index] = terms;
     return terms;
   };
+// Alias identity is proved per actual route, never installed from a global
+// vocabulary donor. Both sides must survive source-plan and projected-term binding.
+const chainAliasReference = (
+  terms: ReadonlyArray<LocatedTerm>,
+  referring: LocatedTerm,
+  eligible: AliasEligible,
+  remaining: MutableRef.MutableRef<number>
+): O.Option<LocatedTerm> => {
+  if (!spendChainWork(remaining, terms.length + 1)) return O.none();
+  const characters = A.reduce(terms, 0, (sum, candidate) => sum + candidate.term.head.length);
+  if (!spendChainWork(remaining, characters * 12 + terms.length * (referring.term.head.length * 2 + 32)))
+    return O.none();
+  const proven = A.some(
+    terms,
+    (donor) =>
+      eligible(donor.claimNumber, donor.term) &&
+      isIntroducing(donor) &&
+      (donor.claimNumber !== referring.claimNumber || donor.term.anchor.endChar <= referring.term.anchor.startChar) &&
+      Str.includes("(")(donor.term.head) &&
+      Str.includes(")")(donor.term.head) &&
+      (isExplicitAbbreviatedHead(referring.term.head)(donor.term.head) ||
+        isSourcePrefixAbbreviatedHead(referring.term.head)(donor.term.head))
+  );
+  return O.some(proven ? { ...referring, sourceRole: "alias-reference" } : referring);
+};
 const boundedChainVerdict =
   (
     lookup: (chain: Chain, index: number) => O.Option<ReadonlyArray<LocatedTerm>>,
     read: (terms: ReadonlyArray<LocatedTerm>, referring: LocatedTerm, chain: Chain) => Verdict,
-    remaining: MutableRef.MutableRef<number>
+    remaining: MutableRef.MutableRef<number>,
+    aliasEligible: AliasEligible
   ) =>
   (referring: LocatedTerm, chain: Chain, index: number): O.Option<Verdict> => {
-    const independent = chainIndependentVerdict(referring, chain);
+    let aliasCandidate = false;
+    if (aliasEligible !== noAliasEvidence && chain.resolvable && referring.sourceRole === "unknown") {
+      // Reserve source-key allocation and acronym-shape inspection before either.
+      if (!spendChainWork(remaining, referring.term.anchor.quote.length * 2 + 32)) return O.none();
+      aliasCandidate =
+        aliasEligible(referring.claimNumber, referring.term) &&
+        O.isSome(Str.match(/^[A-Z][A-Z0-9-]+(?:\s+[\p{L}\p{N}-]+)*$/u)(referring.term.anchor.quote));
+    }
+    const independent = aliasCandidate ? O.none() : chainIndependentVerdict(referring, chain);
     if (O.isSome(independent)) return O.some(independent);
     return O.flatMap(lookup(chain, index), (terms) => {
       // The introduction filter and up to five matching passes still happen
       // for each reference; caching does not waive those scans or the
       // decomposed-claim completeness scan performed by readableVerdict.
       if (!spendChainWork(remaining, (terms.length + 1) * 6 + chain.claims.length)) return O.none();
-      return O.some(read(terms, referring, chain));
+      const resolved = aliasCandidate
+        ? chainAliasReference(terms, referring, aliasEligible, remaining)
+        : O.some(referring);
+      return O.map(resolved, (reference) =>
+        O.orElse(chainIndependentVerdict(reference, chain), () => read(terms, reference, chain))
+      );
     });
   };
 
 const policyInContext = (
   trees: ReadonlyArray<ClaimElementTree>,
   claims: ReadonlyArray<PatentClaim>,
-  roleFor: RoleFor = legacyRole
+  roleFor: RoleFor = legacyRole,
+  aliasEligible: AliasEligible = noAliasEvidence
 ): ReadonlyArray<AntecedentFinding> => {
   const claimIndex = HashMap.fromIterable(
     A.map(claims, (claim): readonly [number, PatentClaim] => [claim.claimNumber, claim])
@@ -615,7 +657,8 @@ const policyInContext = (
           const evaluate = boundedChainVerdict(
             lookup,
             (terms, referring, chain) => read(terms, decomposed, referring, chain),
-            termWork
+            termWork,
+            aliasEligible
           );
           return A.flatMap(referringTerms, (referring) => {
             let findings: ReadonlyArray<Ranked> = [];
@@ -775,7 +818,8 @@ export const inspectClaimInput = Effect.fn("ClaimElement.inspectClaimInput")(fun
 const inspectionReport = (
   input: ClaimInputCollection,
   decompositions: ReadonlyArray<ClaimInputDecomposition>,
-  roleFor: RoleFor = legacyRole
+  roleFor: RoleFor = legacyRole,
+  aliasEligible: AliasEligible = noAliasEvidence
 ): ClaimInputInspectionReport => {
   const unavailable = unavailableAncestors(decompositions);
   const eligible = A.filter(
@@ -790,7 +834,8 @@ const inspectionReport = (
     policyInContext(
       A.map(usable, ({ tree }) => tree),
       A.map(usable, ({ qualification }) => qualification.claim),
-      roleFor
+      roleFor,
+      aliasEligible
     ),
     indexComplete
   );
@@ -854,53 +899,18 @@ const roleInputBudget = (plans: ReadonlyArray<ClaimBoundRolePlan>): O.Option<num
   }
   return O.some(remaining);
 };
-const aliasNominalRole = (
-  nominal: ClaimNominalSpan,
-  donors: ReadonlyArray<ClaimNominalSpan>,
-  donorCharacters: number,
-  charge: (amount: number) => boolean
-): ClaimNominalPolicyRole => {
-  if (nominal.role !== "unknown" || nominal.determiner !== "bare") return nominal.role;
-  if (O.isNone(Str.match(/^[A-Z][A-Z0-9-]+(?:\s+[\p{L}\p{N}-]+)*$/u)(nominal.anchor.quote))) return "unknown";
-  // Only actual alias candidates perform these donor parses. A source with no
-  // explicit parenthetical declarations does no fictitious quadratic work.
-  if (!charge(donorCharacters * 12 + donors.length * (nominal.head.quote.length * 2 + 32))) return "unknown";
-  const head = Str.toLowerCase(nominal.head.quote);
-  return A.some(
-    donors,
-    (donor) =>
-      isExplicitAbbreviatedHead(head)(Str.toLowerCase(donor.head.quote)) ||
-      isSourcePrefixAbbreviatedHead(head)(Str.toLowerCase(donor.head.quote))
-  )
-    ? "alias-reference"
-    : "unknown";
-};
 const sourceRoleIndex = (
   plans: ReadonlyArray<ClaimBoundRolePlan>
 ): O.Option<HashMap.HashMap<string, ClaimNominalPolicyRole>> => {
   const budget = roleInputBudget(plans);
   if (O.isNone(budget)) return O.none();
-  let remaining = budget.value;
-  const charge = (amount: number): boolean => {
-    remaining -= amount;
-    return remaining >= 0;
-  };
-  // Parentheses are a necessary condition of BOTH existing alias matchers;
-  // removing other donors preserves every unexhausted semantic match.
-  const donors = A.filter(
-    A.flatMap(plans, ({ plan }) => plan.nominals),
-    (nominal) => Str.includes("(")(nominal.head.quote) && Str.includes(")")(nominal.head.quote)
-  );
-  const characters = A.reduce(donors, 0, (sum, donor) => sum + donor.head.quote.length);
   let roles = HashMap.empty<string, ClaimNominalPolicyRole>();
   for (const { claimNumber, plan } of plans) {
     for (const nominal of plan.nominals) {
-      const role = aliasNominalRole(nominal, donors, characters, charge);
-      if (remaining < 0) return O.none();
       roles = HashMap.set(
         roles,
         `${claimNumber}:${nominal.anchor.startChar}:${nominal.anchor.endChar}:${nominal.anchor.quote}`,
-        role
+        nominal.role
       );
     }
   }
@@ -926,7 +936,9 @@ export const inspectPreparedClaimRoles = Effect.fn("ClaimElement.inspectPrepared
       () => unknownBareRole(claimNumber, term)
     );
   return lexicalCoverage(
-    inspectionReport(prepared.input, result.decompositions, roleFor),
+    inspectionReport(prepared.input, result.decompositions, roleFor, (claimNumber, term) =>
+      HashMap.has(indexed.value, `${claimNumber}:${term.anchor.startChar}:${term.anchor.endChar}:${term.anchor.quote}`)
+    ),
     HashSet.fromIterable(A.map(result.plans, ({ claimNumber }) => claimNumber))
   );
 });

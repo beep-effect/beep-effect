@@ -329,6 +329,9 @@ const isObjectSlot = (
     HashSet.make("comprising", "comprises", "including", "includes", "containing", "contains", "has", "have"),
     wordAt(tokens, start - 1)
   );
+const singularAgreement = (token: ClaimLexicalToken): boolean =>
+  (token.pos === "AUX" && HashSet.has(HashSet.make("is", "was", "has"), word(token))) ||
+  (HashSet.has(HashSet.make("VERB", "AUX"), token.pos) && finiteInflection(token));
 const objectRole = (tokens: ReadonlyArray<ClaimLexicalToken>, start: number, end: number): ClaimNominalPolicyRole => {
   if (
     tagAt(tokens, start) === "NUM" ||
@@ -364,6 +367,7 @@ class RoleCompiler {
   private quotes: ReadonlyArray<boolean> = [];
   private brackets = HashSet.empty<number>();
   private predicateIndexes = HashSet.empty<number>();
+  private adjunctIndexes = HashSet.empty<number>();
   private names = HashSet.empty<number>();
   private predicates: Array<ClaimPredicateSpan> = [];
   private readonly nominals: Array<ClaimNominalSpan> = [];
@@ -434,6 +438,8 @@ class RoleCompiler {
     for (let index = 0; index < this.tokens.length; index++) {
       if (!this.charge(1)) return false;
       if (this.protected(index) || !this.adjunct(index)) continue;
+      if (!this.charge(1)) return false;
+      this.adjunctIndexes = HashSet.add(this.adjunctIndexes, index);
       this.predicates.push(
         ClaimPredicateSpan.make({ anchor: O.getOrThrow(at(this.tokens, index)).anchor, kind: "adjunct" })
       );
@@ -527,6 +533,19 @@ class RoleCompiler {
           )
         )
     );
+  private contradictoryPluralRelative = (end: number): boolean => {
+    if (!relativeSubjectAt(this.tokens, end + 1)) return false;
+    let cursor = end + 1;
+    // Traverse only adjuncts already admitted by the predicate pass. Each
+    // visit is charged; a protected span, intervening NP or unlicensed token
+    // stops attachment proof. Exhaustion declines the entire atomic plan.
+    while (HashSet.has(this.adjunctIndexes, cursor)) {
+      if (!this.charge(1)) return false;
+      cursor++;
+    }
+    if (!this.charge(1) || !HashSet.has(this.predicateIndexes, cursor)) return false;
+    return O.exists(at(this.tokens, cursor), singularAgreement);
+  };
   private appendNominal = (
     start: number,
     end: number,
@@ -540,6 +559,7 @@ class RoleCompiler {
     let role = nominalRole(this.claim, this.tokens, start, start + width, end, kind, this.predicateIndexes);
     if (kind === "bare" && HashSet.has(this.names, start)) role = "explicit-name";
     if (kind === "bare" && role === "unknown" && this.coordinatedPlural(start, end)) role = "generic-plural";
+    if (role === "generic-plural" && this.contradictoryPluralRelative(end)) role = "unknown";
     this.nominals.push(
       ClaimNominalSpan.make({
         anchor: anchor(this.claim.claimText, first, last),

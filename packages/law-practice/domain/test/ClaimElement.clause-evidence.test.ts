@@ -16,6 +16,7 @@ import { assert, describe } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 
@@ -59,6 +60,44 @@ const evidenceFor = (text: string) =>
   });
 
 describe("qualified source evidence and atomic projection", () => {
+  it.effect("keeps ambiguous partitive attachment and mass roles unknown", () =>
+    Effect.gen(function* () {
+      for (const noun of ["sensors", "material"]) {
+        const text = `A system comprising a set of ${noun} that is mounted.`;
+        const claim = PatentClaim.cases.independent.make({
+          claimNumber: 1,
+          claimText: text,
+          preamble: "A system",
+          transition: "comprising",
+          body: `a set of ${noun} that is mounted.`,
+        });
+        const original = evidenceFor(text);
+        const evidence = ClaimLexicalEvidence.cases.aligned.make({
+          ...original,
+          tokens: A.map(original.tokens, (token) => {
+            const lower = Str.toLowerCase(token.anchor.quote);
+            const [pos, lemma] = O.getOrElse(
+              HashMap.get(
+                HashMap.make(
+                  ["of", ["ADP", "of"]],
+                  ["that", ["SCONJ", "that"]],
+                  ["is", ["AUX", "be"]],
+                  ["mounted", ["VERB", "mount"]],
+                  ["sensors", ["NOUN", "sensor"]]
+                ),
+                lower
+              ),
+              () => [token.pos, lower]
+            );
+            return ClaimLexicalToken.make({ ...token, pos, lemma: O.some(lemma) });
+          }),
+        });
+        const plan = O.getOrThrow(compileClaimClauseRoles(claim, evidence));
+        const nominal = O.getOrThrow(A.findFirst(plan.nominals, (candidate) => candidate.head.quote === noun));
+        assert.strictEqual(nominal.role, "unknown");
+      }
+    })
+  );
   it.effect("rejects wrong source identity, ordinal, stale text and duplicate evidence", () =>
     Effect.gen(function* () {
       const input = inputOf("A system comprising a sensor; the sensor.");
