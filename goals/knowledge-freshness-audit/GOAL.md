@@ -13,15 +13,13 @@ skill adaptations, repair confirmed discrepancies, and prove complete coverage.
 
 ## Activation boundary
 
-This campaign is initially paused. P0 authoring and a docs-only planning PR are
-authorized; the audit starts only after explicit operator activation. A planning
-PR at mergeable neither activates nor completes this goal.
-
-After activation, update lifecycle through the existing goals command. Refresh
-the census and parent capabilities before implementation. Audited-content
-mutation still requires the corresponding read-only report and recorded
-false-positive review. Ask only about genuinely unresolved purpose/authority on
-concrete evidence; do not repeat approvals already recorded.
+The operator activated bounded report collection, local false-positive/omission
+review, validated repairs, and PR publication. The manifest is active; P1-P3 are
+partial. Promotional cloud work has ended and no paid pilot or spending is
+admitted. Continue from history/2026-11-06-reviewed-local-repairs.md.
+Audited-content mutation still requires its concrete report and parent review.
+Keep PM's missing original and ADHD provenance separate; never infer acceptance
+from an inaccessible source or a repeated claim count.
 
 ## Execute
 
@@ -29,8 +27,8 @@ concrete evidence; do not repeat approvals already recorded.
 2. Extract anchored claims and explicit zero-claim/error receipts per item.
 3. Verify against revision-bound evidence with authority and time kept explicit.
    Reuse deterministic Knowledge checks and shared evidence receipts.
-4. Optionally evaluate Jev under the $5 pilot in research/jev-evaluation.md.
-   No calls in P0; no raw secrets; failed admission selects the agent fallback.
+4. Keep Jev unrun under the current no-spend instruction; use local deterministic
+   checks and evidence-led review.
 5. Reconcile skill base/local/upstream content and preserve reviewed adaptations.
 6. Repair the owning source, capture before/after proof, and recheck dependencies.
 7. Complete coverage, precise regression gates, and exact-head PR closeout.
@@ -52,5 +50,5 @@ in research/OPPORTUNITIES.md when it occurs.
 
 Use Yeet repair -> verify -> publish -> monitor. Each PR needs exact-head hosted
 proof and no outstanding review obligations. Leave PRs open unless merging is
-explicitly authorized. Final audit reflection and lifecycle closeout land with
-final work; the P0 planning packet remains paused.
+explicitly authorized. Final work carries reflection and proposed closeout; a separate packet-state
+PR adopts verified completion under AGENTS.md. Partial delivery does not close the goal.

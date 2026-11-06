@@ -595,10 +595,6 @@ You are not done if these fail:
 - `bun run test`
 - `bun run docgen`
 
-If agent instruction surfaces changed, also run:
-
-- `bun run agents:pathless:check`
-
 ### EF-21: Runtime execution stays at the boundary
 
 - Application entrypoints and tests may execute effects with `Effect.run*`.

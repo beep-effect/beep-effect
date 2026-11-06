@@ -108,8 +108,9 @@ parse_timestamp_epoch() {
 }
 
 active_ack_ids() {
-  # Two jq processes in total, not two per ack file: with hundreds of acks the
-  # per-file loop alone outran the 2s UserPromptSubmit hook budget.
+  # Read ack files in batches rather than one jq process per file. The pipeline
+  # has multiple jq stages, and find may split a large input into several batches.
+  # The former per-file loop outran the 2s UserPromptSubmit hook budget.
   # `find -type f` skips symlinks, matching the old `-f && ! -L` guard, and
   # `find -exec ... {} +` stays portable to BSD userlands (no `xargs -d`).
   [ -d "$acks" ] || { printf '[]'; return 0; }

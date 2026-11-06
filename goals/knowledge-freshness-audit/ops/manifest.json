@@ -3,15 +3,15 @@
   "initiative": {
     "id": "knowledge-freshness-audit",
     "title": "Repository freshness audit",
-    "status": "paused",
+    "status": "active",
     "created": "2026-09-24",
-    "updated": "2026-09-25",
+    "updated": "2026-11-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/knowledge-freshness-audit",
-  "lifecycle": "paused",
+  "lifecycle": "active",
   "mission": "Audit repository claims against explicit authority and evidence, reconcile customized upstream skills, and verify targeted repairs.",
-  "statusNote": "Planning packet delivered in PR #1218; campaign remains authored-but-not-started. Explicit operator activation opens P1 reporting. Audited-content mutation follows the corresponding report and false-positive review. Planning PR readiness is not audit completion.",
+  "statusNote": "Operator-authorized audit execution and local repairs are in progress. Collected reports through T91 and parent false-positive reviews support bounded repairs; coverage is incomplete. PM T17 missing original and ADHD imported-source provenance remain separate holds. Promotional cloud credits expired; no paid pilot or spending is authorized. Delivery PR readiness is not goal completion.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
@@ -65,17 +65,17 @@
     {
       "id": "P1",
       "name": "Inventory and report-first extraction/evidence tooling",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
       "name": "Claim verification and optional bounded Jev evaluation",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",
       "name": "Skill reconciliation and targeted repairs",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
@@ -99,7 +99,7 @@
     "bun run beep yeet verify"
   ],
   "stopConditions": [
-    "Audit execution has not been explicitly activated; P0 packet delivery remains authorized.",
+    "Only operator-authorized bounded local review, repairs and PR delivery are admitted; no new paid cloud work or pilot.",
     "Required authority is materially contradictory; stop the dependent repair and continue independent work.",
     "The proposed change exceeds claims-plus-targeted-fixes scope or would reopen inherited ratified doctrine.",
     "Audited-content mutation lacks its corresponding report and recorded false-positive review.",

@@ -22,8 +22,9 @@ appears outside an Example.
 ## Carrier and kind split
 
 Use titled Example sections everywhere. The legacy `@example` and `@remarks`
-carriers are retired repo-wide: the zero-legacy ratchet fails on any occurrence in
-`packages/**/src`. Move `@remarks` content into Details or Gotchas.
+carriers are retired repo-wide. The default zero-legacy scan covers
+non-generated `{packages,apps}/**/src`; pass `--include-generated` to prove
+generator output too. Move `@remarks` content into Details or Gotchas.
 
 Examples are required for value-level exports: functions, constants, classes,
 schemas, services, layers, and other runtime values. Pure type-level exports need
@@ -62,18 +63,20 @@ After:
  *
  * **Details**
  *
- * Successful decoding returns the normalized schema value.
+ * Successful decoding returns a validated, already-trimmed string; surrounding
+ * whitespace is rejected rather than removed.
  *
  * **Example** (Inspect both outcomes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect both outcomes"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
  * const decodeUserName = S.decodeUnknownOption(S.Trimmed.check(S.isNonEmpty()))
  *
- * console.log(O.isSome(decodeUserName("Ada"))) // true
- * console.log(O.isNone(decodeUserName(""))) // true
+ * O.isSome(decodeUserName("Ada")) // => true
+ * O.isNone(decodeUserName("")) // => true
+ * O.isNone(decodeUserName(" Ada ")) // => true
  * ```
  *
  * @see {@link S.decodeUnknownOption} for the underlying decoding operation.
@@ -165,7 +168,7 @@ slugs.
 
 ## Forbidden patterns
 
-- `@remarks`, `@module`, or `@template` in new or touched blocks.
+- `@example` or `@remarks` anywhere; `@module` or `@template` in new or touched blocks.
 - `{type}` blobs in tags or a hyphen after `@returns`/`@throws`.
 - Bare `@see` links without a purpose phrase.
 - Empty, duplicate, or out-of-order sections; a section after an Example.
