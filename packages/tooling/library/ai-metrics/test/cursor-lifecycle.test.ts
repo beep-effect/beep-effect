@@ -1,5 +1,7 @@
-import { createConnection } from "node:net";
+import { createServer } from "node:net";
+import { fcRuns } from "@beep/fc-runs";
 import {
+  CursorLifecycleError,
   CursorLifecyclePolicy,
   CursorLifecycleRuntime,
   forwardCursorLifecycleHook,
@@ -11,11 +13,14 @@ import { NativeTraceRequest, projectNativeTraceRequest } from "@beep/repo-ai-met
 import { makeObservationControl, ObservationControlPolicy } from "@beep/repo-ai-metrics/observation-control";
 import { hashPrivateIdentifier } from "@beep/repo-ai-metrics/privacy";
 import {
+  cursorLifecycleFixtureCodecs,
   cursorPeerSource,
   hashObservationPayload,
   makeCursorLifecycleFixtureReceiver,
   nativeTraceWire,
 } from "@beep/repo-ai-metrics/test/cursor-lifecycle";
+import { cursorPeerDiagnosticBootstrap } from "@beep/repo-ai-metrics/test/cursor-peer-diagnostic";
+import { makeSealedRuntimeFixture } from "@beep/repo-ai-metrics/test/sealed-runtime";
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -25,18 +30,27 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { expect } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
+import * as References from "effect/References";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import type { Socket } from "node:net";
 
 const json = S.fromJsonString(S.Unknown);
 const encode = S.encodeUnknownEffect(json);
@@ -59,6 +73,145 @@ const decodeWire = S.decodeUnknownEffect(
       })
     ),
   })
+);
+const diagnosticGuard = S.String.check(
+  S.isPattern(
+    /^(?:(?:source|runtime|unknown)\.)?(?:bounded_json|public_digest|process|observe|serve)\.(?:enter|i\d+|r\d+|b\d+\.\d+)$/
+  )
+);
+const diagnosticReport = S.Struct({
+  diagnostic: S.tag("cursor-peer-diagnostic/v1"),
+  ok: S.Boolean,
+  phase: S.Literals(["bootstrap", "bounded_json", "public_digest", "process", "observe", "serve", "complete"]),
+  predicate: S.String.check(
+    S.isPattern(
+      /^(?:bootstrap|(?:(?:source|runtime|unknown)\.)?(?:bounded_json|public_digest|process|observe|serve)\.(?:enter|i\d+|r\d+|b\d+\.\d+))$/
+    )
+  ),
+  exceptionClass: S.Literals([
+    "None",
+    "ValueError",
+    "PermissionError",
+    "FileNotFoundError",
+    "ProcessLookupError",
+    "TimeoutError",
+    "OSError",
+    "JSONDecodeError",
+    "UnicodeDecodeError",
+    "AttributeError",
+    "KeyError",
+    "StopIteration",
+    "ConnectionResetError",
+    "BrokenPipeError",
+    "Unknown",
+  ]),
+  sourceHashMatches: S.Boolean,
+  predicateAstPreserved: S.Boolean,
+  shortCircuitOrderPreserved: S.Boolean,
+  projectedPrintSuppressed: S.Boolean,
+  checks: S.Record(diagnosticGuard, S.Struct({ observedTrue: S.Boolean, observedFalse: S.Boolean })),
+});
+const diagnosticReady = S.Struct({ ready: S.tag(true) });
+const isDiagnosticReady = S.is(diagnosticReady);
+const decodeDiagnosticLine = S.decodeEffect(S.fromJsonString(S.Union([diagnosticReady, diagnosticReport])), {
+  onExcessProperty: "error",
+});
+const decodeDiagnosticReport = S.decodeUnknownEffect(diagnosticReport, { onExcessProperty: "error" });
+const encodeDiagnosticError = S.encodeEffect(S.fromJsonString(CursorLifecycleError));
+const diagnosticObservation = S.Struct({
+  listenerReady: S.Boolean,
+  diagnosticAckObserved: S.Boolean,
+  helperExitZero: S.Boolean,
+  report: diagnosticReport,
+});
+const diagnosticEvidence = S.Struct({
+  ...diagnosticObservation.fields,
+  evidence: S.Literals(["synthetic-diagnostic-occurrence-not-retrodiagnosis", "synthetic-regression-fixture"]),
+  testProcessReportsBun: S.Boolean,
+  testProcessReportsNode22: S.Boolean,
+});
+const encodeDiagnosticEvidence = S.encodeEffect(S.fromJsonString(diagnosticEvidence));
+const decodeDiagnosticEvidence = S.decodeEffect(S.fromJsonString(diagnosticEvidence), { onExcessProperty: "error" });
+const equivalentDiagnosticEvidence = S.toEquivalence(diagnosticEvidence);
+const decodeAssertionMessage = S.decodeUnknownOption(S.Struct({ message: S.String }));
+const diagnosticContext = Effect.fnUntraced(function* (
+  observed: typeof diagnosticObservation.Type,
+  evidence: typeof diagnosticEvidence.Type.evidence = "synthetic-diagnostic-occurrence-not-retrodiagnosis"
+) {
+  const encoded = yield* encodeDiagnosticEvidence({
+    ...observed,
+    evidence,
+    testProcessReportsBun: O.isSome(O.fromUndefinedOr(process.versions.bun)),
+    testProcessReportsNode22: Str.startsWith("22.")(process.versions.node),
+  });
+  return `[cursor-peer-diagnostic] ${encoded}`;
+});
+
+const inspectSyntheticPeer = Effect.fn("CursorLifecycleTest.inspectSyntheticPeer")(
+  function* (policy: CursorLifecyclePolicy, runtime: Effect.Success<ReturnType<typeof makeSealedRuntimeFixture>>) {
+    const fs = yield* FileSystem.FileSystem;
+    const directory = yield* fs.makeTempDirectoryScoped({ prefix: "cursor-lifecycle-" });
+    const socketPath = `${directory}/s`;
+    const header = yield* encode({ source: cursorPeerSource, sha256: policy.helperSha256 });
+    const publicPolicy = yield* encode({
+      workspace: policy.workspace,
+      runtimeExecutable: policy.runtimeExecutable,
+      runtimeSha256: policy.runtimeSha256,
+      sourcePins: policy.sourcePins,
+    });
+    const stdin = new TextEncoder().encode(`${header}\n${publicPolicy}\n{}\n`);
+    const child = yield* ChildProcess.make(
+      policy.pythonExecutable,
+      ["-I", "-B", "-c", cursorPeerDiagnosticBootstrap, socketPath],
+      { extendEnv: false, stdin: Stream.make(stdin), stderr: "ignore", killSignal: "SIGKILL" }
+    );
+    let output = "";
+    let outputBytes = 0;
+    const next = yield* child.stdout.pipe(
+      Stream.mapEffect((chunk) => {
+        outputBytes += chunk.byteLength;
+        if (outputBytes > 16384) return Effect.fail("diagnostic-bounds");
+        output += new TextDecoder().decode(chunk);
+        return Effect.succeed(chunk);
+      }),
+      Stream.decodeText(),
+      Stream.splitLines,
+      Stream.rechunk(1),
+      Stream.toPull
+    );
+    const first = yield* next;
+    const firstValue = yield* decodeDiagnosticLine(first[0]).pipe(Effect.mapError(() => "diagnostic-envelope"));
+    const listenerReady = isDiagnosticReady(firstValue);
+    let diagnosticAckObserved = false;
+    let reportValue: unknown = firstValue;
+    if (listenerReady) {
+      const body = yield* encode(start);
+      const sending = yield* Effect.forkChild(
+        runtime.send(socketPath, body, false).pipe(
+          Effect.flatMap((reply) => (reply === "{}\n" ? Effect.void : Effect.fail("diagnostic-socket"))),
+          Effect.timeoutOrElse({ duration: "6 seconds", orElse: () => Effect.fail("diagnostic-socket") }),
+          Effect.result
+        )
+      );
+      const final = yield* next;
+      reportValue = yield* decodeDiagnosticLine(final[0]).pipe(Effect.mapError(() => "diagnostic-envelope"));
+      const acknowledged = yield* Fiber.join(sending);
+      diagnosticAckObserved = Result.isSuccess(acknowledged);
+    }
+    const report = yield* decodeDiagnosticReport(reportValue).pipe(Effect.mapError(() => "diagnostic-envelope"));
+    const exit = yield* child.exitCode;
+    for (const marker of [
+      policy.workspace,
+      policy.runtimeExecutable,
+      "PRIVATE-PROMPT",
+      "private@example",
+      "native-session",
+      "forged-root",
+    ])
+      expect(Str.includes(marker)(output)).toBe(false);
+    return { listenerReady, diagnosticAckObserved, helperExitZero: exit === 0, report };
+  },
+  Effect.mapError(() => CursorLifecycleError.make({ reason: "transport" }))
 );
 const salt = "synthetic-cursor-passive-salt";
 const id = Sha256Hex.make(Str.repeat(64)("a"));
@@ -92,7 +245,8 @@ const start = {
 const fixture = Effect.fn("CursorLifecycleTest.fixture")(function* (maxPages = 32) {
   yield* TestClock.adjust("1 second");
   const fs = yield* FileSystem.FileSystem;
-  const runtimeExecutable = yield* fs.realPath(process.execPath);
+  const runtime = yield* makeSealedRuntimeFixture();
+  const runtimeExecutable = runtime.executable;
   const pythonExecutable = yield* fs.realPath("/usr/bin/python3");
   const namespaceId = yield* hashPrivateIdentifier("ai-metrics-hash-salt-namespace/v1", O.some(salt));
   const sourceRoot = yield* fs.makeTempDirectoryScoped({ prefix: "cursor-source-fixture-" });
@@ -109,7 +263,7 @@ const fixture = Effect.fn("CursorLifecycleTest.fixture")(function* (maxPages = 3
   const policy = CursorLifecyclePolicy.make({
     workspace: process.cwd(),
     runtimeExecutable,
-    runtimeSha256: yield* sha(runtimeExecutable),
+    runtimeSha256: runtime.sha256,
     pythonExecutable,
     pythonSha256: yield* sha(pythonExecutable),
     helperSha256: yield* hashObservationPayload(new TextEncoder().encode(cursorPeerSource)),
@@ -135,13 +289,119 @@ const fixture = Effect.fn("CursorLifecycleTest.fixture")(function* (maxPages = 3
     if (Result.isFailure(opened)) return { result: Result.fail(opened.failure), reply: Result.fail(opened.failure) };
     const encoded = yield* encode(body);
     const sending = yield* Effect.forkChild(
-      forwardCursorLifecycleHook(opened.success.socketPath, encoded).pipe(Effect.result)
+      runtime.send(opened.success.socketPath, encoded, false).pipe(
+        Effect.flatMap(cursorLifecycleFixtureCodecs.decodeAcknowledgement),
+        Effect.mapError(() => CursorLifecycleError.make({ reason: "transport" })),
+        Effect.result
+      )
     );
     const result = yield* opened.success.accept.pipe(Effect.result);
     const reply = yield* Fiber.join(sending);
     return { result, reply };
   });
-  return { policy, journal, control, namespaceId, deliver };
+  return { policy, journal, control, namespaceId, deliver, runtime };
+});
+
+const ackServer = Effect.fn("CursorLifecycleTest.syntheticAckServer")(function* (reply: string, hold: boolean) {
+  const fs = yield* FileSystem.FileSystem;
+  const directory = yield* fs.makeTempDirectoryScoped({ prefix: "ack-contract-" });
+  yield* fs.chmod(directory, 0o700);
+  const canonical = yield* fs.realPath(directory);
+  const path = `${canonical}/s`;
+  const seen = yield* Deferred.make<void>();
+  let received = "";
+  let receivedBytes = 0;
+  let sockets: ReadonlyArray<Socket> = [];
+  const server = yield* Effect.acquireRelease(
+    Effect.sync(() =>
+      createServer({ allowHalfOpen: true }, (socket) => {
+        sockets = A.append(sockets, socket);
+        socket.on("data", (chunk: Uint8Array) => {
+          receivedBytes += chunk.byteLength;
+          if (receivedBytes > 8192) socket.destroy();
+          else received += new TextDecoder().decode(chunk);
+        });
+        socket.once("end", () => {
+          Deferred.doneUnsafe(seen, Effect.void);
+          if (!hold) socket.end(reply);
+        });
+        socket.once("error", () => socket.destroy());
+      })
+    ),
+    (server) =>
+      Effect.callback<void>((resume) => {
+        A.forEach(sockets, (socket) => socket.destroy());
+        server.close(() => resume(Effect.void));
+      })
+  );
+  yield* Effect.callback<void, CursorLifecycleError>((resume) => {
+    server.once("error", () => resume(Effect.fail(CursorLifecycleError.make({ reason: "transport" }))));
+    server.listen(path, () => resume(Effect.void));
+  });
+  return { path, received: Effect.sync(() => received), awaitRequest: Deferred.await(seen) };
+});
+
+it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer), { memoMap: Layer.makeMemoMapUnsafe() })((it) => {
+  for (const kind of ["valid", "malformed", "oversized"]) {
+    it.effect(`production forwarder projects input and validates ${kind} synthetic ACK without durability claims`, () =>
+      Effect.gen(function* () {
+        const body = yield* encode(start);
+        const good = yield* encode({ receiptId: id, accepted: 1, rejected: 0 });
+        const reply = kind === "valid" ? good : kind === "malformed" ? "{malformed" : Str.repeat(1025)("x");
+        const server = yield* ackServer(reply, false);
+        const result = yield* forwardCursorLifecycleHook(server.path, body).pipe(Effect.result);
+        const projected = yield* server.received;
+        for (const marker of ["PRIVATE-", "private@example", "/private", "callerVerified", "forged-root"])
+          expect(Str.includes(marker)(projected)).toBe(false);
+        if (kind === "valid") assertSuccess(result, { receiptId: id, accepted: 1, rejected: 0 });
+        else assertFailure(result, CursorLifecycleError.make({ reason: "transport" }));
+      })
+    );
+  }
+  it.effect("production forwarder reports connection failure and refuses oversized input before transport", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const absent = yield* fs.makeTempDirectoryScoped({ prefix: "missing-ack-" });
+      const body = yield* encode(start);
+      const connectionError = yield* forwardCursorLifecycleHook(`${absent}/s`, body).pipe(Effect.flip);
+      expect(connectionError.reason).toBe("transport");
+      const oversized = yield* forwardCursorLifecycleHook(`${absent}/s`, Str.repeat(8193)("x")).pipe(Effect.flip);
+      expect(oversized.reason).toBe("callback");
+    })
+  );
+});
+it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeMemoMapUnsafe() })((it) => {
+  it.effect("private runtime close waits for child exit, removes its copy and preserves source permissions", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const runtime = yield* makeSealedRuntimeFixture();
+      yield* runtime.close;
+      yield* runtime.closed;
+      const remains = yield* fs.exists(runtime.executable);
+      expect(remains).toBe(false);
+      const source = yield* fs.realPath(process.execPath);
+      expect((yield* fs.stat(source)).mode).toBe(runtime.sourceMode);
+    })
+  );
+  it.effect("interrupting a waiting peer send preserves interruption and closes only its owned process and copy", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const server = yield* ackServer("", true);
+      const runtime = yield* makeSealedRuntimeFixture();
+      const body = yield* encode(start);
+      const sending = yield* Effect.forkChild(runtime.send(server.path, body, false));
+      yield* server.awaitRequest;
+      yield* Fiber.interrupt(sending);
+      const outcome = yield* Fiber.await(sending);
+      if (outcome._tag !== "Failure") return yield* Effect.die("unexpected-peer-success");
+      expect(Cause.hasInterruptsOnly(outcome.cause)).toBe(true);
+      yield* runtime.closed;
+      const remains = yield* fs.exists(runtime.executable);
+      expect(remains).toBe(false);
+      const source = yield* fs.realPath(process.execPath);
+      expect((yield* fs.stat(source)).mode).toBe(runtime.sourceMode);
+    })
+  );
 });
 
 it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) =>
@@ -244,17 +504,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       );
       const opened = yield* receiver.open();
       const body = yield* encode(start);
-      yield* Effect.callback<void>((resume) => {
-        const socket = createConnection({ path: opened.socketPath, allowHalfOpen: true });
-        socket.once("connect", () =>
-          socket.end(body, () => {
-            socket.destroy();
-            resume(Effect.void);
-          })
-        );
-        socket.once("error", () => resume(Effect.void));
-        return Effect.sync(() => socket.destroy());
-      });
+      yield* f.runtime.send(opened.socketPath, body, true);
       const uncertain = yield* opened.accept.pipe(Effect.result);
       expect(uncertain._tag).toBe("Failure");
       expect((yield* f.journal.stats).pages).toBe(1);
@@ -320,6 +570,70 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       expect((yield* f.journal.stats).pages).toBe(0);
     })
   )
+);
+
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) =>
+  it.effect(
+    "writable byte-identical private runtime refuses before journal commit; sealing admits the same bytes",
+    () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        const before = yield* sha(f.runtime.executable);
+        expect(before).toBe(f.policy.runtimeSha256);
+        const alias = `${f.runtime.executable}.link`;
+        yield* fs.symlink(f.runtime.executable, alias);
+        const linked = yield* f.deliver(start, CursorLifecyclePolicy.make({ ...f.policy, runtimeExecutable: alias }));
+        expect(linked.result._tag).toBe("Failure");
+        expect(linked.reply._tag).toBe("Failure");
+        expect((yield* f.journal.stats).pages).toBe(0);
+        yield* fs.chmod(f.runtime.executable, 0o770);
+        const diagnostic = yield* inspectSyntheticPeer(f.policy, f.runtime);
+        expect(diagnostic.report.phase).toBe("public_digest");
+        expect(diagnostic.report.predicate).toBe("runtime.public_digest.r41");
+        expect(
+          A.some(
+            R.toEntries(diagnostic.report.checks),
+            ([name, value]) => name === "runtime.public_digest.b40.1" && value.observedTrue
+          )
+        ).toBe(true);
+        expect(R.keys(diagnostic.report.checks)).not.toContain("runtime.public_digest.b40.2");
+        const refused = yield* f.deliver(start);
+        expect(refused.result._tag).toBe("Failure");
+        expect(refused.reply._tag).toBe("Failure");
+        expect((yield* f.journal.stats).pages).toBe(0);
+        const writableHash = yield* sha(f.runtime.executable);
+        expect(writableHash).toBe(before);
+        yield* fs.chmod(f.runtime.executable, 0o500);
+        const accepted = yield* f.deliver(start);
+        expect(accepted.result._tag).toBe("Success");
+        expect(accepted.reply._tag).toBe("Success");
+        expect((yield* f.journal.stats).pages).toBe(1);
+        const sealedHash = yield* sha(f.runtime.executable);
+        expect(sealedHash).toBe(before);
+      })
+  )
+);
+
+it.effect.prop(
+  "arbitrary closed diagnostic evidence roundtrips without serializing forged private fields",
+  [Arbitrary.schema(diagnosticEvidence)],
+  Effect.fnUntraced(function* ([sample]) {
+    const forged = {
+      ...sample,
+      argv: ["PRIVATE-ARGV"],
+      path: "/private/PRIVATE-PATH",
+      stderr: "PRIVATE-STDERR",
+      report: { ...sample.report, callback: "PRIVATE-CALLBACK" },
+    };
+    const encoded = yield* encodeDiagnosticEvidence(forged);
+    const decoded = yield* decodeDiagnosticEvidence(encoded);
+    expect(equivalentDiagnosticEvidence(sample, decoded)).toBe(true);
+    expect(R.keys(decoded)).toHaveLength(7);
+    for (const marker of ["PRIVATE-ARGV", "PRIVATE-PATH", "PRIVATE-STDERR", "PRIVATE-CALLBACK"])
+      expect(Str.includes(marker)(encoded)).toBe(false);
+  }),
+  { arbitrary: fcRuns(25) }
 );
 
 it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) =>
@@ -409,5 +723,135 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       expect(error.reason).toBe("enrollment");
       expect((yield* f.journal.stats).pages).toBe(0);
     })
+  )
+);
+
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) =>
+  it.effect("reports closed synthetic peer predicates without retaining callback or process values", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const observed = yield* inspectSyntheticPeer(f.policy, f.runtime);
+      const message = yield* diagnosticContext(observed);
+      // This schema-closed metadata has no paths, PIDs, argv, environment, callback body or stderr.
+      yield* Effect.logInfo(message);
+      expect(observed.report.sourceHashMatches, message).toBe(true);
+      expect(observed.report.predicateAstPreserved, message).toBe(true);
+      expect(observed.report.shortCircuitOrderPreserved, message).toBe(true);
+      expect(observed.report.projectedPrintSuppressed, message).toBe(true);
+      expect(observed.report.ok, message).toBe(true);
+      expect(observed.diagnosticAckObserved, message).toBe(true);
+      expect(observed.helperExitZero, message).toBe(true);
+      expect((yield* f.journal.stats).pages, message).toBe(0);
+    }).pipe(Effect.timeout("15 seconds"))
+  )
+);
+
+it.effect("closed diagnostic assertion context survives when all info logging is filtered", () =>
+  Effect.gen(function* () {
+    const report = diagnosticReport.make({
+      ok: false,
+      phase: "public_digest",
+      predicate: "source.public_digest.b40.1",
+      exceptionClass: "ValueError",
+      sourceHashMatches: true,
+      predicateAstPreserved: true,
+      shortCircuitOrderPreserved: true,
+      projectedPrintSuppressed: true,
+      checks: { "source.public_digest.b40.1": { observedTrue: true, observedFalse: false } },
+    });
+    const message = yield* diagnosticContext(
+      { listenerReady: true, diagnosticAckObserved: false, helperExitZero: false, report },
+      "synthetic-regression-fixture"
+    );
+    let infoLogs = 0;
+    const logger = Logger.make(() => {
+      infoLogs++;
+    });
+    const loggerContext = yield* Layer.build(Logger.layer([logger]));
+    const assertion = yield* Effect.gen(function* () {
+      yield* Effect.logInfo(message);
+      return yield* Effect.try({
+        try: () => expect(report.ok, message).toBe(true),
+        catch: (error) =>
+          decodeAssertionMessage(error).pipe(
+            O.map((value) => value.message),
+            O.getOrElse(() => "unclassified-assertion")
+          ),
+      }).pipe(Effect.flip);
+    }).pipe(Effect.provideService(References.MinimumLogLevel, "None"), Effect.provideContext(loggerContext));
+    expect(infoLogs).toBe(0);
+    expect(Str.includes(message)(assertion)).toBe(true);
+    expect(Str.includes("source.public_digest.b40.1")(assertion)).toBe(true);
+    for (const forbidden of [
+      "PRIVATE-PROMPT",
+      "private@example",
+      "native-session",
+      "forged-root",
+      "/home/",
+      "argv",
+      "stderr",
+    ])
+      expect(Str.includes(forbidden)(assertion)).toBe(false);
+  })
+);
+
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) =>
+  it.effect("refuses a diagnostic source digest mismatch before observing a peer", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const observed = yield* inspectSyntheticPeer(
+        CursorLifecyclePolicy.make({ ...f.policy, helperSha256: id }),
+        f.runtime
+      );
+      expect(observed.listenerReady).toBe(false);
+      expect(observed.diagnosticAckObserved).toBe(false);
+      expect(observed.report.sourceHashMatches).toBe(false);
+      expect(observed.report.phase).toBe("bootstrap");
+      expect(R.size(observed.report.checks)).toBe(0);
+      expect((yield* f.journal.stats).pages).toBe(0);
+    }).pipe(Effect.timeout("15 seconds"))
+  )
+);
+
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) =>
+  it.effect("attributes an owned synthetic writable source refusal to a closed digest predicate", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const fs = yield* FileSystem.FileSystem;
+      const pin = yield* Effect.fromOption(A.head(f.policy.sourcePins));
+      yield* fs.chmod(pin.path, 0o660);
+      const observed = yield* inspectSyntheticPeer(f.policy, f.runtime);
+      expect(observed.listenerReady).toBe(true);
+      expect(observed.report.ok).toBe(false);
+      expect(observed.report.phase).toBe("public_digest");
+      expect(observed.report.exceptionClass).toBe("ValueError");
+      expect(observed.diagnosticAckObserved).toBe(false);
+      expect(
+        A.some(
+          R.toEntries(observed.report.checks),
+          ([name, value]) => name === "source.public_digest.b40.1" && value.observedTrue
+        )
+      ).toBe(true);
+      expect(observed.report.predicateAstPreserved).toBe(true);
+      expect(observed.report.shortCircuitOrderPreserved).toBe(true);
+      expect((yield* f.journal.stats).pages).toBe(0);
+    }).pipe(Effect.timeout("15 seconds"))
+  )
+);
+
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) =>
+  it.effect("diagnostic transport errors cannot expose helper arguments or raw exceptions", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const failed = yield* inspectSyntheticPeer(
+        CursorLifecyclePolicy.make({ ...f.policy, pythonExecutable: "/nonexistent/PRIVATE-HELPER" }),
+        f.runtime
+      ).pipe(Effect.flip);
+      expect(failed.reason).toBe("transport");
+      const encoded = yield* encodeDiagnosticError(failed);
+      expect(Str.includes("PRIVATE-HELPER")(encoded)).toBe(false);
+      expect(Str.includes("_closed_probe")(encoded)).toBe(false);
+      expect((yield* f.journal.stats).pages).toBe(0);
+    }).pipe(Effect.timeout("15 seconds"))
   )
 );
