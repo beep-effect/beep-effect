@@ -24,9 +24,26 @@ import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { vi } from "vitest";
 import { qualifyClaudeManagedPolicy } from "./claude-native-policy.ts";
-import { MuseProxyCanaryEvidence, MuseProxyCanaryRequest, runMuseProxyCanary } from "./muse-proxy-canary.ts";
+import {
+  MuseProxyCanaryError,
+  MuseProxyCanaryEvidence,
+  MuseProxyCanaryRequest,
+  runMuseProxyCanary,
+} from "./muse-proxy-canary.ts";
 import { NativeAttemptDiagnostic } from "./native-attempt-diagnostic.ts";
+
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const original = await importOriginal<typeof import("node:fs/promises")>();
+  return { ...original, stat: vi.fn(original.stat), readFile: vi.fn(original.readFile) };
+});
+
+// Process metadata injection is module-scoped; serialize every case that can use it.
+const nativeCase = (name: string, body: () => Effect.Effect<void, unknown>) =>
+  it.live(name, body, { concurrent: false });
+
+const failurePhase = (failure: unknown) => (S.is(MuseProxyCanaryError)(failure) ? failure.phase : "unexpected-error");
 
 const id = (c: string) => Sha256Hex.make(Str.repeat(64)(c));
 const digest = (text: string | Uint8Array) => createHash("sha256").update(text).digest("hex");
@@ -182,7 +199,7 @@ const fixture = async (
   };
 };
 
-it.live("canonical consumer, actual descendant and metadata-only replay stay distinct", () =>
+nativeCase("canonical consumer, actual descendant and metadata-only replay stay distinct", () =>
   Effect.tryPromise(async () => {
     const f = await fixture({ rejectTraceOnce: true });
     try {
@@ -215,12 +232,17 @@ it.live("canonical consumer, actual descendant and metadata-only replay stay dis
   })
 );
 for (const mode of ["source-fail", "reported-error", "wrong-reply"]) {
-  it.live(`attempted ${mode} never invokes another wrapper source`, () =>
+  nativeCase(`attempted ${mode} never invokes another wrapper source`, () =>
     Effect.tryPromise(async () => {
       const f = await fixture({ mode });
       try {
-        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
-        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        const first = await Effect.runPromise(f.run.pipe(Effect.result));
+        expect(first._tag).toBe("Failure");
+        if (first._tag === "Failure")
+          expect(failurePhase(first.failure)).toBe(mode !== "wrong-reply" ? "source-exit" : "source-protocol");
+        const replay = await Effect.runPromise(f.run.pipe(Effect.result));
+        expect(replay._tag).toBe("Failure");
+        if (replay._tag === "Failure") expect(failurePhase(replay.failure)).toBe("attempted-unknown");
         expect(await f.count("source-count")).toBe(1);
         expect(f.traces()).toBe(0);
         const text = await Fs.readFile(Path.join(f.request.attemptDirectory, "diagnostic-source-failed.json"), "utf8");
@@ -246,7 +268,7 @@ for (const mode of ["source-fail", "reported-error", "wrong-reply"]) {
     })
   );
 }
-it.live("wrapper bytes drift refuses before consumer invocation", () =>
+nativeCase("wrapper bytes drift refuses before consumer invocation", () =>
   Effect.tryPromise(async () => {
     const f = await fixture();
     try {
@@ -258,3 +280,79 @@ it.live("wrapper bytes drift refuses before consumer invocation", () =>
     }
   })
 );
+
+for (const mode of [
+  "initial-exe-enoent",
+  "changed-start-ticks",
+  "foreign-parent",
+  "initial-stat-enoent",
+  "enoent-then-startticks",
+] as const) {
+  nativeCase(`owned synthetic process snapshots preserve the source fence: ${mode}`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture();
+      const originalStat = vi.mocked(Fs.stat).getMockImplementation();
+      const originalRead = vi.mocked(Fs.readFile).getMockImplementation();
+      if (originalStat === undefined || originalRead === undefined) throw new Error("missing-owned-fixture-mock");
+      let injected = false;
+      let statReads = 0;
+      const statMock = vi.mocked(Fs.stat).mockImplementation(async (filename, settings) => {
+        if (
+          (mode === "initial-exe-enoent" || mode === "enoent-then-startticks") &&
+          !injected &&
+          /^\/proc\/[0-9]+\/exe$/.test(String(filename))
+        ) {
+          injected = true;
+          throw Object.assign(new Error("SYNTHETIC_ENOENT"), { code: "ENOENT" });
+        }
+        return originalStat(filename, settings);
+      });
+      const readMock = vi.mocked(Fs.readFile).mockImplementation(async (filename, settings) => {
+        if (mode === "initial-stat-enoent" && !injected && /^\/proc\/[0-9]+\/stat$/.test(String(filename))) {
+          injected = true;
+          throw Object.assign(new Error("SYNTHETIC_ENOENT"), { code: "ENOENT" });
+        }
+        const value = await originalRead(filename, settings);
+        if (
+          mode !== "initial-exe-enoent" &&
+          mode !== "initial-stat-enoent" &&
+          /^\/proc\/[0-9]+\/stat$/.test(String(filename)) &&
+          typeof value === "string"
+        ) {
+          statReads++;
+          if (statReads >= (mode === "enoent-then-startticks" ? 3 : 2)) {
+            injected = true;
+            const end = value.lastIndexOf(")") + 2;
+            const fields = value.slice(end).trim().split(/\s+/);
+            const index = mode === "changed-start-ticks" || mode === "enoent-then-startticks" ? 19 : 1;
+            fields[index] = String(BigInt(fields[index] ?? "0") + 1n);
+            return value.slice(0, end) + fields.join(" ");
+          }
+        }
+        return value;
+      });
+      try {
+        const first = await Effect.runPromise(f.run.pipe(Effect.result));
+        expect(injected).toBe(true);
+        expect(first._tag, first._tag === "Failure" ? failurePhase(first.failure) : "success").toBe(
+          mode === "initial-exe-enoent" ? "Success" : "Failure"
+        );
+        if (mode === "initial-exe-enoent") {
+          expect(await f.count("source-count")).toBe(1);
+          expect(f.traces()).toBe(1);
+        } else {
+          if (first._tag === "Failure") expect(failurePhase(first.failure)).toBe("source-identity");
+          const replay = await Effect.runPromise(f.run.pipe(Effect.result));
+          expect(replay._tag).toBe("Failure");
+          if (replay._tag === "Failure") expect(failurePhase(replay.failure)).toBe("attempted-unknown");
+          expect(await f.count("source-count")).toBeLessThanOrEqual(1);
+          expect(f.traces()).toBe(0);
+        }
+      } finally {
+        statMock.mockImplementation(originalStat);
+        readMock.mockImplementation(originalRead);
+        await f.close();
+      }
+    })
+  );
+}
