@@ -47,7 +47,13 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { decodeGrokCanaryOutput, GrokCanarySource, observeGrokReportedNotSignedIn } from "./grok-exec-wire.ts";
+import {
+  decodeGrokCanaryOutput,
+  GrokCanarySource,
+  GrokNativeFailureClass,
+  observeGrokNativeFailureClass,
+  observeGrokReportedNotSignedIn,
+} from "./grok-exec-wire.ts";
 
 const $I = $RepoCliId.create("goals/harness-telemetry-enrollment/ops/grok-native-canary");
 const absolute = S.String.check(S.isPattern(/^\/[^\u0000-\u001f"\\]*$/), S.isMaxLength(4096)).pipe(
@@ -264,6 +270,9 @@ export class GrokNativeCanaryDiagnostic extends S.Opaque<
     stdoutBytes: S.OptionFromOptionalKey(diagnosticCount),
     stderrBytes: S.OptionFromOptionalKey(diagnosticCount),
     protocolTags: S.OptionFromOptionalKey(protocolTagCounts),
+    nativeFailureClass: S.OptionFromOptionalKey(GrokNativeFailureClass).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     nativeReportedNotSignedIn: S.OptionFromOptionalKey(S.Literal(true)).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
@@ -271,7 +280,7 @@ export class GrokNativeCanaryDiagnostic extends S.Opaque<
     .check(
       S.makeFilter(
         (value) =>
-          O.isNone(value.nativeReportedNotSignedIn) ||
+          (O.isNone(value.nativeReportedNotSignedIn) && O.isNone(value.nativeFailureClass)) ||
           (value.operation === "main" &&
             (value.stage === "native-exit" || value.stage === "outcome") &&
             value.producerDispatchAttempts === 1 &&
@@ -1002,6 +1011,7 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
     let stderrBytes = O.none<number>();
     let protocolTags = O.none<typeof protocolTagCounts.Type>();
     let nativeReportedNotSignedIn = O.none<true>();
+    let nativeFailureClass = O.none<typeof GrokNativeFailureClass.Type>();
     const measure = (kind: "stdout" | "stderr", bytes: number) => {
       if (kind === "stdout") stdoutBytes = O.some(bytes);
       else stderrBytes = O.some(bytes);
@@ -1026,6 +1036,7 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
           stderrBytes,
           protocolTags,
           nativeReportedNotSignedIn,
+          nativeFailureClass,
         })
       );
     evidence = yield* Effect.gen(function* () {
@@ -1105,6 +1116,8 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
           nativeExitStatus = O.some(captured.exitStatus);
           protocolTags = O.some(yield* countProtocolTags(captured.stdout));
           nativeReportedNotSignedIn = yield* observeGrokReportedNotSignedIn(captured.stdout, captured.exitStatus);
+          if (captured.exitStatus !== 0 && O.getOrThrow(protocolTags).error > 0)
+            nativeFailureClass = O.some(yield* observeGrokNativeFailureClass(captured.stdout, captured.exitStatus));
           yield* checkpoint(
             "diagnostic-040-native-exit.json",
             "native-exit",

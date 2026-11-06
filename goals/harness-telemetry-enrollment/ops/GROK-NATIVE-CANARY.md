@@ -160,3 +160,33 @@ The explicit main/title `grok-4.7` pins, fixed prompt, 23-tool denylist, native
 read-only sandbox, one source fence and unknown HTTP retry accounting are unchanged.
 Metadata authentication and an empty inventory do not claim successful inference,
 model entitlement, quota, or recovery of any prior failed attempt.
+
+
+## Finite native failure reports
+
+Nonzero main exits with observed error rows can retain an optional
+`nativeFailureClass`: `auth`, `subscription-or-quota`,
+`model-unavailable-or-config`, `network`, or `Unknown`. These classify a native
+report, never verified account state or historical cause. Exact case-sensitive
+message literals from the installed public 1.0.77 binary qualify the allowlist:
+`Not signed in` (including its exact login-help sentence),
+`SuperGrok subscription required`, `Model not found in config.toml [model.*]`,
+and the fixed Grok connection-timeout/interruption sentence with an HTTP status.
+The model class includes a local configuration failure; it does not prove that
+Grok 4.7 is unavailable at the provider. The subscription class does not infer
+quota from generic quota words. Static binary presence alone does not establish
+that every literal appears in a headless error envelope.
+
+Every unsupported, appended, malformed, conflicting, duplicate-error or oversized
+report remains `Unknown`. Generic HTTP status, auth codes, OS network tokens,
+nested messages and stderr never qualify a class. Raw messages and unknown fields
+remain transient and are discarded. The older positive NotSignedIn observation
+remains separate and retains its previously qualified substring semantics.
+No new class permits replay or changes admission, fences, native invocation,
+retention, delivery, authentication or model/effort pins.
+
+The latest actual native exit cannot be retroactively classified because its raw
+output was discarded. Its cause remains Unknown. Only a fresh owner-admitted,
+independently reviewed single-use attempt can exercise this observer against
+new native output. Offline fixtures validate the closed projection and retained
+metadata; they do not establish real account, quota, model or network diagnosis.

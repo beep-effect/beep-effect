@@ -76,6 +76,10 @@ int main(int argc,char **argv) {
  fputs("PRIVATE_STDERR_SYNTHETIC_ONLY",stderr);
  if(!strcmp(mode,"source-fail"))return 7;
  if(!strcmp(mode,"reported-not-signed-in")){puts("{\"type\":\"error\",\"message\":\"PRIVATE_PREFIX Not signed in PRIVATE_SUFFIX\",\"cwd\":\"PRIVATE_CWD\",\"spend\":\"PRIVATE_SPEND\"}");return 1;}
+ if(!strcmp(mode,"auth-error")){puts("{\"type\":\"error\",\"message\":\"Not signed in\",\"cwd\":\"PRIVATE_CWD\"}");return 1;}
+ if(!strcmp(mode,"subscription-error")){puts("{\"type\":\"error\",\"message\":\"SuperGrok subscription required\",\"cwd\":\"PRIVATE_CWD\"}");return 1;}
+ if(!strcmp(mode,"model-error")){puts("{\"type\":\"error\",\"message\":\"Model not found in config.toml [model.*]\",\"cwd\":\"PRIVATE_CWD\"}");return 1;}
+ if(!strcmp(mode,"network-error")){puts("{\"type\":\"error\",\"message\":\"Connection to Grok timed out or was interrupted. Please try again. (HTTP 504).\",\"cwd\":\"PRIVATE_CWD\"}");return 1;}
  if(!strcmp(mode,"other-native-error")){puts("{\"type\":\"error\",\"message\":\"PRIVATE_OTHER_ERROR\"}");return 1;}
  puts("{\"type\":\"available_commands\",\"tools\":[],\"commands\":[]}");
  puts("{\"type\":\"thought\",\"data\":\"PRIVATE_REASONING_SYNTHETIC_ONLY\"}");
@@ -411,7 +415,14 @@ for (const mode of ["source-fail", "wrong-reply", "tool"]) {
   );
 }
 
-for (const mode of ["reported-not-signed-in", "other-native-error"]) {
+for (const [mode, expected] of [
+  ["reported-not-signed-in", "Unknown"],
+  ["other-native-error", "Unknown"],
+  ["auth-error", "auth"],
+  ["subscription-error", "subscription-or-quota"],
+  ["model-error", "model-unavailable-or-config"],
+  ["network-error", "network"],
+] as const) {
   nativeCase(`finite nonzero failure projection retains only a qualified report: ${mode}`, () =>
     Effect.tryPromise(async () => {
       const f = await fixture({ mode });
@@ -422,8 +433,9 @@ for (const mode of ["reported-not-signed-in", "other-native-error"]) {
         const codec = S.fromJsonString(GrokNativeCanaryDiagnostic);
         const diagnostic = await Effect.runPromise(S.decodeEffect(codec, { onExcessProperty: "error" })(raw));
         expect(diagnostic.nativeReportedNotSignedIn).toEqual(
-          mode === "reported-not-signed-in" ? O.some(true) : O.none()
+          mode === "reported-not-signed-in" || mode === "auth-error" ? O.some(true) : O.none()
         );
+        expect(diagnostic.nativeFailureClass).toEqual(O.some(expected));
         expect(diagnostic.category).toBe("native-exit-refused");
         expect(O.getOrThrow(diagnostic.nativeExitStatus)).toBe(1);
         expect(O.getOrThrow(diagnostic.protocolTags).error).toBe(1);
@@ -431,6 +443,12 @@ for (const mode of ["reported-not-signed-in", "other-native-error"]) {
         expect(raw).not.toContain("Not signed in");
         expect(raw).not.toContain("message");
         expect(raw).not.toContain("spend");
+        const invalidClass = raw.replace(/"nativeFailureClass":"[^"]+"/, '"nativeFailureClass":"PRIVATE_UNBOUNDED"');
+        expect((await Effect.runPromise(S.decodeEffect(codec)(invalidClass).pipe(Effect.result)))._tag).toBe("Failure");
+        const unqualifiedClass = raw.replace('"operation":"main"', '"operation":"inspect-1"');
+        expect((await Effect.runPromise(S.decodeEffect(codec)(unqualifiedClass).pipe(Effect.result)))._tag).toBe(
+          "Failure"
+        );
         if (mode === "reported-not-signed-in") {
           const wrongExit = raw.replace('"nativeExitStatus":1', '"nativeExitStatus":0');
           expect((await Effect.runPromise(S.decodeEffect(codec)(wrongExit).pipe(Effect.result)))._tag).toBe("Failure");
