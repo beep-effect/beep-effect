@@ -152,7 +152,14 @@ const metadataAttributes = (span: NativeTraceMetadata, evidenceEpoch: number) =>
   text("openinference.span.kind", span.kind),
   text("ai_metrics.event_id", span.eventId),
   text("ai_metrics.route_id", span.routeId),
-  text("ai_metrics.stream", O.isSome(span.managedController) ? "managed-controller" : "native"),
+  text(
+    "ai_metrics.stream",
+    O.isSome(span.managedController)
+      ? "managed-controller"
+      : O.isSome(span.nativeLifecycle)
+        ? "native-lifecycle"
+        : "native"
+  ),
   ...A.flatMap(O.toArray(span.managedController), (controller) => [
     text("ai_metrics.producer_origin", "managed-controller"),
     text("ai_metrics.launch_id", controller.launchId),
@@ -160,6 +167,23 @@ const metadataAttributes = (span: NativeTraceMetadata, evidenceEpoch: number) =>
     text("ai_metrics.process_instance_id", controller.processInstanceId),
     text("ai_metrics.evidence_id", controller.evidenceId),
     text("ai_metrics.controller_elapsed_nanos", controller.elapsedNanos),
+  ]),
+  ...A.flatMap(O.toArray(span.nativeLifecycle), (event) => [
+    text("ai_metrics.harness", "cursor"),
+    text("ai_metrics.lifecycle.kind", event.kind),
+    text("ai_metrics.lifecycle.assurance", event.assurance),
+    text("ai_metrics.lifecycle.source_timestamp", event.sourceTimestamp),
+    text("ai_metrics.lifecycle.runtime_instance_id", event.runtimeInstanceId),
+    text("ai_metrics.lifecycle.root_id", event.rootId),
+    text("ai_metrics.lifecycle.host_id", event.hostId),
+    ...O.toArray(O.map(event.generationHash, (value) => text("ai_metrics.lifecycle.generation_id", value))),
+    ...O.toArray(
+      O.map(event.reportedDurationMillis, (value) => integer("ai_metrics.lifecycle.native_reported_duration_ms", value))
+    ),
+    ...O.toArray(O.map(event.reportedReason, (value) => text("ai_metrics.lifecycle.native_reported_reason", value))),
+    ...O.toArray(O.map(event.reportedStatus, (value) => text("ai_metrics.lifecycle.native_reported_status", value))),
+    ...O.toArray(O.map(event.reportedModelId, (value) => text("ai_metrics.lifecycle.native_reported_model", value))),
+    ...O.toArray(O.map(event.reportedEffort, (value) => text("ai_metrics.lifecycle.native_reported_effort", value))),
   ]),
   ...O.toArray(O.map(span.fixtureSurface, (surface) => text("ai_metrics.fixture.surface", surface))),
   ...(O.isSome(span.fixtureSurface)
@@ -229,7 +253,9 @@ export const encodeNativeTraceBatch = Effect.fn("AiMetrics.encodeNativeTraceBatc
           ? `fixture.${span.fixtureSurface.value}.${Str.toLowerCase(span.kind)}`
           : O.isSome(span.managedController)
             ? "managed.controller.canary"
-            : `agent.${Str.toLowerCase(span.kind)}`,
+            : O.isSome(span.nativeLifecycle)
+              ? `cursor.${span.nativeLifecycle.value.kind}`
+              : `agent.${Str.toLowerCase(span.kind)}`,
         kind: 1,
         startTimeUnixNano: point,
         endTimeUnixNano: span.durationKnown ? O.getOrElse(span.endTimeUnixNano, () => point) : point,

@@ -251,7 +251,13 @@ export const makeNativeIntakeJournal = Effect.fn("AiMetrics.makeNativeIntakeJour
             Effect.gen(function* () {
               if (
                 batch.namespaceId !== config.namespaceId ||
-                A.some(batch.spans, (span) => span.namespaceId !== batch.namespaceId || span.routeId !== batch.routeId)
+                A.some(
+                  batch.spans,
+                  (span) =>
+                    span.namespaceId !== batch.namespaceId ||
+                    span.routeId !== batch.routeId ||
+                    (O.isSome(span.nativeLifecycle) && span.nativeLifecycle.value.hostId !== config.hostId)
+                )
               )
                 return yield* failure("namespace");
               const payload = yield* encodeBatch(batch);

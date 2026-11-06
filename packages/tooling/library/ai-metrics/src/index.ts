@@ -58,6 +58,8 @@ export * from "./compose.ts";
  * @since 0.0.0
  */
 export * from "./config-snapshot.ts";
+/** Passive native Cursor lifecycle bridge; host activation is separate. @since 0.0.0 */
+export * from "./cursor-lifecycle.ts";
 /**
  * Canonical data-root precedence: `--data-root`, `BEEP_AI_METRICS_DATA_ROOT`,
  * then the XDG state store. Examples live on the owning declarations in
@@ -276,6 +278,8 @@ export * from "./native-http.ts";
  * @since 0.0.0
  */
 export * from "./native-intake.ts";
+/** Content-free lifecycle metadata. @since 0.0.0 */
+export * from "./native-lifecycle.ts";
 /**
  * Verified native backend observations linked to original send attempts.
  * Examples live in `./native-readback.ts`.

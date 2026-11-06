@@ -16,6 +16,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { nativeTraceWire } from "./internal/native-trace-wire.ts";
 import { ManagedControllerObservation, managedControllerTraceIdentity } from "./managed-controller.ts";
+import { NativeLifecycleMetadata } from "./native-lifecycle.ts";
 import { hashPrivateIdentifier } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("native-trace");
@@ -136,6 +137,9 @@ export class NativeTraceMetadata extends S.Opaque<NativeTraceMetadata, { readonl
     managedController: S.OptionFromOptionalKey(ManagedControllerObservation).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
+    nativeLifecycle: S.OptionFromOptionalKey(NativeLifecycleMetadata).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     usage: S.Struct({
       convention: UsageConvention,
       input: S.OptionFromOptionalKey(TokenCount),
@@ -170,6 +174,28 @@ export class NativeTraceMetadata extends S.Opaque<NativeTraceMetadata, { readonl
           title: "Consistent controller provenance",
           description:
             "Controller metadata must agree with AGENT identity, timing, unknown usage and the preserved session hash.",
+        }
+      )
+    )
+    .check(
+      S.makeFilter(
+        (value) =>
+          O.isNone(value.nativeLifecycle) ||
+          (value.kind === "CHAIN" &&
+            value.status === "unset" &&
+            !value.durationKnown &&
+            O.isNone(value.managedController) &&
+            O.isNone(value.fixtureSurface) &&
+            O.isNone(value.startTimeUnixNano) &&
+            O.isNone(value.endTimeUnixNano) &&
+            O.isNone(value.modelHash) &&
+            O.isNone(value.modelName) &&
+            O.contains(value.sessionHash, value.nativeLifecycle.value.sessionHash) &&
+            value.usage.convention === "unknown" &&
+            A.every([value.usage.input, value.usage.output, value.usage.cacheRead, value.usage.cacheWrite], O.isNone)),
+        {
+          identifier: "NativeLifecycleEvidence",
+          message: "Lifecycle observations cannot assert source time, model activity or usage",
         }
       )
     )
