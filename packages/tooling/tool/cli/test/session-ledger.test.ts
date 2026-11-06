@@ -10,6 +10,7 @@ import {
   PrRepository,
   RegisterReport,
   RegisterReportJson,
+  RegisterRow,
   RegisterRowJson,
   recordSweepDone,
   renderSessionRow,
@@ -663,8 +664,11 @@ describe("beep session", () => {
     );
 
     it.effect("converts an in-process unit in one step and refuses a conversion it cannot make", () =>
-      withScratchCheckout(({ clone, lane }) =>
+      withScratchCheckout(({ clone, lane, stateRoot }) =>
         Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const home = path.dirname(stateRoot);
           yield* captureOutput(
             withCwd(
               lane,
@@ -800,6 +804,36 @@ describe("beep session", () => {
             ])
           ).pipe(Effect.flip);
           expect(taken.message).toContain("cannot take a target that already has a live row");
+
+          // A row written before last contact was recorded lists as "never".
+          const registerFile = path.join(
+            home,
+            ".local",
+            "state",
+            "beep",
+            "orchestrator",
+            "github.com__beep-effect__beep-effect.jsonl"
+          );
+          const silent = yield* RegisterRowJson.encode(
+            RegisterRow.make({
+              schemaVersion: "orchestrator-register/v1",
+              repository,
+              kind: "external-person",
+              address: "the operator",
+              name: O.none(),
+              owns: [],
+              state: "active",
+              waitingOnOrchestrator: O.none(),
+              lastContact: O.none(),
+              orphanPlan: "fleet desk",
+              note: O.none(),
+              recordedBy: O.none(),
+              recordedAt: DateTime.makeUnsafe("2026-11-06T00:00:00Z"),
+            })
+          );
+          yield* fs.writeFileString(registerFile, `${silent}\n`, { flag: "a" });
+          const listed = yield* captureOutput(withCwd(clone, runSession(["register", "list"])));
+          assertInclude(listed, "- external-person the operator [active] owns: \n  last contact: never");
         })
       )
     );
