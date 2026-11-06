@@ -1,12 +1,9 @@
-import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
-import { Git } from "@beep/git/Git";
 import { GithubCommitStatusRecord } from "@beep/repo-cli/test/SharedInternals";
 import {
   decideGateTableRow,
-  GateTableCommandOptions,
+  GateTableEntry,
   GateTableRead,
   GateTableReport,
-  GateTableReportJson,
   GateTableThreadsCounted,
   GateTableThreadsNotRead,
   GateTableThreadsUnknown,
@@ -15,24 +12,22 @@ import {
   readGateTable,
   renderGateTableEntry,
   renderGateTableReport,
-  runYeetGateTable,
   YeetReviewWindowElapsed,
   YeetReviewWindowOpen,
   YeetReviewWindowUnknown,
 } from "@beep/repo-cli/test/Yeet";
-import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
-import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import * as TestConsole from "effect/testing/TestConsole";
 import checkRunsFixture from "./fixtures/yeet-merge-gate/check-runs.json" with { type: "json" };
 import checkSuitesFixture from "./fixtures/yeet-merge-gate/check-suites.json" with { type: "json" };
 import recordedPull from "./fixtures/yeet-merge-gate/pull.json" with { type: "json" };
@@ -40,8 +35,8 @@ import rulesFixture from "./fixtures/yeet-merge-gate/rules.json" with { type: "j
 import threadsFixture from "./fixtures/yeet-merge-gate/threads.json" with { type: "json" };
 import openThreadsFixture from "./fixtures/yeet-merge-gate/threads-open.json" with { type: "json" };
 import timelineFixture from "./fixtures/yeet-merge-gate/timeline.json" with { type: "json" };
-import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { legacyGhAnswer, recordedGithub } from "./support/YeetGithub.ts";
+import type { GateTableRow } from "@beep/repo-cli/test/Yeet";
 import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
@@ -268,23 +263,24 @@ interface Script {
   readonly threads: unknown;
 }
 
-const answer = (script: Script, call: GithubCall): GithubAnswer | undefined => {
-  if (O.isSome(call.graphql)) {
-    return legacyGhAnswer({ call, exitCode: 0, output: encodeJson(script.threads) });
-  }
-  const path = call.path;
-  if (path === "{repo}/pulls") return { body: script.pulls };
-  if (path === "{repo}/pulls/1459") return { body: pullFixture };
-  if (path === "{repo}/pulls/1460") return { body: draftPull };
-  if (path === "{repo}/rules/branches/main")
-    return script.rulesFail === true ? { status: 500, body: {} } : { body: rulesFixture };
-  if (path === `{repo}/commits/${pullFixture.head.sha}/check-runs`) return { body: checkRunsFixture };
-  if (path === `{repo}/commits/${draftSha}/check-runs`) return { body: { total_count: 0, check_runs: [] } };
-  if (Str.endsWith("/status")(path)) return { body: script.statuses };
-  if (path === "{repo}/issues/1459/timeline") return { body: timelineFixture };
-  if (path === `{repo}/commits/${pullFixture.head.sha}/check-suites`) return { body: checkSuitesFixture };
-  return undefined;
-};
+// Every REST path the read makes, by repository-relative path; anything else is a 404.
+const restRoutes = (script: Script): Readonly<Record<string, GithubAnswer>> => ({
+  "{repo}/pulls": { body: script.pulls },
+  "{repo}/pulls/1459": { body: pullFixture },
+  "{repo}/pulls/1460": { body: draftPull },
+  "{repo}/rules/branches/main": script.rulesFail === true ? { status: 500, body: {} } : { body: rulesFixture },
+  [`{repo}/commits/${pullFixture.head.sha}/check-runs`]: { body: checkRunsFixture },
+  [`{repo}/commits/${draftSha}/check-runs`]: { body: { total_count: 0, check_runs: [] } },
+  [`{repo}/commits/${pullFixture.head.sha}/status`]: { body: script.statuses },
+  [`{repo}/commits/${draftSha}/status`]: { body: script.statuses },
+  "{repo}/issues/1459/timeline": { body: timelineFixture },
+  [`{repo}/commits/${pullFixture.head.sha}/check-suites`]: { body: checkSuitesFixture },
+});
+
+const answer = (script: Script, call: GithubCall): GithubAnswer | undefined =>
+  O.isSome(call.graphql)
+    ? legacyGhAnswer({ call, exitCode: 0, output: encodeJson(script.threads) })
+    : O.getOrUndefined(R.get(restRoutes(script), call.path));
 
 const runRead = (script: Script) =>
   windowClosed.pipe(
@@ -295,6 +291,10 @@ const runRead = (script: Script) =>
   );
 
 const noStatuses = { total_count: 0, statuses: [] };
+
+// The decided row at an index; an unreadable entry there fails the test.
+const rowAt = (report: GateTableReport, index: number): GateTableRow =>
+  O.getOrThrow(O.filter(A.get(report.entries, index), GateTableEntry.guards.row));
 
 describe("yeet gate-table recorded read", () => {
   it.effect("reads every open PR, decides each row, and reads threads only out of draft", () =>
@@ -307,13 +307,12 @@ describe("yeet gate-table recorded read", () => {
       expect(A.map(report.entries, (entry) => (entry._tag === "row" ? entry.read.prNumber : entry.prNumber))).toEqual([
         1459, 1460,
       ]);
-      const [ready, draft] = report.entries;
-      expect(ready?._tag === "row" && ready.gateMet).toBe(true);
-      expect(ready?._tag === "row" && ready.read.threads).toEqual(
-        GateTableThreadsCounted.make({ outstanding: 0, total: 4 })
-      );
-      expect(draft?._tag === "row" && draft.read.threads._tag).toBe("not-read");
-      expect(draft?._tag === "row" && O.isNone(draft.read.window)).toBe(true);
+      const ready = rowAt(report, 0);
+      const draft = rowAt(report, 1);
+      expect(ready.gateMet).toBe(true);
+      expect(ready.read.threads).toEqual(GateTableThreadsCounted.make({ outstanding: 0, total: 4 }));
+      expect(draft.read.threads._tag).toBe("not-read");
+      assertNone(draft.read.window);
       // One ruleset read for the one base, one thread read for the one ready PR.
       expect(A.length(A.filter(github.calls, (call) => call.path === "{repo}/rules/branches/main"))).toBe(1);
       expect(A.length(A.filter(github.calls, (call) => O.isSome(call.graphql)))).toBe(1);
@@ -323,11 +322,9 @@ describe("yeet gate-table recorded read", () => {
   it.effect("counts outstanding threads with the merge gate's rule", () =>
     Effect.gen(function* () {
       const { report } = yield* runRead({ pulls: [pullFixture], threads: openThreadsFixture, statuses: noStatuses });
-      const [row] = report.entries;
-      expect(row?._tag === "row" && row.read.threads).toEqual(
-        GateTableThreadsCounted.make({ outstanding: 4, total: 4 })
-      );
-      expect(row?._tag === "row" && row.gateMet).toBe(false);
+      const row = rowAt(report, 0);
+      expect(row.read.threads).toEqual(GateTableThreadsCounted.make({ outstanding: 4, total: 4 }));
+      expect(row.gateMet).toBe(false);
     })
   );
 
@@ -339,10 +336,10 @@ describe("yeet gate-table recorded read", () => {
         statuses: noStatuses,
         rulesFail: true,
       });
-      const [row, broken] = report.entries;
-      expect(row?._tag === "row" && O.isNone(row.read.requiredContexts)).toBe(true);
-      expect(row?._tag === "row" && row.gateMet).toBe(false);
-      expect(broken?._tag).toBe("unreadable");
+      const row = rowAt(report, 0);
+      assertNone(row.read.requiredContexts);
+      expect(row.gateMet).toBe(false);
+      expect(report.entries[1]?._tag).toBe("unreadable");
     })
   );
 
@@ -353,54 +350,9 @@ describe("yeet gate-table recorded read", () => {
         threads: threadsFixture,
         statuses: { total_count: 101, statuses: [{ context: "Vercel", state: "success" }] },
       });
-      const [row] = report.entries;
-      expect(row?._tag === "row" && O.isNone(row.read.statuses)).toBe(true);
-      expect(row?._tag === "row" && row.pending).toEqual(["statuses=?"]);
+      const row = rowAt(report, 0);
+      assertNone(row.read.statuses);
+      expect(row.pending).toEqual(["statuses=?"]);
     })
   );
 });
-
-// `Git` rides beside the platform services: the read-only context resolves the repo root through it.
-const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
-// Every git probe the read-only context makes answers as a clean feature branch.
-const scriptedGit = ScriptedSpawner.make(() => ({ stdout: "feat/gate\n", exit: 0 }));
-
-const runCommand = (json: boolean) =>
-  windowClosed.pipe(
-    DateTime.toEpochMillis,
-    TestClock.setTime,
-    Effect.andThen(
-      runYeetGateTable(
-        GateTableCommandOptions.make({ base: "origin/main", head: "HEAD", packetDir: ".beep/yeet", json })
-      ).pipe(
-        recordedGithub((call) => answer({ pulls: [pullFixture], threads: threadsFixture, statuses: noStatuses }, call))
-          .provide,
-        Effect.provideServiceEffect(Git, Git.make),
-        provideSpawner(scriptedGit)
-      )
-    ),
-    Effect.andThen(TestConsole.logLines),
-    Effect.map((lines) => A.join(A.map(lines, String), "\n"))
-  );
-
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestConsole.layer), { timeout: "30 seconds" })(
-  "yeet gate-table command",
-  (it) => {
-    it.effect("prints the table under the recorded login", () =>
-      runCommand(false).pipe(
-        Effect.map((printed) => {
-          expect(printed).toContain("# gate-table 2026-10-06T11:00:00.000Z: 1 open PR(s), 1 GATE-MET");
-          expect(printed).toContain("#1459\tready\tmain");
-        })
-      )
-    );
-
-    it.effect("emits the yeet-gate-table/v1 report with --json", () =>
-      runCommand(true).pipe(
-        // The layer's console keeps earlier tests' lines; the report is the last one.
-        Effect.flatMap((printed) => GateTableReportJson.decode(A.lastNonEmpty(Str.split(printed, "\n")))),
-        Effect.map((report) => expect(A.length(report.entries)).toBe(1))
-      )
-    );
-  }
-);

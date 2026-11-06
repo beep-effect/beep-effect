@@ -17,6 +17,7 @@ import {
   rulingsInForce,
 } from "@beep/repo-cli/test/Session";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
@@ -184,7 +185,7 @@ describe("HANDOFF.md file helpers", () => {
 
   it("reads the journal's last non-blank line", () => {
     expect(O.getOrNull(lastJournalLine("- a\n- b  \n\n"))).toBe("- b");
-    expect(O.isNone(lastJournalLine("\n\n"))).toBe(true);
+    assertNone(lastJournalLine("\n\n"));
   });
 });
 
@@ -237,9 +238,7 @@ describe("register conversion", () => {
 
   it("retires the source and carries its owns, ask and orphan plan to the target", () => {
     const result = convert();
-    expect(Result.isSuccess(result)).toBe(true);
-    if (Result.isFailure(result)) return;
-    const { retire, successor } = result.success;
+    const { retire, successor } = Result.getOrThrow(result);
     expect([retire.kind, retire.address, retire.state]).toStrictEqual(["in-process-agent", "agent-1", "retired"]);
     expect(O.getOrNull(retire.note)).toBe("converted to desktop-session t3://thread/abc");
     expect([successor.kind, successor.address, successor.state]).toStrictEqual([
@@ -250,16 +249,15 @@ describe("register conversion", () => {
     expect(successor.owns).toStrictEqual(["PR #7"]);
     expect(O.getOrNull(successor.waitingOnOrchestrator)).toBe("final sha");
     expect(successor.orphanPlan).toBe("relaunch from brief");
-    expect(O.map(successor.lastContact, DateTime.toEpochMillis)).toStrictEqual(O.some(10));
+    assertSome(O.map(successor.lastContact, DateTime.toEpochMillis), 10);
     expect(O.getOrNull(successor.note)).toBe("converted from in-process-agent agent-1");
   });
 
   it("a retired target row does not block the conversion", () => {
-    expect(
-      Result.isSuccess(
-        convert({ target: O.some(unit({ kind: "desktop-session", address: "t3://thread/abc", state: "retired" })) })
-      )
-    ).toBe(true);
+    const converted = Result.getOrThrow(
+      convert({ target: O.some(unit({ kind: "desktop-session", address: "t3://thread/abc", state: "retired" })) })
+    );
+    expect(converted.successor.state).toBe("active");
   });
 
   it("refuses each conversion it cannot make", () => {

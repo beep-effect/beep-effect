@@ -4,6 +4,8 @@ import { reviewerCheckExternalId } from "@beep/repo-cli/commands/Reviewer";
 import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
 import {
   decideMergeGate,
+  GateTableCommandOptions,
+  GateTableReportJson,
   MERGE_GATE_OWNER_HOLD_LABEL,
   MERGE_GATE_S11_DEFAULT_ATTRIBUTION,
   MERGE_GATE_UNBLOCKS_MAIN_LABEL,
@@ -24,6 +26,7 @@ import {
   readMergeGate,
   renderMergeGateDecision,
   runMergeGate,
+  runYeetGateTable,
   runYeetMergeGate,
   SquashCommitlintFail,
   SquashCommitlintOffendingLine,
@@ -37,7 +40,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertInclude, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -1961,6 +1964,58 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           const mergeWasSent26 = yield* mergeWasSent(calls);
           expect(mergeWasSent26).toBe(false);
         })
+      )
+    );
+  }
+);
+
+// `yeet gate-table` under the same recorded login: the open-PR list is the only route the
+// merge gate's script lacks; the combined status 404s, which the table reads as unknown.
+const withGateTable = <A, E, R>(use: Effect.Effect<A, E, R>) =>
+  windowClosed.pipe(
+    DateTime.toEpochMillis,
+    TestClock.setTime,
+    Effect.andThen(Ref.make<ReadonlyArray<string>>(A.empty())),
+    Effect.flatMap((calls) => {
+      const github = recordedGithub((call) => {
+        const line = A.join(["gh", ...legacyGhArgs(call)], " ");
+        MutableRef.update(calls.ref, A.append(line));
+        return call.method === "GET" && call.path === "{repo}/pulls"
+          ? { body: [restPull(pullFixture)] }
+          : githubAnswer(defaultScript, call, line);
+      });
+      return use.pipe(
+        github.provide,
+        Effect.provideServiceEffect(Git, Git.make),
+        provideSpawner(scriptedGh(defaultScript, calls))
+      );
+    })
+  );
+
+const gateTableOptions = (json: boolean) =>
+  GateTableCommandOptions.make({ base: "origin/main", head: "HEAD", packetDir: ".beep/yeet", json });
+
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestConsole.layer), { timeout: "30 seconds" })(
+  "yeet gate-table command",
+  (it) => {
+    it.effect("prints the table under the recorded login, unknown statuses holding the row", () =>
+      withGateTable(runYeetGateTable(gateTableOptions(false))).pipe(
+        Effect.andThen(TestConsole.logLines),
+        Effect.map((lines) => {
+          const printed = A.join(A.map(lines, String), "\n");
+          assertInclude(printed, "1 open PR(s), 0 GATE-MET");
+          assertInclude(printed, `#${pullFixture.number}\tready\tmain`);
+          assertInclude(printed, "PENDING:statuses=?");
+        })
+      )
+    );
+
+    it.effect("emits the yeet-gate-table/v1 report with --json", () =>
+      withGateTable(runYeetGateTable(gateTableOptions(true))).pipe(
+        Effect.andThen(TestConsole.logLines),
+        // The layer's console keeps earlier tests' lines; the report is the last one.
+        Effect.flatMap((lines) => GateTableReportJson.decode(O.getOrElse(O.map(A.last(lines), String), () => ""))),
+        Effect.map((report) => assertTrue(A.length(report.entries) === 1))
       )
     );
   }
