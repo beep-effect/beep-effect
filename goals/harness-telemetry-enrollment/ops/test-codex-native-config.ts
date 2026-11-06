@@ -222,7 +222,7 @@ it.layer(Layer.merge(NodeServices.layer, NodeCrypto.layer), { concurrent: false 
       expect(explicit).toEqual(original);
     })
   );
-  for (const harness of ["claude-code", "grok"] as const)
+  for (const harness of ["claude-code", "grok", "muse"] as const)
     it.effect(`admits the finite ${harness} route while preserving controller intake policy`, () =>
       Effect.gen(function* () {
         const f = yield* fixture;
