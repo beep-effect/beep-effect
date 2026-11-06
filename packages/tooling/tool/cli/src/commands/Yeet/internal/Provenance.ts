@@ -11,6 +11,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { renderPrettyCommandJson } from "@beep/repo-cli-kit/cli/Json";
 import { LiteralKit } from "@beep/schema";
@@ -27,9 +29,8 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runGitOutput } from "../../../internal/repo-run/index.ts";
+import { adaptGitKitError } from "../../../internal/repo-run/index.ts";
 import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
-import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -1391,10 +1392,13 @@ const findCodexSession = Effect.fn("PrProvenance.findCodexSession")(function* (h
 });
 const detectGitPaths = Effect.fn("PrProvenance.detectGitPaths")(function* (cwd: string) {
   const path = yield* Path.Path;
+  const git = yield* Git;
+  // `commonDir` is absolute, so the clone no longer depends on resolving git's cwd-relative answer
+  // against the checkout root (W7a Y38, SPEC D-18).
   const [common, checkout] = yield* Effect.all(
     [
-      runGitOutput(cwd, ["rev-parse", "--git-common-dir"], yeetGitOutputErrorAdapter),
-      runGitOutput(cwd, ["rev-parse", "--show-toplevel"], yeetGitOutputErrorAdapter),
+      git.commonDir(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.commonDir(), yeetGitOutputErrorAdapter))),
+      git.repoRoot(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.repoRoot(), yeetGitOutputErrorAdapter))),
     ],
     { concurrency: 2 }
   );
@@ -1597,11 +1601,14 @@ export const detectPrProvenanceFromPaths = Effect.fn("PrProvenance.detectFromPat
   const path = yield* Path.Path;
   const environment = yield* readDetectionEnvironment();
   const harness = classifyHarness(environment);
-  const workspaceOverride = yield* runGitOutput(
-    checkoutPath,
-    ["config", "--get", "beep.workspace.label"],
-    yeetGitOutputErrorAdapter
-  ).pipe(Effect.map(Str.trim), Effect.option, Effect.map(O.flatMap(decodePrProvenanceLabel)));
+  const git = yield* Git;
+  const workspaceOverride = yield* git
+    .configGet(checkoutPath, "beep.workspace.label")
+    .pipe(
+      Effect.map(O.map(Str.trim)),
+      Effect.orElseSucceed(O.none<string>),
+      Effect.map(O.flatMap(decodePrProvenanceLabel))
+    );
   const workspace = O.getOrElse(workspaceOverride, () => labelFromBasename(path, clonePath));
   const evidence = yield* readSessionEvidence(harness, environment, checkoutPath);
   const sessionWorkspace = yield* detectSessionWorkspace(path, evidence.sessionHome, workspace);

@@ -85,6 +85,7 @@ import {
   SquashCommitlintReport,
   SquashPullRequestFacts,
 } from "./SquashCommitlint.ts";
+import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -1443,7 +1444,7 @@ export const runMergeGate = Effect.fn("Yeet.runMergeGate")(function* (
 ): Effect.fn.Return<
   MergeGateDecision,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | FileSystem.FileSystem
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | FileSystem.FileSystem | Git
 > {
   return yield* runMergeGateAsGhLogin(context, options).pipe(provideYeetGhLogin(context.repoRoot));
 });
