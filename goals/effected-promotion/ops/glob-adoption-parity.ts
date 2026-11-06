@@ -46,7 +46,9 @@
  *
  * Exit status is non-zero when a pattern pair disagrees or an EffectImports fingerprint differs from the baseline.
  */
+
 import * as NodeURL from "node:url";
+import { Git } from "@beep/git/Git";
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import {
   discoverEffectImportMarkdownFiles,
@@ -54,7 +56,6 @@ import {
   EffectImportRulesOptions,
 } from "@beep/repo-cli/commands/Laws/EffectImports";
 import { discoverWorkspacePackages } from "@beep/repo-cli/test/Quality";
-import { runGitLines as runRepoGitLines } from "@beep/repo-cli/test/RepoRun";
 import { NodeCrypto, NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -72,6 +73,8 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+// The retired repo-run runner, frozen verbatim by repo-cli-gh-git-consolidation (runner retirement, SPEC D-21).
+import { runGitLines as runRepoGitLines } from "../../repo-cli-gh-git-consolidation/ops/frozen-w7b/GitRunners.old.ts";
 import type { GitCommandErrorAdapter } from "@beep/repo-cli/test/RepoRun";
 
 const TOOL = "goals/effected-promotion/ops/glob-adoption-parity.ts";
@@ -737,4 +740,11 @@ const program = Effect.gen(function* () {
 });
 
 // @effect-diagnostics-next-line strictEffectProvide:off -- this is the script's entry point; the one layer is provided once here. Owner: goals/effected-promotion. Exit: the script is deleted with the packet's closeout.
-NodeRuntime.runMain(program.pipe(Effect.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))));
+// `Git` rides beside the platform services: the Laws discovery lists the visible tree through the kit (SPEC D-21).
+NodeRuntime.runMain(
+  program.pipe(
+    Effect.provide(
+      Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Layer.provide(NodeServices.layer)))
+    )
+  )
+);

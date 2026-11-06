@@ -39,7 +39,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import { diffMembership } from "../../internal/ratchet/RatchetDiff.ts";
-import { runGitOutput } from "../../internal/repo-run/index.ts";
+import { runRepoCommandCaptureRaw } from "../../internal/repo-run/index.ts";
 import { reflectionFileNameIsArtifact, reflectionFrontmatterIsValid } from "../Lint/ReflectionArtifact.ts";
 import {
   goalCloseoutView,
@@ -49,7 +49,6 @@ import {
 } from "./Completion.ts";
 import { goalDecisionLogReport } from "./Decisions.projection.ts";
 import { GOAL_DECISIONS_DIR } from "./Decisions.schemas.ts";
-import { GoalsGitError } from "./Goals.errors.ts";
 import {
   decodeGoalManifest,
   GoalCloseoutVerification,
@@ -70,7 +69,6 @@ import {
   readmeLifecycleToken,
 } from "./Inventory.ts";
 import { diffResearchReports, projectResearchReports, renderResearchReportsDrift } from "./ManifestProjection.ts";
-import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 import type { GoalDecisionDocument, GoalDecisionReader } from "./Decisions.projection.ts";
 import type { GoalCompletionReceipt, GoalManifest, GoalPullRequestRef } from "./Goals.schemas.ts";
 import type { CapabilityProjection } from "./Graph.schemas.ts";
@@ -616,11 +614,15 @@ export const makeGoalPacketWorkingTreeReader = Effect.fn("Goals.makeGoalPacketWo
 ) {
   const path = yield* Path.Path;
   const base = makeGoalPacketFilesystemReader();
-  const listed = yield* runGitOutput(
-    repoRoot,
+  // KEEP (D-21): `ls-files --others --ignored` has no kit member; the raw stdout capture keeps the NUL records.
+  const listed = yield* runRepoCommandCaptureRaw(
+    "git",
     ["ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--", GOALS_DIR],
-    gitAdapter
-  ).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
+    repoRoot
+  ).pipe(
+    Effect.map((captured) => (captured.exitCode === 0 ? O.some(captured.output) : O.none<string>())),
+    Effect.orElseSucceed(O.none<string>)
+  );
   const ignored = HashSet.fromIterable(
     pipe(
       O.getOrElse(listed, thunkEmptyStr),
@@ -1008,12 +1010,6 @@ export const goalPacketFindings = Effect.fn("Goals.packetFindings")(function* <E
   findings = A.appendAll(findings, researchReportFindings1);
   return { findings, manifest: O.some(decoded.value) };
 });
-
-const gitAdapter: GitCommandErrorAdapter<GoalsGitError> = {
-  onSpawnFailure: (commandLine) => (cause) => GoalsGitError.new(`spawn ${commandLine}: ${String(cause)}`),
-  onNonZeroExit: ({ commandLine, exitCode }) => GoalsGitError.new(`${commandLine} exited with ${exitCode}`),
-  onTruncated: O.none(),
-};
 
 type DoctorPacket = {
   readonly record: GoalPacketRecord;

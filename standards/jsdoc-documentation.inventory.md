@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-06T01:56:21.884Z
+Generated: 2026-11-06T11:46:50.371Z
 
 ## Scope
 
@@ -474,8 +474,8 @@ Export findings:
 - `src/commands/Cache/Cache.command.ts:359` `runCacheWarm` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.command.ts:557` `buildCacheDashboard` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.service.ts:112` `encodeCachePolicyBaselineText` (const) - 1 example import violation(s)
-- `src/commands/Ci/CiLane.ts:413` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:1570` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:415` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:1572` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:312` `CorpusArchiveMoveDigestMismatchError` (class) - 1 example import violation(s)
 - `src/commands/CreatePackage/CreatePackage.command.ts:119` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:304` `MessageFacts` (class) - 1 example import violation(s)
