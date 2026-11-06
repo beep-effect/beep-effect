@@ -1,5 +1,5 @@
 /**
- * Private, provision-only configuration for one fixed Codex controller pilot.
+ * Private, provision-only configuration for one fixed native controller pilot.
  * No credential reads, service changes, enrollment, provider invocation or resume.
  * @packageDocumentation
  * @since 0.0.0
@@ -68,6 +68,10 @@ const DestinationAllowlist = S.Struct({
 export class NativeCanaryConfigRequest extends S.Opaque<NativeCanaryConfigRequest, { readonly brand: unique symbol }>()(
   S.Struct({
     version: S.tag("native-canary-config-request/v1"),
+    harness: S.Literals(["codex-cli", "claude-code", "grok", "muse"]).pipe(
+      S.withConstructorDefault(Effect.succeed("codex-cli" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("codex-cli" as const))
+    ),
     rootProbeFile: PrivatePath,
     rootProbeSha256: Sha256Hex,
     rootId: ObservationRoot.fields.rootId,
@@ -265,7 +269,9 @@ export const generateNativeCanaryConfig = Effect.fn("NativeCanaryConfig.generate
     )
       return yield* fail("root");
     const ingressRouteId = yield* hashPublicTextSha256(`native-canary/v1:${request.pilotToken}:ingress`);
-    const launchRouteId = yield* hashPublicTextSha256(`native-canary/v1:${request.pilotToken}:launch:codex-cli`);
+    const launchRouteId = yield* hashPublicTextSha256(
+      `native-canary/v1:${request.pilotToken}:launch:${request.harness}`
+    );
     const config = ObservationLaunchConfig.make({
       intake: TranscriptIntakeConfig.make({
         hostId: request.hostId,
@@ -298,7 +304,7 @@ export const generateNativeCanaryConfig = Effect.fn("NativeCanaryConfig.generate
       }),
       launchHttp: O.some(
         ObservationLaunchHttpPolicy.make({
-          routes: [{ routeId: launchRouteId, harness: "codex-cli", surface: "cli" }],
+          routes: [{ routeId: launchRouteId, harness: request.harness, surface: "cli" }],
           bodyTimeoutMillis: 1000,
         })
       ),

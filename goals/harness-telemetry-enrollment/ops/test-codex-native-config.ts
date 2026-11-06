@@ -6,7 +6,7 @@ import {
   ObservationInventory,
   ObservationRoot,
 } from "@beep/repo-ai-metrics/observation-inventory";
-import { readObservationLaunchConfig } from "@beep/repo-ai-metrics/observation-launch";
+import { ObservationLaunchConfig, readObservationLaunchConfig } from "@beep/repo-ai-metrics/observation-launch";
 import { ObservationRootProbeResult, ObservationRootReceipt } from "@beep/repo-ai-metrics/observation-root-probe";
 import { hashPublicTextSha256 } from "@beep/repo-ai-metrics/privacy";
 import { Sha256Hex } from "@beep/schema";
@@ -201,4 +201,47 @@ it.layer(Layer.merge(NodeServices.layer, NodeCrypto.layer), { concurrent: false 
       expect(yield* f.fs.exists(request.outputDirectory)).toBe(false);
     })
   );
+});
+
+it.layer(Layer.merge(NodeServices.layer, NodeCrypto.layer), { concurrent: false })("native harness selection", (it) => {
+  it.effect("keeps default Codex configuration bytes identical to the explicit Codex route", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture;
+      const first = yield* f.provide(generateNativeCanaryConfig(f.request));
+      const filenames = [
+        first.workerConfigFile,
+        `${first.artifactDirectory}/deployment-request.json`,
+        `${first.artifactDirectory}/deployment-plan.json`,
+      ];
+      const original = yield* Effect.forEach(filenames, (name) => f.fs.readFileString(name));
+      yield* f.fs.remove(f.request.outputDirectory, { recursive: true });
+      yield* f.provide(
+        generateNativeCanaryConfig(NativeCanaryConfigRequest.make({ ...f.request, harness: "codex-cli" }))
+      );
+      const explicit = yield* Effect.forEach(filenames, (name) => f.fs.readFileString(name));
+      expect(explicit).toEqual(original);
+    })
+  );
+  for (const harness of ["claude-code", "grok", "muse"] as const)
+    it.effect(`admits the finite ${harness} route while preserving controller intake policy`, () =>
+      Effect.gen(function* () {
+        const f = yield* fixture;
+        const receipt = yield* f.provide(
+          generateNativeCanaryConfig(
+            NativeCanaryConfigRequest.make({
+              ...f.request,
+              harness,
+            })
+          )
+        );
+        const raw = yield* f.fs.readFileString(receipt.workerConfigFile);
+        const config = yield* S.decodeEffect(S.fromJsonString(ObservationLaunchConfig))(raw);
+        expect(O.getOrThrow(config.launchHttp).routes).toEqual([
+          { routeId: receipt.launchRouteId, harness, surface: "cli" },
+        ]);
+        expect(config.route.producer).toEqual(O.some("managed-controller"));
+        expect(config.route.approvedModels).toEqual([]);
+        expect(config.route.usageConvention).toBe("unknown");
+      })
+    );
 });

@@ -1,3 +1,4 @@
+import { collectManifestProjectionRows } from "@beep/repo-cli/commands/Goals/Manifest";
 import {
   GOAL_DECISION_TARGETS,
   GoalDecision,
@@ -18,10 +19,12 @@ import * as A from "effect/Array";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
 import {
   expectReportedExit,
   readProjectFile,
@@ -188,6 +191,19 @@ describe("goals decisions projection", () => {
 it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
   "goals decisions command",
   (it) => {
+    it.effect("the manifest CLI checks an empty working tree without rewriting files", () =>
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.makeDirectory("goals");
+        const rows = yield* collectManifestProjectionRows();
+        expect(rows).toEqual([]);
+        yield* runGoalsCommand(["manifest"]);
+        const logs = yield* TestConsole.logLines;
+        expect(A.some(logs, Str.includes("OK: every researchReports array matches"))).toBe(true);
+      })
+    );
+
     it.effect("add writes the file, projects SPEC.md and PLAN.md, and the doctor blocks on drift", () =>
       Effect.gen(function* () {
         yield* temporaryWorkingDirectory;
