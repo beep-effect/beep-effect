@@ -11,7 +11,9 @@ import {
 import * as Effect from "effect/Effect";
 import * as MutableList from "effect/MutableList";
 import * as Num from "effect/Number";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { CitationAnnotationSpanDecision, CitationAnnotationSpanProcessor } from "./AnnotationSpan.ts";
 import { concatCitationPythonRanges, normalizeCitationPythonSlice } from "./PythonUnicode.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationPythonSliceLayout, CitationPythonUnicodeValue } from "./PythonUnicode.ts";
@@ -37,9 +39,9 @@ export class CitationAnnotationReplacement extends S.Opaque<
 ) {}
 const length = (value: CitationPythonUnicodeStorage) => value.bytes.length / value.width;
 /** Capture the enclosing operation's budget. The caller owns validated immutable
- * native inputs, source-defined tuple sorting and offset mapping. This executes
- * the unchecked/default-concatenation branch only; HTML balancing and custom
- * annotators remain separate required composition, never silently ignored modes.
+ * native inputs, source-defined tuple sorting and offset mapping. Without a captured span processor this executes unchecked concatenation.
+ * Captured processors may withhold/adjust spans before output commitment;
+ * custom annotators remain separate required composition.
  * Invoke under the enclosing admitted operation Scope and captured deadline.
  * @internal @category operations @since 0.0.0
  */
@@ -47,6 +49,7 @@ export const makeCitationAnnotationAssembly = Effect.fn("Citation.makeAnnotation
   limits: CitationEngineLimits
 ) {
   const budget = yield* CitationTextBudget;
+  const processor = yield* Effect.serviceOption(CitationAnnotationSpanProcessor);
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
     CitationSafetyLimitExceeded.make({ operation: "annotate", limit });
   const reserveOutput = (sourceUnits: number) => (layout: CitationPythonSliceLayout) => {
@@ -70,17 +73,28 @@ export const makeCitationAnnotationAssembly = Effect.fn("Citation.makeAnnotation
       const bounds = normalizeCitationPythonSlice(value, start, end);
       MutableList.append(ranges, { source: value, ...bounds });
     };
+    const apply = Effect.fn("Citation.applyAnnotationSpan")(function* (
+      replacement: CitationAnnotationReplacement,
+      lastEnd: number
+    ) {
+      const start = Num.max(replacement.start, lastEnd);
+      const end = replacement.end;
+      if (replacement.start < lastEnd && start >= end) return lastEnd;
+      const selected = O.isSome(processor)
+        ? yield* processor.value.prepare(source, CitationAnnotationReplacement.make({ ...replacement, start }))
+        : CitationAnnotationSpanDecision.cases.WrapSlice.make({ start, end });
+      if (CitationAnnotationSpanDecision.guards.Skip(selected)) return lastEnd;
+      append(source.storage, lastEnd, selected.start);
+      append(replacement.before, 0, length(replacement.before));
+      if (CitationAnnotationSpanDecision.guards.WrapText(selected)) append(selected.text, 0, length(selected.text));
+      else append(source.storage, selected.start, selected.end);
+      append(replacement.after, 0, length(replacement.after));
+      return selected.end;
+    });
     let lastEnd = 0;
     for (const replacement of ordered) {
       yield* Effect.yieldNow;
-      const start = Num.max(replacement.start, lastEnd);
-      const end = replacement.end;
-      if (replacement.start < lastEnd && start >= end) continue;
-      append(source.storage, lastEnd, start);
-      append(replacement.before, 0, length(replacement.before));
-      append(source.storage, start, end);
-      append(replacement.after, 0, length(replacement.after));
-      lastEnd = end;
+      lastEnd = yield* apply(replacement, lastEnd);
     }
     if (lastEnd < source.pythonLength) append(source.storage, lastEnd, source.pythonLength);
     return yield* concatCitationPythonRanges(MutableList.toArray(ranges), reserveOutput(source.utf16Units));

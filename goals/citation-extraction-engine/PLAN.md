@@ -1261,6 +1261,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert annotation preparation and restore the prior single Document forward-map implementation together; retain all original source corpora and open acceptance requirements.
 
+### Compose original skip annotations through shared XML workers, 2026-11-06
+
+Original skip annotation now composes overlap trimming, XML checks, style expansion and output assembly through captured Effect services. Focused actual Bun/Node replay covers 36 source cases and 83 acknowledged children per runtime, preserving exact outputs, parser query order/results and 33 skip decisions. Eight annotation regression tests pass in 47.34s; lint/types, declarations, blocking laws and scoped Fallow pass. Complete 126-case replay per runtime is registered for hosted CI. Wrap templates, custom annotators, final public engine integration and all eleven representation laws, four fidelity questions and fifteen unfinished proof rows remain open. See history/evidence/2026-11-06-annotation-skip.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert span processing and assembly integration together, retaining original corpora and every unfinished acceptance obligation.
+
 ### Preserve original annotation style-span expansion, 2026-11-06
 
 The original i/em/b proximity helper now preserves initial-span membership, first/last literal searches, raw signed arithmetic and Python slice bounds on native text. Shared Unicode range/search primitives avoid whole candidate copies and arrays; exact final slice allocation uses the captured parent budget. All 685 original source observations compare, and sixteen tests across style, annotation, native Unicode and literal composition pass. XML balance checking, wrap substitution, full skip/wrap dispatch and general host/numeric behavior remain open. See history/evidence/2026-11-06-annotation-style.md.

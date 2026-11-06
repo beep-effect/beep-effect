@@ -2,7 +2,9 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 
+import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
@@ -21,6 +23,8 @@ import {
 } from "./XmlWorkerProtocol.ts";
 import { CitationXmlWorkerStartup, prepareCitationXmlRpc } from "./XmlWorkerRpc.ts";
 import type { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
+
+const $I = $LawPracticeServerId.create("internal/Citation/XmlWorker");
 /** Capture per-operation text authority, policy, native lifetime and explicit
  * runtime. Inputs are immutable adapter-owned native values through preflight;
  * raw callers must first use their owning source adapter. The returned method
@@ -79,3 +83,11 @@ export const makeCitationXmlWorker = Effect.fn("Citation.makeXmlWorker")(functio
   );
   return { balance, snapshot: owner.snapshot, reap: owner.reap };
 });
+
+/** Captured private balance capability; query calls require no caller services.
+ * @internal @category services @since 0.0.0
+ */
+export class CitationXmlBalance extends Context.Service<
+  CitationXmlBalance,
+  Pick<Effect.Success<ReturnType<typeof makeCitationXmlWorker>>, "balance">
+>()($I`CitationXmlBalance`) {}

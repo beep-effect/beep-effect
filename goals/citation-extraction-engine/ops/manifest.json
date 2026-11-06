@@ -203,7 +203,15 @@
     "packages/law-practice/server/src/internal/Citation/XmlWorkerRpc.ts",
     "packages/law-practice/server/test/CitationXmlWorker.test.ts",
     "packages/law-practice/server/test/CitationXmlWorkerProtocol.test.ts",
-    "packages/law-practice/server/test/integration/CitationXmlWorker.test.ts"
+    "packages/law-practice/server/test/integration/CitationXmlWorker.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-skip.md",
+    "goals/citation-extraction-engine/ops/probe-annotation-skip.py",
+    "packages/law-practice/server/src/internal/Citation/AnnotationSpan.ts",
+    "packages/law-practice/server/src/internal/Citation/AnnotationSkip.ts",
+    "packages/law-practice/server/test/CitationAnnotationSkip.fixtures.ts",
+    "packages/law-practice/server/test/CitationAnnotationSkip.test.ts",
+    "packages/law-practice/server/test/integration/CitationAnnotationSkip.test.ts",
+    "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-skip.json"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
