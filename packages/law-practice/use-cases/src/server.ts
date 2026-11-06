@@ -48,6 +48,11 @@ export {
  * @since 0.0.0
  */
 export { CitationEngineOperation } from "./CitationEngine/CitationEngine.operations.ts";
+/** Server-only operation measurements, separate from citation semantics.
+ * @category models
+ * @since 0.0.0
+ */
+export { CitationEngineReport, CitationExtractionMeasurements } from "./CitationEngine/CitationEngine.report.ts";
 /**
  * Closed citation resource names and nontruncating safety failures.
  * @category errors

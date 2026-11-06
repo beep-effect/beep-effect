@@ -168,6 +168,7 @@ const prepareTokenizerConfiguration = Effect.fn("Citation.prepareTokenizerConfig
 export class CitationTokenizerResult extends S.Opaque<CitationTokenizerResult, { readonly brand: unique symbol }>()(
   S.Struct({
     source: CitationPythonUnicodeStorage,
+    patternsChecked: S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima.patternEvaluations)),
     assembly: CitationAssemblyResult,
     tokens: S.Array(S.Struct({ id: S.Natural, seed: CitationTokenSeed })).check(
       S.isMaxLength(CitationEngineAbsoluteMaxima.tokens)
@@ -296,7 +297,12 @@ export const makeCitationTokenizer = Effect.fn("Citation.makeTokenizer")(functio
         objects.snapshot(id).pipe(Effect.mapBoth({ onSuccess: (seed) => ({ id, seed }), onFailure: preserveSafety })),
       { concurrency: 1 }
     );
-    return CitationTokenizerResult.make({ source: source.value.storage, assembly: result, tokens });
+    return CitationTokenizerResult.make({
+      source: source.value.storage,
+      patternsChecked: selected.indices.length,
+      assembly: result,
+      tokens,
+    });
   }, timing.timed);
   return {
     run: Effect.fn("Citation.runAdmittedTokenizer")((source: unknown) => admission.run("extract", tokenize(source))),

@@ -54,8 +54,9 @@ const installPair = Effect.fnUntraced(function* (
   );
   return { paired, resolutions: Effect.sync(() => resolutions) };
 });
-type VerifiedResult = Effect.Success<
-  ReturnType<Effect.Success<ReturnType<typeof makeCitationVerifiedExtraction>>["extract"]>
+type VerifiedResult = Pick<
+  Effect.Success<ReturnType<Effect.Success<ReturnType<typeof makeCitationVerifiedExtraction>>["extract"]>>,
+  "source" | "semantic" | "occurrences" | "reservedUnits" | "inputs"
 >;
 type SemanticResult = Effect.Success<
   ReturnType<Effect.Success<ReturnType<typeof makeCitationSemanticExtraction>>["extract"]>

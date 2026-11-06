@@ -39,6 +39,12 @@ adds independently identified plain/markup slots, retaining empty supplied
 identities. Private single/pair extraction shares admission, timing and cumulative
 budgets. Retained-Document dispatch and the complete service remain unfinished.
 
+`CitationEngineReport` and `CitationExtractionMeasurements` describe completed
+operations separately from semantic citations. Counts, captured policy and engine
+identity compare deterministically; measured work duration does not. Reports have
+no source-text or citation payload fields. Failure/interruption reporting and the
+complete engine service remain integration work.
+
 Citation oracle corpus,
 accounting, divergence and benchmark schemas export only from `/test`;
 production code must not import that subpath. These test schemas are evidence

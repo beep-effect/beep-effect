@@ -6,10 +6,12 @@ import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Ci
 import { makeCitationSourceExtraction } from "@beep/law-practice-server/internal/Citation/SourceExtraction";
 import { makeCitationSourceRequestAdapter } from "@beep/law-practice-server/internal/Citation/SourceRequest";
 import { makeCitationVerifiedExtraction } from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
+import { CitationEngineReport } from "@beep/law-practice-use-cases/server";
 import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -22,9 +24,12 @@ import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 type Installed = Effect.Success<ReturnType<typeof installCitationDefaultConfigurationFixture>>;
 type SourceRow = Installed["corpus"]["cases"][number];
-type VerifiedResult = Effect.Success<
-  ReturnType<Effect.Success<ReturnType<typeof makeCitationVerifiedExtraction>>["extract"]>
+type VerifiedResult = Pick<
+  Effect.Success<ReturnType<Effect.Success<ReturnType<typeof makeCitationVerifiedExtraction>>["extract"]>>,
+  "source" | "semantic" | "occurrences" | "reservedUnits" | "inputs"
 >;
+const ReportJson = CitationEngineReport.pipe(S.toCodecJson, S.fromJsonString);
+const encodeReport = S.encodeEffect(ReportJson);
 const assertOutputEvidence = Effect.fnUntraced(function* (actual: VerifiedResult, row: SourceRow) {
   expect(actual.occurrences.unverified).toEqual([]);
   expect(actual.occurrences.unverifiedComponents).toEqual([]);
@@ -115,6 +120,15 @@ const assertResolvedRequest = Effect.fnUntraced(function* (
   expect(actual.source).toEqual(expected.source);
   expect(actual.semantic.citations).toEqual(expected.semantic.citations);
   expect(actual.reservedUnits).toBe(expected.reservedUnits);
+  expect(actual.report.engineArtifact).toBe(engineArtifact);
+  expect(actual.report.producedTextUtf16).toBe(actual.reservedUnits);
+  expect(actual.report.extraction?.semanticCitations).toBe(actual.semantic.citations.length);
+  expect(actual.report.extraction?.verifiedMentions).toBe(actual.occurrences.mentions.length);
+  expect(actual.report.extraction?.tokenizer?.patternsChecked).toBeGreaterThan(0);
+  expect(Duration.isFinite(actual.report.workDuration)).toBe(true);
+  const encodedReport = yield* encodeReport(actual.report);
+  expect(encodedReport).not.toContain(input.rawText);
+  expect(encodedReport).not.toContain("sourceText");
   if (actual.semantic.raw.outcome._tag !== "Document") return yield* Effect.die("expected resolved Document");
   yield* assertCitationTokenizedExtractionRow(actual.semantic.raw.outcome.result.extraction, row, translated);
   yield* assertOutputEvidence(actual, row);

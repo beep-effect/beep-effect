@@ -1269,6 +1269,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the identity producer and connected fixture use; retain prior asset and source evidence and every acceptance requirement.
 
+### Measure extraction reports outside semantic citations, 2026-11-06
+
+Publish server-only source-free report schemas and project actual successful extraction counts, captured policy/artifact and Effect-timed work. Measure executed tokenizer patterns against pinned selected rows and preserve skipped-versus-zero distinction. Do not claim queue/total timing or full failure-report/service qualification. Public ports/service/Layer and all remaining acceptance duties remain open. See history/evidence/2026-11-06-extraction-reports.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Remove completed-report composition and public report contracts and restore the preceding extraction result; retain the original oracle and tokenizer fixtures.
+
 ### Full-span evidence and overlap warning binding, 2026-11-06
 
 Verified primary occurrences now retain original full spans as canonical component anchors. Equal primary/full spans share evidence without a second quote allocation; invalid full spans remain explicit component issues. Source overlap warnings bind original model IDs to verified cm1 endpoints after validating returned model views; unavailable or identical occurrence endpoints remain explicit unbound events. Source-backed Bun/Node and mention regression passes 15 tests. Final component/footnote detection, canonical source production for cleaning, public service/Layer and exhaustive goal qualification remain open. See history/evidence/2026-11-06-full-span-warnings.md.
