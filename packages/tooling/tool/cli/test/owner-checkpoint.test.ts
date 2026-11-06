@@ -36,6 +36,7 @@ import {
   SquashCommitlintPass,
   SquashCommitlintReport,
   SquashCommitMessage,
+  sameOwnerCheckpointBinding,
   transitionOwnerCheckpoint,
   YeetReviewWindowElapsed,
 } from "@beep/repo-cli/test/Yeet";
@@ -46,6 +47,7 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -228,6 +230,31 @@ const mergeGithub = (
   base: GithubRoutes = () => ({ body: { object: { type: "commit", sha: merge } } })
 ) => recordedGithub((call) => (Str.startsWith("{repo}/git/ref/heads/")(call.path) ? base(call) : routes(call)));
 
+const JsonBinding = S.fromJsonString(OwnerCheckpointBinding);
+const JsonRecord = S.fromJsonString(OwnerCheckpointRecord);
+const JsonPolicy = S.fromJsonString(OwnerCheckpointPolicy);
+const sameRecord = S.toEquivalence(OwnerCheckpointRecord);
+const samePolicy = S.toEquivalence(OwnerCheckpointPolicy);
+it.effect.prop(
+  "round-trips schema-derived owner bindings, records and policies through JSON",
+  [
+    Arbitrary.schema(OwnerCheckpointBinding),
+    Arbitrary.schema(OwnerCheckpointRecord),
+    Arbitrary.schema(OwnerCheckpointPolicy),
+  ],
+  ([ownerBinding, record, ownerPolicy]) =>
+    Effect.gen(function* () {
+      const bindingJson = yield* S.encodeEffect(JsonBinding)(ownerBinding);
+      const recordJson = yield* S.encodeEffect(JsonRecord)(record);
+      const policyJson = yield* S.encodeEffect(JsonPolicy)(ownerPolicy);
+      const bindingAgain = yield* S.decodeEffect(JsonBinding)(bindingJson);
+      const recordAgain = yield* S.decodeEffect(JsonRecord)(recordJson);
+      const policyAgain = yield* S.decodeEffect(JsonPolicy)(policyJson);
+      assertTrue(sameOwnerCheckpointBinding(bindingAgain, ownerBinding));
+      assertTrue(sameRecord(recordAgain, record));
+      assertTrue(samePolicy(policyAgain, ownerPolicy));
+    })
+);
 describe("offline owner checkpoint", () => {
   it.effect("qualifies upstream while its own App check is still pending, without circular readiness", () =>
     Effect.gen(function* () {
