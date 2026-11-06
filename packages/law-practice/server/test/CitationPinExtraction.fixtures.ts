@@ -18,6 +18,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import {
   assertCitationMetadataEnclosingRefusal,
+  assertCitationMetadataFailure,
   assertCitationMetadataFixtureLifetime,
   assertCitationMetadataRefusal,
   assertCitationWorkerCompositionReleased,
@@ -98,8 +99,7 @@ export const replayCitationPinExtraction = Effect.fn("PinExtractionTest.replay")
   const rows = full ? setup.corpus.cases : A.filter(setup.corpus.cases, (row) => row.smoke);
   for (const row of rows) {
     if (row.error !== null) {
-      const failed = yield* setup.stage.apply(row.request).pipe(Effect.flip);
-      expect(failed).toMatchObject({ reason: row.error });
+      yield* assertCitationMetadataFailure(setup.stage.apply(row.request), { reason: row.error });
     } else {
       const actual = yield* setup.stage.apply(row.request);
       expect({

@@ -178,6 +178,7 @@
     "research/prune-global-feature-review.json",
     "research/published-head-identity-checkpoint.json",
     "research/python-workspace-feature-review.json",
+    "research/query-package-count-repair-2026-11-06.json",
     "research/refresh-current-population.py",
     "research/remaining-mutating-fixer-disposition-review.json",
     "research/remaining-persistent-service-disposition-review.json",

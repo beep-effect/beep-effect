@@ -45,6 +45,8 @@ const Kind = LiteralKit([
   "begin",
   "end",
   "end-strict",
+  "boundary",
+  "non-boundary",
   "repeat",
 ]).pipe(
   $I.annoteSchema("Kind", { description: "Closed structural program tokens; no raw executable regex fragment." })
@@ -83,7 +85,7 @@ const canonicalToken = (token: typeof TokenShape.Type) => {
       () => Str.isEmpty(token.name) && (token.maximum === "unbounded" || token.maximum >= token.value)
     ),
     Match.when("open", () => ordinary && validOpen(token)),
-    Match.whenOr("atom", "end", () => structure && token.value < max.patternUtf16),
+    Match.whenOr("atom", "end", "boundary", "non-boundary", () => structure && token.value < max.patternUtf16),
     Match.orElse(() => structure && token.value === 0)
   );
 };
@@ -213,7 +215,7 @@ const grammarStep = (
     Match.when("repeat", () =>
       state.quantifiable ? O.some(GrammarState.make({ ...state, quantifiable: false })) : O.none()
     ),
-    Match.when("atom", () =>
+    Match.whenOr("atom", "boundary", "non-boundary", () =>
       token.value < program.sets.atoms ? O.some(GrammarState.make({ ...state, quantifiable: true })) : O.none()
     ),
     Match.when("end", () =>
@@ -340,10 +342,20 @@ const endRender = (atom: string) => {
   const suffix = "?(?![\\s\\S]))";
   return { units: 3 + Str.length(atom) + Str.length(suffix), build: () => `(?=${atom}${suffix}` };
 };
+const boundaryRender = (atom: string, inverse: boolean) => {
+  const first = inverse ? "=" : "!";
+  const second = inverse ? "!" : "=";
+  const skeleton = `(?:(?<=)(?${first})|(?<!)(?${second}))`;
+  return {
+    units: 4 * Str.length(atom) + Str.length(skeleton),
+    build: () => `(?:(?<=${atom})(?${first}${atom})|(?<!${atom})(?${second}${atom}))`,
+  };
+};
 const renderToken = (
   alphabet: CitationRegexAlphabetText,
   token: CitationRegexProgramToken,
-  names: MutableHashSet.MutableHashSet<string>
+  names: MutableHashSet.MutableHashSet<string>,
+  cpython: boolean
 ) =>
   Match.value(token.kind).pipe(
     Match.when("atom", () => renderAtom(alphabet, token).pipe(Effect.map(fixedRender))),
@@ -354,6 +366,13 @@ const renderToken = (
     Match.when("begin", () => Effect.succeed(fixedRender("^"))),
     Match.when("end-strict", () => Effect.succeed(fixedRender("(?![\\s\\S])"))),
     Match.when("end", () => renderAtom(alphabet, token).pipe(Effect.map(endRender))),
+    Match.whenOr("boundary", "non-boundary", () => {
+      if (cpython && alphabet.pythonLength === 0 && token.kind === "non-boundary")
+        return Effect.succeed(fixedRender("(?!)"));
+      return renderAtom(alphabet, token).pipe(
+        Effect.map((atom) => boundaryRender(atom, token.kind === "non-boundary"))
+      );
+    }),
     Match.when("repeat", () => Effect.succeed(repeatRender(token))),
     Match.exhaustive
   );
@@ -395,6 +414,8 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
           : view.getUint32(byte, true);
     };
     const verbose = (flags & 64) !== 0;
+    let ignoreCase = (flags & 2) !== 0;
+    let groupDepth = 0;
     const whitespace = () => A.some(categories.verboseSpace, (row) => row.start <= peek() && peek() <= row.end);
     const commentStep = () => (categories.engine === "python-re" && peek() === 92 && peek(1) >= 0 ? 2 : 1);
     const skipComment = Effect.fn("Citation.skipVerboseComment")(function* () {
@@ -447,7 +468,7 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       return id;
     });
     const literal = Effect.fnUntraced(function* (start: number, end = start) {
-      return yield* categories.literal(start, end, (flags & 2) !== 0);
+      return yield* categories.literal(start, end, ignoreCase);
     });
     let escapedPoint = -1;
     const escapedLiteral = Effect.fnUntraced(function* (point: number) {
@@ -645,17 +666,52 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       index++;
       return name;
     });
-    const groupHeader = Effect.fn("Citation.readRegexGroupHeader")(function* () {
-      if (peek() !== 63) return { group: ++groups, name: "", assertion: false };
+    // Case flags affect emitted point sets, never the source pattern identity.
+    const caseFlagSet = Effect.fn("Citation.readRegexCaseFlagSet")(function* () {
+      const start = index;
+      while (peek() === 105) {
+        if (index % 256 === 0) yield* Effect.yieldNow;
+        index++;
+      }
+      return index > start;
+    });
+    const caseFlags = Effect.fn("Citation.readRegexCaseFlags")(function* () {
+      const enabled = yield* caseFlagSet();
+      let disabled = false;
+      if (peek() === 45) {
+        index++;
+        disabled = yield* caseFlagSet();
+        if (!disabled) return yield* unsupported();
+      }
+      if (enabled === disabled || (peek() !== 58 && peek() !== 41)) return yield* unsupported();
+      const scoped = peek() === 58;
       index++;
-      if (peek() === 58) {
-        index++;
-        return { group: 0, name: "", assertion: false };
+      return { enabled, scoped };
+    });
+    const caseFlagStart = () => peek() === 40 && peek(1) === 63 && (peek(2) === 105 || peek(2) === 45);
+    const skipDirectives = Effect.fn("Citation.skipRegexCaseDirectives")(function* () {
+      yield* skipIgnored();
+      while (caseFlagStart()) {
+        const saved = index;
+        index += 2;
+        const parsed = yield* caseFlags();
+        if (parsed.scoped) {
+          index = saved;
+          return;
+        }
+        if (categories.engine === "python-re" && (!parsed.enabled || groupDepth > 0 || A.isArrayNonEmpty(tokens)))
+          return yield* unsupported();
+        ignoreCase = parsed.enabled;
+        yield* skipIgnored();
       }
-      if (peek() === 61) {
-        index++;
-        return { group: 0, name: "", assertion: true };
-      }
+    });
+    const scopedCaseHeader = Effect.fn("Citation.readRegexScopedCaseHeader")(function* () {
+      const parsed = yield* caseFlags();
+      if (!parsed.scoped) return yield* unsupported();
+      ignoreCase = parsed.enabled;
+      return { group: 0, name: "", assertion: false };
+    });
+    const pythonGroupHeader = Effect.fn("Citation.readRegexPythonGroupHeader")(function* () {
       if (peek() !== 80) {
         yield* skipNested();
         if (peek() !== 58) return yield* unsupported();
@@ -670,7 +726,23 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       names = R.set(names, name, group);
       return { group, name, assertion: false };
     });
+    const groupHeader = Effect.fn("Citation.readRegexGroupHeader")(function* () {
+      if (peek() !== 63) return { group: ++groups, name: "", assertion: false };
+      index++;
+      if (peek() === 58) {
+        index++;
+        return { group: 0, name: "", assertion: false };
+      }
+      if (peek() === 61) {
+        index++;
+        return { group: 0, name: "", assertion: true };
+      }
+      if (peek() === 105 || peek() === 45) return yield* scopedCaseHeader();
+      return yield* pythonGroupHeader();
+    });
     const group = Effect.fn("Citation.parseRegexGroup")(function* (): Effect.fn.Return<Summary, ParseFailure> {
+      const savedCase = ignoreCase;
+      groupDepth++;
       index++;
       const header = yield* groupHeader();
       if (header.assertion) yield* emit("open");
@@ -678,6 +750,8 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       const body = yield* expression();
       if (peek() !== 41) return yield* unsupported();
       index++;
+      groupDepth--;
+      ignoreCase = savedCase;
       yield* emit("close");
       if (header.assertion) yield* emit("close");
       return summary(
@@ -722,26 +796,43 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       yield* emit("atom", citationResult4);
       return summary(1);
     });
+    const boundary = Effect.fn("Citation.parseRegexBoundary")(function* () {
+      const kind = peek(1) === 98 ? "boundary" : "non-boundary";
+      index += 2;
+      const word = yield* atom(categories.word);
+      yield* emit(kind, word);
+      return summary(0, false, categories.engine === "python-regex-v0");
+    });
+    const assertionKind = (point: number) => {
+      if (point === 94 || point === 36) return "anchor";
+      if (point !== 92) return "none";
+      return Match.value(peek(1)).pipe(
+        Match.whenOr(65, 90, () => "anchor" as const),
+        Match.whenOr(98, 66, () => "boundary" as const),
+        Match.orElse(() => "none" as const)
+      );
+    };
     const parseAtom = Effect.fn("Citation.parseRegexAtom")(function* (): Effect.fn.Return<Summary, ParseFailure> {
       const point = peek();
       if (point === 40) return yield* group();
-      if (point === 94 || point === 36) return yield* anchor(point);
-      if (point === 92 && (peek(1) === 65 || peek(1) === 90)) return yield* anchor(point);
+      const assertion = assertionKind(point);
+      if (assertion === "anchor") return yield* anchor(point);
+      if (assertion === "boundary") return yield* boundary();
       if (point === 123) yield* repeat(summary(0, false, false));
       if (invalidAtom(point)) return yield* unsupported();
       return yield* characterAtom(point);
     });
     const sequence = Effect.fn("Citation.parseRegexSequence")(function* (): Effect.fn.Return<Summary, ParseFailure> {
       let result = summary(0);
-      yield* skipIgnored();
+      yield* skipDirectives();
       while (peek() >= 0 && peek() !== 41 && peek() !== 124) {
         if (index % 64 === 0) yield* Effect.yieldNow;
         const tokenStart = A.length(tokens);
         const citationResult5 = yield* parseAtom();
-        yield* skipIgnored();
+        yield* skipDirectives();
         const citationResult6 = yield* repeat(citationResult5, tokenStart);
         result = combine(result, citationResult6, false);
-        yield* skipIgnored();
+        yield* skipDirectives();
       }
       return result;
     });
@@ -814,7 +905,7 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
     const names = MutableHashSet.empty<string>();
     for (const token of program.tokens) {
       if (index++ % 128 === 0) yield* Effect.yieldNow;
-      const fragment = yield* renderToken(alphabet, token, names);
+      const fragment = yield* renderToken(alphabet, token, names, categories.engine === "python-re");
       if (fragment.units > limits.patternUtf16 - Str.length(pattern)) return yield* budget();
       pattern += fragment.build();
     }

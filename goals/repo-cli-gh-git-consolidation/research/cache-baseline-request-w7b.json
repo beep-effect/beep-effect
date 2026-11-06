@@ -1,5 +1,5 @@
 {
-  "previous": "3a7edb194078b25a92eba060c7da503c893db748523ed4b4b2b5ed6882215c67",
+  "previous": "ceb63b3d095df8826453e784f220ecde0cadf23ad134c23f8613a3baff034ef6",
   "review": {
     "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7b, feat/gh-git-w7b-groups)",
     "reason": "Record the W7b seal drift and the inherited #2686 manifest drift: the goals completion reads moved onto GitHubContent, so GitHubContent.ts joins the goals-doctor and knowledge policy seals (Goals.errors.ts stays, main's doctor keeps GoalsGitError); @beep/html and @beep/technical-drawing manifests changed in #2686 without a re-stamp; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",

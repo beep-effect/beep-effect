@@ -2407,3 +2407,21 @@ five state-policy tasks passed. Hoist the schema and its encoder to module scope
 to reuse the parser cache while preserving the fixture bytes and assertions.
 Keep the failed job receipt and require fresh hosted proof after the repair.
 No local verify, publish or repository test suite was run.
+
+### 2026-11-05: Keep successful inspection evidence after diagnostic refusal
+
+Accepted-main workflow run42126399874 / job127591603870 failed with `invalid-input-or-stream`; its source inspection passed but the following source upload was skipped. The retained104-byte refusal cannot distinguish memory, archive, process, filesystem or input failures. Gate the source upload on successful inspection plus its report output, independently of later diagnostic success. Retain only fixed categorical failure codes, with no exception messages, paths, payloads or environment values. The actual cause remains unknown; an unchanged retry cannot repair the missing evidence.
+
+### 2026-11-05: Treat review API exhaustion as unknown state
+
+PR #2707 closeout could not read review state because GitHub GraphQL reported its API limit exhausted. A minimal quota query confirmed zero remaining and reset at 23:31:05Z; the REST quota snapshot had shown a different GraphQL allowance, so it was insufficient evidence to resume reads. Preserve the failed receipt and hold review/merge readiness until an actual post-reset read succeeds. Share and respect the authenticated API reset across metadata consumers to prevent repeated failed polls; this is an environment wait, not an empty review inventory. No credential or subscription change.
+
+### 2026-11-05: Avoid repeated packet tail collisions
+
+PR #2707 conflicted at the SPEC and PLAN append points after sibling #2690 landed, then again with #2692 and its manifest report row. Preserve both independent histories, place this repair's checkpoint in the existing Status section and decision near the start of the existing Decision log, and insert its report row away from the manifest tail. This reduces shared append edits without a new merge policy or an unaccepted tooling dependency. Reverse the placement through Git; keep every evidence entry.
+
+The next base merge adopted #2704's generated manifest format. The source and plan decisions merged cleanly; resolve the manifest using the accepted pure projection core for this packet only, preserving the new report and upstream references. This is metadata conflict resolution; no quality suite or source-generator entrypoint is run.
+
+### 2026-11-06: Count refusal bytes in the publication budget
+
+Source inspection permits a report up to four MiB. Adding even the observed 104-byte refusal can exceed the existing combined report cap near that boundary. Before publishing either artifact, inspect only regular-file sizes and select a pair only when its total fits. On overflow, retain only the individually safe report selected by the documented policy, and fail the complete-pair gate. Reject missing, symlink and special-file candidates without reading payloads or repeating archive work. Boundary and fixed-output controls are authored for hosted CI; no local test or quality suite was run.

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "claim-performance-integrated-policy-replay/v1",
+  "implementationDigest": "9d1ca21c9ae5a416cb106a33d879446b880d131c07097be0c50ce3aa4261c8cd",
+  "resultSha256": "68c246a48995310b6e4aea6b3c4cdaa6bbe0515756f47a04045c76f4197e71e7",
+  "sourceSelectionDigest": "75c4dc3e3d4accf873b90f5fb2c757941a1d57ea97ad530a8700a4e19668388a",
+  "referenceSelectionDigest": "ffcffd914a33dbabbe6f878e375bf6d9d41f9f30487e835d7061760b1593b8ff",
+  "claims": 538,
+  "strict": 41,
+  "parsed": 537,
+  "abstained": 453,
+  "all538RowsEqualPolicyWork002": true,
+  "all60ServiceReportsByteIdentical": true,
+  "prior41Lost": [],
+  "preservation": {
+    "filesChecked": 1213,
+    "originalPathFilesChecked": 1210,
+    "historicalRunnerArtifactsChecked": 3,
+    "activeRunners": [
+      {
+        "path": "packages/law-practice/server/test/evaluation/allowed.main.ts",
+        "sha256": "d774701ac7e444ce165d79d28535a9a556388c515f5859809abf2359fa1b0094"
+      },
+      {
+        "path": "packages/law-practice/server/test/evaluation/iprally-smoke.main.ts",
+        "sha256": "041e4c9ed71c372cc91951d6707c61640958ab490672efbf7d02c3e96bec0813"
+      },
+      {
+        "path": "packages/law-practice/server/test/evaluation/positive.main.ts",
+        "sha256": "061c8a578fca133ca7da71595271568906b2ff474664f6c2e31b60920a607d03"
+      }
+    ],
+    "changed": [],
+    "passingClaimsProtected": 37,
+    "lost": [],
+    "strictMatches": 41,
+    "retentionEvaluated": true,
+    "preserved": true
+  },
+  "privateOutput": "product-integrated-policy-001",
+  "acceptedMain": "c5f18e9701abef1f57f55f16881adbc79837e270",
+  "policySource": "f5cffb0fee18fbded82e1aead6aa35d002b249d6",
+  "independentCorrectnessEstablished": false,
+  "usefulnessEstablished": false
+}

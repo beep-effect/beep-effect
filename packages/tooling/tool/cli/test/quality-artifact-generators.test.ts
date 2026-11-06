@@ -545,6 +545,7 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
 `);
 
       expect(summary.total).toBe(3);
+      expect(summary.packages).toBe(2);
       expect(summary.byTask).toEqual({ check: 1, lint: 2 });
       expect(summary.byReason).toEqual({ TaskFileChanged: 2, TaskGlobalDepsChanged: 1 });
     })
@@ -634,6 +635,7 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
       const query = yield* summarizeTurboQueryAffectedOutput('{"data":{"affectedTasks":{"items":[]}}}');
       const dry = yield* summarizeTurboDryRunOutput('{"tasks":[]}');
       expect(query.total).toBe(0);
+      expect(query.packages).toBe(0);
       expect(dry.total).toBe(0);
       expect(dry.packages).toBe(0);
     })
