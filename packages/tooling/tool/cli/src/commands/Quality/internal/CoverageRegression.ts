@@ -1300,6 +1300,49 @@ const toCoveragePackageBaseline = Effect.fn("CoverageRegression.toCoveragePackag
   });
 });
 
+const isMissingCounterlessCoverageCandidate = (
+  entry: CoverageSnapshotEntry,
+  files: Record<string, CoverageFileBaseline>,
+  filePath: string
+): boolean =>
+  !R.has(files, filePath) &&
+  Str.startsWith(`${entry.baseline.path}/src/`)(filePath) &&
+  (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath)) &&
+  !Str.endsWith(".d.ts")(filePath);
+
+const isPureExternalReexportSource = (filePath: string, text: string): boolean => {
+  const project = createInMemoryTsMorphProject();
+  const source = project.createSourceFile(filePath, text, { overwrite: true });
+  const statements = source.getStatements();
+  return (
+    project.getProgram().getSyntacticDiagnostics(source).length === 0 &&
+    A.isReadonlyArrayNonEmpty(statements) &&
+    A.every(
+      statements,
+      (statement) =>
+        Node.isExportDeclaration(statement) &&
+        O.exists(
+          O.fromUndefinedOr(statement.getModuleSpecifier()),
+          (specifier) => Str.length(specifier.getLiteralValue()) > 0
+        )
+    )
+  );
+};
+
+const isExistingCounterlessCoverageSource = Effect.fn("CoverageRegression.isExistingCounterlessSource")(function* (
+  repoRoot: string,
+  packageRoot: string,
+  filePath: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const absolute = path.resolve(repoRoot, filePath);
+  const resolved = yield* fs.realPath(absolute).pipe(Effect.option);
+  if (O.isNone(resolved) || !Str.startsWith(`${packageRoot}${path.sep}`)(resolved.value)) return false;
+  const text = yield* fs.readFileString(absolute).pipe(Effect.option);
+  return O.exists(text, (value) => isPureExternalReexportSource(filePath, value));
+});
+
 /** Complete only omitted, still-existing external re-export modules with truthful zero-unit coverage.
  * Local runtime statements, unreadable/deleted paths and invalid syntax retain their missing-file failures.
  * Package counters and percentages are never changed.
@@ -1323,7 +1366,6 @@ const toCoveragePackageBaseline = Effect.fn("CoverageRegression.toCoveragePackag
  */
 export const completeCounterlessCoverageFilesForTesting = Effect.fn("CoverageRegression.completeCounterlessFiles")(
   function* (repoRoot: string, baseline: CoverageRegressionBaseline, entries: ReadonlyArray<CoverageSnapshotEntry>) {
-    const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     return yield* Effect.forEach(
       entries,
@@ -1333,35 +1375,8 @@ export const completeCounterlessCoverageFilesForTesting = Effect.fn("CoverageReg
         const files = { ...entry.baseline.files };
         const packageRoot = path.resolve(repoRoot, entry.baseline.path);
         for (const filePath of R.keys(previous.value.files)) {
-          if (
-            R.has(files, filePath) ||
-            !Str.startsWith(`${entry.baseline.path}/src/`)(filePath) ||
-            !(Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath)) ||
-            Str.endsWith(".d.ts")(filePath)
-          )
-            continue;
-          const absolute = path.resolve(repoRoot, filePath);
-          const resolved = yield* fs.realPath(absolute).pipe(Effect.option);
-          if (O.isNone(resolved) || !Str.startsWith(`${packageRoot}${path.sep}`)(resolved.value)) continue;
-          const text = yield* fs.readFileString(absolute).pipe(Effect.option);
-          if (O.isNone(text)) continue;
-          const project = createInMemoryTsMorphProject();
-          const source = project.createSourceFile(filePath, text.value, { overwrite: true });
-          const statements = source.getStatements();
-          if (
-            project.getProgram().getSyntacticDiagnostics(source).length > 0 ||
-            A.isReadonlyArrayEmpty(statements) ||
-            !A.every(
-              statements,
-              (statement) =>
-                Node.isExportDeclaration(statement) &&
-                O.exists(
-                  O.fromUndefinedOr(statement.getModuleSpecifier()),
-                  (specifier) => Str.length(specifier.getLiteralValue()) > 0
-                )
-            )
-          )
-            continue;
+          if (!isMissingCounterlessCoverageCandidate(entry, files, filePath)) continue;
+          if (!(yield* isExistingCounterlessCoverageSource(repoRoot, packageRoot, filePath))) continue;
           R.assignProperty(
             files,
             filePath,
@@ -2729,6 +2744,51 @@ export const coverageBaselineWriteReport: {
   }
 );
 
+const validateCoverageFileIdentityWrite = Effect.fn("CoverageRegression.validateFileIdentityWrite")(function* (
+  scoped: boolean,
+  expectedPackageNames: ReadonlyArray<string>,
+  options: { readonly replaceAll?: boolean; readonly addMissingFilesOnly?: boolean },
+  previous: O.Option<CoverageRegressionBaselineDocument>
+) {
+  if (
+    options.addMissingFilesOnly === true &&
+    (!scoped ||
+      options.replaceAll === true ||
+      A.isReadonlyArrayEmpty(expectedPackageNames) ||
+      O.isNone(previous) ||
+      !isCurrentCoverageRegressionBaseline(previous.value))
+  )
+    return yield* QualityTaskConfigurationError.new(
+      "--add-missing-files-only requires a scoped schema-v2 baseline write with exact existing packages and cannot use --replace-all."
+    );
+});
+
+const validateUnscopedCoverageSnapshot = Effect.fn("CoverageRegression.validateUnscopedSnapshot")(function* (
+  repoRoot: string,
+  entries: ReadonlyArray<CoverageSnapshotEntry>,
+  previous: O.Option<CoverageRegressionBaselineDocument>
+) {
+  const path = yield* Path.Path;
+  const workspaceNames = yield* workspaceCoveragePackages(repoRoot, path).pipe(Effect.map(A.map((info) => info.name)));
+  const lost = baselineEntriesLostByReplacement(
+    pipe(
+      previous,
+      O.match({
+        onNone: A.empty<string>,
+        onSome: (document) => R.keys(document.packages),
+      })
+    ),
+    A.map(entries, (entry) => entry.packageName),
+    workspaceNames
+  );
+
+  if (A.isReadonlyArrayNonEmpty(lost)) {
+    return yield* QualityTaskConfigurationError.new(
+      `Refusing to write ${coverageRegressionBaselinePath}: an unscoped regeneration requires a complete workspace snapshot, and ${A.length(lost)} package(s) recorded in the baseline are still in the workspace but produced no coverage summary in this run: ${A.join(lost, ", ")}. Re-run coverage across the whole workspace, or pass a turbo filter so the run is treated as scoped and merged instead. Packages that no longer exist are pruned normally and do not trigger this.`
+    );
+  }
+});
+
 /**
  * Write the committed coverage regression baseline from generated summaries.
  *
@@ -2776,7 +2836,6 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
     CoverageRegressionError,
     FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
   > {
-    const path = yield* Path.Path;
     let entries = yield* collectCoverageSnapshot(repoRoot);
     yield* validateCoverageSnapshotCompleteness(entries, expectedPackageNames);
 
@@ -2786,17 +2845,7 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
     // missing file yields `None`; anything else propagates.
     const previous = yield* readPreviousBaseline(repoRoot);
     const replaceAll = options.replaceAll === true;
-    if (
-      options.addMissingFilesOnly === true &&
-      (!scoped ||
-        replaceAll ||
-        A.isReadonlyArrayEmpty(expectedPackageNames) ||
-        O.isNone(previous) ||
-        !isCurrentCoverageRegressionBaseline(previous.value))
-    )
-      return yield* QualityTaskConfigurationError.new(
-        "--add-missing-files-only requires a scoped schema-v2 baseline write with exact existing packages and cannot use --replace-all."
-      );
+    yield* validateCoverageFileIdentityWrite(scoped, expectedPackageNames, options, previous);
 
     if (
       scoped &&
@@ -2810,28 +2859,7 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
       );
     }
 
-    if (!scoped) {
-      const workspaceNames = yield* workspaceCoveragePackages(repoRoot, path).pipe(
-        Effect.map(A.map((info) => info.name))
-      );
-      const lost = baselineEntriesLostByReplacement(
-        pipe(
-          previous,
-          O.match({
-            onNone: A.empty<string>,
-            onSome: (document) => R.keys(document.packages),
-          })
-        ),
-        A.map(entries, (entry) => entry.packageName),
-        workspaceNames
-      );
-
-      if (A.isReadonlyArrayNonEmpty(lost)) {
-        return yield* QualityTaskConfigurationError.new(
-          `Refusing to write ${coverageRegressionBaselinePath}: an unscoped regeneration requires a complete workspace snapshot, and ${A.length(lost)} package(s) recorded in the baseline are still in the workspace but produced no coverage summary in this run: ${A.join(lost, ", ")}. Re-run coverage across the whole workspace, or pass a turbo filter so the run is treated as scoped and merged instead. Packages that no longer exist are pruned normally and do not trigger this.`
-        );
-      }
-    }
+    if (!scoped) yield* validateUnscopedCoverageSnapshot(repoRoot, entries, previous);
 
     const currentPrevious = pipe(previous, O.filter(isCurrentCoverageRegressionBaseline));
     if (O.isSome(currentPrevious))

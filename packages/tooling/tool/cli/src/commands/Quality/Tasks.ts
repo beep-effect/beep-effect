@@ -961,12 +961,10 @@ const coverageFullPassthroughArgs = (args: ReadonlyArray<string>): ReadonlyArray
   return passthrough;
 };
 
-const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOptions")(function* (
-  repoRoot: string,
-  args: ReadonlyArray<string>,
-  baseOverride?: string
-): Effect.fn.Return<CoverageTaskOptions, QualityTaskConfigurationError, QualityTaskEnvironment> {
-  const parsed = parseCoverageTaskOptions(args);
+const validateCoverageFileIdentityTaskOptions = Effect.fn("QualityTasks.validateFileIdentityTaskOptions")(function* (
+  parsed: CoverageTaskOptions,
+  args: ReadonlyArray<string>
+) {
   if (
     parsed.addMissingFilesOnly === true &&
     (!parsed.writeBaseline || !parsed.scoped || parsed.replaceAll || A.some(args, isCoverageAffectedArg))
@@ -974,6 +972,15 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
     return yield* QualityTaskConfigurationError.new(
       "--add-missing-files-only requires --write-baseline with exact --filter package selectors; --replace-all and --affected are unsupported."
     );
+});
+
+const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOptions")(function* (
+  repoRoot: string,
+  args: ReadonlyArray<string>,
+  baseOverride?: string
+): Effect.fn.Return<CoverageTaskOptions, QualityTaskConfigurationError, QualityTaskEnvironment> {
+  const parsed = parseCoverageTaskOptions(args);
+  yield* validateCoverageFileIdentityTaskOptions(parsed, args);
   // A scoped `--replace-all` is the deliberate re-measure path: it adopts every
   // package this run measured, and the hosted pull-request run judges every row
   // it raises.
