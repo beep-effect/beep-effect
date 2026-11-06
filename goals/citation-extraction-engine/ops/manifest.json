@@ -166,7 +166,8 @@
     "packages/law-practice/server/src/internal/Citation/SourceRequest.ts",
     "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.input.ts",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-admitted-source-extraction.md",
-    "packages/law-practice/server/src/internal/Citation/SourceExtraction.ts"
+    "packages/law-practice/server/src/internal/Citation/SourceExtraction.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-paired-source-extraction.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

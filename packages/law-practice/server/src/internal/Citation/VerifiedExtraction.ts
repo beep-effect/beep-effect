@@ -3,11 +3,13 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationSourceRole } from "@beep/law-practice-use-cases/server";
+import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { O } from "@beep/utils";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import {
   CitationCanonicalSourceResult,
   deriveCitationCanonicalSource,
@@ -61,6 +63,7 @@ const IdentityInput = S.Struct({ source: VerifiedSourceText, role: CitationSourc
   })
 );
 const Input = S.Struct({
+  companion: S.optionalKey(VerifiedSourceText),
   cleanSteps: CitationExtractionEntryInput.fields.cleanSteps,
   container: CitationExtractionEntryInput.fields.container,
   removeAmbiguous: CitationExtractionEntryInput.fields.removeAmbiguous,
@@ -76,6 +79,7 @@ export class CitationVerifiedExtractionResult extends S.Opaque<
 >()(
   S.Struct({
     source: CitationCanonicalSourceResult,
+    inputs: S.Struct({ plain: S.NullOr(SourceTextIdentity), markup: S.NullOr(SourceTextIdentity) }),
     semantic: CitationSemanticExtractionResult,
     occurrences: CitationOccurrenceProjectionResult,
     reservedUnits: S.Natural,
@@ -93,8 +97,20 @@ const own = Effect.fn("Citation.ownVerifiedExtraction")(function* (
   const extracted = yield* ownCitationSemanticExtraction(limits, configuration.extraction);
   return { ...extracted, engineArtifact: configuration.engineArtifact };
 });
-const requestFor = (source: VerifiedSourceText, role: CitationSourceRole) =>
-  role === "plain" ? { plain: source.sourceText, markup: null } : { plain: null, markup: source.sourceText };
+const sourcesFor = (source: VerifiedSourceText, role: CitationSourceRole, companion: VerifiedSourceText | null) =>
+  role === "plain" ? { plain: source, markup: companion } : { plain: companion, markup: source };
+const requestFor = (sources: ReturnType<typeof sourcesFor>) => ({
+  plain: sources.plain === null ? null : sources.plain.sourceText,
+  markup: sources.markup === null ? null : sources.markup.sourceText,
+});
+const identitiesFor = (sources: ReturnType<typeof sourcesFor>) => ({
+  plain: sources.plain === null ? null : sources.plain.source,
+  markup: sources.markup === null ? null : sources.markup.source,
+});
+// Original Both branch uses markup as Document.source, while tokenizer text
+// remains the supplied plain value. Empty markup instead selects Plain.
+const parentFor = (sources: ReturnType<typeof sourcesFor>, fallback: VerifiedSourceText) =>
+  sources.markup !== null && !Str.isEmpty(sources.markup.sourceText) ? sources.markup : (sources.plain ?? fallback);
 const prepare = Effect.fn("Citation.extractVerifiedPrimitiveSource")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
@@ -120,11 +136,15 @@ const prepare = Effect.fn("Citation.extractVerifiedPrimitiveSource")(function* (
       const semantic = yield* stage.extract({ plain: "eyecite" });
       const source = yield* retainCitationCanonicalSource(identity.source);
       const occurrences = yield* projection.project({ source: source.source, result: semantic });
-      return { semantic, source, occurrences };
+      return { semantic, source, occurrences, inputs: identitiesFor(sourcesFor(identity.source, "plain", null)) };
     }
     const input = modes.value;
+    const sources = sourcesFor(identity.source, identity.role, input.companion ?? null);
+    const parent = parentFor(sources, identity.source);
+    const companion = parent === identity.source ? input.companion : identity.source;
+    const role = parent === sources.markup ? "markup" : "plain";
     const semantic = yield* stage.extract({
-      ...requestFor(identity.source, identity.role),
+      ...requestFor(sources),
       cleanSteps: input.cleanSteps,
       container: input.container,
       removeAmbiguous: input.removeAmbiguous,
@@ -133,15 +153,19 @@ const prepare = Effect.fn("Citation.extractVerifiedPrimitiveSource")(function* (
     const source = yield* deriveCitationCanonicalSource(
       limits,
       owned.engineArtifact,
-      identity.source,
+      parent,
       semantic.raw.outcome.result.extraction.tokenizer.source,
-      { ...input, role: identity.role }
+      {
+        ...input,
+        role,
+        ...O.getSomesStruct({ companion: O.map(O.fromUndefinedOr(companion), (value) => value.source) }),
+      }
     );
     const occurrences = yield* projection.project({ source: source.source, result: semantic });
-    return { semantic, source, occurrences };
+    return { semantic, source, occurrences, inputs: identitiesFor(sources) };
   }).pipe(Effect.provideContext(owned.children));
 });
-/** Run from one authenticated primitive source under the same permit, deadline
+/** Run from authenticated primitive sources under the same permit, deadline
  * and cumulative budget through canonical source derivation and occurrence
  * verification. Ignored shortcut modes remain unread. The output has no partial
  * success path and returned methods require no caller services.

@@ -47,6 +47,7 @@ export class CitationSourceDerivationModes extends S.Opaque<
 >()(
   S.Struct({
     role: CitationSourceRole,
+    companion: S.optionalKey(SourceTextIdentity),
     cleanSteps: CitationExtractionEntryInput.fields.cleanSteps,
     container: CitationExtractionEntryInput.fields.container,
   }).pipe(

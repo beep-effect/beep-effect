@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "b7cb1244dd7953233de547a1935ab1dd1f0a043ef0ded403ef66ef32e2bac122",
+  "planSha256": "f2743286e696d9621c9311d11134a4cc1a42d5130c7f45e5a1b78afc93fe5aa3",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1124,15 +1124,15 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/CanonicalSource.ts",
-          "sha256": "4afd303e5d906725b71f8cf5a5c7e7e32e46502b631b17b8cb5d5c97f9822930"
+          "sha256": "2c0715e02ac6c5ad4587b721417783aaa3ea5e56496ed3e03a9988d2f04fc885"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/VerifiedExtraction.ts",
-          "sha256": "f52a28f23cc11488b4e3ebdbdc478ed0976ed5d451ea8fbce0bc2928e9f065a0"
+          "sha256": "a8b0222fae8c7f89445e05e47aed3961a5e2d2be52188dd5edbb99aa352bf4db"
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalSource.test.ts",
-          "sha256": "6b0a7d0fea3fa6d9dc87d4a3f31529e03637115e67a7e3606fe2e21710962bcb"
+          "sha256": "a64da2385eb6ad1400600a99f19e376ff5261ae45dfc9cea2a13498ff10c49e2"
         },
         {
           "path": "packages/law-practice/server/test/CitationVerifiedExtraction.fixtures.ts",
@@ -1193,6 +1193,10 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-admitted-source-extraction.md",
           "sha256": "6b1c208cabc221a02c3960e36fc57b210f9a48847123fc33328ae595f708e237"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-paired-source-extraction.md",
+          "sha256": "b34270fd1cba513db39a69e7c4e4063d46231eccfc0c4c32601236a48c2eab8c"
         }
       ],
       "workflowState": "audit",

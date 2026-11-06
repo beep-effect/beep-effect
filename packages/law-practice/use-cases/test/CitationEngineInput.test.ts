@@ -5,6 +5,7 @@ import {
   CitationCleanerContainerKind,
   CitationEngineExtractionOptions,
   CitationEngineSourceInput,
+  CitationEngineSourcePairInput,
   CitationSourceRole,
 } from "@beep/law-practice-use-cases/server";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
@@ -54,12 +55,22 @@ it.effect("retains exact raw Unicode and identity without granting a verified ca
     expect(source.source).toEqual(identity);
     expect(source.role).toBe("plain");
     expect(S.is(VerifiedSourceText)(source)).toBe(false);
+    const pair = yield* S.decodeEffect(CitationEngineSourcePairInput)({
+      plain: { source: identity, sourceText: "" },
+      markup: { source: identity, sourceText: " A😀\n" },
+      cleanSteps: [],
+    });
+    expect(pair.plain?.sourceText).toBe("");
+    expect(pair.markup?.sourceText).toBe(" A😀\n");
+    expect(pair.cleanSteps).toEqual([]);
+    expect(S.is(VerifiedSourceText)(pair.plain)).toBe(false);
   })
 );
 it.effect("keeps raw source and mode contracts out of root and client surfaces", () =>
   Effect.sync(() => {
     for (const name of [
       "CitationEngineSourceInput",
+      "CitationEngineSourcePairInput",
       "CitationEngineExtractionOptions",
       "CitationBuiltinCleanerName",
       "CitationCleanerContainerKind",

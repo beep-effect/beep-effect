@@ -150,6 +150,104 @@ it.layer(citationTokenizerTestLayer)("canonical single-source request adapter", 
       expect(json).not.toContain("private");
     })
   );
+  it.effect("snapshots both source slots and named options before either resolver call", () =>
+    Effect.gen(function* () {
+      const plain = yield* citationFixtureSourceProof("plain");
+      const markup = yield* citationFixtureSourceProof("<p>A</p>");
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const steps = ["underscores"];
+      const raw = {
+        plain: { source: plain.source, sourceText: plain.sourceText },
+        markup: { source: markup.source, sourceText: markup.sourceText },
+        cleanSteps: steps,
+      };
+      let calls = 0;
+      const resolver = SourceTextResolver.of({
+        resolve: Effect.fn("SourceRequestTest.resolvePair")((request) =>
+          Effect.sync(() => {
+            calls++;
+            const expected = calls === 1 ? plain : markup;
+            expect(request.identity).toEqual(expected.source);
+            raw.markup.sourceText = "mutated";
+            raw.markup.source = plain.source;
+            steps[0] = "html";
+            return ResolvedSourceText.make({ identity: expected.source, text: expected.sourceText });
+          })
+        ),
+      });
+      const adapter = yield* makeCitationSourceRequestAdapter(limits).pipe(
+        Effect.provideService(SourceTextResolver, resolver)
+      );
+      const result = yield* adapter.preparePair(raw);
+      expect(result._tag).toBe("Extract");
+      if (result._tag !== "Extract") return yield* Effect.die("expected paired Extract");
+      expect(result.role).toBe("plain");
+      expect(result.source.source).toEqual(plain.source);
+      expect(result.companion?.source).toEqual(markup.source);
+      expect(result.companion?.sourceText).toBe("<p>A</p>");
+      expect(result.cleanSteps).toEqual(["underscores"]);
+      expect(calls).toBe(2);
+    })
+  );
+  it.effect("leaves markup and options unread on the paired plain shortcut", () =>
+    Effect.gen(function* () {
+      const plain = yield* citationFixtureSourceProof("eyecite");
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const adapter = yield* makeCitationSourceRequestAdapter(limits).pipe(
+        Effect.provideService(
+          SourceTextResolver,
+          fakeResolver(ResolvedSourceText.make({ identity: plain.source, text: plain.sourceText }))
+        )
+      );
+      let reads = 0;
+      const result = yield* adapter.preparePair({
+        plain: { source: plain.source, sourceText: plain.sourceText },
+        get markup() {
+          reads++;
+          return Symbol("ignored");
+        },
+        get cleanSteps() {
+          reads++;
+          return Symbol("ignored");
+        },
+      });
+      expect(result._tag).toBe("Shortcut");
+      expect(reads).toBe(0);
+    })
+  );
+  it.effect("preflights both slots before resolving and retains supplied empty-source identity", () =>
+    Effect.gen(function* () {
+      const empty = yield* citationFixtureSourceProof("");
+      const limits = { ...(yield* defaultCitationEnginePolicy).limits, sourceUtf16: 5 };
+      let calls = 0;
+      const resolver = SourceTextResolver.of({
+        resolve: Effect.fn("SourceRequestTest.resolveEmptyPair")(() =>
+          Effect.sync(() => {
+            calls++;
+            return ResolvedSourceText.make({ identity: empty.source, text: "" });
+          })
+        ),
+      });
+      const adapter = yield* makeCitationSourceRequestAdapter(limits).pipe(
+        Effect.provideService(SourceTextResolver, resolver)
+      );
+      const missing = yield* adapter.preparePair({}).pipe(Effect.flip);
+      expect(missing._tag).toBe("CitationInputError");
+      const oversized = yield* adapter
+        .preparePair({
+          plain: { source: empty.source, sourceText: "" },
+          markup: { source: empty.source, sourceText: "longer" },
+        })
+        .pipe(Effect.flip);
+      expect(oversized).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "sourceUtf16" });
+      expect(calls).toBe(0);
+      const retained = yield* adapter.preparePair({ markup: { source: empty.source, sourceText: "" } });
+      expect(retained._tag).toBe("Extract");
+      expect(retained.source.source).toEqual(empty.source);
+      expect(retained.source.sourceText).toBe("");
+      expect(calls).toBe(1);
+    })
+  );
   it.layer(TestClock.layer())("captured deadline", (it) => {
     it.effect("interrupts a stalled resolver with a closed safety failure", () =>
       Effect.gen(function* () {

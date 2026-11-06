@@ -44,6 +44,15 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("canonical t
       expect(changedMode.source.source.extractor.version).not.toBe(first.source.source.extractor.version);
       const changedVersion = yield* derive(changed.storage, modes, Sha256Hex.make(Str.repeat(64)("b")));
       expect(changedVersion.source.source.extractor.version).not.toBe(first.source.source.extractor.version);
+      const companion = yield* citationFixtureSourceProof("Visible 😀");
+      const otherCompanion = yield* citationFixtureSourceProof("Different source");
+      const pairedModes = { ...modes, companion: companion.source };
+      const paired = yield* derive(changed.storage, pairedModes);
+      const otherModes = { ...modes, companion: otherCompanion.source };
+      const otherPair = yield* derive(changed.storage, otherModes);
+      expect(paired.source.source.textDigest).toBe(first.source.source.textDigest);
+      expect(paired.source.source.extractor.version).not.toBe(first.source.source.extractor.version);
+      expect(paired.source.source.extractor.version).not.toBe(otherPair.source.source.extractor.version);
       const invalid = yield* derive({ width: 2, bytes: new Uint8Array([0, 0xd8]) }).pipe(Effect.flip);
       expect(invalid).toMatchObject({ reason: "unverifiable-text" });
       const observed = yield* setup.observed.snapshot;

@@ -27,6 +27,7 @@ export {
   CitationCleanerContainerKind,
   CitationEngineExtractionOptions,
   CitationEngineSourceInput,
+  CitationEngineSourcePairInput,
   CitationSourceRole,
 } from "./CitationEngine/CitationEngine.input.ts";
 /**

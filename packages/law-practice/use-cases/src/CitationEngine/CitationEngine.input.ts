@@ -139,3 +139,36 @@ export class CitationEngineExtractionOptions extends S.Opaque<
     })
   )
 ) {}
+
+const SourceSlot = S.Struct({
+  source: CitationEngineSourceInput.fields.source,
+  sourceText: CitationEngineSourceInput.fields.sourceText,
+}).pipe(
+  $I.annoteSchema("SourceSlot", { description: "One independently verifiable raw source in a named argument slot." })
+);
+/** Raw primitive plain/markup arguments with independent source identities.
+ * Null means no supplied source; an empty supplied text retains its identity.
+ * Slot names own the roles. Custom callables remain captured server services.
+ * This covers primitive sources, not retained Document dispatch.
+ * **Example** (Inspect paired source ownership)
+ * ```ts
+ * import { CitationEngineSourcePairInput } from "@beep/law-practice-use-cases/server"
+ * console.log(CitationEngineSourcePairInput.fields.plain !== undefined) // true
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CitationEngineSourcePairInput extends S.Opaque<
+  CitationEngineSourcePairInput,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    plain: S.NullOr(SourceSlot).pipe(S.withDecodingDefaultKey(Effect.succeed(null))),
+    markup: S.NullOr(SourceSlot).pipe(S.withDecodingDefaultKey(Effect.succeed(null))),
+    ...CitationEngineExtractionOptions.fields,
+  }).pipe(
+    $I.annoteSchema("CitationEngineSourcePairInput", {
+      description: "Server-only primitive source pair and named modes; decoding alone grants no source proof.",
+    })
+  )
+) {}

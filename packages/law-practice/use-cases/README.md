@@ -34,8 +34,10 @@ Single-source `CitationEngineSourceInput` and named
 Builtin cleaner names, container kinds and source roles have one schema owner
 there, reused by private server implementation. Decoding source data grants no
 verified-source capability. The private adapter uses the existing canonical
-`SourceTextResolver` and provenance verifier; full dual-source/retained-Document
-request dispatch and the complete service contract remain unfinished.
+`SourceTextResolver` and provenance verifier. `CitationEngineSourcePairInput`
+adds independently identified plain/markup slots, retaining empty supplied
+identities. Private single/pair extraction shares admission, timing and cumulative
+budgets. Retained-Document dispatch and the complete service remain unfinished.
 
 Citation oracle corpus,
 accounting, divergence and benchmark schemas export only from `/test`;

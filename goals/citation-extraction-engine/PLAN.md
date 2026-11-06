@@ -1277,6 +1277,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the full-span/warning adaptation wave; retain primary occurrence projection and original raw warning pairs.
 
+### Verify independent plain and markup sources through extraction, 2026-11-06
+
+Reuse the existing resolver/verifier and admitted extraction owner for independently identified plain/markup slots. Preserve the canonical Both branch: plain tokenization, markup source parent, no geometry and truthy-cleaner refusal. Retain both input identities and bind companion identity in changed-text derivation. Retained Document dispatch and full goal qualification remain open. See history/evidence/2026-11-06-paired-source-extraction.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Remove the primitive-pair component and adapter and companion integration; restore the preceding single-source route while retaining the sealed source observations.
+
 ### Compose authenticated production extraction configuration, 2026-11-06
 
 The production constructor composes complete parser/helper/vocabulary assets and returns the existing frozen-edition owner. Semantic vocabulary now uses shared bounded byte authentication before its existing schema and public-membership checks. Semantic/verified replay uses this constructor. Individual data identities remain separate from the unfinished complete implementation identity. Public service/Layer and exhaustive acceptance remain open. See history/evidence/2026-11-06-default-configuration.md.
