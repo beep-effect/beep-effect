@@ -2460,3 +2460,14 @@ bytes in bounded chunks instead of allocating another full report at final
 verification. Keep the 256 MiB limit and prove the repair with hosted pressure
 regressions and two real comparable observations. Narrow component/line
 metadata prevented further speculative tar-parser repairs.
+
+
+### 2026-11-06 — Publication stopped before push by GitHub connectivity
+
+The bounded-source comparison repair is committed, but canonical publication
+stopped while fetching main: both SSH and temporary HTTPS transport attempts
+returned exit 128. An independent bounded HTTPS probe resolved api.github.com
+but established no TCP connection. Preserve the local commit, failed transport
+receipts and observation artifacts; retry publication only after connectivity
+returns. A short connection deadline and explicit network attribution would
+avoid treating these waits as local proof or repeated code failures.
