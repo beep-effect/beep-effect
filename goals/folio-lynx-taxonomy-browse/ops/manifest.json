@@ -48,11 +48,7 @@
     "explorations/lynx-lkg-ontology-grounding/DECISIONS.md",
     "explorations/lynx-lkg-ontology-grounding/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/document-structure-ontologies/research/SOURCES.md",
-    "../../explorations/lynx-lkg-ontology-grounding/research/SOURCES.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -80,5 +76,9 @@
     "Exact FOLIO or Lynx artifact licensing and checksums are unavailable.",
     "The sources require parallel vendor machinery instead of TaxonomySeed.",
     "Tool delivery requires a new deployable or write surface."
+  ],
+  "researchReferences": [
+    "../../explorations/document-structure-ontologies/research/SOURCES.md",
+    "../../explorations/lynx-lkg-ontology-grounding/research/SOURCES.md"
   ]
 }

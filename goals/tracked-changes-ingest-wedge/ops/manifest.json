@@ -38,12 +38,7 @@
     "explorations/harvey-lab-firm-knowledge/MAP.md",
     "explorations/harvey-lab-firm-knowledge/DECISIONS.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/harvey-lab-firm-knowledge/research/SOURCES.md",
-    "../../explorations/harvey-lab-firm-knowledge/research/mine-synthetic-corpus.md",
-    "../../explorations/harvey-lab-firm-knowledge/research/verify-completeness.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -72,5 +67,10 @@
     "Semantic implementation would proceed after a hard failure without operator re-approval.",
     "The sibling eval framework is unavailable and would need duplication.",
     "Any real OIP/client material would leave the device."
+  ],
+  "researchReferences": [
+    "../../explorations/harvey-lab-firm-knowledge/research/SOURCES.md",
+    "../../explorations/harvey-lab-firm-knowledge/research/mine-synthetic-corpus.md",
+    "../../explorations/harvey-lab-firm-knowledge/research/verify-completeness.md"
   ]
 }

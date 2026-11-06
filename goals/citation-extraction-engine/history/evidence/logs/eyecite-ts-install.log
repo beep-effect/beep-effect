@@ -1,0 +1,36 @@
+(node:930951) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +220
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 220, reused 134, downloaded 0, added 0
+Progress: resolved 220, reused 171, downloaded 45, added 192
+Progress: resolved 220, reused 171, downloaded 49, added 220, done
+.../esbuild@0.27.2/node_modules/esbuild postinstall$ node install.js
+.../esbuild@0.28.0/node_modules/esbuild postinstall$ node install.js
+.../esbuild@0.27.2/node_modules/esbuild postinstall: Done
+.../esbuild@0.28.0/node_modules/esbuild postinstall: Done
+
+devDependencies:
++ @biomejs/biome 2.3.14
++ @changesets/changelog-github 0.5.2
++ @changesets/cli 2.29.8
++ @size-limit/preset-small-lib 12.0.0
++ @types/adm-zip 0.5.8
++ @types/node 25.9.1
++ @vitest/coverage-v8 4.0.18
++ adm-zip 0.5.17
++ fast-check 4.7.0
++ size-limit 12.0.0
++ tsdown 0.20.3
++ tsx 4.22.3
++ typescript 5.9.3
++ vitest 4.0.18
+
+. prepare$ pnpm data:generate
+. prepare: > eyecite-ts@0.34.2 data:generate ~/.cache/beep/citation-extraction-engine/eyecite-ts
+. prepare: > tsx scripts/generate-reporters-data.ts
+. prepare: Wrote ~/.cache/beep/citation-extraction-engine/eyecite-ts/src/data/reporters.gen.ts (967.5 KB)
+. prepare: Done
+Done in 5.2s using pnpm v10.6.5

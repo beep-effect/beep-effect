@@ -34,9 +34,9 @@
     "goals/effect-child-process-hardening/research/2026-07-30-verification.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
     "research/2026-07-29-inventory.md",
-    "research/2026-07-30-verification.md"
+    "research/2026-07-30-verification.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {

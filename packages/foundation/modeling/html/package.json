@@ -39,7 +39,7 @@
     "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit",
     "check:scripts": "bun run beep:check:scripts",
     "generate": "bun run scripts/generate.ts && biome check --write src/Html.model.ts src/Html.meta.ts src/internal/Html.language-tag-registry.generated.ts",
-    "generate:check": "bun run generate && git diff --exit-code -- src/Html.model.ts src/Html.meta.ts src/internal/Html.language-tag-registry.generated.ts"
+    "generate:check": "bun run scripts/generate.ts --check"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -101,6 +101,7 @@
     "whatwg-url": "catalog:"
   },
   "devDependencies": {
+    "@beep/codegen-kit": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/platform-node": "catalog:",

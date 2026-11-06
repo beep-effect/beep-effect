@@ -32,8 +32,9 @@
     "goals/tsgo-045-effect-idiom-sweep/ops/prompts/00-orchestrator.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
     "research/2026-09-12-grounding.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
     "research/origin-prompt-2026-09-12.md"
   ],
   "agentLaunchers": [

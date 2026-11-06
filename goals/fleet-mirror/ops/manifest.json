@@ -35,9 +35,9 @@
     "goals/fleet-mirror/research/p0-policy-surface-measurement.md"
   ],
   "researchReports": [
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
-    "research/p0-policy-surface-measurement.md",
-    "research/OPPORTUNITIES.md"
+    "research/p0-policy-surface-measurement.md"
   ],
   "agentLaunchers": [
     {

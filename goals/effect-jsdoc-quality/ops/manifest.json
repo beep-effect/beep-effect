@@ -33,7 +33,13 @@
     "goals/effect-jsdoc-quality/GOAL.md",
     "goals/effect-jsdoc-quality/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/P0-baseline-check.md",
+    "research/P1-summary.md",
+    "research/P2-summary.md",
+    "research/P3-summary.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

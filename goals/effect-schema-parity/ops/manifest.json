@@ -40,13 +40,16 @@
     "explorations/effect-schema-parity/MAP.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
-    "research/OPPORTUNITIES.md",
     "research/2026-09-29-p3-gates.md",
     "research/2026-09-29-p4-gate-cut.md",
     "research/2026-09-29-p5a-check-census.md",
     "research/2026-10-01-p5-cache-review.md",
-    "research/2026-10-01-p5-check-census.md"
+    "research/2026-10-01-p5-check-census.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/tools/boundary-probe.ts",
+    "research/tools/facet-census.ts",
+    "research/tools/facet-probe.ts"
   ],
   "agentLaunchers": [
     {

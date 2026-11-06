@@ -275,7 +275,8 @@ it.layer(TestLayer, { timeout: "60 seconds" })("Git W7 kit — real repository",
         yield* runFixtureGit(dir, ["config", "commit.gpgsign", "true"]);
         yield* git.commit(dir, "force-added log", { noGpgSign: true });
         yield* runFixtureGit(dir, ["config", "commit.gpgsign", "false"]);
-        assert.strictEqual((yield* git.commitInfo(dir)).signatureStatus, "N");
+        const gitResult20 = yield* git.commitInfo(dir);
+        assert.strictEqual(gitResult20.signatureStatus, "N");
       })
     );
 

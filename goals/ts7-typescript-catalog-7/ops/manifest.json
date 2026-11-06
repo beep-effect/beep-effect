@@ -31,9 +31,10 @@
     "goals/ts7-typescript-catalog-7/research/SOURCES.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
     "research/OPPORTUNITIES.md",
-    "research/cache-baseline-basis.md"
+    "research/SOURCES.md",
+    "research/cache-baseline-basis.md",
+    "research/cache-baseline-request.json"
   ],
   "agentLaunchers": [
     {

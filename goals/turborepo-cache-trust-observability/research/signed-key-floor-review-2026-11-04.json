@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "cache-signed-key-floor-preparation/v1",
+  "recordedAt": "2026-11-04T00:03:03.958080+00:00",
+  "sourceBaseRevision": "31e2ac20f34a1c699a35be55f67881dbf0d8ffd0",
+  "authority": "Source preparation and authored hosted regressions only; not native replay, qualification, rollout or trust readiness.",
+  "feature": "futureFlag:longerSignatureKey",
+  "owner": "turborepo-cache-trust-observability",
+  "reviewedSourcePaths": [
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
+    "packages/tooling/tool/cli/test/cache-census.test.ts"
+  ],
+  "finding": "The shared signed-root projector enabled signatures but omitted the native minimum-key-length flag. Short supplied keys therefore remained permitted in the recorded native default behavior.",
+  "preparedBehavior": [
+    "Force longerSignatureKey true together with remote-cache enablement and signing in both supported configuration layouts.",
+    "Preserve unrelated future flags, task configuration and remote options.",
+    "Include the flag in projected configuration identity and exact signed-root bytes.",
+    "Reject reviewed signed-root projections with the safeguard omitted or disabled.",
+    "Preserve separate Beep missing-key role policy; native length enforcement alone does not reject an absent key."
+  ],
+  "priorNativeEvidence": {
+    "path": "goals/turborepo-quality-cache-adoption/research/native-signature-key-controls.json",
+    "sha256": "295dee52c2f80d3e19fe4b0bf11f1d9d219bff217ea2c7f2e7c00786cb58d6e4",
+    "cases": 168,
+    "clients": {
+      "stable": {
+        "reportedVersion": "2.11.10",
+        "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+      },
+      "canary": {
+        "reportedVersion": "2.11.11-canary.1",
+        "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+      }
+    },
+    "scope": "Synthetic native key-length behavior only; no real cache transport or qualification.",
+    "rerunInThisPreparation": false
+  },
+  "authoredRegressions": {
+    "newTopLevelCase": "enforces the native key floor while preserving unrelated future flags",
+    "configurationRows": 4,
+    "extendedExistingCases": [
+      "Legacy and global layout preservation plus idempotence.",
+      "Signed activation configuration identity and rejection of omitted/disabled minimum-key enforcement."
+    ],
+    "executedLocally": false,
+    "hostedResult": "pending"
+  },
+  "unchangedAuthorities": [
+    "Ordinary R2 fleet and production signing remain unchanged.",
+    "No credential access, key rotation, producer grant, runner capacity or billing change.",
+    "Artifact HMAC remains distinct from upload authorization and protected producer identity.",
+    "Historical projections are retained; changed overlays need fresh source-bound review and qualification."
+  ],
+  "featureAcceptanceStatus": "pending",
+  "wholeGoalCriteriaCompleted": 0,
+  "rollback": "Suspend affected candidate tuples and revert the projector/test change through reviewed Git history; retain native evidence and reject mixed reviewed overlays."
+}

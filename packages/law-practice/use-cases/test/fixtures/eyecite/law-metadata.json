@@ -1,0 +1,5685 @@
+{
+  "bindingCorpusSha256": "4b91de078a8cd6fedcd2c01fb98f3ef525497d207340265f4ff1318b5cea564d",
+  "cases": [
+    {
+      "calls": ["law"],
+      "id": 0,
+      "patch": {
+        "fullSpanEnd": 5,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 1,
+      "patch": {
+        "fullSpanEnd": 37,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 2,
+      "patch": {
+        "fullSpanEnd": 5,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 3,
+      "patch": {
+        "fullSpanEnd": 37,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": true
+    },
+    {
+      "calls": ["law"],
+      "id": 4,
+      "patch": {
+        "fullSpanEnd": 6,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 5,
+      "patch": {
+        "fullSpanEnd": 38,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 6,
+      "patch": {
+        "fullSpanEnd": 6,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 7,
+      "patch": {
+        "fullSpanEnd": 38,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 8,
+      "patch": {
+        "fullSpanEnd": 5,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "756e72656c61746564",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 9,
+      "patch": {
+        "fullSpanEnd": 37,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "756e72656c61746564",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 10,
+      "patch": {
+        "fullSpanEnd": 5,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "756e72656c61746564",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 11,
+      "patch": {
+        "fullSpanEnd": 37,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "756e72656c61746564",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 12,
+      "patch": {
+        "fullSpanEnd": 8,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 13,
+      "patch": {
+        "fullSpanEnd": 40,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 14,
+      "patch": {
+        "fullSpanEnd": 8,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 15,
+      "patch": {
+        "fullSpanEnd": 40,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 16,
+      "patch": {
+        "fullSpanEnd": 17,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129283129287869696929",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129283129287869696929",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 17,
+      "patch": {
+        "fullSpanEnd": 49,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129283129287869696929",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129283129287869696929",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 18,
+      "patch": {
+        "fullSpanEnd": 17,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129283129287869696929",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129283129287869696929",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 19,
+      "patch": {
+        "fullSpanEnd": 49,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129283129287869696929",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129283129287869696929",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": true
+    },
+    {
+      "calls": ["law"],
+      "id": 20,
+      "patch": {
+        "fullSpanEnd": 16,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "28612920616e6420286229",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "28612920616e6420286229",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 21,
+      "patch": {
+        "fullSpanEnd": 48,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "28612920616e6420286229",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "28612920616e6420286229",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 22,
+      "patch": {
+        "fullSpanEnd": 16,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "28612920616e6420286229",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "28612920616e6420286229",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 23,
+      "patch": {
+        "fullSpanEnd": 48,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "28612920616e6420286229",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "28612920616e6420286229",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 24,
+      "patch": {
+        "fullSpanEnd": 16,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129206574207365712e",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129206574207365712e",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 25,
+      "patch": {
+        "fullSpanEnd": 48,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129206574207365712e",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129206574207365712e",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 26,
+      "patch": {
+        "fullSpanEnd": 16,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129206574207365712e",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129206574207365712e",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 27,
+      "patch": {
+        "fullSpanEnd": 48,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129206574207365712e",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129206574207365712e",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 28,
+      "patch": {
+        "fullSpanEnd": 17,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 29,
+      "patch": {
+        "fullSpanEnd": 49,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 30,
+      "patch": {
+        "fullSpanEnd": 17,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 31,
+      "patch": {
+        "fullSpanEnd": 49,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": true
+    },
+    {
+      "calls": ["law"],
+      "id": 32,
+      "patch": {
+        "fullSpanEnd": 23,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "5765737420537570702e",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420537570702e203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 33,
+      "patch": {
+        "fullSpanEnd": 55,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "5765737420537570702e",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420537570702e203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 34,
+      "patch": {
+        "fullSpanEnd": 23,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "5765737420537570702e",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420537570702e203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 35,
+      "patch": {
+        "fullSpanEnd": 55,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "5765737420537570702e",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420537570702e203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 36,
+      "patch": {
+        "fullSpanEnd": 20,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "436f6e736f6c2e",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2028436f6e736f6c2e203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 37,
+      "patch": {
+        "fullSpanEnd": 52,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "436f6e736f6c2e",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2028436f6e736f6c2e203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 38,
+      "patch": {
+        "fullSpanEnd": 20,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "436f6e736f6c2e",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2028436f6e736f6c2e203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 39,
+      "patch": {
+        "fullSpanEnd": 52,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "436f6e736f6c2e",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2028436f6e736f6c2e203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 40,
+      "patch": {
+        "fullSpanEnd": 23,
+        "metadata": {
+          "day": {
+            "bytes": "32",
+            "width": 1
+          },
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "4a616e75617279",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20284a616e7561727920322c203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 41,
+      "patch": {
+        "fullSpanEnd": 55,
+        "metadata": {
+          "day": {
+            "bytes": "32",
+            "width": 1
+          },
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "4a616e75617279",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20284a616e7561727920322c203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 42,
+      "patch": {
+        "fullSpanEnd": 23,
+        "metadata": {
+          "day": {
+            "bytes": "32",
+            "width": 1
+          },
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "4a616e75617279",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20284a616e7561727920322c203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 43,
+      "patch": {
+        "fullSpanEnd": 55,
+        "metadata": {
+          "day": {
+            "bytes": "32",
+            "width": 1
+          },
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "4a616e75617279",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20284a616e7561727920322c203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 44,
+      "patch": {
+        "fullSpanEnd": 19,
+        "metadata": {
+          "day": {
+            "bytes": "32",
+            "width": 1
+          },
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "4a616e2e",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20284a616e2e2032203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 45,
+      "patch": {
+        "fullSpanEnd": 51,
+        "metadata": {
+          "day": {
+            "bytes": "32",
+            "width": 1
+          },
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "4a616e2e",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20284a616e2e2032203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 46,
+      "patch": {
+        "fullSpanEnd": 19,
+        "metadata": {
+          "day": {
+            "bytes": "32",
+            "width": 1
+          },
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "4a616e2e",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20284a616e2e2032203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 47,
+      "patch": {
+        "fullSpanEnd": 51,
+        "metadata": {
+          "day": {
+            "bytes": "32",
+            "width": 1
+          },
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "4a616e2e",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20284a616e2e2032203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 48,
+      "patch": {
+        "fullSpanEnd": 12,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "31353939",
+            "width": 1
+          }
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283135393929",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 49,
+      "patch": {
+        "fullSpanEnd": 44,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "31353939",
+            "width": 1
+          }
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283135393929",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 50,
+      "patch": {
+        "fullSpanEnd": 12,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "31353939",
+            "width": 1
+          }
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283135393929",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 51,
+      "patch": {
+        "fullSpanEnd": 44,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "31353939",
+            "width": 1
+          }
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283135393929",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": true
+    },
+    {
+      "calls": ["law"],
+      "id": 52,
+      "patch": {
+        "fullSpanEnd": 12,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "31363030",
+            "width": 1
+          }
+        },
+        "year": 1600
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283136303029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 53,
+      "patch": {
+        "fullSpanEnd": 44,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "31363030",
+            "width": 1
+          }
+        },
+        "year": 1600
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283136303029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 54,
+      "patch": {
+        "fullSpanEnd": 12,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "31363030",
+            "width": 1
+          }
+        },
+        "year": 1600
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283136303029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 55,
+      "patch": {
+        "fullSpanEnd": 44,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "31363030",
+            "width": 1
+          }
+        },
+        "year": 1600
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283136303029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 56,
+      "patch": {
+        "fullSpanEnd": 12,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "32303237",
+            "width": 1
+          }
+        },
+        "year": 2027
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323729",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 57,
+      "patch": {
+        "fullSpanEnd": 44,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "32303237",
+            "width": 1
+          }
+        },
+        "year": 2027
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323729",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 58,
+      "patch": {
+        "fullSpanEnd": 12,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "32303237",
+            "width": 1
+          }
+        },
+        "year": 2027
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323729",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 59,
+      "patch": {
+        "fullSpanEnd": 44,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "32303237",
+            "width": 1
+          }
+        },
+        "year": 2027
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323729",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 60,
+      "patch": {
+        "fullSpanEnd": 12,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "32303238",
+            "width": 1
+          }
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323829",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 61,
+      "patch": {
+        "fullSpanEnd": 44,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "32303238",
+            "width": 1
+          }
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323829",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 62,
+      "patch": {
+        "fullSpanEnd": 12,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "32303238",
+            "width": 1
+          }
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323829",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 63,
+      "patch": {
+        "fullSpanEnd": 44,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "32303238",
+            "width": 1
+          }
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323829",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": true
+    },
+    {
+      "calls": ["law"],
+      "id": 64,
+      "patch": {
+        "fullSpanEnd": 15,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "31393933",
+            "width": 1
+          }
+        },
+        "year": 1993
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2028313939332d393429",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 65,
+      "patch": {
+        "fullSpanEnd": 47,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "31393933",
+            "width": 1
+          }
+        },
+        "year": 1993
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2028313939332d393429",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 66,
+      "patch": {
+        "fullSpanEnd": 15,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "31393933",
+            "width": 1
+          }
+        },
+        "year": 1993
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2028313939332d393429",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 67,
+      "patch": {
+        "fullSpanEnd": 47,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "31393933",
+            "width": 1
+          }
+        },
+        "year": 1993
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2028313939332d393429",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 68,
+      "patch": {
+        "fullSpanEnd": 12,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "6206600662066006",
+            "width": 2
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000280062066006620660062900",
+              "width": 2
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 69,
+      "patch": {
+        "fullSpanEnd": 44,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "6206600662066006",
+            "width": 2
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000280062066006620660062900",
+              "width": 2
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 70,
+      "patch": {
+        "fullSpanEnd": 12,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "6206600662066006",
+            "width": 2
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000280062066006620660062900",
+              "width": 2
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 71,
+      "patch": {
+        "fullSpanEnd": 44,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "6206600662066006",
+            "width": 2
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000280062066006620660062900",
+              "width": 2
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 72,
+      "patch": {
+        "fullSpanEnd": 12,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "521f0100501f0100521f0100501f0100",
+            "width": 4
+          }
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000000028000000521f0100501f0100521f0100501f010029000000",
+              "width": 4
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 73,
+      "patch": {
+        "fullSpanEnd": 44,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "521f0100501f0100521f0100501f0100",
+            "width": 4
+          }
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000000028000000521f0100501f0100521f0100501f010029000000",
+              "width": 4
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 74,
+      "patch": {
+        "fullSpanEnd": 12,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "521f0100501f0100521f0100501f0100",
+            "width": 4
+          }
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000000028000000521f0100501f0100521f0100501f010029000000",
+              "width": 4
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 75,
+      "patch": {
+        "fullSpanEnd": 44,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": {
+            "bytes": "521f0100501f0100521f0100501f0100",
+            "width": 4
+          }
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000000028000000521f0100501f0100521f0100501f010029000000",
+              "width": 4
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 76,
+      "patch": {
+        "fullSpanEnd": 24,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "6e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420323032302920286e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 77,
+      "patch": {
+        "fullSpanEnd": 56,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "6e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420323032302920286e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 78,
+      "patch": {
+        "fullSpanEnd": 24,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "6e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420323032302920286e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 79,
+      "patch": {
+        "fullSpanEnd": 56,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "6e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420323032302920286e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": true
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 80,
+      "patch": {
+        "fullSpanEnd": 29,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029202832303231206e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 81,
+      "patch": {
+        "fullSpanEnd": 61,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029202832303231206e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 82,
+      "patch": {
+        "fullSpanEnd": 29,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029202832303231206e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 83,
+      "patch": {
+        "fullSpanEnd": 61,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029202832303231206e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": true
+    },
+    {
+      "calls": ["law"],
+      "id": 84,
+      "patch": {
+        "fullSpanEnd": 32,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "6e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420323032302920286e6f74652920286f7468657229",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 85,
+      "patch": {
+        "fullSpanEnd": 64,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "6e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420323032302920286e6f74652920286f7468657229",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 86,
+      "patch": {
+        "fullSpanEnd": 32,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "6e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420323032302920286e6f74652920286f7468657229",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 87,
+      "patch": {
+        "fullSpanEnd": 64,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "6e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420323032302920286e6f74652920286f7468657229",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": true
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 88,
+      "patch": {
+        "fullSpanEnd": 33,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "286e657374656429206e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2028576573742032303230292028286e657374656429206e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 89,
+      "patch": {
+        "fullSpanEnd": 65,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "286e657374656429206e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2028576573742032303230292028286e657374656429206e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 90,
+      "patch": {
+        "fullSpanEnd": 33,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "286e657374656429206e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2028576573742032303230292028286e657374656429206e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 91,
+      "patch": {
+        "fullSpanEnd": 65,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "286e657374656429206e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2028576573742032303230292028286e657374656429206e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 92,
+      "patch": {
+        "fullSpanEnd": 20,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029202829",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 93,
+      "patch": {
+        "fullSpanEnd": 52,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029202829",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 94,
+      "patch": {
+        "fullSpanEnd": 20,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029202829",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 95,
+      "patch": {
+        "fullSpanEnd": 52,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029202829",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 96,
+      "patch": {
+        "fullSpanEnd": 23,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "e90000004c75000000f60100",
+            "width": 4
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000000028000000570000006500000073000000740000002000000032000000300000003200000030000000290000002000000028000000e90000004c75000000f6010029000000",
+              "width": 4
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 97,
+      "patch": {
+        "fullSpanEnd": 55,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "e90000004c75000000f60100",
+            "width": 4
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000000028000000570000006500000073000000740000002000000032000000300000003200000030000000290000002000000028000000e90000004c75000000f6010029000000",
+              "width": 4
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 98,
+      "patch": {
+        "fullSpanEnd": 23,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "e90000004c75000000f60100",
+            "width": 4
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000000028000000570000006500000073000000740000002000000032000000300000003200000030000000290000002000000028000000e90000004c75000000f6010029000000",
+              "width": 4
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 99,
+      "patch": {
+        "fullSpanEnd": 55,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "e90000004c75000000f60100",
+            "width": 4
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000000028000000570000006500000073000000740000002000000032000000300000003200000030000000290000002000000028000000e90000004c75000000f6010029000000",
+              "width": 4
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 100,
+      "patch": {
+        "fullSpanEnd": 22,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "35d8cedf",
+            "width": 2
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000280057006500730074002000320030003200300029002000280035d8cedf2900",
+              "width": 2
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 101,
+      "patch": {
+        "fullSpanEnd": 54,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "35d8cedf",
+            "width": 2
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000280057006500730074002000320030003200300029002000280035d8cedf2900",
+              "width": 2
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 102,
+      "patch": {
+        "fullSpanEnd": 22,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "35d8cedf",
+            "width": 2
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000280057006500730074002000320030003200300029002000280035d8cedf2900",
+              "width": 2
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 103,
+      "patch": {
+        "fullSpanEnd": 54,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "35d8cedf",
+            "width": 2
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "2000280057006500730074002000320030003200300029002000280035d8cedf2900",
+              "width": 2
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": true
+    },
+    {
+      "calls": ["law"],
+      "id": 104,
+      "patch": {
+        "fullSpanEnd": 18,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420323032302920287878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787829",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 105,
+      "patch": {
+        "fullSpanEnd": 50,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420323032302920287878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787829",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 106,
+      "patch": {
+        "fullSpanEnd": 18,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420323032302920287878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787829",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 107,
+      "patch": {
+        "fullSpanEnd": 50,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420323032302920287878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787829",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 108,
+      "patch": {
+        "fullSpanEnd": 24,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "6e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420",
+              "width": 1
+            },
+            "kind": "Text"
+          },
+          {
+            "data": {
+              "bytes": "3230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          },
+          {
+            "data": {
+              "bytes": "20286e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 109,
+      "patch": {
+        "fullSpanEnd": 56,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "6e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420",
+              "width": 1
+            },
+            "kind": "Text"
+          },
+          {
+            "data": {
+              "bytes": "3230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          },
+          {
+            "data": {
+              "bytes": "20286e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 110,
+      "patch": {
+        "fullSpanEnd": 24,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "6e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420",
+              "width": 1
+            },
+            "kind": "Text"
+          },
+          {
+            "data": {
+              "bytes": "3230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          },
+          {
+            "data": {
+              "bytes": "20286e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law", "parenthetical-year"],
+      "id": 111,
+      "patch": {
+        "fullSpanEnd": 56,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": {
+            "bytes": "6e6f7465",
+            "width": 1
+          },
+          "pinCite": null,
+          "publisher": {
+            "bytes": "57657374",
+            "width": 1
+          },
+          "year": {
+            "bytes": "32303230",
+            "width": 1
+          }
+        },
+        "year": 2020
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "20285765737420",
+              "width": 1
+            },
+            "kind": "Text"
+          },
+          {
+            "data": {
+              "bytes": "3230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          },
+          {
+            "data": {
+              "bytes": "20286e6f746529",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 112,
+      "patch": {
+        "fullSpanEnd": 5,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "0a0a",
+              "width": 1
+            },
+            "kind": "ParagraphToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 113,
+      "patch": {
+        "fullSpanEnd": 37,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "0a0a",
+              "width": 1
+            },
+            "kind": "ParagraphToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 114,
+      "patch": {
+        "fullSpanEnd": 5,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "0a0a",
+              "width": 1
+            },
+            "kind": "ParagraphToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 115,
+      "patch": {
+        "fullSpanEnd": 37,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "0a0a",
+              "width": 1
+            },
+            "kind": "ParagraphToken"
+          },
+          {
+            "data": {
+              "bytes": "202857657374203230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": true
+    },
+    {
+      "calls": ["law"],
+      "id": 116,
+      "patch": {
+        "fullSpanEnd": 5,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "49642e",
+              "width": 1
+            },
+            "kind": "IdToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 117,
+      "patch": {
+        "fullSpanEnd": 37,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "49642e",
+              "width": 1
+            },
+            "kind": "IdToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 118,
+      "patch": {
+        "fullSpanEnd": 5,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "49642e",
+              "width": 1
+            },
+            "kind": "IdToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 119,
+      "patch": {
+        "fullSpanEnd": 37,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "49642e",
+              "width": 1
+            },
+            "kind": "IdToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 120,
+      "patch": {
+        "fullSpanEnd": 5,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": null,
+            "kind": "Token"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 121,
+      "patch": {
+        "fullSpanEnd": 37,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": null,
+            "kind": "Token"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 122,
+      "patch": {
+        "fullSpanEnd": 5,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": null,
+            "kind": "Token"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 123,
+      "patch": {
+        "fullSpanEnd": 37,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": null,
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": null,
+            "kind": "Token"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 124,
+      "patch": {
+        "fullSpanEnd": 8,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129",
+              "width": 1
+            },
+            "kind": "Text"
+          },
+          {
+            "data": {
+              "bytes": "0a0a",
+              "width": 1
+            },
+            "kind": "ParagraphToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 125,
+      "patch": {
+        "fullSpanEnd": 40,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": null
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129",
+              "width": 1
+            },
+            "kind": "Text"
+          },
+          {
+            "data": {
+              "bytes": "0a0a",
+              "width": 1
+            },
+            "kind": "ParagraphToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": null
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 126,
+      "patch": {
+        "fullSpanEnd": 8,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 5,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129",
+              "width": 1
+            },
+            "kind": "Text"
+          },
+          {
+            "data": {
+              "bytes": "0a0a",
+              "width": 1
+            },
+            "kind": "ParagraphToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    },
+    {
+      "calls": ["law"],
+      "id": 127,
+      "patch": {
+        "fullSpanEnd": 40,
+        "metadata": {
+          "day": null,
+          "month": null,
+          "parenthetical": null,
+          "pinCite": {
+            "bytes": "286129",
+            "width": 1
+          },
+          "publisher": null,
+          "year": null
+        },
+        "year": 1998
+      },
+      "request": {
+        "index": 0,
+        "spanEnd": 37,
+        "words": [
+          {
+            "data": {
+              "bytes": "3120582031",
+              "width": 1
+            },
+            "kind": "CitationToken"
+          },
+          {
+            "data": {
+              "bytes": "286129",
+              "width": 1
+            },
+            "kind": "Text"
+          },
+          {
+            "data": {
+              "bytes": "0a0a",
+              "width": 1
+            },
+            "kind": "ParagraphToken"
+          },
+          {
+            "data": {
+              "bytes": "20283230323029",
+              "width": 1
+            },
+            "kind": "Text"
+          }
+        ],
+        "year": 1998
+      },
+      "smoke": false
+    }
+  ],
+  "configuration": {
+    "highestValidYear": 2027,
+    "lawBindings": [
+      {
+        "flags": 64,
+        "patternSha256": "f5ca4dc7bcbddd92f285153afc729057f8685da8871039adc4ed9ba93babc11e",
+        "profile": {
+          "groups": 6,
+          "minimumWidthFloor": 0,
+          "names": {
+            "day": 4,
+            "month": 3,
+            "parenthetical": 6,
+            "pin_cite": 1,
+            "publisher": 2,
+            "year": 5
+          },
+          "nullableMultiRepeat": false,
+          "repeatedCaptures": false
+        }
+      },
+      {
+        "flags": 64,
+        "patternSha256": "64281dfa923bfaa728294ce902d332708da29db32fba05204677a9b71a793107",
+        "profile": {
+          "groups": 6,
+          "minimumWidthFloor": 0,
+          "names": {
+            "day": 4,
+            "month": 3,
+            "parenthetical": 6,
+            "pin_cite": 1,
+            "publisher": 2,
+            "year": 5
+          },
+          "nullableMultiRepeat": false,
+          "repeatedCaptures": false
+        }
+      }
+    ],
+    "lawPattern": {
+      "bytes": "0a202020200a20202020283f503c70696e5f636974653e0a2020202020202020232073756273656374696f6e206c696b65202861292831292878696969293a0a20202020202020200a20202020283f3a0a20202020202020205c285b302d39612d7a412d5a5d7b312c347d5c290a20202020290a2a0a2020202020202020283f3a5c20616e645c200a20202020283f3a0a20202020202020205c285b302d39612d7a412d5a5d7b312c347d5c290a20202020290a2b293f0a2020202020202020283f3a5c2065745c207365715c2e293f0a20202020290a3f0a202020205c203f0a20202020283f3a5c280a20202020202020202320436f6e736f6c2e2c204d634b696e6e65792c2044656572696e672c20576573742c204c657869734e657869732c206574632e0a2020202020202020283f503c7075626c69736865723e0a2020202020202020202020205b412d5a5d5b612d7a5d2b5c2e3f0a202020202020202020202020283f3a5c20537570705c2e293f0a2020202020202020293f0a20202020202020205c203f0a202020202020202023206d6f6e74680a2020202020202020283f3a0a20202020283f503c6d6f6e74683e0a20202020202020204a616e756172797c4a616e5c2e7c0a202020202020202046656272756172797c4665625c2e7c0a20202020202020204d617263687c4d61725c2e7c0a2020202020202020417072696c7c4170725c2e7c0a20202020202020204d61797c0a20202020202020204a756e657c4a756e5c2e7c0a20202020202020204a756c797c4a756c5c2e7c0a20202020202020204175677573747c4175675c2e7c0a202020202020202053657074656d6265727c536570743f5c2e7c0a20202020202020204f63746f6265727c4f63745c2e7c0a20202020202020204e6f76656d6265727c4e6f765c2e7c0a2020202020202020446563656d6265727c4465635c2e0a20202020290a5c20293f0a202020202020202023206461790a2020202020202020283f503c6461793e5c647b312c327d293f2c3f5c203f0a20202020202020202320666f75722d646967697420796561720a20202020202020200a20202020283f3a0a2020202020202020283f503c796561723e0a2020202020202020202020205c647b347d0a2020202020202020290a2020202020202020232059656172206973206f63636173696f6e616c6c7920612072616e67652c206c696b652022313939332d393422206f722022323030352d3036222e0a20202020202020202320466f72206e6f772077652069676e6f72652074686520656e64206f66207468652072616e67653a0a2020202020202020283f3a2d5c647b327d293f0a20202020290a3f0a202020205c29293f0a202020205c203f0a202020202320706172656e746865746963616c0a202020200a20202020283f3a0a202020202020202023206f7074696f6e616c2073706163652c206f70656e696e6720706172656e0a20202020202020205c203f5c280a20202020202020202020202023206361707475726520756e74696c206c61737420656e6420706172656e2c207765276c6c207472696d206f666620657874726120616674657277617264730a202020202020202020202020283f503c706172656e746865746963616c3e2e2a290a20202020202020202020205c290a20202020293f0a0a",
+      "width": 1
+    },
+    "yearBindings": [
+      {
+        "flags": 64,
+        "patternSha256": "25f29e5046f9dddf7cf8437e8d5b78400da886e7add78806521be4329942a802",
+        "profile": {
+          "groups": 1,
+          "minimumWidthFloor": 4,
+          "names": {
+            "year": 1
+          },
+          "nullableMultiRepeat": false,
+          "repeatedCaptures": false
+        }
+      },
+      {
+        "flags": 64,
+        "patternSha256": "973a15abde966b49d78ac7bbd0f873b7242fef48f5c8bc96bb3768e84a2898e0",
+        "profile": {
+          "groups": 1,
+          "minimumWidthFloor": 4,
+          "names": {
+            "year": 1
+          },
+          "nullableMultiRepeat": false,
+          "repeatedCaptures": false
+        }
+      }
+    ],
+    "yearPattern": {
+      "bytes": "0a20202020283f3a0a2020202020202020283f503c796561723e0a2020202020202020202020205c647b347d0a2020202020202020290a2020202020202020232059656172206973206f63636173696f6e616c6c7920612072616e67652c206c696b652022313939332d393422206f722022323030352d3036222e0a20202020202020202320466f72206e6f772077652069676e6f72652074686520656e64206f66207468652072616e67653a0a2020202020202020283f3a2d5c647b327d293f0a20202020290a",
+      "width": 1
+    }
+  },
+  "helpersSha256": "3d3431db232be2f3d7320125528975d57797372a9c4c21d524927fc1ccf0a297",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "producerSha256": "c8f1e6a457b73a17188214e7f7076ade70ce4323670f18e7798ea392c0aeedb4",
+  "python": "3.11.15",
+  "regex": "2023.12.25",
+  "schemaVersion": "citation-law-metadata/v1"
+}

@@ -31,7 +31,14 @@
     "goals/docs-lint-oxlint-rules/research/SOURCES.md"
   ],
   "researchReports": [
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
+    "research/cache-baseline-request.json",
+    "research/cache-baseline-review.md",
+    "research/cli-audit-attribution.md",
+    "research/effect-vitest-review.md",
+    "research/generated-inventory-drift.md",
+    "research/schema-catalog-drift.md",
     "research/spike.md",
     "research/verification.tsv"
   ],

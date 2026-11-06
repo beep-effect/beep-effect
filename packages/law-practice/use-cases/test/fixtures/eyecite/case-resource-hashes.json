@@ -1,0 +1,1149 @@
+{
+  "schemaVersion": "citation-case-resource-hashes/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "python": "3.11.15",
+  "pythonHashSeed": "0",
+  "hashWidth": 64,
+  "hashModulus": "2305843009213693951",
+  "versions": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22"
+  },
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "sources": {
+    "models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a",
+    "utils.py": "8e27eb1207f6c0fdb695530e3677a3e9f039986b2baf68461ba680ee2bff902e"
+  },
+  "producerSha256": "09837721698fe45f5dbd89ebdec1c4eeabeca8ed26df8a328ae95fdb033ff9b8",
+  "scope": "Exact case/resource hashes only; controlled null-page identities are not live identity-adapter proof.",
+  "cases": [
+    {
+      "name": "page-1",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "376794172219282606",
+        "resourceHash": "1986750081022884797"
+      }
+    },
+    {
+      "name": "page-2",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "2"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "630472890875820896",
+        "resourceHash": "1465210507262904853"
+      }
+    },
+    {
+      "name": "page-20",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "20"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "745644279464380199",
+        "resourceHash": "1226098292844416122"
+      }
+    },
+    {
+      "name": "volume-2",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "2",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "409692463325984750",
+        "resourceHash": "589156506666343791"
+      }
+    },
+    {
+      "name": "volume-absent",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "2128870552654064890",
+        "resourceHash": "1171370646517902174"
+      }
+    },
+    {
+      "name": "volume-null",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": null,
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "655631651528732288",
+        "resourceHash": "969070658665715114"
+      }
+    },
+    {
+      "name": "reporter-null",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": null,
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "1789440236797251077",
+        "resourceHash": "1452633287487697364"
+      }
+    },
+    {
+      "name": "reporter-empty",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "1968727558974592117",
+        "resourceHash": "948332263143251072"
+      }
+    },
+    {
+      "name": "bmp",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "\u00e9\u4e2d",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "607414430445423504",
+        "resourceHash": "1213399423386929749"
+      }
+    },
+    {
+      "name": "astral",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "\ud83d\ude00",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "1959787753671669230",
+        "resourceHash": "1839906233544935568"
+      }
+    },
+    {
+      "name": "quotes",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "\"\\",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "1733458501182083661",
+        "resourceHash": "1088943975165396839"
+      }
+    },
+    {
+      "name": "control-del",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "\u0000\n\t\u007f",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "1654773511800927893",
+        "resourceHash": "127717870842988142"
+      }
+    },
+    {
+      "name": "high-surrogate",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "\ud800",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "1836673049406989194",
+        "resourceHash": "1598712252603582965"
+      }
+    },
+    {
+      "name": "low-surrogate",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "\udfff",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "695084637471069308",
+        "resourceHash": "1636427354654750616"
+      }
+    },
+    {
+      "name": "corrected",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "raw",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        },
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "376794172219282606",
+        "resourceHash": "1986750081022884797"
+      }
+    },
+    {
+      "name": "corrected-no-raw",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        },
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "376794172219282606",
+        "resourceHash": "1986750081022884797"
+      }
+    },
+    {
+      "name": "ignored-extra",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1",
+            "extra": "unhashed"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "376794172219282606",
+        "resourceHash": "1986750081022884797"
+      }
+    },
+    {
+      "name": "ignored-metadata",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": "unhashed",
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "citationHash": "376794172219282606",
+        "resourceHash": "1986750081022884797"
+      }
+    },
+    {
+      "name": "null-page",
+      "identityMode": "controlled-source-id-hook",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": null
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": "4294967296"
+      },
+      "expected": {
+        "citationHash": "4294967296",
+        "resourceHash": "725453319809313587"
+      }
+    },
+    {
+      "name": "null-page-same-identity",
+      "identityMode": "controlled-source-id-hook",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "page": null
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": "4294967296"
+      },
+      "expected": {
+        "citationHash": "4294967296",
+        "resourceHash": "725453319809313587"
+      }
+    },
+    {
+      "name": "null-page-other-identity",
+      "identityMode": "controlled-source-id-hook",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "page": null
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": "4294967312"
+      },
+      "expected": {
+        "citationHash": "4294967312",
+        "resourceHash": "1221855198015950998"
+      }
+    },
+    {
+      "name": "null-page-lazy-edition",
+      "identityMode": "controlled-source-id-hook",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "page": null
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": {
+          "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+          "shortName": "U.S."
+        },
+        "missingPageIdentityHash": "4294967296"
+      },
+      "expected": {
+        "citationHash": "4294967296",
+        "resourceHash": "725453319809313587"
+      }
+    },
+    {
+      "name": "missing-page",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "reporter": "U.S."
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "error": "missing-page"
+      }
+    },
+    {
+      "name": "missing-reporter",
+      "identityMode": "content",
+      "input": {
+        "citation": {
+          "type": "case",
+          "components": {
+            "page": "1"
+          },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "selectedEdition": null,
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ]
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": {
+              "status": "unmapped",
+              "value": "scotus"
+            },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "selectedEdition": null,
+        "missingPageIdentityHash": null
+      },
+      "expected": {
+        "error": "missing-reporter"
+      }
+    }
+  ]
+}
