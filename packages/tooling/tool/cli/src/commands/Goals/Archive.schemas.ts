@@ -438,3 +438,37 @@ export class ArchiveReceipt extends S.Class<ArchiveReceipt, { readonly brand: un
     description: "The archive commit of an executed plan and each packet's record and verification verdict.",
   })
 ) {}
+
+/**
+ * One row of the archive repository's `ARCHIVE-INDEX.md`.
+ *
+ * **Example** (Construct an index row)
+ *
+ * ```ts
+ * import { ArchiveIndexRow } from "@beep/repo-cli/commands/Goals/Archive.schemas"
+ *
+ * const row = ArchiveIndexRow.make({
+ *   root: "goals",
+ *   slug: "demo",
+ *   status: "completed-retained",
+ *   archiveCommit: "a".repeat(40),
+ *   sourceCommit: "c".repeat(40),
+ * })
+ * console.log(row.slug) // "demo"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ArchiveIndexRow extends S.Class<ArchiveIndexRow, { readonly brand: unique symbol }>($I`ArchiveIndexRow`)(
+  {
+    root: PacketRoot,
+    slug: PacketSlug,
+    status: PacketStatusToken,
+    archiveCommit: GitCommitSha,
+    sourceCommit: GitCommitSha,
+  },
+  $I.annote("ArchiveIndexRow", {
+    description: "One archived packet in ARCHIVE-INDEX.md: kind, slug, status, archive commit and main source commit.",
+  })
+) {}

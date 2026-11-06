@@ -34,6 +34,13 @@ export * from "./Archive.service.ts";
  */
 export * from "./Archive.ts";
 /**
+ * Packet archive execution services: archive store, tombstone writer, inbound link rewriter.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./ArchiveExecution.service.ts";
+/**
  * Materialization-plan schema surface.
  *
  * @category schemas

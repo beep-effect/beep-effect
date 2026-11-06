@@ -3,9 +3,9 @@ import { runGoalsArchive } from "@beep/repo-cli/commands/Goals/Archive";
 import { ArchiveRecord, tombstoneKeeps } from "@beep/repo-cli/commands/Goals/Archive.schemas";
 import { ArchivePlanner, ArchivePlannerLive, archivePlanId } from "@beep/repo-cli/commands/Goals/Archive.service";
 import { GoalExplorationPathState, goalPacketFindings } from "@beep/repo-cli/commands/Goals/Doctor";
-import { ArchiveError } from "@beep/repo-cli/commands/Goals/Goals.errors";
 import { decodeGoalManifest } from "@beep/repo-cli/commands/Goals/Goals.schemas";
 import { GoalPacketRecord } from "@beep/repo-cli/commands/Goals/Inventory";
+import { GoalManifestFormatter } from "@beep/repo-cli/commands/Goals/Manifest.service";
 import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe } from "@effect/vitest";
@@ -74,12 +74,36 @@ const GUIDE = A.join(
   "\n"
 );
 
+const REFLECTION = (instruction: string): string =>
+  A.join(
+    [
+      "---",
+      "goal: done",
+      "agent: codex",
+      "date: 2026-11-06",
+      "trigger: closeout",
+      "confidence: high",
+      "findings:",
+      "  - category: tooling-friction",
+      "    confidence: high",
+      `    instruction: ${instruction}`,
+      "    explanation: It ran twice.",
+      "---",
+      "",
+    ],
+    "\n"
+  );
+
 const FIXTURE: ReadonlyArray<readonly [string, string]> = [
-  ["goals/done/ops/manifest.json", goalManifest("done", "completed-retained")],
+  [
+    "goals/done/ops/manifest.json",
+    goalManifest("done", "completed-retained", { mission: "Ship the done packet.", provides: ["archive/done"] }),
+  ],
   ["goals/done/README.md", "# Done\n\nSee [plan](./PLAN.md).\n"],
   ["goals/done/PLAN.md", "# Plan\n"],
   ["goals/done/SPEC.md", "# Spec\n"],
-  ["goals/done/history/reflections/2026-11-06-codex.md", "---\ngoal: done\n---\n"],
+  ["goals/done/history/reflections/2026-11-05-codex.md", REFLECTION("Older finding.")],
+  ["goals/done/history/reflections/2026-11-06-codex.md", REFLECTION("Cache the slow scan.")],
   ["goals/done/research/OPPORTUNITIES.md", "# Friction\n"],
   ["goals/done/research/notes.md", "notes\n"],
   ["goals/old/ops/manifest.json", goalManifest("old", "superseded", { supersededBy: "done" })],
@@ -158,6 +182,53 @@ const doctorRecord = (slug: string, manifestText: string): GoalPacketRecord =>
     manifestText,
   });
 
+const gitOutput = Effect.fn("ArchiveTest.gitOutput")(function* (root: string, args: ReadonlyArray<string>) {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const output = yield* spawner.string(ChildProcess.make("git", args, { cwd: root }));
+  return Str.trim(output);
+});
+
+const makeArchiveCheckout = Effect.fn("ArchiveTest.makeArchiveCheckout")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const archiveDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-goals-archive-checkout-" });
+  yield* git(archiveDir, ["init", "-q"]);
+  for (const [key, value] of [
+    ["user.name", "archive"],
+    ["user.email", "archive@example.invalid"],
+    ["commit.gpgsign", "false"],
+    ["core.hooksPath", "/dev/null"],
+  ] as const) {
+    yield* git(archiveDir, ["config", key, value]);
+  }
+  return archiveDir;
+});
+
+const existsAll = Effect.fn("ArchiveTest.existsAll")(function* (base: string, files: ReadonlyArray<string>) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return yield* Effect.forEach(files, (file) => fs.exists(path.join(base, file)));
+});
+
+const readText = Effect.fn("ArchiveTest.readText")(function* (base: string, file: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return yield* fs.readFileString(path.join(base, file));
+});
+
+const noFormatter = { format: () => Effect.void };
+
+const writeOptions = (archiveDir: string) =>
+  ({
+    kind: "all",
+    slugs: [],
+    repo: REPO,
+    plan: false,
+    json: false,
+    write: true,
+    dryRun: false,
+    archiveDir,
+  }) as const;
+
 const TestLayer = Layer.provideMerge(ArchivePlannerLive, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
 
 describe("goals archive", () => {
@@ -232,6 +303,7 @@ describe("goals archive", () => {
         const [done, , gone] = plan.entries;
         assert.deepStrictEqual(done?.keep, [
           "goals/done/README.md",
+          "goals/done/history/reflections/2026-11-05-codex.md",
           "goals/done/history/reflections/2026-11-06-codex.md",
           "goals/done/ops/manifest.json",
           "goals/done/research/OPPORTUNITIES.md",
@@ -308,20 +380,197 @@ describe("goals archive", () => {
       })
     );
 
-    it.effect("refuses --write until slice 3 and requires --plan", () =>
+    it.effect("validates the mode, --expect and --repo before planning", () =>
       Effect.gen(function* () {
         const root = yield* makeFixtureRepo();
-        const base = { kind: "goals", slugs: [], repo: REPO, plan: false, json: false, write: false } as const;
-        const write = yield* runGoalsArchive({ ...base, write: true }, root).pipe(Effect.flip);
-        assertInstanceOf(write, ArchiveError);
-        assert.strictEqual(write.reason, "archive-write-not-implemented");
-        const noMode = yield* runGoalsArchive(base, root).pipe(Effect.flip);
-        assertInstanceOf(noMode, ArchiveError);
-        assert.strictEqual(noMode.reason, "archive-input-invalid");
-        const badRepo = yield* runGoalsArchive({ ...base, plan: true, repo: "nope" }, root).pipe(Effect.flip);
-        assertInstanceOf(badRepo, ArchiveError);
-        const plan = yield* runGoalsArchive({ ...base, plan: true, batch: 1 }, root);
-        assert.strictEqual(A.length(plan.entries), 1);
+        const base = {
+          kind: "goals",
+          slugs: [],
+          repo: REPO,
+          plan: false,
+          json: false,
+          write: false,
+          dryRun: false,
+          archiveDir: ".repos/goals-archive",
+        } as const;
+        const reasons = yield* Effect.forEach(
+          [
+            { ...base, write: true },
+            base,
+            { ...base, plan: true, write: true },
+            { ...base, plan: true, repo: "nope" },
+            { ...base, plan: true, batch: 0 },
+          ],
+          (options) => Effect.map(Effect.flip(runGoalsArchive(options, root)), (error) => error.reason)
+        );
+        assert.deepStrictEqual(reasons, [
+          "archive-input-invalid",
+          "archive-input-invalid",
+          "archive-input-invalid",
+          "archive-input-invalid",
+          "archive-input-invalid",
+        ]);
+        const planned = yield* runGoalsArchive({ ...base, plan: true, batch: 1 }, root);
+        assertNone(planned);
+      })
+    );
+
+    it.effect("writes: mirrors and verifies, tombstones, rewrites links and records the receipt", () =>
+      Effect.gen(function* () {
+        const root = yield* makeFixtureRepo();
+        const archiveDir = yield* makeArchiveCheckout();
+        const planner = yield* ArchivePlanner;
+        const plan = yield* planner.plan({ kinds: ["goals", "explorations"], slugs: [], repo: REPO, repoRoot: root });
+        const receipt = yield* runGoalsArchive({ ...writeOptions(archiveDir), expect: plan.planId }, root).pipe(
+          Effect.provideService(GoalManifestFormatter, noFormatter)
+        );
+        receipt.pipe(O.isSome, assertTrue);
+        const archiveCommit = O.getOrElse(
+          O.map(receipt, (value) => value.archiveCommit),
+          () => ""
+        );
+        assert.deepStrictEqual(
+          O.map(receipt, (value) => A.map(value.entries, (entry) => [entry.slug, entry.verified] as const)),
+          O.some([
+            ["done", true],
+            ["old", true],
+            ["gone", true],
+          ])
+        );
+
+        // Archive checkout: complete packet trees at the recorded hashes, index and README.
+        const doneEntry = A.findFirst(plan.entries, (entry) => entry.slug === "done");
+        const archivedTree = yield* gitOutput(archiveDir, ["rev-parse", `${archiveCommit}:goals/done`]);
+        assertSome(
+          O.map(doneEntry, (entry) => entry.localTreeHash),
+          archivedTree
+        );
+        const archived = yield* existsAll(archiveDir, [
+          "goals/done/PLAN.md",
+          "goals/done/history/reflections/2026-11-06-codex.md",
+          "README.md",
+        ]);
+        assert.deepStrictEqual(archived, [true, true, true]);
+        const index = yield* readText(archiveDir, "ARCHIVE-INDEX.md");
+        assertTrue(
+          Str.includes(`| goals | done | completed-retained | ${archiveCommit} | ${plan.sourceCommit} |`)(index)
+        );
+        assertTrue(Str.includes(`| explorations | gone | graduated | ${archiveCommit} |`)(index));
+
+        // Main: tombstone keep/remove result.
+        const removed = yield* existsAll(root, [
+          "goals/done/PLAN.md",
+          "goals/done/SPEC.md",
+          "goals/done/research/notes.md",
+          "explorations/gone/RESEARCH.md",
+        ]);
+        assert.deepStrictEqual(removed, [false, false, false, false]);
+        const kept = yield* existsAll(root, [
+          "goals/done/research/OPPORTUNITIES.md",
+          "goals/done/history/reflections/2026-11-06-codex.md",
+          "explorations/gone/DECISIONS.md",
+          "explorations/gone/BRIEF.md",
+        ]);
+        assert.deepStrictEqual(kept, [true, true, true, true]);
+
+        // Stub README content.
+        const readme = yield* readText(root, "goals/done/README.md");
+        const fragments = [
+          "# done",
+          "Lifecycle: `completed-retained`",
+          "Ship the done packet.",
+          "- `archive/done`",
+          "Cache the slow scan.",
+          `https://github.com/${REPO}/tree/main/goals/done`,
+        ];
+        assertTrue(A.every(fragments, (fragment) => Str.includes(fragment)(readme)));
+        assertFalse(Str.includes("Older finding.")(readme));
+        const explorationReadme = yield* readText(root, "explorations/gone/README.md");
+        assertTrue(
+          Str.includes("<!-- BEGIN GENERATED: EXPLORATION STATUS -->\nStage: `graduate`\nStatus: `graduated`")(
+            explorationReadme
+          )
+        );
+
+        // Manifest archive blocks.
+        const manifestText = yield* readText(root, "goals/done/ops/manifest.json");
+        const manifest = yield* decodeGoalManifest(parseJson(manifestText));
+        assert.strictEqual(manifest.archive?.commit, archiveCommit);
+        assert.strictEqual(manifest.archive?.contentHash, archivedTree);
+        assert.strictEqual(manifest.archive?.path, "goals/done");
+        const explorationText = yield* readText(root, "explorations/gone/ops/manifest.json");
+        assertSome(
+          O.map(
+            S.decodeOption(S.fromJsonString(ExplorationManifest))(explorationText),
+            (value) => value.exploration.archive?.path
+          ),
+          "explorations/gone"
+        );
+
+        // Inbound link rewrite: the removed-file link moves, the kept README link and fenced text stay.
+        const guide = yield* readText(root, "docs/guide.md");
+        assertTrue(
+          Str.includes(
+            `See [the plan](https://github.com/${REPO}/blob/main/goals/done/PLAN.md#p1) and [the readme](../goals/done/README.md).`
+          )(guide)
+        );
+        assertTrue(Str.includes("[fenced](../goals/done/SPEC.md)")(guide));
+
+        // Receipt, and archived packets leave the next plan.
+        const receiptWritten = yield* existsAll(root, [`.beep/archive/receipts/${plan.planId}.json`]);
+        assert.deepStrictEqual(receiptWritten, [true]);
+        const next = yield* planner.plan({ kinds: ["goals", "explorations"], slugs: [], repo: REPO, repoRoot: root });
+        assert.deepStrictEqual(next.entries, []);
+      })
+    );
+
+    it.effect("a verify mismatch aborts before anything on main changes", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* makeFixtureRepo();
+        const archiveDir = yield* makeArchiveCheckout();
+        const planner = yield* ArchivePlanner;
+        const plan = yield* planner.plan({ kinds: ["goals"], slugs: ["done"], repo: REPO, repoRoot: root });
+        // An uncommitted edit diverges the copied working tree from the HEAD tree the plan recorded.
+        yield* fs.writeFileString(path.join(root, "goals/done/PLAN.md"), "# Plan (edited)\n");
+        const watched = ["goals/done/PLAN.md", "goals/done/ops/manifest.json", "docs/guide.md"];
+        const before = yield* Effect.forEach(watched, (file) => readText(root, file));
+        const failure = yield* runGoalsArchive(
+          { ...writeOptions(archiveDir), slugs: ["done"], expect: plan.planId },
+          root
+        ).pipe(Effect.provideService(GoalManifestFormatter, noFormatter), Effect.flip);
+        assert.strictEqual(failure.reason, "archive-verify-mismatch");
+        const after = yield* Effect.forEach(watched, (file) => readText(root, file));
+        assert.deepStrictEqual(after, before);
+        const present = yield* existsAll(root, ["goals/done/SPEC.md", ".beep/archive"]);
+        assert.deepStrictEqual(present, [true, false]);
+      })
+    );
+
+    it.effect("refuses a stale --expect and changes nothing on --dry-run", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* makeFixtureRepo();
+        const archiveDir = yield* makeArchiveCheckout();
+        const planner = yield* ArchivePlanner;
+        const plan = yield* planner.plan({ kinds: ["goals"], slugs: [], repo: REPO, repoRoot: root });
+        const stale = yield* runGoalsArchive(
+          { ...writeOptions(archiveDir), kind: "goals", expect: Str.repeat(64)("0") },
+          root
+        ).pipe(Effect.flip);
+        assert.strictEqual(stale.reason, "archive-plan-mismatch");
+        const dry = yield* runGoalsArchive(
+          { ...writeOptions(archiveDir), kind: "goals", expect: plan.planId, dryRun: true },
+          root
+        );
+        assertNone(dry);
+        const archiveEntries = yield* fs.readDirectory(archiveDir);
+        assert.deepStrictEqual(archiveEntries, [".git"]);
+        const present = yield* existsAll(root, ["goals/done/PLAN.md", ".beep/archive"]);
+        assert.deepStrictEqual(present, [true, false]);
+        const status = yield* gitOutput(root, ["status", "--porcelain"]);
+        assert.strictEqual(status, "");
       })
     );
   });

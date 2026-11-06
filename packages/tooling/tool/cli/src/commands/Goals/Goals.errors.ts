@@ -457,6 +457,7 @@ export const ArchiveErrorReason = LiteralKit([
   "archive-read-failed",
   "archive-git-failed",
   "archive-write-not-implemented",
+  "archive-plan-mismatch",
   "archive-push-failed",
   "archive-verify-mismatch",
   "tombstone-conflict",
