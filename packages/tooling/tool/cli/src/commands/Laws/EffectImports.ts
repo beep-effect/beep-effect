@@ -1732,7 +1732,10 @@ const listGitVisiblePaths = Effect.fn("EffectImports.listGitVisiblePaths")(funct
   const cwd = process.cwd();
   return yield* Effect.all([
     git.lsFiles(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.lsFiles([]), adapter))),
-    git.untrackedFiles(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.untrackedFiles(), adapter))),
+    // `relative: true` keeps the untracked half cwd-relative, as `lsFiles` and the Markdown filter are.
+    git
+      .untrackedFiles(cwd, { relative: true })
+      .pipe(Effect.mapError(adaptGitKitError(GitCommand.untrackedFiles(true), adapter))),
   ]).pipe(
     Effect.map(([tracked, untracked]) =>
       O.some(
