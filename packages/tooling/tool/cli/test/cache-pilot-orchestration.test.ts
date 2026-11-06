@@ -1002,6 +1002,33 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       expect(calls).toHaveLength(0);
     })
   );
+  for (const fault of faultDomain.pick(["missing-runtime-key", "remote-hit", "source-write", "unsafe-log"]).literals) {
+    it.effect(
+      `rejects types ${fault} without publishing an observation or retaining experiment files`,
+      Effect.fnUntraced(function* () {
+        const { root, fs, path, run, privateDirectories } = yield* fixture(
+          fault,
+          linker,
+          false,
+          true,
+          "none",
+          "@beep/types#lint"
+        );
+        const failure = yield* run().pipe(Effect.flip);
+        expect(failure._tag).toBe("CacheCommandError");
+        if (fault === "source-write") {
+          expect(failure.message).toBe("Read-only pilot package source changed during execution.");
+        }
+        const observationDirectoryExists = yield* fs.exists(path.join(root, ".beep/cache/experiments"));
+        expect(observationDirectoryExists).toBe(false);
+        expect(A.fromIterable(privateDirectories).length).toBeGreaterThan(0);
+        for (const directory of privateDirectories) {
+          const retained = yield* fs.exists(directory);
+          expect(retained).toBe(false);
+        }
+      })
+    );
+  }
   it.effect("submits the local experiment to admission and preserves a rejected admission", () =>
     Effect.gen(function* () {
       const { root, runAdmitted } = yield* fixture();

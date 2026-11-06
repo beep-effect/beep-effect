@@ -998,7 +998,7 @@ const runPilot = Effect.fn("CachePilot.run")(
               expectedTasks
             )
           ) {
-            return yield* CacheCommandError.new("Pilot graph differs from the reviewed identity task closure.");
+            return yield* CacheCommandError.new("Pilot graph differs from the reviewed selected-task closure.");
           }
           for (const node of joined) {
             const expected = yield* A.findFirst(census.nodes, (row) => row.id === node.id).pipe(
