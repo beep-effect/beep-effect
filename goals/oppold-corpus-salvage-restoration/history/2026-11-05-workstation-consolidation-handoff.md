@@ -179,3 +179,80 @@ or authority to delete them.
 - **Practice KG and professional runtime:** keep the deployed v1 front and
   existing bundle identities. Backup success and new native output do not
   establish ingestion, semantic trust, corpus-v2 or runtime acceptance.
+
+## Addendum 2026-11-06: publication and read-only reconciliation results
+
+This addendum records terminal results from the operator's cleanup lane. It
+changes no gate, lifecycle state or acceptance box in this packet. All
+identities, per-store detail and the duplicate map stay in private operator
+records.
+
+### Publication
+
+The 33-store extraction family (26 engine passes, 7 exceptions) and its
+occurrence catalog were uploaded to the existing encrypted recovery
+repository, next to the retained baseline. The upload passed a full
+recovery-key stored-data read check, recovery-key sample restores and one
+restored file per store, all matching by hash. Originals and every failed or
+partial attempt remain retained. This is transfer and recovery proof, not
+fidelity or acceptance.
+
+### Structural fidelity, measured against this packet's mail gates
+
+A read-only pass compared each sealed export with its own engine log and the
+catalog. It covered child accounting, silent skips, attachment entries,
+property sidecars and catalog consistency.
+
+| Extraction class | Structural pass | Fail |
+| --- | ---: | ---: |
+| Engine pass | 23 | 3 |
+| Exception | 0 | 7 |
+
+- The three engine-pass failures contain items the engine reported as skipped.
+  The extraction's warning classifier did not match those lines. Treat the
+  original engine-pass label as superseded for those stores.
+- Across the family, 206 items were skipped by type and 2 had an undeterminable
+  type. Seven attachments could not be typed.
+- The packet's byte-signature census proposes extension repairs for most
+  attachments, consistent with the clipped-extension finding in P4. **No repair
+  and no second-pass extraction were run.** The P2 attachment gate is therefore
+  unmet for every store, and no store is accepted. A structural pass means the
+  engine export is internally complete and catalogued. It does not mean every
+  Outlook property was recovered, because no independent second reader was
+  available.
+
+### Exceptions
+
+| Class | Stores | Disposition |
+| --- | ---: | --- |
+| Per-store elapsed ceiling | 1 | Bounded alternate attempt with the same pinned engine, in a new attempt root; see below |
+| Truncated container (index beyond end of file) | 1 | Held; no pinned engine can read absent data |
+| Deterministic engine skips (sharing, configuration, corrupt item table) | 5 | Held; only a different engine could differ, and that is an operator decision |
+
+The alternate attempt kept the engine and arguments and only raised the
+per-store ceiling. It finished well inside the new ceiling with a clean engine
+exit, and the original was unchanged. The engine still could not export a
+sizeable minority of that store's mail items, all of them beyond the point
+where the first attempt was stopped. The store therefore stays an exception and
+moves to the deterministic engine-failure class. Its earlier partial attempt is
+retained. The alternate output was published to the same repository
+alongside the first release and passed the same full stored-data read check
+and recovery-key sample restores.
+
+### Duplicate map (not deduplication)
+
+A private, non-destructive map keys messages by normalized Message-ID (stored
+only as a hash), a sender/submit-time/subject header key, and exact body plus
+attachment digests. Under 1% of messages lack a Message-ID. About 55% of
+messages share an ID with a copy in another store. A few percent of ID groups
+conflict on content; those are review items, never merge candidates. Nothing was
+deleted or merged. Restic chunk deduplication is unrelated to these numbers.
+
+### What this means for resuming the packet
+
+- Use the private reconciliation report to choose which stores enter P2 through
+  this packet's own runner. Adopting this family instead would still need the
+  frozen repair and second-pass steps, plus exception ledger rows.
+- The skipped-item and truncated-container classes need explicit P2 exception
+  decisions.
+- No downstream ingestion, KG rebuild or mailbox operation was performed.
