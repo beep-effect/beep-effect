@@ -612,21 +612,52 @@ const SPLIT_INTEGRATION_SCRIPTS = ["test:integration:parallel", "test:integratio
 // Packages that predate the parallel/serial integration split still ship a plain
 // `test:integration`; without this bucket they would be silently dropped from the
 // root integration lane instead of running alongside the bounded-parallel packages.
-const unsplitIntegrationTaskFilters = Effect.fn("QualityTasks.unsplitIntegrationTaskFilters")(function* (
-  repoRoot: string
+const unsplitIntegrationTaskArgs = Effect.fn("QualityTasks.unsplitIntegrationTaskArgs")(function* (
+  repoRoot: string,
+  args: ReadonlyArray<string>
 ): Effect.fn.Return<ReadonlyArray<string>, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path> {
   const owners = yield* workspaceTaskOwners(repoRoot);
-
-  return pipe(
+  const unsplit = A.filter(
     owners,
-    A.filter(
-      (owner) =>
-        ownerDefinesScript("test:integration")(owner) &&
-        !A.some(SPLIT_INTEGRATION_SCRIPTS, (script) => ownerDefinesScript(script)(owner))
-    ),
-    A.map(ownerFilter)
+    (owner) =>
+      ownerDefinesScript("test:integration")(owner) &&
+      !A.some(SPLIT_INTEGRATION_SCRIPTS, (script) => ownerDefinesScript(script)(owner))
   );
+  return A.match(unsplit, {
+    onEmpty: A.empty<string>,
+    onNonEmpty: (unsplitOwners) =>
+      A.some(args, isExplicitTurboAffectedOrScopeArg)
+        ? [
+            ...pipe(
+              owners,
+              A.filter((owner) => A.some(SPLIT_INTEGRATION_SCRIPTS, (script) => ownerDefinesScript(script)(owner))),
+              A.map((owner) => `--filter=!${owner.packageName}`)
+            ),
+            ...args,
+          ]
+        : [...A.map(unsplitOwners, ownerFilter), ...args],
+  });
 });
+
+/**
+ * Resolve the plain integration lane without broadening explicit caller scope.
+ *
+ * **Example** (Prepare affected integration arguments)
+ *
+ * ```ts
+ * import { unsplitIntegrationTaskArgsForTesting } from "@beep/repo-cli/test/Quality"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(unsplitIntegrationTaskArgsForTesting(".", ["--affected"]))) // true
+ * ```
+ *
+ * @param repoRoot - Root whose workspace manifests define integration script owners.
+ * @param args - Caller scope and task arguments, preserved after any owner exclusions.
+ * @returns No arguments when there are no unsplit owners; otherwise the plain lane's scoped arguments.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const unsplitIntegrationTaskArgsForTesting = unsplitIntegrationTaskArgs;
 
 const requireWorkspaceTaskFilters = Effect.fn("QualityTasks.requireWorkspaceTaskFilters")(function* (
   repoRoot: string,
@@ -4372,9 +4403,7 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
   let integrationFailures = A.empty<QualityTaskFailed>();
   if (lanes.integration) {
     const parallelArgs = yield* workspaceTaskArgs(repoRoot, "test:integration:parallel", lanes.args);
-    const unsplitFilters = A.some(lanes.args, isExplicitTurboAffectedOrScopeArg)
-      ? A.empty<string>()
-      : yield* unsplitIntegrationTaskFilters(repoRoot);
+    const unsplitArgs = yield* unsplitIntegrationTaskArgs(repoRoot, lanes.args);
     const parallelFailures = yield* collectStreamingStepFailures("test:integration:parallel", [
       turboStep(
         repoRoot,
@@ -4383,14 +4412,9 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
         boundedRootTurboArgs(parallelArgs, plan)
       ),
       ...optionalQualityTaskStep({
-        enabled: A.isReadonlyArrayNonEmpty(unsplitFilters),
+        enabled: A.isReadonlyArrayNonEmpty(unsplitArgs),
         step: () =>
-          turboStep(
-            repoRoot,
-            "test:integration",
-            ["test:integration"],
-            boundedRootTurboArgs([...unsplitFilters, ...lanes.args], plan)
-          ),
+          turboStep(repoRoot, "test:integration", ["test:integration"], boundedRootTurboArgs(unsplitArgs, plan)),
       }),
     ]);
     const serialFailures = yield* Effect.scoped(

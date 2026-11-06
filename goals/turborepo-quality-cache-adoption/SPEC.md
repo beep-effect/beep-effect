@@ -1106,6 +1106,18 @@ Prepare an optional tracked-test membership digest in the existing observed tool
 
 Reverse: Remove the optional collector and native input declaration while preserving the fresh cache hold, historical evidence and qualification requirement.
 
+### Exclude external reference links from identity lint metadata inputs, 2026-11-06
+
+At source 68d37217c6ab10f6b1ca70316ab6544c87d23c38, real-root stable build/check/lint dry runs succeed, while pinned canary lint refuses an external .repos manifest link before strict entrypoint selection is enabled. Only identity lint contributes the observed broad manifest input. Its generated package command is biome check . and the reference tree contains no tracked files.
+
+Add only !$TURBO_ROOT$/.repos/** to identity lint inputs. Keep cache:false, all other inputs/exclusions, dependency graph and profile routing. The same canary dry run now succeeds. Stable retains every observed lint task ID and input path; only the edited identity turbo.json input content hash changes. Record the original refusal, exact client/source/config hashes and all actual metadata in research/real-root-entrypoint-and-reference-inputs-2026-11-06.json.
+
+Twelve candidate-bound root dry runs compare build/check/lint across both pinned clients with strict entrypoint selection absent/true. Both clients remove two build commands from check, so leave that flag absent until execution/caller/value proof is complete. This source repair requires hosted acceptance and a newly bound identity input profile before protected trials. No quality task, feature activation, qualification, credential or production setting changed. No manual local verify, publish, check, tests, docgen or package-quality suite.
+
+Lane `codex/cache-strict-entrypoint-review-20261106`
+
+Reverse: Remove the one .repos input exclusion while retaining the source-bound original refusal and candidate metadata observations.
+
 ### Keep entity-kit discovery fresh pending complete index-state qualification, 2026-11-06
 
 The new check selects Git-tracked regular source files, but the native content key excludes Git metadata. Four additional isolated metadata plans keep the hash unchanged across changed source membership. Keep this check fresh until complete path/mode/scope/baseline/content discovery identity is qualified. The existing test-only collector is insufficient for general source and regular-mode discovery; do not promote this check through it. No law body was run and no final exclusion, baseline change or qualification is granted.
@@ -1139,6 +1151,12 @@ it grants no computation qualification or production trust. Hosted CI remains
 authoritative, with no local task bodies or quality suites executed.
 
 Reverse: Restore the prior property-test and coverage input arrays while retaining the diagnostic Python inputs, metadata receipt and unchanged coverage cache false policy.
+
+### Preserve unsplit integration owners in scoped quality execution, 2026-11-06
+
+The existing scoped branch drops the plain integration bucket, including current owners with integration source. Retain caller scope and prepend only split-owner exclusions; do not add positive unsplit filters to an affected selection because native Turbo unions them and could broaden scope. Keep the empty-owner no-op and existing unscoped owner filters. Twenty pinned native metadata plans (default and repository-enabled flag fixtures) validate the negative-filter behavior without task execution. The helper regression is authored but unrun; no local quality suites or source-generator entrypoints are used. Prepare unpublished until an owned PR slot opens, then consume accepted main and push for hosted proof. See research/scoped-unsplit-integration-selection-2026-11-06.json and its limitations.
+
+Reverse: Revert the integration argument resolver and its regression controls; retain uncached integration policy and all historical evidence.
 
 ### Count native query packages and bind prepared-source history, 2026-11-06
 

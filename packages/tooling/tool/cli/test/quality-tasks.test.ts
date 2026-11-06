@@ -162,6 +162,7 @@ import {
   turboLaneDigestFromSummary,
   turboSecretSessionStepForTesting,
   turboStepLocalEnvForTesting,
+  unsplitIntegrationTaskArgsForTesting,
   validateCoverageTaskArgsForTesting,
   withoutUnusableRemoteCacheForTesting,
   workspaceCoverageScopeOwners,
@@ -10044,6 +10045,59 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         TestClock.withLive
       )
+    );
+
+    it.effect(
+      "keeps scoped unsplit integration owners without duplicating split owners or widening caller filters",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const root = process.cwd();
+            const manifest = yield* encodeJson({
+              name: "@beep/test-root",
+              private: true,
+              workspaces: ["packages/*"],
+            });
+            yield* fs.writeFileString(path.join(root, "package.json"), manifest);
+            const scriptsByDirectory = {
+              plain: { test: "vitest" },
+              unsplit: { "test:integration": "vitest run test/integration" },
+              serial: { "test:integration:serial": "vitest run test/integration" },
+              split: {
+                "test:integration": "bun run test:integration:parallel",
+                "test:integration:parallel": "vitest run test/integration",
+              },
+            };
+            for (const [directory, scripts] of R.toEntries(scriptsByDirectory)) {
+              const packageDirectory = path.join(root, "packages", directory);
+              yield* fs.makeDirectory(packageDirectory, { recursive: true });
+              const packageManifest = yield* encodeJson({ name: `@beep/${directory}`, private: true, scripts });
+              yield* fs.writeFileString(path.join(packageDirectory, "package.json"), packageManifest);
+            }
+            const unscoped = yield* unsplitIntegrationTaskArgsForTesting(root, []);
+            expect(unscoped).toEqual(["--filter=@beep/unsplit"]);
+            for (const args of [
+              ["--affected", "--summarize"],
+              ["--filter=@beep/unsplit"],
+              ["--filter=@beep/split"],
+              ["--filter=@beep/serial"],
+              ["--filter", "@beep/unsplit"],
+              ["--filter=!@beep/unsplit"],
+              ["--since=HEAD^"],
+              ["--filter=@beep/unsplit", "--", "--testNamePattern=fixture"],
+            ]) {
+              const selected = yield* unsplitIntegrationTaskArgsForTesting(root, args);
+              expect(selected).toEqual(["--filter=!@beep/serial", "--filter=!@beep/split", ...args]);
+            }
+            const noIntegration = yield* encodeJson({ name: "@beep/unsplit", private: true, scripts: {} });
+            yield* fs.writeFileString(path.join(root, "packages/unsplit/package.json"), noIntegration);
+            const absent = yield* unsplitIntegrationTaskArgsForTesting(root, ["--affected"]);
+            expect(absent).toEqual([]);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
 
     it.effect("reads an object-form workspaces declaration without packages as no workspaces", () =>
