@@ -1,6 +1,7 @@
 {
   "catalog": {
     "@alchemy.run/cloudflare": "2.0.0-beta.85",
+    "@alchemy.run/domain": "2.0.0-beta.85",
     "@arizeai/phoenix-client": "7.18.1",
     "@azure/core-http-compat": "2.5.0",
     "@azure/core-rest-pipeline": "1.25.0",
@@ -142,8 +143,8 @@
     "@vitest/istanbul-lib-coverage": "2.1.0",
     "@vitest/istanbul-lib-instrument": "2.1.0",
     "@xenova/transformers": "^2.17.2",
-    "@xstate/effect": "1.0.0-alpha.12",
-    "@xstate/test": "2.0.0-alpha.4",
+    "@xstate/effect": "1.0.0-beta.0",
+    "@xstate/test": "2.0.0-beta.0",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
     "alchemy": "2.0.0-beta.85",
@@ -177,6 +178,7 @@
     "fast-xml-parser": "^5.12.0",
     "fast-xml-validator": "1.2.0",
     "fflate": "^0.8.3",
+    "foldkit": "0.170.0",
     "framer-motion": "^14.9.1",
     "frimousse": "0.4.0",
     "graphology": "0.26.0",
@@ -247,7 +249,7 @@
     "wink-eng-lite-web-model": "^1.8.1",
     "wink-nlp": "^2.4.0",
     "wink-nlp-utils": "^2.1.0",
-    "xstate": "6.0.0-alpha.73",
+    "xstate": "6.0.0-beta.1",
     "yaml": "^2.9.1",
     "comment-parser": "1.4.9",
     "are-docs-informative": "0.1.1",
@@ -326,7 +328,8 @@
   "patchedDependencies": {
     "drizzle-orm@1.0.0-rc.5-ab785fc": "patches/drizzle-orm@1.0.0-rc.5-ab785fc.patch",
     "effect@4.1.2": "patches/effect@4.1.2.patch",
-    "@effect/platform-node-shared@4.1.2": "patches/@effect%2Fplatform-node-shared@4.1.2.patch"
+    "@effect/platform-node-shared@4.1.2": "patches/@effect%2Fplatform-node-shared@4.1.2.patch",
+    "@alchemy.run/domain@2.0.0-beta.85": "patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch"
   },
   "private": true,
   "repository": {
@@ -440,6 +443,7 @@
     "lint:effect-imports-markdown": "bun run beep laws effect-imports --mode markdown --check --enforce-documentation",
     "lint:markdown-fences": "bun run beep laws markdown-fences --check",
     "lint:retired-effect-paths": "bun run beep laws retired-effect-paths --check",
+    "lint:entity-kit-freeze": "bun run beep laws entity-kit-freeze --check",
     "lint:retired-iri-authorities": "bun run beep laws retired-iri-authorities --check",
     "lint:schema-tag-idioms": "bun run beep laws schema-tag-idioms --check",
     "lint:holds": "bun run beep holds lint",
@@ -580,6 +584,7 @@
     "apps/beep-effect-web",
     "packages/party/domain",
     "packages/party/use-cases",
-    "packages/party/server"
+    "packages/party/server",
+    "packages/drivers/alchemy-postgres"
   ]
 }

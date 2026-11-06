@@ -209,6 +209,8 @@
     "research/test_selection_invoke_compatibility.py",
     "research/tracked-test-membership-key-gap-2026-11-06.json",
     "research/tracked-test-membership-key-gap-2026-11-06.md",
+    "research/types-lint-toolchain-key-2026-11-06.json",
+    "research/types-lint-toolchain-key-2026-11-06.md",
     "research/watch-feature-review.json",
     "research/watch-source-driver-controls.json",
     "research/watch-source-observation.json",
