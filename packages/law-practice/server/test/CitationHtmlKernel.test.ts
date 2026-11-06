@@ -300,4 +300,70 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
       }
     })
   );
+  it.effect("sanitizes ABI faults and releases allocated native input on every failed completion", () =>
+    Effect.gen(function* () {
+      const bytes = yield* loadAsset();
+      const input = { encoding: "UTF-8", bytes: new TextEncoder().encode("<p>Example</p>"), fullHtml: false };
+      const native = globalThis.WebAssembly;
+      const trap = () => {
+        throw new Error("synthetic ABI trap");
+      };
+      const cases: ReadonlyArray<{
+        readonly patch: WebAssembly.Instance["exports"];
+        readonly reason: string;
+        readonly released: number;
+      }> = [
+        { patch: { _initialize: trap }, reason: "kernel-failed", released: 0 },
+        { patch: { html_version: () => 0 }, reason: "invalid-asset", released: 0 },
+        { patch: { html_iconv_version: () => 0 }, reason: "invalid-asset", released: 0 },
+        { patch: { html_iconv_inventory: trap }, reason: "invalid-asset", released: 0 },
+        { patch: { html_iconv_inventory: () => -1 }, reason: "invalid-asset", released: 0 },
+        { patch: { html_iconv_inventory: () => 2 ** 32 }, reason: "invalid-asset", released: 0 },
+        { patch: { html_iconv_inventory_length: () => 32769 }, reason: "invalid-asset", released: 0 },
+        { patch: { malloc: trap }, reason: "kernel-failed", released: 0 },
+        { patch: { html_clean: trap }, reason: "kernel-failed", released: 1 },
+        { patch: { html_clean: () => 2 }, reason: "kernel-failed", released: 1 },
+        { patch: { html_output_length: trap }, reason: "kernel-failed", released: 1 },
+        { patch: { html_output_length: () => -1 }, reason: "kernel-failed", released: 1 },
+        { patch: { html_output_units: () => 101 }, reason: "kernel-failed", released: 1 },
+        { patch: { html_output: () => 2 ** 32 }, reason: "kernel-failed", released: 1 },
+        { patch: { html_output_length: () => 0, html_output_units: () => 1 }, reason: "kernel-failed", released: 1 },
+      ];
+      for (const row of cases) {
+        let releases = 0;
+        let frees = 0;
+        const runtime = {
+          Module: native.Module,
+          Instance: class {
+            readonly exports: WebAssembly.Instance["exports"];
+            constructor(module: WebAssembly.Module, imports: Bun.WebAssembly.Imports) {
+              this.exports = {
+                ...new native.Instance(module, imports).exports,
+                ...row.patch,
+                html_release: () => {
+                  releases++;
+                },
+                free: () => {
+                  frees++;
+                },
+              };
+            }
+          },
+        };
+        const failure = yield* Effect.acquireUseRelease(
+          Effect.sync(() => vi.stubGlobal("WebAssembly", runtime)),
+          () =>
+            makeCitationHtmlKernel(bytes).pipe(
+              Effect.flatMap((kernel) => kernel.run({ input, outputUtf16: 100 })),
+              Effect.flip
+            ),
+          () => Effect.sync(() => vi.unstubAllGlobals())
+        );
+        expect(failure).toMatchObject({ _tag: "CitationHtmlKernelFailure", reason: row.reason });
+        expect("cause" in failure).toBe(false);
+        expect(releases).toBe(row.released);
+        expect(frees).toBe(row.released);
+      }
+    })
+  );
 });

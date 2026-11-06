@@ -156,50 +156,48 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
         engine: "python-re",
       });
       const argument = yield* encodeCitationRegexStartup(startup);
-      for (const mode of CitationRegexMatchMode.literals) {
-        for (const maxMatches of [2, 3]) {
-          const frame = yield* encodeCitationRegexJob(
-            CitationRegexWorkerJob.make({
-              patternWidth: 1,
-              patternBytes: pattern.bytes,
-              sourceWidth: 1,
-              sourceBytes: native("b ab").bytes,
-              flags: 0,
-              mode,
-              maxMatches,
-            }),
-            limits.processMessageBytes
-          );
-          const chunks = A.empty<Uint8Array>();
-          yield* citationRegexWorkerProgram.pipe(
-            Effect.provideService(Stdio.Stdio, {
-              ...stdio,
-              args: Effect.succeed([argument]),
-              stdin: Stream.make(frame),
-              stdout: () =>
-                Sink.forEach((chunk: string | Uint8Array) =>
-                  Effect.sync(() => {
-                    chunks.push(Predicate.isString(chunk) ? new TextEncoder().encode(chunk) : chunk);
-                  })
-                ),
-            })
-          );
-          const replies = A.empty<typeof CitationRegexWorkerReply.Type>();
-          yield* readCitationRegexFrames(Stream.fromIterable(chunks), limits.processMessageBytes, 3, (body) =>
-            decodeCitationRegexReply(body).pipe(Effect.tap((reply) => Effect.sync(() => replies.push(reply))))
-          );
-          expect(A.map(replies, (reply) => reply._tag)).toEqual([
-            "Ready",
-            "Started",
-            maxMatches === 2 ? "Complete" : "Failure",
-          ]);
-          expect(A.last(replies)).toMatchObject({
-            value:
-              maxMatches === 2
-                ? { groups: 2, matches: mode === "finditer" ? 2 : 1 }
-                : { failure: { _tag: "CitationSafetyLimitExceeded", limit: "patternMatches" } },
-          });
-        }
+      const cases = A.flatMap(CitationRegexMatchMode.literals, (mode) => [
+        { mode, maxMatches: 2, tag: "Complete", expected: { groups: 2, matches: mode === "finditer" ? 2 : 1 } },
+        {
+          mode,
+          maxMatches: 3,
+          tag: "Failure",
+          expected: { failure: { _tag: "CitationSafetyLimitExceeded", limit: "patternMatches" } },
+        },
+      ]);
+      for (const { mode, maxMatches, tag, expected } of cases) {
+        const frame = yield* encodeCitationRegexJob(
+          CitationRegexWorkerJob.make({
+            patternWidth: 1,
+            patternBytes: pattern.bytes,
+            sourceWidth: 1,
+            sourceBytes: native("b ab").bytes,
+            flags: 0,
+            mode,
+            maxMatches,
+          }),
+          limits.processMessageBytes
+        );
+        const chunks = A.empty<Uint8Array>();
+        yield* citationRegexWorkerProgram.pipe(
+          Effect.provideService(Stdio.Stdio, {
+            ...stdio,
+            args: Effect.succeed([argument]),
+            stdin: Stream.make(frame),
+            stdout: () =>
+              Sink.forEach((chunk: string | Uint8Array) =>
+                Effect.sync(() => {
+                  chunks.push(Predicate.isString(chunk) ? new TextEncoder().encode(chunk) : chunk);
+                })
+              ),
+          })
+        );
+        const replies = A.empty<typeof CitationRegexWorkerReply.Type>();
+        yield* readCitationRegexFrames(Stream.fromIterable(chunks), limits.processMessageBytes, 3, (body) =>
+          decodeCitationRegexReply(body).pipe(Effect.tap((reply) => Effect.sync(() => replies.push(reply))))
+        );
+        expect(A.map(replies, (reply) => reply._tag)).toEqual(["Ready", "Started", tag]);
+        expect(A.last(replies)).toMatchObject({ value: expected });
       }
     })
   );
