@@ -1,6 +1,6 @@
 # Epistemic Retention Policy Calibration
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](ops/manifest.json)
 
@@ -47,6 +47,6 @@ Completion may conclude that the evidence is insufficient and recommend keeping
 policy inert; an accountable negative result is a valid calibration outcome.
 
 Delivery: [PR #2357](https://github.com/beep-effect/beep-effect/pull/2357).
-The manifest proposes `completed-retained`; hosted readiness, review/window and
-merge evidence must verify through completion refresh before that lifecycle
-projects as complete. The proposal itself is not proof or activation approval.
+Hosted readiness, review/window and merge evidence verified through completion
+refresh, and the `completed-retained` closeout was adopted as a committed `closeout` by `goals set-status` in [#2703](https://github.com/beep-effect/beep-effect/pull/2703). Closing the
+calibration is not activation approval.

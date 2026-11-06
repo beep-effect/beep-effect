@@ -765,6 +765,7 @@ const VALIDATION_REQUIREMENTS_BY_FINDING_KIND: Readonly<
   "schema-version-upgrade": [],
   "completion-gate-unsatisfied": [],
   "completion-gate-unknown": [],
+  "closeout-adoption-pending": [],
   "superseded-without-pointer": [],
   "exploration-backlink-missing": [],
   "packet-status-drift": [],

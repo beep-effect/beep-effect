@@ -4,13 +4,13 @@
     "id": "party-slice",
     "packetId": "goal-packet/v1:df463561b16b55b74c78917fdc9d4e75e4e1d46704914af44e2268bc82ce6baf",
     "title": "Party Slice",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-22",
-    "updated": "2026-11-03",
+    "updated": "2026-11-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/party-slice",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Graduate the scratchpad party model into a domain-agnostic packages/party slice (domain, use-cases, server) on @beep/epistemics",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -85,12 +85,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -105,7 +105,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2676
   }
