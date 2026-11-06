@@ -615,6 +615,70 @@ it.layer(NodeServices.layer, { timeout: "15 seconds" })((it) => {
 
 describe("Yeet inbox hook first-seen stamps", () => {
   it.layer(NodeServices.layer, { timeout: "15 seconds" })((it) => {
+    it.effect("keeps unchanged clear state on disk and surfaces the next P0 immediately", () =>
+      withInbox(({ ack, root }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tool = {
+            cwd: root,
+            hook_event_name: "PreToolUse",
+            session_id: "unchanged-session",
+            tool_name: "Bash",
+            tool_input: { command: "true" },
+          };
+          const initial = yield* runHook(root, "codex", tool);
+          expect(initial.stdout).toContain("[p0-attention]");
+          yield* ack("coverage-live");
+          const cleared = yield* runHook(root, "codex", { ...tool, tool_name: "Read" });
+          expect(cleared.stdout).toContain("thread-live");
+          const sessionsDir = path.join(root, ".beep/inbox/sessions");
+          const sessionNames = yield* fs.readDirectory(sessionsDir);
+          const names = A.filter(sessionNames, Str.endsWith(".json"));
+          expect(names).toHaveLength(1);
+          const statePath = path.join(sessionsDir, A.getUnsafe(names, 0));
+          const beforeText = yield* fs.readFileString(statePath);
+          const before = yield* YeetHookSessionStateJson.decode(beforeText);
+          const beforeObject = yield* decodeObject(beforeText);
+          expect(beforeObject).toMatchObject({ incidentId: null });
+          const beforeInfo = yield* fs.stat(statePath);
+          const unchanged = yield* runHook(root, "codex", tool);
+          expect(unchanged.stdout).toBe("");
+          const stop = yield* runHook(root, "codex", { ...tool, hook_event_name: "Stop" });
+          const stopped = yield* decodeObject(stop.stdout);
+          expect(stopped).toEqual({});
+          const afterInfo = yield* fs.stat(statePath);
+          expect(afterInfo.ino).toEqual(beforeInfo.ino);
+          expect(afterInfo.mtime).toEqual(beforeInfo.mtime);
+          const unchangedText = yield* fs.readFileString(statePath);
+          expect(unchangedText).toBe(beforeText);
+
+          const failuresPath = path.join(root, ".beep/inbox/failures.ndjson");
+          const failures = yield* fs.readFileString(failuresPath);
+          const next = yield* encodeUnknown({
+            schemaVersion: "yeet-inbox/v1",
+            kind: "check-failed",
+            id: "next-p0",
+            severity: "P0",
+            checkout: root,
+            ts: "2026-11-06T00:00:00Z",
+            capsule: { headSha: "abc123", prNumber: 900, lane: "next failure" },
+          });
+          yield* fs.writeFileString(failuresPath, `${failures}${next}\n`);
+          const arrived = yield* runHook(root, "codex", { ...tool, tool_name: "Read" });
+          expect(arrived.stdout).toContain("next-p0");
+          const afterText = yield* fs.readFileString(statePath);
+          const after = yield* YeetHookSessionStateJson.decode(afterText);
+          expect(after.seenIds).toEqual(before.seenIds);
+          expect(after.firstSeenAt["coverage-live"]).toBe(before.firstSeenAt["coverage-live"]);
+          expect(after.firstSeenAt["thread-live"]).toBe(before.firstSeenAt["thread-live"]);
+          expect(after.firstSeenAt["next-p0"]).toBeDefined();
+          const rearmed = yield* runHook(root, "codex", tool);
+          expect(rearmed.stdout).toContain("[p0-attention]");
+        })
+      )
+    );
+
     it.effect("stamps each row's first injection once and keeps the session file's shape", () =>
       withInbox(({ root }) =>
         Effect.gen(function* () {

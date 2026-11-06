@@ -144,6 +144,9 @@ describe("yeet final-check command", () => {
         assertInclude(planned, "final-check plan for");
         assertInclude(planned, "skip coverage: hosted proves it");
         assertInclude(planned, "expectation-rewrite: scan the diff's test files");
+        assertInclude(planned, "scope probe unavailable; retaining standalone root sweeps");
+        assertInclude(planned, "lint-policy: bunx oxlint . --config .oxlintrc.docs.json");
+        assertInclude(planned, "lint-policy: bun run beep lint deprecated-apis --full");
         assertInclude(planned, "lint: bunx biome check --files-ignore-unknown=true --no-errors-on-unmatched README.md");
 
         expect((yield* finalCheck(["--gates", "heavy"]).pipe(Effect.flip)).message).toContain(
@@ -184,6 +187,46 @@ describe("yeet final-check command", () => {
         expect(moved.message).toContain("the checkout changed while the gates ran");
         const readDirectory3 = yield* fs.readDirectory(`${root}/.beep/yeet/final-check`);
         expect(readDirectory3).toHaveLength(1);
+      })
+    );
+
+    it.effect(
+      "plans full policy explicitly and retains affected-scope root guards",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* temporaryWorkingDirectory;
+        yield* runFixtureGit(root, ["init", "-q"]);
+        yield* commit(root, ".gitignore", ".beep/\n", "ignore yeet state");
+        yield* fs.makeDirectory(`${root}/standards`, { recursive: true });
+        yield* commit(
+          root,
+          "standards/lint-policy.sweeps.jsonc",
+          '{"schemaVersion":"lint-policy-sweeps/v1","deprecatedApis":"oxlint"}\n',
+          "sweep configuration"
+        );
+        yield* commit(root, "README.md", "head\n", "head");
+        const before = yield* TestConsole.logLines;
+        yield* finalCheck(["--base", "HEAD~1", "--gates", "lint-policy", "--dry-run"]);
+        const after = yield* TestConsole.logLines;
+        const planned = A.join(A.map(A.drop(after, A.length(before)), String), "\n");
+        assertInclude(planned, "lint-policy: bun run beep lint policy --full --base");
+        expect(planned).not.toContain("bunx oxlint");
+        expect(planned).not.toContain("lint deprecated-apis --full");
+
+        yield* commit(
+          root,
+          "standards/policy-tools.fingerprint.json",
+          '{"schemaVersion":"policy-tools-fingerprint/v2","shared":[],"sharedTasks":[],"check":[],"entries":[]}\n',
+          "readable seal"
+        );
+        yield* commit(root, "README.md", "source-only change\n", "source-only change");
+        const affectedBefore = yield* TestConsole.logLines;
+        yield* finalCheck(["--base", "HEAD~1", "--gates", "lint-policy", "--dry-run"]);
+        const affectedAfter = yield* TestConsole.logLines;
+        const affected = A.join(A.map(A.drop(affectedAfter, A.length(affectedBefore)), String), "\n");
+        expect(affected).not.toContain("lint policy --full");
+        assertInclude(affected, "lint-policy: bunx oxlint . --config .oxlintrc.docs.json");
+        assertInclude(affected, "lint-policy: bun run beep lint deprecated-apis --full");
       })
     );
   });
