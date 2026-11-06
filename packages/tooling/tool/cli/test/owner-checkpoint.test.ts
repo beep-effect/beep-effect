@@ -44,7 +44,6 @@ import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { Sha256Hex } from "@beep/schema";
 import { NodeCrypto } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -186,12 +185,7 @@ const sqlite = (filename: string) =>
     })
   );
 const withDb = <Value, Error, Requirements>(filename: string, effect: Effect.Effect<Value, Error, Requirements>) =>
-  Effect.scoped(
-    Effect.gen(function* () {
-      const services = yield* Layer.build(sqlite(filename));
-      return yield* Effect.provideContext(effect, services);
-    })
-  );
+  provideTestLayer(sqlite(filename))(effect);
 const inMemory = <Value, Error, Requirements>(effect: Effect.Effect<Value, Error, Requirements>) =>
   withDb(":memory:", effect);
 const releasedStore = Effect.gen(function* () {
@@ -1405,8 +1399,11 @@ describe("inert owner native adapter", () => {
         const result = yield* readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external").pipe(
           Effect.result
         );
-        expect(Result.isSuccess(result)).toBe(app === 7 || app === null);
-        if (Result.isFailure(result)) expect(result.failure.reason).toBe(app === "malformed" ? "evidence" : "gate");
+        if (app === 7 || app === null) result.pipe(Result.isSuccess, assertTrue);
+        else {
+          result.pipe(Result.isFailure, assertTrue);
+          if (Result.isFailure(result)) expect(result.failure.reason).toBe(app === "malformed" ? "evidence" : "gate");
+        }
       }).pipe(offline, github.provide);
     });
   }
@@ -1462,7 +1459,8 @@ describe("inert owner native adapter", () => {
         const result = yield* readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external").pipe(
           Effect.result
         );
-        expect(Result.isSuccess(result)).toBe(!failedPage);
+        if (failedPage) result.pipe(Result.isFailure, assertTrue);
+        else result.pipe(Result.isSuccess, assertTrue);
         expect(A.some(github.calls, (call) => call.query.get("page") === "2")).toBe(true);
         if (!failedPage) {
           expect(A.filter(github.calls, (call) => Str.endsWith("/statuses")(call.path))).toHaveLength(2);
@@ -1661,54 +1659,55 @@ describe("authority receipt root", () => {
     "base-moved",
   ]) {
     it.effect(`hashes bounded receipt bytes before decoding: ${fault}`, () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          yield* TestClock.setTime(ms);
-          const fs = yield* FileSystem.FileSystem;
-          const root = yield* fs.makeTempDirectoryScoped({ prefix: "checkpoint-receipts-" });
-          yield* fs.chmod(root, 0o700);
-          const write = Effect.fnUntraced(function* (value: unknown) {
-            const text = yield* encodeUnknownJson(value);
-            const hash = yield* sha256Hex(text);
-            const sha256 = Sha256Hex.make(hash);
-            const ref = OwnerCheckpointReceiptRef.make({ name: `${sha256}.json`, sha256 });
-            yield* fs.writeFileString(`${root}/${ref.name}`, text);
-            yield* fs.chmod(`${root}/${ref.name}`, 0o600);
-            return ref;
-          });
-          const observerValue = yield* observerReceiptFixture(fault);
-          const observer = yield* write(observerValue);
-          const encodedClassic = yield* encodeSnapshotJson(
-            fault === "base-moved"
-              ? OwnerCheckpointSnapshot.make({ ...evidence.classic, base: { ...evidence.classic.base, sha: head } })
-              : evidence.classic
-          );
-          const classic = yield* write(encodedClassic);
-          const encodedFinal = yield* encodeFinalCheckJson(
-            FinalCheckReceipt.make({
-              ...finalCheck,
-              ...(fault === "post-finalization" ? { finishedAt: DateTime.formatIso(now) } : {}),
-              ...(fault === "missing-family" ? { steps: [] } : {}),
-            })
-          );
-          const final = yield* write(encodedFinal);
-          const manifest = yield* write({
-            version: "owner-checkpoint-receipts/v1",
-            checkout: fault === "wrong-checkout" ? releaseId : digest,
-            binding: fault === "wrong-binding" ? { ...binding, prNumber: 999 } : binding,
-            observer,
-            classic,
-            finalCheck: final,
-          });
-          yield* mutateReceiptFixtureFile(root, observer, fault);
-          const result = yield* readOwnerCheckpointEvidenceReceipts(root, binding, manifest, policy, digest).pipe(
-            Effect.result
-          );
-          expect(Result.isSuccess(result)).toBe(fault === "none");
+      Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "checkpoint-receipts-" });
+        yield* fs.chmod(root, 0o700);
+        const write = Effect.fnUntraced(function* (value: unknown) {
+          const text = yield* encodeUnknownJson(value);
+          const hash = yield* sha256Hex(text);
+          const sha256 = Sha256Hex.make(hash);
+          const ref = OwnerCheckpointReceiptRef.make({ name: `${sha256}.json`, sha256 });
+          yield* fs.writeFileString(`${root}/${ref.name}`, text);
+          yield* fs.chmod(`${root}/${ref.name}`, 0o600);
+          return ref;
+        });
+        const observerValue = yield* observerReceiptFixture(fault);
+        const observer = yield* write(observerValue);
+        const encodedClassic = yield* encodeSnapshotJson(
+          fault === "base-moved"
+            ? OwnerCheckpointSnapshot.make({ ...evidence.classic, base: { ...evidence.classic.base, sha: head } })
+            : evidence.classic
+        );
+        const classic = yield* write(encodedClassic);
+        const encodedFinal = yield* encodeFinalCheckJson(
+          FinalCheckReceipt.make({
+            ...finalCheck,
+            ...(fault === "post-finalization" ? { finishedAt: DateTime.formatIso(now) } : {}),
+            ...(fault === "missing-family" ? { steps: [] } : {}),
+          })
+        );
+        const final = yield* write(encodedFinal);
+        const manifest = yield* write({
+          version: "owner-checkpoint-receipts/v1",
+          checkout: fault === "wrong-checkout" ? releaseId : digest,
+          binding: fault === "wrong-binding" ? { ...binding, prNumber: 999 } : binding,
+          observer,
+          classic,
+          finalCheck: final,
+        });
+        yield* mutateReceiptFixtureFile(root, observer, fault);
+        const result = yield* readOwnerCheckpointEvidenceReceipts(root, binding, manifest, policy, digest).pipe(
+          Effect.result
+        );
+        if (fault === "none") result.pipe(Result.isSuccess, assertTrue);
+        else {
+          result.pipe(Result.isFailure, assertTrue);
           if (Result.isFailure(result))
             expect(result.failure.reason).toBe(fault === "base-moved" ? "binding" : "evidence");
-        })
-      ).pipe(provideTestLayer(NodeServices.layer), offline)
+        }
+      }).pipe(provideTestLayer(NodeFileSystem.layer), offline)
     );
   }
 });
@@ -1718,30 +1717,28 @@ describe("publication crash and revision serialization", () => {
     const github = recordedGithub((call) =>
       call.method === "POST" ? { unreachable: "PRIVATE_LOST_RESPONSE" } : { body: { total_count: 0, check_runs: [] } }
     );
-    return Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "publication-fence-" });
-        const filename = `${directory}/owner.sqlite`;
-        yield* withDb(
-          filename,
-          Effect.gen(function* () {
-            const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
-            yield* publisher.owner.register(binding);
-            expect((yield* publisher.publish(binding, 0))._tag).toBe("Unknown");
-          }).pipe(provideTestLayer(CheckRun.layer))
-        );
-        yield* withDb(
-          filename,
-          Effect.gen(function* () {
-            const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
-            expect((yield* publisher.publish(binding, 0))._tag).toBe("Unknown");
-            yield* publisher.owner.apply(request(0, OwnerCheckpointCommand.cases.Revoke.make({})), policy, now);
-            expect((yield* Effect.flip(publisher.publish(binding, 1))).reason).toBe("uncertain");
-          }).pipe(provideTestLayer(CheckRun.layer))
-        );
-        expect(A.filter(github.calls, (call) => call.method === "POST")).toHaveLength(1);
-      })
-    ).pipe(provideTestLayer(NodeServices.layer), offline, github.provide);
+    return Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "publication-fence-" });
+      const filename = `${directory}/owner.sqlite`;
+      yield* withDb(
+        filename,
+        Effect.gen(function* () {
+          const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+          yield* publisher.owner.register(binding);
+          expect((yield* publisher.publish(binding, 0))._tag).toBe("Unknown");
+        }).pipe(provideTestLayer(CheckRun.layer))
+      );
+      yield* withDb(
+        filename,
+        Effect.gen(function* () {
+          const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+          expect((yield* publisher.publish(binding, 0))._tag).toBe("Unknown");
+          yield* publisher.owner.apply(request(0, OwnerCheckpointCommand.cases.Revoke.make({})), policy, now);
+          expect((yield* Effect.flip(publisher.publish(binding, 1))).reason).toBe("uncertain");
+        }).pipe(provideTestLayer(CheckRun.layer))
+      );
+      expect(A.filter(github.calls, (call) => call.method === "POST")).toHaveLength(1);
+    }).pipe(provideTestLayer(NodeFileSystem.layer), offline, github.provide);
   });
 });
