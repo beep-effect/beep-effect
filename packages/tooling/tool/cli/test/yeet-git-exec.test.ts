@@ -24,6 +24,8 @@ import {
   safeOriginBranchFromBaseForTesting,
   warnOnMismatchedPublishUpstream,
   YeetChangedPathsQuery,
+  YeetGitErrorWording,
+  yeetGitErrorAdapter,
 } from "@beep/repo-cli/test/Yeet";
 import { expect, it } from "@effect/vitest";
 import { assertInclude, assertNone, assertSome } from "@effect/vitest/utils";
@@ -95,6 +97,21 @@ const failingSpawner = ScriptedSpawner.make(() =>
 );
 
 const WORKTREE_FAILED = "Failed to run git worktree add.";
+
+it("git errors preserve custom spawn wording and omit an unspecified truncation exit code", () => {
+  const adapter = yeetGitErrorAdapter(
+    YeetGitErrorWording.make({
+      spawnFailure: "Cannot inspect the checkout.",
+      nonZeroExit: "exited with code",
+      truncated: "exceeded the read bound.",
+    })
+  );
+  expect(adapter.onSpawnFailure("git status").message).toBe("Cannot inspect the checkout.");
+  const truncated = O.getOrThrow(adapter.onTruncated)("git status");
+  expect(truncated.message).toBe("git status exceeded the read bound.");
+  expect(truncated.command).toBe("git status");
+  expect(truncated.exitCode).toBeUndefined();
+});
 
 it("optionFromNonEmpty trims to Some and drops blank text", () => {
   assertSome(optionFromNonEmpty(" main "), "main");

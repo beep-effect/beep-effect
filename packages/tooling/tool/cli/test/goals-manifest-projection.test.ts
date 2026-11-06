@@ -167,6 +167,12 @@ describe("goal manifest researchReports projection", () => {
       line,
       "researchReports drifts from research/: +4 unlisted (research/a.md, research/b.md, research/c.md, +1 more); -1 missing (research/z.md); 1 outside research/ (history/p1.md)"
     );
+    assert.strictEqual(
+      renderResearchReportsDrift(
+        ResearchReportsDrift.make({ missing: [], unlisted: [], references: [], reordered: true })
+      ),
+      "researchReports drifts from research/: unsorted or duplicated entries"
+    );
   });
 
   it("reads string arrays from a raw manifest", () => {
