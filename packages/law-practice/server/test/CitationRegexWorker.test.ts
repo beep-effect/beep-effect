@@ -7,12 +7,26 @@ import {
 import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { CitationRegexPatternProfile } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { makeCitationRegexWorker } from "@beep/law-practice-server/internal/Citation/RegexWorker";
-import { CitationRegexMatchMode } from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
+import { makeCitationRegexEvaluation } from "@beep/law-practice-server/internal/Citation/RegexWorkerEvaluation";
+import { citationRegexWorkerProgram } from "@beep/law-practice-server/internal/Citation/RegexWorkerProgram";
+import {
+  CitationRegexMatchMode,
+  CitationRegexWorkerJob,
+  encodeCitationRegexJob,
+  readCitationRegexFrames,
+} from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
+import {
+  CitationRegexWorkerStartup,
+  decodeCitationRegexReply,
+  decodeCitationRegexStartup,
+  encodeCitationRegexStartup,
+} from "@beep/law-practice-server/internal/Citation/RegexWorkerRpc";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Digest from "effect/crypto/Digest";
 import * as Deferred from "effect/Deferred";
@@ -22,8 +36,13 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as PlatformError from "effect/PlatformError";
+import * as Predicate from "effect/Predicate";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stdio from "effect/Stdio";
+import * as Stream from "effect/Stream";
 import {
   makeCitationNativeManualClock,
   makeCitationNativeSleepClock,
@@ -32,6 +51,7 @@ import {
   waitForCitationNativeTest,
 } from "./CitationNativeSpawner.fixtures.ts";
 import { setupCitationRegexWorker as setup } from "./CitationRegexWorker.fixtures.ts";
+import type { CitationRegexWorkerReply } from "@beep/law-practice-server/internal/Citation/RegexWorkerRpc";
 
 const $I = $LawPracticeServerId.create("test/CitationRegexWorker");
 const ExpectedMatches = S.Array(S.Array(S.Tuple([S.Int, S.Int])).check(S.isMaxLength(3))).check(S.isMaxLength(2));
@@ -65,6 +85,7 @@ const pointWords = (points: ReadonlyArray<number>) => {
   return { width: 4, bytes };
 };
 const pattern = native("(?P<maybe>a)?(b)");
+const decodeStartup = S.decodeUnknownEffect(S.toType(CitationRegexWorkerStartup));
 const descriptor = {
   patternSha256: "b07d89ba5ecfc4ef7c8c6208e879a81454b1cc89203805eceef7e16b55117bb7",
   flags: 0,
@@ -128,6 +149,150 @@ const assertModeCaptures = Effect.fn("RegexWorkerTest.assertModeCaptures")(funct
 });
 
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices: true })("owned native regex", (it) => {
+  it.effect("rejects malformed policy, runtime and match quotas before spawning", () =>
+    Effect.gen(function* () {
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const invalidPolicy = yield* makeCitationRegexWorker(null, null, []).pipe(Effect.flip);
+      expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
+      const invalidRuntime = yield* makeCitationRegexWorker(limits, null, []).pipe(Effect.flip);
+      expect(invalidRuntime).toMatchObject({ reason: "invalid-runtime" });
+      const { worker, observed } = yield* setup([descriptor]);
+      const invalidQuota = yield* worker.evaluate(pattern, native("b ab"), 0, -1).pipe(Effect.flip);
+      expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });
+      const exits = yield* observed.snapshot;
+      expect(exits).toEqual({ spawned: 0, confirmed: 0 });
+    })
+  );
+  it.effect("runs the one-request program with complete mode results and closed limit failures", () =>
+    Effect.gen(function* () {
+      const stdio = yield* Stdio.Stdio;
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const startup = yield* decodeStartup({
+        limits: { ...limits, patternMatches: 2 },
+        descriptor,
+        engine: "python-re",
+      });
+      const argument = yield* encodeCitationRegexStartup(startup);
+      const cases = A.flatMap(CitationRegexMatchMode.literals, (mode) => [
+        { mode, maxMatches: 2, tag: "Complete", expected: { groups: 2, matches: mode === "finditer" ? 2 : 1 } },
+        {
+          mode,
+          maxMatches: 3,
+          tag: "Failure",
+          expected: { failure: { _tag: "CitationSafetyLimitExceeded", limit: "patternMatches" } },
+        },
+      ]);
+      for (const { mode, maxMatches, tag, expected } of cases) {
+        const frame = yield* encodeCitationRegexJob(
+          CitationRegexWorkerJob.make({
+            patternWidth: 1,
+            patternBytes: pattern.bytes,
+            sourceWidth: 1,
+            sourceBytes: native("b ab").bytes,
+            flags: 0,
+            mode,
+            maxMatches,
+          }),
+          limits.processMessageBytes
+        );
+        const chunks = A.empty<Uint8Array>();
+        yield* citationRegexWorkerProgram.pipe(
+          Effect.provideService(Stdio.Stdio, {
+            ...stdio,
+            args: Effect.succeed([argument]),
+            stdin: Stream.make(frame),
+            stdout: () =>
+              Sink.forEach((chunk: string | Uint8Array) =>
+                Effect.sync(() => {
+                  chunks.push(Predicate.isString(chunk) ? new TextEncoder().encode(chunk) : chunk);
+                })
+              ),
+          })
+        );
+        const replies = A.empty<typeof CitationRegexWorkerReply.Type>();
+        yield* readCitationRegexFrames(Stream.fromIterable(chunks), limits.processMessageBytes, 3, (body) =>
+          decodeCitationRegexReply(body).pipe(Effect.tap((reply) => Effect.sync(() => replies.push(reply))))
+        );
+        expect(A.map(replies, (reply) => reply._tag)).toEqual(["Ready", "Started", tag]);
+        expect(A.last(replies)).toMatchObject({ value: expected });
+      }
+    })
+  );
+  it.effect("rejects missing requests and sanitizes each broken reply stage", () =>
+    Effect.gen(function* () {
+      const stdio = yield* Stdio.Stdio;
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const startup = yield* decodeStartup({ limits, descriptor, engine: "python-re" });
+      const argument = yield* encodeCitationRegexStartup(startup);
+      const frame = yield* encodeCitationRegexJob(
+        CitationRegexWorkerJob.make({
+          patternWidth: 1,
+          patternBytes: pattern.bytes,
+          sourceWidth: 1,
+          sourceBytes: native("b ab").bytes,
+          flags: 0,
+          mode: "finditer",
+          maxMatches: 2,
+        }),
+        limits.processMessageBytes
+      );
+      const missingStartup = yield* citationRegexWorkerProgram.pipe(
+        Effect.provideService(Stdio.Stdio, { ...stdio, args: Effect.succeed([]) }),
+        Effect.flip
+      );
+      expect(missingStartup).toMatchObject({ reason: "invalid-runtime" });
+      const missingRequest = yield* citationRegexWorkerProgram.pipe(
+        Effect.provideService(Stdio.Stdio, {
+          ...stdio,
+          args: Effect.succeed([argument]),
+          stdin: Stream.empty,
+          stdout: () => Sink.drain,
+        }),
+        Effect.flip
+      );
+      expect(missingRequest).toMatchObject({ reason: "invalid-frame" });
+      for (const brokenStage of [1, 2, 3]) {
+        let stage = 0;
+        const error = yield* citationRegexWorkerProgram.pipe(
+          Effect.provideService(Stdio.Stdio, {
+            ...stdio,
+            args: Effect.succeed([argument]),
+            stdin: Stream.make(frame),
+            stdout: () => {
+              stage++;
+              return stage === brokenStage
+                ? Sink.fail(PlatformError.systemError({ module: "Stdio", method: "stdout", _tag: "Unknown" }))
+                : Sink.drain;
+            },
+          }),
+          Effect.flip
+        );
+        expect(error).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "channel-failed" });
+        expect(stage).toBe(brokenStage);
+      }
+    })
+  );
+  it.effect("rejects malformed native source storage before evaluation", () =>
+    Effect.gen(function* () {
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const startup = yield* decodeStartup({ limits, descriptor, engine: "python-re" });
+      const evaluator = yield* makeCitationRegexEvaluation(startup);
+      const error = yield* evaluator
+        .evaluate(
+          CitationRegexWorkerJob.make({
+            patternWidth: 1,
+            patternBytes: pattern.bytes,
+            sourceWidth: 2,
+            sourceBytes: new Uint8Array([98]),
+            flags: 0,
+            mode: "finditer",
+            maxMatches: 2,
+          })
+        )
+        .pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-frame" });
+    })
+  );
   it.effect("executes real matching and returns native captures only after confirmed retirement", () =>
     Effect.gen(function* () {
       const { worker, admission, observed } = yield* setup([descriptor]);
@@ -355,4 +520,19 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       })
     );
   }
+
+  it.effect("rejects missing startup arguments and capture metadata beyond the installation budget", () =>
+    Effect.gen(function* () {
+      const malformed = yield* decodeCitationRegexStartup([]).pipe(Effect.flip);
+      expect(malformed).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
+      const policy = yield* defaultCitationEnginePolicy;
+      const startup = yield* decodeStartup({
+        limits: { ...policy.limits, patternUtf16: 1 },
+        descriptor,
+        engine: "python-re",
+      });
+      const oversized = yield* encodeCitationRegexStartup(startup).pipe(Effect.flip);
+      expect(oversized).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
+    })
+  );
 });

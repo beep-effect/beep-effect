@@ -1,18 +1,34 @@
 import * as NodeURL from "node:url";
-import { Citation, CitationDetachedId, CitationGroupMember, CitationMentionId } from "@beep/law-practice-domain/values";
+import {
+  Citation,
+  CitationDetachedId,
+  CitationGroupMember,
+  CitationMention,
+  CitationMentionId,
+} from "@beep/law-practice-domain/values";
 import { CitationCallbackResult } from "@beep/law-practice-server/internal/Citation/CallbackResource";
+import {
+  CitationCallbackRuntimeIndexFactory,
+  makeCitationCallbackRuntimeIndexFactory,
+} from "@beep/law-practice-server/internal/Citation/CallbackRuntimeIndex";
 import {
   CitationCallbackDictionary,
   CitationCallbackFailure,
   CitationCallbackList,
+  CitationCallbackResource,
   CitationResolutionCallbacks,
   CitationResolutionWork,
   makeCitationCallbackDictionary,
   makeCitationResolutionWork,
+  readCapturedCitationSession,
   runCitationCallbackSession,
   runPreparedCitationCallbackSession,
 } from "@beep/law-practice-server/internal/Citation/CallbackSession";
 import { makeDefaultCitationResolutionCallbacks } from "@beep/law-practice-server/internal/Citation/DefaultCallbacks";
+import {
+  CitationFrozenEditions,
+  makeCitationFrozenEditions,
+} from "@beep/law-practice-server/internal/Citation/FrozenEditions";
 import { prepareCitationResolution } from "@beep/law-practice-server/internal/Citation/ResolutionInput";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -43,6 +59,7 @@ import {
   normalizeCallbackFixtureResource as resource,
 } from "./CitationCallbackSession.fixtures.ts";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
+import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import type {
   CitationCallbackEntry,
   CitationCallbackGroup,
@@ -80,6 +97,284 @@ const controls = () =>
   );
 
 it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback session", (it) => {
+  it.effect("rejects non-object session capabilities and enforces retained and aliased edge budgets atomically", () =>
+    Effect.gen(function* () {
+      const absent = yield* readCapturedCitationSession(null).pipe(Effect.flip);
+      expect(absent.reason).toBe("identity-failed");
+      const input = yield* controls();
+      const prepared = yield* prepareCitationResolution({
+        ...input,
+        limits: { ...input.limits, resolutionEdges: 2, authorities: 3 },
+      });
+      const members = A.map(prepared.mentions, (mention) => member(mention.id));
+      for (const mode of ["allocate", "write", "set"]) {
+        const work = yield* makeCitationResolutionWork(prepared.limits);
+        const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+          Effect.provideService(CitationResolutionWork, work)
+        );
+        yield* dictionary.start;
+        if (mode === "allocate") {
+          yield* dictionary.allocate(A.take(members, 1));
+          const refused = yield* dictionary.allocate(members).pipe(Effect.flip);
+          expect(refused.reason).toBe("limit-exceeded");
+          const lists = yield* dictionary.readListNodes;
+          expect(lists).toEqual([A.take(members, 1)]);
+        } else if (mode === "write") {
+          yield* dictionary.allocate(A.take(members, 1));
+          const target = yield* dictionary.allocate([]);
+          const refused = yield* dictionary.write(target, members).pipe(Effect.flip);
+          expect(refused.reason).toBe("limit-exceeded");
+          const lists = yield* dictionary.readListNodes;
+          expect(lists).toEqual([A.take(members, 1), []]);
+        } else {
+          const base = yield* resource("budget-base");
+          const alias = yield* resource("budget-alias");
+          const third = yield* resource("budget-third");
+          const list = yield* dictionary.get(base);
+          yield* dictionary.write(list, A.take(members, 1));
+          yield* dictionary.set(alias, list);
+          const refused = yield* dictionary.set(third, list).pipe(Effect.flip);
+          expect(refused.reason).toBe("limit-exceeded");
+          const groups = yield* dictionary.read;
+          expect(A.map(groups, (group) => group.members)).toEqual([A.take(members, 1), A.take(members, 1)]);
+          const baseKey = yield* dictionary.resourceKey(base);
+          const aliasKey = yield* dictionary.resourceKey(alias);
+          expect(baseKey).not.toBe(aliasKey);
+          const count = yield* dictionary.uniqueResourceCount([base, alias, base]);
+          expect(count).toBe(2);
+        }
+        yield* dictionary.close;
+      }
+    })
+  );
+
+  it.effect("refuses a fallback canonical resource whose selected edition was not supplied", () =>
+    Effect.gen(function* () {
+      const input = yield* context(
+        Row.make({
+          name: "missing-selected-edition",
+          kinds: ["case"],
+          pages: {},
+          bindings: {},
+          events: [],
+          outcome: { status: "value", groups: [] },
+        })
+      );
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const reference = A.getUnsafe(bundle.editions, 0).ref;
+      const mentions = yield* Effect.forEach(
+        input.mentions,
+        Effect.fnUntraced(function* (mention) {
+          const wire = yield* S.encodeEffect(Citation)(mention.citation);
+          if (wire.type !== "case") return yield* fail();
+          const citation = yield* S.decodeEffect(Citation)({
+            ...wire,
+            publication: { ...wire.publication, selectedEdition: reference },
+          });
+          return CitationMention.make({ ...mention, citation });
+        })
+      );
+      const prepared = yield* prepareCitationResolution({ ...input, mentions, editions: [] });
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      yield* dictionary.start;
+      const failure = yield* dictionary
+        .canonicalResource(member(A.getUnsafe(prepared.mentions, 0).id))
+        .pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationCallbackFailure", reason: "identity-failed" });
+      const groups = yield* dictionary.read;
+      expect(groups).toEqual([]);
+      yield* dictionary.close;
+    })
+  );
+
+  it.effect("enforces runtime-backed authority and aliased edge budgets without publishing the rejected binding", () =>
+    Effect.gen(function* () {
+      const input = yield* context(
+        Row.make({
+          name: "runtime-list-budget",
+          kinds: ["case", "case"],
+          pages: {},
+          bindings: {},
+          events: [],
+          outcome: { status: "value", groups: [] },
+        })
+      );
+      const mentions = yield* Effect.forEach(
+        input.mentions,
+        Effect.fnUntraced(function* (mention, index) {
+          const wire = yield* S.encodeEffect(Citation)(mention.citation);
+          if (wire.type !== "case") return yield* fail();
+          const citation = yield* S.decodeEffect(Citation)({
+            ...wire,
+            publication: { ...wire.publication, selectedEdition: null },
+            components: { ...wire.components, reporter: "U.S.", page: index === 0 ? "1" : "2" },
+          });
+          return CitationMention.make({ ...mention, citation });
+        })
+      );
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(bundle);
+      const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+        Effect.provideService(CitationFrozenEditions, frozen)
+      );
+      yield* Effect.forEach(
+        [1, 2],
+        Effect.fnUntraced(function* (authorities) {
+          const prepared = yield* prepareCitationResolution({
+            ...input,
+            mentions,
+            limits: { ...input.limits, authorities, resolutionEdges: 2 },
+          });
+          const work = yield* makeCitationResolutionWork(prepared.limits);
+          const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, work),
+            Effect.provideService(CitationCallbackRuntimeIndexFactory, factory)
+          );
+          yield* dictionary.start;
+          const members = A.map(prepared.mentions, (mention) => member(mention.id));
+          const first = yield* dictionary.canonicalResource(A.getUnsafe(members, 0));
+          const second = yield* dictionary.canonicalResource(A.getUnsafe(members, 1));
+          const list = yield* dictionary.get(first);
+          yield* dictionary.write(list, members);
+          const attempt = authorities === 1 ? dictionary.get(second).pipe(Effect.asVoid) : dictionary.set(second, list);
+          const failure = yield* attempt.pipe(Effect.flip);
+          expect(failure.reason).toBe("limit-exceeded");
+          const groups = yield* dictionary.read;
+          expect(A.map(groups, (group) => group.members)).toEqual([members]);
+          yield* dictionary.close;
+        }),
+        { concurrency: 1, discard: true }
+      );
+    })
+  );
+
+  it.effect("rejects list replacement that would multiply aliased edges and retains the old lists", () =>
+    Effect.gen(function* () {
+      const input = yield* controls();
+      const prepared = yield* prepareCitationResolution({
+        ...input,
+        limits: { ...input.limits, resolutionEdges: 2, authorities: 2 },
+      });
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      yield* dictionary.start;
+      const base = yield* resource("edge-base");
+      const alias = yield* resource("edge-alias");
+      const third = yield* resource("edge-overflow");
+      const list = yield* dictionary.get(base);
+      yield* dictionary.set(alias, list);
+      const members = A.map(prepared.mentions, (mention) => member(mention.id));
+      const rejected = yield* dictionary.write(list, members).pipe(Effect.flip);
+      expect(rejected.reason).toBe("limit-exceeded");
+      const groups = yield* dictionary.read;
+      expect(A.map(groups, (group) => group.members)).toEqual([[], []]);
+      const getOverflow = yield* dictionary.get(third).pipe(Effect.flip);
+      const setOverflow = yield* dictionary.set(third, list).pipe(Effect.flip);
+      expect(getOverflow.reason).toBe("limit-exceeded");
+      expect(setOverflow.reason).toBe("limit-exceeded");
+      yield* dictionary.write(list, A.take(members, 1));
+      const accepted = yield* dictionary.read;
+      expect(A.map(accepted, (group) => group.members)).toEqual([A.take(members, 1), A.take(members, 1)]);
+      yield* dictionary.close;
+    })
+  );
+
+  it.effect("bounds full-pair handles independently of list allocation", () =>
+    Effect.gen(function* () {
+      const input = yield* controls();
+      const prepared = yield* prepareCitationResolution({
+        ...input,
+        limits: { ...input.limits, resolutionIterations: 3 },
+      });
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      yield* dictionary.start;
+      const ref = member(A.getUnsafe(prepared.mentions, 0).id);
+      const first = yield* dictionary.createFullPair(ref, none());
+      const second = yield* dictionary.createFullPair(ref, none());
+      expect(second.pairSlot).not.toBe(first.pairSlot);
+      const rejected = yield* dictionary.createFullPair(ref, none()).pipe(Effect.flip);
+      expect(rejected.reason).toBe("limit-exceeded");
+      const wrongKind = yield* dictionary.canonicalResource(ref).pipe(Effect.flip);
+      expect(wrongKind.reason).toBe("invalid-input");
+      yield* dictionary.close;
+    })
+  );
+
+  it.effect("replaces an existing resource list without changing its aliases", () =>
+    Effect.gen(function* () {
+      const input = yield* controls();
+      const prepared = yield* prepareCitationResolution(input);
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      yield* dictionary.start;
+      const base = yield* resource("replace-base");
+      const alias = yield* resource("retained-alias");
+      const original = yield* dictionary.get(base);
+      const first = member(A.getUnsafe(prepared.mentions, 0).id);
+      const second = member(A.getUnsafe(prepared.mentions, 1).id);
+      yield* dictionary.write(original, [first]);
+      yield* dictionary.set(alias, original);
+      const replacement = yield* dictionary.allocate([second]);
+      yield* dictionary.set(base, replacement);
+      const replaced = yield* dictionary.get(base);
+      const retained = yield* dictionary.get(alias);
+      const groups = yield* dictionary.read;
+      expect(replaced).toBe(replacement);
+      expect(retained).toBe(original);
+      expect(A.map(groups, (group) => group.members)).toEqual([[second], [first]]);
+      yield* dictionary.close;
+    })
+  );
+
+  it.effect("rejects registered resources without a runtime owner and mismatched work budgets", () =>
+    Effect.gen(function* () {
+      const input = yield* controls();
+      const prepared = yield* prepareCitationResolution(input);
+      const wrongWork = yield* makeCitationResolutionWork({
+        ...prepared.limits,
+        resolutionIterations: prepared.limits.resolutionIterations + 1,
+      });
+      const mismatch = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, wrongWork),
+        Effect.flip
+      );
+      expect(mismatch.reason).toBe("invalid-input");
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      yield* dictionary.start;
+      const registered = CitationCallbackResource.cases.Registered.make({
+        scope: prepared.engineArtifact,
+        slot: 0,
+        value: null,
+      });
+      for (const operation of [
+        dictionary.get(registered),
+        dictionary.currentResource(registered),
+        dictionary.validateResource(registered),
+        dictionary.isTruthy(registered),
+        dictionary.hostResource(null),
+      ]) {
+        const failure = yield* operation.pipe(Effect.flip);
+        expect(failure.reason).toBe("invalid-input");
+      }
+      const groups = yield* dictionary.read;
+      expect(groups).toEqual([]);
+      yield* dictionary.close;
+    })
+  );
+
   it.effect("verifies evidence before invoking a callback and enforces exact dispatch budgets", () =>
     Effect.gen(function* () {
       const input = yield* controls();
@@ -562,5 +857,37 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
         );
       }),
     { timeout: 30_000 }
+  );
+  it.effect("rejects malformed work limits and detached identity digest failures", () =>
+    Effect.gen(function* () {
+      const badWork = yield* makeCitationResolutionWork(null).pipe(Effect.flip);
+      expect(badWork).toMatchObject({ reason: "invalid-input" });
+      const input = yield* context(
+        Row.make({
+          name: "failed-detached-identity",
+          kinds: ["case"],
+          pages: {},
+          bindings: {},
+          events: [],
+          outcome: { status: "value", groups: [] },
+        })
+      );
+      const prepared = yield* prepareCitationResolution(input);
+      const source = A.getUnsafe(prepared.mentions, 0).citation;
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      for (const digest of [
+        makeTestCitationDigest(() => Effect.die("synthetic detached digest failure")),
+        makeTestCitationDigest(() => Effect.succeed(new Uint8Array(1))),
+      ]) {
+        const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+          Effect.provideService(CitationResolutionWork, work),
+          Effect.provideService(Digest.Digest, digest)
+        );
+        yield* dictionary.start;
+        const failure = yield* dictionary.registerDetached(source).pipe(Effect.flip);
+        expect(failure).toMatchObject({ reason: "identity-failed" });
+        expect("cause" in failure).toBe(false);
+      }
+    })
   );
 });

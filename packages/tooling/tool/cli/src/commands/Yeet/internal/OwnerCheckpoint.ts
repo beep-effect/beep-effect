@@ -169,11 +169,10 @@ export const qualifyOwnerCheckpointEvidence = Effect.fn("OwnerCheckpoint.qualify
     A.some(evidence.finalCheck.expectationRewrites, (rewrite) => rewrite.classification !== "follows-diff")
   )
     return yield* refuse("evidence");
-  const startedDate = DateTime.make(evidence.finalCheck.startedAt);
-  const finishedDate = DateTime.make(evidence.finalCheck.finishedAt);
-  if (O.isNone(startedDate) || O.isNone(finishedDate)) return yield* refuse("evidence");
-  const started = DateTime.toEpochMillis(startedDate.value);
-  const finished = DateTime.toEpochMillis(finishedDate.value);
+  const startedAt = yield* Effect.fromOption(DateTime.make(evidence.finalCheck.startedAt), () => refuse("evidence"));
+  const finishedAt = yield* Effect.fromOption(DateTime.make(evidence.finalCheck.finishedAt), () => refuse("evidence"));
+  const started = DateTime.toEpochMillis(startedAt);
+  const finished = DateTime.toEpochMillis(finishedAt);
   const finalized = DateTime.toEpochMillis(evidence.observer.finalizedAt);
   const observed = DateTime.toEpochMillis(evidence.observer.snapshot.read.readAt);
   const classic = DateTime.toEpochMillis(evidence.classic.read.readAt);

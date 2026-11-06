@@ -655,3 +655,102 @@ it.effect("releases borrowed capacity after producer failure and interruption wi
     expect(result.producedTextUtf16).toBe(1);
   })
 );
+
+it.effect("rejects malformed policy, reservation amounts and nested plan names", () =>
+  Effect.gen(function* () {
+    const h = yield* harness;
+    const invalidPolicy = yield* makeCitationCleanerPipeline(null).pipe(
+      Effect.provideService(CitationCleanerRuntime, h.runtime),
+      Effect.flip
+    );
+    expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
+    const p = yield* pipeline(h);
+    const reserve = h.callback((value, work) =>
+      work.reserveText(-1).pipe(Effect.map((charge) => CitationCleanerProduced.make({ value, charges: [charge] })))
+    );
+    h.plans.set("invalid-reserve", () => h.sequence([reserve]));
+    const reservation = yield* p.run({ text: "x", plan: "invalid-reserve" }).pipe(Effect.flip);
+    expect(reservation).toMatchObject({ reason: "invalid-reservation" });
+    const nested = h.callback((value, work) =>
+      work.nested("", value).pipe(Effect.map((value) => CitationCleanerProduced.make({ value, charges: [] })))
+    );
+    h.plans.set("invalid-nested", () => h.sequence([nested]));
+    const plan = yield* p.run({ text: "x", plan: "invalid-nested" }).pipe(Effect.flip);
+    expect(plan).toMatchObject({ reason: "invalid-input" });
+  })
+);
+it.effect("rejects negative text accounting from unchanged and produced runtime values", () =>
+  Effect.gen(function* () {
+    const h = yield* harness;
+    const limits = (yield* defaultCitationEnginePolicy).limits;
+    const p = yield* makeCitationCleanerPipeline(limits).pipe(
+      Effect.provideService(CitationCleanerRuntime, {
+        ...h.runtime,
+        textUnits: () => Effect.succeedSome(-1),
+      })
+    );
+    h.plans.set("unchanged", () => h.sequence([]));
+    const unchanged = yield* p.run({ text: "x", plan: "unchanged" }).pipe(Effect.flip);
+    expect(unchanged).toMatchObject({ reason: "invalid-reservation" });
+    const callback = h.callback((value) => Effect.succeed(CitationCleanerProduced.make({ value, charges: [] })));
+    h.plans.set("produced", () => h.sequence([callback]));
+    const produced = yield* p.run({ text: "x", plan: "produced" }).pipe(Effect.flip);
+    expect(produced).toMatchObject({ reason: "invalid-reservation" });
+  })
+);
+it.effect("enforces the clean deadline when it is shorter than the operation deadline", () =>
+  Effect.gen(function* () {
+    const h = yield* harness;
+    const entered = yield* Deferred.make<void>();
+    const wait = h.callback(() => Deferred.succeed(entered, undefined).pipe(Effect.andThen(Effect.never)));
+    h.plans.set("wait", () => h.sequence([wait]));
+    const p = yield* pipeline(h, { cleanDeadline: Duration.millis(50), operationDeadline: Duration.millis(100) });
+    const fiber = yield* p.run({ text: "x", plan: "wait" }).pipe(Effect.forkChild);
+    yield* Deferred.await(entered);
+    yield* TestClock.adjust(Duration.millis(50));
+    const failed = yield* Fiber.join(fiber).pipe(Effect.flip);
+    expect(failed).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "cleanDeadline" });
+    const work = yield* h.work;
+    const state = yield* work.snapshot;
+    expect(state.closed).toBe(true);
+  })
+);
+
+it.effect("rejects real reservation totals that exceed or underfund the produced text", () =>
+  Effect.gen(function* () {
+    const h = yield* harness;
+    const p = yield* pipeline(h, { producedTextUtf16: 10 });
+    for (const { units, text } of [
+      { units: 2, text: "X" },
+      { units: 1, text: "XX" },
+    ]) {
+      const callback = h.callback((_, work) =>
+        Effect.gen(function* () {
+          const charge = yield* work.reserveText(units);
+          return CitationCleanerProduced.make({ value: h.own(text), charges: [charge] });
+        })
+      );
+      h.plans.set("mismatched-reservation", () => h.sequence([callback]));
+      const failure = yield* p.run({ text: "x", plan: "mismatched-reservation" }).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "invalid-reservation" });
+      const work = yield* h.work;
+      const before = yield* work.snapshot;
+      expect(before.closed).toBe(true);
+      const stale = yield* work.reserveText(1).pipe(Effect.flip);
+      expect(stale).toMatchObject({ _tag: "CitationCleanerFailure", reason: "closed-work" });
+      const after = yield* work.snapshot;
+      expect(after).toEqual(before);
+    }
+  })
+);
+
+it.effect("rejects oversized raw source text before issuing values or opening a plan", () =>
+  Effect.gen(function* () {
+    const h = yield* harness;
+    const p = yield* pipeline(h, { sourceUtf16: 1 });
+    const failure = yield* p.run({ text: "xx", plan: "unopened" }).pipe(Effect.flip);
+    expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "sourceUtf16" });
+    const events = yield* h.events;
+    expect(events).toEqual([]);
+  })
+);

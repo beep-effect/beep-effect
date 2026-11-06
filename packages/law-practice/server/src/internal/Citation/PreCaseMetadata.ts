@@ -44,6 +44,7 @@ export class CitationPreCaseMetadataFailure extends S.TaggedError<
   })
 ) {}
 const fail = (reason: typeof Reason.Type) => CitationPreCaseMetadataFailure.make({ reason });
+const invalidInput = () => fail("invalid-input");
 /** Built-in citation state before the source pre-citation helper.
  * @internal @category models @since 0.0.0
  */
@@ -107,13 +108,11 @@ const prepare = Effect.fn("Citation.preparePreCaseMetadata")(function* (
   config: CitationPublicationMetadataConfiguration,
   raw: unknown
 ) {
-  const envelope = yield* S.decodeUnknownEffect(Envelope)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+  const envelope = yield* S.decodeUnknownEffect(Envelope)(raw).pipe(Effect.mapError(invalidInput));
   if (truthy(envelope.plaintiff)) return O.none<CitationPreCaseMetadataPatch>();
-  const defendant = yield* S.decodeUnknownEffect(Value)(envelope.defendant).pipe(
-    Effect.mapError(() => fail("invalid-input"))
-  );
+  const defendant = yield* S.decodeUnknownEffect(Value)(envelope.defendant).pipe(Effect.mapError(invalidInput));
   if (truthy(defendant)) return O.none<CitationPreCaseMetadataPatch>();
-  const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+  const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(invalidInput));
   const owned = yield* matchCitationMetadataContext(
     limits,
     runtime,

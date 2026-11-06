@@ -8,13 +8,15 @@ import { expect } from "@effect/vitest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Scope from "effect/Scope";
-import { makeCitationObservedSpawner } from "./CitationNativeSpawner.fixtures.ts";
+import { citationBunTestExecutable, makeCitationObservedSpawner } from "./CitationNativeSpawner.fixtures.ts";
 
-const command = () =>
-  ChildProcess.make(process.execPath, ["--no-env-file", "--no-install", "-e", "process.stdin.resume()"], {
+const command = Effect.fn("NativeProcessTest.command")(function* () {
+  const executable = yield* citationBunTestExecutable;
+  return ChildProcess.make(executable, ["--no-env-file", "--no-install", "-e", "process.stdin.resume()"], {
     env: {},
     extendEnv: false,
     shell: false,
@@ -25,9 +27,66 @@ const command = () =>
     killSignal: "SIGKILL",
     forceKillAfter: Duration.zero,
   });
+});
 const failure = (reason: CitationRegexWorkerFailure["reason"]) => CitationRegexWorkerFailure.make({ reason });
 
 it.layer(BunServices.layer, { excludeTestServices: true })("shared native process ownership", (it) => {
+  it.effect("quarantines uncertain liveness and recovers without releasing the permit early", () =>
+    Effect.gen(function* () {
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const malformed = yield* makeCitationNativeProcessOwner(null, "extract", failure).pipe(Effect.flip);
+      expect(malformed).toMatchObject({ reason: "invalid-runtime" });
+      const admission = yield* makeCitationNativeProcessAdmission(limits);
+      const observed = yield* makeCitationObservedSpawner();
+      let uncertain = true;
+      const spawner = ChildProcessSpawner.of({
+        ...observed.spawner,
+        spawn: Effect.fn("NativeProcessTest.uncertainSpawn")((command) =>
+          observed.spawner.spawn(command).pipe(
+            Effect.map((handle) => ({
+              ...handle,
+              isRunning: Effect.suspend(() =>
+                uncertain
+                  ? Effect.fail(
+                      PlatformError.systemError({ module: "ChildProcess", method: "isRunning", _tag: "Unknown" })
+                    )
+                  : handle.isRunning
+              ),
+            }))
+          )
+        ),
+      });
+      const scope = yield* Scope.make();
+      const owner = yield* makeCitationNativeProcessOwner(limits, "extract", failure).pipe(
+        Effect.provideService(ChildProcessSpawner, spawner),
+        Effect.provideService(Scope.Scope, scope)
+      );
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() => {
+          uncertain = false;
+        }).pipe(Effect.andThen(Scope.close(scope, Exit.void)), Effect.andThen(owner.reap()), Effect.orDie)
+      );
+      const permit = yield* admission.acquireRegex("extract");
+      const childCommand = yield* command();
+      const started = yield* owner.start(childCommand, permit);
+      yield* started.child;
+      const refused = yield* started.process.retire(false).pipe(Effect.flip);
+      expect(refused).toMatchObject({ reason: "cleanup-unconfirmed" });
+      const held = yield* admission.snapshot;
+      expect(held).toMatchObject({ active: 1, quarantined: 1 });
+      yield* Scope.close(scope, Exit.void);
+      const closed = yield* owner.snapshot;
+      expect(closed).toEqual({ processes: 1, quarantined: 1, closed: true });
+      uncertain = false;
+      yield* owner.reap();
+      const released = yield* admission.snapshot;
+      expect(released).toMatchObject({ active: 0, quarantined: 0 });
+      const final = yield* owner.snapshot;
+      expect(final).toEqual({ processes: 0, quarantined: 0, closed: true });
+      const physical = yield* observed.snapshot;
+      expect(physical).toEqual({ spawned: 1, confirmed: 1 });
+    })
+  );
   it.effect("retires a regex reservation exactly once across concurrent observers and reaping", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
@@ -38,7 +97,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("shared native proces
       );
       const permit = yield* admission.acquireRegex("extract");
       let releases = 0;
-      const started = yield* owner.start(command(), {
+      const childCommand = yield* command();
+      const started = yield* owner.start(childCommand, {
         quarantine: permit.quarantine,
         release: Effect.sync(() => {
           releases++;
@@ -95,7 +155,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("shared native proces
         Effect.provideService(Scope.Scope, scope)
       );
       const citationResult10 = yield* admission.acquireRegex("extract");
-      const started = yield* owner.start(command(), citationResult10);
+      const childCommand = yield* command();
+      const started = yield* owner.start(childCommand, citationResult10);
       yield* started.child;
       yield* Scope.close(scope, Exit.void);
       const citationResult11 = yield* observed.snapshot;

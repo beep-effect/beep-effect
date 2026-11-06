@@ -289,6 +289,7 @@
       <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-20" />
       <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-28" />
       <excludeFolder url="file://$MODULE_DIR$/goals/public-origin-beep-effect-com" />
+      <excludeFolder url="file://$MODULE_DIR$/explorations/t3code-fleet-driver" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />

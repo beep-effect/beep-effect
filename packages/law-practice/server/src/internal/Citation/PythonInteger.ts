@@ -19,7 +19,7 @@ import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 const $I = $LawPracticeServerId.create("internal/Citation/PythonInteger");
 const spaces = HashSet.fromIterable(
   A.filter(A.fromIterable(citationPythonTextData.whitespace), (char) => {
-    const point = O.getOrElse(Str.codePointAt(char, 0), () => 0);
+    const point = O.getOrThrow(Str.codePointAt(char, 0));
     return point > 127 || point === 32 || (point >= 9 && point <= 13);
   })
 );

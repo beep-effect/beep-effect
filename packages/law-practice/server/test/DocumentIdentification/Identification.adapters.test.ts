@@ -26,11 +26,13 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as M from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -337,6 +339,138 @@ describe("extraction batch pairing", () => {
         expect(["invalid-input", "conflicting-records"]).toContain(error.reason);
         expect(String(error)).not.toContain("bad-private-line");
       }
+    })
+  );
+});
+
+describe("adapter failure boundaries", () => {
+  it.effect("redacts either contact file read failure without publishing partial cards", () =>
+    Effect.gen(function* () {
+      const config = ContactFilesConfig.make({ csvPath: "/synthetic/cards.csv", vcardPath: "/synthetic/cards.vcf" });
+      for (const deniedPath of [config.csvPath, config.vcardPath]) {
+        const reads: Array<string> = [];
+        const denied = PlatformError.systemError({
+          module: "FileSystem",
+          method: "readFileString",
+          _tag: "PermissionDenied",
+          cause: "private-contact-source",
+        });
+        const fs = FileSystem.makeNoop({
+          readFileString: Effect.fn("ContactFailureTest.read")(function* (file) {
+            reads.push(file);
+            if (file === deniedPath) return yield* denied;
+            return file === config.csvPath ? csv : vcf;
+          }),
+        });
+        const source = yield* withService(
+          ContactCardSource,
+          ContactCardSourceFile.pipe(
+            Layer.provide(Layer.succeed(ContactFilesLocation, config)),
+            Layer.provide(Layer.succeed(FileSystem.FileSystem, fs))
+          )
+        );
+        const failure = yield* Stream.runCollect(source.cards).pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "IdentificationError",
+          operation: "contact-read",
+          reason: "unavailable",
+        });
+        expect("cause" in failure).toBe(false);
+        expect(reads).toEqual(deniedPath === config.csvPath ? [config.csvPath] : [config.csvPath, config.vcardPath]);
+      }
+    })
+  );
+
+  it.effect("rejects malformed CSV and vCard structure through the text boundary", () =>
+    Effect.gen(function* () {
+      for (const input of ["", "Unrecognised Header\nprivate-contact-source", "First Name,Company\nAlex"]) {
+        const failure = yield* parseOutlookCsv(input).pipe(Effect.flip);
+        expect(failure).toMatchObject({ operation: "contact-parse", reason: "invalid-input" });
+        expect("cause" in failure).toBe(false);
+      }
+      for (const input of [
+        "BEGIN:VCARD\nVERSION:2.1\nFN:private-contact-source\nEND:VCARD",
+        "BEGIN:VCARD\nVERSION:4.0\nprivate-contact-source\nEND:VCARD",
+        "BEGIN:VCARD\nBEGIN:VCARD\nEND:VCARD",
+        "FN:private-contact-source\n",
+      ]) {
+        const failure = yield* parseVcards(input).pipe(Effect.flip);
+        expect(failure).toMatchObject({ operation: "contact-parse", reason: "invalid-input" });
+        expect("cause" in failure).toBe(false);
+      }
+    })
+  );
+
+  it.effect("redacts extraction file failures and rejects reviewed docket indexes outside the extraction", () =>
+    Effect.gen(function* () {
+      const extract = yield* encodeJson({ id: "doc-1", extraction });
+      const critic = yield* encodeJson({ id: "doc-1", verdict });
+      for (const deniedPath of ["/batch/extract.jsonl", "/batch/critic.jsonl"]) {
+        const denied = PlatformError.systemError({
+          module: "FileSystem",
+          method: "readFileString",
+          _tag: "PermissionDenied",
+          cause: "private-extraction-source",
+        });
+        const layer = DocumentExtractionSourceFile.pipe(
+          Layer.provide(
+            Layer.succeed(ExtractionBatchesLocation, ExtractionBatchesConfig.make({ directories: ["/batch"] }))
+          ),
+          Layer.provide(
+            Layer.succeed(
+              FileSystem.FileSystem,
+              FileSystem.makeNoop({
+                readFileString: Effect.fn("ExtractionFailureTest.read")(function* (file) {
+                  if (file === deniedPath) return yield* denied;
+                  return file === "/batch/extract.jsonl" ? extract : critic;
+                }),
+              })
+            )
+          ),
+          Layer.provide(Path.layer)
+        );
+        const failure = yield* Layer.build(layer).pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "IdentificationError",
+          operation: "extraction-read",
+          reason: "unavailable",
+        });
+        expect("cause" in failure).toBe(false);
+      }
+      const badDocket = yield* encodeJson({ id: "doc-1", verdict: { ...verdict, keepDockets: [0] } });
+      const invalidIndex = yield* Layer.build(batches(extract, badDocket)).pipe(Effect.flip);
+      expect(invalidIndex).toMatchObject({ operation: "extraction-read", reason: "invalid-input" });
+    })
+  );
+
+  it.effect("redacts RDAP transport failures and treats a missing patent as absent", () =>
+    Effect.gen(function* () {
+      const source = yield* withService(
+        DomainRegistrantLookup,
+        DomainRegistrantLookupLive.pipe(
+          Layer.provide(
+            Layer.succeed(
+              HttpClient.HttpClient,
+              HttpClient.make((request) =>
+                Effect.fail(
+                  new HttpClientError.HttpClientError({
+                    reason: new HttpClientError.TransportError({ request, cause: "private-network-cause" }),
+                  })
+                )
+              )
+            )
+          )
+        )
+      );
+      const failure = yield* source.registrant("acme.example").pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "IdentificationError", operation: "rdap-query", reason: "unavailable" });
+      expect("cause" in failure).toBe(false);
+      const urls: Array<string> = [];
+      const patents = yield* withService(UsptoRecordLookup, usptoLayer({}, 404, urls));
+      const missing = yield* patents.byPatent("99000001");
+      assertNone(missing);
+      expect(urls).toHaveLength(1);
+      expect(A.getUnsafe(urls, 0)).toContain("99000001");
     })
   );
 });

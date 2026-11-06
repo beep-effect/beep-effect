@@ -265,6 +265,37 @@ and `constant` named import from `effect/Function` that the code law requires
 the other 1297 in 112 files mostly in `@beep/effect-drizzle`). Enabling it needs
 an upstream allowlist option or a change to that law.
 
+### Namespace-import replacement qualification
+
+On 2026-11-05, isolated fixtures were checked with both installed compilers:
+`tsgo` reported `7.0.2+effect-tsgo.0.67.1`, and `tsrs` reported
+`7.1.0-beta+effect-tsgo.0.67.1 (tsrs 0.21.0-ts7.1.0-beta, ...)`.
+Only `preferNamespaceImport` was enabled in the fixture profile, with
+`namespaceImportPackages: ["effect"]` and Effect errors included in the exit
+code. The same fixtures were checked with `laws effect-imports --candidate
+--check --json`, using its code, JSDoc, and Markdown modes as appropriate.
+
+| Fixture | Compiler diagnostic | Existing import law |
+| --- | --- | --- |
+| Named import from the root barrel | TS377146 | Rejects |
+| Named import from a nested barrel | TS377146 | Rejects |
+| Namespace import from the root barrel | None; exit 0 | Rejects |
+| Namespace import from a nested barrel | None; exit 0 | Rejects |
+| Named re-export from the root barrel | None; exit 0 | Rejects |
+| Namespace re-export from the root barrel | None; exit 0 | Rejects |
+| Type-level reference through the root barrel | None; exit 0 | Rejects |
+| Root barrel import inside a JSDoc fence | None; exit 0 | Rejects |
+| Root barrel import inside a Markdown fence | Outside the compiler input | Rejects |
+| Named `pipe` import from `effect/Function` | TS377146 | Permits |
+| Namespace import from `effect/Effect` | None; exit 0 | Permits |
+
+Both compilers produced the same diagnostic findings. For a reported error,
+`tsgo` exited 1 and `tsrs` exited 2. The fixtures demonstrate that this
+diagnostic cannot replace the existing import law at these versions. Keep
+the law and its documentation checks. Enabling the diagnostic separately
+requires resolving the Function import policy and migrating its consumers;
+it does not qualify deletion of the law.
+
 History: from 2026-10-14 to `goals/tsrs-gates` PR 2 (2026-10-27) the newest
 rules ran in a standalone `Heavy / Effect Diagnostics` job
 (`goals/effect-rules-diagnostics-lane`), because the gate compiler then was

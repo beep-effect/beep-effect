@@ -94,4 +94,17 @@ it.layer(BunCrypto.layer)("trusted resource identity descriptors", (it) => {
       expect("cause" in failed).toBe(false);
     })
   );
+  it.effect("rejects malformed digest bytes without exposing input or nested causes", () =>
+    Effect.gen(function* () {
+      const failure = yield* makeCitationResourceAuthorityId(external()).pipe(
+        Effect.provideService(
+          Digest.Digest,
+          makeTestCitationDigest(() => Effect.succeed(new Uint8Array(1)))
+        ),
+        Effect.flip
+      );
+      expect(failure).toMatchObject({ reason: "digest-failed" });
+      expect("cause" in failure).toBe(false);
+    })
+  );
 });

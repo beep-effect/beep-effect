@@ -86,8 +86,9 @@ export class CitationHtmlInputFailure extends S.TaggedError<
     description: "HTML preparation rejected without source text, native messages or causes.",
   })
 ) {}
+const invalidInput = () => CitationHtmlInputFailure.make({ reason: "invalid-input" });
 const whitespace = HashSet.fromIterable(
-  A.map(A.fromIterable(citationPythonTextData.whitespace), (char) => O.getOrElse(Str.codePointAt(char, 0), () => -1))
+  A.map(A.fromIterable(citationPythonTextData.whitespace), (char) => O.getOrThrow(Str.codePointAt(char, 0)))
 );
 type ReadPoint = (index: number) => number;
 const xmlPrefix: ReadonlyArray<number> = [60, 63, 120, 109, 108];
@@ -208,9 +209,7 @@ const safety = (limit: CitationSafetyBudget) => CitationSafetyLimitExceeded.make
  * @since 0.0.0
  */
 export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(function* (input: unknown) {
-  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(input).pipe(
-    Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
-  );
+  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(input).pipe(Effect.mapError(invalidInput));
   const clock = yield* Clock.Clock;
   const sourceCeiling = limits.sourceUtf16;
   const messageCeiling = limits.processMessageBytes;
@@ -249,9 +248,7 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
       maximumInput: number,
       beforeAllocate: (layout: CitationHtmlInputLayout) => Effect.Effect<void, E>
     ) {
-      const text = yield* S.decodeUnknownEffect(schema)(input).pipe(
-        Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
-      );
+      const text = yield* S.decodeUnknownEffect(schema)(input).pipe(Effect.mapError(invalidInput));
       const length = Str.length(text);
       if (length > maximumInput) return yield* safety("sourceUtf16");
       return yield* Effect.gen(function* () {
@@ -276,9 +273,7 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
     // This private port receives an immutable, adapter-owned Python byte value.
     // The snapshot owns transport memory; callers must not mutate their value
     // while preparation runs. No raw byte field is added to public requests.
-    const source = yield* S.decodeUnknownEffect(S.Uint8Array)(input).pipe(
-      Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
-    );
+    const source = yield* S.decodeUnknownEffect(S.Uint8Array)(input).pipe(Effect.mapError(invalidInput));
     const size = source.byteLength;
     if (size > messageCeiling) return yield* safety("processMessageBytes");
     const start = yield* skipByteSpace(source);
@@ -294,9 +289,7 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
   ) {
     // This private stage borrows immutable adapter-owned storage. Validation
     // and complete-frame preflight precede allocation of transport memory.
-    const source = yield* S.decodeUnknownEffect(NativeStorage)(input).pipe(
-      Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
-    );
+    const source = yield* S.decodeUnknownEffect(NativeStorage)(input).pipe(Effect.mapError(invalidInput));
     const size = source.bytes.byteLength;
     if (size % source.width !== 0) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
     if (size > messageCeiling) return yield* safety("processMessageBytes");
