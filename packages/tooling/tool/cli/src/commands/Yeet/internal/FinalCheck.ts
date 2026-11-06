@@ -49,7 +49,9 @@ import {
   persistLaneProofs,
   prepareLaneProofSession,
 } from "../../Quality/internal/LaneProofReuse.ts";
+import { resolveLintPolicyScope } from "../../Quality/internal/LintPolicyScope.ts";
 import { GithubCheckLaneSpec } from "../../Quality/Quality.schemas.ts";
+import { readLintPolicySweeps } from "../../Quality/Tasks.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { collectExpectationRewrites, verifyExpectationRewrites } from "./ExpectationRewrite.ts";
 import {
@@ -71,6 +73,7 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CiLaneId } from "../../Ci/CiLane.ts";
 import type { LaneProofSession } from "../../Quality/internal/LaneProofReuse.ts";
+import type { LintPolicySweeps } from "../../Quality/Quality.schemas.ts";
 import type { ExpectationRewriteVerdict, YeetFinalCheckOptions } from "./FinalCheck.schemas.ts";
 
 /**
@@ -102,7 +105,11 @@ const EXPECTATION_REWRITE_CONTEXT = "Test Unit (expectations edited to match new
  * `beep ci local` and hosted CI run. Lint Policy keeps its affected law tasks
  * (`beep lint policy --base`) and adds the two repo-wide sweeps that the
  * affected local scope omits but the hosted `--full` lane runs: root docs
- * oxlint and the deprecated-API oxlint sweep. Lint adds the pre-commit Biome
+ * oxlint and the deprecated-API oxlint sweep. A caller that resolved full scope
+ * supplies the existing sweep configuration: the policy command explicitly
+ * runs `--full`, owns root docs once, and owns the full deprecated-API sweep
+ * when its configured engine is oxlint. Unknown/affected scope retains the
+ * standalone sweeps. Lint adds the pre-commit Biome
  * pass over the diff's changed files, because package `lint` tasks never see
  * paths outside a workspace package (#2187 landed an EF-40 GritQL violation in
  * `goals/` that no hosted lane flagged and lefthook then rejected on every
@@ -122,16 +129,32 @@ const EXPECTATION_REWRITE_CONTEXT = "Test Unit (expectations edited to match new
  * @param repoRoot - Checkout root used as every subprocess working directory.
  * @param mergeBase - Merge base of the branch with its base ref.
  * @param changedFiles - Files the diff adds or modifies, repo-relative.
+ * @param fullLintPolicySweeps - Validated sweep configuration when planning an explicit full policy run.
  * @returns Planned steps in gate order.
  * @category planning
  * @since 0.0.0
  */
 export const planFinalCheckSteps: {
-  (repoRoot: string, mergeBase: string, changedFiles: ReadonlyArray<string>): ReadonlyArray<FinalCheckPlannedStep>;
-  (mergeBase: string, changedFiles: ReadonlyArray<string>): (repoRoot: string) => ReadonlyArray<FinalCheckPlannedStep>;
+  (
+    repoRoot: string,
+    mergeBase: string,
+    changedFiles: ReadonlyArray<string>,
+    fullLintPolicySweeps?: LintPolicySweeps
+  ): ReadonlyArray<FinalCheckPlannedStep>;
+  (
+    mergeBase: string,
+    changedFiles: ReadonlyArray<string>,
+    fullLintPolicySweeps?: LintPolicySweeps
+  ): (repoRoot: string) => ReadonlyArray<FinalCheckPlannedStep>;
 } = dual(
-  3,
-  (repoRoot: string, mergeBase: string, changedFiles: ReadonlyArray<string>): ReadonlyArray<FinalCheckPlannedStep> => {
+  (args: IArguments) => Str.isString(args[1]),
+  (
+    repoRoot: string,
+    mergeBase: string,
+    changedFiles: ReadonlyArray<string>,
+    fullLintPolicySweeps?: LintPolicySweeps
+  ): ReadonlyArray<FinalCheckPlannedStep> => {
+    const fullPolicy = O.fromUndefinedOr(fullLintPolicySweeps);
     const plan = CiLocalStepPlan.make({ affected: true, base: mergeBase, onMainBranch: false });
     const lane = (gate: FinalCheckGate, hostedContext: string, laneId: CiLaneId) =>
       FinalCheckPlannedStep.make({
@@ -164,31 +187,38 @@ export const planFinalCheckSteps: {
         "cheap-gates",
         ["bun", "run", "beep", "quality", "github-checks", "cheap-gates"]
       ),
-      command("lint-policy", "Heavy / Lint Policy (affected law tasks)", "lint-policy:laws", [
-        "bun",
-        "run",
-        "beep",
-        "lint",
-        "policy",
-        "--base",
-        mergeBase,
-      ]),
-      command("lint-policy", "Heavy / Lint Policy (root docs oxlint)", "lint-policy:docs", [
-        "bunx",
-        "oxlint",
-        ".",
-        "--config",
-        ".oxlintrc.docs.json",
-        "--max-warnings=0",
-      ]),
-      command("lint-policy", "Heavy / Lint Policy (deprecated APIs)", "lint-policy:deprecated-apis", [
-        "bun",
-        "run",
-        "beep",
-        "lint",
-        "deprecated-apis",
-        "--full",
-      ]),
+      command(
+        "lint-policy",
+        O.isSome(fullPolicy)
+          ? "Heavy / Lint Policy (full law tasks and root sweeps)"
+          : "Heavy / Lint Policy (affected law tasks)",
+        "lint-policy:laws",
+        ["bun", "run", "beep", "lint", "policy", ...(O.isSome(fullPolicy) ? ["--full"] : []), "--base", mergeBase]
+      ),
+      ...(O.isSome(fullPolicy)
+        ? []
+        : [
+            command("lint-policy", "Heavy / Lint Policy (root docs oxlint)", "lint-policy:docs", [
+              "bunx",
+              "oxlint",
+              ".",
+              "--config",
+              ".oxlintrc.docs.json",
+              "--max-warnings=0",
+            ]),
+          ]),
+      ...(O.exists(fullPolicy, (sweeps) => sweeps.deprecatedApis === "oxlint")
+        ? []
+        : [
+            command("lint-policy", "Heavy / Lint Policy (deprecated APIs)", "lint-policy:deprecated-apis", [
+              "bun",
+              "run",
+              "beep",
+              "lint",
+              "deprecated-apis",
+              "--full",
+            ]),
+          ]),
       lane("lint", "Lint (package Biome, GritQL laws)", "lint"),
       ...(A.isReadonlyArrayEmpty(changedFiles)
         ? []
@@ -213,6 +243,20 @@ export const planFinalCheckSteps: {
       ),
     ];
   }
+);
+
+// Resolve scope before planning, then force --full so the child cannot silently
+// downgrade. A missing/failed probe keeps both standalone root guards.
+const resolveFullLintPolicySweeps = Effect.fn("Yeet.resolveFullLintPolicySweeps")(
+  function* (repoRoot: string, base: string) {
+    const scope = yield* resolveLintPolicyScope(repoRoot, base);
+    return scope._tag === "full" ? yield* Effect.asSome(readLintPolicySweeps(repoRoot)) : O.none<LintPolicySweeps>();
+  },
+  Effect.catch((error) =>
+    Console.log(
+      `[yeet] final-check lint-policy: scope probe unavailable; retaining standalone root sweeps (${error.message})`
+    ).pipe(Effect.as(O.none<LintPolicySweeps>()))
+  )
 );
 
 const renderCommand = (step: QualityTaskStep): string =>
@@ -770,10 +814,14 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
     repoRoot,
     YeetChangedPathsQuery.make({ base: mergeBase, head: "HEAD", diffFilter: "d" })
   );
+  const fullPolicySweeps =
+    A.contains(gates, "lint-policy") && !A.some(skips, (skip) => skip.gate === "lint-policy")
+      ? yield* resolveFullLintPolicySweeps(repoRoot, mergeBase)
+      : O.none<LintPolicySweeps>();
   const run: FinalCheckRun = {
     repoRoot,
     mergeBase,
-    planned: planFinalCheckSteps(repoRoot, mergeBase, changedFiles),
+    planned: planFinalCheckSteps(repoRoot, mergeBase, changedFiles, O.getOrUndefined(fullPolicySweeps)),
     skips,
     resume: options.resume,
   };
