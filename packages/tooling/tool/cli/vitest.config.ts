@@ -114,6 +114,7 @@ const isolatedSuites = [
   "test/lint-workers.test.ts",
   "test/native-runtime.test.ts",
   "test/observability-catalog.test.ts",
+  "test/owner-checkpoint.test.ts",
   "test/package-verify.test.ts",
   "test/process-identity.test.ts",
   "test/proof-job.test.ts",
