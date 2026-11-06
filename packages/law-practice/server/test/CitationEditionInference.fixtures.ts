@@ -93,6 +93,18 @@ export const replayCitationEditionGuesses = Effect.fn("EditionInferenceTest.gues
   expect(invalidYear).toMatchObject({ reason: "invalid-input" });
   const invalidCandidates = yield* inference.guess({}).pipe(Effect.flip);
   expect(invalidCandidates).toMatchObject({ reason: "invalid-input" });
+  const invalidEnvelope = yield* inference.guess(null).pipe(Effect.flip);
+  expect(invalidEnvelope).toMatchObject({ reason: "invalid-input" });
+  const invalidGuessYear = yield* inference
+    .guess({ exact: [], variation: [], year: 2026.5, prior: null })
+    .pipe(Effect.flip);
+  expect(invalidGuessYear).toMatchObject({ reason: "invalid-input" });
+  const invalidPolicy = yield* makeCitationEditionInference({}).pipe(
+    Effect.provideService(CitationFrozenEditions, owner),
+    DateTime.withCurrentZoneOffset(0),
+    Effect.flip
+  );
+  expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
   const maybe = (index: number | null) => (index === null ? null : ref(index));
   for (const [exact, variation, year, prior, expected, calls, clockReads] of corpus.cases) {
     reads.length = 0;
@@ -118,6 +130,21 @@ export const replayCitationEditionGuesses = Effect.fn("EditionInferenceTest.gues
   yield* setYear(2027);
   const live = yield* inference.includesYear(ref(0), 2027);
   expect(live).toBe(true);
+  yield* setYear(10000);
+  const invalidClock = yield* inference.includesYear(ref(0), 2027).pipe(Effect.flip);
+  expect(invalidClock).toMatchObject({ reason: "invalid-clock" });
+  yield* setYear(2027);
+  const first = A.getUnsafe(corpus.synthetic, 0);
+  const malformedEdition = CitationRuntimeEdition.make({
+    ...first,
+    value: { ...first.value, start: "invalid-start-date" },
+  });
+  const corrupt = yield* makeCitationEditionInference(limits).pipe(
+    Effect.provideService(CitationFrozenEditions, controlOwner([malformedEdition], [])),
+    DateTime.withCurrentZoneOffset(0)
+  );
+  const invalidEdition = yield* corrupt.includesYear(first.edition, 2026).pipe(Effect.flip);
+  expect(invalidEdition).toMatchObject({ reason: "invalid-edition" });
   const bounded = yield* makeCitationEditionInference({ ...limits, candidates: 1 }).pipe(
     Effect.provideService(CitationFrozenEditions, owner),
     DateTime.withCurrentZoneOffset(0)

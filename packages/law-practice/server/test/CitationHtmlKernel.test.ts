@@ -21,6 +21,7 @@ import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { vi } from "vitest";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/internal/Citation/HtmlCompletion";
 import type { CitationHtmlKernelFailure } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
@@ -242,6 +243,61 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
           expect(failure).toMatchObject({ _tag: "CitationHtmlKernelFailure", reason: "invalid-asset" });
           expect("cause" in failure).toBe(false);
         }
+      }
+    })
+  );
+
+  it.effect("fails closed when the host cannot compile or instantiate the authenticated module", () =>
+    Effect.gen(function* () {
+      const bytes = yield* loadAsset();
+      const input = { encoding: "UTF-8", bytes: new TextEncoder().encode("<p>Example</p>"), fullHtml: false };
+      const cases = [
+        { runtime: {}, reason: "invalid-asset" },
+        {
+          runtime: {
+            Module: class {
+              constructor() {
+                throw new Error("synthetic compile failure");
+              }
+            },
+            Instance: class {},
+          },
+          reason: "invalid-asset",
+        },
+        {
+          runtime: {
+            Module: class {},
+            Instance: class {
+              constructor() {
+                throw new Error("synthetic instantiate failure");
+              }
+            },
+          },
+          reason: "kernel-failed",
+        },
+        { runtime: { Module: class {}, Instance: class {} }, reason: "kernel-failed" },
+        {
+          runtime: {
+            Module: class {},
+            Instance: class {
+              readonly exports = {};
+            },
+          },
+          reason: "kernel-failed",
+        },
+      ];
+      for (const row of cases) {
+        const failure = yield* Effect.acquireUseRelease(
+          Effect.sync(() => vi.stubGlobal("WebAssembly", row.runtime)),
+          () =>
+            makeCitationHtmlKernel(bytes).pipe(
+              Effect.flatMap((kernel) => kernel.run({ input, outputUtf16: 100 })),
+              Effect.flip
+            ),
+          () => Effect.sync(() => vi.unstubAllGlobals())
+        );
+        expect(failure).toMatchObject({ _tag: "CitationHtmlKernelFailure", reason: row.reason });
+        expect("cause" in failure).toBe(false);
       }
     })
   );
