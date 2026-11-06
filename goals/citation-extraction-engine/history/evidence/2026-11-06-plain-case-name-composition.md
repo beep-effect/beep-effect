@@ -78,6 +78,15 @@ After sharing the existing no-assignment patch, the focused eight-test composed/
 processing regression passes in 12.36 seconds and package checks pass again
 (0.4/3.2 seconds). No further runtime changes follow those receipts.
 
+The first publication attempt stopped at a transient fetch failure. A direct
+retry succeeded; main's unrelated #2746 repair and citation replay #2749 were
+then merged, through 4d79b1d1c4. The latter retains the exported source loader,
+uses controlled extraction time for semantic replay and adds an explicit common
+stage-deadline test. The post-merge composed/processing suite passes all nine
+tests in 12.85 seconds, and package checks pass (0.4/3.8 seconds). Source-bound
+hashes are refreshed for the integrated fixture. No production runtime changes
+are made by this follow-up synchronization.
+
 ## Remaining full goal
 
 This completes the built-in helper connection, not full extraction or the public

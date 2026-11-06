@@ -364,11 +364,11 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCaseNameProcess.fixtures.ts",
-          "sha256": "ec80f43b73ac9ff8db4bb10b85904ed5b8aa4d6aa5e3d068bd61ec4e79f1c4e3"
+          "sha256": "c884d9fb53abd8ac5f692e2feb5aecdc68039e0e9c869dbbe9baaac887e64bd3"
         },
         {
           "path": "packages/law-practice/server/test/CitationCaseNameProcess.test.ts",
-          "sha256": "5621f45b7d9a39645d2193dc9ac8554db5e4fe0ddf3a1d37eaa4fccb4e1d364f"
+          "sha256": "6e8f8e6a039f08be363e21c463eec2056688cfb09f1b5b81edb71ff0c3b2a0fd"
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationCaseNameProcess.test.ts",
@@ -680,7 +680,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-plain-case-name-composition.md",
-          "sha256": "9ffe328cdc53ff20941fa52193d2502796795e3afa47568cec593e798849c4d1"
+          "sha256": "5a1a37ea331c9b08f606c238571726bcf23786bd6eb97e18c2cf3b93fb98a32f"
         },
         {
           "path": "goals/citation-extraction-engine/ops/probe-plain-case-name.py",
@@ -786,11 +786,11 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCaseNameProcess.fixtures.ts",
-          "sha256": "ec80f43b73ac9ff8db4bb10b85904ed5b8aa4d6aa5e3d068bd61ec4e79f1c4e3"
+          "sha256": "c884d9fb53abd8ac5f692e2feb5aecdc68039e0e9c869dbbe9baaac887e64bd3"
         },
         {
           "path": "packages/law-practice/server/test/CitationCaseNameProcess.test.ts",
-          "sha256": "5621f45b7d9a39645d2193dc9ac8554db5e4fe0ddf3a1d37eaa4fccb4e1d364f"
+          "sha256": "6e8f8e6a039f08be363e21c463eec2056688cfb09f1b5b81edb71ff0c3b2a0fd"
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationCaseNameProcess.test.ts",
@@ -1853,11 +1853,11 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCaseNameProcess.fixtures.ts",
-          "sha256": "ec80f43b73ac9ff8db4bb10b85904ed5b8aa4d6aa5e3d068bd61ec4e79f1c4e3"
+          "sha256": "c884d9fb53abd8ac5f692e2feb5aecdc68039e0e9c869dbbe9baaac887e64bd3"
         },
         {
           "path": "packages/law-practice/server/test/CitationCaseNameProcess.test.ts",
-          "sha256": "5621f45b7d9a39645d2193dc9ac8554db5e4fe0ddf3a1d37eaa4fccb4e1d364f"
+          "sha256": "6e8f8e6a039f08be363e21c463eec2056688cfb09f1b5b81edb71ff0c3b2a0fd"
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationCaseNameProcess.test.ts",
