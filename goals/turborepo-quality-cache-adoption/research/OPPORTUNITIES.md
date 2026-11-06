@@ -1282,3 +1282,7 @@ A fresh accepted-source native census adds thirteen executable computations. Fif
 ## New tracked-source law repeats the discovery-key gap, 2026-11-06
 
 Source review of the added entity-kit freeze check finds Git index path and regular-mode selection outside its native content key. Four isolated metadata plans preserve the key across a changed tracked-source list. Prepare a fresh boundary while complete discovery identity and qualification remain unfinished. The test-only membership collector must not be presented as covering all source discovery. No law body was executed.
+
+## General source discovery needs index modes, 2026-11-06
+
+The entity-kit scanner uses regular index modes across source files; the prepared test-only path key cannot cover that boundary. Reuse the existing Git stage command and bounded scrubbed capture instead of importing the ambient-environment Git service into a fingerprint probe. Include all index metadata conservatively and retain cache:false until the actual scanner, native input chain and isolation are qualified. Source and authored controls are in Cache.fingerprint.ts and cache-runtime.test.ts; no local suite ran.

@@ -109,5 +109,32 @@
     "task": "//#lint:entity-kit-freeze",
     "cache": false
   },
-  "remaining": "Bind and qualify the complete law discovery state before restoring reuse. The test-only membership collector cannot stand in for regular source-file discovery. The hold is unfinished adoption, not final exclusion."
+  "remaining": "Bind and qualify the complete law discovery state before restoring reuse. The test-only membership collector cannot stand in for regular source-file discovery. The hold is unfinished adoption, not final exclusion.",
+  "preparedSourceBindings": {
+    "turbo.json": "ac2286808e66d71d4af7045b469e1aa03a83a792dd74d38d0160c17d3144bc6a",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "61ef182fc929f3a1b97a66bcb83c2110efeea98721f18b73b992d091ce70ee51",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts": "5c63da2d613525645b62edd679cd23ad10dc37b794c28bd5547d340154ebb531",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "84dce03fbd76a2b130d7aad47f5960437323eec3dd791c55d9ff62304049a500",
+    "packages/tooling/tool/cli/test/cache-runtime.test.ts": "31e6a8069484d83cef1dac99261a97ae4bf6eb26ec8510945d1af6501263d4fa"
+  },
+  "preparedBinding": {
+    "schemaField": "CacheToolchainSnapshot.trackedSourceIndex",
+    "collection": "Canonical GitCommand.lsFiles stage argv through shared scrubbed bounded capture; complete NUL-framed listing digest retains paths, modes, staged object ids and merge stages.",
+    "maxCapturedCharacters": 16777216,
+    "timeoutSeconds": 10,
+    "nativeInput": "BEEP_CACHE_TOOLCHAIN_DIGEST",
+    "qualificationGranted": false,
+    "taskBodiesExecuted": false,
+    "testsAuthoredNotRun": [
+      "index-only source add/remove",
+      "spaces and newlines in source paths",
+      "matching clone and independent worktree inventories",
+      "index executable mode change and restoration",
+      "working-tree content change preserves index digest; staged change invalidates",
+      "index digest changes alter toolchain identity",
+      "failed/truncated/unterminated capture refuses without path-bearing causes",
+      "ten-second scrubbed stage capture and timeout redaction"
+    ],
+    "remaining": "Full native dependency-chain, actual scanner semantics, byte-path safety, portable runtime, isolation/concurrency and hosted qualification remain required before cache promotion."
+  }
 }

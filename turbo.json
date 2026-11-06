@@ -5817,6 +5817,7 @@
     },
     "//#lint:entity-kit-freeze": {
       "cache": false,
+      "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
       "outputs": [],
       "dependsOn": ["@beep/repo-cli#lint:policy-fingerprint:laws"],
       "inputs": [

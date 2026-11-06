@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
@@ -230,6 +231,34 @@ export const collectCacheGitExclusions = Effect.fn("CacheFingerprint.gitExclusio
   return CacheCensusSource.make({ path: ".git/info/exclude", sha256: yield* hashBytes(contents) });
 }, CacheCommandError.mapError("Cannot fingerprint Git local exclusions."));
 
+const captureCacheTrackedDiscovery = Effect.fn("CacheFingerprint.captureTrackedDiscovery")(function* (
+  root: string,
+  args: ReadonlyArray<string>,
+  maxChars: number,
+  subject: string
+) {
+  const searchPath = yield* configStringOption("PATH").pipe(
+    Effect.flatMap(Effect.fromOption(() => CacheCommandError.new(`${subject} requires PATH.`)))
+  );
+  const result = yield* runCaptured({
+    command: "git",
+    args,
+    cwd: root,
+    source: "stdout",
+    bound: OutputBound.make({ maxChars, truncatedNotice: "[tracked discovery exceeds limit]" }),
+    timeout: Duration.seconds(10),
+    extendEnv: false,
+    env: { PATH: searchPath, LANG: "C", LC_ALL: "C", GIT_CONFIG_NOSYSTEM: "1", GIT_OPTIONAL_LOCKS: "0" },
+  }).pipe(Effect.mapError(() => CacheCommandError.new(`${subject} is unavailable.`)));
+  if (
+    result.exitCode !== 0 ||
+    result.truncated ||
+    (Str.isNonEmpty(result.output) && !Str.endsWith("\0")(result.output))
+  )
+    return yield* CacheCommandError.new(`${subject} failed or exceeded its capture bound.`);
+  return yield* hashBytes(new TextEncoder().encode(result.output));
+});
+
 /**
  * Bind tracked test discovery without hashing clone paths or Git index bytes.
  *
@@ -257,27 +286,49 @@ export const collectCacheGitExclusions = Effect.fn("CacheFingerprint.gitExclusio
 export const collectCacheTrackedTestMembership = Effect.fn("CacheFingerprint.trackedTestMembership")(function* (
   root: string
 ) {
-  const searchPath = yield* configStringOption("PATH").pipe(
-    Effect.flatMap(Effect.fromOption(() => CacheCommandError.new("Tracked test discovery requires PATH.")))
+  return yield* captureCacheTrackedDiscovery(
+    root,
+    ["ls-files", "--cached", "--deduplicate", "-z", "--", "*.test.ts", "*.test.tsx"],
+    1048576,
+    "Tracked test discovery"
   );
-  const result = yield* runCaptured({
-    command: "git",
-    args: ["ls-files", "--cached", "--deduplicate", "-z", "--", "*.test.ts", "*.test.tsx"],
-    cwd: root,
-    source: "stdout",
-    bound: OutputBound.make({ maxChars: 1048576, truncatedNotice: "[tracked test discovery exceeds limit]" }),
-    timeout: Duration.seconds(10),
-    extendEnv: false,
-    env: { PATH: searchPath, LANG: "C", LC_ALL: "C", GIT_CONFIG_NOSYSTEM: "1", GIT_OPTIONAL_LOCKS: "0" },
-  }).pipe(Effect.mapError(() => CacheCommandError.new("Tracked test discovery is unavailable.")));
-  if (
-    result.exitCode !== 0 ||
-    result.truncated ||
-    (Str.isNonEmpty(result.output) && !Str.endsWith("\0")(result.output))
-  )
-    return yield* CacheCommandError.new("Tracked test discovery failed or exceeded its capture bound.");
-  return yield* hashBytes(new TextEncoder().encode(result.output));
 }, CacheCommandError.mapError("Cannot fingerprint tracked test membership."));
+
+/**
+ * Bind the complete staged source inventory through the existing Git command.
+ *
+ * **Details**
+ * Includes paths, modes, object identities and merge stages from the scrubbed
+ * ten-second, sixteen-million-character NUL-delimited listing. The conservative
+ * whole-index identity covers regular source discovery without copying the
+ * law's filters. Working-tree contents,
+ * scanner code and baselines still require native inputs. No clone path or raw
+ * index bytes enter the digest. Collection does not freeze subsequent edits.
+ *
+ * **Example** (Observe staged source discovery)
+ *
+ * ```ts
+ * import { collectCacheTrackedSourceIndex } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.assert(Effect.isEffect(collectCacheTrackedSourceIndex("/repo")))
+ * ```
+ *
+ * @param root - Repository root whose index supplies scanner candidates.
+ * @returns A digest of the complete NUL-framed staged inventory.
+ * @category queries
+ * @since 0.0.0
+ */
+export const collectCacheTrackedSourceIndex = Effect.fn("CacheFingerprint.trackedSourceIndex")(function* (
+  root: string
+) {
+  return yield* captureCacheTrackedDiscovery(
+    root,
+    GitCommand.lsFiles().redactedArgs,
+    16777216,
+    "Tracked source discovery"
+  );
+}, CacheCommandError.mapError("Cannot fingerprint tracked source inventory."));
 
 /**
  * Observe an explicitly supported runtime matching the repository's bounded Bun pin.
@@ -356,6 +407,7 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
       inspectCacheDependencyTree(root, (yield* collectCacheCensus(root)).workspaces)
     ),
     trackedTestMembership: yield* Effect.asSome(collectCacheTrackedTestMembership(root)),
+    trackedSourceIndex: yield* Effect.asSome(collectCacheTrackedSourceIndex(root)),
     sources: [
       CacheCensusSource.make({ path: ".bun-version", sha256: yield* hashBytes(declaration) }),
       yield* collectCacheGitExclusions(root),

@@ -93,7 +93,7 @@
   "candidateChange": {
     "task": "//#lint:opaque-roundtrips",
     "cache": false,
-    "candidateTurboSha256": "c8fb0cb0c9b78b70b38cf773c9ef305d9ea9b6ad483b8c37e45905965d7ba72a"
+    "candidateTurboSha256": "ac2286808e66d71d4af7045b469e1aa03a83a792dd74d38d0160c17d3144bc6a"
   },
   "remaining": "Implement and qualify a portable tracked-file discovery binding or equivalent reviewed scanner semantics before restoring reuse. This temporary fresh boundary remains unfinished adoption work.",
   "completeRepositoryTaskExecuted": false,
@@ -123,12 +123,12 @@
       "timeout diagnostic path redaction"
     ]
   },
-  "preparedSourceCommit": "8fc5d0f62bb5b5c9da1fdcdccb15117183f971d1",
   "preparedSourceBindings": {
-    "turbo.json": "c8fb0cb0c9b78b70b38cf773c9ef305d9ea9b6ad483b8c37e45905965d7ba72a",
-    "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "76cc2c9677b74b58b2b71b049a20606f2640f0fe7dbe8b016254ae244a605e39",
-    "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts": "c5ff2a3e5add483fe2279f02df0895ec26c1ea61adf8425ac43ede068263f437",
-    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "4725146f9243e01a7ba8f461544e8988909bbd8eac3681513a96e923593fd874",
-    "packages/tooling/tool/cli/test/cache-runtime.test.ts": "8352b0b11e730c720e2b806ab8ddda5a44e939c30fb4df02bc1a61962355e9ac"
-  }
+    "turbo.json": "ac2286808e66d71d4af7045b469e1aa03a83a792dd74d38d0160c17d3144bc6a",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "61ef182fc929f3a1b97a66bcb83c2110efeea98721f18b73b992d091ce70ee51",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts": "5c63da2d613525645b62edd679cd23ad10dc37b794c28bd5547d340154ebb531",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "84dce03fbd76a2b130d7aad47f5960437323eec3dd791c55d9ff62304049a500",
+    "packages/tooling/tool/cli/test/cache-runtime.test.ts": "31e6a8069484d83cef1dac99261a97ae4bf6eb26ec8510945d1af6501263d4fa"
+  },
+  "preparedSourceParent": "357fae517bab9f9dc2cda657441c2fb7926b38f4"
 }

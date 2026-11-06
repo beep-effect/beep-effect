@@ -1094,6 +1094,12 @@ links together to reverse this component; runtime configuration is unchanged.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-quality-cache-adoption`; add a `kind: decision` file there, never edit this block._
 
+### Bind complete tracked source inventory before discovery qualification, 2026-11-06
+
+Extend the existing bounded tracked-discovery capture with the canonical Git ls-files stage command. Include the complete NUL-framed path, mode, object and merge-stage listing under the existing runtime digest, with a ten-second and 16777216-character cap. Keep scrubbed execution and sanitized failures. This is deliberately conservative: staged object changes also invalidate the shared runtime key. Working-tree contents, law scope, baseline and implementation still require native inputs; a snapshot does not freeze concurrent index edits. Historical schemas default the new optional digest to None, while current collection observes Some. Author cross-root, mode, content and failure controls for hosted CI. No local suites ran, no qualification is granted and both affected tasks remain cache false.
+
+Reverse: Remove the optional source-index digest and native env declaration while keeping affected tasks fresh and preserving failure evidence.
+
 ### Bind tracked test paths through the existing runtime identity, 2026-11-06
 
 Prepare an optional tracked-test membership digest in the existing observed toolchain snapshot. Use bounded scrubbed Git discovery of the scanner pathspecs, NUL framing and digest-only retention. Reject incomplete captures and sanitize operational errors without their path-bearing tails. Declare the existing calculated runtime digest for this root command; keep caching off until full qualification. Shared identity conservatively invalidates other governed computations on tracking changes. Authored hosted controls are unrun locally; no activation or promotion is granted. Existing snapshot absence remains historical, not qualification for this newly reviewed input.

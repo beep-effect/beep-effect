@@ -18,6 +18,7 @@ import * as Census from "@beep/repo-cli/commands/Cache/Cache.census";
 import * as Fingerprint from "@beep/repo-cli/commands/Cache/Cache.fingerprint";
 import {
   collectCacheGitExclusions,
+  collectCacheTrackedSourceIndex,
   collectCacheTrackedTestMembership,
   CacheRuntimeFileGuards as FsGuards,
   CacheRuntimeProfile as Profile,
@@ -304,6 +305,38 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         yield* git(["-C", worktree, "add", "--", candidateName]);
         const linkedTrackedMembership = yield* collectCacheTrackedTestMembership(worktree);
         expect(linkedTrackedMembership).toBe(trackedMembership);
+        const sourceName = "source with space\nand newline.ts";
+        yield* fs.writeFileString(path.join(clone, sourceName), "export const source = true;\n");
+        const untrackedSource = yield* collectCacheTrackedSourceIndex(clone);
+        yield* git(["add", "--", sourceName]);
+        const trackedSource = yield* collectCacheTrackedSourceIndex(clone);
+        expect(trackedSource).not.toBe(untrackedSource);
+        yield* fs.writeFileString(path.join(worktree, sourceName), "export const source = true;\n");
+        yield* git(["-C", worktree, "add", "--", sourceName]);
+        const linkedSource = yield* collectCacheTrackedSourceIndex(worktree);
+        expect(linkedSource).toBe(trackedSource);
+        yield* git(["update-index", "--chmod=+x", "--", sourceName]);
+        const executableSource = yield* collectCacheTrackedSourceIndex(clone);
+        expect(executableSource).not.toBe(trackedSource);
+        const sourceKey = yield* hashCacheToolchain(
+          CacheToolchainSnapshot.make({ ...runtimeSnapshot, trackedSourceIndex: O.some(trackedSource) })
+        );
+        const modeKey = yield* hashCacheToolchain(
+          CacheToolchainSnapshot.make({ ...runtimeSnapshot, trackedSourceIndex: O.some(executableSource) })
+        );
+        expect(modeKey).not.toBe(sourceKey);
+        yield* git(["update-index", "--chmod=-x", "--", sourceName]);
+        const restoredSource = yield* collectCacheTrackedSourceIndex(clone);
+        expect(restoredSource).toBe(trackedSource);
+        yield* fs.writeFileString(path.join(clone, sourceName), "export const source = false;\n");
+        const workingSource = yield* collectCacheTrackedSourceIndex(clone);
+        expect(workingSource).toBe(trackedSource);
+        yield* git(["add", "--", sourceName]);
+        const stagedSource = yield* collectCacheTrackedSourceIndex(clone);
+        expect(stagedSource).not.toBe(trackedSource);
+        yield* git(["rm", "--cached", "--", sourceName]);
+        const removedSource = yield* collectCacheTrackedSourceIndex(clone);
+        expect(removedSource).toBe(untrackedSource);
         const trackedKey = yield* hashCacheToolchain(
           CacheToolchainSnapshot.make({ ...runtimeSnapshot, trackedTestMembership: O.some(trackedMembership) })
         );
@@ -427,6 +460,51 @@ it.layer(runtimeLayer, { timeout: "10 seconds" })("runtime native spawn", (it) =
       assertInstanceOf(failure, CacheCommandError);
       expect(failure.message).toBe("Tracked test discovery is unavailable.");
       expect(failure.cause).toBeUndefined();
+    })
+  );
+
+  it.effect("refuses incomplete source-index captures without retaining their paths", () =>
+    Effect.gen(function* () {
+      for (const captured of [
+        StepExec.CapturedStep.make({ exitCode: 1, output: "private source failure", truncated: false }),
+        StepExec.CapturedStep.make({ exitCode: 0, output: "100644 abc 0\tprivate.ts\0", truncated: true }),
+        StepExec.CapturedStep.make({ exitCode: 0, output: "100644 abc 0\tprivate.ts", truncated: false }),
+      ]) {
+        vi.spyOn(StepExec, "runCaptured").mockImplementation(() => Effect.succeed(captured));
+        const failure = yield* collectCacheTrackedSourceIndex("/fixture").pipe(Effect.flip);
+        assertInstanceOf(failure, CacheCommandError);
+        expect(failure.message).toBe("Tracked source discovery failed or exceeded its capture bound.");
+        expect(failure.cause).toBeUndefined();
+      }
+    })
+  );
+
+  it.effect("scrubs source-index capture and drops timeout diagnostics", () =>
+    Effect.gen(function* () {
+      const capture = vi.spyOn(StepExec, "runCaptured").mockImplementation(() =>
+        Effect.fail(
+          StepExec.CaptureCommandTimedOutError.make({
+            commandLine: "git ls-files --stage -z",
+            message: "timed out after private-source-path.ts",
+          })
+        )
+      );
+      const failure = yield* collectCacheTrackedSourceIndex("/fixture").pipe(Effect.flip);
+      assertInstanceOf(failure, CacheCommandError);
+      expect(failure.message).toBe("Tracked source discovery is unavailable.");
+      expect(failure.cause).toBeUndefined();
+      expect(capture).toHaveBeenCalledWith(
+        expect.objectContaining({
+          args: ["ls-files", "--stage", "-z"],
+          extendEnv: false,
+          source: "stdout",
+          timeout: Duration.seconds(10),
+          bound: StepExec.OutputBound.make({
+            maxChars: 16777216,
+            truncatedNotice: "[tracked discovery exceeds limit]",
+          }),
+        })
+      );
     })
   );
 
