@@ -1245,6 +1245,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Remove the private source-extraction composition and its connected controls; preserve the existing resolver and verified extraction stages.
 
+### Execute original unchecked annotation assembly, 2026-11-06
+
+The existing native Unicode range/concatenation and captured text-budget primitives now assemble source-defined annotation spans with Python slicing, overlap trimming and exact output/growth admission. Two tests replay 214 original outputs and exercise exact/refused budgets. Fresh pinned Python replay is byte-identical. This is the prepared ordered primitive branch, not target sorting, HTML balancing, callback semantics or the full annotation service. No accounting row is promoted. See history/evidence/2026-11-06-annotation-assembly.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the annotation assembly module, source corpus and this checkpoint together; preserve the original annotation capability obligations.
+
 ### Authenticated source through verified extraction, 2026-11-06
 
 A genuine parent source capability now drives the actual primitive extraction request. Unchanged text retains its existing proof. Changed tokenizer text receives a verified manifestation with preserved artifact/locator/normalization identity and a versioned parent/engine/cleaning-mode/output commitment. Source derivation and occurrence projection share one admitted operation, deadline and cumulative budget with extraction. Plain, Unicode and raw HTML replay pass on both runtimes; output evidence is produced by production code. Determinism, mode/engine changes, malformed-text refusal and shortcut bypass controls pass. Public service/Layer, authenticated runtime asset loading, final document adaptation and full accounting/safety qualification remain open. See history/evidence/2026-11-06-verified-extraction.md.

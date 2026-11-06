@@ -26,6 +26,11 @@ Upstream repositories:
   - Affected material: extraction-pipeline behavior, ported/reimplemented
     expressions and regular expressions, and attribution-safe parity fixtures.
 
+The private citation `AnnotationAssembly.ts` adapts unchecked default annotation
+assembly from pinned eyecite `annotate.py`, preserving Python slicing and overlap
+behavior with native Unicode ranges. Source-generated primitive fixtures retain
+that attribution; broader annotation integration remains unfinished.
+
 The private citation `ExtractorSelection.ts` adapts required-string selection
 from the pinned eyecite `tokenizers.py`, using Effect Trie and HashSet.
 `ExtractorOrdering.ts` connects source match introductions to the existing

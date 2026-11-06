@@ -305,7 +305,12 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-reports.md",
         "goals/citation-extraction-engine/history/evidence/2026-11-06-cleaner-port.md",
         "goals/citation-extraction-engine/history/evidence/2026-11-06-tokenizer-port.md",
-        "goals/citation-extraction-engine/history/evidence/2026-11-06-cleaner-unchanged-reservation.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-cleaner-unchanged-reservation.md",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-assembly.md",
+        "packages/law-practice/server/src/internal/Citation/AnnotationAssembly.ts",
+        "packages/law-practice/server/test/CitationAnnotationAssembly.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-assembly.json",
+        "goals/citation-extraction-engine/ops/probe-annotation-assembly.py"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

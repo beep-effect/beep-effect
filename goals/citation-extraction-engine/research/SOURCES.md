@@ -211,6 +211,12 @@ approval remain absent. A separately cached matching-version WASI build is
 research only and has no HTML parity or runtime acceptance. Existing eyecite
 attribution covers the source-derived observations; no native asset is added.
 
+The [unchecked annotation assembly evidence](
+../history/evidence/2026-11-06-annotation-assembly.md) binds 214 original outputs
+and 719 annotation tuples to the pinned annotate.py and producer. The target
+reuses native range concatenation and captured allocation authority. Target
+sorting, HTML/callback modes and final annotation service remain open.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

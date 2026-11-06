@@ -176,7 +176,10 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-06-tokenizer-port.md",
     "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.runtime.ts",
     "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.tokenizer.ts",
-    "goals/citation-extraction-engine/history/evidence/2026-11-06-cleaner-unchanged-reservation.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-cleaner-unchanged-reservation.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-assembly.md",
+    "packages/law-practice/server/src/internal/Citation/AnnotationAssembly.ts",
+    "goals/citation-extraction-engine/ops/probe-annotation-assembly.py"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
