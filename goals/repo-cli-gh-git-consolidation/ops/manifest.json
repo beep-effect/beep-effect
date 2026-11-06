@@ -242,6 +242,50 @@
     {
       "path": "ops/frozen-w6/Merge.old.ts",
       "purpose": "Frozen pre-W6 merge phase of mergePr (the gh pr merge --squash --match-head-commit call and its bounded MERGED confirmation, lane base 641180ade6), lifted below the reviewer gate and replayed by ops/yeet-gh-seams-differential-w6.ts."
+    },
+    {
+      "path": "ops/yeet-differential-w7.ts",
+      "purpose": "W7a differential: the frozen Yeet git bodies (ops/frozen-w7a: PublishScope stash, base-freshness, upstream, existing-commit and restage; Handler merge-only guard; ExpectationRewrite collector; HeadInstallReceipt inputs; MergedPreview; ProofState lock path and diff fingerprint; GateStaleness inputs; PullRequest body and PullRequestTitle) compared with their @beep/git kit replacements over scratch repositories, written to research/yeet-differential-w7.json."
+    },
+    {
+      "path": "ops/frozen-w7a/GitRunners.old.ts",
+      "purpose": "Frozen pre-W7 Yeet runGitOutput/runGitPathList runners inlined over the surviving StepExec captures (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/PublishScope.old.ts",
+      "purpose": "Frozen pre-W7 PublishScope bodies, the stash, base-freshness, upstream, existing-commit and restage reads (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/Handler.old.ts",
+      "purpose": "Frozen pre-W7 Handler merge-only publish guard (assertMergeOnlyPublish) (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/ExpectationRewrite.old.ts",
+      "purpose": "Frozen pre-W7 ExpectationRewrite collector and its per-file diff (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/HeadInstallReceipt.old.ts",
+      "purpose": "Frozen pre-W7 HeadInstallReceipt install-input reader (collectHeadInstallInputs) (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/MergedPreview.old.ts",
+      "purpose": "Frozen pre-W7 MergedPreview materializer (createYeetMergePreview) and its captures (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/ProofState.old.ts",
+      "purpose": "Frozen pre-W7 ProofState lock path and diff fingerprint (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/GateStaleness.old.ts",
+      "purpose": "Frozen pre-W7 GateStaleness gate-input path collector (collectYeetGateInputPaths) (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/PullRequest.old.ts",
+      "purpose": "Frozen pre-W7 PullRequest body builder (buildPrBody) and its commit range (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/PullRequestTitle.old.ts",
+      "purpose": "Frozen pre-W7 PullRequestTitle resolver (resolvePullRequestTitle) (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
     }
   ]
 }
