@@ -62,6 +62,11 @@ export class CitationCaseNameResult extends S.Opaque<CitationCaseNameResult, { r
 ) {}
 const invalid = () => CitationCaseNameScanFailure.make({ reason: "invalid-configuration" });
 const noneText = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array([78, 111, 110, 101]) });
+/** Project the built-in None token spelling without changing native text values.
+ * @internal @category utilities @since 0.0.0
+ */
+export const citationCaseNameWordText = (data: CitationPythonUnicodeStorage | null) =>
+  data === null ? noneText : data;
 /** Run the built-in name helper inside an existing captured operation.
  * @internal @category operations @since 0.0.0
  */
@@ -90,7 +95,7 @@ export const findCitationPlainCaseName = Effect.fn("Citation.findPlainCaseName")
     hasV = word.data.bytes.length !== 0;
   }
   const patch = yield* processCitationCaseName(limits, runtime, config.process, {
-    words: A.map(request.words, (word) => (word.data === null ? noneText : word.data)),
+    words: A.map(request.words, (word) => citationCaseNameWordText(word.data)),
     index: request.index,
     spanStart: request.spanStart,
     short: request.short,

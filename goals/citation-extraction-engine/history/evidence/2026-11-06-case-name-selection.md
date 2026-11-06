@@ -87,3 +87,21 @@ waiver or acceptance requirement changes.
 
 Linked continuation of PRs #2511, #2713, #2725 and #2737 under the approved
 linked-follow-up publication exception.
+
+## Hosted Fallow repair
+
+Hosted Fallow job 127867777705 on 9dad2863d3 reports excessive cognitive
+complexity in replayCitationCaseNameSelection and duplicated setup/constants.
+Artifact 13498409625 supplies the exact source ranges. The replay loop now
+separates one original caller observation from corpus traversal. Existing
+processing fixtures own the common native snapshot and six-field patch assertion;
+the composed and selected name tests reuse them. Connected HTML geometry setup
+is shared by the geometry, HTML-name and selection fixtures. Plain and HTML name
+selection share the existing built-in None word projection.
+
+The four-file regression passes all fifteen tests in 30.26 seconds. Package lint
+and type checks pass again (0.4/3.6 seconds). An isolated copy of the citation
+sources/fixtures reports no remaining selection clone and reduces the per-row
+cognitive score to five. Its estimated CRAP warning has no repository coverage
+graph and is not a hosted gate result. No suppression, threshold or baseline is
+changed. Exact-head hosted Fallow remains required after publication.

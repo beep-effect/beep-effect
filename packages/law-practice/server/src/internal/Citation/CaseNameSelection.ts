@@ -13,6 +13,7 @@ import * as S from "effect/Schema";
 import {
   CitationCaseNameConfiguration,
   CitationCaseNameInput,
+  citationCaseNameWordText,
   copyCitationCaseNameConfiguration,
   findCitationPlainCaseName,
 } from "./CaseName.ts";
@@ -83,7 +84,6 @@ export class CitationCaseNameSelectionResult extends S.Opaque<
   )
 ) {}
 const invalid = () => CitationCaseNameScanFailure.make({ reason: "invalid-configuration" });
-const noneText = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array([78, 111, 110, 101]) });
 const merge = (before: CitationCaseNameProcessPatch, after: CitationCaseNameProcessPatch) =>
   CitationCaseNameProcessPatch.make({
     plaintiff: O.orElse(after.plaintiff, () => before.plaintiff),
@@ -108,7 +108,7 @@ const run = Effect.fn("Citation.selectCaseNameHelpers")(function* (
     const html = yield* extractCitationHtmlCaseName(limits, runtime, config.html, {
       words: A.map(request.words, (word) => ({
         kind: word.kind,
-        data: word.data === null ? noneText : word.data,
+        data: citationCaseNameWordText(word.data),
         start: word.start,
         stopWord: O.getOrElse(R.get(word.groups, "stop_word"), () => null),
       })),

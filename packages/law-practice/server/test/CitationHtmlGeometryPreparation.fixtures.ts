@@ -17,21 +17,29 @@ import {
 import { readCitationSpanOffsetsCorpus } from "./CitationSpanOffsets.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
+/** Install connected geometry using the existing runtime, timing and physical owners. */
+export const installCitationHtmlGeometryFixture = Effect.fn("HtmlGeometryPreparationTest.installConnected")(function* (
+  kind: CitationNativeRuntimeKind,
+  setup: Effect.Success<ReturnType<typeof setupCitationMetadataRuntime>>,
+  diffSteps?: number
+) {
+  const discovery = yield* readCitationHtmlDiscoveryCorpus();
+  const fs = yield* FileSystem.FileSystem;
+  const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-connected-geometry-diff-" });
+  const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
+  const limits = { ...setup.limits, diffSteps: diffSteps ?? setup.limits.diffSteps };
+  return yield* makeCitationHtmlGeometryPreparation(limits, setup.runtime, {
+    discovery: discovery.configuration,
+    diffRuntime,
+  }).pipe(Effect.provideContext(setup.provided));
+});
 const install = Effect.fn("HtmlGeometryPreparationTest.install")(function* (
   kind: CitationNativeRuntimeKind,
   diffSteps?: number
 ) {
   const original = yield* readCitationSpanOffsetsCorpus();
-  const discovery = yield* readCitationHtmlDiscoveryCorpus();
   const setup = yield* setupCitationMetadataRuntime(kind);
-  const fs = yield* FileSystem.FileSystem;
-  const diffDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-html-diff-" });
-  const diffRuntime = yield* makeCitationDiffTestRuntime(kind, diffDirectory);
-  const limits = { ...setup.limits, diffSteps: diffSteps ?? setup.limits.diffSteps };
-  const stage = yield* makeCitationHtmlGeometryPreparation(limits, setup.runtime, {
-    discovery: discovery.configuration,
-    diffRuntime,
-  }).pipe(Effect.provideContext(setup.provided));
+  const stage = yield* installCitationHtmlGeometryFixture(kind, setup, diffSteps);
   return { original, setup, stage };
 });
 /** Replay both original edit sequences and every downstream source query. */

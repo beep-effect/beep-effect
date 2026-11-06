@@ -6,17 +6,14 @@ import {
   CitationHtmlCaseNameConfiguration,
   makeCitationHtmlCaseName,
 } from "@beep/law-practice-server/internal/Citation/HtmlCaseName";
-import { makeCitationHtmlGeometryPreparation } from "@beep/law-practice-server/internal/Citation/HtmlGeometryPreparation";
 import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
-import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
-import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixtures.ts";
+import { installCitationHtmlGeometryFixture } from "./CitationHtmlGeometryPreparation.fixtures.ts";
 import {
   assertCitationWorkerClosedLifetime,
   assertCitationWorkerCompositionReleased,
@@ -115,15 +112,8 @@ const requestOf = (row: Row, geometry: CitationHtmlTagGeometryInput) => ({
 });
 const install = Effect.fn("HtmlCaseNameTest.install")(function* (kind: CitationNativeRuntimeKind) {
   const original = yield* readCitationHtmlCaseNameCorpus();
-  const discovery = yield* readCitationHtmlDiscoveryCorpus();
   const setup = yield* setupCitationMetadataRuntime(kind);
-  const fs = yield* FileSystem.FileSystem;
-  const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-html-name-diff-" });
-  const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
-  const prepare = yield* makeCitationHtmlGeometryPreparation(setup.limits, setup.runtime, {
-    discovery: discovery.configuration,
-    diffRuntime,
-  }).pipe(Effect.provideContext(setup.provided));
+  const prepare = yield* installCitationHtmlGeometryFixture(kind, setup);
   const stage = yield* makeCitationHtmlCaseName(setup.limits, setup.runtime, original.configuration).pipe(
     Effect.provideContext(setup.provided)
   );

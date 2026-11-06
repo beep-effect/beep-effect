@@ -34,16 +34,40 @@ import {
   setupCitationMetadataRuntime,
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
+import type { CitationCaseNameProcessPatch } from "@beep/law-practice-server/internal/Citation/CaseNameProcess";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationCaseNameProcess");
 const Native = CitationNativeUnicodeHex;
 const Value = S.NullOr(Native);
-const Snapshot = S.Struct({
+/** Complete native name-phase model snapshot shared by composed replays. */
+export const CitationCaseNameSnapshot = S.Struct({
   metadata: S.Record(S.String, S.Union([S.Null, Native, S.Int])),
   year: S.NullOr(S.Int),
   fullSpanStart: S.NullOr(S.Int),
   span: S.Tuple([S.Int, S.Int]),
+});
+export type CitationCaseNameSnapshot = typeof CitationCaseNameSnapshot.Type;
+/** Compare every name patch field against the original enclosing model snapshot. */
+export const assertCitationCaseNamePatch = Effect.fn("CaseNameTest.assertPatch")(function* (
+  result: { readonly patch: CitationCaseNameProcessPatch },
+  row: { readonly id: number; readonly before: CitationCaseNameSnapshot; readonly after: CitationCaseNameSnapshot },
+  kind: CitationNativeRuntimeKind
+) {
+  let metadata = row.before.metadata;
+  for (const [key, value] of [
+    Tuple.make("plaintiff", result.patch.plaintiff),
+    Tuple.make("defendant", result.patch.defendant),
+    Tuple.make("antecedent_guess", result.patch.antecedentGuess),
+    Tuple.make("year", result.patch.year),
+  ])
+    if (O.isSome(value)) metadata = R.set(metadata, key, value.value);
+  expect(metadata, `${kind}:${row.id}:metadata`).toEqual(row.after.metadata);
+  const priorYear = row.before.year === null ? null : BigInt(row.before.year);
+  expect(O.getOrElse(result.patch.numericYear, () => priorYear)).toEqual(
+    row.after.year === null ? null : BigInt(row.after.year)
+  );
+  expect(O.getOrElse(result.patch.fullSpanStart, () => row.before.fullSpanStart)).toEqual(row.after.fullSpanStart);
 });
 const Corpus = S.fromJsonString(
   S.Struct({
@@ -56,8 +80,8 @@ const Corpus = S.fromJsonString(
         index: S.Int,
         words: S.Array(Native),
         state: S.Struct({ candidateCaseName: Value, hasV: S.Boolean, startIndex: S.NullOr(S.Int), preCiteYear: Value }),
-        before: Snapshot,
-        after: Snapshot,
+        before: CitationCaseNameSnapshot,
+        after: CitationCaseNameSnapshot,
         error: S.NullOr(S.Literals(["TypeError", "ValueError"])),
         calls: S.Array(S.Unknown),
       })
@@ -144,19 +168,7 @@ const assertRow = Effect.fn("CaseNameProcessTest.row")(function* (
       reason: row.error === "TypeError" ? "missing-candidate" : "invalid-year",
     });
   const result = yield* stage.apply(request(row));
-  let metadata = row.before.metadata;
-  for (const [key, value] of [
-    Tuple.make("plaintiff", result.patch.plaintiff),
-    Tuple.make("defendant", result.patch.defendant),
-    Tuple.make("antecedent_guess", result.patch.antecedentGuess),
-    Tuple.make("year", result.patch.year),
-  ])
-    if (O.isSome(value)) metadata = R.set(metadata, key, value.value);
-  expect(metadata, `metadata:${row.id}`).toEqual(row.after.metadata);
-  expect(O.getOrElse(result.patch.fullSpanStart, () => row.before.fullSpanStart)).toBe(row.after.fullSpanStart);
-  const beforeYear = row.before.year === null ? null : BigInt(row.before.year);
-  const afterYear = row.after.year === null ? null : BigInt(row.after.year);
-  expect(O.getOrElse(result.patch.numericYear, () => beforeYear)).toBe(afterYear);
+  yield* assertCitationCaseNamePatch(result, row, "bun");
 });
 /** Compare source attribute presence and conditional writes, preserving empty Some values. */
 export const replayCitationCaseNameProcess = Effect.fn("CaseNameProcessTest.replay")(function* (

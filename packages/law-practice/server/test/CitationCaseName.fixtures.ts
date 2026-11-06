@@ -6,28 +6,21 @@ import { makeCitationCaseName } from "@beep/law-practice-server/internal/Citatio
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Tuple from "effect/Tuple";
-import { readCitationCaseNameProcessCorpus } from "./CitationCaseNameProcess.fixtures.ts";
+import {
+  assertCitationCaseNamePatch,
+  CitationCaseNameSnapshot,
+  readCitationCaseNameProcessCorpus,
+} from "./CitationCaseNameProcess.fixtures.ts";
 import { citationCaseNameScanErrorReason, readCitationCaseNameScanCorpus } from "./CitationCaseNameScan.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
   makeCitationMetadataFixture,
   readCitationOracleFixture,
 } from "./CitationRegexWorker.fixtures.ts";
-import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
-import type { CitationCaseNameResult } from "@beep/law-practice-server/internal/Citation/CaseName";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationCaseName");
-const Snapshot = S.Struct({
-  metadata: S.Record(S.String, S.Union([S.Null, CitationNativeUnicodeHex, S.Int])),
-  year: S.NullOr(S.Int),
-  fullSpanStart: S.NullOr(S.Int),
-  span: S.Tuple([S.Int, S.Int]),
-});
 const Corpus = S.fromJsonString(
   S.Struct({
     schemaVersion: S.tag("citation-plain-case-name/v1"),
@@ -37,8 +30,8 @@ const Corpus = S.fromJsonString(
         scanCase: S.Natural,
         short: S.Boolean,
         seeded: S.Boolean,
-        before: Snapshot,
-        after: Snapshot,
+        before: CitationCaseNameSnapshot,
+        after: CitationCaseNameSnapshot,
         processed: S.Boolean,
         error: S.NullOr(S.Literals(["IndexError", "TypeError", "KeyError"])),
         regexCalls: S.Array(S.String),
@@ -61,27 +54,6 @@ export const readCitationCaseNameCorpus = Effect.fn("CaseNameTest.load")(functio
   return { scan, corpus, configuration: { scan: scan.configuration, process: process.configuration } };
 });
 const install = makeCitationMetadataFixture({ load: readCitationCaseNameCorpus, make: makeCitationCaseName });
-/** Compare every name patch field against the original enclosing model snapshot. */
-export const assertCitationCaseNamePatch = Effect.fn("CaseNameTest.assertPatch")(function* (
-  result: Pick<CitationCaseNameResult, "patch">,
-  row: Pick<(typeof Corpus.Type.cases)[number], "id" | "before" | "after">,
-  kind: CitationNativeRuntimeKind
-) {
-  let metadata = row.before.metadata;
-  for (const [key, value] of [
-    Tuple.make("plaintiff", result.patch.plaintiff),
-    Tuple.make("defendant", result.patch.defendant),
-    Tuple.make("antecedent_guess", result.patch.antecedentGuess),
-    Tuple.make("year", result.patch.year),
-  ])
-    if (O.isSome(value)) metadata = R.set(metadata, key, value.value);
-  expect(metadata, `${kind}:${row.id}:metadata`).toEqual(row.after.metadata);
-  const priorYear = row.before.year === null ? null : BigInt(row.before.year);
-  expect(O.getOrElse(result.patch.numericYear, () => priorYear)).toEqual(
-    row.after.year === null ? null : BigInt(row.after.year)
-  );
-  expect(O.getOrElse(result.patch.fullSpanStart, () => row.before.fullSpanStart)).toEqual(row.after.fullSpanStart);
-});
 type Row = (typeof Corpus.Type.cases)[number];
 const assertRow = Effect.fn("CaseNameTest.row")(function* (
   setup: Effect.Success<ReturnType<typeof install>>,
