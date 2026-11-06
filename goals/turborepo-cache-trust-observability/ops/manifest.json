@@ -83,6 +83,7 @@
     "research/docgen-launch-baseline-request-2026-10-29.json",
     "research/docgen-launch-baseline-review-2026-10-29.md",
     "research/docgen-launch-repair-checkpoint.json",
+    "research/file-level-dependency-drift-2026-11-06.json",
     "research/fs-guards-directory-coverage-checkpoint.json",
     "research/hosted-producer-verifier-checkpoint.json",
     "research/inspection-governance-checkpoint.json",
