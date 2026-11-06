@@ -490,13 +490,7 @@ const makeFinalCheckStepRunner = (planned: ReadonlyArray<FinalCheckPlannedStep>,
     // start snapshot; a subsequent step must prepare a fresh boundary.
     yield* invalidate;
     if (O.isSome(started) && result.status === "passed") {
-      session = yield* prepare().pipe(
-        Effect.catch((error) =>
-          Effect.logWarning("[yeet] final-check completed step could not be saved for resume", error).pipe(
-            Effect.as(O.none<LaneProofSession>())
-          )
-        )
-      );
+      session = yield* prepare();
       if (O.isSome(session)) {
         yield* persistLaneProofs(started.value, [[lane, result.durationMs]], session.value).pipe(
           Effect.ignore({ log: "Warn", message: "[yeet] final-check completed step could not be saved for resume" })
