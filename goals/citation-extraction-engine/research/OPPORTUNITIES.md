@@ -446,3 +446,13 @@ history/evidence/2026-11-03-edition-inference.md.
   Both-runtime output/refusal and physical-retirement regression then passed.
 - Prevention: allocate a directory per generated worker role when a test owns
   multiple bundled entrypoints; production runtime paths remain explicit.
+
+## 2026-11-06 — nested method replacement crossed a parser boundary
+
+- Work: share annotation Unicode refusal translation with template parsing.
+- Evidence: an automated multiline edit removed adjacent group parsing; the
+  compiler reported missing values and original template regression failed.
+- Resolution: restore the unchanged group parser from the owned committed head,
+  replace only the error handler, and replay the complete original corpus.
+- Prevention: use tightly bounded edits for nested pipelines and inspect the
+  resulting method before running source-fidelity proof.

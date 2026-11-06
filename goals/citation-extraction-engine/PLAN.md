@@ -1253,6 +1253,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the annotation assembly module, source corpus and this checkpoint together; preserve the original annotation capability obligations.
 
+### Preserve native annotator calls and deferred join failures, 2026-11-06
+
+Assembly now captures the native-string annotator profile through an Effect service, preserves prepared callback arguments, defers non-string results until final join and stops on callback exceptions. Existing budget/Unicode/range capabilities snapshot receiving text without a new arena or registry. Eleven tests pass in 62.44s, including all unchecked source cases, actual Bun/Node markup traces, physical exits, exact capacity, callback capture/mutable-return controls and actual deadline labels. General host values, nested callbacks, final engine/boundary integration and every open law/fidelity/proof obligation remain required. See history/evidence/2026-11-06-annotation-callback.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert native callback capture and assembly integration together, preserving original corpora, default assembly and every unfinished acceptance requirement.
+
 ### Connect annotation ordering and original source maps, 2026-11-06
 
 Effect Array/Order now sorts primitive tuples with Python point-order string ties, then applies existing offsets right at starts and left at ends. The Document forward placeholder/diff path has one shared owner; annotation executes only that direction while Document retains backward/emphasis order. All 214 unsorted primitive cases and 36 new mapped cases compare. Seven tests pass, including actual Bun/Node placeholder+diff children with twelve confirmed exits each and Document geometry regression. Full HTML/callback modes and synchronous-sort isolation/scaling remain open before engine completion. See history/evidence/2026-11-06-annotation-preparation.md.

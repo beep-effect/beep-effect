@@ -276,3 +276,10 @@ uses the same original helper/pattern with actual Bun/Node regex and XML workers
 Its separate 162-case original annotation corpus retains actual parser/helper
 observations and invalid-template results. Existing BSD-2-Clause/PSF notices
 apply; warm-cache warning and final engine qualification remain open.
+
+The [callback evidence](../history/evidence/2026-11-06-annotation-callback.md)
+records actual callable arguments and deferred-join/immediate failures from
+unchanged annotate_citations. Its 144-case corpus retains Unicode and all three
+markup modes; original string-subclass coercion hooks remain uncalled. Existing
+BSD-2-Clause/PSF attribution applies. Arbitrary host values, callback protocols
+and final engine qualification remain open.

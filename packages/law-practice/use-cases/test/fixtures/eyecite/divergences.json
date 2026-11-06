@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "82c923bc19ba8e884f47ccc93c01ca0f9d9709623c9406cc08f95ccfa7689a3c",
+  "planSha256": "c56425506c8bcfc87150f18a863182dbc5f3910b37403992d112b3faa632115f",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1224,7 +1224,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/AnnotationAssembly.ts",
-          "sha256": "9e7e59b58b3af5382eed728258431ed51fa1543b66bfa5d6f1bffe7b0a8db66c"
+          "sha256": "c421a130f2014b2618aa6f9edb01c64952e128dd4786573deb795b1272bac2e8"
         },
         {
           "path": "packages/law-practice/server/test/CitationAnnotationAssembly.test.ts",
@@ -1376,11 +1376,11 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/AnnotationTemplate.ts",
-          "sha256": "5ede1cded983731184754f696fa9b6c73bde495a1e46883aef503f95e78bb0da"
+          "sha256": "f903eb4bc950734f2a14a3be902f72ed2357349ee3fcdc347c9f188267604754"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/AnnotationBudget.ts",
-          "sha256": "40d7d9276d323787f815678777799d08c46afa8461d5f0d04606ebc982649f44"
+          "sha256": "0ef4e9ea8ae883e3715afd06d7e69a5ee28481700e196bc939707832c0d6195c"
         },
         {
           "path": "packages/law-practice/server/test/CitationAnnotationTemplate.test.ts",
@@ -1404,7 +1404,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationAnnotationReplay.fixtures.ts",
-          "sha256": "d1618daf24610686cd614c0c78ae6ac0a65dc222fd825feb1f8c0b9fd45e136a"
+          "sha256": "1d9da9ae0cf61dbadf769fa539ef646caa8a11d2e5c8fb44f2c46ad757b92617"
         },
         {
           "path": "packages/law-practice/server/test/CitationAnnotationTemplate.fixtures.ts",
@@ -1429,6 +1429,38 @@
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-wrap-composition.json",
           "sha256": "c91c4ec5e74e1ac4d80846218b5c6ed7dd181df138690d845da9081a04d13b6a"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-callback.md",
+          "sha256": "ab32760678af54079c5e27d008f6210d0f2429327edd0903a53457f6ae635e01"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-annotation-callback.py",
+          "sha256": "154a982c40642bab1d11c2fb5b331fc2268b1bb32d79cbb015efa4fda0adc03f"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/AnnotationCallback.ts",
+          "sha256": "bd8befc9c3dc7017241dbfc741b942ad000c077d78d0327d85c0479cccd31e3a"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationAnnotationCallback.fixtures.ts",
+          "sha256": "97c8ee4d20b9aab554efdcbd135dd7e438a1ad2ccc117ee2f11a4a4f52f9577f"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationAnnotationCallback.test.ts",
+          "sha256": "c6d72fcb71af0b58dade3dd51071e930da3ae540f37a4fcacd20ef611da42e6a"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationAnnotationCallbackBoundary.test.ts",
+          "sha256": "d6e8723522f3c5f1a0d8b6e129e9b8a6349548f6bc5539894e73c170798c7513"
+        },
+        {
+          "path": "packages/law-practice/server/test/integration/CitationAnnotationCallback.test.ts",
+          "sha256": "de2976240ac664da8b7a60bdc51ff25ffdf23d0f35686c88332ed390f85d1a47"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-callback.json",
+          "sha256": "b212c0289337730e0c0196b596c846a01c1cfba8ca0565d6f9226e2bcaeade09"
         }
       ],
       "workflowState": "audit",

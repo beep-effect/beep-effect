@@ -54,13 +54,14 @@ export const makeCitationAnnotationXmlTrace = Effect.fn("AnnotationReplayTest.tr
 export const makeCitationAnnotationReplay = Effect.fn("AnnotationReplayTest.assembly")(function* (
   limits: CitationEngineLimits,
   budget: CitationTextBudget["Service"],
-  processor: CitationAnnotationSpanProcessor["Service"]
+  processor?: CitationAnnotationSpanProcessor["Service"]
 ) {
   const unicode = yield* makeCitationPythonUnicode(limits, "annotate");
-  const assembly = yield* makeCitationAnnotationAssembly(limits).pipe(
-    Effect.provideService(CitationTextBudget, budget),
-    Effect.provideService(CitationAnnotationSpanProcessor, processor)
-  );
+  const configured =
+    processor === undefined
+      ? makeCitationAnnotationAssembly(limits)
+      : makeCitationAnnotationAssembly(limits).pipe(Effect.provideService(CitationAnnotationSpanProcessor, processor));
+  const assembly = yield* configured.pipe(Effect.provideService(CitationTextBudget, budget));
   const assemble = Effect.fn("AnnotationReplayTest.assemble")(function* (
     raw: CitationNativeUnicodeHex,
     input: ReadonlyArray<CitationAnnotationReplayReplacement>

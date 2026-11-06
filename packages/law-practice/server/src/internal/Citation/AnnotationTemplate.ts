@@ -3,14 +3,14 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationPythonUnicodeStorage, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as MutableList from "effect/MutableList";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { captureCitationAnnotationReservation } from "./AnnotationBudget.ts";
+import { captureCitationAnnotationReservation, failCitationAnnotationUnicode } from "./AnnotationBudget.ts";
 import { parseCitationPythonInteger } from "./PythonInteger.ts";
 import {
   citationPythonPointAt,
@@ -98,18 +98,13 @@ export const makeCitationAnnotationTemplates = Effect.fn("Citation.makeAnnotatio
     end: number
   ) {
     const storage = yield* sliceCitationPythonStorage(template, start, end, reserve);
-    const value = yield* unicode.fromStorageReserved(storage, reserveUnits).pipe(
-      Effect.catchTag("CitationPythonUnicodeFailure", (error) =>
-        Effect.fail(
-          error.reason === "invalid-input"
-            ? invalid()
-            : CitationSafetyLimitExceeded.make({
-                operation: "annotate",
-                limit: error.reason === "deadline-exceeded" ? "annotateDeadline" : "producedTextUtf16",
-              })
+    const value = yield* unicode
+      .fromStorageReserved(storage, reserveUnits)
+      .pipe(
+        Effect.catchTag("CitationPythonUnicodeFailure", (error) =>
+          failCitationAnnotationUnicode(limits, invalid, error)
         )
-      )
-    );
+      );
     const number = yield* parseCitationPythonInteger(value);
     if (O.isNone(number) || number.value < BigInt(0) || number.value >= BigInt(1073741823)) return yield* invalid();
     const canonical = yield* canonicalGroupName(template, start, end);
