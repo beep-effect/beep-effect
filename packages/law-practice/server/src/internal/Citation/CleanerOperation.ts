@@ -15,5 +15,8 @@ export const makeCitationCleanerOperation = Effect.fn("Citation.makeCleanerOpera
   const pipeline = yield* makeCitationCleanerPipeline(policy);
   return {
     run: Effect.fn("Citation.runAdmittedCleaner")((input: unknown) => admission.run("clean", pipeline.run(input))),
+    runOwned: Effect.fn("Citation.runAdmittedOwnedCleaner")((input: unknown) =>
+      admission.run("clean", pipeline.runOwned(input))
+    ),
   };
 });

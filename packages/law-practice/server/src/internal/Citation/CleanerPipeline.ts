@@ -106,6 +106,12 @@ const Request = S.Struct({
     description: "Private raw-text invocation of a captured server plan, not the final public cleaner request.",
   })
 );
+const OwnedRequest = S.Struct({ value: LiveObject, plan: Plan }).pipe(
+  $I.annoteSchema("OwnedRequest", {
+    description:
+      "An issued immutable native/host value and captured server plan; structural decoding does not grant ownership.",
+  })
+);
 const Reason = LiteralKit([
   "invalid-input",
   "unknown-plan",
@@ -401,6 +407,35 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
       close: Ref.update(state, (current) => CitationCleanerWorkSnapshot.make({ ...current, closed: true })),
     };
   });
+  const runInitial = Effect.fn("Citation.runOwnedCleanerPlan")(function* (
+    plan: string,
+    initial: Effect.Effect<CitationCleanerObject, Failure>
+  ) {
+    return yield* Effect.acquireUseRelease(
+      makeWork,
+      ({ work }) =>
+        sanitize(
+          Effect.gen(function* () {
+            const value = yield* initial;
+            const result = yield* work.nested(plan, value);
+            return CitationCleanerRun.make({
+              value: result,
+              producedTextUtf16: (yield* work.snapshot).producedTextUtf16,
+            });
+          })
+        ).pipe(
+          Effect.timeoutOrElse({
+            duration: limits.cleanDeadline,
+            orElse: () => Effect.fail(safety("cleanDeadline")),
+          }),
+          Effect.timeoutOrElse({
+            duration: limits.operationDeadline,
+            orElse: () => Effect.fail(safety("operationDeadline")),
+          })
+        ),
+      ({ close }) => close
+    );
+  });
   return {
     run: Effect.fn("Citation.runCleanerPipeline")(
       function* (input: unknown) {
@@ -409,26 +444,28 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
         const request = yield* S.decodeUnknownEffect(Request, { onExcessProperty: "error" })(input).pipe(
           Effect.mapError(() => fail("invalid-input"))
         );
-        return yield* Effect.acquireUseRelease(
-          makeWork,
-          ({ work }) =>
-            sanitize(
-              Effect.gen(function* () {
-                const initial = yield* runtime.fromText(request.text);
-                const value = yield* work.nested(request.plan, initial);
-                return CitationCleanerRun.make({ value, producedTextUtf16: (yield* work.snapshot).producedTextUtf16 });
-              })
-            ).pipe(
-              Effect.timeoutOrElse({
-                duration: limits.cleanDeadline,
-                orElse: () => Effect.fail(safety("cleanDeadline")),
-              }),
-              Effect.timeoutOrElse({
-                duration: limits.operationDeadline,
-                orElse: () => Effect.fail(safety("operationDeadline")),
-              })
-            ),
-          ({ close }) => close
+        return yield* runInitial(request.plan, runtime.fromText(request.text));
+      },
+      sanitize,
+      Effect.provideService(Clock.Clock, clock)
+    ),
+    /** Run an already-issued value without projecting native words or replacing
+     * its object identity. The enclosing document owns the initial handle.
+     * Uses the same work ledger, timers, invocation and close path as raw text.
+     */
+    runOwned: Effect.fn("Citation.runOwnedCleanerPipeline")(
+      function* (input: unknown) {
+        const request = yield* S.decodeUnknownEffect(OwnedRequest, { onExcessProperty: "error" })(input).pipe(
+          Effect.mapError(() => fail("invalid-input"))
+        );
+        return yield* runInitial(
+          request.plan,
+          Effect.gen(function* () {
+            yield* runtime.assertOwned(request.value);
+            const units = yield* runtime.textUnits(request.value);
+            if (O.isSome(units) && units.value > limits.sourceUtf16) return yield* safety("sourceUtf16");
+            return request.value;
+          })
         );
       },
       sanitize,

@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Owned cleaner handoff checkpoint (2026-11-05): the existing pipeline/admitted
+operation now accept an issued native/host value without fromText conversion.
+Both entries share one scoped work/timer/close path. Twenty-five focused tests
+pass, including literal surrogate identity, real builtin output, forged/source
+refusal and timed owned preflight. Document modes/clean-step protocols and full
+cleaner/geometry composition remain open. See
+[owned-input evidence](history/evidence/2026-11-05-cleaner-owned-input.md).
+
 Connected geometry checkpoint (2026-11-05): post-cleaning native preparation
 now runs placeholder, forward diff, original-markup backward diff and emphasis
 in source order through existing shared owners. Both runtime source smoke and
