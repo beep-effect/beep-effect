@@ -1,6 +1,6 @@
+import { SchemaFirstDetectors } from "@beep/repo-cli/test/Lint";
 import { describe, expect, it, vi } from "@effect/vitest";
 import { Project } from "ts-morph";
-import { SchemaFirstDetectors } from "../src/commands/Lint/internal/SchemaFirstDetectors.ts";
 
 describe("schema-first data-like decision short circuiting", () => {
   it("does not inspect terminal object signatures after an array decision", () => {

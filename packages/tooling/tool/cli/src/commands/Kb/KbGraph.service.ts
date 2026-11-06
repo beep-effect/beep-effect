@@ -34,6 +34,8 @@ import {
 import type { Assertion, Audience, KbClaim, KbView } from "./Kb.schemas.ts";
 import type { KbGraphConfidence, KbGraphReview } from "./KbGraph.schemas.ts";
 
+const encodeGraphJson = S.encodeEffect(S.fromJsonString(KbGraph, { space: 2 }));
+
 const $I = $RepoCliId.create("commands/Kb/KbGraph.service");
 const byId = Order.mapInput(Str.Order, (row: { readonly id: string }) => row.id);
 const audienceDefault: Audience = "public";
@@ -235,7 +237,7 @@ export const makeKbGraphExport = Effect.gen(function* () {
     write: Effect.fn("KbGraphExport.write")(
       function* (root, view, out, force) {
         const graph = yield* project(root, view);
-        const json = `${yield* S.encodeEffect(S.fromJsonString(KbGraph, { space: 2 }))(graph)}\n`;
+        const json = `${yield* encodeGraphJson(graph)}\n`;
         const outward = view === "outward";
         if (outward && hasKbCanary({ "graph.json": json })) return yield* canaryFailed("");
         const target = path.resolve(out);

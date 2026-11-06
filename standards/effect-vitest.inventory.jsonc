@@ -3522,7 +3522,7 @@
       "symbol": "it.live",
       "occurrence": "v2:c027e67dd880a2a8fe4d854ffa24710fb29e526922688554f73771e44f9220b0",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set — // th",
+      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set \u2014 // th",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -3566,7 +3566,7 @@
       "symbol": "it.live",
       "occurrence": "v2:839f4c06674803449cc12ea63d0ef0fe4c6c3b982ae7010cc7e7aa1039f70146",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped — the zombie-node failure // mode the QA 2026-08-26 P0 found:",
+      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped \u2014 the zombie-node failure // mode the QA 2026-08-26 P0 found:",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -10897,6 +10897,72 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Fixed-count independent race trials, not retries: every trial asserts its result and a single failure fails the test. TestClock and explicit lease completion govern ownership; no failed trial is retried. Owner: @beep/law-practice-server. Exit: detector distinguishes repeated independent cases from retry-until-success loops. Re-reviewed after expression-only Effect 4.1.2 adaptation; independent trials and shorter child Scope are unchanged."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/Kb.test.ts:21:@effect/platform-node/NodeFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/Kb.test.ts",
+      "line": 21,
+      "endLine": 21,
+      "symbol": "@effect/platform-node/NodeFileSystem",
+      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Judge whether MemoryFileSystem.layer can replace the platform filesystem without changing the subject."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Real temporary filesystem behavior is the subject: ledger path overlap, persisted output, or SQLite reopen. Test scope cleans temporary directories. Owner: @beep/repo-cli. Exit: remove if these integration tests no longer exercise disk behavior."
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/owner-checkpoint.test.ts:152:scoped@2#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/owner-checkpoint.test.ts",
+      "line": 152,
+      "endLine": 157,
+      "symbol": "scoped",
+      "occurrence": "v2:badb0e2fa464084e1bb58427a38f9393f8b5c6895c7984da0983cc5569718776",
+      "class": "helper-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const services = yield* Layer.build(sqlite(filename)); return yield* Effect.provideContext(effect, services); }) )",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "Delete only a whole-body Effect.scoped; retain deliberate shorter lifetimes for judgment."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Separate scoped SQLite connections are the subject of database reopen and dispatch fence tests. Closing each connection before reopening is required. Owner: @beep/repo-cli. Exit: remove if persistent reopen coverage moves to another test."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/owner-checkpoint.test.ts:31:@effect/platform-node/NodeFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/owner-checkpoint.test.ts",
+      "line": 31,
+      "endLine": 31,
+      "symbol": "@effect/platform-node/NodeFileSystem",
+      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Judge whether MemoryFileSystem.layer can replace the platform filesystem without changing the subject."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Real temporary filesystem behavior is the subject: ledger path overlap, persisted output, or SQLite reopen. Test scope cleans temporary directories. Owner: @beep/repo-cli. Exit: remove if these integration tests no longer exercise disk behavior."
     }
   ]
 }
