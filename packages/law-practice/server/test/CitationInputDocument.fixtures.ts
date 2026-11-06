@@ -218,6 +218,8 @@ const checkCase = Effect.fn("InputDocumentTest.check")(function* (
     expect(result.plain === plain).toBe(row.plainIsPlainInput);
     expect(result.steps).toBe(steps);
     expect(O.isSome(result.geometry)).toBe(row.hasForward && row.hasBackward);
+    if (O.isNone(result.geometry)) expect(result.reservedUnits).toBe(result.cleanerTextUtf16);
+    else expect(result.reservedUnits).toBeGreaterThanOrEqual(result.cleanerTextUtf16);
     if (O.isSome(result.geometry)) expect(result.geometry.value.tags).toEqual(row.emphasis);
   }
   expect(fixture.events(), `${row.id}:events`).toEqual(

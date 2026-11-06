@@ -196,18 +196,31 @@ export const makeCitationRegexJobPreparation = Effect.fn("Citation.makeRegexJobP
     const flags = yield* S.decodeUnknownEffect(Flags)(flagsInput).pipe(Effect.mapError(invalid));
     const maxMatches = yield* S.decodeUnknownEffect(Matches)(maxMatchesInput).pipe(Effect.mapError(invalid));
     let preparedSource = O.none<CitationPreparedRegexInput>();
+    let measuredBytes = O.none<number>();
     const preparedPattern = yield* patternInput
       .prepareUnicode(pattern, (patternLayout) =>
         sourceInput
-          .prepareUnicode(source, (sourceLayout) =>
-            preflightCitationRegexJob(
-              patternLayout,
-              sourceLayout,
-              flags,
-              maxMatches,
-              limits.processMessageBytes,
-              mode
-            ).pipe(Effect.flatMap(beforeAllocate))
+          .prepareUnicode(
+            source,
+            (sourceLayout) =>
+              preflightCitationRegexJob(
+                patternLayout,
+                sourceLayout,
+                flags,
+                maxMatches,
+                limits.processMessageBytes,
+                mode
+              ).pipe(
+                Effect.tap((bytes) =>
+                  Effect.sync(() => {
+                    measuredBytes = O.some(bytes);
+                  })
+                ),
+                Effect.asVoid
+              ),
+            Effect.suspend(() =>
+              Effect.fromOption(measuredBytes).pipe(Effect.mapError(invalid), Effect.flatMap(beforeAllocate))
+            )
           )
           .pipe(
             Effect.tap((value) =>

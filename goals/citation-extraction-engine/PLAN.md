@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Cleaner parent-budget checkpoint (2026-11-05): direct reservations and bounded
+producers now consume the captured invocation authority; Document cleaning
+constructs its executor inside that invocation. Native HTML refusal and exact
+settlement controls pass. Regex now reserves text before native admission,
+preserving preflight and copy bounds while removing a resource-order inversion.
+Thirty-six focused regressions and package checks pass; full-engine coverage
+remains open. See [bridge evidence](history/evidence/2026-11-05-cleaner-parent-budget.md).
+
 Shared text-capacity checkpoint (2026-11-05): parent text authority can now lend
 exclusive remaining capacity, with exact uninterruptible settlement. Parent and
 cleaner work reuse Effect Semaphore/Context.Reference exclusion and reject

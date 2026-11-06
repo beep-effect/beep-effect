@@ -1,5 +1,17 @@
 # Citation engine friction receipts
 
+## 2026-11-05 — text/native capacity acquisition order
+
+- Work: join bounded cleaner production to the shared parent text authority.
+- Evidence: HTML production can hold text capacity before native admission;
+  regex input previously acquired native admission before waiting for text
+  reservation. Concurrent operations could form a wait cycle.
+- Resolution: retain complete regex frame preflight, then reserve text before
+  the native grant and receiving copy. The focused single-slot control observes
+  no native claim while text is held, and interrupted waits release cleanly.
+- Prevention: preserve one acquisition order across composed authorities and
+  test the held-capacity state before extending another producer integration.
+
 ## 2026-11-05 — two real Node worker fixtures shared one compiled output
 
 - Work: run regex and diff workers together in HTML geometry preparation.

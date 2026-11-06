@@ -11,7 +11,12 @@ import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { CitationCleanerRun, CitationLiveCleanerObject, makeCitationCleanerPipeline } from "./CleanerPipeline.ts";
+import {
+  CitationCleanerRun,
+  CitationCleanerRuntime,
+  CitationLiveCleanerObject,
+  makeCitationCleanerPipeline,
+} from "./CleanerPipeline.ts";
 import { CitationCleanerValues } from "./CleanerValues.ts";
 import {
   CitationHtmlGeometryPreparationConfiguration,
@@ -125,9 +130,9 @@ const own = Effect.fn("Citation.captureInputDocument")(function* (
   const configuration = yield* copyCitationHtmlGeometryConfiguration(limits, config);
   const values = yield* CitationCleanerValues;
   const protocols = yield* CitationDocumentInputProtocols;
-  const pipeline = yield* makeCitationCleanerPipeline(limits);
+  const cleanerRuntime = yield* CitationCleanerRuntime;
   const empty = yield* values.text("");
-  return { configuration, values, protocols, pipeline, empty };
+  return { configuration, values, protocols, cleanerRuntime, limits, empty };
 });
 type Owned = Effect.Success<ReturnType<typeof own>>;
 const Patch = S.Struct({
@@ -149,7 +154,10 @@ const cleanValue = Effect.fn("Citation.cleanDocumentInput")(function* (
   value: CitationCleanerObject
 ) {
   const plan = yield* owned.protocols.plan(input.steps);
-  return yield* owned.pipeline.runOwned({ value, plan });
+  const pipeline = yield* makeCitationCleanerPipeline(owned.limits).pipe(
+    Effect.provideService(CitationCleanerRuntime, owned.cleanerRuntime)
+  );
+  return yield* pipeline.runOwned({ value, plan });
 });
 const plainBranch = Effect.fn("Citation.initializePlainDocument")(function* (
   owned: Owned,

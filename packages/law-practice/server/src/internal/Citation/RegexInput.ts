@@ -194,6 +194,8 @@ const boundary = (text: string, offset: number) =>
 /** Capture policy/Clock. Borrowed native storage must remain immutable through
  * preparation, as in the HTML transport adapter. The trusted server preflight
  * receives exact sizes before any receiving payload/projection/map allocation;
+ * an optional native grant runs after the text reservation and before copying,
+ * so a caller never holds native capacity while waiting for text authority.
  * no callable is request data. Returned operations have R = never.
  * @internal @category operations @since 0.0.0
  */
@@ -350,7 +352,8 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
   });
   const prepareUnicode = Effect.fn("Citation.prepareRegexUnicode")(function* <E>(
     input: unknown,
-    beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>
+    beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>,
+    grant: Effect.Effect<void, E> = Effect.void
   ) {
     const source = yield* S.decodeUnknownEffect(NativeInput)(input).pipe(Effect.mapError(() => fail("invalid-input")));
     const byteLength = source.bytes.byteLength;
@@ -361,6 +364,7 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
     const layout = yield* measureNative(source);
     yield* beforeAllocate(layout);
     yield* reserve(layout.utf16Units);
+    yield* grant;
     const citationResult2 = yield* capture(unicode.fromStorage(source));
     return yield* finish(citationResult2, layout);
   });
@@ -373,9 +377,10 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
     }, timed),
     prepareUnicode: Effect.fn("Citation.captureRegexUnicode")(function* <E>(
       input: unknown,
-      beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>
+      beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>,
+      grant: Effect.Effect<void, E> = Effect.void
     ) {
-      return yield* prepareUnicode(input, beforeAllocate);
+      return yield* prepareUnicode(input, beforeAllocate, grant);
     }, timed),
   };
 });

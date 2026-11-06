@@ -23,6 +23,7 @@ import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { CitationTextBudget } from "./TextBudget.ts";
 import { makeCitationTextCapacity } from "./TextCapacity.ts";
 
 const CitationEngineLimitsType = S.toType(CitationEngineLimits);
@@ -238,6 +239,8 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
   );
   const clock = yield* Clock.Clock;
   const runtime = yield* CitationCleanerRuntime;
+  const parent = yield* Effect.serviceOption(CitationTextBudget);
+  if (O.isSome(parent) && parent.value.maximum > limits.producedTextUtf16) return yield* fail("invalid-input");
   const sanitize = <A>(body: Effect.Effect<A, Failure>): Effect.Effect<A, Failure> =>
     body.pipe(
       Effect.catchCause((cause) => {
@@ -283,7 +286,19 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
         }
       ).pipe(Effect.flatten);
     });
-    const reserveText = (units: number) => exclusive(reserveUnlocked(units));
+    const reserveText = (units: number) =>
+      exclusive(
+        Effect.gen(function* () {
+          const amount = yield* S.decodeEffect(ReservationUnits)(units).pipe(
+            Effect.mapError(() => fail("invalid-reservation"))
+          );
+          yield* ensureOpen;
+          const current = yield* Ref.get(state);
+          if (amount > limits.producedTextUtf16 - current.producedTextUtf16) return yield* safety("producedTextUtf16");
+          if (O.isSome(parent)) yield* parent.value.reserve(amount);
+          return yield* Effect.uninterruptible(reserveUnlocked(amount));
+        })
+      );
     const withTextCapacity: CitationCleanerWork["withTextCapacity"] = (produce) =>
       capacity.borrow(
         ensureOpen.pipe(
@@ -291,13 +306,20 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
             Effect.uninterruptibleMask((restore) =>
               Effect.gen(function* () {
                 const remaining = limits.producedTextUtf16 - (yield* Ref.get(state)).producedTextUtf16;
-                const result = yield* restore(produce(remaining));
-                const units = yield* S.decodeEffect(Units)(result.units).pipe(
-                  Effect.mapError(() => fail("invalid-reservation"))
-                );
-                yield* ensureOpen;
-                const charges = units === 0 ? [] : [yield* reserveUnlocked(units)];
-                return { value: result.value, charges };
+                const run = Effect.fnUntraced(function* (allowance: number) {
+                  const result = yield* restore(produce(allowance));
+                  const units = yield* S.decodeEffect(Units)(result.units).pipe(
+                    Effect.mapError(() => fail("invalid-reservation"))
+                  );
+                  if (units > allowance) return yield* safety("producedTextUtf16");
+                  yield* ensureOpen;
+                  const charges = units === 0 ? [] : [yield* reserveUnlocked(units)];
+                  return { value: { value: result.value, charges }, units };
+                });
+                const result = O.isSome(parent)
+                  ? yield* parent.value.withCapacity((available) => run(available < remaining ? available : remaining))
+                  : yield* run(remaining);
+                return result.value;
               })
             )
           )
