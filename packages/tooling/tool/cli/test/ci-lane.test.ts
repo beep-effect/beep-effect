@@ -34,7 +34,6 @@ import {
 } from "@beep/repo-cli/test/SharedInternals";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -1750,12 +1749,14 @@ const storybookSpawner = (dryRunOutput: string, dryRunExitCode = 0) =>
     A.contains(args, "--dry-run=json") ? { stdout: dryRunOutput, exit: dryRunExitCode } : {}
   );
 
-const storybookCiLayer = (spawner: ScriptedSpawner) => {
-  const fileSystemLayer = FileSystem.layerNoop({
+const storybookCiLayer = (
+  spawner: ScriptedSpawner,
+  fileSystemLayer: Layer.Layer<FileSystem.FileSystem> = FileSystem.layerNoop({
     exists: (file) => Effect.succeed(Str.endsWith("/.git")(file)),
     makeDirectory: () => Effect.void,
     writeFileString: () => Effect.void,
-  });
+  })
+) => {
   const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
   return Layer.provideMerge(
     Git.layer,
@@ -1823,29 +1824,29 @@ for (const selected of [false, true]) {
   const probe = storybookSpawner(
     storybookDryRun(selected ? [{ package: "@beep/storybook", task: "storybook:build" }] : [])
   );
-  it.layer(storybookCiLayer(probe), { timeout: "10 seconds" })(`storybook selection-only (${selected})`, (it) => {
+  it.layer(Layer.mergeAll(storybookCiLayer(probe, NodeFileSystem.layer), NodeStdio.layer, NodeTerminal.layer), {
+    timeout: "10 seconds",
+  })(`storybook selection-only (${selected})`, (it) => {
     it.effect("writes the dependency-aware decision without provisioning or running the lane", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const output = yield* fs.makeTempFileScoped();
-          yield* Command.runWith(ciLaneCommand, { version: "0.0.0" })([
-            "storybook",
-            "--selection-only",
-            "--affected",
-            "--base",
-            "origin/main",
-          ]).pipe(
-            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ GITHUB_OUTPUT: output }))
-          );
-          expect(probe.spawns).toHaveLength(1);
-          expect(spawnLine(firstOf(probe.spawns))).toBe(storybookProbeLine);
-          expect(firstOf(probe.spawns).env).toMatchObject({ TURBO_SCM_BASE: "origin/main" });
-          const contents = yield* fs.readFileString(output);
-          expect(contents).toContain("should_run");
-          expect(contents).toContain(selected ? "true" : "false");
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeFileSystem.layer, NodeStdio.layer, NodeTerminal.layer)))
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const output = yield* fs.makeTempFileScoped();
+        yield* Command.runWith(ciLaneCommand, { version: "0.0.0" })([
+          "storybook",
+          "--selection-only",
+          "--affected",
+          "--base",
+          "origin/main",
+        ]).pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ GITHUB_OUTPUT: output }))
+        );
+        expect(probe.spawns).toHaveLength(1);
+        expect(spawnLine(firstOf(probe.spawns))).toBe(storybookProbeLine);
+        expect(firstOf(probe.spawns).env).toMatchObject({ TURBO_SCM_BASE: "origin/main" });
+        const contents = yield* fs.readFileString(output);
+        expect(contents).toContain("should_run");
+        expect(contents).toContain(selected ? "true" : "false");
+      })
     );
   });
 }

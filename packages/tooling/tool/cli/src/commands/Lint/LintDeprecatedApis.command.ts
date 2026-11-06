@@ -77,6 +77,29 @@ const validateAssignmentEvidence = Effect.fn("Lint.validateAssignmentEvidence")(
   }
 });
 
+const validateRustAssignmentEvidence = Effect.fn("Lint.validateRustAssignmentEvidence")(function* (
+  root: string,
+  args: ReadonlyArray<string>
+) {
+  const path = yield* Path.Path;
+  const inventory = yield* runCaptured({
+    command: path.join(root, "node_modules/.bin/oxlint"),
+    args: ["--debug=files", ...args],
+    cwd: root,
+    env: { OXC_LOG: "off" },
+    extendEnv: true,
+    bound: qualityStepOutputBound,
+  });
+  if (inventory.exitCode !== 0 || inventory.truncated) {
+    return yield* LintProgramAssignmentError.make({
+      files: [],
+      message: "lint deprecated-apis: file inventory failed or was truncated; cannot prove TypeScript coverage.",
+    });
+  }
+  const files = pipe(inventory.output, Str.split(/\r?\n/), A.map(Str.trim), A.filter(Str.isNonEmpty));
+  yield* validateLintProgramAssignment(root, files).pipe(Effect.scoped);
+});
+
 const runDeprecatedApiLint = Effect.fn("Lint.deprecatedApiWorker")(function* (
   root: string,
   targets: ReadonlyArray<string>
@@ -97,24 +120,7 @@ const runDeprecatedApiLint = Effect.fn("Lint.deprecatedApiWorker")(function* (
     ...targets,
   ];
   const useGo = yield* Config.Boolean("BEEP_LINT_TSGOLINT").pipe(Config.withDefault(false));
-  if (!useGo) {
-    const inventory = yield* runCaptured({
-      command: path.join(root, "node_modules/.bin/oxlint"),
-      args: ["--debug=files", ...args],
-      cwd: root,
-      env: { OXC_LOG: "off" },
-      extendEnv: true,
-      bound: qualityStepOutputBound,
-    });
-    if (inventory.exitCode !== 0 || inventory.truncated) {
-      return yield* LintProgramAssignmentError.make({
-        files: [],
-        message: "lint deprecated-apis: file inventory failed or was truncated; cannot prove TypeScript coverage.",
-      });
-    }
-    const files = pipe(inventory.output, Str.split(/\r?\n/), A.map(Str.trim), A.filter(Str.isNonEmpty));
-    yield* validateLintProgramAssignment(root, files).pipe(Effect.scoped);
-  }
+  if (!useGo) yield* validateRustAssignmentEvidence(root, args);
   yield* Console.log(`[lint:deprecated-apis] oxlint (${useGo ? "tsgolint" : "tsrs"}) ${A.join(args, " ")}`);
   const result = yield* runCaptured({
     command: path.join(root, "node_modules/.bin/oxlint"),

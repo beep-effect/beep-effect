@@ -11,6 +11,7 @@ import * as Cache from "effect/Cache";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { API } from "tsrs/async";
@@ -101,33 +102,40 @@ export const validateLintProgramAssignment = Effect.fn("Lint.validateProgramAssi
   const assigned = Effect.fnUntraced(function* (file: string) {
     let directory = path.dirname(file);
     let visited = HashSet.empty<string>();
-    while (path.basename(directory) !== "node_modules") {
+    const searchSolution = Effect.fnUntraced(function* (candidate: string) {
+      let queue: ReadonlyArray<string> = [candidate];
+      while (A.isReadonlyArrayNonEmpty(queue)) {
+        const [config, ...rest] = queue;
+        queue = rest;
+        if (HashSet.has(visited, config)) continue;
+        visited = HashSet.add(visited, config);
+        const parsed = yield* Cache.get(configs, config);
+        if (HashSet.has(parsed.members, api.getCanonicalFileName(file))) return true;
+        // A composite project with source files prunes solution traversal in tsrs.
+        if (parsed.options.composite && A.isReadonlyArrayNonEmpty(parsed.fileNames)) continue;
+        queue = A.appendAll(
+          queue,
+          A.map(parsed.projectReferences, (reference) =>
+            path.extname(reference.path) === ".json" ? reference.path : path.join(reference.path, "tsconfig.json")
+          )
+        );
+      }
+      return false;
+    });
+    const searchDirectory = Effect.fnUntraced(function* (directory: string) {
       for (const name of ["tsconfig.json", "jsconfig.json"]) {
         const candidate = path.join(directory, name);
         if (!(yield* fs.exists(candidate))) continue;
-        let queue: ReadonlyArray<string> = [candidate];
-        let disableSolutionSearching = false;
-        while (A.isReadonlyArrayNonEmpty(queue)) {
-          const [config, ...rest] = queue;
-          queue = rest;
-          if (HashSet.has(visited, config)) continue;
-          visited = HashSet.add(visited, config);
-          const parsed = yield* Cache.get(configs, config);
-          if (config === candidate) disableSolutionSearching = parsed.options.disableSolutionSearching === true;
-          if (HashSet.has(parsed.members, api.getCanonicalFileName(file))) return true;
-          // tsrs prunes composite projects before visiting their references. Be
-          // conservative when the API cannot expose its possibly-matches predicate:
-          // require an ancestor solution to prove ownership instead of over-assigning.
-          if (parsed.options.composite && A.isReadonlyArrayNonEmpty(parsed.fileNames)) continue;
-          queue = A.appendAll(
-            queue,
-            A.map(parsed.projectReferences, (reference) =>
-              path.extname(reference.path) === ".json" ? reference.path : path.join(reference.path, "tsconfig.json")
-            )
-          );
-        }
-        if (disableSolutionSearching) return false;
+        const parsed = yield* Cache.get(configs, candidate);
+        const stopAtCandidate = !HashSet.has(visited, candidate) && parsed.options.disableSolutionSearching === true;
+        if (yield* searchSolution(candidate)) return O.some(true);
+        if (stopAtCandidate) return O.some(false);
       }
+      return O.none<boolean>();
+    });
+    while (path.basename(directory) !== "node_modules") {
+      const found = yield* searchDirectory(directory);
+      if (O.isSome(found)) return found.value;
       const parent = path.dirname(directory);
       if (parent === directory) break;
       directory = parent;

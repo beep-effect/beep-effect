@@ -1,9 +1,10 @@
 import { validateLintProgramAssignment } from "@beep/repo-cli/test/Lint";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 
 const fixture = Effect.fnUntraced(function* () {
@@ -18,7 +19,7 @@ const fixture = Effect.fnUntraced(function* () {
   return { root, write };
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("Rust lint ownership", (it) => {
+it.layer(Layer.merge(NodeFileSystem.layer, Path.layer), { timeout: "30 seconds" })("Rust lint ownership", (it) => {
   it.effect("resolves directory references, inherited includes and all TypeScript extensions", () =>
     Effect.gen(function* () {
       const { root, write } = yield* fixture();

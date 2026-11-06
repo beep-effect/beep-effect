@@ -1160,9 +1160,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const workflowJobs14 = yield* workflowJobs(workflow);
       const steps = jobSteps(workflowJobs14, "storybook");
       const setupGate = "steps.lane-gate.outputs.should_run == 'true'";
-      for (const name of ["Setup monorepo CI", "Select Storybook before browser provisioning"]) {
-        assert.strictEqual(stepByName(steps, name).if, setupGate, name);
-      }
+      assert.strictEqual(stepByName(steps, "Setup monorepo CI").if, setupGate);
+      assert.strictEqual(stepByName(steps, "Select Storybook before browser provisioning").if, setupGate);
       const gate = "steps.storybook-selection.outputs.should_run == 'true'";
       for (const name of [
         "Resolve Playwright version",
