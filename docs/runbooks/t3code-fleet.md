@@ -105,7 +105,7 @@ hostname `tom-pc-1-wsl`. The existing `Ubuntu` distro stays untouched. The
 distro runs its own `tailscaled` and is its own tailnet node, because the
 Windows node already carries an unrelated Funnel route and must not gain a T3
 listener (decision 2026-11-06). All steps run over the PC's key-auth SSH
-(`tjopp@tom-pc-1`, PowerShell), never through the Desktop remote-control task.
+(`<windows-user>@tom-pc-1`, PowerShell), never through the Desktop remote-control task.
 
 1. Install: `wsl --install Ubuntu-26.04 --name t3-agent --no-launch --location C:\WSL\t3-agent`.
 2. Configure as root (`wsl -d t3-agent -u root`): write `/etc/wsl.conf`
