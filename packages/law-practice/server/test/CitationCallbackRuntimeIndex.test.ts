@@ -34,6 +34,7 @@ import {
   CitationSessionResourceDescriptors,
   makeCitationSessionDocumentProjector,
 } from "@beep/law-practice-server/internal/Citation/SessionDocument";
+import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -41,6 +42,8 @@ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -53,6 +56,7 @@ import {
   normalizeCallbackFixtureResource,
   prepareCallbackObservation,
 } from "./CitationCallbackSession.fixtures.ts";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import type {
   CitationFullsCallbackInput,
@@ -481,6 +485,31 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
       );
       const citationResult37 = yield* Effect.flip(owner.read);
       expect(citationResult37.reason).toBe("invalid-input");
+    })
+  );
+  it.effect("refuses index issuance when captured entropy or hashing fails", () =>
+    Effect.gen(function* () {
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(bundle);
+      const random = yield* SecureRandom.SecureRandom;
+      const digest = yield* Digest.Digest;
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const owner = { limits, read: () => Effect.fail(invalid()), step: Effect.void };
+      const cases = [
+        { random: { ...random, randomBytes: () => Effect.die("synthetic entropy failure") }, digest },
+        { random, digest: makeTestCitationDigest(() => Effect.die("synthetic digest failure")) },
+        { random, digest: makeTestCitationDigest(() => Effect.succeed(new Uint8Array(1))) },
+      ];
+      for (const row of cases) {
+        const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+          Effect.provideService(CitationFrozenEditions, frozen),
+          Effect.provideService(SecureRandom.SecureRandom, row.random),
+          Effect.provideService(Digest.Digest, row.digest)
+        );
+        const failure = yield* factory.build(owner).pipe(Effect.flip);
+        expect(failure).toMatchObject({ reason: "identity-failed" });
+        expect("cause" in failure).toBe(false);
+      }
     })
   );
 });

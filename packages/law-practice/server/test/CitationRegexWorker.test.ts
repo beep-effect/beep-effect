@@ -146,6 +146,20 @@ const assertModeCaptures = Effect.fn("RegexWorkerTest.assertModeCaptures")(funct
 });
 
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices: true })("owned native regex", (it) => {
+  it.effect("rejects malformed policy, runtime and match quotas before spawning", () =>
+    Effect.gen(function* () {
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const invalidPolicy = yield* makeCitationRegexWorker(null, null, []).pipe(Effect.flip);
+      expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
+      const invalidRuntime = yield* makeCitationRegexWorker(limits, null, []).pipe(Effect.flip);
+      expect(invalidRuntime).toMatchObject({ reason: "invalid-runtime" });
+      const { worker, observed } = yield* setup([descriptor]);
+      const invalidQuota = yield* worker.evaluate(pattern, native("b ab"), 0, -1).pipe(Effect.flip);
+      expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });
+      const exits = yield* observed.snapshot;
+      expect(exits).toEqual({ spawned: 0, confirmed: 0 });
+    })
+  );
   it.effect("runs the one-request program with complete mode results and closed limit failures", () =>
     Effect.gen(function* () {
       const stdio = yield* Stdio.Stdio;

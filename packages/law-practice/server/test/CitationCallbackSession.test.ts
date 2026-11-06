@@ -563,4 +563,36 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       }),
     { timeout: 30_000 }
   );
+  it.effect("rejects malformed work limits and detached identity digest failures", () =>
+    Effect.gen(function* () {
+      const badWork = yield* makeCitationResolutionWork(null).pipe(Effect.flip);
+      expect(badWork).toMatchObject({ reason: "invalid-input" });
+      const input = yield* context(
+        Row.make({
+          name: "failed-detached-identity",
+          kinds: ["case"],
+          pages: {},
+          bindings: {},
+          events: [],
+          outcome: { status: "value", groups: [] },
+        })
+      );
+      const prepared = yield* prepareCitationResolution(input);
+      const source = A.getUnsafe(prepared.mentions, 0).citation;
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      for (const digest of [
+        makeTestCitationDigest(() => Effect.die("synthetic detached digest failure")),
+        makeTestCitationDigest(() => Effect.succeed(new Uint8Array(1))),
+      ]) {
+        const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+          Effect.provideService(CitationResolutionWork, work),
+          Effect.provideService(Digest.Digest, digest)
+        );
+        yield* dictionary.start;
+        const failure = yield* dictionary.registerDetached(source).pipe(Effect.flip);
+        expect(failure).toMatchObject({ reason: "identity-failed" });
+        expect("cause" in failure).toBe(false);
+      }
+    })
+  );
 });

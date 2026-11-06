@@ -131,7 +131,7 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         );
         const emit = yield* values.retainHost({ function: "emit" });
         const builtin = yield* values.retainHost({ function: "builtin" });
-        const makePipeline = (value: CitationCleanerObject, name: typeof Row.Type.cleaner, repeat = false) =>
+        const makePipeline = (value: CitationCleanerObject, name: unknown, repeat = false) =>
           makeCitationCleanerPipeline(policy).pipe(
             Effect.provideService(
               CitationCleanerRuntime,
@@ -219,6 +219,29 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
           spawned: 2,
           retired: 2,
         });
+        const invalidBytes = yield* S.decodeEffect(S.Uint8ArrayFromHex)(
+          "3c6d65746120636861727365743d227574662d38223e3c6469763effc0afeda0803c2f6469763e"
+        );
+        const refusalCases = [
+          { name: "not-installed", value: yield* values.text("x"), reason: "unknown-step" },
+          { name: "html", value: yield* values.text(""), reason: "html-parse-error" },
+          {
+            name: "html",
+            value: yield* values.text('<?xml version="1.0" encoding="UTF-8"?><p>x</p>'),
+            reason: "html-unicode-encoding-declaration",
+          },
+          { name: "html", value: yield* values.bytes(invalidBytes), reason: "html-unicode-decode-error" },
+        ];
+        yield* Effect.forEach(
+          refusalCases,
+          Effect.fnUntraced(function* (row) {
+            const pipeline = yield* makePipeline(row.value, row.name);
+            const failure = yield* pipeline.run({ text: "x", plan: "closed-builtin-failure" }).pipe(Effect.flip);
+            expect(failure).toMatchObject({ reason: row.reason });
+            expect("cause" in failure).toBe(false);
+          }),
+          { concurrency: 1, discard: true }
+        );
         const unchanged = yield* values.text("A");
         const repeated = yield* makePipeline(unchanged, "underscores", true);
         const result = yield* repeated.run({ text: "x", plan: "same-reference-still-charges" });

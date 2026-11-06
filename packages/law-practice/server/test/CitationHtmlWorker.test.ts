@@ -19,7 +19,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
+import { ChildProcessSpawner, make as makeSpawner } from "effect/process/ChildProcessSpawner";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/internal/Citation/HtmlCompletion";
@@ -41,6 +41,34 @@ import {
 } from "./CitationNativeSpawner.fixtures.ts";
 
 it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes", (it) => {
+  it.effect("rejects malformed policy, runtime and input before starting a child", () =>
+    Effect.gen(function* () {
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const invalidPolicy = yield* makeCitationHtmlWorker(null, null).pipe(Effect.flip);
+      expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
+      const invalidRuntime = yield* makeCitationHtmlWorker(limits, null).pipe(Effect.flip);
+      expect(invalidRuntime).toMatchObject({ reason: "invalid-runtime" });
+      const f = yield* fixture("released");
+      let spawns = 0;
+      const worker = yield* makeCitationHtmlWorker(limits, f).pipe(
+        Effect.provideService(
+          ChildProcessSpawner,
+          makeSpawner(() =>
+            Effect.sync(() => {
+              spawns++;
+              throw new Error("malformed input started a child");
+            })
+          )
+        )
+      );
+      for (const clean of [worker.clean, worker.cleanBytes, worker.cleanUnicode]) {
+        const failure = yield* clean(null).pipe(Effect.flip);
+        expect(failure).toMatchObject({ reason: "invalid-input" });
+        expect("cause" in failure).toBe(false);
+      }
+      expect(spawns).toBe(0);
+    })
+  );
   it.effect(
     "executes the real bundled kernel and acknowledges cleanup before returning",
     () =>
