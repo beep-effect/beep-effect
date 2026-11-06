@@ -256,6 +256,7 @@ export class ClaimFrameArgument extends S.Opaque<ClaimFrameArgument, { readonly 
 export class ClaimSourceFrame extends S.Opaque<ClaimSourceFrame, { readonly brand: unique symbol }>()(
   S.Struct({
     ordinal: PosInt,
+    publicOwner: PosInt,
     extent: TextAnchor,
     lexicalHeader: TextAnchor,
     parent: S.OptionFromNullOr(PosInt),
@@ -317,6 +318,86 @@ export const ClaimElementGrouping = LiteralKit([
  */
 export type ClaimElementGrouping = typeof ClaimElementGrouping.Type;
 /**
+ * Existing positive source membership licensing one public nominal owner.
+ * @category models
+ * @since 0.0.0
+ */
+export const ClaimTermOwnerCertificate = LiteralKit(["existing-element-nominal", "preamble-clause-nominal"])
+  .toTaggedUnion("kind")({
+    "existing-element-nominal": {
+      element: PosInt,
+      production: ClaimElementGrouping,
+      lexicalRegion: TextAnchor,
+      roleNominal: PosInt,
+    },
+    "preamble-clause-nominal": {
+      element: PosInt,
+      roleNominal: PosInt,
+      sourceClause: PosInt,
+      clauseNominal: TextAnchor,
+      preamble: TextAnchor,
+    },
+  })
+  .pipe(
+    $I.annoteSchema("ClaimTermOwnerCertificate", {
+      description:
+        "Exact existing production or accepted preamble clause membership; containment alone is no ownership proof.",
+    })
+  );
+/**
+ * Source membership certificate type.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ClaimTermOwnerCertificate = typeof ClaimTermOwnerCertificate.Type;
+/**
+ * Exclusive complete core region, independently bounded from the grammatical header.
+ * @category models
+ * @since 0.0.0
+ */
+export class ClaimOwnedTermRegion extends S.Opaque<ClaimOwnedTermRegion, { readonly brand: unique symbol }>()(
+  S.Struct({
+    ordinal: PosInt,
+    ownerElement: PosInt,
+    core: PosInt,
+    extent: TextAnchor,
+    certificate: ClaimTermOwnerCertificate,
+  }).pipe(
+    $I.annoteSchema("ClaimOwnedTermRegion", {
+      description: "One source-local attached nominal index and its exact positively certified public owner region.",
+    })
+  )
+) {}
+/**
+ * Finite source barriers; a protected quote may still be contained by a complete named core.
+ * @category models
+ * @since 0.0.0
+ */
+export const ClaimSourceExclusion = LiteralKit([
+  "qualified-transition",
+  "declaration-metadata",
+  "dependency-citation",
+  "quoted-protection",
+])
+  .toTaggedUnion("kind")({
+    "qualified-transition": { extent: TextAnchor, preamble: TextAnchor, body: TextAnchor },
+    "declaration-metadata": { extent: TextAnchor, owner: PosInt },
+    "dependency-citation": { extent: TextAnchor, claimReferences: S.Array(PosInt) },
+    "quoted-protection": { extent: TextAnchor },
+  })
+  .pipe(
+    $I.annoteSchema("ClaimSourceExclusion", {
+      description:
+        "Typed qualified syntax, declaration labels, exact dependency citations and balanced quote barriers; never lexical exception lists.",
+    })
+  );
+/**
+ * Source exclusion type.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ClaimSourceExclusion = typeof ClaimSourceExclusion.Type;
+/**
  * Canonical source declaration; unlabelled items never fabricate label anchors.
  * @category models
  * @since 0.0.0
@@ -370,6 +451,7 @@ export class ClaimPlannedElement extends S.Opaque<ClaimPlannedElement, { readonl
     kind: S.Literals(["preamble-subject", "limitation", "sub-limitation", "functional-relation"]),
     grouping: ClaimElementGrouping,
     nominals: S.Array(ClaimNominalSpan),
+    ownedTermRegions: S.Array(ClaimOwnedTermRegion),
   }).pipe(
     $I.annoteSchema("ClaimPlannedElement", {
       description:
@@ -403,6 +485,7 @@ export class ClaimSourceElementPlan extends S.Opaque<ClaimSourceElementPlan, { r
     remainingWork: S.Int,
     frames: S.Array(ClaimSourceFrame),
     nominals: S.Array(ClaimAttachedNominal),
+    sourceExclusions: S.Array(ClaimSourceExclusion),
     elements: S.Array(ClaimPlannedElement),
     declarations: S.Array(ClaimListDeclaration),
     declarationPlans: S.Array(ClaimSourceDeclaration),

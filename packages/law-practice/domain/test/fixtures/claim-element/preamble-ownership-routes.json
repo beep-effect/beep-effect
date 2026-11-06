@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "preamble-ownership-natural-route-oracles/v1",
+  "sources": [
+    {
+      "claimNumber": 1,
+      "text": "A cap with a strip, wherein the cap is mounted.",
+      "refs": [],
+      "owner": {
+        "path": "1",
+        "anchor": {
+          "startChar": 11,
+          "endChar": 18,
+          "quote": "a strip"
+        }
+      },
+      "admitted": true
+    },
+    {
+      "claimNumber": 2,
+      "text": "A cover, wherein the cover is mounted.",
+      "refs": [],
+      "owner": null,
+      "admitted": true
+    },
+    {
+      "claimNumber": 3,
+      "text": "The cap of claim 1, wherein the strip is mounted.",
+      "refs": [1],
+      "ref": {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 28,
+          "endChar": 37,
+          "quote": "the strip"
+        }
+      },
+      "admitted": true
+    },
+    {
+      "claimNumber": 4,
+      "text": "The cover of claim 2, wherein the strip is mounted.",
+      "refs": [2],
+      "ref": {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 30,
+          "endChar": 39,
+          "quote": "the strip"
+        }
+      },
+      "admitted": true
+    },
+    {
+      "claimNumber": 5,
+      "text": "The cap of claims 1 or 2, wherein the strip is mounted.",
+      "refs": [1, 2],
+      "ref": {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 34,
+          "endChar": 43,
+          "quote": "the strip"
+        }
+      },
+      "admitted": true
+    }
+  ],
+  "controls": [
+    {
+      "case": "actual-ancestor",
+      "current": 3,
+      "route": [3, 1],
+      "expectedIntroducing": {
+        "path": "1",
+        "anchor": {
+          "startChar": 11,
+          "endChar": 18,
+          "quote": "a strip"
+        }
+      }
+    },
+    {
+      "case": "sibling-independent-not-donor",
+      "current": 4,
+      "route": [4, 2],
+      "expectedIntroducing": null
+    },
+    {
+      "case": "alternative-valid-route",
+      "current": 5,
+      "route": [5, 1],
+      "expectedIntroducing": {
+        "path": "1",
+        "anchor": {
+          "startChar": 11,
+          "endChar": 18,
+          "quote": "a strip"
+        }
+      }
+    },
+    {
+      "case": "alternative-unsupported-route",
+      "current": 5,
+      "route": [5, 2],
+      "expectedIntroducing": null
+    },
+    {
+      "case": "later-same-source-not-donor",
+      "text": "A cap, wherein the strip is mounted with a strip.",
+      "ref": {
+        "startChar": 15,
+        "endChar": 24,
+        "quote": "the strip"
+      },
+      "laterCore": {
+        "startChar": 41,
+        "endChar": 48,
+        "quote": "a strip"
+      },
+      "expectedIntroducing": null
+    },
+    {
+      "case": "failed-ancestor-no-donation",
+      "current": 3,
+      "route": [3, 1],
+      "overrideSourceAdmission": {
+        "claimNumber": 1,
+        "admitted": false
+      },
+      "expectedIntroducing": null,
+      "expectedCoverage": "adverse-partial"
+    },
+    {
+      "case": "relative-inherited-subject-no-second-public-term",
+      "fixture": "preamble-existing-relative-object",
+      "subjectCore": "cap",
+      "owningElement": "root",
+      "usingFrames": ["froot", "frelative"],
+      "expectedPublicOccurrences": 1
+    }
+  ],
+  "normalizerOrPolicyOutcomeClaimed": false,
+  "benchmarkLabel": false,
+  "runtimeExecuted": false
+}

@@ -31,7 +31,7 @@ import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import { qualifyClaimInput } from "../PatentDocument/PatentDocument.normalizer.ts";
 import { compileClaimClauseRoles } from "./ClaimClauseRole.behavior.ts";
 import { ClaimBoundRolePlan, ClaimRoleDecomposition } from "./ClaimClauseRole.model.ts";
-import { projectClaimRoleTerms } from "./ClaimClauseRole.projection.ts";
+import { projectClaimRoleTerms, validateClaimSourceOwnership } from "./ClaimClauseRole.projection.ts";
 import { compileClaimSourceElements } from "./ClaimClauseRole.structure.ts";
 import { ClaimDecompositionError } from "./ClaimElement.errors.ts";
 import { ClaimInputQualification } from "./ClaimElement.input.model.ts";
@@ -2254,6 +2254,7 @@ const projectedClaimInput = (
     remaining -= amount;
     return remaining >= 0;
   };
+  if (!validateClaimSourceOwnership(structural, charge)) return O.none();
   if (!charge(structural.elements.length ** 2 + structural.roles.nominals.length)) return O.none();
   const paths = A.reduce(structural.elements, HashMap.empty<number, string>(), (index, element) => {
     const parent = O.flatMap(element.parent, (ordinal) => HashMap.get(index, ordinal));

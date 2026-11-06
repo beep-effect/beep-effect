@@ -2504,6 +2504,16 @@
       "line": 125,
       "owner": "@beep/law-practice-domain",
       "reason": "Fixed reviewed source grammar regression controls decode 54 authored source plans and three route families to assert exact UTF-16 terms, head/outer extents, kinds, topology, frame argument provenance, functional partitions and route verdicts, plus atomic negative controls. Random codec round trips cannot establish those source grammar obligations. Public claim/tree model properties remain covered by the existing domain model tests; no arbitrary padding is introduced. This exception is limited to @beep/law-practice-domain fixed source-regression tests and must be re-reviewed when this file or its asserted invariants change."
+    },
+    {
+      "file": "packages/law-practice/domain/test/ClaimElement.preamble-ownership.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 207,
+      "owner": "@beep/law-practice-domain",
+      "reason": "Source-led fixed ownership conformance and corrupt-plan regressions require exact token/core/head/frame/citation/route/partition anchors. Random independently generated schema values do not provide the joint qualified-source and grammatical-owner certificates these assertions exercise. This scoped exception covers only this file/rule occurrence; source proof, actual budget controls and output assertions remain required."
     }
   ],
   "backlog": []

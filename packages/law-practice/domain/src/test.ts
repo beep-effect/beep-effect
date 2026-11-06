@@ -41,3 +41,19 @@
  * @since 0.0.0
  */
 export { fixtureSource, TestCrypto } from "./internal/officeActionFixture.ts";
+/**
+ * Pure inspection-plan assertions for source-only ownership controls.
+ *
+ * @example
+ * ```ts
+ * import { projectClaimRoleTerms, validateClaimSourceOwnership } from "@beep/law-practice-domain/test"
+ * console.log(typeof projectClaimRoleTerms, typeof validateClaimSourceOwnership) // "function", "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export {
+  projectClaimRoleTerms,
+  validateClaimSourceOwnership,
+} from "./values/ClaimElement/ClaimClauseRole.projection.ts";
