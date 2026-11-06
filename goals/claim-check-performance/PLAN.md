@@ -1,6 +1,6 @@
 # Claim Checker Performance Plan
 
-Status: active. This nominal/predicate candidate retains 41/538 exact structures, parses 537/538 and abstains on 454/538. All original 37 and prior 41 passes remain. Accepted main includes parent #2685 and coverage repair #2706; the separate reviewed policy-work candidate measures 41 strict / 453 abstained and is ready to compose. Prospective source-only handbook and full 24-family / 567-claim frame are frozen, with all 572 raw context nodes retained; independent references, semantic subgroup membership and metric truth remain unaccepted. Every usefulness and final delivery gate remains required.
+Status: active. The composed nominal/predicate/policy candidate retains 41/538 exact structures, parses 537/538 and abstains on 453/538. All original 37 and prior 41 passes remain; selected work-limit claims fall from 47 to 30 without losing a substantive finding. Accepted main includes parent #2685 and coverage repair #2706. The prospective source-only handbook and full 24-family / 567-claim frame are frozen, with all 572 raw context nodes retained; new references, semantic subgroup membership and metric truth remain unaccepted. Broader clause/nominal-role implementation and ownership repair under review are separate active lanes. Every usefulness and final delivery gate remains required.
 
 ## P0 — Baseline and evaluation integrity
 
