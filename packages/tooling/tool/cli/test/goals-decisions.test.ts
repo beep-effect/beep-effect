@@ -200,7 +200,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         expect(rows).toEqual([]);
         yield* runGoalsCommand(["manifest"]);
         const logs = yield* TestConsole.logLines;
-        expect(A.some(logs, Str.includes("OK: every researchReports array matches"))).toBe(true);
+        expect(logs).toContainEqual(expect.stringContaining("OK: every researchReports array matches"));
       })
     );
 

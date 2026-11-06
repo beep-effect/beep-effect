@@ -310,7 +310,7 @@ describe("goal manifest researchReports projection", () => {
         assert.deepStrictEqual(O.getOrThrow(A.head(calls)).args, ["biome", "format", "--write", manifest]);
         const rewritten = yield* fs.readFileString(manifest);
         const parsed = Result.getOrThrow(
-          S.decodeUnknownResult(S.fromJsonString(S.Struct({ researchReports: S.Array(S.String) })))(rewritten)
+          S.decodeResult(S.fromJsonString(S.Struct({ researchReports: S.Array(S.String) })))(rewritten)
         );
         assert.deepStrictEqual(parsed.researchReports, ["research/SOURCES.md"]);
       })
