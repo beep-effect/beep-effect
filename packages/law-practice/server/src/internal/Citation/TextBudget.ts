@@ -56,8 +56,8 @@ export const makeCitationTextBudget = Effect.fn("Citation.makeTextBudget")(funct
   const reserve = (units: number) => capacity.exclusive(reserveUnlocked(units));
   const withCapacity: CitationTextBudget["Service"]["withCapacity"] = (produce) =>
     capacity.borrow(
-      Effect.uninterruptibleMask((restore) =>
-        Effect.gen(function* () {
+      Effect.uninterruptibleMask(
+        Effect.fnUntraced(function* (restore) {
           const remaining = limits.producedTextUtf16 - (yield* Ref.get(used));
           const result = yield* restore(produce(remaining));
           yield* reserveUnlocked(result.units);

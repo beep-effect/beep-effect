@@ -303,8 +303,8 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
       capacity.borrow(
         ensureOpen.pipe(
           Effect.andThen(
-            Effect.uninterruptibleMask((restore) =>
-              Effect.gen(function* () {
+            Effect.uninterruptibleMask(
+              Effect.fnUntraced(function* (restore) {
                 const remaining = limits.producedTextUtf16 - (yield* Ref.get(state)).producedTextUtf16;
                 const run = Effect.fnUntraced(function* (allowance: number) {
                   const result = yield* restore(produce(allowance));

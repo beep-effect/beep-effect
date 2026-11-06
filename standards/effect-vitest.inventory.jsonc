@@ -5928,6 +5928,28 @@
       "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
     },
     {
+      "id": "EV010:packages/law-practice/server/test/CitationDiffKernel.test.ts:6:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationDiffKernel.test.ts",
+      "line": 6,
+      "endLine": 6,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reads the committed authenticated WASM asset and sealed original-source diff corpus through the actual filesystem. Seeding MemoryFileSystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-06-reference-token-extraction.md."
+    },
+    {
       "id": "EV010:packages/law-practice/server/test/CitationExtractorOrdering.test.ts:7:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -6126,13 +6148,13 @@
       "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
     },
     {
-      "id": "EV010:packages/law-practice/server/test/CitationHtmlKernel.test.ts:12:@effect/platform-bun/BunFileSystem@0#1",
+      "id": "EV010:packages/law-practice/server/test/CitationHtmlKernel.test.ts:10:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationHtmlKernel.test.ts",
-      "line": 12,
-      "endLine": 12,
+      "line": 10,
+      "endLine": 10,
       "symbol": "@effect/platform-bun/BunFileSystem",
       "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
       "class": "platform-filesystem-candidate",

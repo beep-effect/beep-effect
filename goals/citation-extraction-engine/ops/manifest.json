@@ -111,7 +111,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-06-plain-case-name-composition.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-case-name-selection.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-full-case-metadata.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-06-full-citation-extraction.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-full-citation-extraction.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-token-extraction.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -198,7 +199,8 @@
     "python3 goals/citation-extraction-engine/ops/verify-plain-case-name.py --self-test",
     "python3 goals/citation-extraction-engine/ops/verify-case-name-selection.py --self-test",
     "python3 goals/citation-extraction-engine/ops/verify-case-metadata.py --self-test",
-    "python3 goals/citation-extraction-engine/ops/verify-full-citation.py --self-test"
+    "python3 goals/citation-extraction-engine/ops/verify-full-citation.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-reference-token.py --self-test"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
@@ -543,6 +545,14 @@
     {
       "path": "ops/verify-full-citation.py",
       "purpose": "Seal full-citation constructor evidence, reject corruption and optionally replay the clean pinned oracle; not exhaustive target extraction proof."
+    },
+    {
+      "path": "ops/probe-reference-token.py",
+      "purpose": "Capture original short/Id./supra/unknown construction from default-tokenized Documents, complete state and spans, retaining no-target observations."
+    },
+    {
+      "path": "ops/verify-reference-token.py",
+      "purpose": "Seal original reference constructor evidence and shared V0 profile dependency; reject corruption and optionally replay the pinned oracle."
     }
   ]
 }

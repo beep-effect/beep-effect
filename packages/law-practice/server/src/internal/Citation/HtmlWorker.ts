@@ -88,6 +88,11 @@ const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
 const Text = S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.sourceUtf16));
 const StageText = S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.producedTextUtf16));
 const Output = S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima.producedTextUtf16));
+const WorkerStartupJson = S.fromJsonString(CitationHtmlWorkerStartup).pipe(
+  $I.annoteSchema("WorkerStartupJson", {
+    description: "Captured static boundary codec for bounded citation processing.",
+  })
+);
 /**
  * Capture Clock, process spawner and owning Scope. Returned methods have
  * R = never. Admission includes preparation; one clean timer covers preparation,
@@ -121,7 +126,7 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
   const assetPath = yield* path
     .fromFileUrl(new URL("../../../assets/citation-html/kernel.wasm", import.meta.url))
     .pipe(Effect.mapError(() => failure("invalid-runtime")));
-  const argument = yield* S.encodeEffect(S.fromJsonString(CitationHtmlWorkerStartup))(
+  const argument = yield* S.encodeEffect(WorkerStartupJson)(
     CitationHtmlWorkerStartup.make({ maximum: limits.processMessageBytes, assetPath })
   ).pipe(Effect.mapError(() => failure("invalid-runtime")));
   // Standalone private workers own a local pool. Engine composition supplies one

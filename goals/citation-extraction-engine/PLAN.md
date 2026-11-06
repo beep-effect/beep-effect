@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Reference-token checkpoint (2026-11-06): short/Id./supra/unknown construction
+now connects existing pin/name/edition/court services under one captured owner.
+All 24 original cases match complete state and spans on both runtimes, with
+94 confirmed exits each. Exact optional source-created plaintiff presence is
+preserved. Full/reference/native-diff/cleaner regression passes fourteen tests;
+hosted verification and the complete extraction loop remain open. See
+[reference evidence](history/evidence/2026-11-06-reference-token-extraction.md).
+
 Full-token construction checkpoint (2026-11-06): original edition-source dispatch
 now connects to complete fresh case/law/journal models through existing family
 services. All fifteen direct constructor examples match on both runtimes, with

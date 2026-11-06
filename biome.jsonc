@@ -72,6 +72,8 @@
       // Canonical Python payload bytes are hash-bound and deliberately retain
       // upstream text. ops/check-operations.ts validates this generated corpus.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
+      // Sealed generated diff corpus; dedicated schema/hash verification owns its bytes.
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/diff-kernel.json",
       // Complete source traces; ops/check-cleaner-pipeline.ts seals their bytes.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json",
       // Complete byte-source outcomes sealed by ops/verify-html-bytes.py.

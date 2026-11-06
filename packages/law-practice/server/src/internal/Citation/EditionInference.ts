@@ -39,6 +39,9 @@ export class CitationEditionInferenceFailure extends S.TaggedError<
     description: "Edition inference failed without source values or nested causes.",
   })
 ) {}
+const PythonYear = S.Union([S.Int, S.BigInt]).pipe(
+  $I.annoteSchema("PythonYear", { description: "Lossless Python integer year from native date extraction." })
+);
 /** Source sequences preserve duplicates and exact-before-variation priority.
  * @internal @category models @since 0.0.0
  */
@@ -49,7 +52,7 @@ export class CitationEditionInferenceInput extends S.Opaque<
   S.Struct({
     exact: Refs,
     variation: Refs,
-    year: S.NullOr(S.Union([S.Int, S.BigInt])),
+    year: S.NullOr(PythonYear),
     prior: S.NullOr(CitationEditionRef),
   }).pipe(
     $I.annoteSchema("CitationEditionInferenceInput", {
@@ -91,9 +94,7 @@ export const makeCitationEditionInference = Effect.fn("Citation.makeEditionInfer
     const ref = yield* S.decodeUnknownEffect(CitationEditionRef)(reference).pipe(
       Effect.mapError(() => fail("invalid-input"))
     );
-    const year = yield* S.decodeUnknownEffect(S.Union([S.Int, S.BigInt]))(yearInput).pipe(
-      Effect.mapError(() => fail("invalid-input"))
-    );
+    const year = yield* S.decodeUnknownEffect(PythonYear)(yearInput).pipe(Effect.mapError(() => fail("invalid-input")));
     const now = yield* DateTime.nowInCurrentZone.pipe(Effect.provideService(DateTime.CurrentTimeZone, zone));
     const current = yield* S.decodeEffect(CurrentYear)(DateTime.getPart(now, "year")).pipe(
       Effect.mapError(() => fail("invalid-clock"))

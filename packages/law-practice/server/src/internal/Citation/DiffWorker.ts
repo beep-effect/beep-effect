@@ -1,6 +1,7 @@
 /** Exact default diff through the existing shared admission/physical owner.
  * @internal @packageDocumentation @since 0.0.0
  */
+import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -30,6 +31,7 @@ import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { captureCitationTextReservation } from "./TextBudget.ts";
 import type { CitationPythonUnicodeFailure, CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
+const $I = $LawPracticeServerId.create("internal/Citation/DiffWorker");
 const failure = (reason: CitationDiffWorkerFailure["reason"]) => CitationDiffWorkerFailure.make({ reason });
 const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
   CitationSafetyLimitExceeded.make({ operation: "extract", limit });
@@ -41,6 +43,9 @@ const layout = (source: CitationPythonUnicodeStorage, units: number) =>
     pythonLength: source.bytes.byteLength / source.width,
     utf16Units: units,
   });
+const UnicodeValue = S.toType(CitationPythonUnicodeStorage).pipe(
+  $I.annoteSchema("UnicodeValue", { description: "Captured static boundary codec for bounded citation processing." })
+);
 /** Capture policy, runtime, Clock, Scope, process spawner and optional composed
  * text/admission owners. Methods have R=never. Both layouts and the complete
  * request are preflighted before receiving copies or native admission. One
@@ -91,19 +96,18 @@ export const makeCitationDiffWorker = Effect.fn("Citation.makeDiffWorker")(funct
               Effect.mapError(() => failure("invalid-runtime"))
             );
             if (quota > limits.diffSteps) return yield* safety("diffSteps");
-            const beforeRaw = yield* S.decodeUnknownEffect(S.toType(CitationPythonUnicodeStorage))(beforeInput).pipe(
+            const beforeRaw = yield* S.decodeUnknownEffect(UnicodeValue)(beforeInput).pipe(
               Effect.mapError(invalidInput)
             );
-            const afterRaw = yield* S.decodeUnknownEffect(S.toType(CitationPythonUnicodeStorage))(afterInput).pipe(
-              Effect.mapError(invalidInput)
-            );
+            const afterRaw = yield* S.decodeUnknownEffect(UnicodeValue)(afterInput).pipe(Effect.mapError(invalidInput));
             let after = O.none<CitationPythonUnicodeValue>();
             let measured = O.none<CitationDiffJobLayout>();
             const before = yield* unicode
               .fromStorageReserved(beforeRaw, (beforeUnits) =>
                 unicode
-                  .fromStorageReserved(afterRaw, (afterUnits) =>
-                    Effect.gen(function* () {
+                  .fromStorageReserved(
+                    afterRaw,
+                    Effect.fnUntraced(function* (afterUnits) {
                       const plan = CitationDiffJobLayout.make({
                         before: layout(beforeRaw, beforeUnits),
                         after: layout(afterRaw, afterUnits),

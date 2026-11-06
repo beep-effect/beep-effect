@@ -75,6 +75,11 @@ export class CitationPreparedHtmlGeometry extends S.Opaque<
   )
 ) {}
 const invalid = () => CitationHtmlGeometryPreparationFailure.make({ reason: "invalid-configuration" });
+const PreparedHtmlValue = S.toType(CitationPreparedHtmlSource).pipe(
+  $I.annoteSchema("PreparedHtmlValue", {
+    description: "Captured static boundary codec for bounded citation processing.",
+  })
+);
 export const copyCitationHtmlGeometryConfiguration = Effect.fn("Citation.ownHtmlGeometryConfiguration")(function* (
   limits: CitationEngineLimits,
   config: CitationHtmlGeometryPreparationConfiguration
@@ -120,7 +125,7 @@ const prepare = Effect.fn("Citation.prepareHtmlGeometry")(function* (
   config: CitationHtmlGeometryPreparationConfiguration,
   raw: unknown
 ) {
-  const source = yield* S.decodeUnknownEffect(S.toType(CitationPreparedHtmlSource))(raw).pipe(
+  const source = yield* S.decodeUnknownEffect(PreparedHtmlValue)(raw).pipe(
     Effect.mapError(() => CitationHtmlGeometryPreparationFailure.make({ reason: "invalid-input" }))
   );
   return yield* prepareCitationHtmlGeometry(limits, regexRuntime, config, source.markup, Effect.succeed(source.plain));

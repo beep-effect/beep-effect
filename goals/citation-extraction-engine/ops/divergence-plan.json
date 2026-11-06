@@ -201,7 +201,15 @@
         "packages/law-practice/use-cases/test/fixtures/eyecite/full-extraction.json",
         "packages/law-practice/server/src/internal/Citation/FullExtraction.ts",
         "packages/law-practice/server/test/CitationFullExtraction.fixtures.ts",
-        "packages/law-practice/server/test/CitationFullExtraction.test.ts"
+        "packages/law-practice/server/test/CitationFullExtraction.test.ts",
+        "packages/law-practice/server/src/internal/Citation/ExtractionContext.ts",
+        "packages/law-practice/server/src/internal/Citation/ReferenceTokenExtraction.ts",
+        "packages/law-practice/server/test/CitationReferenceToken.fixtures.ts",
+        "packages/law-practice/server/test/CitationReferenceToken.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/reference-token.json",
+        "goals/citation-extraction-engine/ops/probe-reference-token.py",
+        "goals/citation-extraction-engine/ops/verify-reference-token.py",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-token-extraction.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

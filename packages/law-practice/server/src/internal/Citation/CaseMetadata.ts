@@ -179,21 +179,24 @@ const postMetadata = Effect.fn("Citation.applyFullCasePostMetadata")(function* (
     }),
   });
 });
-const guessCourt = Effect.fn("Citation.guessFullCaseCourt")(function* (
+/** Reuse original reporter-based court guessing inside an enclosing operation.
+ * @internal @category operations @since 0.0.0
+ */
+export const guessCitationCaseCourt = Effect.fn("Citation.guessFullCaseCourt")(function* (
   limits: CitationEngineLimits,
   owner: CitationFrozenEditions["Service"],
   candidates: CitationEditionInferenceInput,
-  metadata: CitationCaseMetadataFields
+  court: CitationPythonUnicodeStorage | null
 ) {
-  if (metadata.court !== null && metadata.court.bytes.length !== 0) return metadata;
+  if (court !== null && court.bytes.length !== 0) return court;
   for (const ref of A.appendAll(candidates.exact, candidates.variation)) {
     const edition = yield* readCitationFrozenEdition(owner, ref);
     if (!edition.value.reporter.is_scotus) continue;
     const strings = yield* makeCitationRegexInput(limits);
-    const court = yield* strings.prepareText("scotus", () => Effect.void);
-    return CitationCaseMetadataFields.make({ ...metadata, court: court.value.storage });
+    const guessed = yield* strings.prepareText("scotus", () => Effect.void);
+    return guessed.value.storage;
   }
-  return metadata;
+  return court;
 });
 const prepare = Effect.fn("Citation.prepareFullCaseMetadata")(function* (
   limits: CitationEngineLimits,
@@ -230,7 +233,8 @@ const prepare = Effect.fn("Citation.prepareFullCaseMetadata")(function* (
     metadata = CitationCaseMetadataFields.make({ ...metadata, ...pre.value.metadata });
     fullSpanStart = pre.value.fullSpanStart;
   }
-  metadata = yield* guessCourt(limits, owner, candidates, metadata);
+  const court = yield* guessCitationCaseCourt(limits, owner, candidates, metadata.court);
+  metadata = CitationCaseMetadataFields.make({ ...metadata, court });
   const editionGuess = yield* editions.guess({ ...candidates, year });
   return {
     metadata,

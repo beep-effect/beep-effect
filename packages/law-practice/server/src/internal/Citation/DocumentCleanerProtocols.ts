@@ -34,15 +34,20 @@ const GeneratorState = S.Struct({
 /** Private observation of an issued named container; not a request or wire value.
  * @internal @category models @since 0.0.0
  */
-export const CitationDocumentCleanerContainerState = S.Struct({
-  kind: Kind,
-  size: S.Natural,
-  generator: S.Option(GeneratorState),
-}).pipe(
-  $I.annoteSchema("CitationDocumentCleanerContainerState", {
-    description: "Owned named container shape and optional shared generator state.",
-  })
-);
+export class CitationDocumentCleanerContainerState extends S.Opaque<
+  CitationDocumentCleanerContainerState,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    kind: Kind,
+    size: S.Natural,
+    generator: S.Option(GeneratorState),
+  }).pipe(
+    $I.annoteSchema("CitationDocumentCleanerContainerState", {
+      description: "Owned named container shape and optional shared generator state.",
+    })
+  )
+) {}
 const Input = S.Struct({ kind: Kind, names: S.Array(CitationBuiltinCleanerName) }).pipe(
   $I.annoteSchema("Input", { description: "Trusted named-container configuration; no host iterator or callback data." })
 );
@@ -57,6 +62,9 @@ const invalid = () => CitationCleanerFailure.make({ reason: "invalid-input" });
 const sourceFailure = (sourceError: CitationDocumentInputFailure["sourceError"]) =>
   CitationDocumentInputFailure.make({ reason: "source-protocol", sourceError });
 
+const LimitsValue = S.toType(CitationEngineLimits).pipe(
+  $I.annoteSchema("LimitsValue", { description: "Captured static boundary codec for bounded citation processing." })
+);
 /** Capture one value owner, original cleaner protocols and optional host Document
  * protocols. Issued named containers share their exact handles between constructor
  * truth/membership and cleaner iteration. Selecting a plan never iterates it;
@@ -69,7 +77,7 @@ const sourceFailure = (sourceError: CitationDocumentInputFailure["sourceError"])
 export const makeCitationDocumentCleanerProtocols = Effect.fn("Citation.makeDocumentCleanerProtocols")(function* (
   policy: unknown
 ) {
-  const limits = yield* S.decodeUnknownEffect(S.toType(CitationEngineLimits))(policy).pipe(Effect.mapError(invalid));
+  const limits = yield* S.decodeUnknownEffect(LimitsValue)(policy).pipe(Effect.mapError(invalid));
   const values = yield* CitationCleanerValues;
   const hostCleaner = yield* CitationCleanerProtocols;
   const hostDocument = yield* Effect.serviceOption(CitationDocumentInputProtocols);
@@ -142,7 +150,7 @@ export const makeCitationDocumentCleanerProtocols = Effect.fn("Citation.makeDocu
   });
   const inspect = Effect.fn("Citation.inspectDocumentNamedContainer")(function* (value: CitationCleanerObject) {
     const entry = yield* entryOf(value);
-    if (O.isNone(entry)) return O.none<typeof CitationDocumentCleanerContainerState.Type>();
+    if (O.isNone(entry)) return O.none<CitationDocumentCleanerContainerState>();
     const generator = O.isSome(entry.value.generator)
       ? yield* Ref.get(entry.value.generator.value).pipe(Effect.asSome)
       : O.none();

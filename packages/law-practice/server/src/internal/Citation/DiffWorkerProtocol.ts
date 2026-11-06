@@ -119,6 +119,9 @@ const ReplyJson = S.fromJsonString(CitationDiffWorkerReply);
 const Limit = S.Int.check(S.isBetween({ minimum: 1, maximum: max.processMessageBytes }));
 const encoder = new TextEncoder();
 const line = (text: string) => encoder.encode(`${text}\n`);
+const JobLayoutValue = S.toType(CitationDiffJobLayout).pipe(
+  $I.annoteSchema("JobLayoutValue", { description: "Captured static boundary codec for bounded citation processing." })
+);
 /** Metadata-only exact job preflight. No native/base64/frame payload is allocated.
  * @internal @category operations @since 0.0.0
  */
@@ -126,7 +129,7 @@ export const preflightCitationDiffJob = Effect.fn("Citation.preflightDiffJob")(f
   raw: unknown,
   maximum: number
 ) {
-  const layout = yield* S.decodeUnknownEffect(S.toType(CitationDiffJobLayout))(raw).pipe(Effect.mapError(invalid));
+  const layout = yield* S.decodeUnknownEffect(JobLayoutValue)(raw).pipe(Effect.mapError(invalid));
   const limit = yield* S.decodeEffect(Limit)(maximum).pipe(Effect.mapError(invalid));
   if (layout.before.utf16Units + layout.after.utf16Units > layout.maximumInputUtf16)
     return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "diffInputUtf16" });

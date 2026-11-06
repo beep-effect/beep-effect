@@ -80,6 +80,11 @@ const Exports = S.Struct({
 }).pipe($I.annoteSchema("Exports", { description: "Pinned default-diff ABI after complete asset authentication." }));
 const natural = S.is(S.Natural);
 const operations = ["-", "+", "="];
+const KernelRequestValue = S.toType(CitationDiffKernelRequest).pipe(
+  $I.annoteSchema("KernelRequestValue", {
+    description: "Captured static boundary codec for bounded citation processing.",
+  })
+);
 const validate = Effect.fn("Citation.validateDiffKernelInput")(function* (request: CitationDiffKernelRequest) {
   const { before, after, maximumInputUtf16 } = request;
   if (before.bytes.byteLength % before.width !== 0 || after.bytes.byteLength % after.width !== 0)
@@ -154,7 +159,7 @@ export const makeCitationDiffKernel = Effect.fn("Citation.makeDiffKernel")(funct
   const compiled = yield* compileCitationNativeWasm(input, citationDiffKernelAsset, () => fail("invalid-asset"));
   return {
     run: Effect.fn("Citation.runDiffKernel")(function* (raw: unknown) {
-      const request = yield* S.decodeUnknownEffect(S.toType(CitationDiffKernelRequest))(raw).pipe(
+      const request = yield* S.decodeUnknownEffect(KernelRequestValue)(raw).pipe(
         Effect.mapError(() => fail("invalid-input"))
       );
       yield* validate(request);

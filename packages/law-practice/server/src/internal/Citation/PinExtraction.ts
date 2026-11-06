@@ -79,7 +79,10 @@ export class CitationPinExtractionResult extends S.Opaque<
   )
 ) {}
 const Input = S.toType(CitationPinExtractionInput);
-const prepare = Effect.fn("Citation.preparePinExtraction")(function* (
+/** Reuse the exact pin helper inside an enclosing operation.
+ * @internal @category operations @since 0.0.0
+ */
+export const extractCitationPinCite = Effect.fn("Citation.preparePinExtraction")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
   config: CitationPublicationMetadataConfiguration,
@@ -128,7 +131,7 @@ export const makeCitationPinExtraction = Effect.fn("Citation.makePinExtraction")
     runtimeInput,
     configurationInput,
     "3d1b06d98647ef244e02b08aee15ff80a0fb3971528a8a9c97854dd35916bb3d",
-    prepare,
+    extractCitationPinCite,
     () => fail("invalid-configuration")
   );
   const apply = Effect.fn("Citation.extractPinCite")(

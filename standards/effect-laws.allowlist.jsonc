@@ -4,6 +4,14 @@
   "entries": [
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "packages/law-practice/server/src/internal/Citation/DocumentCleanerProtocols.ts",
+      "kind": "weak-collection",
+      "reason": "Named cleaner containers are issued object capabilities shared by Document and cleaner protocols. Weak identity membership rejects copied handles and permits abandoned containers to be collected without retaining their contents for the owner lifetime. Effect collections do not provide weak keys; scope closure replaces the issuer map.",
+      "owner": "@beep/law-practice-server",
+      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/law-practice/server/src/internal/Citation/CallbackObservations.ts",
       "kind": "weak-collection",
       "reason": "Default-branch observations are capabilities bound to the exact callback result object. Weak issuer membership rejects copied or structurally forged results without retaining every result and its encoded observation for the lifetime of the module. Effect collections cannot provide weak keys or identity-only issuance.",

@@ -46,8 +46,13 @@ export class CitationDiffWorkerStartup extends S.Opaque<CitationDiffWorkerStartu
   )
 ) {}
 /** @internal @category operations @since 0.0.0 */
+const WorkerStartupJson = S.fromJsonString(CitationDiffWorkerStartup).pipe(
+  $I.annoteSchema("WorkerStartupJson", {
+    description: "Captured static boundary codec for bounded citation processing.",
+  })
+);
 export const encodeCitationDiffStartup = Effect.fn("Citation.encodeDiffStartup")((startup: CitationDiffWorkerStartup) =>
-  S.encodeEffect(S.fromJsonString(CitationDiffWorkerStartup))(startup).pipe(
+  S.encodeEffect(WorkerStartupJson)(startup).pipe(
     Effect.mapError(() => CitationDiffWorkerFailure.make({ reason: "invalid-runtime" }))
   )
 );

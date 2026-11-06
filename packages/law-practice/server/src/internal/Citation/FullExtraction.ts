@@ -16,7 +16,7 @@ import {
   CitationCaseMetadataResult,
   makeCitationCaseMetadata,
 } from "./CaseMetadata.ts";
-import { CitationCaseNameSelectionInput } from "./CaseNameSelection.ts";
+import { CitationTokenExtractionInput, validateCitationTokenWord } from "./ExtractionContext.ts";
 import { CitationJournalMetadataConfiguration, makeCitationJournalMetadata } from "./JournalMetadata.ts";
 import {
   CitationFullLawMetadataResult,
@@ -71,10 +71,8 @@ export class CitationFullExtractionInput extends S.Opaque<
   { readonly brand: unique symbol }
 >()(
   S.Struct({
-    words: CitationCaseNameSelectionInput.fields.words,
-    index: CitationCaseNameSelectionInput.fields.index,
-    token: S.Struct({ ...CitationTokenSeed.fields, kind: S.tag("CitationToken"), short: S.Literal(false) }),
-    geometry: CitationCaseNameSelectionInput.fields.geometry,
+    ...CitationTokenExtractionInput.fields,
+    token: S.Struct({ ...CitationTokenSeed.fields, kind: S.tag("CitationToken"), short: S.tag(false) }),
   }).pipe(
     $I.annoteSchema("CitationFullExtractionInput", {
       description:
@@ -178,8 +176,6 @@ const emptyCase = CitationCaseMetadataFields.make({
   resolvedCaseName: null,
   resolvedCaseNameShort: null,
 });
-const sameNative = S.toEquivalence(CitationTokenSeed.fields.data);
-const sameGroups = S.toEquivalence(CitationTokenSeed.fields.groups);
 /** Select the original model class, instantiate fresh built-in state and run the
  * existing family service. Exactly one selected family owns operation admission;
  * the captured outer deadline covers source selection plus metadata. Returned
@@ -217,14 +213,7 @@ export const makeCitationFullExtraction = Effect.fn("Citation.makeFullExtraction
     const request = yield* decodeCitationMetadataWordRequest(limits, S.toType(CitationFullExtractionInput), raw, () =>
       fail("invalid-input")
     );
-    const word = yield* Effect.fromOption(A.get(request.words, request.index), () => fail("invalid-input"));
-    if (
-      word.kind !== "CitationToken" ||
-      !sameNative(word.data, request.token.data) ||
-      word.start !== request.token.start ||
-      !sameGroups(word.groups, request.token.groups)
-    )
-      return yield* fail("invalid-input");
+    yield* validateCitationTokenWord(request, () => fail("invalid-input"));
     const token = CitationTokenSeed.make(request.token);
     const selected = yield* dispatch.classify(token);
     const exact = yield* resolve(token.exact);

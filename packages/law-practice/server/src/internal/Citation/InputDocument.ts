@@ -113,6 +113,11 @@ const fail = (reason: typeof Reason.Type, sourceError: typeof SourceError.Type) 
 const Mode = LiteralKit(["Plain", "Markup", "Empty", "Both", "Unchanged"]).pipe(
   $I.annoteSchema("Mode", { description: "Original first matching branch after repeated live truth evaluations." })
 );
+const DocumentInputValue = S.toType(CitationDocumentInput).pipe(
+  $I.annoteSchema("DocumentInputValue", {
+    description: "Captured static boundary codec for bounded citation processing.",
+  })
+);
 const selectMode = Effect.fn("Citation.selectInputDocumentMode")(function* (
   protocols: CitationDocumentInputProtocols["Service"],
   input: CitationDocumentInput
@@ -212,7 +217,7 @@ const prepare = Effect.fn("Citation.initializeInputDocument")(function* (
   owned: Owned,
   raw: unknown
 ) {
-  const input = yield* S.decodeUnknownEffect(S.toType(CitationDocumentInput))(raw).pipe(
+  const input = yield* S.decodeUnknownEffect(DocumentInputValue)(raw).pipe(
     Effect.mapError(() => fail("invalid-input", "TypeError"))
   );
   yield* owned.values.assertOwned(input.plain);

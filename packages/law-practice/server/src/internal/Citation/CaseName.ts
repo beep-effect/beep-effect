@@ -67,6 +67,11 @@ const noneText = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8A
  */
 export const citationCaseNameWordText = (data: CitationPythonUnicodeStorage | null) =>
   data === null ? noneText : data;
+const CaseNameInputValue = S.toType(CitationCaseNameInput).pipe(
+  $I.annoteSchema("CaseNameInputValue", {
+    description: "Captured static boundary codec for bounded citation processing.",
+  })
+);
 /** Run the built-in name helper inside an existing captured operation.
  * @internal @category operations @since 0.0.0
  */
@@ -76,7 +81,7 @@ export const findCitationPlainCaseName = Effect.fn("Citation.findPlainCaseName")
   config: CitationCaseNameConfiguration,
   raw: unknown
 ) {
-  const request = yield* S.decodeUnknownEffect(S.toType(CitationCaseNameInput))(raw).pipe(
+  const request = yield* S.decodeUnknownEffect(CaseNameInputValue)(raw).pipe(
     Effect.mapError(() => CitationCaseNameScanFailure.make({ reason: "invalid-input" }))
   );
   const state = yield* scanCitationCaseName(limits, runtime, config.scan, request).pipe(

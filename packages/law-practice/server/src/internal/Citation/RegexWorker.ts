@@ -64,34 +64,33 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
         owner,
         acquireCitationNativeLease(admission, "extract", true, failure),
         () => failure("invalid-runtime"),
-        (operation) =>
-          Effect.gen(function* () {
-            const quota = yield* S.decodeUnknownEffect(CitationRegexWorkerJob.fields.maxMatches)(maximumMatches).pipe(
-              Effect.mapError(() => failure("invalid-runtime"))
-            );
-            if (quota > limits.patternMatches) return yield* safety("patternMatches");
-            const prepared = yield* preparation.prepare(pattern, source, flags, quota, () => operation.acquire, mode);
-            const bound = yield* registry.bind(prepared.pattern.value.storage, flags);
-            const argument = yield* encodeCitationRegexStartup(
-              CitationRegexWorkerStartup.make({ limits, descriptor: bound.descriptor, engine: registry.engine })
-            );
-            const result = yield* makeCitationRegexResult(
-              limits,
-              bound.program.groups,
-              prepared.source.layout.pythonLength
-            );
-            return yield* Effect.gen(function* () {
-              const child = yield* operation.start(citationNativeProcessCommand(runtime, argument));
-              const body = yield* callCitationRegexRpc(child, prepared.job, prepared.frame, limits.processMessageBytes);
-              return {
-                result: yield* result.decode(body, quota),
-                source: prepared.source,
-                descriptor: bound.descriptor,
-              };
-            }).pipe(
-              Effect.timeoutOrElse({ duration: regexDeadline, orElse: () => Effect.fail(safety("regexDeadline")) })
-            );
-          })
+        Effect.fnUntraced(function* (operation) {
+          const quota = yield* S.decodeUnknownEffect(CitationRegexWorkerJob.fields.maxMatches)(maximumMatches).pipe(
+            Effect.mapError(() => failure("invalid-runtime"))
+          );
+          if (quota > limits.patternMatches) return yield* safety("patternMatches");
+          const prepared = yield* preparation.prepare(pattern, source, flags, quota, () => operation.acquire, mode);
+          const bound = yield* registry.bind(prepared.pattern.value.storage, flags);
+          const argument = yield* encodeCitationRegexStartup(
+            CitationRegexWorkerStartup.make({ limits, descriptor: bound.descriptor, engine: registry.engine })
+          );
+          const result = yield* makeCitationRegexResult(
+            limits,
+            bound.program.groups,
+            prepared.source.layout.pythonLength
+          );
+          return yield* Effect.gen(function* () {
+            const child = yield* operation.start(citationNativeProcessCommand(runtime, argument));
+            const body = yield* callCitationRegexRpc(child, prepared.job, prepared.frame, limits.processMessageBytes);
+            return {
+              result: yield* result.decode(body, quota),
+              source: prepared.source,
+              descriptor: bound.descriptor,
+            };
+          }).pipe(
+            Effect.timeoutOrElse({ duration: regexDeadline, orElse: () => Effect.fail(safety("regexDeadline")) })
+          );
+        })
       ).pipe(timed)
   );
   return { evaluate, snapshot: owner.snapshot, reap: owner.reap };

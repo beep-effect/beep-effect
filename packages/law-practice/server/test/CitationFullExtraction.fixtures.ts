@@ -3,33 +3,25 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
-import {
-  CitationFrozenEditions,
-  makeCitationFrozenEditions,
-} from "@beep/law-practice-server/internal/Citation/FrozenEditions";
 import { makeCitationFullExtraction } from "@beep/law-practice-server/internal/Citation/FullExtraction";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { readCitationCaseMetadataConfiguration } from "./CitationCaseMetadata.fixtures.ts";
-import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
+import { installCitationFrozenMetadataRuntime } from "./CitationFrozenEditions.fixtures.ts";
 import { readCitationJournalMetadataCorpus } from "./CitationJournalMetadata.fixtures.ts";
 import { loadCitationLawMetadataFixtures } from "./CitationLawMetadata.fixtures.ts";
-import {
-  assertCitationWorkerCompositionReleased,
-  readCitationOracleFixture,
-  setupCitationMetadataRuntime,
-} from "./CitationRegexWorker.fixtures.ts";
+import { assertCitationWorkerCompositionReleased, readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import {
   CitationCaseNameDocument,
   CitationNativeUnicodeHex,
   CitationTokenSeedHex,
+  readCitationModelMetadata,
 } from "./CitationTokenSeed.fixtures.ts";
+import type { CitationFullExtractionOutcome } from "@beep/law-practice-server/internal/Citation/FullExtraction";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationFullExtraction");
@@ -63,14 +55,6 @@ const Corpus = S.fromJsonString(
       "Actual original full-citation construction from tokenized Documents across all three source families.",
   })
 );
-const names = R.fromEntries<readonly [string, string]>([
-  ["pinCite", "pin_cite"],
-  ["pinCiteSpanStart", "pin_cite_span_start"],
-  ["pinCiteSpanEnd", "pin_cite_span_end"],
-  ["antecedentGuess", "antecedent_guess"],
-  ["resolvedCaseName", "resolved_case_name"],
-  ["resolvedCaseNameShort", "resolved_case_name_short"],
-]);
 const install = Effect.fn("FullExtractionTest.install")(function* (kind: CitationNativeRuntimeKind) {
   const corpus = yield* readCitationOracleFixture(
     "full-extraction",
@@ -79,10 +63,8 @@ const install = Effect.fn("FullExtractionTest.install")(function* (kind: Citatio
   const cases = yield* readCitationCaseMetadataConfiguration();
   const laws = yield* loadCitationLawMetadataFixtures();
   const journals = yield* readCitationJournalMetadataCorpus();
-  const { bundle } = yield* loadCitationFrozenEditionFixtures();
-  const owner = yield* makeCitationFrozenEditions(bundle);
-  const setup = yield* setupCitationMetadataRuntime(kind, undefined, false, true, 8192);
-  const provided = Context.add(setup.provided, CitationFrozenEditions, owner);
+  const setup = yield* installCitationFrozenMetadataRuntime(kind);
+  const provided = setup.provided;
   const configuration = {
     editions: corpus.bindings,
     case: cases,
@@ -107,11 +89,8 @@ export const replayCitationFullExtraction = Effect.fn("FullExtractionTest.replay
     expect(result.outcome._tag).toBe(row.expected.kind);
     expect(result.index).toBe(row.index);
     expect([result.token.start, result.token.end]).toEqual(row.expected.span);
-    const state = result.outcome;
-    const values = yield* S.decodeUnknownEffect(
-      S.Record(S.String, S.Union([S.Null, S.Struct({ width: S.Literals([1, 2, 4]), bytes: S.Uint8Array }), S.Int]))
-    )(state.metadata);
-    const metadata = R.mapKeys(values, (key) => O.getOrElse(R.get(names, key), () => key));
+    const state: CitationFullExtractionOutcome = result.outcome;
+    const metadata = yield* readCitationModelMetadata(state.metadata);
     expect(metadata, `${kind}:${row.id}:metadata`).toEqual(row.expected.metadata);
     expect(state.year === null ? null : BigInt(state.year)).toEqual(
       row.expected.year === null ? null : BigInt(row.expected.year)

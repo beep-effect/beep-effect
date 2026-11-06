@@ -20,14 +20,16 @@ const $I = $LawPracticeServerId.create("internal/Citation/NativeWasm");
  * undergoes complete size/digest authentication before compilation.
  * @internal @category models @since 0.0.0
  */
-export const CitationNativeWasmStartup = S.Struct({
-  maximum: S.Int.check(S.isBetween({ minimum: 1, maximum: CitationEngineAbsoluteMaxima.processMessageBytes })),
-  assetPath: S.NonEmptyString.check(S.isMaxLength(4096)),
-}).pipe(
-  $I.annoteSchema("CitationNativeWasmStartup", {
-    description: "Common authenticated kernel startup fields; no ambient configuration.",
-  })
-);
+export class CitationNativeWasmStartup extends S.Opaque<CitationNativeWasmStartup, { readonly brand: unique symbol }>()(
+  S.Struct({
+    maximum: S.Int.check(S.isBetween({ minimum: 1, maximum: CitationEngineAbsoluteMaxima.processMessageBytes })),
+    assetPath: S.NonEmptyString.check(S.isMaxLength(4096)),
+  }).pipe(
+    $I.annoteSchema("CitationNativeWasmStartup", {
+      description: "Common authenticated kernel startup fields; no ambient configuration.",
+    })
+  )
+) {}
 /** Authenticated ABI callable; shape is checked only after asset authentication.
  * @internal @category models @since 0.0.0
  */
@@ -74,28 +76,31 @@ export const CitationNativeWasmMemory = MemoryFields.pipe(
 /** @internal @category models @since 0.0.0 */
 export type CitationNativeWasmMemory = typeof CitationNativeWasmMemory.Type;
 /** @internal @category models @since 0.0.0 */
-export const CitationNativeWasmRuntime = S.Struct({
-  WebAssembly: S.Struct({
-    Module: S.declare<new (bytes: Uint8Array<ArrayBuffer>) => unknown>(
-      (value): value is new (bytes: Uint8Array<ArrayBuffer>) => unknown => P.isFunction(value)
-    ),
-    Instance: S.declare<new (module: unknown, imports: unknown) => unknown>(
-      (value): value is new (module: unknown, imports: unknown) => unknown => P.isFunction(value)
-    ),
-  }),
-}).pipe(
-  $I.annoteSchema("CitationNativeWasmRuntime", {
-    description: "Server WebAssembly constructors without requiring DOM globals in the package.",
-  })
-);
+export class CitationNativeWasmRuntime extends S.Opaque<CitationNativeWasmRuntime, { readonly brand: unique symbol }>()(
+  S.Struct({
+    WebAssembly: S.Struct({
+      Module: S.declare<new (bytes: Uint8Array<ArrayBuffer>) => unknown>(
+        (value): value is new (bytes: Uint8Array<ArrayBuffer>) => unknown => P.isFunction(value)
+      ),
+      Instance: S.declare<new (module: unknown, imports: unknown) => unknown>(
+        (value): value is new (module: unknown, imports: unknown) => unknown => P.isFunction(value)
+      ),
+    }),
+  }).pipe(
+    $I.annoteSchema("CitationNativeWasmRuntime", {
+      description: "Server WebAssembly constructors without requiring DOM globals in the package.",
+    })
+  )
+) {}
 /** @internal @category models @since 0.0.0 */
-export type CitationNativeWasmRuntime = typeof CitationNativeWasmRuntime.Type;
-/** @internal @category models @since 0.0.0 */
-export const CitationNativeWasmInstance = S.Struct({ exports: S.Unknown }).pipe(
-  $I.annoteSchema("CitationNativeWasmInstance", { description: "Runtime instance before pinned export decoding." })
-);
-/** @internal @category models @since 0.0.0 */
-export type CitationNativeWasmInstance = typeof CitationNativeWasmInstance.Type;
+export class CitationNativeWasmInstance extends S.Opaque<
+  CitationNativeWasmInstance,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ exports: S.Unknown }).pipe(
+    $I.annoteSchema("CitationNativeWasmInstance", { description: "Runtime instance before pinned export decoding." })
+  )
+) {}
 const InitializationExports = S.Struct({ memory: CitationNativeWasmMemory, _initialize: CitationNativeWasmVoid0 }).pipe(
   $I.annoteSchema("InitializationExports", { description: "Common authenticated reactor initialization capability." })
 );

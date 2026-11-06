@@ -32,7 +32,16 @@ const Action = LiteralKit([
 /** Frozen source token edition ordinals and authenticated artifact references.
  * @internal @category models @since 0.0.0
  */
-export const CitationTokenDispatchBindings = S.Array(S.Struct({ id: S.Natural, ref: CitationEditionRef }))
+export class CitationTokenDispatchBinding extends S.Opaque<
+  CitationTokenDispatchBinding,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ id: S.Natural, ref: CitationEditionRef }).pipe(
+    $I.annoteSchema("CitationTokenDispatchBinding", { description: "One authenticated source-token edition identity." })
+  )
+) {}
+/** @internal @category models @since 0.0.0 */
+export const CitationTokenDispatchBindings = S.Array(CitationTokenDispatchBinding)
   .check(S.isMaxLength(2533))
   .pipe(
     $I.annoteSchema("CitationTokenDispatchBindings", {

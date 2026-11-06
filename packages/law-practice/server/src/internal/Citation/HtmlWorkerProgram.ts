@@ -5,6 +5,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { $LawPracticeServerId } from "@beep/identity/packages";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -34,8 +35,17 @@ import type * as RpcGroup from "effect/rpc/RpcGroup";
 import type * as RpcMessage from "effect/rpc/RpcMessage";
 import type { CitationHtmlWorkerJob, CitationHtmlWorkerReply } from "./HtmlWorkerProtocol.ts";
 
+const $I = $LawPracticeServerId.create("internal/Citation/HtmlWorkerProgram");
 const badRuntime = () => CitationHtmlWorkerFailure.make({ reason: "invalid-runtime" });
 const badFrame = () => CitationHtmlWorkerFailure.make({ reason: "invalid-frame" });
+const WorkerArguments = S.Tuple([S.String.check(S.isMaxLength(32768))]).pipe(
+  $I.annoteSchema("WorkerArguments", { description: "Captured static boundary codec for bounded citation processing." })
+);
+const WorkerStartupJson = S.fromJsonString(CitationHtmlWorkerStartup).pipe(
+  $I.annoteSchema("WorkerStartupJson", {
+    description: "Captured static boundary codec for bounded citation processing.",
+  })
+);
 /**
  * Execute exactly one framed native request. Scope exit closes standard output
  * through the runtime; no successful reply authorizes parent slot reuse before
@@ -47,12 +57,10 @@ const badFrame = () => CitationHtmlWorkerFailure.make({ reason: "invalid-frame" 
 export const citationHtmlWorkerProgram = Effect.gen(function* () {
   const stdio = yield* Stdio.Stdio;
   const citationResult1 = yield* stdio.args;
-  const [argument] = yield* S.decodeUnknownEffect(S.Tuple([S.String.check(S.isMaxLength(32768))]))(
-    citationResult1
-  ).pipe(Effect.mapError(badRuntime));
-  const startup = yield* S.decodeEffect(S.fromJsonString(CitationHtmlWorkerStartup), { onExcessProperty: "error" })(
-    argument
-  ).pipe(Effect.mapError(badRuntime));
+  const [argument] = yield* S.decodeUnknownEffect(WorkerArguments)(citationResult1).pipe(Effect.mapError(badRuntime));
+  const startup = yield* S.decodeEffect(WorkerStartupJson, { onExcessProperty: "error" })(argument).pipe(
+    Effect.mapError(badRuntime)
+  );
   const maximum = startup.maximum;
   yield* preflightCitationHtmlControlFrames(maximum);
   const asset = yield* loadCitationNativeWasmAsset(startup.assetPath, citationHtmlKernelAsset, badRuntime);

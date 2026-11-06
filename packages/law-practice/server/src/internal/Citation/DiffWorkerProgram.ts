@@ -1,6 +1,7 @@
 /** One-job default-diff child. The parent owns timing and physical retirement.
  * @internal @packageDocumentation @since 0.0.0
  */
+import { $LawPracticeServerId } from "@beep/identity/packages";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -28,8 +29,17 @@ import { loadCitationNativeWasmAsset } from "./NativeWasm.ts";
 import type * as RpcGroup from "effect/rpc/RpcGroup";
 import type { CitationDiffWorkerJob, CitationDiffWorkerReply } from "./DiffWorkerProtocol.ts";
 
+const $I = $LawPracticeServerId.create("internal/Citation/DiffWorkerProgram");
 const badRuntime = () => CitationDiffWorkerFailure.make({ reason: "invalid-runtime" });
 const badFrame = () => CitationDiffWorkerFailure.make({ reason: "invalid-frame" });
+const WorkerArguments = S.Tuple([S.String.check(S.isMaxLength(32768))]).pipe(
+  $I.annoteSchema("WorkerArguments", { description: "Captured static boundary codec for bounded citation processing." })
+);
+const WorkerStartupJson = S.fromJsonString(CitationDiffWorkerStartup).pipe(
+  $I.annoteSchema("WorkerStartupJson", {
+    description: "Captured static boundary codec for bounded citation processing.",
+  })
+);
 /** Execute one complete request via the upstream RPC server and pinned host.
  * Kernel output is bounded to the exact success-frame capacity before packed
  * output allocation. No native/codec defect becomes a source-bearing failure.
@@ -38,12 +48,10 @@ const badFrame = () => CitationDiffWorkerFailure.make({ reason: "invalid-frame" 
 export const citationDiffWorkerProgram = Effect.gen(function* () {
   const stdio = yield* Stdio.Stdio;
   const args = yield* stdio.args;
-  const [argument] = yield* S.decodeUnknownEffect(S.Tuple([S.String.check(S.isMaxLength(32768))]))(args).pipe(
+  const [argument] = yield* S.decodeUnknownEffect(WorkerArguments)(args).pipe(Effect.mapError(badRuntime));
+  const startup = yield* S.decodeEffect(WorkerStartupJson, { onExcessProperty: "error" })(argument).pipe(
     Effect.mapError(badRuntime)
   );
-  const startup = yield* S.decodeEffect(S.fromJsonString(CitationDiffWorkerStartup), { onExcessProperty: "error" })(
-    argument
-  ).pipe(Effect.mapError(badRuntime));
   const maximum = startup.maximum;
   yield* preflightCitationDiffControlFrames(maximum);
   const maximumOutputBytes = yield* citationDiffOutputByteCapacity(maximum);

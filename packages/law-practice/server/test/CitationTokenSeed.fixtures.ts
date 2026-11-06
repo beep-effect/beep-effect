@@ -3,6 +3,9 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationTokenSeed } from "@beep/law-practice-server/internal/Citation/TokenObjects";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeServerId.create("test/CitationTokenSeed");
@@ -43,3 +46,22 @@ export const CitationCaseNameDocument = S.Struct({
   })
 );
 export type CitationCaseNameDocument = typeof CitationCaseNameDocument.Type;
+
+const ModelMetadata = S.Record(S.String, S.Union([S.Null, S.toType(CitationNativeUnicodeHex), S.Int])).pipe(
+  $I.annoteSchema("ModelMetadata", {
+    description: "Native model attributes used only to compare original and target constructor state.",
+  })
+);
+const modelNames = R.fromEntries<readonly [string, string]>([
+  ["pinCite", "pin_cite"],
+  ["pinCiteSpanStart", "pin_cite_span_start"],
+  ["pinCiteSpanEnd", "pin_cite_span_end"],
+  ["antecedentGuess", "antecedent_guess"],
+  ["resolvedCaseName", "resolved_case_name"],
+  ["resolvedCaseNameShort", "resolved_case_name_short"],
+]);
+/** Normalize only the declared model field spellings, preserving every native value and field. */
+export const readCitationModelMetadata = Effect.fn("CitationModelTest.metadata")(function* (raw: unknown) {
+  const values = yield* S.decodeUnknownEffect(ModelMetadata)(raw);
+  return R.mapKeys(values, (key) => O.getOrElse(R.get(modelNames, key), () => key));
+});
