@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { Repo } from "@beep/github/Repo";
-import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -35,7 +34,7 @@ const unknown = Effect.fnUntraced(function* (
   record: OwnerCheckpointRecord,
   policy: OwnerCheckpointPolicy
 ) {
-  const now = DateTime.makeUnsafe(yield* Clock.currentTimeMillis);
+  const now = yield* DateTime.now;
   if (record.state._tag !== "Claimed")
     return OwnerCheckpointMergeOutcome.cases.Uncertain.make({ recording: "pending" });
   const recorded = yield* store
@@ -89,7 +88,7 @@ export const dispatchOwnerCheckpointMerge = Effect.fn("OwnerCheckpoint.dispatchM
   snapshot: OwnerCheckpointSnapshot,
   policy: OwnerCheckpointPolicy
 ) {
-  const now = DateTime.makeUnsafe(yield* Clock.currentTimeMillis);
+  const now = yield* DateTime.now;
   yield* assertRepository(binding);
   yield* qualifyOwnerCheckpointSnapshot(binding, snapshot, policy, now);
   const rest = yield* GithubRest;
@@ -158,7 +157,7 @@ export const observeOwnerCheckpointMerge = Effect.fn("OwnerCheckpoint.observeMer
   binding: OwnerCheckpointBinding,
   policy: OwnerCheckpointPolicy
 ) {
-  const now = DateTime.makeUnsafe(yield* Clock.currentTimeMillis);
+  const now = yield* DateTime.now;
   yield* assertRepository(binding);
   const current = yield* store.read(binding);
   if (
