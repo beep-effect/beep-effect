@@ -1270,3 +1270,15 @@ and economics inputs for each consumer; hosted CI remains the behavioral proof.
 No computation qualification or production-cache activation follows from this
 repair. Prevent recurrence by auditing the script's full executed suite rather
 than treating property tests or coverage as narrower without source evidence.
+
+
+## 2026-11-06 — Reference links enter identity's broad metadata inputs
+
+During actual-root strict-entrypoint review, pinned canary lint dry-run refused
+`input symlink leaves repository` before that flag was enabled. The observed
+identity lint input glob spans repository manifests and reaches ignored external
+`.repos` links. A source-bound negative reference-tree input lets that same dry
+run finish and preserves every observed stable lint input path. The original
+refusal is retained separately. A real-root baseline with canonical provisioned
+reference links before profile approval would have caught the mismatch earlier.
+No quality task body ran and no feature/qualification/production setting changed.
