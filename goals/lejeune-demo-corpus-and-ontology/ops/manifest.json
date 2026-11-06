@@ -28,6 +28,17 @@
       {
         "number": 872,
         "role": "supporting"
+      },
+      {
+        "number": 2756,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_lejeune-closeout-7b0d55794a03/verdict.json",
+        "gating": true
       }
     ]
   },
@@ -87,5 +98,9 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P0-P2 complete on 2026-08-27: frozen fixtures, exact spans, ontology, cited rules, deterministic projections, live Anthropic recording, and offline replay are proven. P3 repository review and hosted merge-readiness are in progress."
+  "statusNote": "P0-P2 complete on 2026-08-27: frozen fixtures, exact spans, ontology, cited rules, deterministic projections, live Anthropic recording, and offline replay are proven. P3 repository review and hosted merge-readiness are in progress.",
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2756
+  }
 }

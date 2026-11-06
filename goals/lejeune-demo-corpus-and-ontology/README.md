@@ -41,7 +41,7 @@ Use this command for execution-capable sessions:
 
 Closed. The lab, bundle builder, projections, rule checks, provider recording and
 offline replay merged in #872 (2026-08-30). That PR predates the Yeet publish
-verdict and was pushed without one, so this docs-only final PR carries the
+verdict and was pushed without one, so this docs-only final PR (#2756) carries the
 `completed-retained` proposal and the gating verdict. The closeout reflection is
 `history/reflections/2026-08-27-codex.md`.
 
