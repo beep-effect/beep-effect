@@ -34,7 +34,7 @@ zero unclassified differences). Each PR flips its own row.
 | W7 kit | `Git.revListCount`, `mergeTree` (+ `MergeTreeResult`, the `"differs"` classify kind), `upstream`, `updateRef`, `gitDir`, `diffPatch`; `fetch`, `log`, `nameStatus`, `stashPush`, `add`, `checkIgnore`, `commit`, `worktreeAdd`, `submoduleForeach`, `branchList` options; `internal/repo-run/PatientGit.ts` | none (Yeet's `patientGit` import moves to the repo-run barrel) | merged, #2665 (D-17) |
 | W7a | none (the W7 kit) | `R/commands/Yeet/**` census rows Y1-Y88 (`research/w7-site-census-2026-11-03.md`, D-16) | merged, #2708 (D-18) |
 | W7b | none (the W7 kit) | the other command groups plus Qa and Refs, census rows B1-B136 (D-16) | merged, #2721 (D-19) |
-| W7c | none (the W7 kit) | `R/commands/Worktree/**` census rows W1-W45 (D-16) | in review, this PR (D-20) |
+| W7c | none (the W7 kit) | `R/commands/Worktree/**` census rows W1-W45 (D-16) | in review, #2736 (D-20) |
 | W7 retire | none | delete the generic runners from `internal/repo-run/GitExec.ts`, census rows X1-X10 (D-16) | pending |
 | C | none | Closeout: ledger of every site-list row (migrated or kept with reason), reflection, `proposedCloseout` | pending |
 
