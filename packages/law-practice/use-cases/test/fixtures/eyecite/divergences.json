@@ -92,7 +92,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexProgram.ts",
-          "sha256": "45ff8e4fbdc992b406d4703bc4184967f65be0049f030193e3f7c4fc2001623e"
+          "sha256": "a332177eab21aa78450d0129c1aeab8f51203f14fe5c097e0f8e8a200a570702"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexDescriptors.ts",
@@ -280,7 +280,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexBoundaries.fixtures.ts",
-          "sha256": "791f0288379ce7f4c75812a4b669ca6609936f60d4e09c8f362ac9337675a575"
+          "sha256": "0f17dc6704f65b2d439a9f6bd8c7335afd173635ed39589da9eac1429e5bef55"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexBoundaries.test.ts",
@@ -304,7 +304,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexCaseFlags.fixtures.ts",
-          "sha256": "ab0cded9d06d8594ffdfbbefebe2ae1fd3299b7cce4172cf1d43d1b31b8af664"
+          "sha256": "b79348fce6e01e38bf1c64bd899070ee8943d80c935cd426b40c845957c8c287"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexCaseFlags.test.ts",
@@ -320,7 +320,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-regex-case-flags.md",
-          "sha256": "9b188e0ac94f038c6df396f097061bd7d6b3c5d6f1cf15020703a14893bb1f3c"
+          "sha256": "2b007438731f4b8756d6ea74a5b84fb70e99c76bae8cc88e7b2615344c418a19"
         },
         {
           "path": "goals/citation-extraction-engine/ops/probe-stop-word-patterns.py",
@@ -1353,7 +1353,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexBoundaries.fixtures.ts",
-          "sha256": "791f0288379ce7f4c75812a4b669ca6609936f60d4e09c8f362ac9337675a575"
+          "sha256": "0f17dc6704f65b2d439a9f6bd8c7335afd173635ed39589da9eac1429e5bef55"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexBoundaries.test.ts",
@@ -1377,7 +1377,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexCaseFlags.fixtures.ts",
-          "sha256": "ab0cded9d06d8594ffdfbbefebe2ae1fd3299b7cce4172cf1d43d1b31b8af664"
+          "sha256": "b79348fce6e01e38bf1c64bd899070ee8943d80c935cd426b40c845957c8c287"
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexCaseFlags.test.ts",
@@ -1393,7 +1393,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-regex-case-flags.md",
-          "sha256": "9b188e0ac94f038c6df396f097061bd7d6b3c5d6f1cf15020703a14893bb1f3c"
+          "sha256": "2b007438731f4b8756d6ea74a5b84fb70e99c76bae8cc88e7b2615344c418a19"
         },
         {
           "path": "goals/citation-extraction-engine/ops/probe-stop-word-patterns.py",

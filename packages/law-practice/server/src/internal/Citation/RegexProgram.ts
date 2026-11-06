@@ -705,23 +705,13 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
         yield* skipIgnored();
       }
     });
-    const groupHeader = Effect.fn("Citation.readRegexGroupHeader")(function* () {
-      if (peek() !== 63) return { group: ++groups, name: "", assertion: false };
-      index++;
-      if (peek() === 58) {
-        index++;
-        return { group: 0, name: "", assertion: false };
-      }
-      if (peek() === 61) {
-        index++;
-        return { group: 0, name: "", assertion: true };
-      }
-      if (peek() === 105 || peek() === 45) {
-        const parsed = yield* caseFlags();
-        if (!parsed.scoped) return yield* unsupported();
-        ignoreCase = parsed.enabled;
-        return { group: 0, name: "", assertion: false };
-      }
+    const scopedCaseHeader = Effect.fn("Citation.readRegexScopedCaseHeader")(function* () {
+      const parsed = yield* caseFlags();
+      if (!parsed.scoped) return yield* unsupported();
+      ignoreCase = parsed.enabled;
+      return { group: 0, name: "", assertion: false };
+    });
+    const pythonGroupHeader = Effect.fn("Citation.readRegexPythonGroupHeader")(function* () {
       if (peek() !== 80) {
         yield* skipNested();
         if (peek() !== 58) return yield* unsupported();
@@ -735,6 +725,20 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       const group = O.getOrElse(R.get(names, name), () => ++groups);
       names = R.set(names, name, group);
       return { group, name, assertion: false };
+    });
+    const groupHeader = Effect.fn("Citation.readRegexGroupHeader")(function* () {
+      if (peek() !== 63) return { group: ++groups, name: "", assertion: false };
+      index++;
+      if (peek() === 58) {
+        index++;
+        return { group: 0, name: "", assertion: false };
+      }
+      if (peek() === 61) {
+        index++;
+        return { group: 0, name: "", assertion: true };
+      }
+      if (peek() === 105 || peek() === 45) return yield* scopedCaseHeader();
+      return yield* pythonGroupHeader();
     });
     const group = Effect.fn("Citation.parseRegexGroup")(function* (): Effect.fn.Return<Summary, ParseFailure> {
       const savedCase = ignoreCase;

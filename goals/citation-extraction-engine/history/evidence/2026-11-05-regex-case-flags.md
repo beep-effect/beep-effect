@@ -33,7 +33,8 @@ The producer requires clean eyecite commit
 04d82c032ad5fd0f9ab72a61c87110c46ee8f52e, tree
 a35a58fac03400f71a93a93485b77f1d56f2b02f, CPython 3.11.15 and regex
 2023.12.25 V0. It captures 35 patterns, 70 original parse/profile outcomes and
-3,474 matching-mode observations. PYTHONHASHSEED 313/317 produce identical bytes.
+3,474 matching-mode observations. PYTHONHASHSEED 313/317 produce identical bytes
+before repository formatting; the fixture seal below covers committed formatted bytes.
 
 Profiles come from each engine's actual parser tree. The CPython profile reader
 distinguishes capturing SUBPATTERN nodes from scoped-flag SUBPATTERN nodes whose
@@ -43,7 +44,7 @@ Every profile is compared to the target, including source syntax failures.
 | Artifact | SHA-256 |
 | --- | --- |
 | Producer | f5d4d41a50a4fe89040687d726d153de0572bd758d7acb06bf09ea6e8c0118c1 |
-| regex-case-flags.json | 717cb46cac6ebef29949a59998fd873275b8c3dc9094843a58c9fdc4aa94fd6d |
+| regex-case-flags.json | 9c2a3e666734e79836701f6a8488446b90336ff2debf9cd405e1e2d7cd899d93 |
 
 Local smoke replay uses the existing actual Bun/Node process supervisors and
 shared source-capture assertions. Each runtime executes 17 CPython and 35 V0

@@ -3,7 +3,6 @@
  */
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationRegexEngine } from "@beep/law-practice-server/internal/Citation/RegexEngine";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -12,7 +11,7 @@ import * as S from "effect/Schema";
 import {
   assertCitationRegexProgramProfiles,
   CitationRegexProbePattern,
-  replayCitationRegexProgramEngine,
+  replayCitationRegexProgramFamily,
 } from "./CitationRegexVerbose.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
@@ -39,7 +38,7 @@ const load = Effect.fn("RegexCaseFlagsTest.load")(function* () {
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/regex-case-flags.json", import.meta.url))
   );
   const hash = yield* S.decodeEffect(Sha256HexFromBytes)(bytes);
-  expect(hash).toBe("717cb46cac6ebef29949a59998fd873275b8c3dc9094843a58c9fdc4aa94fd6d");
+  expect(hash).toBe("9c2a3e666734e79836701f6a8488446b90336ff2debf9cd405e1e2d7cd899d93");
   return yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
 });
 /** Every parse/profile is checked locally; source CPython and V0 remain distinct. */
@@ -57,10 +56,5 @@ export const replayCitationRegexCaseFlags = Effect.fn("RegexCaseFlagsTest.replay
   full: boolean
 ) {
   const corpus = yield* load();
-  for (const engine of CitationRegexEngine.literals) {
-    const counts = yield* replayCitationRegexProgramEngine(kind, full, corpus.patterns, engine, 8192);
-    const expected = expectedCounts[engine];
-    expect(counts.admitted).toBe(full ? expected.full : expected.smoke);
-    expect(counts.refused).toBe(expected.refused);
-  }
+  yield* replayCitationRegexProgramFamily(kind, full, corpus.patterns, expectedCounts, 8192);
 });

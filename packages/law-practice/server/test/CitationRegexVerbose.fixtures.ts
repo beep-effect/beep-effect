@@ -13,6 +13,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import { assertCitationRegexRuntimeReleased, setupCitationRegexWorker } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import type * as R from "effect/Record";
 
 const $I = $LawPracticeServerId.create("test/CitationRegexVerbose");
 const Native = S.Struct({ width: S.Literals([1, 2, 4]), bytes: S.Uint8ArrayFromHex });
@@ -219,4 +220,24 @@ export const replayCitationRegexProgramEngine = Effect.fn("RegexProgramTest.engi
   }
   yield* assertCitationRegexRuntimeReleased(setup.admission, setup.observed.snapshot, admitted + refused);
   return { admitted, refused };
+});
+const ReplayCounts = S.Struct({ smoke: S.Natural, full: S.Natural, refused: S.Natural }).pipe(
+  $I.annoteSchema("ReplayCounts", {
+    description: "Expected source-family worker admissions and explicit profile refusals.",
+  })
+);
+/** Replay both source engines with the shared complete exit-accounting assertions. */
+export const replayCitationRegexProgramFamily = Effect.fn("RegexProgramTest.family")(function* (
+  kind: CitationNativeRuntimeKind,
+  full: boolean,
+  patterns: ReadonlyArray<CitationRegexProbePattern>,
+  expectedCounts: R.ReadonlyRecord<typeof CitationRegexEngine.Type, typeof ReplayCounts.Type>,
+  patternMaximum: number
+) {
+  for (const engine of CitationRegexEngine.literals) {
+    const counts = yield* replayCitationRegexProgramEngine(kind, full, patterns, engine, patternMaximum);
+    const expected = expectedCounts[engine];
+    expect(counts.admitted).toBe(full ? expected.full : expected.smoke);
+    expect(counts.refused).toBe(expected.refused);
+  }
 });

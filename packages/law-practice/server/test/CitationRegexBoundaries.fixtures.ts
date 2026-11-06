@@ -3,7 +3,6 @@
  */
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationRegexEngine } from "@beep/law-practice-server/internal/Citation/RegexEngine";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -12,7 +11,7 @@ import * as S from "effect/Schema";
 import {
   assertCitationRegexProgramProfiles,
   CitationRegexProbePattern,
-  replayCitationRegexProgramEngine,
+  replayCitationRegexProgramFamily,
 } from "./CitationRegexVerbose.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
@@ -57,10 +56,5 @@ export const replayCitationRegexBoundaries = Effect.fn("RegexBoundariesTest.repl
   full: boolean
 ) {
   const corpus = yield* load();
-  for (const engine of CitationRegexEngine.literals) {
-    const counts = yield* replayCitationRegexProgramEngine(kind, full, corpus.patterns, engine, 8192);
-    const expected = expectedCounts[engine];
-    expect(counts.admitted).toBe(full ? expected.full : expected.smoke);
-    expect(counts.refused).toBe(expected.refused);
-  }
+  yield* replayCitationRegexProgramFamily(kind, full, corpus.patterns, expectedCounts, 8192);
 });
