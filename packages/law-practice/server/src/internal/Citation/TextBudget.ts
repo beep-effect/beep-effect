@@ -11,6 +11,7 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { prepareCitationAdmissionPolicy } from "./Admission.ts";
+import { makeCitationTextCapacity } from "./TextCapacity.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/TextBudget");
 const Amount = S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima.producedTextUtf16)).pipe(
@@ -28,6 +29,13 @@ export class CitationTextBudget extends Context.Service<
     readonly maximum: number;
     readonly reserve: (units: number) => Effect.Effect<void, CitationSafetyLimitExceeded>;
     readonly snapshot: Effect.Effect<number>;
+    /** The captured producer enforces the allowance before output allocation and
+     * completes cleanup before return. Failure/interruption publishes no output
+     * or successful charge. Reentry, including child fibers, is forbidden.
+     */
+    readonly withCapacity: <A, E>(
+      produce: (remaining: number) => Effect.Effect<{ readonly value: A; readonly units: number }, E>
+    ) => Effect.Effect<{ readonly value: A; readonly units: number }, E | CitationSafetyLimitExceeded>;
   }
 >()($I`CitationTextBudget`) {}
 /** Share a schema-owned ceiling using Effect's atomic Ref.modify. Rejected
@@ -37,14 +45,27 @@ export class CitationTextBudget extends Context.Service<
 export const makeCitationTextBudget = Effect.fn("Citation.makeTextBudget")(function* (policy: unknown) {
   const { limits } = yield* prepareCitationAdmissionPolicy(policy);
   const used = yield* Ref.make(0);
-  const reserve = Effect.fn("Citation.reserveInvocationText")(function* (input: number) {
+  const capacity = yield* makeCitationTextCapacity(exhausted);
+  const reserveUnlocked = Effect.fn("Citation.reserveInvocationText")(function* (input: number) {
     const units = yield* S.decodeEffect(Amount)(input).pipe(Effect.mapError(exhausted));
     const accepted = yield* Ref.modify(used, (current) =>
       units <= limits.producedTextUtf16 - current ? Tuple.make(true, current + units) : Tuple.make(false, current)
     );
     if (!accepted) return yield* exhausted();
   });
-  return CitationTextBudget.of({ maximum: limits.producedTextUtf16, reserve, snapshot: Ref.get(used) });
+  const reserve = (units: number) => capacity.exclusive(reserveUnlocked(units));
+  const withCapacity: CitationTextBudget["Service"]["withCapacity"] = (produce) =>
+    capacity.borrow(
+      Effect.uninterruptibleMask((restore) =>
+        Effect.gen(function* () {
+          const remaining = limits.producedTextUtf16 - (yield* Ref.get(used));
+          const result = yield* restore(produce(remaining));
+          yield* reserveUnlocked(result.units);
+          return result;
+        })
+      )
+    );
+  return CitationTextBudget.of({ maximum: limits.producedTextUtf16, reserve, snapshot: Ref.get(used), withCapacity });
 });
 /** Capture an optional composed owner at installation, preserving standalone
  * stage policy behavior. Later caller contexts cannot replace this authority.

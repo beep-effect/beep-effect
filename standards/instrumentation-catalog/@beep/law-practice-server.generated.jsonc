@@ -350,6 +350,7 @@
     {"name":"Citation.makeSessionDocumentProjector","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.makeSpanOffsets","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.makeTextBudget","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.makeTextCapacity","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.makeTokenAssembly","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.makeTokenCapture","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.makeTokenContext","owner":"@beep/law-practice-server","family":"slice","conforms":true},

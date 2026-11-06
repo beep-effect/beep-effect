@@ -22,8 +22,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
+import { makeCitationTextCapacity } from "./TextCapacity.ts";
 
 const CitationEngineLimitsType = S.toType(CitationEngineLimits);
 
@@ -176,7 +176,7 @@ export interface CitationCleanerWork {
   /**
    * Exclusively lend remaining capacity to a captured bounded producer. It must
    * enforce this ceiling before allocating output and retire native work before
-   * returning. No ledger reentry is permitted from the borrowing fiber. Empty
+   * returning. No ledger reentry is permitted from the borrowing fiber or its children. Empty
    * output is valid even at zero capacity; settlement issues no empty ticket.
    */
   readonly withTextCapacity: <A, E>(
@@ -259,17 +259,8 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
   const makeWork = Effect.gen(function* () {
     const state = yield* Ref.make(CitationCleanerWorkSnapshot.make({ producedTextUtf16: 0, closed: false }));
     const issued = new WeakMap<CitationCleanerTextCharge, number>();
-    const capacity = yield* Semaphore.make(1);
-    let borrower = O.none<number>();
-    const exclusive = <A, E>(body: Effect.Effect<A, E>): Effect.Effect<A, E | Failure> =>
-      Effect.withFiber((fiber) =>
-        Effect.suspend(
-          (): Effect.Effect<A, E | Failure> =>
-            O.isSome(borrower) && borrower.value === fiber.id
-              ? Effect.fail(fail("invalid-reservation"))
-              : capacity.withPermit(body)
-        )
-      );
+    const capacity = yield* makeCitationTextCapacity(() => fail("invalid-reservation"));
+    const exclusive = capacity.exclusive;
     const ensureOpen = Ref.get(state).pipe(
       Effect.flatMap((value) => (value.closed ? Effect.fail(fail("closed-work")) : Effect.void))
     );
@@ -294,30 +285,21 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
     });
     const reserveText = (units: number) => exclusive(reserveUnlocked(units));
     const withTextCapacity: CitationCleanerWork["withTextCapacity"] = (produce) =>
-      exclusive(
-        Effect.withFiber((fiber) =>
-          Effect.acquireUseRelease(
-            ensureOpen.pipe(
-              Effect.andThen(
-                Effect.sync(() => {
-                  borrower = O.some(fiber.id);
-                })
-              )
-            ),
-            Effect.fnUntraced(function* () {
-              const remaining = limits.producedTextUtf16 - (yield* Ref.get(state)).producedTextUtf16;
-              const result = yield* produce(remaining);
-              const units = yield* S.decodeEffect(Units)(result.units).pipe(
-                Effect.mapError(() => fail("invalid-reservation"))
-              );
-              yield* ensureOpen;
-              const charges = units === 0 ? [] : [yield* reserveUnlocked(units)];
-              return { value: result.value, charges };
-            }),
-            () =>
-              Effect.sync(() => {
-                borrower = O.none();
+      capacity.borrow(
+        ensureOpen.pipe(
+          Effect.andThen(
+            Effect.uninterruptibleMask((restore) =>
+              Effect.gen(function* () {
+                const remaining = limits.producedTextUtf16 - (yield* Ref.get(state)).producedTextUtf16;
+                const result = yield* restore(produce(remaining));
+                const units = yield* S.decodeEffect(Units)(result.units).pipe(
+                  Effect.mapError(() => fail("invalid-reservation"))
+                );
+                yield* ensureOpen;
+                const charges = units === 0 ? [] : [yield* reserveUnlocked(units)];
+                return { value: result.value, charges };
               })
+            )
           )
         )
       );

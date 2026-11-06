@@ -1,5 +1,12 @@
 # Citation Extraction Engine Plan
 
+Shared text-capacity checkpoint (2026-11-05): parent text authority can now lend
+exclusive remaining capacity, with exact uninterruptible settlement. Parent and
+cleaner work reuse Effect Semaphore/Context.Reference exclusion and reject
+inherited child reentry. Twenty-two focused tests and package checks pass.
+The final cleaner/Document authority bridge remains open. See
+[capacity evidence](history/evidence/2026-11-05-shared-text-capacity.md).
+
 Input Document constructor checkpoint (2026-11-05): captured server protocols
 now drive the actual source branch order through owned cleaning and geometry,
 including reversed insertion, generator consumption and None results. Thirty

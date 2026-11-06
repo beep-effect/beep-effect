@@ -150,7 +150,10 @@
         "packages/law-practice/server/test/CitationInputDocument.fixtures.ts",
         "packages/law-practice/server/test/CitationInputDocument.test.ts",
         "packages/law-practice/server/test/integration/CitationInputDocument.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-input-document-constructor.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-input-document-constructor.md",
+        "packages/law-practice/server/src/internal/Citation/TextCapacity.ts",
+        "packages/law-practice/server/test/CitationTextCapacity.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-shared-text-capacity.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
