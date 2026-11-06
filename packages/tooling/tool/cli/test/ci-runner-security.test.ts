@@ -1942,6 +1942,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "runs-on"])).toBe("beep-ec2-heavy");
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "environment"])).toBe("turbo-cache-write");
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "timeout-minutes"])).toBe(10);
+      expect(yamlAt(heavy, ["jobs", "producer-inspect", "env"])).toEqual({
+        PYTHONDONTWRITEBYTECODE: "1",
+      });
+      expect(yamlAt(heavy, ["env", "PYTHONDONTWRITEBYTECODE"])).toBeUndefined();
+      expect(yamlAt(heavy, ["jobs", "verify", "env", "PYTHONDONTWRITEBYTECODE"])).toBeUndefined();
+      expect(yamlAt(heavy, ["jobs", "producer-prepare", "env", "PYTHONDONTWRITEBYTECODE"])).toBeUndefined();
+      expect(yamlAt(heavy, ["jobs", "producer-execute", "env", "PYTHONDONTWRITEBYTECODE"])).toBeUndefined();
       const workflowJobs24 = yield* workflowJobs(heavy);
       const steps = jobSteps(workflowJobs24, "producer-inspect");
       const setup = stepByName(steps, "Setup pinned toolchain without cache capabilities");
