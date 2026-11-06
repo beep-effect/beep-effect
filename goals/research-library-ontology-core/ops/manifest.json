@@ -4,13 +4,14 @@
     "id": "research-library-ontology-core",
     "packetId": "goal-packet/v1:9f96d3771bf7eb10673e0e91fcbbae64d7fa0ed053d65025fb7612e0fb6eeafa",
     "title": "Research library ontology core",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-06",
     "updated": "2026-11-06",
-    "packetAnchorDocument": "SPEC.md"
+    "packetAnchorDocument": "SPEC.md",
+    "statusNote": "Completed-retained: verified via re-final #2787 (merge 34d6cd1309); implementation #2771; real library migrated to catalog v2 with 0 SHACL violations and a hash-equal index.md."
   },
   "packetPath": "goals/research-library-ontology-core",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Make the research library ontology-first: named S.Class models with PROV-O/CiTO/FaBiO/SKOS/DCAT annotations, a Context.Service topology, generated Turtle T-Box and SHACL shapes through the @beep/ontology fold, SHACL-validated catalog, SPARQL-backed views.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -97,7 +98,7 @@
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -112,7 +113,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2787
   }
