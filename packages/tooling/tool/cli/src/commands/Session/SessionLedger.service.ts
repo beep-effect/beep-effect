@@ -18,10 +18,13 @@ import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { adaptGitKitError } from "../../internal/repo-run/index.ts";
-import { makeJsonLinesStore, partitionJsonLines } from "../../internal/state/JsonLinesStore.ts";
+import {
+  makeJsonLinesStore,
+  makeMemoryJsonLinesStore,
+  partitionJsonLines,
+} from "../../internal/state/JsonLinesStore.ts";
 import { repositoryJsonLinesFileName, resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
 import { PrNumber, PrRepository } from "../Yeet/internal/Provenance.ts";
 import { detectPrRepository } from "../Yeet/internal/ProvenanceFooter.ts";
@@ -194,16 +197,10 @@ export const layerSessionLedgerLive = Layer.effect(SessionLedger, makeSessionLed
  */
 export const layerSessionLedgerMemory = Layer.effect(
   SessionLedger,
-  Ref.make(A.empty<SessionLedgerRow>()).pipe(
-    Effect.map((rows) =>
-      SessionLedger.of({
-        append: Effect.fn("SessionLedger.memory.append")((row) => Ref.update(rows, A.append(row))),
-        list: Effect.fn("SessionLedger.memory.list")((repository) =>
-          Ref.get(rows).pipe(Effect.map(A.filter((row) => equivalentRepository(row.repository, repository))))
-        ),
-      })
-    )
-  )
+  makeMemoryJsonLinesStore({
+    partitionOf: (row: SessionLedgerRow) => row.repository,
+    samePartition: equivalentRepository,
+  }).pipe(Effect.map(SessionLedger.of))
 );
 
 const gitAdapter: GitCommandErrorAdapter<SessionLedgerError> = {

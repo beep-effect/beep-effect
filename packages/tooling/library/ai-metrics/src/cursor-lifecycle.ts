@@ -50,6 +50,26 @@ const nativeSourceContract = CursorLifecycleSourceContract.make({
 export const makeCursorLifecycleReceiver = (policy: CursorLifecyclePolicy) =>
   makeCursorLifecycleCore(policy, nativeSourceContract);
 
+/**
+ * Project bounded native callback input without opening a socket or writing to disk.
+ * **Example** (Inspect the transient input projector)
+ * ```ts
+ * import { projectCursorLifecycleHookInput } from "@beep/repo-ai-metrics/cursor-lifecycle"
+ * console.log(typeof projectCursorLifecycleHookInput)
+ * ```
+ * @param body - Transient bounded native stdin, never a policy or root attestation.
+ * @returns Only the existing allowlisted native callback fields encoded for forwarding.
+ * @category mapping
+ * @since 0.0.0
+ */
+export const projectCursorLifecycleHookInput = Effect.fn("AiMetrics.cursorLifecycle.projectInput")(function* (
+  body: string
+) {
+  if (new TextEncoder().encode(body).byteLength > 8192) return yield* failure("callback");
+  const native = yield* decodeCallback(body).pipe(Effect.mapError(() => failure("callback")));
+  return yield* encodeCallback(native).pipe(Effect.mapError(() => failure("callback")));
+});
+
 /** Project and forward one callback; this function never prints hook output.
  * **Details** Only the positive native envelope reaches the private socket. An
  * uncertain transport response is not replayed here. Cursor fire-and-forget loss
@@ -73,8 +93,7 @@ export const forwardCursorLifecycleHook = Effect.fn("AiMetrics.cursorLifecycle.f
     new TextEncoder().encode(socketPath).byteLength > 107
   )
     return yield* failure("callback");
-  const native = yield* decodeCallback(body).pipe(Effect.mapError(() => failure("callback")));
-  const projected = yield* encodeCallback(native).pipe(Effect.mapError(() => failure("callback")));
+  const projected = yield* projectCursorLifecycleHookInput(body);
   const reply = yield* Effect.callback<string, CursorLifecycleError>((resume) => {
     const socket = createConnection({ path: socketPath, allowHalfOpen: true });
     let output = "";
