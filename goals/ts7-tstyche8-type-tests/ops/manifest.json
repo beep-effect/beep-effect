@@ -30,7 +30,7 @@
     "goals/ts7-tstyche8-type-tests/GOAL.md",
     "goals/ts7-tstyche8-type-tests/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

@@ -6,6 +6,90 @@
  */
 
 /**
+ * Representation laws and unresolved citation fidelity questions.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationDivergenceProofReceipt, CitationDivergences } from "./internal/citationDivergences.ts";
+/**
+ * Schema-decoded explicit citation policy fixture with no ambient config reads.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { defaultCitationEnginePolicy } from "./internal/citationEnginePolicyFixture.ts";
+/**
+ * Assertion and loop evidence for the pinned official citation oracle.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationOracleAssertions } from "./internal/citationOracleAssertions.ts";
+/**
+ * Pinned citation-oracle source/runtime discovery evidence, validated only at
+ * the test boundary and never presented as target parity proof.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationOracleDiscovery } from "./internal/citationOracleDiscovery.ts";
+/**
+ * Preserve exact oracle JSON bytes with their schema-decoded view.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationOracleArtifact, CitationOracleJson } from "./internal/citationOracleJson.ts";
+/**
+ * Portable source, canonical-case and regex accounting ledgers.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationOracleLedgers } from "./internal/citationOracleLedgers.ts";
+/**
+ * Normalized public-operation oracle inputs, stages and outputs, isolated from
+ * production contracts and independent model/helper assertion accounting.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationOracleOperations } from "./internal/citationOracleOperations.ts";
+/**
+ * Frozen oracle publication/court identity and source-version mapping evidence.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationOracleVocabularyMapping } from "./internal/citationOracleVocabularyMapping.ts";
+/**
+ * Regex adversarial corpus, synthetic controls and family benchmark receipts.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export {
+  CitationRegexBenchmarkContract,
+  CitationRegexBenchmarkControls,
+  CitationRegexBenchmarkResults,
+} from "./internal/citationRegexBenchmarks.ts";
+/**
+ * Focused supplemental extraction, resolution, cleaning and annotation evidence.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationSupplementalExtraction } from "./internal/citationSupplementalExtraction.ts";
+export { CitationSupplementalTextCase } from "./internal/citationSupplementalText.ts";
+/**
+ * Pinned TypeScript donor export/test accounting and disposition obligations.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationTypescriptDonors } from "./internal/citationTypescriptDonors.ts";
+/**
  * Port-output schema for the `Effect` a law-practice port method returns,
  * exported for package-local guard and codec tests.
  *

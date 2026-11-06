@@ -301,10 +301,14 @@ needed only for the escalation list below.
   hosted CI instead of queueing: if scheduler admission or a local gate has
   waited 10 minutes, stop that local run, keep the package-scoped checks that
   already passed (`quality package-verify`, or lint and check of the touched
-  packages), `git push`, and open the PR with
-  `gh pr create --draft --label ready-for-heavy`, then flip it with
-  `bun run beep yeet ready` at content-final as usual. Hosted CI is the
-  proof; record in the PR body which local checks ran and which were skipped.
+  packages), and run `bun run beep yeet open --body-file <md>` on the
+  committed HEAD. It pushes and opens the draft with `ready-for-heavy`, the
+  provenance footer and the readiness monitor, and runs no local gate. Flip it
+  with `bun run beep yeet ready` at content-final as usual. Hosted CI is the
+  proof; the body file records which local checks ran and which were skipped.
+  Never open a PR with raw `gh pr create` or replace a body with
+  `gh pr edit --body*`: both drop the Yeet provenance footer. Use
+  `bun run beep yeet gh pr body <n> --body-file <md>`, which keeps it.
 - Draft means only "the owner is still pushing". "Final" means the pushed
   head passed `bun run beep yeet final-check`: the scoped local replay of
   every hosted gate the cheap tier skips (Lint Policy, Lint, Effect
@@ -446,6 +450,7 @@ If you touch this, load or run this first. Do not hand-author around it.
 | --- | --- |
 | New workspace package or app | `bun run beep create-package` (the only bootstrap path; no `mkdir`, no copied sibling) |
 | New slice / concept / role file | `bun run beep architecture` |
+| Files under `goals/<slug>/research/` | `bun run beep goals manifest --write` (`researchReports` is a generated projection; never hand-edit it) |
 | `packages/*/domain` or schemas | schema-first-development skill |
 | Effect service / Layer | effect-first-development skill |
 | JSDoc on exports | `.patterns/jsdoc-documentation.md` |

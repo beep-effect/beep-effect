@@ -2254,7 +2254,57 @@ RPM systems, `perl` on Debian), keep the existing bounds and retain an actual
 accepted-source build as the gate. Do not convert a source regression check into
 compiled-artifact proof.
 
+## 2026-11-04 UTC: signed overlays omitted native key-length enforcement
 
+While reviewing the pending feature matrix, source inspection of
+`projectCacheSignedRoot` found signatures enabled without the native
+`longerSignatureKey` safeguard. The already recorded 168-case native experiment
+shows short supplied keys still execute in that default configuration.
+Prepare the safeguard in the existing shared projector rather than another
+key-policy helper. Preserve independent missing-key roles and exact overlay
+verification. Owner: trust goal; hosted regressions and signed rollout remain
+pending. No credential was read and no live setting was changed.
+
+The first hosted Fallow run on PR #2692 found one introduced cognitive-complexity
+finding in the new four-row key-floor test: two nested Boolean loops plus two
+layout branches scored 9. The retained audit and health raw reports name the
+same test. Enumerate the same four input pairs in one loop instead, preserving
+every assertion and avoiding helper extraction or a raised threshold. Owner:
+this PR; current hosted Fallow proof remains required after the repair.
+
+### 2026-11-03 — hold readiness after an unread check census
+
+- Read-first closeout for #2680 printed `merge-ready: yes` after a transient
+  GitHub API failure. A direct exact-head read still showed Lint Policy and
+  Coverage Regression failures. The successful required-only capture could
+  conceal the unread complete check list because absent counts defaulted to zero.
+- Reuse the remote summary's existing typed `readFailure` in the shared readiness
+  policy. An unread capture holds the checks criterion; a later complete read
+  can recover. Author regressions for the real partition shape and zero-count
+  masking without running local verification or repository tests.
+- The live snapshot stays held. Retain the failed read and contradictory output;
+  no cache result, old report or zero exit proves current hosted readiness.
+
+### 2026-11-03 — preserve the same read failure in historical recovery
+
+- Hosted Repo Sanity on #2684 found that the narrowed completion-recovery
+  decoder omitted the new required readiness input. Its schema must retain the
+  existing typed `readFailure`, including when other counters claim green.
+- Add the optional encoded field to that decoder. A legacy absent failure
+  decodes to None; a recorded failure survives and refuses recovery. Extend the
+  existing recovery matrix with an exact refusal-message assertion so a decode
+  error cannot stand in for the intended readiness hold. No local suite ran.
+### 2026-11-03 — include directory metadata in pilot source guards
+
+While following the native permission counterexample, inspection of
+`Cache.pilot.ts` found that its internal snapshot recorded files and symlink
+targets but omitted directory/root metadata and empty directories. Its file
+limit was checked only at directory entry. Add those entries to the existing
+annotated snapshot model and enforce the ceiling before each append. Hosted
+orchestration regressions must reject metadata-only changes for selected and
+dependency packages, refuse overflow and prove cleanup without issuing a
+receipt. No new scanner, state store, runtime policy or qualification grant is
+needed. No local verify/publish or package proof is run.
 ### Installed dependency digest differs across protected inspections, 2026-11-03
 
 - Work: independently freeze the actual protected source/toolchain profile.

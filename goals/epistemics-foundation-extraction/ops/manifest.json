@@ -38,8 +38,12 @@
     "goals/epistemics-foundation-extraction/research/SOURCES.md"
   ],
   "researchReports": [
+    "research/2026-10-28-acceptance-audit.md",
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
-    "research/2026-10-28-acceptance-audit.md"
+    "research/cache-baseline-request-p1.json",
+    "research/cache-baseline-review-p1.md",
+    "research/p1-move-report.md"
   ],
   "agentLaunchers": [
     {

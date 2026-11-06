@@ -30,7 +30,20 @@
     "goals/repository-simplification-residue/GOAL.md",
     "goals/repository-simplification-residue/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/cache-baseline-request-dependency-review.json",
+    "research/cache-baseline-request-guidance-wave-3.json",
+    "research/cache-baseline-request-shared-completion-receipts.json",
+    "research/cache-baseline-request-vitest-canon-wave-10.json",
+    "research/cache-baseline-request-vitest-canon-wave-11.json",
+    "research/cache-baseline-review-dependency-review.md",
+    "research/cache-baseline-review-guidance-wave-3.md",
+    "research/cache-baseline-review-shared-completion-receipts.md",
+    "research/cache-baseline-review-vitest-canon-wave-10.md",
+    "research/cache-baseline-review-vitest-canon-wave-11.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

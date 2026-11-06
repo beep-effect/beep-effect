@@ -1,0 +1,9 @@
+
+ RUN  v5.0.5 ~/YeeBois/projects/beep-effect-worktrees/citation-extraction-engine/packages/law-practice/domain
+
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  03:29:06
+   Duration  4.33s (transform 65%, tests 15%, import 13%, setup 7%)
+

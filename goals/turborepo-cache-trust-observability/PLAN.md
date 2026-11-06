@@ -1442,3 +1442,41 @@ attributed repair before independent producer approval and signed trials.
 See `research/installed-dependency-diagnostic-preparation-2026-11-03.json`. This
 checkpoint does not complete a phase, qualify a task or prove any acceptance
 criterion.
+
+### Pilot directory and root mutation guard, 2026-11-03
+
+Source inspection found that the read-only snapshot omitted directories and its
+package root. A mode-only directory change or an added empty directory could
+therefore leave the comparison unchanged. The internal snapshot now includes
+those entries and complete regular-file modes, and enforces its entry limit
+for every visited child. Nine new orchestration fault cases exercise mode-only
+changes, empty directories, the bound, refusal without a receipt and cleanup.
+
+The isolated implementation is prepared for hosted CI; no local quality suite
+or pilot execution is used as proof. Current source-bound native permission
+counterexamples motivate the review but do not prove this supervisory change.
+Fresh hosted test/check/review results remain required. All whole-goal criteria
+and signed production, epoch, role and representative-window work remain open.
+
+### Signed-overlay minimum-key preparation, 2026-11-04 UTC
+
+Source review found that the shared signed-root projection omitted native
+32-byte minimum-key enforcement. The projector and exact verifier now prepare
+`longerSignatureKey: true` in both layouts while preserving unrelated flags.
+One new four-row regression and extended preservation/identity/omission controls
+are authored; no local suite ran and current hosted proof is pending. See
+`research/signed-key-floor-review-2026-11-04.json`. The recorded native 168-case
+experiment is historical evidence, not a fresh run. No live signing, credential,
+profile qualification, phase completion or representative window is granted.
+
+### Hold readiness after a failed check capture, 2026-11-03
+
+[The regression receipt](research/readiness-unread-check-regression-2026-11-03.json)
+records a live closeout that printed ready while an independent exact-head read
+still showed two CI failures. The collector retained a typed read failure, but
+the shared status/completion readiness policy ignored it. Require a complete
+read before the checks criterion can pass and label an incomplete check summary. Authored partition, zero-count and
+recovery regressions await hosted CI; no local test or quality suite ran.
+
+Keep the observed PR held, the inherited main repair separate, and every trust
+acceptance criterion open. This repair changes no cache or producer authority.

@@ -36,7 +36,12 @@
     "goals/practice-box-provisioning/GOAL.md",
     "goals/practice-box-provisioning/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/2026-09-02-box-api-semantics-grok.md",
+    "research/2026-09-02-preapply-review-codex.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

@@ -1,0 +1,90 @@
+diff --git a/packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts b/packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts
+index 7011fd0f5d..6dc8f10b2c 100644
+--- a/packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts
++++ b/packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts
+@@ -935,8 +935,9 @@ const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
+                 ancestor.terms,
+                 (introduced) =>
+                   introduced.anchor.startChar === edge.introducing.anchor.startChar &&
+-                  isIntroducingDeterminer(introduced.determiner) &&
+-                  (partOwner || introduced.head === term.head)
++                  // The antecedent edge already established unique term identity,
++                  // including supported modifiers, counts and explicit aliases.
++                  isIntroducingDeterminer(introduced.determiner)
+               )
+           );
+         })
+
+Proposed synthetic tests:
+import { decomposeClaim } from "@beep/law-practice-domain/values/ClaimElement";
+import { normalizePatentClaims } from "@beep/law-practice-domain/values/PatentDocument";
+import { it } from "@beep/test-runner";
+import { assert, describe } from "@effect/vitest";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+
+describe("further limitations retain resolved lexical identity", () => {
+  it.effect("attaches a unique modified, counted or explicit alias subject to its parent element", () =>
+    Effect.gen(function* () {
+      for (const [parent, child] of [
+        ["a coated housing", "the housing includes a liner"],
+        ["one or more standard compression algorithms", "said compression algorithms are lossless"],
+        ["a linked infrared (IR) channel", "the IR channel is active"],
+      ]) {
+        const claims = yield* normalizePatentClaims([
+          ["1", `A fixture comprising ${parent}.`],
+          ["2", `The fixture of claim 1 wherein ${child}.`],
+        ]);
+        const tree = yield* decomposeClaim(O.getOrThrow(A.last(claims)), claims);
+        assert.isTrue(
+          A.some(
+            tree.edges,
+            (edge) => edge.kind === "antecedent" && edge.referring.path === "2.a" && edge.introducing.path === "1.a"
+          )
+        );
+        assert.isTrue(
+          A.some(
+            tree.edges,
+            (edge) => edge.kind === "depends-on-element" && edge.dependent === "2.a" && edge.ancestor === "1.a"
+          )
+        );
+      }
+    })
+  );
+
+  it.effect("does not turn ambiguity, an action object, or an unrelated subject into an attachment", () =>
+    Effect.gen(function* () {
+      for (const [parent, child] of [
+        ["a coated housing; a coated housing", "the housing includes a liner"],
+        ["a coated housing", "creating the housing"],
+        ["a coated housing", "a relay coupled to the housing"],
+      ]) {
+        const claims = yield* normalizePatentClaims([
+          ["1", `A fixture comprising ${parent}.`],
+          ["2", `The fixture of claim 1 wherein ${child}.`],
+        ]);
+        const tree = yield* decomposeClaim(O.getOrThrow(A.last(claims)), claims);
+        assert.isFalse(
+          A.some(
+            tree.edges,
+            (edge) => edge.kind === "depends-on-element" && edge.dependent === "2.a" && edge.ancestor !== "1"
+          )
+        );
+      }
+    })
+  );
+
+  it.effect("never attaches a sibling introduction outside the dependency route", () =>
+    Effect.gen(function* () {
+      const claims = yield* normalizePatentClaims([
+        ["1", "A fixture comprising a sensor."],
+        ["2", "The fixture of claim 1 further comprising a coated housing."],
+        ["3", "The fixture of claim 1 wherein the housing includes a liner."],
+      ]);
+      const tree = yield* decomposeClaim(O.getOrThrow(A.last(claims)), claims);
+      assert.isFalse(A.some(tree.edges, (edge) => edge.kind === "depends-on-element" && edge.ancestor === "2.a"));
+      assert.isFalse(A.some(tree.edges, (edge) => edge.kind === "antecedent" && edge.introducing.path === "2.a"));
+    })
+  );
+});

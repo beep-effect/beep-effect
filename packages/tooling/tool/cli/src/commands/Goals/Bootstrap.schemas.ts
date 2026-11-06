@@ -528,7 +528,7 @@ export class PlanEntry extends S.Opaque<PlanEntry, { readonly brand: unique symb
  *
  * const preservation = PlanPreservation.make({
  *   path: "goals/x/ops/manifest.json",
- *   unmodeledKeys: ["researchReports"],
+ *   unmodeledKeys: ["stopConditions"],
  *   preImageDigest: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  *   reason: "Unmodeled manifest keys survive only through byte-preserving JSONC edits.",
  * })
@@ -741,7 +741,7 @@ export class PacketSnapshot extends S.Opaque<PacketSnapshot, { readonly brand: u
  * import * as A from "effect/Array"
  *
  * console.log(A.contains(MODELED_GOAL_MANIFEST_KEYS, "initiative")) // true
- * console.log(A.contains(MODELED_GOAL_MANIFEST_KEYS, "researchReports")) // false
+ * console.log(A.contains(MODELED_GOAL_MANIFEST_KEYS, "stopConditions")) // false
  * ```
  *
  * @category constants
@@ -787,6 +787,7 @@ const VALIDATION_REQUIREMENTS_BY_FINDING_KIND: Readonly<
   "ops-script-duplicate": ["doctor-clean"],
   "decision-file-invalid": ["doctor-clean"],
   "decision-log-drift": ["doctor-clean"],
+  "research-reports-drift": ["doctor-clean"],
 };
 
 /**

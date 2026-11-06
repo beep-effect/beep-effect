@@ -1,0 +1,1412 @@
+{
+  "schemaVersion": "citation-dictionary-reentrancy/v1",
+  "scope": "direct comparison mutation in combined-general tables; Unicode/split tables, forked callbacks and complete engine proof remain open",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "python": "3.11.15",
+  "pythonHashSeed": "0",
+  "hashWidth": 64,
+  "producerSha256": "d458969dbbad47bde537307c4f8372797ecd12174898e63dbd049399a62e3e36",
+  "dictionarySourceSha256": "474b899187e73c5ec416b82e17346d2c17616b1b662e1c2fd1c7e53bb2bf19d8",
+  "cpythonLicenseSha256": "3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf",
+  "oracleLicenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "versions": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22"
+  },
+  "cases": [
+    {
+      "name": "clear-in-get",
+      "initial": [0, 2],
+      "keys": [
+        {
+          "objectId": 0,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 1,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 2,
+          "hash": "34",
+          "token": "2"
+        },
+        {
+          "objectId": 3,
+          "hash": "35",
+          "token": "3"
+        },
+        {
+          "objectId": 4,
+          "hash": "36",
+          "token": "4"
+        },
+        {
+          "objectId": 5,
+          "hash": "37",
+          "token": "5"
+        },
+        {
+          "objectId": 6,
+          "hash": "38",
+          "token": "6"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "clear"
+            }
+          ],
+          "entries": []
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [],
+          "entries": []
+        }
+      ]
+    },
+    {
+      "name": "remove-in-get",
+      "initial": [0, 2],
+      "keys": [
+        {
+          "objectId": 0,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 1,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 2,
+          "hash": "34",
+          "token": "2"
+        },
+        {
+          "objectId": 3,
+          "hash": "35",
+          "token": "3"
+        },
+        {
+          "objectId": 4,
+          "hash": "36",
+          "token": "4"
+        },
+        {
+          "objectId": 5,
+          "hash": "37",
+          "token": "5"
+        },
+        {
+          "objectId": 6,
+          "hash": "38",
+          "token": "6"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "remove",
+              "key": 0,
+              "result": 100
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 102
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 102
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "replace-in-get",
+      "initial": [0, 2],
+      "keys": [
+        {
+          "objectId": 0,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 1,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 2,
+          "hash": "34",
+          "token": "2"
+        },
+        {
+          "objectId": 3,
+          "hash": "35",
+          "token": "3"
+        },
+        {
+          "objectId": 4,
+          "hash": "36",
+          "token": "4"
+        },
+        {
+          "objectId": 5,
+          "hash": "37",
+          "token": "5"
+        },
+        {
+          "objectId": 6,
+          "hash": "38",
+          "token": "6"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "remove",
+              "key": 0,
+              "result": 100
+            },
+            {
+              "kind": "set",
+              "key": 0,
+              "value": 100
+            },
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 0,
+              "value": 100
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 0,
+              "value": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "update-in-get",
+      "initial": [0, 2],
+      "keys": [
+        {
+          "objectId": 0,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 1,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 2,
+          "hash": "34",
+          "token": "2"
+        },
+        {
+          "objectId": 3,
+          "hash": "35",
+          "token": "3"
+        },
+        {
+          "objectId": 4,
+          "hash": "36",
+          "token": "4"
+        },
+        {
+          "objectId": 5,
+          "hash": "37",
+          "token": "5"
+        },
+        {
+          "objectId": 6,
+          "hash": "38",
+          "token": "6"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 99
+          },
+          "trace": [
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "set",
+              "key": 0,
+              "value": 99
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 99
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 99
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 99
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "insert-no-resize",
+      "initial": [0],
+      "keys": [
+        {
+          "objectId": 0,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 1,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 2,
+          "hash": "34",
+          "token": "2"
+        },
+        {
+          "objectId": 3,
+          "hash": "35",
+          "token": "3"
+        },
+        {
+          "objectId": 4,
+          "hash": "36",
+          "token": "4"
+        },
+        {
+          "objectId": 5,
+          "hash": "37",
+          "token": "5"
+        },
+        {
+          "objectId": 6,
+          "hash": "38",
+          "token": "6"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "set",
+              "key": 2,
+              "value": 102
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "resize-in-get",
+      "initial": [0, 2, 3, 4, 5],
+      "keys": [
+        {
+          "objectId": 0,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 1,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 2,
+          "hash": "34",
+          "token": "2"
+        },
+        {
+          "objectId": 3,
+          "hash": "35",
+          "token": "3"
+        },
+        {
+          "objectId": 4,
+          "hash": "36",
+          "token": "4"
+        },
+        {
+          "objectId": 5,
+          "hash": "37",
+          "token": "5"
+        },
+        {
+          "objectId": 6,
+          "hash": "38",
+          "token": "6"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "set",
+              "key": 6,
+              "value": 106
+            },
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            },
+            {
+              "objectId": 5,
+              "value": 105
+            },
+            {
+              "objectId": 6,
+              "value": 106
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            },
+            {
+              "objectId": 5,
+              "value": 105
+            },
+            {
+              "objectId": 6,
+              "value": 106
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "resize-in-set",
+      "initial": [0, 2, 3, 4, 5],
+      "keys": [
+        {
+          "objectId": 0,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 1,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 2,
+          "hash": "34",
+          "token": "2"
+        },
+        {
+          "objectId": 3,
+          "hash": "35",
+          "token": "3"
+        },
+        {
+          "objectId": 4,
+          "hash": "36",
+          "token": "4"
+        },
+        {
+          "objectId": 5,
+          "hash": "37",
+          "token": "5"
+        },
+        {
+          "objectId": 6,
+          "hash": "38",
+          "token": "6"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 1,
+            "value": 55
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "remove",
+              "key": 0,
+              "result": 100
+            },
+            {
+              "kind": "set",
+              "key": 6,
+              "value": 106
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            },
+            {
+              "objectId": 5,
+              "value": 105
+            },
+            {
+              "objectId": 6,
+              "value": 106
+            },
+            {
+              "objectId": 1,
+              "value": 55
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 55
+          },
+          "trace": [
+            {
+              "kind": "compare",
+              "left": 1,
+              "right": 0
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            },
+            {
+              "objectId": 5,
+              "value": 105
+            },
+            {
+              "objectId": 6,
+              "value": 106
+            },
+            {
+              "objectId": 1,
+              "value": 55
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "clear-in-remove",
+      "initial": [0, 2],
+      "keys": [
+        {
+          "objectId": 0,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 1,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 2,
+          "hash": "34",
+          "token": "2"
+        },
+        {
+          "objectId": 3,
+          "hash": "35",
+          "token": "3"
+        },
+        {
+          "objectId": 4,
+          "hash": "36",
+          "token": "4"
+        },
+        {
+          "objectId": 5,
+          "hash": "37",
+          "token": "5"
+        },
+        {
+          "objectId": 6,
+          "hash": "38",
+          "token": "6"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "remove",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "clear"
+            }
+          ],
+          "entries": []
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [],
+          "entries": []
+        }
+      ]
+    },
+    {
+      "name": "mutate-raise",
+      "initial": [0, 2],
+      "keys": [
+        {
+          "objectId": 0,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 1,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 2,
+          "hash": "34",
+          "token": "2"
+        },
+        {
+          "objectId": 3,
+          "hash": "35",
+          "token": "3"
+        },
+        {
+          "objectId": 4,
+          "hash": "36",
+          "token": "4"
+        },
+        {
+          "objectId": 5,
+          "hash": "37",
+          "token": "5"
+        },
+        {
+          "objectId": 6,
+          "hash": "38",
+          "token": "6"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "error",
+            "kind": "ValueError"
+          },
+          "trace": [
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "clear"
+            }
+          ],
+          "entries": []
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [],
+          "entries": []
+        }
+      ]
+    },
+    {
+      "name": "false-after-resize",
+      "initial": [0, 2, 3, 4, 5],
+      "keys": [
+        {
+          "objectId": 0,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 1,
+          "hash": "7",
+          "token": "different"
+        },
+        {
+          "objectId": 2,
+          "hash": "34",
+          "token": "2"
+        },
+        {
+          "objectId": 3,
+          "hash": "35",
+          "token": "3"
+        },
+        {
+          "objectId": 4,
+          "hash": "36",
+          "token": "4"
+        },
+        {
+          "objectId": 5,
+          "hash": "37",
+          "token": "5"
+        },
+        {
+          "objectId": 6,
+          "hash": "38",
+          "token": "6"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "trace": [
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "set",
+              "key": 6,
+              "value": 106
+            },
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            },
+            {
+              "objectId": 5,
+              "value": 105
+            },
+            {
+              "objectId": 6,
+              "value": 106
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 3,
+              "value": 103
+            },
+            {
+              "objectId": 4,
+              "value": 104
+            },
+            {
+              "objectId": 5,
+              "value": 105
+            },
+            {
+              "objectId": 6,
+              "value": 106
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "replace-five",
+      "initial": [0, 2],
+      "keys": [
+        {
+          "objectId": 0,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 1,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 2,
+          "hash": "34",
+          "token": "2"
+        },
+        {
+          "objectId": 3,
+          "hash": "35",
+          "token": "3"
+        },
+        {
+          "objectId": 4,
+          "hash": "36",
+          "token": "4"
+        },
+        {
+          "objectId": 5,
+          "hash": "37",
+          "token": "5"
+        },
+        {
+          "objectId": 6,
+          "hash": "38",
+          "token": "6"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 104
+          },
+          "trace": [
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "remove",
+              "key": 0,
+              "result": 100
+            },
+            {
+              "kind": "set",
+              "key": 0,
+              "value": 100
+            },
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "remove",
+              "key": 0,
+              "result": 100
+            },
+            {
+              "kind": "set",
+              "key": 0,
+              "value": 101
+            },
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "remove",
+              "key": 0,
+              "result": 101
+            },
+            {
+              "kind": "set",
+              "key": 0,
+              "value": 102
+            },
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "remove",
+              "key": 0,
+              "result": 102
+            },
+            {
+              "kind": "set",
+              "key": 0,
+              "value": 103
+            },
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "remove",
+              "key": 0,
+              "result": 103
+            },
+            {
+              "kind": "set",
+              "key": 0,
+              "value": 104
+            },
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 0,
+              "value": 104
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 104
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 2,
+              "value": 102
+            },
+            {
+              "objectId": 0,
+              "value": 104
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "read-get",
+      "initial": [0, 2],
+      "keys": [
+        {
+          "objectId": 0,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 1,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 2,
+          "hash": "34",
+          "token": "2"
+        },
+        {
+          "objectId": 3,
+          "hash": "35",
+          "token": "3"
+        },
+        {
+          "objectId": 4,
+          "hash": "36",
+          "token": "4"
+        },
+        {
+          "objectId": 5,
+          "hash": "37",
+          "token": "5"
+        },
+        {
+          "objectId": 6,
+          "hash": "38",
+          "token": "6"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "read",
+              "entries": [
+                {
+                  "objectId": 0,
+                  "value": 100
+                },
+                {
+                  "objectId": 2,
+                  "value": 102
+                }
+              ]
+            },
+            {
+              "kind": "get",
+              "key": 0,
+              "result": 100
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 100
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 100
+            },
+            {
+              "objectId": 2,
+              "value": 102
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "clear-refill",
+      "initial": [0, 2],
+      "keys": [
+        {
+          "objectId": 0,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 1,
+          "hash": "7",
+          "token": "same"
+        },
+        {
+          "objectId": 2,
+          "hash": "34",
+          "token": "2"
+        },
+        {
+          "objectId": 3,
+          "hash": "35",
+          "token": "3"
+        },
+        {
+          "objectId": 4,
+          "hash": "36",
+          "token": "4"
+        },
+        {
+          "objectId": 5,
+          "hash": "37",
+          "token": "5"
+        },
+        {
+          "objectId": 6,
+          "hash": "38",
+          "token": "6"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 99
+          },
+          "trace": [
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            },
+            {
+              "kind": "clear"
+            },
+            {
+              "kind": "set",
+              "key": 0,
+              "value": 99
+            },
+            {
+              "kind": "compare",
+              "left": 0,
+              "right": 1
+            }
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 99
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 99
+          },
+          "trace": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 99
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

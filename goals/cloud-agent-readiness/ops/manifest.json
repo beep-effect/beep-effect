@@ -50,8 +50,18 @@
     "goals/cloud-agent-readiness/history/2026-11-01-cloud-task-admission.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
-    "research/2026-10-01-container-probe.md"
+    "research/2026-10-01-container-probe.md",
+    "research/2026-10-14-cheap-gate-concurrency.json",
+    "research/2026-10-14-detached-recovery.json",
+    "research/2026-10-14-detached-yeet.json",
+    "research/2026-10-14-fallow-closeout.json",
+    "research/2026-10-14-import-memory.json",
+    "research/2026-10-14-long-cheap-gates.json",
+    "research/2026-10-14-mcp-qualification.json",
+    "research/2026-10-14-schema-memory.json",
+    "research/2026-10-14-workstation-cli-inventory.json",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {

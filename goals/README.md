@@ -41,7 +41,7 @@ goals/<slug>/
 | `GOAL.md` | Compact `/goal` launcher for execution agents. It delegates to `SPEC.md` and must not become the normative spec. |
 | `ops/manifest.json` | Machine-readable routing: lifecycle, anchor document, launchers, phases, checks, assets. |
 | `research/` | Source-backed exploration, tradeoffs, inventories, and freshness-dated notes. |
-| `research/SOURCES.md` | Provenance ledger: mined sources, upstream licenses, external citations, in-repo bricks, and source-exploration cross-links (inherited at graduate; registered in `researchReports[]` + `currentSourceOfTruth[]`). |
+| `research/SOURCES.md` | Provenance ledger: mined sources, upstream licenses, external citations, in-repo bricks, and source-exploration cross-links (inherited at graduate; listed in `currentSourceOfTruth[]` by hand, while `researchReports[]` is generated from `research/` by `bun run beep goals manifest --write`). |
 | `history/` | Archived outputs, closeouts, reflection logs, verification notes, and evidence. |
 | `history/reflections/` | Per-session agent reflections written at P3 Close (and on demand via `/reflect`). One immutable file per run, named `<YYYY-MM-DD>-<agent>.md`, with schema-validated YAML frontmatter (`ReflectionFrontmatter`); enforced by `bun run beep lint reflection-artifacts` for packets with `reflectionRequired: true`. Start from `_template/history/reflections/_TEMPLATE.md`. |
 | `ops/handoffs/` | Optional phase-specific handoffs or secondary execution packets. |

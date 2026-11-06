@@ -18,6 +18,7 @@ import { goalsCompletionCommand } from "./Completion.ts";
 import { goalsDecisionsCommand } from "./Decisions.ts";
 import { goalsDoctorCommand } from "./Doctor.ts";
 import { goalsCatalogCommand, goalsExplainCommand, goalsNextCommand } from "./Graph.ts";
+import { goalsManifestCommand } from "./Manifest.ts";
 import { goalsIndexCommand } from "./PortfolioIndex.ts";
 import { goalsSetRiskTierCommand } from "./SetRiskTier.ts";
 import { goalsSetStatusCommand } from "./SetStatus.ts";
@@ -44,6 +45,7 @@ export const goalsCommand = Command.make("goals", {}, () =>
     "- bun run beep goals decisions check|write [--slug <slug>]",
     '- bun run beep goals decisions add <slug> --title "..." --reversal "..." [--body "..."] [--kind checkpoint]',
     "- bun run beep goals index [--write | --check | --json]",
+    "- bun run beep goals manifest [--write | --check]",
     "- bun run beep goals next [--json]",
     "- bun run beep goals explain <slug> [--json]",
     "- bun run beep goals catalog [--json]",
@@ -62,6 +64,7 @@ export const goalsCommand = Command.make("goals", {}, () =>
     goalsCompletionCommand,
     goalsDecisionsCommand,
     goalsIndexCommand,
+    goalsManifestCommand,
     goalsNextCommand,
     goalsExplainCommand,
     goalsCatalogCommand,
