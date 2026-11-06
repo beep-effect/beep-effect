@@ -225,6 +225,12 @@ const phoenixInventoryHttpLayer = Layer.succeed(
         O.map((value) => value.toString()),
         O.getOrElse(() => request.url)
       );
+      if (request.method === "POST" && request.body._tag === "Uint8Array") {
+        const body = new TextDecoder().decode(request.body.body);
+        if (Str.includes("AgentEffectivenessPhoenixInventory")(body)) {
+          expect(body).toContain("traceAnnotationsNames: traceAnnotationNames");
+        }
+      }
       const response =
         request.method === "POST" && url === "https://phoenix.test/graphql"
           ? Response.json({

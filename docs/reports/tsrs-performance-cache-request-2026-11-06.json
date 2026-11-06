@@ -1,0 +1,20 @@
+{
+  "previous": "cb77033ce9542e31c09cc01446c1a435f84b6c6374d52d0f33d325fe3cdf45ae",
+  "review": {
+    "reviewer": "Codex performance publication review",
+    "reason": "Record hashed compiler/backend selectors, CLI checker scheduling caches and generated policy inputs; preserve qualification scope and trust boundaries.",
+    "basis": {
+      "path": "docs/reports/tsrs-performance-cache-review-2026-11-06.md",
+      "sha256": "ac73c5881cd2a6a55fb7cf74c20cc4df752735eab0b1d2ff675f92c0c39df235"
+    }
+  },
+  "subjects": ["//", "@beep/repo-cli"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

@@ -8,5 +8,196 @@
     "incremental": false,
     "noEmit": true,
     "rootDir": ".."
-  }
+  },
+  "references": [
+    {
+      "path": "../../../../drivers/commands/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/duckdb/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/exiftool/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/ffmpeg/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/git/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/github-actions/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/github/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/libpff/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/m365/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/obs/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/occt/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/pdf-tools/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/phoenix/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/poppler/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/tesseract/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/tika/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/uspto/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/capability/chalk/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/capability/cli-kit/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/capability/colors/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/capability/config-file/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/capability/file-processing/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/capability/mcp-kit/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/capability/observability/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/capability/runtime-env/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/capability/technical-drawing/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/capability/walker/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/capability/xdg/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/epistemics/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/github-commands/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/github-reporting/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/glob/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/jsonc/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/jsonl/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/lockfiles/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/managed-section/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/markdown/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/md/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/package-json/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/provenance/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/rdf/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/semver/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/skill-contract/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/spdx/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/tsconfig/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/yaml/tsconfig.json"
+    },
+    {
+      "path": "../../../library/ai-metrics/tsconfig.json"
+    },
+    {
+      "path": "../../../library/ai-sync/tsconfig.json"
+    },
+    {
+      "path": "../../../library/palantiri/tsconfig.json"
+    },
+    {
+      "path": "../../../library/qa-capture/tsconfig.json"
+    },
+    {
+      "path": "../../../library/repo-cli-kit/tsconfig.json"
+    },
+    {
+      "path": "../../../library/repo-tsconfig/tsconfig.json"
+    },
+    {
+      "path": "../../../library/repo-utils/tsconfig.json"
+    },
+    {
+      "path": "../../../library/repo-workspaces/tsconfig.json"
+    },
+    {
+      "path": "../../../policy-pack/repo-configs/tsconfig.json"
+    },
+    {
+      "path": "../../../test-kit/fc-runs/tsconfig.json"
+    },
+    {
+      "path": "../../../test-kit/memfs/tsconfig.json"
+    },
+    {
+      "path": "../../../test-kit/test-runner/tsconfig.json"
+    },
+    {
+      "path": "../../../test-kit/test-utils/tsconfig.json"
+    },
+    {
+      "path": "../../docgen/tsconfig.json"
+    }
+  ]
 }

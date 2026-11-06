@@ -6721,6 +6721,30 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         ).toEqual({ _tag: "selected", packageNames: ["@beep/repo-cli"], dependentPackageNames: [] });
       });
 
+      it("routes generated governance metadata to tooling consumers and fails closed on unknown inputs", () => {
+        const owners = [owner("repo-cli"), owner("repo-cli-kit"), owner("unrelated")];
+        const inventory = "standards/effect-vitest.inventory.jsonc";
+        const catalog = "standards/schema-catalog/@beep/schema.generated.jsonc";
+        expect(planCoverageAffectedScope(owners, [inventory])).toEqual({
+          _tag: "selected",
+          packageNames: ["@beep/repo-cli"],
+          dependentPackageNames: [],
+        });
+        expect(planCoverageAffectedScope(owners, [catalog])).toEqual({
+          _tag: "selected",
+          packageNames: ["@beep/repo-cli", "@beep/repo-cli-kit"],
+          dependentPackageNames: [],
+        });
+        expect(planCoverageAffectedScope(owners, [inventory, "standards/unknown.jsonc"])._tag).toBe("full");
+        expect(planCoverageAffectedScope([], [inventory])._tag).toBe("full");
+        expect(planCoverageAffectedScope([owner("repo-cli")], [catalog])._tag).toBe("full");
+        expect(
+          planCoverageAffectedScope(owners, [
+            "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+          ])._tag
+        ).toBe("full");
+      });
+
       it.effect("reads workspace edges from the live inventory and never lists the repository root as an owner", () =>
         Effect.andThen(
           temporaryRepository,
