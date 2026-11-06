@@ -458,6 +458,7 @@
     {"name":"CacheWorkflow.directoryAlias","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.executeOwnedUpload","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.file","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CacheWorkflow.fileMetadata","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.files","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.freshHostedArtifact","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.git","owner":"@beep/repo-cli","family":"tooling","conforms":true},

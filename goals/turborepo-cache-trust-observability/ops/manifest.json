@@ -174,6 +174,7 @@
     "research/signing-posture-native-canary.json",
     "research/signing-posture-native-stable.json",
     "research/source-directory-alias-checkpoint-2026-11-02.json",
+    "research/source-inspection-byte-budget-repair-2026-11-06.json",
     "research/supervisor-phase-checkpoint-2026-11-02.json",
     "research/supervisor-safe-hints-checkpoint-2026-11-02.json",
     "research/worker-git-startup-checkpoint-2026-11-02.json",
