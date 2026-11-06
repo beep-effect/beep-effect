@@ -2,7 +2,7 @@
 
 ## Objective
 
-Every file under `./scripts` either becomes a `beep` CLI command (Effect code in `@beep/repo-cli`
+Every file under `scripts/` either becomes a `beep` CLI command (Effect code in `@beep/repo-cli`
 or its `beep-*` tools) or is deleted, except the single reviewed shell exception
 `scripts/cloud/bootstrap.sh`. Hosted CI runs its pre-toolchain steps (change profile, runner
 resources, apt-source pruning) through a compiled `beep` binary fetched before `bun install`, so
@@ -18,7 +18,7 @@ D15); sibling of `infra-alchemy-rebuild` and `python-free-repo`.
   run inside the harness before any toolchain; allowlisted by directory).
 - Changing what the CI steps compute; `beep ci change-profile` must emit the same variables
   `ci-change-profile.sh` emits today.
-- The `./scripts` equivalents inside goal and exploration packets (`goals/*/ops/*.sh`): those are
+- The `scripts/` equivalents inside goal and exploration packets (`goals/*/ops/*.sh`): those are
   evidence, governed by `python-free-repo`'s triage rule only if the operator extends it.
 
 ## Source Hierarchy
