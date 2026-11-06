@@ -139,14 +139,43 @@ class PilotTransport extends S.Opaque<PilotTransport, { readonly brand: unique s
   )
 ) {}
 
-const identityDirectory = "packages/foundation/modeling/identity";
-const typesDirectory = "packages/foundation/primitive/types";
-const identityTask = "@beep/identity#lint";
-const typesTask = "@beep/types#lint";
-const additionalDependencyDirectories: Readonly<Record<string, string>> = {
-  "@beep/fc-runs#lint": "packages/tooling/test-kit/fc-runs",
-  "@beep/test-runner#lint": "packages/tooling/test-kit/test-runner",
-};
+class PilotRecipe extends S.Opaque<PilotRecipe, { readonly brand: unique symbol }>()(
+  S.Struct({
+    selected: S.Struct({
+      computation: CacheActivationRequest.fields.computation,
+      directory: S.NonEmptyString,
+      package: S.NonEmptyString,
+    }),
+    dependency: S.Struct({
+      computation: CacheActivationRequest.fields.computation,
+      directory: S.NonEmptyString,
+    }),
+    additionalDependencies: S.Record(S.String, S.NonEmptyString),
+  }).pipe(
+    $I.annoteSchema("PilotRecipe", {
+      description:
+        "Supervisor-owned selected computation and fresh dependency mount recipe; not a caller-supplied qualification grant.",
+    })
+  )
+) {}
+
+// Keep the existing identity recipe as the only admitted execution recipe.
+// A second computation needs its own scanner, mutation and replay evidence.
+const recipe = PilotRecipe.make({
+  selected: {
+    computation: "@beep/identity#lint",
+    directory: "packages/foundation/modeling/identity",
+    package: "@beep/identity",
+  },
+  dependency: {
+    computation: "@beep/types#lint",
+    directory: "packages/foundation/primitive/types",
+  },
+  additionalDependencies: {
+    "@beep/fc-runs#lint": "packages/tooling/test-kit/fc-runs",
+    "@beep/test-runner#lint": "packages/tooling/test-kit/test-runner",
+  },
+});
 const captureBound = OutputBound.make({ maxChars: 1024 * 1024, truncatedNotice: "[pilot capture overflow]" });
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const hashText = (text: string) => hashBytes(new TextEncoder().encode(text));
@@ -363,17 +392,23 @@ const validatePilotClosure = Effect.fn("CachePilot.validateClosure")(function* (
   if (!S.toEquivalence(CacheDependencyTree)(installed, dependencies.tree)) {
     return yield* CacheCommandError.new("Pilot dependency snapshot differs from the observed normal installation.");
   }
-  const selectedNode = yield* A.findFirst(current.source.configuration.nodes, (node) => node.id === identityTask).pipe(
-    Effect.fromOption(() => CacheCommandError.new("The pilot computation is absent."))
-  );
+  const selectedNode = yield* A.findFirst(
+    current.source.configuration.nodes,
+    (node) => node.id === recipe.selected.computation
+  ).pipe(Effect.fromOption(() => CacheCommandError.new("The pilot computation is absent.")));
   if (!A.contains(selectedNode.configuration.env, "BEEP_CACHE_TOOLCHAIN_DIGEST")) {
     return yield* CacheCommandError.new("The pilot must declare BEEP_CACHE_TOOLCHAIN_DIGEST as a hashed input.");
   }
-  const dependencyNodes = A.filter(current.source.configuration.nodes, (node) => node.id !== identityTask);
+  const dependencyNodes = A.filter(
+    current.source.configuration.nodes,
+    (node) => node.id !== recipe.selected.computation
+  );
   if (
     A.some(
       dependencyNodes,
-      (node) => (node.id !== typesTask && !R.has(additionalDependencyDirectories, node.id)) || node.configuration.cache
+      (node) =>
+        (node.id !== recipe.dependency.computation && !R.has(recipe.additionalDependencies, node.id)) ||
+        node.configuration.cache
     )
   ) {
     return yield* CacheCommandError.new(
@@ -422,7 +457,10 @@ const runPilot = Effect.fn("CachePilot.run")(
         Effect.flatMap(decodeText),
         Effect.flatMap(JsonStringCodec(CacheActivationPreview).decode)
       );
-      const activationRequest = CacheActivationRequest.make({ computation: identityTask, ...preview.activation });
+      const activationRequest = CacheActivationRequest.make({
+        computation: recipe.selected.computation,
+        ...preview.activation,
+      });
       const current = yield* cache.activation(root, activationRequest);
       if (!S.toEquivalence(CacheActivationPreview)(current, preview)) {
         return yield* CacheCommandError.new("The pilot activation preview is stale.");
@@ -505,7 +543,7 @@ const runPilot = Effect.fn("CachePilot.run")(
     const needsProfile = A.some(
       census.nodes,
       (node) =>
-        node.id === identityTask &&
+        node.id === recipe.selected.computation &&
         O.isSome(node.command) &&
         A.contains(node.configuration.passThroughEnv, "BIOME_CONFIG_PATH")
     );
@@ -516,7 +554,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       yield* verifyCacheIdentityLintProfile(root);
       yield* collectCacheTaskSelection(
         root,
-        ["run", "lint", "--filter=@beep/identity", "--env-mode=strict"],
+        ["run", "lint", `--filter=${recipe.selected.package}`, "--env-mode=strict"],
         O.some(turbo)
       );
     }
@@ -548,7 +586,9 @@ const runPilot = Effect.fn("CachePilot.run")(
     const runtimeKeyObservation = `BEEP_CACHE_TOOLCHAIN_DIGEST=${yield* hashText(runtimeIdentity.toolchainDigest)}`;
     const before = yield* readCacheEvidenceBytes(root, current.activation.before).pipe(Effect.flatMap(decodeText));
     const after = yield* readCacheEvidenceBytes(root, current.activation.after).pipe(Effect.flatMap(decodeText));
-    const typesConfig = yield* readBytes(root, `${typesDirectory}/turbo.json`).pipe(Effect.flatMap(decodeText));
+    const typesConfig = yield* readBytes(root, `${recipe.dependency.directory}/turbo.json`).pipe(
+      Effect.flatMap(decodeText)
+    );
     const experiment = yield* fs
       .makeTempDirectoryScoped({
         directory: "/tmp",
@@ -575,10 +615,10 @@ const runPilot = Effect.fn("CachePilot.run")(
       yield* fs.makeDirectory(directory);
       const identity = path.join(directory, "identity");
       const types = path.join(directory, "types");
-      yield* copyPackage(path.join(source, identityDirectory), identity);
-      yield* copyPackage(path.join(source, typesDirectory), types);
+      yield* copyPackage(path.join(source, recipe.selected.directory), identity);
+      yield* copyPackage(path.join(source, recipe.dependency.directory), types);
       const additionalPackages = yield* Effect.forEach(
-        R.toEntries(additionalDependencyDirectories),
+        R.toEntries(recipe.additionalDependencies),
         Effect.fn("CachePilot.prepareDependency")(function* ([task, relative]) {
           if (!A.contains(expectedDependencies, task)) return O.none();
           const target = path.join(directory, "dependencies", relative);
@@ -637,8 +677,8 @@ const runPilot = Effect.fn("CachePilot.run")(
         ".git": fixture.gitFile,
         node_modules: path.join(dependencies.directory, "node_modules"),
         ".turbo": path.join(fixture.directory, "run"),
-        [identityDirectory]: fixture.identity,
-        [typesDirectory]: fixture.types,
+        [recipe.selected.directory]: fixture.identity,
+        [recipe.dependency.directory]: fixture.types,
       };
       const mounts: Array<string> = [];
       const parents: Array<string> = [];
@@ -673,8 +713,8 @@ const runPilot = Effect.fn("CachePilot.run")(
       });
       yield* visit("");
       for (const [directory, name] of [
-        [identityDirectory, "identity-log"],
-        [typesDirectory, "types-log"],
+        [recipe.selected.directory, "identity-log"],
+        [recipe.dependency.directory, "types-log"],
       ] as const)
         mounts.push("--bind", path.join(fixture.directory, name), path.join(guest, directory, ".turbo"));
       for (const relative of R.keys(fixture.additionalPackages))
@@ -866,7 +906,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         !A.some(
           plan.tasks,
           (task) =>
-            task.taskId === identityTask &&
+            task.taskId === recipe.selected.computation &&
             A.contains(task.environmentVariables.configured, runtimeKeyObservation) &&
             (!needsProfile || O.exists(task.environmentVariables.passthrough, A.contains(expectedProfile)))
         )
@@ -883,7 +923,7 @@ const runPilot = Effect.fn("CachePilot.run")(
             "/tools/turbo",
             "run",
             "lint",
-            "--filter=@beep/identity",
+            `--filter=${recipe.selected.package}`,
             "--no-daemon",
             "--cache=local:",
             "--env-mode=strict",
@@ -1048,7 +1088,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           "/tools/turbo",
           "run",
           "lint",
-          "--filter=@beep/identity",
+          `--filter=${recipe.selected.package}`,
           "--no-daemon",
           `--cache=${O.isSome(transport) ? `remote:${transport.value.cacheAccess}` : reuse ? "local:rw" : "local:"}`,
           "--cache-dir=/cache",
@@ -1074,12 +1114,12 @@ const runPilot = Effect.fn("CachePilot.run")(
       yield* verifySignedCapture(transport, captured, bytes);
       const summary = yield* decodeText(bytes).pipe(Effect.flatMap(JsonStringCodec(NativeSummary).decode));
       const dependencies = yield* Effect.forEach(
-        A.filter(summary.tasks, (task) => task.taskId !== identityTask),
+        A.filter(summary.tasks, (task) => task.taskId !== recipe.selected.computation),
         taskObservation,
         { concurrency: 1 }
       );
       yield* validateDependencyObservations(fixture, dependencies);
-      const selected = A.filter(summary.tasks, (task) => task.taskId === identityTask);
+      const selected = A.filter(summary.tasks, (task) => task.taskId === recipe.selected.computation);
       if (selected.length > 1) {
         return yield* CacheCommandError.new("Native pilot summary repeated the selected task.");
       }
@@ -1127,7 +1167,7 @@ const runPilot = Effect.fn("CachePilot.run")(
             return yield* CacheCommandError.new("Selected pilot command or verdict disagrees with its graph.");
           }
           const capture = {
-            computation: identityTask,
+            computation: recipe.selected.computation,
             taskHash: task.hash,
             origin: observation.origin,
             cacheEnabled: enabled,
@@ -1342,7 +1382,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       let original = rootConfiguration;
       let changedText = original;
       const changeChildConfiguration = Effect.fn("CachePilot.changeChildConfiguration")(function* () {
-        changedPath = `${identityDirectory}/turbo.json`;
+        changedPath = `${recipe.selected.directory}/turbo.json`;
         original = fixture.after;
         if (id === "missing-child-config") changedFixture = PilotRoot.make({ ...fixture, omitChild: true });
         else {
@@ -1362,7 +1402,7 @@ const runPilot = Effect.fn("CachePilot.run")(
             const formatted = yield* invoke(fixture, "/fixture", [
               "/bin/sh",
               "-c",
-              `exec /tools/biome format --stdin-file-path=/fixture/${identityDirectory}/turbo.json < /fixture/${identityDirectory}/turbo.json`,
+              `exec /tools/biome format --stdin-file-path=/fixture/${recipe.selected.directory}/turbo.json < /fixture/${recipe.selected.directory}/turbo.json`,
             ]);
             if (formatted.exitCode !== 0 || formatted.truncated) {
               return yield* CacheCommandError.new("Cannot format the child-config control with pinned Biome.");
@@ -1415,7 +1455,7 @@ const runPilot = Effect.fn("CachePilot.run")(
               R.set(
                 options,
                 "paths",
-                R.set(aliases, "@beep/qualification-alias", [`./${identityDirectory}/src/index.ts`])
+                R.set(aliases, "@beep/qualification-alias", [`./${recipe.selected.directory}/src/index.ts`])
               )
             )
           );
@@ -1432,7 +1472,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         } else if (id === "child-task-config" || id === "missing-child-config") {
           yield* changeChildConfiguration();
         } else if (id === "dependency-source") {
-          changedPath = `${typesDirectory}/src/index.ts`;
+          changedPath = `${recipe.dependency.directory}/src/index.ts`;
           original = yield* readBytes(fixture.types, "src/index.ts").pipe(Effect.flatMap(decodeText));
           changedText = Str.replace("/** @deprecated qualification dependency control */\n", "")(original);
           yield* writeContainedFileString(fixture.types, "src/index.ts", changedText);
@@ -1501,7 +1541,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       return A.some(
         native.tasks,
         (task) =>
-          task.taskId === identityTask &&
+          task.taskId === recipe.selected.computation &&
           task.command !== "<NONEXISTENT>" &&
           Str.trim(task.command) !== "" &&
           O.isSome(task.execution)
@@ -1516,7 +1556,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         "/tools/turbo",
         "run",
         "lint",
-        "--filter=@beep/identity",
+        `--filter=${recipe.selected.package}`,
         "--no-daemon",
         "--cache=local:",
         "--env-mode=strict",
@@ -1587,7 +1627,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         "/tools/turbo",
         "run",
         "lint",
-        "--filter=@beep/identity",
+        `--filter=${recipe.selected.package}`,
         "--no-daemon",
         "--cache=local:",
         "--env-mode=strict",
@@ -1597,12 +1637,12 @@ const runPilot = Effect.fn("CachePilot.run")(
         return yield* CacheCommandError.new("Missing-child refusal requires a complete native dry plan.");
       }
       const plan = yield* JsonStringCodec(NativeSummary).decode(captured.stdout);
-      const task = yield* A.findFirst(plan.tasks, (task) => task.taskId === identityTask).pipe(
+      const task = yield* A.findFirst(plan.tasks, (task) => task.taskId === recipe.selected.computation).pipe(
         Effect.fromOption(() => CacheCommandError.new("Missing-child refusal omitted its selected dry-plan task."))
       );
       const node = yield* joinCacheCensusPlan(census.workspaces, plan).pipe(
         Effect.flatMap((nodes) =>
-          A.findFirst(nodes, (node) => node.id === identityTask).pipe(
+          A.findFirst(nodes, (node) => node.id === recipe.selected.computation).pipe(
             Effect.fromOption(() =>
               CacheCommandError.new("Missing-child refusal omitted its resolved task configuration.")
             )
@@ -1619,7 +1659,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       const summaries = path.join(fixture.directory, "run/runs");
       return yield* S.decodeUnknownEffect(CacheSignedPilotPolicyRefusal)({
         reason: "missing-child-config",
-        removedPath: `${identityDirectory}/turbo.json`,
+        removedPath: `${recipe.selected.directory}/turbo.json`,
         isolationRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(fixture.directory)}`),
         computation: task.taskId,
         taskHash: task.hash,
@@ -1730,7 +1770,7 @@ const runPilot = Effect.fn("CachePilot.run")(
             }
             const bytes = yield* readBytes(root.directory, `run/runs/${O.getOrThrow(A.head(names))}`);
             const summary = yield* decodeText(bytes).pipe(Effect.flatMap(JsonStringCodec(NativeSummary).decode));
-            const selected = A.filter(summary.tasks, (task) => task.taskId === identityTask);
+            const selected = A.filter(summary.tasks, (task) => task.taskId === recipe.selected.computation);
             const task = yield* A.head(selected).pipe(
               Effect.fromOption(() =>
                 CacheCommandError.new("Native capture control did not execute the selected task.")

@@ -323,6 +323,23 @@ export const MERGE_GATE_S11_DEFAULT_ATTRIBUTION = "S11: unattributed at merge; t
 export const MERGE_GATE_UNBLOCKS_MAIN_LABEL = "unblocks-main";
 
 /**
+ * The label an owner puts on a pull request it will merge itself: the gate
+ * holds it as `owner-hold` in both modes, and the gate table never offers it.
+ *
+ * **Example** (Read the label)
+ *
+ * ```ts
+ * import { MERGE_GATE_OWNER_HOLD_LABEL } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(MERGE_GATE_OWNER_HOLD_LABEL) // "owner-merge-hold"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const MERGE_GATE_OWNER_HOLD_LABEL = "owner-merge-hold";
+
+/**
  * The check runs on one commit of the pull request's base branch, reduced to
  * the latest per name by the gate.
  *
@@ -469,6 +486,7 @@ export class MergeGateRead extends S.Opaque<MergeGateRead, { readonly brand: uni
 export const MergeGateHoldReason = LiteralKit([
   "head-moved",
   "draft",
+  "owner-hold",
   "conflicting",
   "squash-commitlint",
   "required-contexts-unknown",
@@ -643,10 +661,51 @@ export class MergeGateInput extends S.Opaque<MergeGateInput, { readonly brand: u
   )
 ) {}
 
-const goodConclusion = (conclusion: string | null): boolean =>
+/**
+ * Whether a check run conclusion counts as green for the gate: success,
+ * skipped, or neutral. A pending run (no conclusion) is not green.
+ *
+ * **Example** (Classify conclusions)
+ *
+ * ```ts
+ * import { mergeGateGoodConclusion } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(mergeGateGoodConclusion("skipped")) // true
+ * console.log(mergeGateGoodConclusion(null)) // false
+ * ```
+ *
+ * @param conclusion - The run's conclusion, `null` while it runs.
+ * @returns Whether the run is green.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const mergeGateGoodConclusion = (conclusion: string | null): boolean =>
   conclusion === "success" || conclusion === "skipped" || conclusion === "neutral";
 
-const latestRunPerName = (runs: ReadonlyArray<MergeGateCheckRun>): HashMap.HashMap<string, MergeGateCheckRun> =>
+/**
+ * The newest run per check name (highest run id), the run a re-run replaced dropped.
+ *
+ * **Example** (A re-run replaces the first attempt)
+ *
+ * ```ts
+ * import { MergeGateCheckRun, mergeGateLatestRunPerName } from "@beep/repo-cli/test/Yeet"
+ * import * as HashMap from "effect/HashMap"
+ *
+ * const latest = mergeGateLatestRunPerName([
+ *   MergeGateCheckRun.make({ id: 1, name: "Lint", status: "completed", conclusion: "failure" }),
+ *   MergeGateCheckRun.make({ id: 2, name: "Lint", status: "completed", conclusion: "success" }),
+ * ])
+ * console.log(HashMap.size(latest)) // 1
+ * ```
+ *
+ * @param runs - Every run on one commit.
+ * @returns The newest run keyed by check name.
+ * @category models
+ * @since 0.0.0
+ */
+export const mergeGateLatestRunPerName = (
+  runs: ReadonlyArray<MergeGateCheckRun>
+): HashMap.HashMap<string, MergeGateCheckRun> =>
   A.reduce(runs, HashMap.empty<string, MergeGateCheckRun>(), (latest, run) =>
     latest.pipe(
       HashMap.get(run.name),
@@ -685,6 +744,12 @@ const structuralHold = ({ read, options }: MergeGateInput): O.Option<MergeGateHo
     ),
     holdWhen(read.draft, read.prNumber, "draft", "still draft; the owner flips ready at content-final"),
     holdWhen(
+      A.contains(read.labels, MERGE_GATE_OWNER_HOLD_LABEL),
+      read.prNumber,
+      "owner-hold",
+      `labelled ${MERGE_GATE_OWNER_HOLD_LABEL}; the owner merges it, the orchestrator does not`
+    ),
+    holdWhen(
       read.mergeableState === "dirty",
       read.prNumber,
       "conflicting",
@@ -710,7 +775,7 @@ const runsHold = (
 ): O.Option<MergeGateHold> => holdWhen(A.isReadonlyArrayNonEmpty(runs), prNumber, reason, `${prefix}: ${names(runs)}`);
 
 const isPending = (run: MergeGateCheckRun): boolean => run.status !== "completed";
-const isRed = (run: MergeGateCheckRun): boolean => !goodConclusion(run.conclusion);
+const isRed = (run: MergeGateCheckRun): boolean => !mergeGateGoodConclusion(run.conclusion);
 
 // The ruleset is how the gate tells required from optional, so an unreadable
 // or empty one holds in both modes, relaxed included.
@@ -789,7 +854,7 @@ const isAttributed = ({ read, options }: MergeGateInput, check: string): boolean
   A.contains(read.attributedChecks, check) || A.some(options.tolerate, (tolerance) => tolerance.check === check);
 
 const latestBaseRun = (base: MergeGateBaseRuns, check: string): O.Option<MergeGateCheckRun> =>
-  HashMap.get(latestRunPerName(base.checkRuns), check);
+  HashMap.get(mergeGateLatestRunPerName(base.checkRuns), check);
 
 const describeBaseRun = (run: MergeGateCheckRun): string =>
   `run ${run.id} ${isPending(run) ? run.status : (run.conclusion ?? "without conclusion")}`;
@@ -969,7 +1034,7 @@ const threadsHold = (read: MergeGateRead): O.Option<MergeGateHold> =>
  * **Details**
  *
  * Criteria in order, first failure wins: head unchanged since the caller
- * looked; not draft; not conflicting; the predicted squash commit message
+ * looked; not draft; not labelled `owner-merge-hold`; not conflicting; the predicted squash commit message
  * passes commitlint; base ruleset readable; every required
  * context registered, complete and green; every other check complete and
  * green unless tolerated with an attribution; review window known and
@@ -1027,7 +1092,7 @@ const threadsHold = (read: MergeGateRead): O.Option<MergeGateHold> =>
  */
 export const decideMergeGate = (input: MergeGateInput): MergeGateDecision => {
   const { read, options } = input;
-  const latest = latestRunPerName(read.checkRuns);
+  const latest = mergeGateLatestRunPerName(read.checkRuns);
   const contexts = requiredContextsStep(read);
   const window = windowStep(input);
   return O.firstSomeOf([

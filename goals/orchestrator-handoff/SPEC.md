@@ -34,15 +34,15 @@ what comes next, and the merge gate is a CLI command rather than a scratchpad sc
 
 ## Acceptance Criteria
 
-- [ ] `bun run beep session open` prints the orchestrator holder first; old ledger rows decode.
-- [ ] `session register add|list` appends and renders the register; the Markdown table is what
+- [x] `bun run beep session open` prints the orchestrator holder first; old ledger rows decode.
+- [x] `session register add|list` appends and renders the register; the Markdown table is what
       `HANDOFF.md` embeds.
-- [ ] `yeet merge-gate <pr> <sha>` reproduces `merge.sh` (head pin, draft, required contexts,
+- [x] `yeet merge-gate <pr> <sha>` reproduces `merge.sh` (head pin, draft, required contexts,
       attributed tolerances, 20-minute window, thread re-read, squash `<title> (#n)`) and is
       proven on recorded fixtures.
-- [ ] The `orchestrate` skill has take-over, run and hand-off procedures with the hand-off trigger
+- [x] The `orchestrate` skill has take-over, run and hand-off procedures with the hand-off trigger
       and smart-zone rules.
-- [ ] AGENTS.md Autonomy points at the skill.
+- [x] AGENTS.md Autonomy points at the skill.
 
 ## Decision Log
 
@@ -91,3 +91,72 @@ read and PATCH is not atomic: an overtaken concurrent edit cannot be recovered
 by readback alone. This limitation is documented on both recording exports.
 Reversal: restore the previous cancellation listing and remove the bounded body
 reconciliation, readback and post-record ready confirmation.
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug orchestrator-handoff`; add a `kind: decision` file there, never edit this block._
+
+### Codex-lane PR-comment helper dropped, 2026-11-06
+
+PLAN P2 listed a helper that posts `orchestrator:`-prefixed PR comments to Codex lanes. Since 2026-11-02 (goals/t3-native-orchestration) T3 Code is the only cross-session route and the orchestrate skill forbids PR comments as a broadcast route; a Codex lane T3 launched is reached by its thread link, and one T3 did not launch is not messageable and is read through its PR, brief or job receipt. A helper would add a side channel the doctrine retired. The register's codex-lane docs now say so.
+
+Lane `feat/orchestrator-handoff-p2`
+
+Reverse: Add a yeet helper that posts orchestrator:-prefixed PR comments and list PR comments as a codex-lane route again.
+
+### Pending commit statuses hold the gate table; failing ones do not, 2026-11-06
+
+PLAN P2 asked for pending commit statuses as blocking. The table reads the combined status of each head (new `GithubRest.commitStatuses`, fails closed past one page) and a pending context holds GATE-MET. A failing context is printed in its own `STATUS-RED:` column and does not hold: on 2026-11-06 every open PR carried failing Vercel previews, and `yeet merge-gate` reads check runs only, so treating them as reds would make the table stricter than the gate it previews and no row would ever be a candidate. Whether a Vercel failure is the AGENTS.md rate-limit exception stays the orchestrator's judgment after reading the deployment.
+
+Lane `feat/orchestrator-handoff-p2`
+
+Reverse: Treat failing commit statuses as reds in decideGateTableRow, or drop the combined-status read.
+
+### Gate table is yeet gate-table, not merge-gate --table, 2026-11-06
+
+PLAN P2 named `yeet merge-gate --table`. The gate takes two required positional arguments (the PR and the pinned head) and the pin is its safety contract; making them optional to host a read-only table would weaken it. The port is a sibling subcommand, `yeet gate-table [--json]`, that only reads and never merges. `gate.sh` stays as a one-line wrapper so pollers armed before the port keep working.
+
+Lane `feat/orchestrator-handoff-p2`
+
+Reverse: Fold the table into merge-gate behind optional pr/sha arguments and delete the gate-table subcommand.
+
+### Gate table reads threads per ready PR with the merge gate's rule, 2026-11-06
+
+gate.sh ran one GraphQL query over the first 60 open PRs with 100 threads each and reimplemented the outstanding rule in jq. The table instead reads every page of open PRs over REST and calls the `@beep/github` ReviewThread service once per PR out of draft, every page, with the same `outstanding` rule `yeet merge-gate` uses. Drafts read no threads (`threads=-`): the gate never meets a draft. A failed read is `threads=?` and never zero. Each base branch's ruleset is read once over REST (`requiredStatusContexts`), the reader the authenticated merge-gate path already uses, so the table spawns no `gh`. Cost: one GraphQL query per ready PR per poll, about ten at the 2026-11-06 queue size, within the REST-first ruling's budget for a four-minute poll.
+
+Lane `feat/orchestrator-handoff-p2`
+
+Reverse: Restore one batched GraphQL query over all open PRs and compute outstanding threads from it.
+
+### HANDOFF render never drops hand-typed register or ruling rows, 2026-11-06
+
+The P3 drill rendered the live HANDOFF.md and the first render would have replaced its hand-typed Register table (claude-session and systemd timer rows the register file never held) and, once the rulings store had one ruling, the whole hand-typed rulings table. A regenerated Register or Rulings section now appends any prior body that did not come from its store, or the block an earlier render carried, under a 'Carried over' heading; it persists until the holder records each item and deletes it. The preamble also keeps a `Holder thread:` line (the drill found no route to ask the live holder for release) and one 'Rendered by `session handoff`' line naming when the carried-over prose was last written, because a successor could not tell fresh prose from three-day-old prose.
+
+Lane `feat/orchestrator-handoff-p2`
+
+Reverse: Remove carriedOver/withCarry from Handoff.ts; regenerated sections then replace the prior body wholesale.
+
+### HANDOFF.md renderer regenerates data sections and keeps prose, 2026-11-06
+
+`session handoff [--file] [--gate-snapshot <file>] [--write]` regenerates the sections whose truth is a file: the holder line (newest open orchestrator row in the ledger), Rulings in force (when the rulings store has one in force), Gate snapshot (when given), Register (always) and Journal pointer (last STATE.md line). Promises, pending decisions, operator-hands items, next actions, recipes, routes and the broadcast are prose written at the moment of the event; they are carried over verbatim, the template placeholder is written only when a section is missing, and sections the template does not know are kept before the journal pointer. `--write` backs the old file up as `HANDOFF.<instant>.bak.md`. Rulings are a new append-only store, `orchestrator-ruling/v1` rows in `<repo>.rulings.jsonl` next to the register, keyed by a kebab-case id with `--supersedes` retiring the replaced ruling. This supersedes the 2026-10-06 'HANDOFF.md is a template, not a schema' row for the data-backed sections only.
+
+Lane `feat/orchestrator-handoff-p2`
+
+Reverse: Delete session handoff and session ruling and go back to hand-writing HANDOFF.md from the template.
+
+### yeet merge-gate holds an owner-merge-hold PR, 2026-11-06
+
+The repository's GitHub labels include `owner-merge-hold`, which an owner puts on a PR it merges itself (2026-11-06: #2797, titled OWNER HOLD), but nothing in the CLI read it: `yeet merge-gate` would have merged it at the gate. The gate now holds such a PR as `owner-hold` (a structural hold, after draft and before conflicting, in strict and relaxed mode), and `yeet gate-table` names it in a `HOLD:` column and never offers it as GATE-MET. Found by the P3 take-over drill.
+
+Lane `feat/orchestrator-handoff-p2`
+
+Reverse: Drop the owner-hold step from structuralHold and the HOLD column from the gate table.
+
+### register convert moves a unit in two appends; scheduled-task is a unit kind, 2026-11-06
+
+`session register convert --kind --address --to-kind --to-address [--brief]` retires the source row (note: converted to the target) and registers the target active with the source's name, owns, waiting ask and orphan plan, last contact now and a note naming the source and brief. It refuses an unregistered or retired source, an in-process-agent target (it would still die with the session), the same unit, and a target with a live row. The orchestrate skill already told successors to re-arm `scheduled-task` rows (T3 `schedule_task`), but the kind did not exist, so such tasks had been registered under other kinds; `scheduled-task` is added. A T3 thread stays a `desktop-session` or `codex-lane` row addressed by its thread link.
+
+Lane `feat/orchestrator-handoff-p2`
+
+Reverse: Delete session register convert and the scheduled-task kind; units are retired and re-added by hand.
+
+<!-- beep:decisions:end -->

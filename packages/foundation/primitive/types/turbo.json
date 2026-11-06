@@ -3,7 +3,8 @@
   "extends": ["//"],
   "tasks": {
     "lint": {
-      "cache": false
+      "cache": false,
+      "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"]
     }
   }
 }
