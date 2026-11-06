@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "f61e617c6c7beb5c49cf11744c47b4c8cbe94077d5a5ad219044e2f1ad21b835",
+  "planSha256": "e5fad4c9ff79718fa36bf90842c0220da5f2d483706bd7915d7546679bbcace7",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -316,7 +316,7 @@
         },
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/regex-case-flags.json",
-          "sha256": "717cb46cac6ebef29949a59998fd873275b8c3dc9094843a58c9fdc4aa94fd6d"
+          "sha256": "9c2a3e666734e79836701f6a8488446b90336ff2debf9cd405e1e2d7cd899d93"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-regex-case-flags.md",
@@ -1361,7 +1361,7 @@
         },
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/regex-case-flags.json",
-          "sha256": "717cb46cac6ebef29949a59998fd873275b8c3dc9094843a58c9fdc4aa94fd6d"
+          "sha256": "9c2a3e666734e79836701f6a8488446b90336ff2debf9cd405e1e2d7cd899d93"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-regex-case-flags.md",
