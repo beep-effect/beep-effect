@@ -1322,6 +1322,10 @@ const yeetFinalCheckCommand = Command.make(
     skip: finalCheckSkipFlag,
     dryRun: finalCheckDryRunFlag,
     failFast: finalCheckFailFastFlag,
+    resume: Flag.Boolean("resume").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Reuse completed steps only when source, base, command and environment still match")
+    ),
   },
   (options) => runYeetFinalCheck(YeetFinalCheckOptions.make(options)).pipe(Effect.asVoid)
 ).pipe(

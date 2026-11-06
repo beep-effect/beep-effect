@@ -44,6 +44,12 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
+import {
+  hasReusableLaneProof,
+  persistLaneProofs,
+  prepareLaneProofSession,
+} from "../../Quality/internal/LaneProofReuse.ts";
+import { GithubCheckLaneSpec } from "../../Quality/Quality.schemas.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { collectExpectationRewrites, verifyExpectationRewrites } from "./ExpectationRewrite.ts";
 import {
@@ -60,6 +66,7 @@ import {
   YeetChangedPathsQuery,
   yeetGitKitError,
 } from "./GitExec.ts";
+import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CiLaneId } from "../../Ci/CiLane.ts";
@@ -423,6 +430,68 @@ const runStep = Effect.fn("Yeet.runFinalCheckStep")(function* (planned: FinalChe
   });
 });
 
+// Composite sanity/cheap gates include live external checks, which cannot be reused.
+// Expectation rewrites remain an in-process replay and never enter this path.
+const reusableFinalCheckGate = FinalCheckGate.pick(["lint-policy", "lint", "check", "docgen", "fallow", "coverage"]);
+
+/**
+ * Execute one planned step, recording a successful exact-input proof for a later resume.
+ *
+ * **Example** (Inspect a resumable step)
+ *
+ * ```ts
+ * import { planFinalCheckSteps, runFinalCheckStep } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ * const step = planFinalCheckSteps("/repo", "base", [])[0]
+ * if (step) console.log(Effect.isEffect(runFinalCheckStep(step, true)))
+ * ```
+ *
+ * **Details**
+ * A failed command never saves proof. Live external checks always execute. The enclosing
+ * final-check command still owns clean-tree checks and the complete head-pinned receipt.
+ *
+ * @category execution
+ * @since 0.0.0
+ */
+export const runFinalCheckStep = Effect.fn("Yeet.runFinalCheckStepWithProof")(function* (
+  planned: FinalCheckPlannedStep,
+  resume: boolean
+) {
+  if (!S.is(reusableFinalCheckGate)(planned.gate)) return yield* runStep(planned);
+  const lane = GithubCheckLaneSpec.make({
+    id: planned.step.label,
+    tier: "pre-push",
+    stage: "repo-quality",
+    wave: "heavy",
+    blockedBy: [],
+    // runStep inherits the ambient environment; hash it as part of the proof too.
+    step: QualityTaskStep.make({ ...planned.step, useLocalEnv: true }),
+  });
+  const session = yield* prepareLaneProofSession([lane], resume ? "active" : "shadow").pipe(
+    Effect.mapError(YeetCommandError.new("Failed to prepare final-check step proof."))
+  );
+  if (O.isSome(session) && resume && hasReusableLaneProof(session.value, lane.id)) {
+    const reason = "reused completed step with matching source, head, base, command and environment";
+    yield* Console.log(`[yeet] final-check ${planned.gate}: ${reason}`);
+    return FinalCheckStepResult.make({
+      gate: planned.gate,
+      label: planned.step.label,
+      hostedContext: planned.hostedContext,
+      command: renderCommand(planned.step),
+      status: "passed",
+      durationMs: 0,
+      reason,
+    });
+  }
+  const result = yield* runStep(planned);
+  if (O.isSome(session) && result.status === "passed") {
+    yield* persistLaneProofs(session.value, [[lane, result.durationMs]]).pipe(
+      Effect.ignore({ log: "Warn", message: "[yeet] final-check completed step could not be saved for resume" })
+    );
+  }
+  return result;
+});
+
 const runExpectationRewriteGate = Effect.fn("Yeet.runExpectationRewriteGate")(function* (
   repoRoot: string,
   mergeBase: string
@@ -489,6 +558,7 @@ type FinalCheckRun = {
   readonly mergeBase: string;
   readonly planned: ReadonlyArray<FinalCheckPlannedStep>;
   readonly skips: ReadonlyArray<FinalCheckSkip>;
+  readonly resume: boolean;
 };
 
 type GateOutcome = {
@@ -529,7 +599,10 @@ const runGate = (run: FinalCheckRun, gate: FinalCheckGate) =>
             steps: [result.step],
             verdicts: result.verdicts,
           }))
-        : Effect.map(Effect.forEach(plannedFor(run, gate), runStep), (steps) => ({ steps, verdicts: [] })),
+        : Effect.map(
+            Effect.forEach(plannedFor(run, gate), (entry) => runFinalCheckStep(entry, run.resume)),
+            (steps) => ({ steps, verdicts: [] })
+          ),
   });
 
 const hasFailure = (steps: ReadonlyArray<FinalCheckStepResult>): boolean =>
@@ -624,7 +697,12 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
 ): Effect.fn.Return<
   O.Option<FinalCheckReceipt>,
   YeetCommandError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
+  | SecureRandom.SecureRandom
+  | Digest.Digest
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git
 > {
   const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
   const gates = yield* parseFinalCheckGates(options.gates);
@@ -640,6 +718,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
     mergeBase,
     planned: planFinalCheckSteps(repoRoot, mergeBase, changedFiles),
     skips,
+    resume: options.resume,
   };
 
   if (options.dryRun) {

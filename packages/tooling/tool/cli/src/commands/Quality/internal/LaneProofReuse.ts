@@ -62,6 +62,9 @@ const LANE_PROOF_BOOKKEEPING_ENV = [
   QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
   LANE_PROOF_MODE_ENV,
   LANE_PROOF_BASE_ENV,
+  // Codex changes this tracing identifier on every shell invocation. It is not
+  // a compiler/test input; retaining it makes cross-invocation resume always miss.
+  "CODEX_TOOL_CALL_ID",
 ] as const;
 
 // A pinned base is a full commit SHA; anything else is a ref to resolve.

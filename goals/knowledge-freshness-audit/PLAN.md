@@ -3,7 +3,8 @@
 ## State
 
 The campaign is active under explicit operator authorization. P1-P3 have partial
-execution and reviewed local repair evidence; P4-P5 remain pending. See
+execution and reviewed local repair evidence. P4 final-tree reconciliation is
+in progress; P5 remains pending. See
 [the execution record](./history/2026-11-06-reviewed-local-repairs.md). [SPEC.md](./SPEC.md) is normative.
 
 | Phase | Status | Work | Exit |
@@ -12,7 +13,7 @@ execution and reviewed local repair evidence; P4-P5 remain pending. See
 | P1 | in-progress | Freeze census; build/reuse read-only extraction and evidence reports | All surface families accounted for; initial report and extraction-quality review recorded |
 | P2 | in-progress | Verify claims and evaluate optional Jev pilot | Typed determinations and reviewed evidence; Jev admitted or explicit fallback |
 | P3 | in-progress | Reconcile skills and repair confirmed discrepancies | Approved report scope, preserved customization, before/after proof |
-| P4 | pending | Recheck final tree, complete coverage, and land precise gates | No unresolved required obligations; repairs and regressions verified |
+| P4 | in-progress | Recheck final tree, complete coverage, and land precise gates | No unresolved required obligations; repairs and regressions verified |
 | P5 | pending | Final audit PR closeout and reflection | Exact-head mergeable proof; lifecycle closeout lands with final work |
 
 ## P0: packet delivery
@@ -135,3 +136,18 @@ Record friction immediately in [OPPORTUNITIES.md](./research/OPPORTUNITIES.md).
 Keep this phase table aligned with the manifest. Store validation and review
 receipts under history; do not embed machine identifiers, secrets, or absolute
 home paths in the public packet.
+
+## Checkpoints
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug knowledge-freshness-audit`; add a `kind: checkpoint` file there, never edit this block._
+
+### Begin final-tree reconciliation with explicit unresolved coverage, 2026-11-06
+
+P4 is in progress under the operator instruction of 2026-11-06. Reconcile frozen inventory e462bc12 against source snapshot 914ede95a490cf26e1fe435762ec191fd2e69da1. Keep raw per-entry ledgers and full reports in the private archive; publish compact accounting and review limits. Inventory, entry linkage, whole-body reading, claim acceptance and delivery readiness are separate obligations. PM and ADHD remain separate holds; no spending or cloud work is admitted.
+
+Lane `codex/knowledge-audit-p4-final-tree`
+
+Reverse: Revert this checkpoint and phase-progress record; retain the private immutable inventory and historical receipts.
+
+<!-- beep:decisions:end -->

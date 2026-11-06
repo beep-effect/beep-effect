@@ -986,6 +986,22 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       })
     );
 
+    it.effect("looks up the already-ready proof under the unknown head when the read carries no head sha", () =>
+      Effect.gen(function* () {
+        const consulted = yield* Ref.make<ReadonlyArray<string>>([]);
+        const error = yield* runYeetReadyGate(context, {
+          finalCheck: (_repoContext, head) => Ref.update(consulted, A.append(head)).pipe(Effect.as(O.none())),
+          refresh: () => Effect.succeedNone,
+          read: () => Effect.succeed(prView({ isDraft: false, headSha: O.none() })),
+          markReady: () => Effect.die("the flip must not run"),
+        }).pipe(Effect.flip);
+        expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
+        expect(error.message).toContain("no final-check receipt for head unknown");
+        const heads = yield* Ref.get(consulted);
+        expect(heads).toEqual(["unknown"]);
+      })
+    );
+
     it.effect("does not call gh for a pull request that is already ready", () =>
       Effect.gen(function* () {
         const decision = yield* runYeetReadyGate(context, {
