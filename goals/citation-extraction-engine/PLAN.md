@@ -1261,6 +1261,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the full-span/warning adaptation wave; retain primary occurrence projection and original raw warning pairs.
 
+### Compose authenticated production extraction configuration, 2026-11-06
+
+The production constructor composes complete parser/helper/vocabulary assets and returns the existing frozen-edition owner. Semantic vocabulary now uses shared bounded byte authentication before its existing schema and public-membership checks. Semantic/verified replay uses this constructor. Individual data identities remain separate from the unfinished complete implementation identity. Public service/Layer and exhaustive acceptance remain open. See history/evidence/2026-11-06-default-configuration.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the default constructor and fixture wiring; retain all source assets and full acceptance duties.
+
 ### Install production helper configurations with captured calendar, 2026-11-06
 
 Thirteen sealed oracle sources now project into a production-only helper asset. Existing runtime schemas derive the static codec and Effect Clock/CurrentTimeZone captures one calendar cutoff for all five temporal helpers. Production tokenizer/document replay uses both catalog and helper assets. Existing bounded native asset loading is shared with schema-driven JSON authentication. Complete engine artifact/public Layer and all broader acceptance remain open. See history/evidence/2026-11-06-production-helpers.md. Base-pinned Secret Scanning requires separately reviewed exact provenance exception in PR #2786.

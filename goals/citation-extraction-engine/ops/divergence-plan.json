@@ -292,7 +292,8 @@
         "packages/law-practice/server/src/internal/Citation/ParserCatalog.ts",
         "packages/law-practice/server/assets/citation/parser-catalog.data",
         "packages/law-practice/server/test/CitationParserCatalog.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-11-06-production-helpers.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-production-helpers.md",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-default-configuration.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

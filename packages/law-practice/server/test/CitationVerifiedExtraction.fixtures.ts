@@ -1,7 +1,6 @@
 /** Authenticated input artifact through the complete live extraction path.
  * @internal @packageDocumentation @since 0.0.0
  */
-import * as NodeURL from "node:url";
 import { CitationDocumentStepContainers } from "@beep/law-practice-server/internal/Citation/DocumentCleanerProtocols";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { makeCitationVerifiedExtraction } from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
@@ -12,17 +11,16 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
+import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { assertCitationNativeRange, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { assertCitationTokenizedExtractionRow } from "./CitationTokenizedExtraction.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
-type Installed = Effect.Success<ReturnType<typeof installCitationDocumentExtractionFixture>>;
+type Installed = Effect.Success<ReturnType<typeof installCitationDefaultConfigurationFixture>>;
 type SourceRow = Installed["corpus"]["cases"][number];
 type VerifiedResult = Effect.Success<
   ReturnType<Effect.Success<ReturnType<typeof makeCitationVerifiedExtraction>>["extract"]>
@@ -77,21 +75,11 @@ export const replayCitationVerifiedExtraction = Effect.fn("VerifiedExtractionTes
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
-  const { corpus, setup, configuration, translated, provided, adapter } =
-    yield* installCitationDocumentExtractionFixture(kind);
+  const { corpus, setup, defaultConfiguration, translated, provided, adapter } =
+    yield* installCitationDefaultConfigurationFixture(kind);
   const rows = A.filter(corpus.cases, (row) => full || A.contains([4, 26, 32], row.id));
-  const fs = yield* FileSystem.FileSystem;
-  const vocabulary = yield* fs.readFileString(
-    NodeURL.fileURLToPath(new URL("../assets/citation/semantic-editions.json", import.meta.url))
-  );
   const engineArtifact = Sha256Hex.make(Str.repeat(64)("a"));
-  const config = {
-    engineArtifact,
-    extraction: {
-      extraction: configuration,
-      semantic: { vocabulary, editions: configuration.extraction.loop.full.editions },
-    },
-  };
+  const config = { engineArtifact, extraction: defaultConfiguration };
   const context = Context.add(provided, CitationDocumentStepContainers, { create: adapter.create });
   const stage = yield* makeCitationVerifiedExtraction(setup.limits, setup.runtime, config).pipe(
     Effect.provideContext(context),

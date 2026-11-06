@@ -10,13 +10,14 @@ import {
   isCurrentCourtReporterArtifactVersion,
   ReporterId,
 } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
-import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
+import { CitationAssetSeal, loadCitationTextAsset } from "./Asset.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SemanticVocabulary");
 const Reason = LiteralKit(["invalid-configuration", "artifact-mismatch", "missing-edition", "kind-mismatch"]).pipe(
@@ -94,4 +95,21 @@ export const makeCitationSemanticVocabulary = Effect.fn("Citation.makeSemanticVo
     return row;
   });
   return { vocabularyVersion: artifact.vocabularyVersion, lookup };
+});
+
+const seal = CitationAssetSeal.make({
+  byteLength: 386455,
+  sha256: Sha256Hex.make("9e3e5f9539e13f0cfce17489ece472686e11c9ccc446ba7d71319d8680c0dba8"),
+});
+/** Load reviewed semantic identities with bounded, byte-authenticated input.
+ * Existing vocabulary validation also checks the current public artifact and
+ * every case reporter's membership before configuration can be published.
+ * @internal @category operations @since 0.0.0
+ */
+export const loadCitationSemanticVocabularyAsset = Effect.fn("Citation.loadSemanticVocabularyAsset")(function* (
+  path: unknown
+) {
+  const text = yield* loadCitationTextAsset(path, seal, () => fail("artifact-mismatch"));
+  yield* makeCitationSemanticVocabulary(text);
+  return { text, artifact: seal.sha256 };
 });

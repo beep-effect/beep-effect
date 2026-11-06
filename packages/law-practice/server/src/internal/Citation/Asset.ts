@@ -49,14 +49,13 @@ export class CitationAssetSeal extends S.Opaque<CitationAssetSeal, { readonly br
   )
 ) {}
 const Path = S.NonEmptyString.check(S.isMaxLength(4096));
-/** Share exact byte authentication and upstream schema decoding for JSON assets.
- * Source-specific configuration codecs and closed errors remain with callers.
+/** Authenticate bounded UTF-8 asset bytes before decoding text.
+ * Source-specific schemas and closed errors remain with callers.
  * @internal @category operations @since 0.0.0
  */
-export const loadCitationJsonAsset = Effect.fn("Citation.loadJsonAsset")(function* <A, E>(
+export const loadCitationTextAsset = Effect.fn("Citation.loadTextAsset")(function* <E>(
   input: unknown,
   seal: CitationAssetSeal,
-  codec: S.Codec<A, string>,
   failed: (reason: CitationAssetFailureReason) => E
 ) {
   const path = yield* S.decodeUnknownEffect(Path)(input).pipe(Effect.mapError(() => failed("unavailable")));
@@ -71,7 +70,18 @@ export const loadCitationJsonAsset = Effect.fn("Citation.loadJsonAsset")(functio
     Effect.catchDefect(() => Effect.fail(failed("artifact-mismatch")))
   );
   if (hash !== seal.sha256) return yield* Effect.fail(failed("artifact-mismatch"));
-  return yield* S.decodeEffect(codec)(new TextDecoder().decode(bytes)).pipe(
-    Effect.mapError(() => failed("invalid-data"))
-  );
+  return new TextDecoder().decode(bytes);
+});
+
+/** Decode authenticated text through the supplied upstream schema codec.
+ * @internal @category operations @since 0.0.0
+ */
+export const loadCitationJsonAsset = Effect.fn("Citation.loadJsonAsset")(function* <A, E>(
+  input: unknown,
+  seal: CitationAssetSeal,
+  codec: S.Codec<A, string>,
+  failed: (reason: CitationAssetFailureReason) => E
+) {
+  const text = yield* loadCitationTextAsset(input, seal, failed);
+  return yield* S.decodeEffect(codec)(text).pipe(Effect.mapError(() => failed("invalid-data")));
 });

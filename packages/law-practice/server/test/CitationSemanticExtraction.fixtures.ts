@@ -1,7 +1,6 @@
 /** Raw source to semantic values using the complete original extraction catalog.
  * @internal @packageDocumentation @since 0.0.0
  */
-import * as NodeURL from "node:url";
 import { Citation } from "@beep/law-practice-domain/values";
 import { CitationDocumentStepContainers } from "@beep/law-practice-server/internal/Citation/DocumentCleanerProtocols";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
@@ -11,12 +10,11 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
+import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { citationExtractionRawRequest } from "./CitationExtractionEntry.fixtures.ts";
 import { makeCitationOccurrenceTestAdapter } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
@@ -36,7 +34,7 @@ const sourceTypes = R.fromEntries<readonly [string, string]>([
 ]);
 type Unicode = Effect.Success<ReturnType<typeof makeCitationPythonUnicode>>;
 type SourceRow = Effect.Success<
-  ReturnType<typeof installCitationDocumentExtractionFixture>
+  ReturnType<typeof installCitationDefaultConfigurationFixture>
 >["corpus"]["cases"][number]["expected"][number];
 const assertSemanticSource = Effect.fnUntraced(function* (unicode: Unicode, citation: Citation, original: SourceRow) {
   const encoded = yield* encodeCitation(citation);
@@ -80,17 +78,15 @@ export const replayCitationSemanticExtraction = Effect.fn("SemanticExtractionTes
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
-  const { corpus, setup, configuration, translated, provided, adapter } =
-    yield* installCitationDocumentExtractionFixture(kind);
+  const {
+    corpus,
+    setup,
+    defaultConfiguration: config,
+    translated,
+    provided,
+    adapter,
+  } = yield* installCitationDefaultConfigurationFixture(kind);
   const rows = A.filter(corpus.cases, (row) => full || A.contains([4, 14, 18, 20, 22, 26, 32], row.id));
-  const fs = yield* FileSystem.FileSystem;
-  const vocabulary = yield* fs.readFileString(
-    NodeURL.fileURLToPath(new URL("../assets/citation/semantic-editions.json", import.meta.url))
-  );
-  const config = {
-    extraction: configuration,
-    semantic: { vocabulary, editions: configuration.extraction.loop.full.editions },
-  };
   const context = Context.add(provided, CitationDocumentStepContainers, { create: adapter.create });
   const install = (limits: typeof setup.limits, input = config) =>
     makeCitationSemanticExtraction(limits, setup.runtime, input).pipe(

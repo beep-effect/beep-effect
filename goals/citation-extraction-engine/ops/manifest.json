@@ -151,7 +151,9 @@
     "packages/law-practice/server/assets/citation/parser-catalog.data",
     "packages/law-practice/server/test/CitationParserCatalog.test.ts",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-production-helpers.md",
-    "packages/law-practice/server/assets/citation/helper-configurations.data"
+    "packages/law-practice/server/assets/citation/helper-configurations.data",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-default-configuration.md",
+    "packages/law-practice/server/src/internal/Citation/DefaultConfiguration.ts"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
