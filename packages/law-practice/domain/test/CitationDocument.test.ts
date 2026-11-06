@@ -4,10 +4,12 @@ import {
   CitationAmbiguous,
   CitationAuthority,
   CitationAuthorityId,
+  CitationComponentAnchor,
   CitationDetached,
   CitationDetachedId,
   CitationDocument,
   CitationDocumentReceipt,
+  CitationFootnoteZone,
   CitationGroupMember,
   CitationMemberList,
   CitationMemberListId,
@@ -33,7 +35,7 @@ import { Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { expect } from "@effect/vitest";
+import { assert, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -176,6 +178,41 @@ const isReceipt = S.is(CitationDocumentReceipt);
 const ReceiptJson = S.fromJsonString(CitationDocumentReceipt);
 
 it.layer(TestCrypto)("citation document relationships", (it) => {
+  it.effect("requires coherent source evidence and enclosing footnote zones for a citation", () =>
+    Effect.gen(function* () {
+      const { first, second } = yield* fixture;
+      const component = CitationComponentAnchor.make({ name: "reporter", anchor: first.anchor });
+      assert.isTrue(S.is(CitationMention)({ ...first, components: [component] }));
+      const { verifiedSource } = yield* fixtureSource("Other source");
+      const foreign = yield* verifyTextAnchorAgainstVerifiedSource(
+        VerifyTextAnchorAgainstVerifiedSourceInput.make({
+          verifiedSource,
+          anchor: TextAnchor.make({ startChar: 0, endChar: 5, quote: "Other" }),
+        })
+      );
+      assert.isFalse(
+        S.is(CitationMention)({
+          ...first,
+          components: [CitationComponentAnchor.make({ name: "reporter", anchor: foreign })],
+        })
+      );
+      const inZone = (anchor: typeof first.anchor) => ({
+        ...first,
+        footnote: O.some(CitationFootnoteZone.make({ label: O.none(), anchor })),
+      });
+      assert.isTrue(S.is(CitationMention)(inZone(first.anchor)));
+      assert.isFalse(S.is(CitationMention)(inZone(foreign)));
+      assert.isFalse(S.is(CitationMention)(inZone(second.anchor)));
+      const { verifiedSource: sameSource } = yield* fixtureSource(text);
+      const truncated = yield* verifyTextAnchorAgainstVerifiedSource(
+        VerifyTextAnchorAgainstVerifiedSourceInput.make({
+          verifiedSource: sameSource,
+          anchor: TextAnchor.make({ startChar: 0, endChar: 1, quote: "1" }),
+        })
+      );
+      assert.isFalse(S.is(CitationMention)(inZone(truncated)));
+    })
+  );
   it.effect(
     "retains separate insertion entries for one authority and projects shared lists without dropping entries",
     () =>

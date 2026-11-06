@@ -97,8 +97,9 @@ Local receipts retain initial failures and final passes separately:
 formatting repair), .beep/diff-worker-complete-typecheck.log and
 .beep/diff-worker-package-verify-final.log. Scoped duplication analysis reports
 zero clone groups touching changed files. Scoped health has no new finding;
-the existing main SpanOffsets.update finding remains owned by the consolidated
-repair PR #2738. No threshold, suppression, baseline or safety limit changes.
+the pre-integration SpanOffsets.update finding was owned by the consolidated
+repair PR #2738. That repair subsequently merged as 1af4d708e7 and is integrated
+here. No threshold, suppression, baseline or safety limit changes.
 
 The new hosted integration tests require all 1,005 source maps and independently
 confirmed exits per runtime. That full replay is pending, not claimed from the

@@ -83,3 +83,20 @@ operator subsequently authorized linked follow-up PRs for this unchanged goal,
 including the prepared geometry/quality work. The authorization is recorded in
 decisions/2026-11-05-linked-follow-up-publication.md. It grants no merge authority
 or completion claim; full parity, accounting, resource and lifecycle duties remain.
+
+## Follow-up hosted complexity repair
+
+PR #2725 Check run 42146333223 / Fallow job 127658589818 / artifact
+13469998224 confirms zero introduced duplicate-code groups and one introduced
+complexity finding: SpanOffsets.update has cognitive complexity 9 against 8.
+The binary search now has its own private function; the admitted update method
+retains offset/side decoding, empty-map refusal and source updater application.
+The search preserves both bisect sides and the Python negative-index fallback.
+No threshold, suppression or baseline changes accompany this repair.
+
+The scoped Fallow health replay reports 16 functions analyzed and zero findings.
+The four geometry tests pass again, including all 2,222 source offset lookups,
+312 prepared tag queries and 14 conversions. Package source/test type checks
+and the touched-file Biome check pass. Receipts are retained locally as
+.beep/span-offsets-fallow-health.json and .beep/span-offsets-fallow-check.log.
+Hosted verification of the repaired head remains pending.

@@ -388,7 +388,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SpanOffsets.ts",
-          "sha256": "763adaad97bf6544493f004654909f7ba139a5b68e8d6e6c5dac1d5d8be1a778"
+          "sha256": "b91aa023b9bba1d7b0b3e9ad53609203861f9d1076f045123f9951dfabbb2f96"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlTagGeometry.ts",
@@ -404,7 +404,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-html-tag-geometry.md",
-          "sha256": "09671da4c8a8f1db289d61fda4928e30f3b062d43110b766d1607db3e0201d44"
+          "sha256": "a86a63616f2cfbc2ba8d21bc73fd20c0fb206540a89be6f703bf10e75512bcba"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-kernel.md",
@@ -456,7 +456,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-worker.md",
-          "sha256": "1ae49f540f50e74c98d6165e03a2153956c5744eb1ff7e3a638597e8280d276c"
+          "sha256": "2e7dc544d43e2f660049bcca046d0a2a043af08f013f9b130b8a0b1b59044cf5"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/DiffWorker.ts",
@@ -729,7 +729,7 @@
         },
         {
           "path": "packages/law-practice/domain/test/CitationDocument.test.ts",
-          "sha256": "fe58015ca8c593dafc287f675de5dee1edf30507d79b74bc75c0eb1a44ce4904"
+          "sha256": "d9cb242dcb01f8199a7526db5d479120161cca09672693cf091b9d69c7d758bc"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-dispatch-decision-capture.md",
@@ -1469,7 +1469,7 @@
         },
         {
           "path": "packages/law-practice/domain/test/CitationDocument.test.ts",
-          "sha256": "fe58015ca8c593dafc287f675de5dee1edf30507d79b74bc75c0eb1a44ce4904"
+          "sha256": "d9cb242dcb01f8199a7526db5d479120161cca09672693cf091b9d69c7d758bc"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-dispatch-decision-capture.md",
@@ -1673,7 +1673,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SpanOffsets.ts",
-          "sha256": "763adaad97bf6544493f004654909f7ba139a5b68e8d6e6c5dac1d5d8be1a778"
+          "sha256": "b91aa023b9bba1d7b0b3e9ad53609203861f9d1076f045123f9951dfabbb2f96"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlTagGeometry.ts",
@@ -1689,7 +1689,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-html-tag-geometry.md",
-          "sha256": "09671da4c8a8f1db289d61fda4928e30f3b062d43110b766d1607db3e0201d44"
+          "sha256": "a86a63616f2cfbc2ba8d21bc73fd20c0fb206540a89be6f703bf10e75512bcba"
         }
       ],
       "workflowState": "audit",
