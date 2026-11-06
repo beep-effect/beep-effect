@@ -2231,9 +2231,14 @@ const cleanReportOnlyDiff = Effect.fn("QualityTasks.cleanReportOnlyDiff")(functi
       return false;
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    return yield* Effect.forEach(entries, (entry) => fs.lstat(path.join(repoRoot, entry.path)), {
+    const regularFiles = yield* Effect.forEach(entries, (entry) => fs.lstat(path.join(repoRoot, entry.path)), {
       concurrency: 1,
     }).pipe(Effect.map(A.every((info) => info.type === "File" && (info.mode & 0o111) === 0)));
+    if (!regularFiles) return false;
+    const finalHead = yield* git.revParse(repoRoot, "HEAD", { peel: "commit" });
+    const finalBase = yield* git.revParse(repoRoot, "origin/main", { peel: "commit" });
+    const finalStatus = yield* git.status(repoRoot, { untrackedFiles: "all", noOptionalLocks: true });
+    return finalHead === head && finalBase === base && A.isReadonlyArrayEmpty(finalStatus);
   }).pipe(Effect.orElseSucceed(thunkFalse));
 });
 
@@ -2254,7 +2259,12 @@ const runGithubCheckLane = Effect.fn("QualityTasks.runGithubCheckLane")(function
   session: O.Option<LaneProofSession>,
   reportOnly: boolean
 ) {
-  if (reportOnly && lane.tier === "cheap-gates" && S.is(ReportOnlyInertLaneId)(lane.id)) {
+  if (
+    reportOnly &&
+    lane.tier === "cheap-gates" &&
+    S.is(ReportOnlyInertLaneId)(lane.id) &&
+    (yield* cleanReportOnlyDiff(lane.step.cwd))
+  ) {
     yield* Console.log(`[beep-cli] ${label}: skipped lane ${lane.id}: ${reportOnlySkipReason}`);
     return {
       lane,
@@ -2602,6 +2612,7 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
   const repoRoot = O.map(A.head(allLanes), (lane) => lane.step.cwd);
   const reportOnly =
     O.isSome(repoRoot) &&
+    A.every(allLanes, (lane) => lane.step.cwd === repoRoot.value) &&
     A.some(allLanes, (lane) => lane.tier === "cheap-gates" && S.is(ReportOnlyInertLaneId)(lane.id))
       ? yield* cleanReportOnlyDiff(repoRoot.value)
       : false;

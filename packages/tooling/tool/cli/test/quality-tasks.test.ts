@@ -16,6 +16,7 @@ import {
   QualityAdmissionLoad,
   QualityConcurrencyPlan,
   QualityProfileDetectionInput,
+  ReportOnlyInertLaneId,
 } from "@beep/repo-cli/commands/Quality";
 import {
   collectAuditDiffInputForTesting,
@@ -3093,6 +3094,46 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual(["failed", "not-run-early-stop"]);
             assertSome(result.report.firstRed, "lint:effect-vitest");
             expect(result.report.skippedAfterRed).toBe(1);
+          }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+        );
+      }
+      for (const control of ["all four", "retained generator", "mixed checkouts"] as const) {
+        it.effect(`revalidates report-only selection for ${control}`, () =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const root = yield* fs.makeTempDirectoryScoped({ prefix: "report-only-revalidation-" });
+            yield* initializeLaneProofRepository(root);
+            yield* fs.makeDirectory(path.join(root, "docs/reports"), { recursive: true });
+            yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "report\n");
+            yield* runGit(root, ["add", "."]);
+            yield* runGit(root, ["commit", "-m", "clean report"]);
+            const other = yield* fs.makeTempDirectoryScoped({ prefix: "report-only-other-" });
+            const lanes = [
+              reportLane(
+                control === "mixed checkouts" ? other : root,
+                "retained:generator",
+                control === "retained generator" ? "echo changed > source.ts" : "exit 0"
+              ),
+              ...A.map(ReportOnlyInertLaneId.literals, (id) => reportLane(root, id)),
+            ];
+            // The first lane's root must be the eligible tree for this mixed-root
+            // control to catch accidental use of only the first checkout.
+            const ordered = control === "mixed checkouts" ? [...A.drop(lanes, 1), O.getOrThrow(A.head(lanes))] : lanes;
+            const run = collectGithubCheckLaneWavesForTesting(
+              "reports",
+              [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: ordered })],
+              "collect-all"
+            );
+            const result = yield* withEnvVarEffect(
+              "BEEP_YEET_PROOF_BASE",
+              undefined,
+              withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "off", run)
+            );
+            const opted = A.filter(result.laneReport.lanes, (lane) => S.is(ReportOnlyInertLaneId)(lane.id));
+            expect(A.map(opted, (lane) => lane.status)).toEqual(
+              A.replicate(control === "all four" ? "skipped" : "failed", 4)
+            );
           }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
         );
       }
