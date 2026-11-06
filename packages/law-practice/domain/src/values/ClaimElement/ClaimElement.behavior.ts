@@ -1157,15 +1157,29 @@ const elementOf =
     };
   };
 
+type AntecedentStrategy = {
+  readonly headFor: (path: string, term: EncodedTerm) => string;
+  readonly allows: (path: string, term: EncodedTerm, candidatePath: string, candidate: EncodedTerm) => boolean;
+};
+const legacyAntecedentStrategy: AntecedentStrategy = {
+  headFor: (_path, term) => term.head,
+  allows: () => true,
+};
 const antecedentEdges = (
   elements: ReadonlyArray<EncodedElement>,
-  ancestors: ReadonlyArray<EncodedElement> = []
+  ancestors: ReadonlyArray<EncodedElement> = [],
+  strategy: AntecedentStrategy = legacyAntecedentStrategy
 ): ReadonlyArray<EncodedEdge> => {
   const located = A.flatMap(A.appendAll(elements, ancestors), (element: EncodedElement) =>
     A.map(element.terms, (term) => ({
       path: element.path,
       // Edge resolution uses the entity contents; emitted trees retain lexical heads.
-      term: { ...term, head: O.getOrElse(pluralityReferenceContent(term.head), () => term.head) },
+      term: {
+        ...term,
+        head: O.getOrElse(pluralityReferenceContent(strategy.headFor(element.path, term)), () =>
+          strategy.headFor(element.path, term)
+        ),
+      },
     }))
   );
   const local = (path: string) => A.some(elements, (element) => element.path === path);
@@ -1183,7 +1197,9 @@ const antecedentEdges = (
     A.map(referringTerms, (referring) => {
       const before = A.filter(
         located,
-        ({ path, term }) => !local(path) || term.anchor.startChar < referring.term.anchor.startChar
+        ({ path, term }) =>
+          (!local(path) || term.anchor.startChar < referring.term.anchor.startChar) &&
+          strategy.allows(referring.path, referring.term, path, term)
       );
       const introductionsBefore = A.filter(
         before,
@@ -1273,6 +1289,326 @@ const antecedentEdges = (
       );
     })
   );
+};
+
+// Ownership restricts structural identity only for inspection. Lexical matching
+// still proposes candidates; a modifier or source proximity is never owner proof.
+class SourceOwnership extends S.Opaque<SourceOwnership, { readonly brand: unique symbol }>()(
+  S.Struct({
+    part: S.NonEmptyString,
+    owner: S.NonEmptyString,
+    head: S.NonEmptyString,
+    reason: S.Literals(["of", "composition", "relative", "possessive", "part-location"]),
+  }).pipe(
+    $I.annoteSchema("SourceOwnership", {
+      description: "Explicit owned-source relationship between existing term mentions, before and after owner binding.",
+    })
+  )
+) {}
+const mentionKey = (path: string, term: EncodedTerm): string => `${path}:${term.anchor.startChar}`;
+const ownershipMentions = (elements: ReadonlyArray<EncodedElement>) =>
+  A.flatMap(elements, (element) => A.map(element.terms, (term) => ({ path: element.path, term })));
+const sameMention = (path: string, start: number, otherPath: string, otherStart: number): boolean =>
+  path === otherPath && start === otherStart;
+const ownerBridge = (element: EncodedElement, left: EncodedTerm, right: EncodedTerm): string =>
+  pipe(
+    Str.slice(
+      left.anchor.endChar - element.anchor.startChar,
+      right.anchor.startChar - element.anchor.startChar
+    )(element.anchor.quote),
+    Str.replace(/\(\s*\d+[a-z]?\s*\)|\[\s*\d+[a-z]?\s*\]/giu, " "),
+    Str.replace(/\s+/gu, " "),
+    Str.toLowerCase,
+    Str.trim
+  );
+const isSpatialPartHead = (head: string): boolean =>
+  O.isSome(Str.match(/\b(?:portions?|surfaces?|edges?|ends?|regions?|areas?|sections?|sides?|bases?)$/u)(head));
+const pairOwnership = (element: EncodedElement, left: EncodedTerm, right: EncodedTerm): O.Option<SourceOwnership> => {
+  const bridge = ownerBridge(element, left, right);
+  if (bridge === "of")
+    return O.some(
+      SourceOwnership.make({
+        part: mentionKey(element.path, left),
+        owner: mentionKey(element.path, right),
+        head: left.head,
+        reason: "of",
+      })
+    );
+  const reason = bridge === "of which" ? "relative" : "composition";
+  // "a signal of which the sensor is aware" is a relative predicate argument,
+  // not a possessive part relationship. The relative branch needs a part head.
+  if (reason === "relative" && !isSpatialPartHead(right.head)) return O.none();
+  const composition =
+    /^(?:with|having|including|containing|has|have|(?:further )?(?:comprises|includes)|(?:is|are) provided with)$/u;
+  if (reason === "composition" && O.isNone(Str.match(composition)(bridge))) return O.none();
+  return O.some(
+    SourceOwnership.make({
+      part: mentionKey(element.path, right),
+      owner: mentionKey(element.path, left),
+      head: right.head,
+      reason,
+    })
+  );
+};
+const claimOfMention = (path: string): O.Option<number> => Num.parse(A.headNonEmpty(Str.split(path, ".")));
+const mentionPrecedes = (path: string, term: EncodedTerm, otherPath: string, other: EncodedTerm): boolean =>
+  O.exists(O.all([claimOfMention(path), claimOfMention(otherPath)]), ([claim, otherClaim]) =>
+    claim === otherClaim ? term.anchor.startChar < other.anchor.startChar : claim < otherClaim
+  );
+const possessiveOwnership = (
+  path: string,
+  term: EncodedTerm,
+  mentions: ReturnType<typeof ownershipMentions>
+): O.Option<SourceOwnership> => {
+  if (!isReferringDeterminer(term.determiner)) return O.none();
+  return O.flatMap(Str.match(/^(.+?)[’']s (.+)$/u)(term.head), (parts) => {
+    const owners = A.filter(
+      mentions,
+      (candidate) =>
+        isIntroducingDeterminer(candidate.term.determiner) &&
+        O.contains(A.get(parts, 1), candidate.term.head) &&
+        mentionPrecedes(candidate.path, candidate.term, path, term)
+    );
+    return O.flatMap(owners.length === 1 ? A.head(owners) : O.none(), (owner) =>
+      O.map(A.get(parts, 2), (head) =>
+        SourceOwnership.make({
+          part: mentionKey(path, term),
+          owner: mentionKey(owner.path, owner.term),
+          head,
+          reason: "possessive",
+        })
+      )
+    );
+  });
+};
+const partLocationOwnership = (element: EncodedElement): O.Option<SourceOwnership> =>
+  O.flatMap(
+    O.all([A.get(element.terms, 0), A.get(element.terms, 1), A.get(element.terms, 2)]),
+    ([part, region, owner]) => {
+      if (isReferringDeterminer(part.determiner)) return O.none();
+      if (!HashSet.has(HashSet.make("in", "on", "at"), ownerBridge(element, part, region))) return O.none();
+      if (ownerBridge(element, region, owner) !== "of") return O.none();
+      if (!isSpatialPartHead(region.head)) return O.none();
+      return O.some(
+        SourceOwnership.make({
+          part: mentionKey(element.path, part),
+          owner: mentionKey(element.path, owner),
+          head: part.head,
+          reason: "part-location",
+        })
+      );
+    }
+  );
+const rawOwnership = (elements: ReadonlyArray<EncodedElement>): ReadonlyArray<SourceOwnership> => {
+  const mentions = ownershipMentions(elements);
+  return A.appendAll(
+    A.flatMap(elements, (element) =>
+      A.appendAll(
+        A.getSomes(
+          A.map(element.terms, (left, index) =>
+            O.flatMap(A.get(element.terms, index + 1), (right) => pairOwnership(element, left, right))
+          )
+        ),
+        O.toArray(partLocationOwnership(element))
+      )
+    ),
+    A.getSomes(A.map(mentions, ({ path, term }) => possessiveOwnership(path, term, mentions)))
+  );
+};
+const boundOwner = (
+  key: string,
+  raw: ReadonlyArray<SourceOwnership>,
+  mentions: ReturnType<typeof ownershipMentions>,
+  baseline: ReadonlyArray<EncodedEdge>
+): O.Option<string> =>
+  O.flatMap(
+    A.findFirst(mentions, ({ path, term }) => mentionKey(path, term) === key),
+    ({ path, term }) => {
+      if (isIntroducingDeterminer(term.determiner)) return O.some(key);
+      // An explicitly owned part cannot inherit a possibly conflicting old owner
+      // reference to bind further nested ownership. Decline that nested proof.
+      if (A.some(raw, (fact) => fact.part === key)) return O.none();
+      const links = A.filter(
+        baseline,
+        (edge) =>
+          edge.kind === "antecedent" &&
+          sameMention(path, term.anchor.startChar, edge.referring.path, edge.referring.anchor.startChar)
+      );
+      return O.flatMap(links.length === 1 ? A.head(links) : O.none(), (edge) =>
+        edge.kind === "antecedent" ? O.some(`${edge.introducing.path}:${edge.introducing.anchor.startChar}`) : O.none()
+      );
+    }
+  );
+const uniqueOwner = (facts: ReadonlyArray<SourceOwnership>, part: string): O.Option<string> => {
+  const owners = HashSet.fromIterable(
+    A.map(
+      A.filter(facts, (fact) => fact.part === part),
+      (fact) => fact.owner
+    )
+  );
+  return HashSet.size(owners) === 1 ? pipe(owners, A.fromIterable, A.head) : O.none();
+};
+const locativePartChain = (element: EncodedElement, partIndex: number, referring: EncodedTerm): boolean =>
+  O.exists(
+    O.all([A.get(element.terms, partIndex), A.get(element.terms, partIndex + 1), A.get(element.terms, partIndex + 2)]),
+    ([part, region, target]) =>
+      target.anchor.startChar === referring.anchor.startChar &&
+      isSpatialPartHead(region.head) &&
+      HashSet.has(HashSet.make("in", "on", "at"), ownerBridge(element, part, region)) &&
+      ownerBridge(element, region, target) === "of"
+  );
+const scopedPartRelationship = (element: EncodedElement, referring: EncodedTerm, fact: SourceOwnership): boolean =>
+  O.exists(
+    A.findFirstIndex(element.terms, (term) => mentionKey(element.path, term) === fact.part),
+    (index) =>
+      Match.value(fact.reason).pipe(
+        Match.when("relative", () =>
+          O.exists(
+            A.get(element.terms, index),
+            (part) => part.head === referring.head && part.anchor.startChar < referring.anchor.startChar
+          )
+        ),
+        Match.when("composition", () => locativePartChain(element, index, referring)),
+        Match.orElse(() => false)
+      )
+  );
+const compositionOwner = (
+  element: EncodedElement,
+  referring: EncodedTerm,
+  raw: ReadonlyArray<SourceOwnership>,
+  facts: ReadonlyArray<SourceOwnership>,
+  mentions: ReturnType<typeof ownershipMentions>,
+  baseline: ReadonlyArray<EncodedEdge>
+): O.Option<string> =>
+  O.flatMap(A.head(element.terms), (subject) =>
+    O.flatMap(boundOwner(mentionKey(element.path, subject), raw, mentions, baseline), (owner) => {
+      const scoped = A.some(facts, (fact) => fact.owner === owner && scopedPartRelationship(element, referring, fact));
+      if (!scoped) return O.none();
+      const competitors = A.filter(
+        element.terms,
+        (term) =>
+          term.anchor.startChar < referring.anchor.startChar && term.anchor.startChar !== subject.anchor.startChar
+      );
+      const competingOwner = A.some(competitors, (term) =>
+        O.exists(
+          boundOwner(mentionKey(element.path, term), raw, mentions, baseline),
+          (other) => other !== owner && A.some(facts, (fact) => fact.owner === other)
+        )
+      );
+      return competingOwner ? O.none() : O.some(owner);
+    })
+  );
+const ownershipStrategy = (
+  elements: ReadonlyArray<EncodedElement>,
+  ancestors: ReadonlyArray<EncodedElement>,
+  baseline: ReadonlyArray<EncodedEdge>
+) => {
+  const all = A.appendAll(elements, ancestors);
+  const mentions = ownershipMentions(all);
+  const raw = rawOwnership(all);
+  const facts = A.getSomes(
+    A.map(raw, (fact) =>
+      O.map(boundOwner(fact.owner, raw, mentions, baseline), (owner) => SourceOwnership.make({ ...fact, owner }))
+    )
+  );
+  const unresolvedParts = HashSet.fromIterable(
+    A.map(
+      A.filter(raw, (fact) => O.isNone(boundOwner(fact.owner, raw, mentions, baseline))),
+      (fact) => fact.part
+    )
+  );
+  const contextFor = (path: string, term: EncodedTerm) => {
+    const key = mentionKey(path, term);
+    // An explicit unknown/ambiguous owner cannot be replaced by a surrounding
+    // composition scope, such as "shaft of the sleeve" inside a nut clause.
+    if (A.some(raw, (fact) => fact.part === key))
+      return HashSet.has(unresolvedParts, key) ? O.none() : uniqueOwner(facts, key);
+    return O.flatMap(
+      A.findFirst(elements, (element) => element.path === path),
+      (element) => compositionOwner(element, term, raw, facts, mentions, baseline)
+    );
+  };
+  const contexts = A.reduce(
+    ownershipMentions(elements),
+    HashMap.empty<string, O.Option<string>>(),
+    (map, { path, term }) => HashMap.set(map, mentionKey(path, term), contextFor(path, term))
+  );
+  const ownersByPart = A.reduce(facts, HashMap.empty<string, HashSet.HashSet<string>>(), (map, fact) =>
+    HashMap.set(
+      map,
+      fact.part,
+      HashSet.add(O.getOrElse(HashMap.get(map, fact.part), HashSet.empty<string>), fact.owner)
+    )
+  );
+  const possessiveHeads = A.reduce(
+    A.filter(
+      facts,
+      (fact) =>
+        fact.reason === "possessive" &&
+        !HashSet.has(unresolvedParts, fact.part) &&
+        O.isSome(uniqueOwner(facts, fact.part))
+    ),
+    HashMap.empty<string, string>(),
+    (map, fact) => HashMap.set(map, fact.part, fact.head)
+  );
+  const strategy: AntecedentStrategy = {
+    headFor: (path, term) => O.getOrElse(HashMap.get(possessiveHeads, mentionKey(path, term)), () => term.head),
+    allows: (path, term, candidatePath, candidate) => {
+      const key = mentionKey(path, term);
+      const owner = O.flatten(HashMap.get(contexts, key));
+      return O.getOrElse(
+        O.flatMap(owner, (context) =>
+          O.map(HashMap.get(ownersByPart, mentionKey(candidatePath, candidate)), (owners) =>
+            HashSet.has(owners, context)
+          )
+        ),
+        // Unknown ownership retains legacy matching, except that a new
+        // possessive normalization needs a positive donor-owner match.
+        () => O.isNone(owner) || !HashMap.has(possessiveHeads, key)
+      );
+    },
+  };
+  return { strategy, facts };
+};
+type StructuralReferenceStrategy = (
+  elements: ReadonlyArray<EncodedElement>,
+  ancestors: ReadonlyArray<EncodedElement>,
+  parents: ReadonlyArray<number>,
+  ancestorBindings: () => ReadonlyArray<EncodedEdge>
+) => ReadonlyArray<EncodedEdge>;
+const legacyStructuralReferences: StructuralReferenceStrategy = (elements, ancestors) =>
+  antecedentEdges(elements, ancestors);
+const inspectionStructuralReferences: StructuralReferenceStrategy = (
+  elements,
+  ancestors,
+  parents,
+  ancestorBindings
+) => {
+  // Foreign referring edges are evidence for binding an ancestor's owner only.
+  // The returned reference list is still produced for current elements alone.
+  const baseline = A.appendAll(antecedentEdges(elements, ancestors), ancestorBindings());
+  const { strategy, facts } = ownershipStrategy(elements, ancestors, baseline);
+  const references = antecedentEdges(elements, ancestors, strategy);
+  const dependencies = A.getSomes(
+    A.map(
+      A.filter(facts, (fact) => fact.reason === "part-location"),
+      (fact): O.Option<EncodedEdge> => {
+        const introduced = A.findFirst(
+          ownershipMentions(ancestors),
+          ({ path, term }) => mentionKey(path, term) === fact.owner && isIntroducingDeterminer(term.determiner)
+        );
+        const dependent = A.findFirst(elements, (element) =>
+          O.exists(A.head(element.terms), (term) => mentionKey(element.path, term) === fact.part)
+        );
+        return O.flatMap(O.all([introduced, dependent]), ([owner, element]) =>
+          O.exists(claimOfMention(owner.path), (number) => A.contains(parents, number))
+            ? O.some({ kind: "depends-on-element", dependent: element.path, ancestor: owner.path })
+            : O.none()
+        );
+      }
+    )
+  );
+  return A.appendAll(references, dependencies);
 };
 
 const functionalEdges = (elements: ReadonlyArray<EncodedElement>): ReadonlyArray<EncodedEdge> =>
@@ -1535,10 +1871,52 @@ const inspectionTreeInput: typeof treeInput = (claim, parts) => {
 
 const decodeTree = S.decodeEffect(ClaimElementTree);
 
+// Resolve each ancestor's owner references in that ancestor's own common natural
+// ancestry, never in the current claim's pooled earlier elements. The provider
+// is lazy: the historical strict strategy does not request this extra evidence.
+const ancestorReferenceProvider =
+  (
+    claim: PatentClaim,
+    claims: ReadonlyArray<PatentClaim>,
+    commonByClaim: HashMap.HashMap<number, HashSet.HashSet<number>>,
+    constructTree: typeof treeInput,
+    resolveReferences: StructuralReferenceStrategy
+  ): (() => ReadonlyArray<EncodedEdge>) =>
+  () => {
+    let prepared = HashMap.empty<number, ReadonlyArray<EncodedEdge>>();
+    const sourceAncestors = (number: number) => {
+      const allowed = O.getOrElse(HashMap.get(commonByClaim, number), HashSet.empty<number>);
+      return A.filter(
+        claims,
+        (candidate) => candidate.claimNumber < number && HashSet.has(allowed, candidate.claimNumber)
+      );
+    };
+    const elementsOf = (source: PatentClaim): ReadonlyArray<EncodedElement> =>
+      O.match(locateParts(source), {
+        onNone: A.empty<EncodedElement>,
+        onSome: (parts) => constructTree(source, parts).elements,
+      });
+    const referencesFor = (source: PatentClaim): ReadonlyArray<EncodedEdge> =>
+      O.getOrElse(HashMap.get(prepared, source.claimNumber), () => {
+        const context = sourceAncestors(source.claimNumber);
+        const resolved = resolveReferences(
+          elementsOf(source),
+          A.flatMap(context, elementsOf),
+          referencesOf(source),
+          () => A.flatMap(context, referencesFor)
+        );
+        const references = A.filter(resolved, (edge) => edge.kind === "antecedent");
+        prepared = HashMap.set(prepared, source.claimNumber, references);
+        return references;
+      });
+    return A.flatMap(sourceAncestors(claim.claimNumber), referencesFor);
+  };
+
 const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
   claim: PatentClaim,
   claims: ReadonlyArray<PatentClaim>,
-  constructTree: typeof treeInput
+  constructTree: typeof treeInput,
+  resolveReferences: StructuralReferenceStrategy = legacyStructuralReferences
 ): Effect.fn.Return<ClaimElementTree, ClaimDecompositionError> {
   const claimNumber = claim.claimNumber;
   const parts = yield* Effect.fromOption(locateParts(claim), () =>
@@ -1585,7 +1963,12 @@ const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
         onSome: (located) => constructTree(candidate, located).elements,
       })
   );
-  const antecedents = antecedentEdges(input.elements, ancestors);
+  const antecedents = resolveReferences(
+    input.elements,
+    ancestors,
+    referencesOf(claim),
+    ancestorReferenceProvider(claim, claims, commonByClaim, constructTree, resolveReferences)
+  );
   const bodyDependencies = A.flatMap(antecedents, (edge): ReadonlyArray<EncodedEdge> => {
     if (
       edge.kind !== "antecedent" ||
@@ -1802,7 +2185,7 @@ export const decomposeClaimInput = Effect.fn("ClaimElement.decomposeClaimInput")
     if (!ClaimInputQualification.guards["context-ready"](qualification)) {
       return Effect.succeed(ClaimInputDecomposition.cases.unchecked.make({ qualification }));
     }
-    return decomposeInContext(qualification.claim, claims, inspectionTreeInput).pipe(
+    return decomposeInContext(qualification.claim, claims, inspectionTreeInput, inspectionStructuralReferences).pipe(
       Effect.map((tree) => ClaimInputDecomposition.cases.decomposed.make({ qualification, tree })),
       Effect.catchTag("ClaimDecompositionError", (cause) =>
         Effect.succeed(ClaimInputDecomposition.cases["decomposition-failed"].make({ qualification, cause }))
