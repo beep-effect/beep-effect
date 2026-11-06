@@ -1,5 +1,19 @@
 # Citation engine friction receipts
 
+## 2026-11-05 — publication succeeds before detached monitor admission fails
+
+- Work: push the owned diff worker and original HTML discovery continuation to
+  PR #2737 while using hosted verification.
+- Evidence: Yeet pushed the committed head, then reported: `Detached proof jobs
+  require an active systemd user manager; no attached fallback was started.`
+  The overall exit code was nonzero although GitHub held the expected head.
+- Resolution: verify the remote head and ready state independently, preserve
+  the provenance footer, and run the supported attached readiness monitor.
+  No duplicate push or user-manager repair is required.
+- Prevention: publish with the attached monitor in environments without a user
+  manager, and distinguish push success from monitor-submission failure in
+  publication results.
+
 ## 2026-10-28 — stale prerequisite and source state
 
 - Work: establish P0 prerequisites and the exact official source baseline.
