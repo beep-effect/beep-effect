@@ -1,4 +1,4 @@
-import { createConnection } from "node:net";
+import * as NodeNet from "node:net";
 import {
   CoworkLifecyclePolicy,
   CoworkLifecycleRuntime,
@@ -250,7 +250,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer
         callback: start,
       });
       yield* Effect.callback<void>((resume) => {
-        const socket = createConnection({ path: opened.socketPath, allowHalfOpen: true });
+        const socket = NodeNet.createConnection({ path: opened.socketPath, allowHalfOpen: true });
         socket.once("connect", () =>
           socket.end(body, () => {
             socket.destroy();

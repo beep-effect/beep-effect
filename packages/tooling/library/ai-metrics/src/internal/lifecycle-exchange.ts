@@ -1,5 +1,5 @@
 /** Private bounded exchange shared by native lifecycle forwarders. */
-import { createConnection } from "node:net";
+import * as NodeNet from "node:net";
 import * as Effect from "effect/Effect";
 import { CursorLifecycleCodecs, failure } from "./cursor-lifecycle-schemas.ts";
 import type { CursorLifecycleError } from "./cursor-lifecycle-schemas.ts";
@@ -11,7 +11,7 @@ export const exchangeLifecycle = Effect.fn("AiMetrics.lifecycle.exchange")(funct
   timeoutMillis: number
 ) {
   const reply = yield* Effect.callback<string, CursorLifecycleError>((resume) => {
-    const socket = createConnection({ path: socketPath, allowHalfOpen: true });
+    const socket = NodeNet.createConnection({ path: socketPath, allowHalfOpen: true });
     let output = "";
     let size = 0;
     socket.once("connect", () => socket.end(projected));
