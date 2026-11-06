@@ -70,6 +70,7 @@ import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CiLaneId } from "../../Ci/CiLane.ts";
+import type { LaneProofSession } from "../../Quality/internal/LaneProofReuse.ts";
 import type { ExpectationRewriteVerdict, YeetFinalCheckOptions } from "./FinalCheck.schemas.ts";
 
 /**
@@ -434,6 +435,73 @@ const runStep = Effect.fn("Yeet.runFinalCheckStep")(function* (planned: FinalChe
 // Expectation rewrites remain an in-process replay and never enter this path.
 const reusableFinalCheckGate = FinalCheckGate.pick(["lint-policy", "lint", "check", "docgen", "fallow", "coverage"]);
 
+const finalCheckProofLane = (planned: FinalCheckPlannedStep) =>
+  GithubCheckLaneSpec.make({
+    id: planned.step.label,
+    tier: "pre-push",
+    stage: "repo-quality",
+    wave: "heavy",
+    blockedBy: [],
+    // runStep inherits the ambient environment; hash it as part of the proof too.
+    step: QualityTaskStep.make({ ...planned.step, useLocalEnv: true }),
+  });
+
+// This runner belongs to one sequential final-check invocation. A post-command
+// session fences that command and identifies the following command's start.
+const makeFinalCheckStepRunner = (planned: ReadonlyArray<FinalCheckPlannedStep>, resume: boolean) => {
+  const lanes = pipe(
+    planned,
+    A.filter((entry) => S.is(reusableFinalCheckGate)(entry.gate)),
+    A.map(finalCheckProofLane)
+  );
+  let session = O.none<LaneProofSession>();
+  const prepare = () =>
+    prepareLaneProofSession(lanes, resume ? "active" : "shadow").pipe(
+      Effect.mapError(YeetCommandError.new("Failed to prepare final-check step proof."))
+    );
+  const invalidate = Effect.sync(() => {
+    session = O.none();
+  });
+  const execute = Effect.fn("Yeet.runFinalCheckStepWithProof")(function* (entry: FinalCheckPlannedStep) {
+    if (!S.is(reusableFinalCheckGate)(entry.gate)) {
+      yield* invalidate;
+      return yield* runStep(entry);
+    }
+    const lane = finalCheckProofLane(entry);
+    if (O.isNone(session)) session = yield* prepare();
+    const started = session;
+    if (O.isSome(started) && resume && hasReusableLaneProof(started.value, lane.id)) {
+      // A reused step executes no command, so there is no intervening command
+      // boundary to re-identify before the next reuse decision.
+      const reason = "reused completed step with matching source, head, base, command and environment";
+      yield* Console.log(`[yeet] final-check ${entry.gate}: ${reason}`);
+      return FinalCheckStepResult.make({
+        gate: entry.gate,
+        label: entry.step.label,
+        hostedContext: entry.hostedContext,
+        command: renderCommand(entry.step),
+        status: "passed",
+        durationMs: 0,
+        reason,
+      });
+    }
+    const result = yield* runStep(entry);
+    // A failed command can also move the tree or environment. Discard its
+    // start snapshot; a subsequent step must prepare a fresh boundary.
+    yield* invalidate;
+    if (O.isSome(started) && result.status === "passed") {
+      session = yield* prepare();
+      if (O.isSome(session)) {
+        yield* persistLaneProofs(started.value, [[lane, result.durationMs]], session.value).pipe(
+          Effect.ignore({ log: "Warn", message: "[yeet] final-check completed step could not be saved for resume" })
+        );
+      }
+    }
+    return result;
+  });
+  return { execute, invalidate };
+};
+
 /**
  * Execute one planned step, recording a successful exact-input proof for a later resume.
  *
@@ -457,39 +525,7 @@ export const runFinalCheckStep = Effect.fn("Yeet.runFinalCheckStepWithProof")(fu
   planned: FinalCheckPlannedStep,
   resume: boolean
 ) {
-  if (!S.is(reusableFinalCheckGate)(planned.gate)) return yield* runStep(planned);
-  const lane = GithubCheckLaneSpec.make({
-    id: planned.step.label,
-    tier: "pre-push",
-    stage: "repo-quality",
-    wave: "heavy",
-    blockedBy: [],
-    // runStep inherits the ambient environment; hash it as part of the proof too.
-    step: QualityTaskStep.make({ ...planned.step, useLocalEnv: true }),
-  });
-  const session = yield* prepareLaneProofSession([lane], resume ? "active" : "shadow").pipe(
-    Effect.mapError(YeetCommandError.new("Failed to prepare final-check step proof."))
-  );
-  if (O.isSome(session) && resume && hasReusableLaneProof(session.value, lane.id)) {
-    const reason = "reused completed step with matching source, head, base, command and environment";
-    yield* Console.log(`[yeet] final-check ${planned.gate}: ${reason}`);
-    return FinalCheckStepResult.make({
-      gate: planned.gate,
-      label: planned.step.label,
-      hostedContext: planned.hostedContext,
-      command: renderCommand(planned.step),
-      status: "passed",
-      durationMs: 0,
-      reason,
-    });
-  }
-  const result = yield* runStep(planned);
-  if (O.isSome(session) && result.status === "passed") {
-    yield* persistLaneProofs(session.value, [[lane, result.durationMs]]).pipe(
-      Effect.ignore({ log: "Warn", message: "[yeet] final-check completed step could not be saved for resume" })
-    );
-  }
-  return result;
+  return yield* makeFinalCheckStepRunner([planned], resume).execute(planned);
 });
 
 const runExpectationRewriteGate = Effect.fn("Yeet.runExpectationRewriteGate")(function* (
@@ -589,20 +625,20 @@ const printGatePlan = (run: FinalCheckRun, gate: FinalCheckGate) =>
           }),
   });
 
-const runGate = (run: FinalCheckRun, gate: FinalCheckGate) =>
+const runGate = (run: FinalCheckRun, gate: FinalCheckGate, runner: ReturnType<typeof makeFinalCheckStepRunner>) =>
   O.match(skipFor(run, gate), {
     onSome: (skip): Effect.Effect<GateOutcome> =>
       Effect.succeed({ steps: [skippedStep(skip, hostedContextFor(run, gate))], verdicts: [] }),
     onNone: () =>
       gate === "expectation-rewrite"
-        ? Effect.map(runExpectationRewriteGate(run.repoRoot, run.mergeBase), (result) => ({
-            steps: [result.step],
-            verdicts: result.verdicts,
-          }))
-        : Effect.map(
-            Effect.forEach(plannedFor(run, gate), (entry) => runFinalCheckStep(entry, run.resume)),
-            (steps) => ({ steps, verdicts: [] })
-          ),
+        ? Effect.map(
+            runner.invalidate.pipe(Effect.andThen(runExpectationRewriteGate(run.repoRoot, run.mergeBase))),
+            (result) => ({
+              steps: [result.step],
+              verdicts: result.verdicts,
+            })
+          )
+        : Effect.map(Effect.forEach(plannedFor(run, gate), runner.execute), (steps) => ({ steps, verdicts: [] })),
   });
 
 const hasFailure = (steps: ReadonlyArray<FinalCheckStepResult>): boolean =>
@@ -613,14 +649,35 @@ const runGates = Effect.fn("Yeet.runFinalCheckGates")(function* (
   gates: ReadonlyArray<FinalCheckGate>,
   failFast: boolean
 ) {
+  const runner = makeFinalCheckStepRunner(
+    A.filter(run.planned, (entry) => A.contains(gates, entry.gate) && O.isNone(skipFor(run, entry.gate))),
+    run.resume
+  );
   let outcome: GateOutcome = { steps: [], verdicts: [] };
   for (const gate of gates) {
     if (failFast && hasFailure(outcome.steps)) break;
-    const next = yield* runGate(run, gate);
+    const next = yield* runGate(run, gate, runner);
     outcome = { steps: A.appendAll(outcome.steps, next.steps), verdicts: A.appendAll(outcome.verdicts, next.verdicts) };
   }
   return outcome;
 });
+
+/**
+ * Exercise the sequential final-check gate runner with controlled subprocess plans.
+ *
+ * **Example** (Run an empty controlled plan)
+ *
+ * ```ts
+ * import { runFinalCheckGatesForTesting } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ * const run = { repoRoot: "/repo", mergeBase: "base", planned: [], skips: [], resume: true }
+ * console.log(Effect.isEffect(runFinalCheckGatesForTesting(run, [], false))) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const runFinalCheckGatesForTesting = runGates;
 
 // Untracked, non-ignored files count: the gates read them (check typechecks
 // every file), so a receipt for the committed head cannot cover them.

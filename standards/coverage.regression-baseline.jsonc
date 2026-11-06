@@ -42422,6 +42422,66 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.migrate.ts": {
+          "lines": 100,
+          "statements": 96.66,
+          "branches": 82.35,
+          "functions": 85.71,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 3,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.ontology.ts": {
+          "lines": 98.14,
+          "statements": 98.38,
+          "branches": 98.43,
+          "functions": 97.5,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 1,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.paths.ts": {
+          "lines": 74.19,
+          "statements": 75,
+          "branches": 75,
+          "functions": 28.57,
+          "uncovered": {
+            "lines": 8,
+            "statements": 9,
+            "branches": 2,
+            "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.projection.ts": {
+          "lines": 100,
+          "statements": 98.38,
+          "branches": 94.33,
+          "functions": 97.29,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 3,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.views.ts": {
+          "lines": 90.9,
+          "statements": 90.14,
+          "branches": 87.5,
+          "functions": 81.48,
+          "uncovered": {
+            "lines": 11,
+            "statements": 14,
+            "branches": 4,
+            "functions": 10
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/OwnerCheckpoint.adapter.ts": {
           "lines": 96.07,
           "statements": 93.18,

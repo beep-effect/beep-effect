@@ -94,6 +94,12 @@ export * from "./Uri.ts";
  */
 export * as Cito from "./Vocab/Cito.ts";
 /**
+ * Dcat pinned vocabulary constants.
+ * @category constants
+ * @since 0.0.0
+ */
+export * as Dcat from "./Vocab/Dcat.ts";
+/**
  * Deo pinned vocabulary constants.
  * @category constants
  * @since 0.0.0
