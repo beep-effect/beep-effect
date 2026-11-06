@@ -13,8 +13,10 @@ import {
   OwnerCheckpointBinding,
   OwnerCheckpointClassicStatus,
   OwnerCheckpointCommand,
+  OwnerCheckpointDelivery,
   OwnerCheckpointError,
   OwnerCheckpointEvidence,
+  OwnerCheckpointIntent,
   OwnerCheckpointObserver,
   OwnerCheckpointPolicy,
   OwnerCheckpointReceiptRef,
@@ -47,6 +49,7 @@ import { assertNone, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -58,7 +61,8 @@ import * as TestClock from "effect/testing/TestClock";
 import pullFixture from "./fixtures/yeet-merge-gate/pull.json" with { type: "json" };
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { recordedGithub } from "./support/YeetGithub.ts";
-import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
+import type { OwnerCheckpointOutbox } from "@beep/repo-cli/test/Yeet";
+import type { GithubAnswer, GithubCall, GithubRoutes } from "./support/YeetGithub.ts";
 
 const head = Str.repeat(40)("a");
 const merge = Str.repeat(40)("b");
@@ -202,6 +206,11 @@ const livePull = (merged = false) => ({
 });
 
 // All source/HTTP/storage data in this file are fixed synthetic fixtures.
+const mergeGithub = (
+  routes: GithubRoutes,
+  base: GithubRoutes = () => ({ body: { object: { type: "commit", sha: merge } } })
+) => recordedGithub((call) => (Str.startsWith("{repo}/git/ref/heads/")(call.path) ? base(call) : routes(call)));
+
 describe("offline owner checkpoint", () => {
   it.effect("qualifies upstream while its own App check is still pending, without circular readiness", () =>
     Effect.gen(function* () {
@@ -416,7 +425,7 @@ describe("offline owner checkpoint", () => {
         const store = yield* claimedStore;
         const sync = request(2, OwnerCheckpointCommand.cases.Synchronize.make({ head: Str.repeat(40)("f") }));
         expect((yield* Effect.flip(store.apply(sync, policy, now))).reason).toBe("state");
-        yield* store.prepareDispatch(binding, 2);
+        yield* store.prepareDispatch(binding, 2, snapshot().base);
         yield* store.apply(request(2, OwnerCheckpointCommand.cases.Unknown.make({ claimId })), policy, now);
         expect(
           (yield* Effect.flip(
@@ -455,7 +464,7 @@ describe("offline owner checkpoint", () => {
         filename,
         Effect.gen(function* () {
           const store = yield* claimedStore;
-          yield* store.prepareDispatch(binding, 2);
+          yield* store.prepareDispatch(binding, 2, snapshot().base);
         })
       );
       yield* withDb(
@@ -464,7 +473,7 @@ describe("offline owner checkpoint", () => {
           const store = yield* makeOwnerCheckpointStore();
           const found4 = yield* store.outbox(binding, 2);
           expect(O.getOrThrow(found4).delivery._tag).toBe("Dispatched");
-          expect((yield* Effect.flip(store.prepareDispatch(binding, 2))).reason).toBe("conflict");
+          expect((yield* Effect.flip(store.prepareDispatch(binding, 2, snapshot().base))).reason).toBe("conflict");
           const found3 = yield* store.read(binding);
           expect(O.getOrThrow(found3).state._tag).toBe("Claimed");
         })
@@ -472,7 +481,7 @@ describe("offline owner checkpoint", () => {
     })
   );
   it.effect("serializes the full expected SHA into exactly one native merge request", () => {
-    const github = recordedGithub((call) =>
+    const github = mergeGithub((call) =>
       call.method === "PUT" ? { body: { merged: true, sha: merge, message: "merged" } } : { body: livePull() }
     );
     return github.provide(
@@ -487,12 +496,13 @@ describe("offline owner checkpoint", () => {
           const puts = A.filter(github.calls, (call) => call.method === "PUT");
           expect(puts).toHaveLength(1);
           expect(puts[0]?.body).toEqual({ sha: head, merge_method: "squash" });
+          expect(A.filter(github.calls, (call) => call.path === "{repo}/git/ref/heads/main")).toHaveLength(1);
         })
       )
     );
   });
   it.effect("retains uncertain dispatch when result persistence fails and never retries merge", () => {
-    const github = recordedGithub((call) =>
+    const github = mergeGithub((call) =>
       call.method === "PUT" ? { unreachable: "PRIVATE_NATIVE_FAILURE" } : { body: livePull() }
     );
     return github.provide(
@@ -517,13 +527,13 @@ describe("offline owner checkpoint", () => {
     );
   });
   it.effect("recovers a confirmed same-PR/head merge by readback alone, retaining unknown commit SHA", () => {
-    const github = recordedGithub(() => ({ body: livePull(true) }));
+    const github = mergeGithub(() => ({ body: livePull(true) }));
     return github.provide(
       inMemory(
         Effect.gen(function* () {
           yield* TestClock.setTime(ms);
           const store = yield* claimedStore;
-          yield* store.prepareDispatch(binding, 2);
+          yield* store.prepareDispatch(binding, 2, snapshot().base);
           const result = yield* observeOwnerCheckpointMerge(store, binding, policy);
           expect(result._tag).toBe("Confirmed");
           if (result._tag === "Confirmed") assertNone(result.mergeCommit);
@@ -655,15 +665,17 @@ describe("owner checkpoint refusal and recovery boundaries", () => {
         yield* Effect.forEach(
           [-1, 0.5, Number.NaN],
           Effect.fnUntraced(function* (revision) {
-            expect((yield* Effect.flip(store.prepareDispatch(binding, revision))).reason).toBe("conflict");
+            expect((yield* Effect.flip(store.prepareDispatch(binding, revision, snapshot().base))).reason).toBe(
+              "conflict"
+            );
             expect((yield* Effect.flip(store.acknowledgePublication(binding, revision, 2))).reason).toBe("publication");
           }),
           { concurrency: 1, discard: true }
         );
         expect((yield* Effect.flip(store.acknowledgePublication(binding, 0, 0))).reason).toBe("publication");
         expect((yield* Effect.flip(store.acknowledgePublication(binding, 0, 2))).reason).toBe("conflict");
-        expect((yield* Effect.flip(store.prepareDispatch(binding, 0))).reason).toBe("conflict");
-        expect((yield* Effect.flip(store.prepareDispatch(binding, 1))).reason).toBe("conflict");
+        expect((yield* Effect.flip(store.prepareDispatch(binding, 0, snapshot().base))).reason).toBe("conflict");
+        expect((yield* Effect.flip(store.prepareDispatch(binding, 1, snapshot().base))).reason).toBe("conflict");
         yield* store.apply(release(), policy, now);
         yield* store.acknowledgePublication(binding, 1, 2);
         expect((yield* Effect.flip(store.acknowledgePublication(binding, 1, 2))).reason).toBe("conflict");
@@ -683,7 +695,7 @@ describe("owner checkpoint refusal and recovery boundaries", () => {
 
 describe("owner merge native outcomes", () => {
   it.effect("rejects another repository before reading or dispatching GitHub", () => {
-    const github = recordedGithub(() => ({ body: livePull() }));
+    const github = mergeGithub(() => ({ body: livePull() }));
     return github.provide(
       inMemory(
         Effect.gen(function* () {
@@ -698,7 +710,7 @@ describe("owner merge native outcomes", () => {
     );
   });
   it.effect("sanitizes a failed prerequisite read without dispatching", () => {
-    const github = recordedGithub(() => ({ status: 403, body: { message: "PRIVATE_READ_FAILURE" } }));
+    const github = mergeGithub(() => ({ status: 403, body: { message: "PRIVATE_READ_FAILURE" } }));
     return github.provide(
       inMemory(
         Effect.gen(function* () {
@@ -715,7 +727,7 @@ describe("owner merge native outcomes", () => {
   for (const mismatch of ["number", "head", "closed", "merged", "draft"]) {
     it.effect(`refuses a live PR with mismatched ${mismatch} before fencing`, () => {
       const pull = livePull();
-      const github = recordedGithub(() => ({
+      const github = mergeGithub(() => ({
         body: {
           ...pull,
           number: mismatch === "number" ? 43 : pull.number,
@@ -747,7 +759,7 @@ describe("owner merge native outcomes", () => {
     { merged: true, sha: "short", message: "incomplete identity" },
   ]) {
     it.effect(`retains a durable uncertain intent after ${result.message}`, () => {
-      const github = recordedGithub((call) => (call.method === "PUT" ? { body: result } : { body: livePull() }));
+      const github = mergeGithub((call) => (call.method === "PUT" ? { body: result } : { body: livePull() }));
       return github.provide(
         inMemory(
           Effect.gen(function* () {
@@ -766,7 +778,7 @@ describe("owner merge native outcomes", () => {
     });
   }
   it.effect("retains a confirmed native result when its recording transaction fails", () => {
-    const github = recordedGithub((call) =>
+    const github = mergeGithub((call) =>
       call.method === "PUT" ? { body: { merged: true, sha: merge, message: "merged" } } : { body: livePull() }
     );
     return github.provide(
@@ -785,7 +797,7 @@ describe("owner merge native outcomes", () => {
     );
   });
   it.effect("refuses recovery without a merge claim", () => {
-    const github = recordedGithub(() => ({ body: livePull(true) }));
+    const github = mergeGithub(() => ({ body: livePull(true) }));
     return github.provide(
       inMemory(
         Effect.gen(function* () {
@@ -799,7 +811,7 @@ describe("owner merge native outcomes", () => {
     );
   });
   it.effect("preserves pending versus recorded uncertainty during readback without redispatch", () => {
-    const github = recordedGithub(() => ({ body: livePull() }));
+    const github = mergeGithub(() => ({ body: livePull() }));
     return github.provide(
       inMemory(
         Effect.gen(function* () {
@@ -818,7 +830,7 @@ describe("owner merge native outcomes", () => {
           });
           const sql = yield* SqlClient.SqlClient;
           yield* sql`CREATE TRIGGER refuse_recovery BEFORE UPDATE ON yeet_owner_checkpoint WHEN NEW.revision = 4 BEGIN SELECT RAISE(ABORT, 'FIXTURE'); END`;
-          const mergedGithub = recordedGithub(() => ({ body: livePull(true) }));
+          const mergedGithub = mergeGithub(() => ({ body: livePull(true) }));
           const recovered = yield* observeOwnerCheckpointMerge(store, binding, policy).pipe(mergedGithub.provide);
           deepStrictEqual(recovered, { _tag: "Confirmed", recording: "pending", mergeCommit: O.none() });
           expect(A.filter([...github.calls, ...mergedGithub.calls], (call) => call.method === "PUT")).toHaveLength(0);
@@ -939,7 +951,7 @@ it.effect("fails closed when the explicitly owned database scope has been releas
       store.register(binding).pipe(Effect.asVoid),
       store.apply(request(2, OwnerCheckpointCommand.cases.Unknown.make({ claimId })), policy, now).pipe(Effect.asVoid),
       store.acknowledgePublication(binding, 2, 2).pipe(Effect.asVoid),
-      store.prepareDispatch(binding, 2).pipe(Effect.asVoid),
+      store.prepareDispatch(binding, 2, snapshot().base).pipe(Effect.asVoid),
     ];
     yield* Effect.forEach(
       operations,
@@ -952,6 +964,176 @@ it.effect("fails closed when the explicitly owned database scope has been releas
     );
   })
 );
+
+const assertPendingMerge = Effect.fnUntraced(function* (
+  store: Effect.Success<ReturnType<typeof makeOwnerCheckpointStore>>,
+  calls: ReadonlyArray<GithubCall>
+) {
+  const pending = yield* store.outbox(binding, 2);
+  expect(O.getOrThrow(pending).delivery._tag).toBe("Pending");
+  const current = yield* store.read(binding);
+  expect(O.getOrThrow(current).revision).toBe(2);
+  expect(O.getOrThrow(current).state._tag).toBe("Claimed");
+  expect(A.filter(calls, (call) => call.method === "PUT")).toHaveLength(0);
+});
+
+describe("dispatch actual base and causal release fence", () => {
+  it.effect("refuses a retargeted live PR before reading its new base or fencing", () => {
+    const github = mergeGithub(() => ({ body: { ...livePull(), base: { ...livePull().base, ref: "other" } } }));
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const store = yield* claimedStore;
+      const error = yield* Effect.flip(dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy));
+      expect(error.reason).toBe("binding");
+      expect(A.filter(github.calls, (call) => Str.includes("/git/ref/")(call.path))).toHaveLength(0);
+      yield* assertPendingMerge(store, github.calls);
+    }).pipe(inMemory, github.provide);
+  });
+  for (const fixture of [
+    { name: "moved commit", answer: { body: { object: { type: "commit", sha: head } } }, reason: "binding" },
+    { name: "short commit", answer: { body: { object: { type: "commit", sha: "short" } } }, reason: "evidence" },
+    { name: "noncommit", answer: { body: { object: { type: "tag", sha: merge } } }, reason: "evidence" },
+    { name: "missing object", answer: { body: {} }, reason: "evidence" },
+    { name: "permission refusal", answer: { status: 403, body: { message: "PRIVATE_BASE_READ" } }, reason: "evidence" },
+    { name: "transport failure", answer: { unreachable: "PRIVATE_BASE_READ" }, reason: "evidence" },
+  ]) {
+    it.effect(`keeps dispatch pending for actual base ${fixture.name}`, () => {
+      const github = mergeGithub(
+        () => ({ body: livePull() }),
+        () => fixture.answer
+      );
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const store = yield* claimedStore;
+        const error = yield* Effect.flip(dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy));
+        expect(error.reason).toBe(fixture.reason);
+        expect(String(error)).not.toContain("PRIVATE_BASE_READ");
+        yield* assertPendingMerge(store, github.calls);
+      }).pipe(inMemory, github.provide);
+    });
+  }
+  it.effect("refuses a fresh changed-base snapshot against the earlier published release", () => {
+    const github = mergeGithub(
+      () => ({ body: livePull() }),
+      () => ({ body: { object: { type: "commit", sha: head } } })
+    );
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const store = yield* claimedStore;
+      const changed = OwnerCheckpointSnapshot.make({ ...snapshot(-10, true), base: { ...snapshot().base, sha: head } });
+      const error = yield* Effect.flip(dispatchOwnerCheckpointMerge(store, binding, 2, changed, policy));
+      expect(error.reason).toBe("conflict");
+      yield* assertPendingMerge(store, github.calls);
+    }).pipe(inMemory, github.provide);
+  });
+  it.effect("rechecks prerequisite freshness after the actual base network read", () => {
+    const started = Promise.withResolvers<void>();
+    const resume = Promise.withResolvers<void>();
+    const github = mergeGithub(
+      () => ({ body: livePull() }),
+      async () => {
+        started.resolve();
+        await resume.promise;
+        return { body: { object: { type: "commit", sha: merge } } };
+      }
+    );
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const store = yield* claimedStore;
+      const fiber = yield* dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy).pipe(
+        Effect.result,
+        Effect.forkChild
+      );
+      yield* Effect.promise(() => started.promise);
+      yield* TestClock.setTime(ms + policy.maxAgeMillis + 1);
+      resume.resolve();
+      const outcome = yield* Fiber.join(fiber);
+      const error = Result.getFailure(outcome);
+      expect(O.getOrThrow(error).reason).toBe("freshness");
+      yield* assertPendingMerge(store, github.calls);
+    }).pipe(inMemory, github.provide);
+  });
+  for (const fixture of [
+    {
+      name: "foreign binding",
+      edit: (entry: OwnerCheckpointOutbox) => ({ ...entry, binding: { ...entry.binding, generation: 1 } }),
+    },
+    { name: "wrong payload revision", edit: (entry: OwnerCheckpointOutbox) => ({ ...entry, revision: 0 }) },
+    {
+      name: "wrong release intent",
+      edit: (entry: OwnerCheckpointOutbox) => ({ ...entry, intent: OwnerCheckpointIntent.cases.CheckHeld.make({}) }),
+    },
+    {
+      name: "wrong release ID",
+      edit: (entry: OwnerCheckpointOutbox) => ({
+        ...entry,
+        intent: OwnerCheckpointIntent.cases.CheckReleased.make({ releaseId: digest, base: snapshot().base }),
+      }),
+    },
+    {
+      name: "unpublished release",
+      edit: (entry: OwnerCheckpointOutbox) => ({ ...entry, delivery: OwnerCheckpointDelivery.cases.Pending.make({}) }),
+    },
+    {
+      name: "foreign base repository",
+      edit: (entry: OwnerCheckpointOutbox) => ({
+        ...entry,
+        intent: OwnerCheckpointIntent.cases.CheckReleased.make({
+          releaseId,
+          base: { ...snapshot().base, repository: "other/repo" },
+        }),
+      }),
+    },
+    {
+      name: "different base ref",
+      edit: (entry: OwnerCheckpointOutbox) => ({
+        ...entry,
+        intent: OwnerCheckpointIntent.cases.CheckReleased.make({
+          releaseId,
+          base: { ...snapshot().base, ref: "other" },
+        }),
+      }),
+    },
+    {
+      name: "different base commit",
+      edit: (entry: OwnerCheckpointOutbox) => ({
+        ...entry,
+        intent: OwnerCheckpointIntent.cases.CheckReleased.make({ releaseId, base: { ...snapshot().base, sha: head } }),
+      }),
+    },
+  ]) {
+    it.effect(`refuses a causal predecessor with ${fixture.name} without fencing`, () => {
+      const github = mergeGithub(() => ({ body: livePull() }));
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const store = yield* claimedStore;
+        const sql = yield* SqlClient.SqlClient;
+        const priorOption = yield* store.outbox(binding, 1);
+        const payload = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(
+          fixture.edit(O.getOrThrow(priorOption))
+        );
+        yield* sql`UPDATE yeet_owner_checkpoint_outbox SET payload=${payload} WHERE revision=1`;
+        yield* Effect.flip(store.prepareDispatch(binding, 2, snapshot().base));
+        yield* Effect.flip(dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy));
+        yield* assertPendingMerge(store, github.calls);
+      }).pipe(inMemory, github.provide);
+    });
+  }
+  for (const malformed of [false, true]) {
+    it.effect(`refuses a ${malformed ? "malformed" : "missing"} immediate release predecessor`, () => {
+      const github = mergeGithub(() => ({ body: livePull() }));
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const store = yield* claimedStore;
+        const sql = yield* SqlClient.SqlClient;
+        if (malformed) yield* sql`UPDATE yeet_owner_checkpoint_outbox SET payload='{' WHERE revision=1`;
+        else yield* sql`DELETE FROM yeet_owner_checkpoint_outbox WHERE revision=1`;
+        yield* Effect.flip(dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy));
+        yield* assertPendingMerge(store, github.calls);
+      }).pipe(inMemory, github.provide);
+    });
+  }
+});
 
 const context = RepoRunContext.make({
   base: "origin/main",

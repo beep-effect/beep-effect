@@ -14,6 +14,7 @@ import {
   OwnerCheckpointIntent,
   OwnerCheckpointOutbox,
   OwnerCheckpointRecord,
+  OwnerCheckpointSnapshot,
   OwnerCheckpointState,
 } from "./OwnerCheckpoint.schemas.ts";
 import { sameOwnerCheckpointBinding, transitionOwnerCheckpoint } from "./OwnerCheckpoint.ts";
@@ -22,7 +23,6 @@ import type {
   OwnerCheckpointBinding,
   OwnerCheckpointPolicy,
   OwnerCheckpointRequest,
-  OwnerCheckpointSnapshot,
 } from "./OwnerCheckpoint.schemas.ts";
 
 const RecordJson = S.fromJsonString(OwnerCheckpointRecord);
@@ -33,6 +33,8 @@ const decodeRecord = S.decodeUnknownEffect(RecordJson);
 const decodeOutbox = S.decodeUnknownEffect(OutboxJson);
 const storage = () => OwnerCheckpointError.make({ reason: "storage" });
 const conflict = () => OwnerCheckpointError.make({ reason: "conflict" });
+const sameBase = S.toEquivalence(OwnerCheckpointSnapshot.fields.base);
+const isBase = S.is(OwnerCheckpointSnapshot.fields.base);
 const requiredValue = <Value>(value: O.Option<Value>) =>
   Effect.fromOption(value).pipe(Effect.mapError(() => OwnerCheckpointError.make({ reason: "missing" })));
 
@@ -218,28 +220,48 @@ export const makeOwnerCheckpointStore = Effect.fn("OwnerCheckpoint.makeStore")(f
       )
       .pipe(Effect.mapError((error) => (S.is(OwnerCheckpointError)(error) ? error : storage())));
   });
+  const qualifyDispatchPredecessor = Effect.fnUntraced(function* (
+    current: OwnerCheckpointRecord & { readonly state: typeof OwnerCheckpointState.cases.Claimed.Type },
+    expectedBase: OwnerCheckpointSnapshot["base"]
+  ) {
+    // Claim is the single revision immediately after Released. Publication does
+    // not advance revisions; never search older releases to repair this link.
+    const previous = yield* outbox(current.binding, current.revision - 1).pipe(Effect.flatMap(requiredValue));
+    if (
+      previous.revision + 1 !== current.revision ||
+      previous.intent._tag !== "CheckReleased" ||
+      previous.intent.releaseId !== current.state.releaseId ||
+      previous.delivery._tag !== "Published" ||
+      !sameBase(previous.intent.base, expectedBase)
+    )
+      return yield* conflict();
+  });
   const prepareDispatch = Effect.fn("OwnerCheckpoint.prepareDispatch")(function* (
     binding: OwnerCheckpointBinding,
-    revision: number
+    revision: number,
+    expectedBase: OwnerCheckpointSnapshot["base"]
   ) {
     if (!Number.isSafeInteger(revision) || revision < 0) return yield* conflict();
+    if (!isBase(expectedBase)) return yield* conflict();
     return yield* sql
       .withTransaction(
         Effect.gen(function* () {
           const current = yield* readRevision(binding, revision);
           if (current.state._tag !== "Claimed") return yield* conflict();
+          const prepared: OwnerCheckpointRecord & { readonly state: typeof OwnerCheckpointState.cases.Claimed.Type } = {
+            ...current,
+            state: current.state,
+          };
+          yield* qualifyDispatchPredecessor(prepared, expectedBase);
           const entry = yield* outbox(binding, revision).pipe(Effect.flatMap(requiredValue));
           if (
+            entry.revision !== revision ||
             entry.intent._tag !== "Merge" ||
             entry.intent.claimId !== current.state.claimId ||
             entry.delivery._tag !== "Pending"
           )
             return yield* conflict();
           yield* replaceDelivery(entry, OwnerCheckpointDelivery.cases.Dispatched.make({}));
-          const prepared: OwnerCheckpointRecord & { readonly state: typeof OwnerCheckpointState.cases.Claimed.Type } = {
-            ...current,
-            state: current.state,
-          };
           return prepared;
         })
       )
