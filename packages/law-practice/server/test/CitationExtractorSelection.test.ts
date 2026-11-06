@@ -96,3 +96,13 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
     );
   }
 );
+
+it.effect("rejects malformed policy with a closed failure before installing operations", () =>
+  Effect.gen(function* () {
+    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
+      const failure = yield* makeCitationExtractorSelection(policy, []).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "invalid-policy" });
+      expect("cause" in failure).toBe(false);
+    }
+  })
+);
