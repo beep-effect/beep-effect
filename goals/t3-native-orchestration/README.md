@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -33,7 +33,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 Close — the implementation merged in [#2594](https://github.com/beep-effect/beep-effect/pull/2594) (`6fad8f6d0f`); closeout PR [#2664](https://github.com/beep-effect/beep-effect/pull/2664) recorded the local-state cleanup but merged before its readiness job reported, and [#2671](https://github.com/beep-effect/beep-effect/pull/2671) was merged the same way, and [#2675](https://github.com/beep-effect/beep-effect/pull/2675) merged with no readiness job at all, so closeout PR [#2696](https://github.com/beep-effect/beep-effect/pull/2696) rebinds the `completed-retained` proposal to its own readiness verdict and is held until that verdict records merge-ready.
+P4 Close — the implementation merged in [#2594](https://github.com/beep-effect/beep-effect/pull/2594) (`6fad8f6d0f`); closeout PR [#2664](https://github.com/beep-effect/beep-effect/pull/2664) recorded the local-state cleanup but merged before its readiness job reported, and [#2671](https://github.com/beep-effect/beep-effect/pull/2671) was merged the same way, and [#2675](https://github.com/beep-effect/beep-effect/pull/2675) merged with no readiness job at all, so closeout PR [#2696](https://github.com/beep-effect/beep-effect/pull/2696) rebound the `completed-retained` proposal to its own readiness verdict, merged at merge-ready, verified, and was adopted as a committed `closeout` by `goals set-status` in [#2703](https://github.com/beep-effect/beep-effect/pull/2703).
 
 ## Latest Evidence
 

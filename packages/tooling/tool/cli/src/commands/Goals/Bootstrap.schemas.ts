@@ -765,6 +765,7 @@ const VALIDATION_REQUIREMENTS_BY_FINDING_KIND: Readonly<
   "schema-version-upgrade": [],
   "completion-gate-unsatisfied": [],
   "completion-gate-unknown": [],
+  "closeout-adoption-pending": [],
   "superseded-without-pointer": [],
   "exploration-backlink-missing": [],
   "packet-status-drift": [],
@@ -785,6 +786,8 @@ const VALIDATION_REQUIREMENTS_BY_FINDING_KIND: Readonly<
   "ops-script-unregistered": ["doctor-clean"],
   "ops-script-unregistrable": ["doctor-clean"],
   "ops-script-duplicate": ["doctor-clean"],
+  "decision-file-invalid": ["doctor-clean"],
+  "decision-log-drift": ["doctor-clean"],
   "research-reports-drift": ["doctor-clean"],
 };
 

@@ -30,13 +30,21 @@ goals/<slug>/
   history/
 ```
 
+A packet has at most three concurrently open pull requests (operator ruling
+2026-11-05, [`agent-pool-doctrine/history/2026-11-05-base-conflict-merge-main.md`](./agent-pool-doctrine/history/2026-11-05-base-conflict-merge-main.md)).
+Every merge forces each other open sibling into a catch-up merge on the
+packet's shared files, so a fourth change is sequenced behind one of the three
+in the same lane or stacked on it; `bun run beep yeet siblings <pr>` lists a
+PR's open packet siblings and their predicted conflicts.
+
 ### File Roles
 
 | Path | Role |
 | --- | --- |
 | `README.md` | Orientation: status, mission, next action, launcher, reading order, evidence pointers. |
 | `SPEC.md` | Normative reference: scope, non-goals, constraints, decisions, acceptance, stop conditions. |
-| `PLAN.md` | Mutable execution plan: phases, sequencing, verification lane, current blockers. |
+| `PLAN.md` | Mutable execution plan: phases, sequencing, verification lane, current blockers. Its `## Checkpoints` block is generated from `decisions/` (`kind: checkpoint`). |
+| `decisions/` | One file per decision or checkpoint, `<YYYY-MM-DD>-<topic>.md` with `GoalDecisionFrontmatter` (title, date, reversal, optional lane/pullRequest/kind). Lane-owned and conflict-free; `bun run beep goals decisions write` projects them into `SPEC.md`'s Decision log and `PLAN.md`'s Checkpoints blocks. |
 | `GOAL.md` | Compact `/goal` launcher for execution agents. It delegates to `SPEC.md` and must not become the normative spec. |
 | `ops/manifest.json` | Machine-readable routing: lifecycle, anchor document, launchers, phases, checks, assets. |
 | `research/` | Source-backed exploration, tradeoffs, inventories, and freshness-dated notes. |
@@ -45,6 +53,29 @@ goals/<slug>/
 | `history/reflections/` | Per-session agent reflections written at P3 Close (and on demand via `/reflect`). One immutable file per run, named `<YYYY-MM-DD>-<agent>.md`, with schema-validated YAML frontmatter (`ReflectionFrontmatter`); enforced by `bun run beep lint reflection-artifacts` for packets with `reflectionRequired: true`. Start from `_template/history/reflections/_TEMPLATE.md`. |
 | `ops/handoffs/` | Optional phase-specific handoffs or secondary execution packets. |
 | `ops/prompts/` | Optional reusable prompts or prompt assets. |
+
+### Decision Files
+
+A decision is never appended to a shared tail. Each lane writes its own file,
+`goals/<slug>/decisions/<YYYY-MM-DD>-<topic>.md`, through
+`bun run beep goals decisions add <slug> --title "..." --reversal "..."
+[--body "..."] [--lane <branch>] [--pr <n>] [--kind checkpoint]`, which also
+regenerates the packet's blocks. The file is YAML frontmatter
+(`title`, `date`, `reversal`, optional `kind`, `lane`, `pullRequest`) over a
+Markdown body; the file-name date must equal the frontmatter date.
+
+`SPEC.md`'s `## Decision log` and `PLAN.md`'s `## Checkpoints` each hold one
+marker-delimited block (`<!-- beep:decisions:begin -->` ... `<!-- beep:decisions:end -->`)
+rendered oldest-first from the directory. The block is a pure projection:
+`bun run beep goals decisions check` and `bun run beep goals doctor` block on
+`decision-log-drift` (block differs from the files) and `decision-file-invalid`
+(name grammar, frontmatter, or date mismatch); `bun run beep goals decisions
+write [--slug <slug>]` regenerates. Packets with no `decisions/` directory and
+no marker are untouched: hand-written Decision Log tables written before this
+convention stay frozen above the block (forward-only migration, see
+`goals/goal-packet-conflict-free-appends/`). A sibling lane merging its own
+decision files never conflicts with yours; after merging `main`, run `write`
+once so the block covers both.
 
 ### Ops Script Registry
 
@@ -223,6 +254,13 @@ test "$(wc -m < goals/<slug>/GOAL.md)" -le 4000
 jq . goals/<slug>/ops/manifest.json
 rg -n "<slug>|GOAL.md|agentLaunchers|packetAnchorDocument" goals/<slug>
 git diff --check -- goals/<slug>
+```
+
+6. Record decisions as files, never as `SPEC.md` tail edits:
+
+```sh
+bun run beep goals decisions add <slug> --title "..." --reversal "..." --body "..."
+bun run beep goals decisions check --slug <slug>
 ```
 
 6. If the packet is non-executable, remove `GOAL.md` only after marking the
