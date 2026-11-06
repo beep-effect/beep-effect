@@ -107,6 +107,20 @@ conversation — every stage, both voices, and what changes on disk — lives in
 | `graduated` | Spawned its promised-now goal packet(s); packet remains as provenance and reopens at `decompose` when a MAP gate fires. |
 | `killed` | Explicitly rejected. Its one-line epitaph stays in tracked `DECISIONS.md` or README Trail; the generated Atlas records only state. Killing an idea is a successful outcome, not a failure. |
 
+## Archive
+
+A `graduated` or `killed` exploration is archived with the same operation as a
+terminal goal: `bun run beep goals archive --kind explorations --slug <slug> --plan`,
+then `--write --expect <planId>` (see [`goals/README.md`](../goals/README.md#archive)).
+The full tree moves to `beep-effect/beep-effect-goals-archive` at the same path;
+the tombstone keeps `ops/manifest.json`, a generated stub `README.md` (status
+region, archive URL), `DECISIONS.md` and `BRIEF.md`. The manifest's
+`exploration.archive` block records `repo`, `path`, `commit`, `contentHash`,
+`archivedAt` and `sourceCommit`; inbound links move to the archive's `blob/main`
+URLs. An exploration that must stay whole declares `exploration.retentionReason`;
+`bun run beep goals doctor` flags a terminal exploration with neither as the
+advisory `archive-decision-missing`.
+
 ## Manifest Schema
 
 `ops/manifest.json` is the tracked transition metadata the `/explore` skill

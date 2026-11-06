@@ -164,13 +164,38 @@ validated by the `GoalManifest` schema and enforced by
 
 Legacy tokens (`complete`, `pending`, `DONE`, bespoke progress strings, ...)
 are no longer valid declarations; the 2026-07 migration preserved each
-packet's original token in `statusNote`. Removal from the working tree is an
-archive *operation*, not a status — a removed packet's history lives in git,
-and physical `goals/_archive/` moves are a follow-up packet.
+packet's original token in `statusNote`.
 
-Completed packets are not always removed. Retain a completed packet only when it
-continues to serve as evidence, reference design, or launch context for follow-up
-work.
+## Archive
+
+Archiving is an operation, not a status. `bun run beep goals archive` moves a
+terminal packet (`completed-retained`, `superseded`) to the public
+`beep-effect/beep-effect-goals-archive` repo at the same path, then leaves a
+tombstone on `main`. It is the default closeout step once the adoption PR merges:
+
+1. `bun run beep goals archive --kind goals --slug <slug> --plan` prints the plan
+   (files kept and moved, HEAD tree hash, inbound links) and its `planId`.
+2. `bun run beep goals archive --kind goals --slug <slug> --write --expect <planId>`
+   recomputes the plan, refuses a stale id, commits the mirrored tree to the
+   local archive checkout (`--archive-dir`), verifies its tree hash, and only
+   then rewrites `main`. Land the result in a packet-state PR.
+
+The tombstone keeps `ops/manifest.json`, a generated stub `README.md`
+(lifecycle, mission, closeout, `provides`, headline finding, archive URL),
+`history/reflections/` and `research/OPPORTUNITIES.md`; everything else moves.
+The manifest gains an `archive` block: `repo`, `path`, `commit`, `contentHash`
+(the verified git tree hash), `archivedAt`, `sourceCommit`. Links into moved
+files are rewritten to the archive repo's `blob/main` URLs. The archive checkout
+is provisioned by `beep refs` once the archive repo exists.
+
+A terminal packet that must keep its full evidence on `main` declares
+`retentionReason` instead. `bun run beep goals doctor` reports a terminal packet
+with neither as the advisory `archive-decision-missing`.
+
+`bun run beep goals harvest [--kind goals|explorations|all] [--check]` writes the
+provenance ledger of reflection findings and todos, friction receipts, unchecked
+plan items, status notes, stop conditions, decision titles and open questions,
+each row citing file, line and commit; `--check` fails when it drifts.
 
 ## Completion gate
 

@@ -109,6 +109,12 @@ capability graph read the manifest, so nothing observable depends on the event.
 
 Reverse: Add an archived event type to the packet event vocabulary (body, fold branch, SetStatus switch, transition writer) in its own reviewed PR and have TombstoneWriter append it; existing archive blocks stay valid
 
+### Defer the goals-archive beep refs member to P1, 2026-11-06
+
+beep refs provision clones every member with no per-member recovery, and refs refresh reports a missing member as pull-failed with a critical notification, so a member whose remote does not exist yet would break provisioning for every checkout. The member is added in P1 when beep-effect/beep-effect-goals-archive exists.
+
+Reverse: Add the member to scripts/references.json once the archive repo exists
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

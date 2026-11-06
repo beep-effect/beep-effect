@@ -31,7 +31,7 @@
         ".claude/skills/closeout",
         ".agents/skills/closeout"
       ],
-      "installedTreeHash": "9e60445d77a7ab5f1c2c657b274e89cb6ef88a3202dca3b28243ee1a2ac9a025"
+      "installedTreeHash": "33f7e04e1561c9c4e25e50b4d7fe9f6ea0124db40b565f6b99356ab67ec66c00"
     },
     "codex-findings": {
       "_tag": "local",

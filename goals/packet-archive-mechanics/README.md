@@ -33,11 +33,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P0 Tooling — in progress. Harvest, archive plan and write (against a local archive
+checkout), the doctor advisory, the INDEX column and the doctrine text are
+implemented on the lane; the tooling PR, the committed ledger and the public-CLI smoke
+remain.
 
 ## Latest Evidence
 
-Not started.
+Slice reports under [`history/`](./history/): harvest, archive plan, archive write.
 
 ## Notes
 
