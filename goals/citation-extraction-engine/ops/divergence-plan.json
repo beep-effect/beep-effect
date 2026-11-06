@@ -131,7 +131,14 @@
         "packages/law-practice/server/test/CitationDiffWorker.fixtures.ts",
         "packages/law-practice/server/test/CitationDiffWorker.test.ts",
         "packages/law-practice/server/test/CitationDiffWorkerProtocol.test.ts",
-        "packages/law-practice/server/test/integration/CitationDiffWorker.test.ts"
+        "packages/law-practice/server/test/integration/CitationDiffWorker.test.ts",
+        "packages/law-practice/server/src/internal/Citation/HtmlDiscovery.ts",
+        "packages/law-practice/server/test/CitationHtmlDiscovery.fixtures.ts",
+        "packages/law-practice/server/test/CitationHtmlDiscovery.test.ts",
+        "packages/law-practice/server/test/integration/CitationHtmlDiscovery.test.ts",
+        "goals/citation-extraction-engine/ops/probe-html-discovery-patterns.py",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/html-discovery-patterns.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-html-discovery-worker.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

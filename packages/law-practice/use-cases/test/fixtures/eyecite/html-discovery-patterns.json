@@ -1,0 +1,46 @@
+{
+  "configuration": {
+    "bindings": [
+      {
+        "flags": 0,
+        "patternSha256": "23152cbb5e43a7b5a489fc28ffdbc537e40655b856479299ecb4723f2b1835ed",
+        "profile": {
+          "groups": 1,
+          "minimumWidthFloor": 4,
+          "names": {},
+          "nullableMultiRepeat": false,
+          "repeatedCaptures": false
+        }
+      },
+      {
+        "flags": 2,
+        "patternSha256": "f70a1c7a8d796740c9e2a9c6c53d904ca7824b915a2df6f4f898d1d15df14f2f",
+        "profile": {
+          "groups": 3,
+          "minimumWidthFloor": 7,
+          "names": {},
+          "nullableMultiRepeat": false,
+          "repeatedCaptures": false
+        }
+      }
+    ],
+    "patterns": {
+      "emphasis": {
+        "bytes": "28003f003a003c0065006d005b005e003e005d002a003e0028005b005c0073005c0053005d002a003f0029003c002f0065006d003e007c003c0028003f002d0069003a005b006900490030015d0029005b005e003e005d002a003e0028005b005c0073005c0053005d002a003f0029003c002f0028003f002d0069003a005b006900490030015d0029003e007c003c0028003f002d0069003a00310129005b005e003e005d002a003e0028005b005c0073005c0053005d002a003f0029003c002f0028003f002d0069003a00310129003e002900",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c285b5c2f612d7a5d295b5e3e5d2b3e",
+        "width": 1
+      }
+    }
+  },
+  "exhaustiveSequences": 41371,
+  "exhaustiveSha256": "7c7cc6def9013ab0be2a270b8ada78849e50120a6ec1bb44038e1b80540f7906",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "producerSha256": "2b1e05c2fd225507620aa9fb10df2dac69e9046eae6ffc00e0335e954d219ff4",
+  "python": "3.11.15",
+  "schemaVersion": "citation-html-discovery-patterns/v1",
+  "sourceCorpusSha256": "300ebdae40b70009428549807c2c6bf44692d7fef645c32ba8ad10223ad8ee2e"
+}

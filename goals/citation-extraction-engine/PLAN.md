@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+HTML discovery worker checkpoint (2026-11-05): the private stage now reuses
+existing captured operation/text ownership and two owned regex jobs. A fixed
+three-branch lowering preserves CPython backreference case distinctions across
+41,371 exhaustive short tag sequences and all 250 sealed source cases. Local
+Bun/Node smoke and ownership/refusal controls pass; full hosted replay is pending.
+HTML names and bidirectional document composition remain open. See
+[worker evidence](history/evidence/2026-11-05-html-discovery-worker.md).
+
 HTML discovery checkpoint (2026-11-05): 250 direct original-source cases now
 freeze placeholder replacement and 162 emphasis tuples, including malformed
 tags, Unicode case-folded closing backreferences, stripping and native layout.

@@ -96,7 +96,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-kernel.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-host.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-worker.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-05-html-discovery.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-html-discovery.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-html-discovery-worker.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -471,6 +472,10 @@
     {
       "path": "ops/verify-diff-kernel.py",
       "purpose": "Replay sealed exact default edit steps and refusal controls through the authenticated compiled core; not worker proof."
+    },
+    {
+      "path": "ops/probe-html-discovery-patterns.py",
+      "purpose": "Bind the two fixed discovery programs and compare finite backreference lowering with exact original captures over sealed cases and exhaustive short tag sequences."
     }
   ]
 }

@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "74385f3157837a85e4df85f6f8034016c007185c35795ebc8de07d65672111b5",
+  "planSha256": "52aed0a377663f235aa0b90473d51a88617e160471ce01d2433ebbbf8c7ad247",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -521,6 +521,34 @@
         {
           "path": "packages/law-practice/server/test/integration/CitationDiffWorker.test.ts",
           "sha256": "8a0e8ad44461cf6fef4742abd1bd939f4ba8cc8be902505395a038cf0bd0550b"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/HtmlDiscovery.ts",
+          "sha256": "039198056220c2814ba24b1b3e93ba8d7a0dfff69fa00feedab9db0b2590503e"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationHtmlDiscovery.fixtures.ts",
+          "sha256": "a1f1392fba7a4c3f2e05768397a57a3f01ebb4bf0cb72a2376f60b5391327e75"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationHtmlDiscovery.test.ts",
+          "sha256": "648185df27333d2d970cbf120ec3026598d96defdc7f2ae0fedbbefe565f363d"
+        },
+        {
+          "path": "packages/law-practice/server/test/integration/CitationHtmlDiscovery.test.ts",
+          "sha256": "8b133a14f07309f7c7380c5cbd2b2e1dffe8818410a19c29ae729fe0044dcd63"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-html-discovery-patterns.py",
+          "sha256": "2b1e05c2fd225507620aa9fb10df2dac69e9046eae6ffc00e0335e954d219ff4"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/html-discovery-patterns.json",
+          "sha256": "83243d56a65e6f9d94602ea3922fc3b9ddbcb895096600223e37b91cbcc847fc"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-html-discovery-worker.md",
+          "sha256": "da097f49484849f97a4b3198f73ce4ae743fd2705c08810d4a7f4051ea8e1cad"
         }
       ],
       "workflowState": "audit",
