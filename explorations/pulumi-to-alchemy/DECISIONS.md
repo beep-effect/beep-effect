@@ -76,7 +76,7 @@ appetite for the credential-free option-C spike; account singletons in or out of
 Grill session (`/grill-with-docs`, operator present) over the eight frontier questions plus the
 operator's three new concerns: `@beep/infra` smells (Python and shell, no tsgo diagnostics,
 `node:crypto` and async/await in the Lambda, nested tests, patches of unknown need, scattered
-Markdown), `./scripts` smells (same), and Python scattered through the repo. Sixteen rounds of
+Markdown), `scripts/` smells (same), and Python scattered through the repo. Sixteen rounds of
 one question each, every answer below is the operator's. The 2026-11-02 recommendation
 ("C now, B as policy, A behind gates") is overturned: the target is A, from scratch.
 
@@ -126,12 +126,12 @@ embeddings. The feature stays; the Python venv and its supply chain go.
 
 **Question:** Where do Alchemy stacks live?
 
-**Answer:** App deploys sit beside the app (`apps/oip-web/alchemy.run.ts`,
-`apps/storybook/alchemy.run.ts`, as `apps/beep-effect-web` already does). Repo-platform stacks
-become `packages/tooling/infra/<name>` (a new tooling kind: `@beep/infra-ci-runners`,
+**Answer:** App deploys sit beside the app (an `alchemy.run.ts` beside `apps/oip-web`,
+an `alchemy.run.ts` beside `apps/storybook`, as `apps/beep-effect-web` already does). Repo-platform stacks
+become `@beep/infra-<name>` packages (tooling kind `infra`) (a new tooling kind: `@beep/infra-ci-runners`,
 `@beep/infra-turbo-cache`, `@beep/infra-github`, `@beep/infra-cost-controls`,
 `@beep/infra-hosts`), each created with `beep create-package`. Repo-owned Alchemy resources
-become `packages/tooling/library/alchemy-<provider>`. The root workspace member `infra/` is
+become `@beep/alchemy-<provider>` tooling libraries. The root workspace member `infra/` is
 deleted. Doctrine amendment owed: `07-non-slice-families.md` tooling kind catalog gains `infra`.
 
 ### D6 — State store: one AWS S3 `BucketState` for every stack
@@ -215,7 +215,7 @@ are their own PR with `alchemy plan` no-op on every stack. No frozen tool clones
 
 ### D14 — Upstreaming: build in-repo, upstream the generic resources, keep the runner composite
 
-**Answer:** Providers ship under `packages/tooling/library/alchemy-<provider>` following Alchemy's
+**Answer:** Providers ship under `@beep/alchemy-<provider>` tooling libraries following Alchemy's
 provider conventions and test harness. Vercel, KMS Grant, CostAllocationTag and the two
 enrollment resources go upstream when stable (upstream-contribution hygiene ruling applies); the
 runner composite stays repo-owned.
@@ -227,7 +227,7 @@ runner composite stays repo-owned.
 ### D16 — Research: P0 of infra-alchemy-rebuild, implementation gated on it
 
 **Answer:** A deep-research pass over every alchemy.run doc page the operator listed, the full
-alchemy and distilled sources, t3code's `infra/relay` and `infra/task-cache` stacks, and all 48
+alchemy and distilled sources, t3code's t3code's relay and task-cache stacks stacks, and all 48
 alchemy.run blog posts (grok-4.7 xhigh deep-research lanes) lands under
 `goals/infra-alchemy-rebuild/research/`. P0 exit is a reviewed "use this, never roll that"
 matrix; P1 scaffolding waits for it. Grok lanes start as soon as the packet exists.
