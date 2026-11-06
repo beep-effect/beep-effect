@@ -295,31 +295,30 @@ describe("goals archive", () => {
     assertFalse(tombstoneKeeps("explorations", "research/notes.md"));
   });
 
-  it.effect("round-trips generated archive records and plan entries through their codecs", () =>
-    Effect.gen(function* () {
-      const recordEquivalence = S.toEquivalence(ArchiveRecord);
-      const records = yield* Arbitrary.checkEffect(
-        Arbitrary.schema(ArchiveRecord),
-        (record) =>
-          Effect.map(
-            Effect.flatMap(S.encodeEffect(ArchiveRecord)(record), S.decodeUnknownEffect(ArchiveRecord)),
-            (decoded) => recordEquivalence(decoded, record)
-          ),
-        fcRuns(25)
+  it.effect.prop(
+    "round-trips generated archive records through their codec",
+    [Arbitrary.schema(ArchiveRecord)],
+    Effect.fnUntraced(function* ([record]) {
+      const decoded = yield* Effect.flatMap(
+        S.encodeEffect(ArchiveRecord)(record),
+        S.decodeUnknownEffect(ArchiveRecord)
       );
-      assert.strictEqual(records._tag, "Passed");
-      const entryEquivalence = S.toEquivalence(ArchivePlanEntry);
-      const entries = yield* Arbitrary.checkEffect(
-        Arbitrary.schema(ArchivePlanEntry),
-        (entry) =>
-          Effect.map(
-            Effect.flatMap(S.encodeEffect(ArchivePlanEntry)(entry), S.decodeUnknownEffect(ArchivePlanEntry)),
-            (decoded) => entryEquivalence(decoded, entry)
-          ),
-        fcRuns(25)
+      assertTrue(S.toEquivalence(ArchiveRecord)(decoded, record));
+    }),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips generated plan entries through their codec",
+    [Arbitrary.schema(ArchivePlanEntry)],
+    Effect.fnUntraced(function* ([entry]) {
+      const decoded = yield* Effect.flatMap(
+        S.encodeEffect(ArchivePlanEntry)(entry),
+        S.decodeUnknownEffect(ArchivePlanEntry)
       );
-      assert.strictEqual(entries._tag, "Passed");
-    })
+      assertTrue(S.toEquivalence(ArchivePlanEntry)(decoded, entry));
+    }),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect("doctor flags a terminal goal with neither archive nor retentionReason as advisory", () =>
