@@ -414,6 +414,8 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
           : view.getUint32(byte, true);
     };
     const verbose = (flags & 64) !== 0;
+    let ignoreCase = (flags & 2) !== 0;
+    let groupDepth = 0;
     const whitespace = () => A.some(categories.verboseSpace, (row) => row.start <= peek() && peek() <= row.end);
     const commentStep = () => (categories.engine === "python-re" && peek() === 92 && peek(1) >= 0 ? 2 : 1);
     const skipComment = Effect.fn("Citation.skipVerboseComment")(function* () {
@@ -466,7 +468,7 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       return id;
     });
     const literal = Effect.fnUntraced(function* (start: number, end = start) {
-      return yield* categories.literal(start, end, (flags & 2) !== 0);
+      return yield* categories.literal(start, end, ignoreCase);
     });
     let escapedPoint = -1;
     const escapedLiteral = Effect.fnUntraced(function* (point: number) {
@@ -664,6 +666,45 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       index++;
       return name;
     });
+    // Case flags affect emitted point sets, never the source pattern identity.
+    const caseFlagSet = Effect.fn("Citation.readRegexCaseFlagSet")(function* () {
+      const start = index;
+      while (peek() === 105) {
+        if (index % 256 === 0) yield* Effect.yieldNow;
+        index++;
+      }
+      return index > start;
+    });
+    const caseFlags = Effect.fn("Citation.readRegexCaseFlags")(function* () {
+      const enabled = yield* caseFlagSet();
+      let disabled = false;
+      if (peek() === 45) {
+        index++;
+        disabled = yield* caseFlagSet();
+        if (!disabled) return yield* unsupported();
+      }
+      if (enabled === disabled || (peek() !== 58 && peek() !== 41)) return yield* unsupported();
+      const scoped = peek() === 58;
+      index++;
+      return { enabled, scoped };
+    });
+    const caseFlagStart = () => peek() === 40 && peek(1) === 63 && (peek(2) === 105 || peek(2) === 45);
+    const skipDirectives = Effect.fn("Citation.skipRegexCaseDirectives")(function* () {
+      yield* skipIgnored();
+      while (caseFlagStart()) {
+        const saved = index;
+        index += 2;
+        const parsed = yield* caseFlags();
+        if (parsed.scoped) {
+          index = saved;
+          return;
+        }
+        if (categories.engine === "python-re" && (!parsed.enabled || groupDepth > 0 || A.isArrayNonEmpty(tokens)))
+          return yield* unsupported();
+        ignoreCase = parsed.enabled;
+        yield* skipIgnored();
+      }
+    });
     const groupHeader = Effect.fn("Citation.readRegexGroupHeader")(function* () {
       if (peek() !== 63) return { group: ++groups, name: "", assertion: false };
       index++;
@@ -674,6 +715,12 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       if (peek() === 61) {
         index++;
         return { group: 0, name: "", assertion: true };
+      }
+      if (peek() === 105 || peek() === 45) {
+        const parsed = yield* caseFlags();
+        if (!parsed.scoped) return yield* unsupported();
+        ignoreCase = parsed.enabled;
+        return { group: 0, name: "", assertion: false };
       }
       if (peek() !== 80) {
         yield* skipNested();
@@ -690,6 +737,8 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       return { group, name, assertion: false };
     });
     const group = Effect.fn("Citation.parseRegexGroup")(function* (): Effect.fn.Return<Summary, ParseFailure> {
+      const savedCase = ignoreCase;
+      groupDepth++;
       index++;
       const header = yield* groupHeader();
       if (header.assertion) yield* emit("open");
@@ -697,6 +746,8 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       const body = yield* expression();
       if (peek() !== 41) return yield* unsupported();
       index++;
+      groupDepth--;
+      ignoreCase = savedCase;
       yield* emit("close");
       if (header.assertion) yield* emit("close");
       return summary(
@@ -769,15 +820,15 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
     });
     const sequence = Effect.fn("Citation.parseRegexSequence")(function* (): Effect.fn.Return<Summary, ParseFailure> {
       let result = summary(0);
-      yield* skipIgnored();
+      yield* skipDirectives();
       while (peek() >= 0 && peek() !== 41 && peek() !== 124) {
         if (index % 64 === 0) yield* Effect.yieldNow;
         const tokenStart = A.length(tokens);
         const citationResult5 = yield* parseAtom();
-        yield* skipIgnored();
+        yield* skipDirectives();
         const citationResult6 = yield* repeat(citationResult5, tokenStart);
         result = combine(result, citationResult6, false);
-        yield* skipIgnored();
+        yield* skipDirectives();
       }
       return result;
     });

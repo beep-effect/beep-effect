@@ -433,6 +433,10 @@
     {
       "path": "ops/verify-case-name-process.py",
       "purpose": "Seal all source case-name processing bytes and dependencies, reject eight evidence corruptions, and optionally require exact pinned-oracle replay; no target-parity verdict."
+    },
+    {
+      "path": "ops/probe-regex-case-flags.py",
+      "purpose": "Observe original positional/scoped case-flag grammar, profiles and capture modes in both pinned engines, preserving lexical scope and directive/quantifier order."
     }
   ]
 }

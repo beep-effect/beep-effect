@@ -75,7 +75,13 @@
         "packages/law-practice/server/test/CitationRegexBoundaries.test.ts",
         "packages/law-practice/use-cases/test/fixtures/eyecite/case-name-scan.json",
         "packages/law-practice/use-cases/test/fixtures/eyecite/regex-boundaries.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-scan-and-boundaries.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-scan-and-boundaries.md",
+        "goals/citation-extraction-engine/ops/probe-regex-case-flags.py",
+        "packages/law-practice/server/test/CitationRegexCaseFlags.fixtures.ts",
+        "packages/law-practice/server/test/CitationRegexCaseFlags.test.ts",
+        "packages/law-practice/server/test/integration/CitationRegexCaseFlags.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/regex-case-flags.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-regex-case-flags.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -391,7 +397,13 @@
         "packages/law-practice/server/test/CitationRegexBoundaries.test.ts",
         "packages/law-practice/use-cases/test/fixtures/eyecite/case-name-scan.json",
         "packages/law-practice/use-cases/test/fixtures/eyecite/regex-boundaries.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-scan-and-boundaries.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-scan-and-boundaries.md",
+        "goals/citation-extraction-engine/ops/probe-regex-case-flags.py",
+        "packages/law-practice/server/test/CitationRegexCaseFlags.fixtures.ts",
+        "packages/law-practice/server/test/CitationRegexCaseFlags.test.ts",
+        "packages/law-practice/server/test/integration/CitationRegexCaseFlags.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/regex-case-flags.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-regex-case-flags.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
