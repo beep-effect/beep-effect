@@ -41,7 +41,7 @@
     "goals/openai-driver/GOAL.md",
     "goals/openai-driver/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

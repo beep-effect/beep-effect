@@ -73,5 +73,19 @@
     "The implementation would exceed named scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
+  ],
+  "researchReports": [
+    "research/chrome-feature-map.md",
+    "research/deep-research-lexical-chat-composer.md",
+    "research/palette.md",
+    "research/references/design-references.md",
+    "research/references/implementation-surface.md",
+    "research/references/project-context.md",
+    "research/references/theming.md",
+    "research/seed/USER_PROMPT_INITIAL.md",
+    "research/seed/assets/EditorComposer_story.png",
+    "research/seed/assets/Lobehub_editor_chat_interface_experience.png",
+    "research/seed/assets/UserChatInput.png",
+    "research/seed/palette.json"
   ]
 }

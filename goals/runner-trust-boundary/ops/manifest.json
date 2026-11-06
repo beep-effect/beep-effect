@@ -57,8 +57,9 @@
     "goals/ci-lane-economics/research/placement-decision.md"
   ],
   "researchReports": [
-    "research/P0-GRILL.md",
+    "research/OPPORTUNITIES.md",
     "research/P0-FACTS.md",
+    "research/P0-GRILL.md",
     "research/P0-MECHANISM.md",
     "research/P0-THREAT-MODEL.md",
     "research/P1-EVIDENCE.md",
@@ -67,7 +68,6 @@
     "research/P3-DESIGN.md",
     "research/P3-EVIDENCE.md",
     "research/P4-EVIDENCE.md",
-    "research/OPPORTUNITIES.md",
     "research/SOURCES.md"
   ],
   "agentLaunchers": [

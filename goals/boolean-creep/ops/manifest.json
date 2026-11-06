@@ -35,7 +35,7 @@
     "goals/boolean-creep/data/inventory.jsonl",
     "goals/boolean-creep/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [],
   "phases": [
     {

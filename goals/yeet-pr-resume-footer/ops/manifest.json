@@ -30,7 +30,12 @@
     "goals/yeet-pr-resume-footer/GOAL.md",
     "goals/yeet-pr-resume-footer/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/2026-09-03-design-panel.md",
+    "research/2026-09-03-exploration.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

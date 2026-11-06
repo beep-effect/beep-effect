@@ -853,6 +853,11 @@
         "reports": ["native-source-replay-prune-global-2026-11-03.json"],
         "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
         "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
+      },
+      "currentDeploymentBoundarySourceReview": {
+        "review": "deployment-boundary-source-review-2026-11-04.json",
+        "scope": "Pending: use the named Vercel/Alchemy/desktop build contracts for a real pruned install/build and missing-input comparison; absence of a current prune command does not establish no benefit.",
+        "authority": "Selected tracked source review only; original correctness and acceptance gates remain open."
       }
     },
     {
@@ -900,6 +905,11 @@
         "report": "native-boundaries-controls-2026-11-03-guarded.json",
         "scope": "Fresh guarded 24-case native boundary matrix and 6 actual startup refusals; no fixture tasks.",
         "authority": "Synthetic semantics only; acceptance stays pending."
+      },
+      "currentDeploymentBoundarySourceReview": {
+        "review": "deployment-boundary-source-review-2026-11-04.json",
+        "scope": "Pending: map native package-boundary semantics to the existing manifest/doctrine owner and current aliases; no equivalence or clean-repository assertion follows from a text scan.",
+        "authority": "Selected tracked source review only; original correctness and acceptance gates remain open."
       }
     },
     {
@@ -941,6 +951,11 @@
           "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
           "termObserved": true
         }
+      },
+      "currentDeploymentBoundarySourceReview": {
+        "review": "deployment-boundary-source-review-2026-11-04.json",
+        "scope": "Pending: frozen installation is one prerequisite repair, not complete profile, output or deployment proof.",
+        "authority": "Selected tracked source review only; original correctness and acceptance gates remain open."
       }
     },
     {

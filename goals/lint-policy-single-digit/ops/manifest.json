@@ -34,13 +34,24 @@
     "packages/tooling/policy-pack/repo-configs/src/eslint/DeprecatedApisESLintConfig.ts"
   ],
   "researchReports": [
-    "research/SOURCES.md",
     "research/00-evidence-brief.md",
     "research/01-engine-swap.md",
     "research/02-inplace-optimization.md",
     "research/03-lane-orchestration.md",
     "research/04-pr-scoping-deferred.md",
-    "research/05-long-tail.md"
+    "research/05-long-tail.md",
+    "research/SOURCES.md",
+    "research/p2-artifacts/README.md",
+    "research/p2-artifacts/fixtures/alias-reexport.ts.txt",
+    "research/p2-artifacts/fixtures/api.ts.txt",
+    "research/p2-artifacts/fixtures/direct-member-overload.ts.txt",
+    "research/p2-artifacts/fixtures/engagement-canary.ts.txt",
+    "research/p2-artifacts/fixtures/jsx.tsx.txt",
+    "research/p2-artifacts/fixtures/out-of-project.ts.txt",
+    "research/p2-artifacts/fixtures/parity-package-tsconfig.json.txt",
+    "research/p2-artifacts/fixtures/reexport.ts.txt",
+    "research/p2-artifacts/fixtures/type-only.ts.txt",
+    "research/p2-artifacts/oxlintrc-deprecated-apis.jsonc"
   ],
   "agentLaunchers": [
     {
