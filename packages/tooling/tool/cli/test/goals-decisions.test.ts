@@ -306,6 +306,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         yield* add("demo", ...base, "--topic", "!!!");
         yield* add("demo", ...base, "--pr", "abc");
         yield* add("demo", "--title", "   ", "--reversal", "Revert.");
+        yield* add("demo", "--title", "Valid title", "--reversal", "   ");
         yield* expectFails(runGoalsCommand(["decisions", "check", "--slug", "Bad_Slug"]));
         yield* expectFails(runGoalsCommand(["decisions", "check", "--slug", "missing"]));
 
