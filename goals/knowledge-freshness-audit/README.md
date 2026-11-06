@@ -40,10 +40,13 @@ is admitted. PM's missing original and ADHD provenance remain separate holds.
 ## Current phase
 
 P0 delivered the planning packet in [PR #1218](https://github.com/beep-effect/beep-effect/pull/1218).
-P1-P3 have partial execution and reviewed local repair evidence. P4-P5 remain
-pending. Tranche counts include redeterminations and are neither unique claim
-coverage nor an exhaustive final-tree certificate. See the execution record for
-proof limits, holds and the remaining frontier.
+P1-P3 have partial execution and reviewed local repair evidence. P4 final-tree
+reconciliation is in progress; P5 remains pending. Tranche counts include
+redeterminations and are neither unique claim coverage nor an exhaustive
+final-tree certificate. See the execution record for
+proof limits, holds and the remaining frontier. The
+[P4 reconciliation report](./history/2026-11-06-p4-final-tree-reconciliation.md)
+records the new census, changed-file obligations and false-positive review.
 
 ## Evidence
 
