@@ -145,6 +145,11 @@ median maximum RSS of 3.41 GiB and 1.88 GiB respectively. Both returned zero
 findings and exit 0. Separate deprecated-API and Effect `global-console`
 positive controls produced matching diagnostic records and failing exits.
 These are bounded local measurements, not full-repository or hosted CI proof.
+A separate end-to-end worker probe included CLI startup and the coverage guard:
+one warm-up followed by three alternating rounds at four workers measured
+3.02 seconds for Go and 1.76 seconds for Rust (42% less time), with median
+maximum RSS of 3.79 GiB and 1.90 GiB. All eight runs passed. The backend-only
+and complete-command samples are separate measurements.
 
 The default deprecated-API worker now selects the installed patched `tsrs-lint`
 launcher directly. Before linting, it asks Oxlint for its exact selected files
