@@ -448,7 +448,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/DiffKernel.ts",
-          "sha256": "4b895172d4b024b7610f44627236cd4f6fef47f5b15d96a7e1208e517527a53c"
+          "sha256": "0966de617fe5442d79769b8fba665c2cbd63a8e0476702495451f7dcacde5228"
         },
         {
           "path": "packages/law-practice/server/test/CitationDiffKernel.test.ts",

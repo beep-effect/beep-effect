@@ -144,7 +144,7 @@ const put = (abi: typeof Exports.Type, address: number, source: CitationPythonUn
   for (let index = 0; index < source.bytes.byteLength / source.width; index++)
     view.setUint32(address + index * 4, citationPythonPointAt(source, index), true);
 };
-/** Compile an authenticated snapshot and capture Digest. Returned methods have
+/** Compile and authenticate a snapshot using Digest at construction. Returned methods have
  * R=never. Inputs are borrowed immutable child-owned storage. Validation checks
  * combined effective UTF-16 before any native input allocation. Each run owns a
  * fresh instance and releases both inputs and its complete result on exit.
