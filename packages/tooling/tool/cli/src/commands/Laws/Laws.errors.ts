@@ -187,6 +187,41 @@ export class RetiredEffectPathsExecutionError extends S.TaggedError<
 }
 
 /**
+ * Failure raised when the entity kit freeze law cannot list or read the tracked files, or read or write its baseline.
+ *
+ * **Example** (Read an entity kit freeze execution error)
+ *
+ * ```ts
+ * import { EntityKitFreezeExecutionError } from "@beep/repo-cli/commands/Laws/Laws.errors"
+ *
+ * const error = EntityKitFreezeExecutionError.new("Could not read the baseline.")
+ * console.log(error.message) // "Could not read the baseline."
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class EntityKitFreezeExecutionError extends S.TaggedError<
+  EntityKitFreezeExecutionError,
+  { readonly brand: unique symbol }
+>($I`EntityKitFreezeExecutionError`)(
+  "EntityKitFreezeExecutionError",
+  {
+    message: S.String,
+  },
+  $I.annoteError<EntityKitFreezeExecutionError>("EntityKitFreezeExecutionError", {
+    description: "The entity kit freeze law could not list or read the tracked files, or read or write its baseline.",
+  })
+) {
+  static readonly new = (message: string): EntityKitFreezeExecutionError =>
+    EntityKitFreezeExecutionError.make({ message });
+
+  static readonly mapError = Err.mapCauseError<EntityKitFreezeExecutionError, [message: string]>((cause, message) =>
+    EntityKitFreezeExecutionError.new(messageWithCause(message, cause))
+  );
+}
+
+/**
  * Failure raised when the retired IRI authority law cannot list or read the tracked files.
  *
  * **Example** (Read a retired IRI authorities execution error)

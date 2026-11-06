@@ -27,6 +27,7 @@
     {"file":"packages/foundation/modeling/md/src/Md.model.ts","symbol":"FootnoteDefinition","kind":"tagged-struct","owner":"@beep/md","identity":"FootnoteDefinition","description":"Footnote definition block."},
     {"file":"packages/foundation/modeling/md/src/Md.model.ts","symbol":"FootnoteReference","kind":"tagged-struct","owner":"@beep/md","identity":"FootnoteReference","description":"Inline footnote reference."},
     {"file":"packages/foundation/modeling/md/src/Md.model.ts","symbol":"Heading","kind":"tagged-struct","owner":"@beep/md","identity":"Heading","description":"Heading block carrying its level alongside inline content."},
+    {"file":"packages/foundation/modeling/md/src/Md.model.ts","symbol":"HeadingLevel","kind":"literal-kit","owner":"@beep/md","identity":"HeadingLevel","description":"Markdown heading level from one (largest) to six (smallest)."},
     {"file":"packages/foundation/modeling/md/src/Md.model.ts","symbol":"HeadingValue","kind":"tagged-union","owner":"@beep/md","identity":"HeadingValue","description":"Flat discriminated union of Markdown heading payloads keyed by semantic level."},
     {"file":"packages/foundation/modeling/md/src/Md.model.ts","symbol":"Hr","kind":"tagged-struct","owner":"@beep/md","identity":"Hr","description":"Horizontal rule block."},
     {"file":"packages/foundation/modeling/md/src/Md.model.ts","symbol":"Img","kind":"tagged-struct","owner":"@beep/md","identity":"Img","description":"Inline image."},

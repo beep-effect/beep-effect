@@ -174,6 +174,14 @@ Lane `codex/knowledge-audit-p4-routing`
 
 Reverse: Revert only the current-use qualifications and this checkpoint; retain the private before/after receipts and original dated models.
 
+### Complete the named Markdown heading domain repair, 2026-11-06
+
+Parent review of T11 C2 at immutable source 3f3b06289764853e3b6f5982e4b80247ac5aabf7 distinguishes the already repaired opaque brands from the remaining named HeadingLevel domain. Use the existing LiteralKit import as prescribed by root and schema-first guidance. Preserve the six numeric wire values and annotation. The new keyed-helper test fails before this expression change while the existing 24 conformance tests pass; all 25 pass after it. Package verification and final publication proof are still pending. No duplicate brand edit, new helper, private-package changeset, cloud work or spending. PM, ADHD, existing owner repairs and broader P4 coverage remain separate.
+
+Lane `codex/knowledge-audit-p4-heading-domain`
+
+Reverse: Restore HeadingLevel to S.Literals and remove the added keyed-helper regression test; preserve all existing conformance tests and private review evidence.
+
 ### Qualify dated memory assessments without rewriting their history, 2026-11-06
 
 Review T8 K1/K2/K4 at immutable source 34d6cd130971c7d8434a188fcb5532a4a6c709c2. Reject an automatic contradiction for the explicitly dated July 8 Graphiti condition; preserve it as history. Add current reading context to the landscape assessment and decision log, linking later coverage, dated retirement/archive decisions and the governing root Agent Memory policy. Original assessment and decision bytes remain unchanged. No vendor/scientific/deployment qualification, service configuration, memory revival, ontology operation or paid/cloud work. P4 remains in progress, with PM/ADHD and existing source-owner/delivery-proof holds separate.

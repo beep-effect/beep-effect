@@ -1078,6 +1078,24 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/drivers/alchemy-postgres": {
+      "name": "@beep/alchemy-postgres",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/domain": "catalog:",
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "alchemy": "catalog:",
+        "effect": "catalog:",
+        "foldkit": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/drivers/anthropic": {
       "name": "@beep/anthropic",
       "version": "0.0.0",
@@ -4385,6 +4403,7 @@
   },
   "patchedDependencies": {
     "drizzle-orm@1.0.0-rc.5-ab785fc": "patches/drizzle-orm@1.0.0-rc.5-ab785fc.patch",
+    "@alchemy.run/domain@2.0.0-beta.85": "patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch",
     "@effect/platform-node-shared@4.1.2": "patches/@effect%2Fplatform-node-shared@4.1.2.patch",
     "effect@4.1.2": "patches/effect@4.1.2.patch",
   },
@@ -4410,6 +4429,7 @@
   },
   "catalog": {
     "@alchemy.run/cloudflare": "2.0.0-beta.85",
+    "@alchemy.run/domain": "2.0.0-beta.85",
     "@arizeai/phoenix-client": "7.18.1",
     "@azure/core-http-compat": "2.5.0",
     "@azure/core-rest-pipeline": "1.25.0",
@@ -4590,6 +4610,7 @@
     "fast-xml-parser": "^5.12.0",
     "fast-xml-validator": "1.2.0",
     "fflate": "^0.8.3",
+    "foldkit": "0.170.0",
     "framer-motion": "^14.9.1",
     "frimousse": "0.4.0",
     "graphology": "0.26.0",
@@ -4683,6 +4704,8 @@
     "@alchemy.run/cloudflare-runtime": ["@alchemy.run/cloudflare-runtime@2.0.0-beta.85", "", { "dependencies": { "@alchemy.run/node-utils": "2.0.0-beta.85", "@cloudflare/unenv-preset": "^2.16.2", "@puppeteer/browsers": "^3.2.4", "capnp-es": "^0.0.16", "magic-string": "^0.30.21", "mime": "^4.1.1", "sharp": "^0.35.5", "unenv": "^2.0.0-rc.24", "workerd": "1.20261026.1", "yauzl": "^3.4.0" }, "peerDependencies": { "@distilled.cloud/cloudflare": "1.0.0-rc.18", "@effect/platform-bun": "^4.1.0", "@effect/platform-node": "^4.1.0", "effect": "^4.1.0", "rolldown": "1.2.13", "vite": "^7.0.0 || ^8.0.0" }, "optionalPeers": ["@effect/platform-bun", "@effect/platform-node", "rolldown", "vite"] }, "sha512-OyGH/j5R9QaUdMjvm3y6pIUpMa7T9SvVYvlVd+fWo/eltOf+k/KQxC12QHC2fe22GVs3apL28l9f4VUH8N9aEA=="],
 
     "@alchemy.run/docker": ["@alchemy.run/docker@2.0.0-beta.85", "", { "dependencies": { "rolldown": "1.2.13" }, "peerDependencies": { "@effect/platform-bun": "^4.1.0", "alchemy": "2.0.0-beta.85", "effect": "^4.1.0" }, "optionalPeers": ["@effect/platform-bun"] }, "sha512-AhVdcCTu/paBdDUtGc2U4WEa8+gczkkf7oH7XEeIVjlQ+xX3hmYWlspdfejoJ9pb2JT4myfvp5EeXi/Jcp+W2g=="],
+
+    "@alchemy.run/domain": ["@alchemy.run/domain@2.0.0-beta.85", "", { "peerDependencies": { "alchemy": "2.0.0-beta.85", "effect": "^4.1.0", "foldkit": "^0.170.0" }, "optionalPeers": ["foldkit"] }, "sha512-nej0ltvPt4j0KsX6wN1WK9oZ9bNsefkPWhQaQPGsEOoz6aRZr4gCEL602HruPbsf/hdwd0SoNBWl2iTpejjrUA=="],
 
     "@alchemy.run/node-utils": ["@alchemy.run/node-utils@2.0.0-beta.85", "", { "dependencies": { "chokidar": "^5.0.0", "rolldown": "1.2.13" } }, "sha512-2gxqMNMoJdx13w7wlDJw+gaXQ8e1VxQFsKldOvweqpd7JEgB5TGn3oO8r1sb/GB9+UzqXdh8tKp2MOVgFOrmbg=="],
 
@@ -4811,6 +4834,8 @@
     "@beep/ai-provider-cli": ["@beep/ai-provider-cli@workspace:packages/drivers/ai-provider-cli"],
 
     "@beep/ai-sync": ["@beep/ai-sync@workspace:packages/tooling/library/ai-sync"],
+
+    "@beep/alchemy-postgres": ["@beep/alchemy-postgres@workspace:packages/drivers/alchemy-postgres"],
 
     "@beep/anthropic": ["@beep/anthropic@workspace:packages/drivers/anthropic"],
 
@@ -7863,6 +7888,8 @@
     "flru": ["flru@1.0.2", "", {}, "sha512-kWyh8ADvHBFz6ua5xYOPnUroZTT/bwWfrCeL0Wj1dzG4/YOmOcfJ99W8dOVyyynJN35rZ9aCOtHChqQovV7yog=="],
 
     "fn.name": ["fn.name@1.1.0", "", {}, "sha512-GRnmB5gPyJpAhTQdSZTSp9uaPSvl09KoYcMQtsB9rQoOmzs9dH6ffeccH+Z+cv6P68Hu5bC6JjRh4Ah/mHSNRw=="],
+
+    "foldkit": ["foldkit@0.170.0", "", { "dependencies": { "parse5": "^8.0.1" }, "peerDependencies": { "@effect/platform-browser": "~4.1.0", "effect": "~4.1.0" } }, "sha512-H/MRQe/IZ/LqpgPi+Zy1S1OXQ8o12e2S/6U+phQu3WmoHSm7Vase/dEnOvrq9YZfqxK44/oVq6wE9oqXzEIaig=="],
 
     "form-data": ["form-data@4.0.6", "", { "dependencies": { "asynckit": "^0.4.0", "combined-stream": "^1.0.8", "es-set-tostringtag": "^2.1.0", "hasown": "^2.0.4", "mime-types": "^2.1.35" } }, "sha512-vKatAh4SlVfgbv+YtmhiRjhEMJsYpsG1Y2rMQtR+SVSbytsSD1YGzDIcrAJmdFec88u/+VoGmxnl+80gL1tRCQ=="],
 
