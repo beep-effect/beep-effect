@@ -113,7 +113,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-06-full-case-metadata.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-full-citation-extraction.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-token-extraction.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-selection.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-selection.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-reference-source.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -202,7 +203,8 @@
     "python3 goals/citation-extraction-engine/ops/verify-case-metadata.py --self-test",
     "python3 goals/citation-extraction-engine/ops/verify-full-citation.py --self-test",
     "python3 goals/citation-extraction-engine/ops/verify-reference-token.py --self-test",
-    "python3 goals/citation-extraction-engine/ops/verify-extraction-selection.py --self-test"
+    "python3 goals/citation-extraction-engine/ops/verify-extraction-selection.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-generated-references.py --self-test"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
@@ -563,6 +565,14 @@
     {
       "path": "ops/verify-extraction-selection.py",
       "purpose": "Seal original final-selection evidence, reject structural corruption and optionally replay the exact clean pinned oracle."
+    },
+    {
+      "path": "ops/probe-generated-references.py",
+      "purpose": "Observe original pin/markup/combined generated references, actual stdlib patterns and capture traces, native model state and unchanged name-validation behavior."
+    },
+    {
+      "path": "ops/verify-generated-references.py",
+      "purpose": "Seal generated-reference source evidence and profile dependency, reject structural corruption and optionally replay the clean pinned oracle; not target generation or dynamic regex authority."
     }
   ]
 }

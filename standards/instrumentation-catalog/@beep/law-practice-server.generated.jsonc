@@ -523,6 +523,7 @@
     {"name":"Citation.readFrozenRegexClass","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.readNativeCleanerText","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.readNativeFrames","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.readNativeWasmStartup","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.readRegexCapture","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.readRegexCaptureName","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.readRegexCaseFlagSet","owner":"@beep/law-practice-server","family":"slice","conforms":true},

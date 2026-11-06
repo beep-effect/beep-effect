@@ -7,7 +7,6 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import { citationDiffKernelAsset, makeCitationDiffKernel } from "./DiffKernel.ts";
 import { packCitationDiffSteps } from "./DiffSteps.ts";
@@ -25,16 +24,13 @@ import {
 } from "./DiffWorkerProtocol.ts";
 import { CitationDiffRpcs, CitationDiffWorkerStartup } from "./DiffWorkerRpc.ts";
 import { citationNativeRpcRequest, runCitationNativeRpcJob } from "./NativeRpc.ts";
-import { loadCitationNativeWasmAsset } from "./NativeWasm.ts";
+import { loadCitationNativeWasmAsset, readCitationNativeWasmStartup } from "./NativeWasm.ts";
 import type * as RpcGroup from "effect/rpc/RpcGroup";
 import type { CitationDiffWorkerJob, CitationDiffWorkerReply } from "./DiffWorkerProtocol.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/DiffWorkerProgram");
 const badRuntime = () => CitationDiffWorkerFailure.make({ reason: "invalid-runtime" });
 const badFrame = () => CitationDiffWorkerFailure.make({ reason: "invalid-frame" });
-const WorkerArguments = S.Tuple([S.String.check(S.isMaxLength(32768))]).pipe(
-  $I.annoteSchema("WorkerArguments", { description: "Captured static boundary codec for bounded citation processing." })
-);
 const WorkerStartupJson = S.fromJsonString(CitationDiffWorkerStartup).pipe(
   $I.annoteSchema("WorkerStartupJson", {
     description: "Captured static boundary codec for bounded citation processing.",
@@ -46,12 +42,7 @@ const WorkerStartupJson = S.fromJsonString(CitationDiffWorkerStartup).pipe(
  * @internal @category programs @since 0.0.0
  */
 export const citationDiffWorkerProgram = Effect.gen(function* () {
-  const stdio = yield* Stdio.Stdio;
-  const args = yield* stdio.args;
-  const [argument] = yield* S.decodeUnknownEffect(WorkerArguments)(args).pipe(Effect.mapError(badRuntime));
-  const startup = yield* S.decodeEffect(WorkerStartupJson, { onExcessProperty: "error" })(argument).pipe(
-    Effect.mapError(badRuntime)
-  );
+  const { stdio, startup } = yield* readCitationNativeWasmStartup(WorkerStartupJson, badRuntime);
   const maximum = startup.maximum;
   yield* preflightCitationDiffControlFrames(maximum);
   const maximumOutputBytes = yield* citationDiffOutputByteCapacity(maximum);

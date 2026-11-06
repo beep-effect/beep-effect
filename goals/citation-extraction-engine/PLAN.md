@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Generated-reference source checkpoint (2026-11-06): 121 actual original pin/
+markup/combined calls now retain 77 references, 108 regex calls and 65 source
+patterns with CPython profiles. All four ordered name fields and 117 original
+name-validity observations are preserved. Nine controls and exact pinned replay
+pass. Target generation and parameterized pattern qualification remain open.
+Hosted Fallow startup clones are replaced by common typed Effect stdio decoding.
+See [source and repair evidence](history/evidence/2026-11-06-generated-reference-source.md).
+
 Final selection checkpoint (2026-11-06): actual full/reference constructor
 results now supply Python-point selection facts. All 148 original filtering and
 disambiguation cases match selected identities, stable order and warning pairs.

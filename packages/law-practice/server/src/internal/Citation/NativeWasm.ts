@@ -12,9 +12,29 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 
 const $I = $LawPracticeServerId.create("internal/Citation/NativeWasm");
+const WorkerArguments = S.Tuple([S.String.check(S.isMaxLength(32768))]).pipe(
+  $I.annoteSchema("WorkerArguments", {
+    description: "Exactly one bounded JSON startup argument for an owned native worker.",
+  })
+);
+/** Read one startup argument through the existing Effect stdio service and typed codec.
+ * Kernel-specific schemas retain their own version tags and closed failures.
+ * @internal @category operations @since 0.0.0
+ */
+export const readCitationNativeWasmStartup = Effect.fn("Citation.readNativeWasmStartup")(function* <A, E>(
+  codec: S.Codec<A, string>,
+  invalid: () => E
+) {
+  const stdio = yield* Stdio.Stdio;
+  const args = yield* stdio.args;
+  const [argument] = yield* S.decodeUnknownEffect(WorkerArguments)(args).pipe(Effect.mapError(invalid));
+  const startup = yield* S.decodeEffect(codec, { onExcessProperty: "error" })(argument).pipe(Effect.mapError(invalid));
+  return { stdio, startup };
+});
 /** Shared bounded asset location and message ceiling for trusted kernel startup.
  * Protocol-specific schemas retain their own version tags; every asset still
  * undergoes complete size/digest authentication before compilation.

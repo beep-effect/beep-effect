@@ -216,7 +216,11 @@
         "packages/law-practice/use-cases/test/fixtures/eyecite/extraction-selection.json",
         "goals/citation-extraction-engine/ops/probe-extraction-selection.py",
         "goals/citation-extraction-engine/ops/verify-extraction-selection.py",
-        "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-selection.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-selection.md",
+        "goals/citation-extraction-engine/ops/probe-generated-references.py",
+        "goals/citation-extraction-engine/ops/verify-generated-references.py",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/generated-references.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-reference-source.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
