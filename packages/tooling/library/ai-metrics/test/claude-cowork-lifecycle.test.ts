@@ -132,7 +132,7 @@ const fixture = Effect.fn("CoworkLifecycleTest.fixture")(function* (maxPages = 3
   const sourceRoot = yield* fs.makeTempDirectoryScoped({ prefix: "cowork-source-fixture-" });
   const sources = [`${sourceRoot}/dispatcher.js`, `${sourceRoot}/envelope.js`];
   yield* Effect.forEach(sources, (path) =>
-    fs.writeFileString(path, "// synthetic public source fixture; no native code\n")
+    fs.writeFileString(path, "// synthetic public source fixture; no native code\n", { mode: 0o600 })
   );
   const sourcePins = yield* Effect.forEach(
     sources,
@@ -190,6 +190,24 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer
       const retained = yield* fs.readFileString(f.policy.socketPath);
       expect(retained).toBe("SYNTHETIC-EXISTING-PATH");
       expect((yield* f.journal.stats).pages).toBe(0);
+    })
+  )
+);
+
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer, platformLayer), {
+  timeout: "45 seconds",
+})((it) =>
+  it.effect("a group-writable enrolled public source refuses even when its bytes and digest are unchanged", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const fs = yield* FileSystem.FileSystem;
+      const pin = yield* Effect.fromOption(A.head(f.policy.sourcePins));
+      yield* fs.chmod(pin.path, 0o660);
+      const result = yield* f.deliver(start);
+      result.result.pipe(Result.isFailure, assertTrue);
+      expect((yield* f.journal.stats).pages).toBe(0);
+      const socketPresent = yield* fs.exists(f.policy.socketPath);
+      assertFalse(socketPresent);
     })
   )
 );
@@ -373,7 +391,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer
       const source = yield* Effect.fromOption(A.head(f.policy.sourcePins));
       const target = source.path;
       const replacement = `${target}.replacement`;
-      yield* fs.writeFileString(replacement, "// different owned public fixture\n");
+      yield* fs.writeFileString(replacement, "// different owned public fixture\n", { mode: 0o600 });
       const body = yield* encode({
         source: coworkPeerSource,
         target,
