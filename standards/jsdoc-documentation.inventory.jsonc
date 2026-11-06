@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-06T01:24:44.783Z",
+  "generatedAt": "2026-11-06T01:56:21.884Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3663,
-    "publicExports": 26323,
+    "publicExports": 26321,
     "openModules": 114,
     "openExports": 88,
     "missingExportExamples": 0,
@@ -466895,7 +466895,7 @@
         "srcDir": "src",
         "sourceFileCount": 503,
         "publicModuleCount": 500,
-        "publicExportCount": 4611
+        "publicExportCount": 4609
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -477822,7 +477822,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 2,
+          "exportCount": 3,
           "remediationStatus": "resolved"
         },
         {
@@ -477848,7 +477848,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 17,
+          "exportCount": 16,
           "remediationStatus": "open"
         },
         {
@@ -477944,7 +477944,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 21,
+          "exportCount": 19,
           "remediationStatus": "open"
         },
         {
@@ -490305,8 +490305,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 212,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-212-assertcacheproducerworkflowprofile",
+          "line": 215,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-215-assertcacheproducerworkflowprofile",
           "currentTags": [
             "@internal",
             "@category",
@@ -490328,8 +490328,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 246,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-246-assertcacheproducerworkflowlocation",
+          "line": 249,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-249-assertcacheproducerworkflowlocation",
           "currentTags": [
             "@internal",
             "@category",
@@ -490351,8 +490351,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 277,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-277-collectcacheproducerworkflowfiles",
+          "line": 280,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-280-collectcacheproducerworkflowfiles",
           "currentTags": [
             "@internal",
             "@category",
@@ -490374,8 +490374,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 336,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-336-inspectcacheproducerworkflow",
+          "line": 365,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-365-inspectcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",
@@ -490397,8 +490397,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 380,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-380-hashcacheproducerworkflow",
+          "line": 409,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-409-hashcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",
@@ -490420,8 +490420,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 410,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-410-hashcacheproduceruploadtarget",
+          "line": 439,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-439-hashcacheproduceruploadtarget",
           "currentTags": [
             "@internal",
             "@category",
@@ -490443,8 +490443,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 430,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-430-hashcacheproduceruploadkey",
+          "line": 459,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-459-hashcacheproduceruploadkey",
           "currentTags": [
             "@internal",
             "@category",
@@ -490466,8 +490466,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 551,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-551-assertcacheproduceruploadruntime",
+          "line": 580,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-580-assertcacheproduceruploadruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -490489,8 +490489,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 585,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-585-loadcacheproducerexecutionruntime",
+          "line": 614,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-614-loadcacheproducerexecutionruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -490512,8 +490512,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 637,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-637-loadcacheproducerstorageruntime",
+          "line": 666,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-666-loadcacheproducerstorageruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -490535,8 +490535,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 682,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-682-initializecacheproducerexecution",
+          "line": 711,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-711-initializecacheproducerexecution",
           "currentTags": [
             "@internal",
             "@category",
@@ -490558,8 +490558,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 760,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-760-runcacheproducerworkflow",
+          "line": 789,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-789-runcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",
@@ -527358,8 +527358,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.command.ts",
-          "line": 46,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-command-ts-46-buildkb",
+          "line": 90,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-command-ts-90-buildkb",
           "currentTags": [
             "@category",
             "@since"
@@ -527380,8 +527380,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.command.ts",
-          "line": 151,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-command-ts-151-kbcommand",
+          "line": 169,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-command-ts-169-kbcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -527424,8 +527424,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.projection.ts",
-          "line": 37,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-projection-ts-37-projectkb",
+          "line": 107,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-projection-ts-107-projectkb",
           "currentTags": [
             "@category",
             "@since"
@@ -527446,8 +527446,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.projection.ts",
-          "line": 151,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-projection-ts-151-haskbcanary",
+          "line": 166,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-projection-ts-166-haskbcanary",
           "currentTags": [
             "@param",
             "@returns",
@@ -527846,8 +527846,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.service.ts",
-          "line": 42,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-42-isoutwardassertion",
+          "line": 43,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-43-isoutwardassertion",
           "currentTags": [
             "@param",
             "@returns",
@@ -527870,8 +527870,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.service.ts",
-          "line": 60,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-60-validatekb",
+          "line": 177,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-177-validatekb",
           "currentTags": [
             "@category",
             "@since"
@@ -527892,8 +527892,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.service.ts",
-          "line": 155,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-155-selectkb",
+          "line": 208,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-208-selectkb",
           "currentTags": [
             "@category",
             "@since"
@@ -527914,8 +527914,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Kb/Kb.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.service.ts",
-          "line": 180,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-180-kbledger",
+          "line": 233,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-233-kbledger",
           "currentTags": [
             "@category",
             "@since"
@@ -527936,8 +527936,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.service.ts",
-          "line": 199,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-199-makekbledger",
+          "line": 252,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-252-makekbledger",
           "currentTags": [
             "@category",
             "@since"
@@ -577317,8 +577317,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 923,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-923-statusfactsfromentries",
+          "line": 928,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-928-statusfactsfromentries",
           "currentTags": [
             "@param",
             "@returns",
@@ -577341,8 +577341,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 1355,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-1355-fleetmirrorservicelive",
+          "line": 1361,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-1361-fleetmirrorservicelive",
           "currentTags": [
             "@category",
             "@since"
@@ -577629,12 +577629,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "WorktreeReapPullRequest",
+          "exportKind": "class",
+          "filePath": "src/commands/Worktree/Reap.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+          "line": 144,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-reap-service-ts-144-worktreereappullrequest",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "probeWorktreeLiveness",
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Reap.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
-          "line": 287,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-reap-service-ts-287-probeworktreeliveness",
+          "line": 310,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-reap-service-ts-310-probeworktreeliveness",
           "currentTags": [
             "@param",
             "@returns",
@@ -577657,8 +577679,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Reap.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
-          "line": 638,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-reap-service-ts-638-runworktreereap",
+          "line": 665,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-reap-service-ts-665-runworktreereap",
           "currentTags": [
             "@param",
             "@returns",
@@ -577681,8 +577703,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 122,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-122-invokerexemption",
+          "line": 129,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-129-invokerexemption",
           "currentTags": [
             "@param",
             "@returns",
@@ -577705,8 +577727,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 153,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-153-describeinotifywatcher",
+          "line": 160,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-160-describeinotifywatcher",
           "currentTags": [
             "@param",
             "@returns",
@@ -577729,8 +577751,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 176,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-176-worktree-local-file-entries",
+          "line": 183,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-183-worktree-local-file-entries",
           "currentTags": [
             "@category",
             "@since"
@@ -577751,32 +577773,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 200,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-200-defaultworktreebranch",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "worktreeAddArgs",
-          "exportKind": "const",
-          "filePath": "src/commands/Worktree/Worktree.command.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 221,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-221-worktreeaddargs",
+          "line": 207,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-207-defaultworktreebranch",
           "currentTags": [
             "@param",
             "@returns",
@@ -577799,8 +577797,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 254,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-254-worktreecontext",
+          "line": 234,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-234-worktreecontext",
           "currentTags": [
             "@category",
             "@since"
@@ -577821,8 +577819,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 294,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-294-worktreecopyoutcome",
+          "line": 274,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-274-worktreecopyoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -577843,8 +577841,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 338,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-338-worktreedoctorentry",
+          "line": 318,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-318-worktreedoctorentry",
           "currentTags": [
             "@category",
             "@since"
@@ -577865,8 +577863,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 387,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-387-worktreedoctorreport",
+          "line": 367,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-367-worktreedoctorreport",
           "currentTags": [
             "@category",
             "@since"
@@ -577887,8 +577885,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 451,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-451-resolveworktreecontext",
+          "line": 449,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-449-resolveworktreecontext",
           "currentTags": [
             "@category",
             "@since"
@@ -577909,8 +577907,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 500,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-500-addworktree",
+          "line": 498,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-498-addworktree",
           "currentTags": [
             "@category",
             "@since"
@@ -577931,8 +577929,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 576,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-576-copylocalfiles",
+          "line": 592,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-592-copylocalfiles",
           "currentTags": [
             "@category",
             "@since"
@@ -577953,8 +577951,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 678,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-678-worktreedoctorreportforcontext",
+          "line": 696,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-696-worktreedoctorreportforcontext",
           "currentTags": [
             "@category",
             "@since"
@@ -577975,8 +577973,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 800,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-800-worktreedoctorentrylines",
+          "line": 814,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-814-worktreedoctorentrylines",
           "currentTags": [
             "@param",
             "@returns",
@@ -577999,8 +577997,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 853,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-853-linkreferences",
+          "line": 867,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-867-linkreferences",
           "currentTags": [
             "@category",
             "@since"
@@ -578021,8 +578019,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 1045,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-1045-renderworktreeremovalreceipt",
+          "line": 1064,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-1064-renderworktreeremovalreceipt",
           "currentTags": [
             "@param",
             "@category",
@@ -578044,8 +578042,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 1289,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-1289-worktreecommand",
+          "line": 1314,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-1314-worktreecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -579263,9 +579261,57 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 143,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-143-worktreemergedpullrequest",
+          "line": 147,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-147-worktreemergedpullrequest",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerWorktreeGithub",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Worktree.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+          "line": 190,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-190-layerworktreegithub",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "branchPullRequests",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Worktree.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+          "line": 226,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-226-branchpullrequests",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -579285,8 +579331,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 186,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-186-mergedpullrequestsforbranch",
+          "line": 264,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-264-mergedpullrequestsforbranch",
           "currentTags": [
             "@param",
             "@returns",
@@ -579309,8 +579355,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 210,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-210-worktreemergedpullrequestprobeshape",
+          "line": 291,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-291-worktreemergedpullrequestprobeshape",
           "currentTags": [
             "@category",
             "@since"
@@ -579331,8 +579377,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 254,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-254-worktreemergedpullrequestprobe",
+          "line": 335,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-335-worktreemergedpullrequestprobe",
           "currentTags": [
             "@category",
             "@since"
@@ -579353,33 +579399,9 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 294,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-294-worktreemergedpullrequestprobelive",
+          "line": 375,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-375-worktreemergedpullrequestprobelive",
           "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "worktreeRemoveArgs",
-          "exportKind": "const",
-          "filePath": "src/commands/Worktree/Worktree.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 318,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-318-worktreeremoveargs",
-          "currentTags": [
-            "@param",
-            "@returns",
             "@category",
             "@since"
           ],
@@ -579399,56 +579421,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 343,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-343-branchdeletecommand",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "worktreeArchiveRefArgs",
-          "exportKind": "const",
-          "filePath": "src/commands/Worktree/Worktree.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 371,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-371-worktreearchiverefargs",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "worktreeBranchDeleteArgs",
-          "exportKind": "const",
-          "filePath": "src/commands/Worktree/Worktree.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 409,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-409-worktreebranchdeleteargs",
+          "line": 396,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-396-branchdeletecommand",
           "currentTags": [
             "@param",
             "@returns",
@@ -579471,8 +579445,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 449,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-449-worktreearchiveplan",
+          "line": 430,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-430-worktreearchiveplan",
           "currentTags": [
             "@param",
             "@returns",
@@ -579495,8 +579469,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 522,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-522-worktreeresiduereason",
+          "line": 503,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-503-worktreeresiduereason",
           "currentTags": [
             "@param",
             "@returns",
@@ -579519,8 +579493,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 536,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-536-worktreeremovalserviceshape",
+          "line": 517,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-517-worktreeremovalserviceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -579541,8 +579515,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 576,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-576-worktreeremovalservice",
+          "line": 557,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-557-worktreeremovalservice",
           "currentTags": [
             "@category",
             "@since"
@@ -579563,8 +579537,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 620,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-620-worktreegiterroradapter",
+          "line": 601,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-601-worktreegiterroradapter",
           "currentTags": [
             "@param",
             "@returns",
@@ -579587,32 +579561,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 652,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-652-listrepositoryworktrees",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "runWorktreeGitCapture",
-          "exportKind": "const",
-          "filePath": "src/commands/Worktree/Worktree.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 713,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-713-runworktreegitcapture",
+          "line": 633,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-633-listrepositoryworktrees",
           "currentTags": [
             "@param",
             "@returns",
@@ -579635,8 +579585,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 1335,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-1335-restorebeepmaterial",
+          "line": 1274,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-1274-restorebeepmaterial",
           "currentTags": [
             "@param",
             "@returns",
@@ -579659,8 +579609,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 2170,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2170-worktreefencesettle",
+          "line": 2173,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2173-worktreefencesettle",
           "currentTags": [
             "@category",
             "@since"
@@ -579681,8 +579631,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 2444,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2444-installregeneratemergedriver",
+          "line": 2447,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2447-installregeneratemergedriver",
           "currentTags": [
             "@category",
             "@since"
@@ -579703,8 +579653,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 2497,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2497-worktreeremovalservicelayer",
+          "line": 2507,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2507-worktreeremovalservicelayer",
           "currentTags": [
             "@category",
             "@since"
@@ -579725,8 +579675,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 2517,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2517-worktreeremovalservicelive",
+          "line": 2527,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2527-worktreeremovalservicelive",
           "currentTags": [
             "@category",
             "@since"

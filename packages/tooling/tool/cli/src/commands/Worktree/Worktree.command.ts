@@ -9,6 +9,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { reportCommandError } from "@beep/repo-cli-kit/cli/CommandErrorFields";
 import { isWithinRoot } from "@beep/repo-cli-kit/PathContainment";
@@ -29,7 +31,13 @@ import { constFalse, dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { ProcessPid, runRepoCommandStreamingCapture } from "../../internal/repo-run/index.ts";
+import {
+  adaptGitKitError,
+  ProcessPid,
+  patientGit,
+  runRepoCommandCapture,
+  runRepoCommandStreamingCapture,
+} from "../../internal/repo-run/index.ts";
 import { ReferenceWorkspace, referenceWorkspaceLayer } from "../Refs/index.ts";
 import { worktreeFleetCommand } from "./Fleet.command.ts";
 import { worktreeReapCommand } from "./Reap.command.ts";
@@ -49,11 +57,10 @@ import {
   installRegenerateMergeDriver,
   listRepositoryWorktrees,
   restoreBeepMaterial,
-  runWorktreeGitCapture,
   WorktreeRemovalService,
   WorktreeRemovalServiceLive,
+  worktreeGitErrorAdapter,
 } from "./Worktree.service.ts";
-import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
@@ -198,33 +205,6 @@ export const WORKTREE_LOCAL_FILE_ENTRIES = [
  * @since 0.0.0
  */
 export const defaultWorktreeBranch = (name: string): string => `feat/${name}`;
-
-/**
- * Build the `git worktree add` argument vector for a target path and branch.
- *
- * **Example** (Data-first and data-last call forms)
- *
- * ```ts
- * import { worktreeAddArgs } from "@beep/repo-cli/commands/Worktree"
- *
- * console.log(worktreeAddArgs("/repo-worktrees/feature-x", "feat/feature-x"))
- * // ["worktree", "add", "/repo-worktrees/feature-x", "-b", "feat/feature-x"]
- * console.log(worktreeAddArgs("feat/feature-x")("/repo-worktrees/feature-x").length) // 5
- * ```
- *
- * @param targetPath - Absolute path of the worktree to create.
- * @param branch - Branch to create and check out in the new worktree.
- * @returns The `git` argument vector (excluding the `git` executable).
- * @category utilities
- * @since 0.0.0
- */
-export const worktreeAddArgs: {
-  (branch: string): (targetPath: string) => ReadonlyArray<string>;
-  (targetPath: string, branch: string): ReadonlyArray<string>;
-} = dual(
-  2,
-  (targetPath: string, branch: string): ReadonlyArray<string> => ["worktree", "add", targetPath, "-b", branch]
-);
 
 /**
  * Resolved worktree layout for the invoking repository.
@@ -400,6 +380,24 @@ export class WorktreeDoctorReport extends S.Opaque<WorktreeDoctorReport, { reado
 const isUnderWorktreesRoot = (path: Path.Path, worktreesRoot: string, candidate: string): boolean =>
   isWithinRoot(path, worktreesRoot, candidate);
 
+const ORIGIN_MAIN_REFSPEC = "+main:refs/remotes/origin/main";
+
+// KEEP (D-20): the doctor prints git's own "Removing worktrees/<id>: <reason>" prose
+// verbatim, which git writes to stderr; `WorktreeEntry.prunable` keeps the fact but drops
+// the reason by design, so this read stays a merged capture.
+const pruneDryRunOutput = Effect.fn("Worktree.pruneDryRunOutput")(function* (
+  cwd: string
+): Effect.fn.Return<string, WorktreeCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+  const args = ["worktree", "prune", "--dry-run"];
+  const command = A.join(["git", ...args], " ");
+  const failMessage = "Failed to compute prunable worktrees.";
+  const capture = yield* runRepoCommandCapture("git", args, cwd).pipe(
+    Effect.mapError(WorktreeCommandError.new(failMessage, { command }))
+  );
+  yield* failOnNonZeroExit(command, failMessage, capture.exitCode);
+  return capture.output;
+});
+
 const failOnNonZeroExit = Effect.fn("Worktree.failOnNonZeroExit")(function* (
   commandText: string,
   failMessage: string,
@@ -505,30 +503,40 @@ export const addWorktree = Effect.fn("Worktree.addWorktree")(function* (
 ): Effect.fn.Return<
   string,
   WorktreeCommandError | WorktreeExistsError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const git = yield* Git;
+  // The fetch reaches the network and the add checks out a whole tree: both get the patient timeout.
+  const patient = yield* patientGit;
   const targetPath = path.join(context.worktreesRoot, name);
   const exists = yield* fs.exists(targetPath).pipe(Effect.orElseSucceed(() => false));
   if (exists) {
     return yield* WorktreeExistsError.new(targetPath);
   }
   if (base === "origin/main") {
-    yield* runStreamingStep(
-      "git",
-      ["fetch", "--quiet", "--force", "origin", "main:refs/remotes/origin/main"],
-      context.currentRoot,
-      "Failed to fetch origin/main for the new worktree."
-    ).pipe(
+    // The leading `+` is `--force` for this one refspec.
+    yield* patient.fetch(context.currentRoot, { remote: "origin", ref: ORIGIN_MAIN_REFSPEC }).pipe(
+      Effect.mapError(
+        adaptGitKitError(
+          GitCommand.fetch("origin", ORIGIN_MAIN_REFSPEC),
+          worktreeGitErrorAdapter("Failed to fetch origin/main for the new worktree.")
+        )
+      ),
       Effect.catchTag(
         "WorktreeCommandError",
         Effect.fnUntraced(function* () {
-          yield* runWorktreeGitCapture(
-            context.currentRoot,
-            ["rev-parse", "--verify", "refs/remotes/origin/main^{commit}"],
-            "Failed to fetch origin/main and no usable tracking base exists."
-          );
+          yield* git
+            .revParse(context.currentRoot, "refs/remotes/origin/main", { peel: "commit" })
+            .pipe(
+              Effect.mapError(
+                adaptGitKitError(
+                  GitCommand.revParse("refs/remotes/origin/main", { peel: "commit" }),
+                  worktreeGitErrorAdapter("Failed to fetch origin/main and no usable tracking base exists.")
+                )
+              )
+            );
           yield* Console.warn(
             "  warning: Failed to fetch origin/main; using the existing tracking commit, which may be stale."
           );
@@ -536,19 +544,27 @@ export const addWorktree = Effect.fn("Worktree.addWorktree")(function* (
       )
     );
   }
-  const resultWorktreeGitCapture = yield* runWorktreeGitCapture(
-    context.currentRoot,
-    ["rev-parse", "--verify", `${base}^{commit}`],
-    "Failed to resolve the worktree base."
-  );
-  const baseSha = Str.trim(resultWorktreeGitCapture);
+  const baseSha = yield* git
+    .revParse(context.currentRoot, base, { peel: "commit" })
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(
+          GitCommand.revParse(base, { peel: "commit" }),
+          worktreeGitErrorAdapter("Failed to resolve the worktree base.")
+        )
+      )
+    );
   yield* Console.log(`  base: ${base} (${baseSha})`);
-  yield* runStreamingStep(
-    "git",
-    [...worktreeAddArgs(targetPath, branch), baseSha],
-    context.currentRoot,
-    "Failed to add the git worktree."
-  );
+  yield* patient
+    .worktreeAdd(context.currentRoot, targetPath, { ref: baseSha, newBranch: branch })
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(
+          GitCommand.worktreeAdd(targetPath, baseSha, false, false, branch),
+          worktreeGitErrorAdapter("Failed to add the git worktree.")
+        )
+      )
+    );
   return targetPath;
 });
 
@@ -624,12 +640,14 @@ const inspectWorktreeEntry = Effect.fn("Worktree.inspectWorktreeEntry")(function
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const removalService = yield* WorktreeRemovalService;
-  const statusOutput = yield* runWorktreeGitCapture(
-    entry.path,
-    ["status", "--porcelain"],
-    `Failed to inspect ${entry.path}.`
-  );
-  const changes = A.filter(Str.split(statusOutput, "\n"), Str.isNonEmpty);
+  const git = yield* Git;
+  const changes = yield* git
+    .status(entry.path)
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(GitCommand.status(), worktreeGitErrorAdapter(`Failed to inspect ${entry.path}.`))
+      )
+    );
   const unpushed = yield* removalService.hasUnpushedCommits(entry.path, O.fromNullishOr(entry.branch));
   const hasEnv = yield* fs.exists(path.join(entry.path, ".env")).pipe(Effect.orElseSucceed(() => false));
   const hasNodeModules = yield* fs
@@ -688,11 +706,7 @@ export const worktreeDoctorReportForContext = Effect.fn("Worktree.worktreeDoctor
   | WorktreeRemovalService
 > {
   const path = yield* Path.Path;
-  const pruneOutput = yield* runWorktreeGitCapture(
-    context.currentRoot,
-    ["worktree", "prune", "--dry-run"],
-    "Failed to compute prunable worktrees."
-  );
+  const pruneOutput = yield* pruneDryRunOutput(context.currentRoot);
   const pruneDryRun = A.filter(Str.split(pruneOutput, "\n"), Str.isNonEmpty);
   const managed = A.filter(context.entries, (entry) => isUnderWorktreesRoot(path, context.worktreesRoot, entry.path));
   const entries = yield* Effect.forEach(managed, inspectWorktreeEntry);
@@ -888,12 +902,17 @@ const runWorktreeNew = Effect.fn("Worktree.runWorktreeNew")(function* (options: 
     branch,
     O.getOrElse(options.base, () => "origin/main")
   );
-  yield* runStreamingStep(
-    "git",
-    ["submodule", "update", "--init", "--recursive"],
-    targetPath,
-    "Failed to update submodules in the new worktree."
-  );
+  const patient = yield* patientGit;
+  yield* patient
+    .submoduleUpdate(targetPath, { init: true, recursive: true })
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(
+          GitCommand.submoduleUpdate(true, undefined, [], { recursive: true }),
+          worktreeGitErrorAdapter("Failed to update submodules in the new worktree.")
+        )
+      )
+    );
   yield* runStreamingStep("bun", ["install"], targetPath, "Failed to run bun install in the new worktree.");
   yield* installRegenerateMergeDriver(targetPath);
   const copies = yield* copyLocalFiles(context.mainCheckout, targetPath);
@@ -1134,16 +1153,22 @@ const runWorktreeDoctor = Effect.fn("Worktree.runWorktreeDoctor")(function* (): 
   const context = yield* resolveWorktreeContext();
   const report = yield* worktreeDoctorReportForContext(context);
   yield* renderDoctorReport(report);
-  const config = yield* runWorktreeGitCapture(
-    context.currentRoot,
-    ["config", "--local", "--list"],
-    "Cannot inspect local merge-driver config."
-  );
-  const driver = A.findFirst(Str.split(config, "\n"), Str.startsWith("merge.regenerate.driver="));
+  const git = yield* Git;
+  const config = yield* git
+    .configList(context.currentRoot, { scope: "local" })
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(
+          GitCommand.configList(undefined, "local"),
+          worktreeGitErrorAdapter("Cannot inspect local merge-driver config.")
+        )
+      )
+    );
+  const driver = A.findFirst(config, (entry) => Str.Equivalence(entry.key, "merge.regenerate.driver"));
   yield* Console.log(
     O.match(driver, {
       onNone: () => "  merge.regenerate: missing (run bun run beep worktree prepare)",
-      onSome: (value) => `  ${value}`,
+      onSome: (entry) => `  ${entry.key}=${entry.value}`,
     })
   );
 });

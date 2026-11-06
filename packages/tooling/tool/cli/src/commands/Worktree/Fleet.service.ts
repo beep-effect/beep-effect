@@ -806,6 +806,7 @@ const ensureScanner = Effect.fn("Fleet.ensureScanner")(function* (
   if (O.isNone(made)) {
     return { scannerDir, available: false, env };
   }
+  // KEEP (D-20): the scanner mirror is plumbing on the scanner's own runner; the kit has no `init` member.
   const init = yield* runGitProbe(scannerDir, ["init", "--bare", "--quiet"]);
   const initialized = O.match(init, {
     onNone: () => false,
@@ -822,12 +823,14 @@ const materializeTarget = Effect.fn("Fleet.materializeTarget")(function* (
   if (!scanner.available) {
     return FleetEpochTarget.make({ ref: targetRef, sha: null, materialized: false });
   }
-  const resultGitProbe = yield* runGitProbe(
+  // KEEP (D-20): the kit reads its environment once at make, and the scanner passes its own env per call.
+  const probe1 = yield* runGitProbe(
     scanner.scannerDir,
     ["ls-remote", "--quiet", "--end-of-options", originUrl, `refs/heads/${targetRef}`],
     scanner.env
   );
-  const lsRemote = gitStdout(resultGitProbe);
+
+  const lsRemote = gitStdout(probe1);
   const sha = O.flatMap(lsRemote, (output) => {
     const token = A.head(Str.split(Str.trim(output), /\s+/));
     return O.filter(token, (value) => /^[0-9a-f]{40,64}$/.test(value));
@@ -840,12 +843,14 @@ const materializeTarget = Effect.fn("Fleet.materializeTarget")(function* (
     never,
     SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   > {
+    // KEEP (D-20): the kit reads its environment once at make, and the scanner passes its own env per call.
     const probe = yield* runGitProbe(scanner.scannerDir, ["cat-file", "-e", `${sha.value}^{commit}`], scanner.env);
     return O.match(probe, { onNone: () => false, onSome: (result) => result.exitCode === 0 });
   });
   if (yield* hasObject()) {
     return FleetEpochTarget.make({ ref: targetRef, sha: sha.value, materialized: true });
   }
+  // KEEP (D-20): the kit reads its environment once at make, and the scanner passes its own env per call.
   yield* runGitProbe(
     scanner.scannerDir,
     [
@@ -971,8 +976,10 @@ const resolveMergeBase = Effect.fn("Fleet.resolveMergeBase")(function* (
   head: string,
   targetSha: string
 ): Effect.fn.Return<O.Option<string>, never, FleetMirrorServiceRequirements> {
-  const resultGitProbe6 = yield* runGitProbe(scanner.scannerDir, ["merge-base", targetSha, head], scanner.env);
-  const output = gitStdout(resultGitProbe6);
+  // KEEP (D-20): the kit reads its environment once at make, and the scanner passes its own env per call.
+  const probe3 = yield* runGitProbe(scanner.scannerDir, ["merge-base", targetSha, head], scanner.env);
+
+  const output = gitStdout(probe3);
   return O.filter(O.map(output, Str.trim), Str.isNonEmpty);
 });
 
@@ -989,12 +996,9 @@ const branchDiffReading = Effect.fn("Fleet.branchDiffReading")(function* (
   mergeBase: string,
   head: string
 ): Effect.fn.Return<BranchDiffReading, never, FleetMirrorServiceRequirements> {
-  const resultGitProbe7 = yield* runGitProbe(
-    scanner.scannerDir,
-    ["diff", "--name-only", "-z", mergeBase, head],
-    scanner.env
-  );
-  const output = gitStdout(resultGitProbe7);
+  // KEEP (D-20): the kit reads its environment once at make, and the scanner passes its own env per call.
+  const probe2 = yield* runGitProbe(scanner.scannerDir, ["diff", "--name-only", "-z", mergeBase, head], scanner.env);
+  const output = gitStdout(probe2);
   return O.match(output, {
     onNone: () => BRANCH_DIFF_PROBE_FAILED,
     onSome: (stdout): BranchDiffReading => {
@@ -1023,12 +1027,13 @@ const policyReading = Effect.fn("Fleet.policyReading")(function* (
   mergeBase: string,
   targetSha: string
 ): Effect.fn.Return<PolicyReading, never, FleetMirrorServiceRequirements> {
-  const resultGitProbe8 = yield* runGitProbe(
+  // KEEP (D-20): the kit reads its environment once at make, and the scanner passes its own env per call.
+  const probe4 = yield* runGitProbe(
     scanner.scannerDir,
     ["diff", "--name-only", "-z", mergeBase, targetSha, "--", ...FLEET_POLICY_SURFACE],
     scanner.env
   );
-  const output = gitStdout(resultGitProbe8);
+  const output = gitStdout(probe4);
   return O.match(output, {
     onNone: () => POLICY_PROBE_FAILED,
     onSome: (stdout): PolicyReading => {
@@ -1133,6 +1138,7 @@ const conflictDerivation = Effect.fn("Fleet.conflictDerivation")(function* (
   if (livenessStatus !== "live") {
     return CONFLICT_NOT_LIVE;
   }
+  // KEEP (D-20): the kit reads its environment once at make, and the scanner passes its own env per call.
   const mergeTree = yield* runGitProbe(
     scanner.scannerDir,
     ["merge-tree", "--write-tree", "--name-only", head, targetSha],
