@@ -14,6 +14,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
@@ -24,6 +25,7 @@ import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
 import * as Str from "effect/String";
 import * as Terminal from "effect/Terminal";
+import { stageAccountHeadroomReport } from "../Palantiri/Palantiri.service.ts";
 import { AccountsBoardLayout, renderAccountsBoard } from "./Accounts.view.ts";
 import { loadAccountsReport } from "./AccountsUsage.service.ts";
 import type { AccountsStatusReport } from "./Accounts.schemas.ts";
@@ -77,7 +79,7 @@ const isQuit = (input: Terminal.UserInput): boolean =>
 const isRefresh = (input: Terminal.UserInput): boolean => input.key.name === "r";
 
 const printOnce = Effect.gen(function* () {
-  const report = yield* loadAccountsReport(O.none());
+  const report = yield* loadAccountsReport(O.none()).pipe(Effect.tap(stageAccountHeadroomReport));
   yield* Console.log(
     renderAccountsBoard(
       report,
@@ -134,6 +136,7 @@ export const watchAccounts = Effect.fn("Accounts.watch")(function* (interval: Du
     yield* draw;
     const previous = (yield* Ref.get(state)).report;
     const [report, lastError] = yield* loadAccountsReport(previous).pipe(
+      Effect.tap(stageAccountHeadroomReport),
       Effect.match({
         onFailure: (error) => [previous, O.some(error.message)] as const,
         onSuccess: (next) => [O.some(next), O.none<string>()] as const,
