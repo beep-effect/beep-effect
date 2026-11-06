@@ -86,7 +86,16 @@ generated from that directory and never edited by hand.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug packet-archive-mechanics`; add a `kind: decision` file there, never edit this block._
 
-_No decision files yet._
+### Adopt the exploration's 19 locked decisions as this packet's design contract, 2026-11-06
+
+The exploration `packet-archive-and-alpha-harvest` settled nineteen decisions on
+2026-11-06 (archive home, tombstone contents, harvest-before-delete ordering,
+status model, batch shape, exemptions, command ownership, appetite). This packet
+executes them as written; `research/P0-DESIGN.md` is their schema and service
+projection. Reopening any of them is a dated superseding entry in the
+exploration's DECISIONS.md first, never an in-place edit here.
+
+Reverse: Reopen the specific decision in explorations/packet-archive-and-alpha-harvest/DECISIONS.md with a dated superseding entry and amend research/P0-DESIGN.md accordingly
 
 <!-- beep:decisions:end -->
 

@@ -75,7 +75,17 @@ generated from that directory and never edited by hand.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug harvested-alpha-triage`; add a `kind: decision` file there, never edit this block._
 
-_No decision files yet._
+### Panel pins: Opus 5.5 high, Grok 4.7 xhigh, GPT-6.1 Sol medium for ledger judging, 2026-11-06
+
+Operator ruling from the 2026-11-06 `/grill-with-docs` session (exploration
+`packet-archive-and-alpha-harvest`, DECISIONS.md "panel pins"): the three verdict
+sessions run as Opus 5.5 `high` (Agent tool child), Grok 4.7 `xhigh` (proxy route)
+and GPT-6.1 Sol `medium` (Codex). The Opus pin is lifted from the doctrine `medium`
+to `high` for this judging task only; launch argv is retained as effort evidence
+when P1 runs. Reviewer separation holds: no session sees another's verdicts before
+the deterministic merge.
+
+Reverse: Drop the Opus child back to the doctrine medium pin by rerunning the Opus verdict session at medium and re-merging; no other artifact depends on the effort
 
 <!-- beep:decisions:end -->
 
