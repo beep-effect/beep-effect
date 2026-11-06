@@ -4,9 +4,7 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
-import * as NodeChildProcessSpawner from "@effect/platform-node/NodeChildProcessSpawner";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import * as NodePath from "@effect/platform-node/NodePath";
+import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -26,24 +24,30 @@ import * as Str from "effect/String";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type * as PlatformError from "effect/PlatformError";
 
-/** The actual owned HTML entrypoint, resolved from the test fixture location.
+/** Bundle the actual owned HTML entrypoint once per scope, retaining its WASM asset lookup.
  * @internal @category testing @since 0.0.0
  */
 export const citationHtmlWorkerTestRuntime = Effect.fn("NativeSourceTest.htmlRuntime")(function* () {
-  const executable = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const context = yield* Layer.build(
-        NodeChildProcessSpawner.layer.pipe(Layer.provide(Layer.merge(NodeFileSystem.layer, NodePath.layer)))
-      );
-      return yield* citationBunTestExecutable.pipe(Effect.provideContext(context));
-    })
-  );
-  return CitationNativeProcessRuntime.make({
-    kind: "bun",
-    executable,
-    cwd: process.cwd(),
-    workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
-  });
+  const context = yield* Layer.build(NodeServices.layer);
+  return yield* Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const root = yield* fs.makeTempDirectoryScoped({ prefix: "citation-html-bundle-" });
+    // Keep the unchanged worker's relative WASM asset lookup inside this scope.
+    const cwd = path.join(root, "src", "internal", "Citation");
+    const assets = path.join(root, "assets", "citation-html");
+    yield* fs.makeDirectory(cwd, { recursive: true });
+    yield* fs.makeDirectory(assets, { recursive: true });
+    yield* fs.copyFile(
+      NodeURL.fileURLToPath(new URL("../assets/citation-html/kernel.wasm", import.meta.url)),
+      path.join(assets, "kernel.wasm")
+    );
+    return yield* makeCitationBundledTestRuntime(
+      "bun",
+      NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+      cwd
+    );
+  }).pipe(Effect.provideContext(context));
 });
 
 /** Resolve the Bun executable the "bun" runtime leg spawns. Under the Bun test

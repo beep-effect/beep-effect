@@ -149,28 +149,29 @@ Binding detail remains in the exploration; these rows identify what this goal ex
 | [Single lab package](../../explorations/lejeune-bolt-agentic-demo/DECISIONS.md#2026-08-26--single-lab-package) | Both packets deliver into one lab package; no promotion now. |
 | [Replay-first](../../explorations/lejeune-bolt-agentic-demo/DECISIONS.md#2026-08-26--replay-first-lunch-demo) | The recorded golden run, not a live provider call, is the lunch artifact. |
 | [Disposition date](../../explorations/lejeune-bolt-agentic-demo/DECISIONS.md#2026-08-25--what-deletion-date-governs-the-lab-and-corpus) | Mutable corpus deletes or receives explicit promotion on 2026-09-30. |
+| Disposition outcome (2026-11-06) | The 2026-09-30 date passed with no promotion or consented pilot; the mutable corpus is `delete`d, and nothing durable existed outside the lab's ignored `.beep/` directory and test temp directories. Reverse by granting a reviewed retention extension through the builder's authorization path. |
 | Provider smoke narrowed (2026-10-21, branch `chore/remove-unused-drivers`) | The provider smoke is Anthropic-only; `venice-ai` left the provider-recording provider literals with `retired:venice-ai`. Reverse by restoring both from commit `426d494b34` via git. |
 
 ## Acceptance Criteria
 
-- [ ] The two fixed RFQ pairs parse into deterministic source documents; facts remain split,
+- [x] The two fixed RFQ pairs parse into deterministic source documents; facts remain split,
       and each fixture yields at least one explicit missing-field result.
-- [ ] Every extracted source-backed field has an exact `@beep/langextract` span that slices to
+- [x] Every extracted source-backed field has an exact `@beep/langextract` span that slices to
       its recorded text.
-- [ ] The 12-class ontology is the complete lunch class set and remains lab-local.
-- [ ] Each of the three rules has positive and refusal or mismatch fixtures, opens the cited
+- [x] The 12-class ontology is the complete lunch class set and remains lab-local.
+- [x] Each of the three rules has positive and refusal or mismatch fixtures, opens the cited
       governing source, and records uncertainty or human-stop behavior where applicable.
-- [ ] Every supplier offer and lot certificate is timestamped and labeled `SYNTHETIC`.
-- [ ] PGlite, DuckDB, and bounded Oxigraph projections rebuild deterministically and return the
+- [x] Every supplier offer and lot certificate is timestamped and labeled `SYNTHETIC`.
+- [x] PGlite, DuckDB, and bounded Oxigraph projections rebuild deterministically and return the
       committed golden queries and citations.
-- [ ] One live day-1 extraction succeeds through `@beep/anthropic` or one same-day fallback;
+- [x] One live day-1 extraction succeeds through `@beep/anthropic` or one same-day fallback;
       the provider output needed for the golden run is recorded safely.
-- [ ] With network and provider unavailable, replay completes with the same normalized records,
+- [x] With network and provider unavailable, replay completes with the same normalized records,
       rule results, citations, and bundle identity.
-- [ ] Raw corpus payloads, customer data, third-party binaries, and secrets are absent from the
+- [x] Raw corpus payloads, customer data, third-party binaries, and secrets are absent from the
       repository.
-- [ ] The mutable corpus exposes its 2026-09-30 delete-or-promote disposition.
-- [ ] No unrelated refactors or formatting churn.
+- [x] The mutable corpus exposes its 2026-09-30 delete-or-promote disposition.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

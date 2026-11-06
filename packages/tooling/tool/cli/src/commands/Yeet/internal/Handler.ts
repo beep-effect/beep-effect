@@ -176,6 +176,7 @@ import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts"
 import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
 import type { ParityLaneDecision, ProofEnvironment } from "./ParityReuse.ts";
 import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
+import type { ProofJobLauncherShape } from "./ProofJobLauncher.ts";
 import type { YeetStatusReviewThread } from "./Status.schemas.ts";
 import type { YeetStatusSnapshot } from "./Status.ts";
 import type { YeetBaseFreshness, YeetMergeReady, YeetStashState, YeetVerdict } from "./Verdict.ts";
@@ -1152,6 +1153,7 @@ export interface PublishTailDependencies {
     | Path.Path
     | ChildProcessSpawner.ChildProcessSpawner
   >;
+  readonly monitorSupport?: ProofJobLauncherShape["support"];
   readonly runnerStatus?: (
     record: ProofJobRecord
   ) => Effect.Effect<ProcessIdentityStatus, never, FileSystem.FileSystem>;
@@ -1285,7 +1287,7 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
   // racing here would otherwise both read a registry with no monitor and both
   // submit one.
   const launcher = yield* ProofJobLauncher.make(plan.context.repoRoot);
-  const { job, running } = yield* launcher.withReadyMonitorSubmitLock(
+  const { job, running, attached } = yield* launcher.withReadyMonitorSubmitLock(
     Effect.gen(function* () {
       const running = yield* findRunningReadyMonitor(
         plan.context,
@@ -1293,15 +1295,38 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
         dependencies.listJobs ?? listCheckoutProofJobs,
         dependencies.runnerStatus ?? readyMonitorRunnerStatus
       );
+      const attached = O.isNone(running) && (yield* dependencies.monitorSupport ?? launcher.support) !== "active";
       const job = O.isSome(running)
         ? yield* Effect.as(recordReusedReadyMonitor(recorder, submitSteps, running.value), running)
-        : yield* submitDetachedReadyMonitor(plan.context, submitSteps, recorder);
-      return { job, running };
+        : attached
+          ? O.none<ProofJobRecord>()
+          : yield* submitDetachedReadyMonitor(plan.context, submitSteps, recorder);
+      return { job, running, attached };
     })
   );
   yield* Console.log(
     `[yeet] pull request: ${O.getOrElse(pullRequest.url, () => `#${pullRequest.number}`)}${pullRequest.created ? " (draft)" : ""}`
   );
+  if (attached) {
+    yield* Console.log(
+      "[yeet] background monitoring is unavailable; publication succeeded, continuing with the attached readiness monitor. Keep this process running until merge-ready or an actionable wave."
+    );
+    const attachedSteps = A.map(submitSteps, (step) =>
+      RepoPlanStep.make({
+        ...step,
+        label: "monitor:until-ready:attached",
+        args: A.filter(step.args, (arg) => arg !== "--detach"),
+        verification: "attached-until-ready-monitor",
+      })
+    );
+    yield* runRequiredPhase(
+      plan.context,
+      attachedSteps,
+      recorder,
+      "The branch is published; its attached monitor needs attention. Continue with `bun run beep yeet monitor --until-ready`."
+    );
+    return yield* publishResult(plan.context, !skipCommit);
+  }
   yield* O.match(job, {
     onNone: () =>
       Console.error(

@@ -15,6 +15,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -28,7 +29,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runGitOutput, runGitPathList } from "../../internal/repo-run/index.ts";
 import { ExplorationManifest, ExplorationStatus } from "../Explore/Atlas.ts";
 import { knowledgeDocumentLines, knowledgeLinkDestinations } from "../Knowledge/Knowledge.refs.ts";
 import { ArchivePlan, ArchivePlanEntry, InboundLink, tombstoneKeeps } from "./Archive.schemas.ts";
@@ -38,9 +38,6 @@ import { isTerminalPacketStatus } from "./Harvest.service.ts";
 import { GOALS_DIR, listGoalPackets, parseGoalManifestText, TEMPLATE_SLUG } from "./Inventory.ts";
 import { canonicalJsonText, sha256Hex } from "./PacketCore/PacketDigest.ts";
 import type * as Digest from "effect/crypto/Digest";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
-import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 import type { KnowledgeDocumentLine } from "../Knowledge/Knowledge.refs.ts";
 import type { ArchiveRepoRef } from "./Archive.schemas.ts";
 import type { GoalManifest } from "./Goals.schemas.ts";
@@ -129,12 +126,16 @@ const candidateOrder = (literals: ReadonlyArray<string>): Order.Order<Candidate>
     Order.mapInput(Order.String, (candidate: Candidate) => candidate.slug)
   );
 
-const gitAdapter = (repoRoot: string): GitCommandErrorAdapter<ArchiveError> => ({
-  onSpawnFailure: (commandLine) => (cause) =>
-    ArchiveError.new("archive-git-failed", null, repoRoot, `spawn ${commandLine}: ${String(cause)}`),
-  onNonZeroExit: ({ commandLine, exitCode }) =>
-    ArchiveError.new("archive-git-failed", null, repoRoot, `${commandLine} exited with ${exitCode}`),
-  onTruncated: O.none(),
+const gitFailed =
+  (repoRoot: string) =>
+  (error: { readonly message: string }): ArchiveError =>
+    ArchiveError.new("archive-git-failed", null, repoRoot, error.message);
+
+// Tracked paths under the pathspecs, once each (an unresolved merge lists one entry per stage).
+const trackedPaths = Effect.fnUntraced(function* (repoRoot: string, pathspec: ReadonlyArray<string>) {
+  const git = yield* Git;
+  const entries = yield* git.lsFiles(repoRoot, { pathspec }).pipe(Effect.mapError(gitFailed(repoRoot)));
+  return A.dedupe(A.map(entries, (entry) => entry.path));
 });
 
 const isArchivableGoal = (manifest: GoalManifest): boolean =>
@@ -277,11 +278,7 @@ const scanFileLinks = Effect.fnUntraced(function* (repoRoot: string, file: strin
 });
 
 const scanInboundLinks = Effect.fnUntraced(function* (repoRoot: string) {
-  const tracked = yield* runGitPathList(
-    repoRoot,
-    ["ls-files", "-z", "--", ...INBOUND_LINK_ROOTS],
-    gitAdapter(repoRoot)
-  );
+  const tracked = yield* trackedPaths(repoRoot, INBOUND_LINK_ROOTS);
   const documents = A.filter(tracked, (file) =>
     A.some(INBOUND_LINK_EXTENSIONS, (extension) => Str.endsWith(extension)(file))
   );
@@ -300,14 +297,16 @@ const planEntry = Effect.fnUntraced(function* (
   candidate: Candidate,
   links: ReadonlyArray<ScannedLink>
 ) {
-  const adapter = gitAdapter(options.repoRoot);
+  const git = yield* Git;
   const dir = packetDir(candidate);
-  const files = yield* runGitPathList(options.repoRoot, ["ls-files", "-z", "--", dir], adapter);
+  const files = yield* trackedPaths(options.repoRoot, [dir]);
   const sorted = A.sort(files, Order.String);
   const kept = (file: string): boolean => tombstoneKeeps(candidate.root, Str.slice(Str.length(dir) + 1)(file));
   const keep = A.filter(sorted, kept);
   const remove = A.filter(sorted, (file) => !kept(file));
-  const localTreeHash = yield* runGitOutput(options.repoRoot, ["rev-parse", `HEAD:${dir}`], adapter);
+  const localTreeHash = yield* git
+    .revParse(options.repoRoot, `HEAD:${dir}`)
+    .pipe(Effect.mapError(gitFailed(options.repoRoot)));
   const removed = HashSet.fromIterable(remove);
   const inbound = A.map(
     A.filter(links, (link) => !Str.startsWith(`${dir}/`)(link.file) && HashSet.has(removed, link.target)),
@@ -367,7 +366,8 @@ export const archivePlanId = Effect.fn("Archive.archivePlanId")(function* (plan:
 
 const buildPlan = Effect.fn("Archive.plan")(function* (options: ArchivePlanOptions) {
   const candidates = yield* selectCandidates(options);
-  const sourceCommit = yield* runGitOutput(options.repoRoot, ["rev-parse", "HEAD"], gitAdapter(options.repoRoot));
+  const git = yield* Git;
+  const sourceCommit = yield* git.revParse(options.repoRoot, "HEAD").pipe(Effect.mapError(gitFailed(options.repoRoot)));
   const links = A.isReadonlyArrayEmpty(candidates) ? A.empty<ScannedLink>() : yield* scanInboundLinks(options.repoRoot);
   const entries = yield* Effect.forEach(candidates, (candidate) => planEntry(options, candidate, links), {
     concurrency: 4,
@@ -414,13 +414,7 @@ export interface ArchivePlannerShape {
 export class ArchivePlanner extends Context.Service<ArchivePlanner, ArchivePlannerShape>()($I`ArchivePlanner`) {}
 
 const makeLive = Effect.gen(function* () {
-  const context = yield* Effect.context<
-    | FileSystem.FileSystem
-    | Path.Path
-    | ChildProcessSpawner.ChildProcessSpawner
-    | SecureRandom.SecureRandom
-    | Digest.Digest
-  >();
+  const context = yield* Effect.context<FileSystem.FileSystem | Path.Path | Git | Digest.Digest>();
   return ArchivePlanner.of({ plan: flow(buildPlan, Effect.provide(context)) });
 });
 

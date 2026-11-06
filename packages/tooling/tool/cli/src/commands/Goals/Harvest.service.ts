@@ -22,6 +22,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -38,7 +39,6 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runGitOutput, runGitPathList } from "../../internal/repo-run/index.ts";
 import { ExplorationStatus } from "../Explore/Atlas.ts";
 import { decodeReflectionFrontmatterText, reflectionFileNameIsArtifact } from "../Lint/ReflectionArtifact.ts";
 import { parseGoalDecision } from "./Decisions.projection.ts";
@@ -57,9 +57,6 @@ import { GOALS_DIR, listGoalPackets, parseGoalManifestText, TEMPLATE_SLUG } from
 import { PacketRoot, PacketSlug, PacketStatusToken } from "./PacketCore/PacketCore.schemas.ts";
 import { canonicalJsonText, sha256Hex } from "./PacketCore/PacketDigest.ts";
 import type * as Digest from "effect/crypto/Digest";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
-import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 import type { HarvestSource } from "./Harvest.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
 
@@ -268,13 +265,10 @@ const jsonValueLines = (manifestText: string, key: string, values: ReadonlyArray
   );
 };
 
-const gitAdapter = (repoRoot: string): GitCommandErrorAdapter<HarvestError> => ({
-  onSpawnFailure: (commandLine) => (cause) =>
-    HarvestError.new("harvest-git-failed", repoRoot, `spawn ${commandLine}: ${String(cause)}`),
-  onNonZeroExit: ({ commandLine, exitCode }) =>
-    HarvestError.new("harvest-git-failed", repoRoot, `${commandLine} exited with ${exitCode}`),
-  onTruncated: O.none(),
-});
+const gitFailed =
+  (repoRoot: string) =>
+  (error: { readonly message: string }): HarvestError =>
+    HarvestError.new("harvest-git-failed", repoRoot, error.message);
 
 const readOptionalText = Effect.fnUntraced(function* (absolutePath: string, relativePath: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -672,8 +666,8 @@ const orderRows: Order.Order<HarvestRow> = Order.combineAll([
 const collectLedger = Effect.fn("Harvest.collect")(function* (options: HarvestCollectOptions) {
   const path = yield* Path.Path;
   const repoRoot = options.repoRoot;
-  const adapter = gitAdapter(repoRoot);
-  const commit = yield* runGitOutput(repoRoot, ["rev-parse", "HEAD"], adapter);
+  const git = yield* Git;
+  const commit = yield* git.revParse(repoRoot, "HEAD").pipe(Effect.mapError(gitFailed(repoRoot)));
   const wantsGoals = A.contains(options.kinds, "goals");
   const wantsExplorations = A.contains(options.kinds, "explorations");
 
@@ -707,7 +701,10 @@ const collectLedger = Effect.fn("Harvest.collect")(function* (options: HarvestCo
     )
   );
 
-  const trackedLedgers = yield* runGitPathList(repoRoot, ["ls-files", "-z", "--", "*OPPORTUNITIES.md"], adapter);
+  const trackedEntries = yield* git
+    .lsFiles(repoRoot, { pathspec: ["*OPPORTUNITIES.md"] })
+    .pipe(Effect.mapError(gitFailed(repoRoot)));
+  const trackedLedgers = A.dedupe(A.map(trackedEntries, (entry) => entry.path));
   const ledgerFiles = A.filter(trackedLedgers, (file) => !isTemplateLedger(file));
   const nonPacketContext: PacketContext = { packet: null, status: null, terminal: false, commit };
   const ledgerPackets = A.filterMap(ledgerFiles, (file) =>
@@ -912,13 +909,7 @@ const readLedger = Effect.fn("Harvest.read")(function* (target: string) {
 });
 
 const makeLive = Effect.gen(function* () {
-  const context = yield* Effect.context<
-    | FileSystem.FileSystem
-    | Path.Path
-    | ChildProcessSpawner.ChildProcessSpawner
-    | SecureRandom.SecureRandom
-    | Digest.Digest
-  >();
+  const context = yield* Effect.context<FileSystem.FileSystem | Path.Path | Git | Digest.Digest>();
   return HarvestProjector.of({
     collect: flow(collectLedger, Effect.provide(context)),
     write: flow(writeLedger, Effect.provide(context)),

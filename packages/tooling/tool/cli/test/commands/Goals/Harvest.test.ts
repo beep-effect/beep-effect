@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { runGoalsHarvest } from "@beep/repo-cli/commands/Goals/Harvest";
 import { HarvestLedger } from "@beep/repo-cli/commands/Goals/Harvest.schemas";
 import {
@@ -183,7 +184,10 @@ const bySource = (rows: ReadonlyArray<HarvestRow>, source: HarvestSource): Reado
 const lineTexts = (rows: ReadonlyArray<HarvestRow>): ReadonlyArray<readonly [number, string]> =>
   A.map(rows, (row) => [row.line, row.text] as const);
 
-const TestLayer = Layer.provideMerge(HarvestProjectorLive, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
+const TestLayer = Layer.provideMerge(
+  HarvestProjectorLive,
+  Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
+);
 
 describe("goals harvest", () => {
   it("parses unchecked plan items and friction receipts with their 1-based lines", () => {

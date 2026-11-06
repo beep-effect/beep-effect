@@ -64,6 +64,24 @@ def read_source(path):
     return data
 
 
+def memory_location(trace):
+    """Retain a fixed module family and line, never paths, messages or locals."""
+    while trace.tb_next is not None:
+        trace = trace.tb_next
+    module = trace.tb_frame.f_globals.get("__name__")
+    components = {
+        "__main__": "observer",
+        "dependency_diagnostics": "observer",
+        "tarfile": "tarfile",
+        "pathlib": "pathlib",
+        "json": "json",
+        "json.decoder": "json",
+        "json.encoder": "json",
+    }
+    component = components.get(module, "unknown") if isinstance(module, str) else "unknown"
+    return {"component": component, "line": trace.tb_lineno} if component != "unknown" else {"component": "unknown"}
+
+
 class LimitedTarInfo(tarfile.TarInfo):
     def _proc_pax(self, archive):
         require(self.size <= HEADER_LIMIT, "archive-header-bound")
@@ -276,12 +294,21 @@ def main():
         return 1
     with os.fdopen(output_fd, "wb") as output:
         code = None
+        memory_context = None
         try:
             data, exit_code = observe(Path(args.source_report), args.revision)
         except Refusal as error:
             code = error.args[0]
         except MemoryError:
             code = "memory-limit"
+            try:
+                memory_context = {
+                    "memoryLocation": memory_location(sys.exc_info()[2]),
+                    "pythonVersion": list(sys.version_info[:3]),
+                }
+            except MemoryError:
+                # A diagnostic allocation must not replace the bounded refusal.
+                memory_context = None
         except subprocess.TimeoutExpired:
             code = "subprocess-deadline"
         except subprocess.SubprocessError:
@@ -293,7 +320,10 @@ def main():
         except (ValueError, KeyError, TypeError):
             code = "invalid-value-or-shape"
         if code is not None:
-            data, exit_code = encoded({"schemaVersion": "cache-dependency-diagnostics/v1", "status": "refused", "code": code}) + b"\n", 1
+            refusal = {"schemaVersion": "cache-dependency-diagnostics/v1", "status": "refused", "code": code}
+            if memory_context is not None:
+                refusal.update(memory_context)
+            data, exit_code = encoded(refusal) + b"\n", 1
         output.write(data)
     print("Dependency diagnostic saved." if exit_code == 0 else "Dependency diagnostic refused; no approval granted.")
     return exit_code

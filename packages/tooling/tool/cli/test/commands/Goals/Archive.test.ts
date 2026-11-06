@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { ExplorationManifest } from "@beep/repo-cli/commands/Explore";
 import { runGoalsArchive } from "@beep/repo-cli/commands/Goals/Archive";
 import { ArchiveRecord, tombstoneKeeps } from "@beep/repo-cli/commands/Goals/Archive.schemas";
@@ -233,7 +234,10 @@ const writeOptions = (archiveDir: string) =>
     archiveDir,
   }) as const;
 
-const TestLayer = Layer.provideMerge(ArchivePlannerLive, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
+const TestLayer = Layer.provideMerge(
+  ArchivePlannerLive,
+  Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
+);
 
 describe("goals archive", () => {
   it.effect("decodes the archive block and retentionReason on goal and exploration manifests", () =>

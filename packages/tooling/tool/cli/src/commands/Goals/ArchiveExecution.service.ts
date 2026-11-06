@@ -15,6 +15,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
 import { applyJsoncModification, JsoncModification } from "@beep/repo-cli-kit/cli/Jsonc";
@@ -33,7 +34,6 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runGitOutput } from "../../internal/repo-run/index.ts";
 import { ExplorationManifest } from "../Explore/Atlas.ts";
 import { knowledgeLinkDestinations } from "../Knowledge/Knowledge.refs.ts";
 import { decodeReflectionFrontmatterText, reflectionFileNameIsArtifact } from "../Lint/ReflectionArtifact.ts";
@@ -45,7 +45,6 @@ import { GoalManifestFormatter } from "./Manifest.service.ts";
 import { biomeManifestFormatter } from "./Manifest.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 import type {
   ArchivePlan,
   ArchivePlanEntry,
@@ -276,16 +275,10 @@ export class InboundLinkRewriter extends Context.Service<InboundLinkRewriter, In
 
 const packetPath = (entry: ArchivePlanEntry): string => `${entry.root}/${entry.slug}`;
 
-const gitAdapter = (
-  cwd: string,
-  reason: "archive-git-failed" | "archive-push-failed"
-): GitCommandErrorAdapter<ArchiveError> => ({
-  onSpawnFailure: (commandLine) => (cause) =>
-    ArchiveError.new(reason, null, cwd, `spawn ${commandLine}: ${String(cause)}`),
-  onNonZeroExit: ({ commandLine, exitCode }) =>
-    ArchiveError.new(reason, null, cwd, `${commandLine} exited with ${exitCode}`),
-  onTruncated: O.none(),
-});
+const gitFailed =
+  (cwd: string, reason: "archive-git-failed" | "archive-push-failed") =>
+  (error: { readonly message: string }): ArchiveError =>
+    ArchiveError.new(reason, null, cwd, error.message);
 
 const fsFailure =
   (reason: "archive-push-failed" | "tombstone-conflict" | "archive-read-failed", slug: string | null, target: string) =>
@@ -425,7 +418,8 @@ const pushPlan = Effect.fn("ArchiveStore.push")(function* (plan: ArchivePlan) {
   const workspace = yield* ArchiveWorkspace;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const adapter = gitAdapter(workspace.archiveDir, "archive-push-failed");
+  const git = yield* Git;
+  const pushFailed = gitFailed(workspace.archiveDir, "archive-push-failed");
   const isCheckout = yield* fs.exists(path.join(workspace.archiveDir, ".git")).pipe(Effect.orElseSucceed(() => false));
   if (!isCheckout) {
     return yield* ArchiveError.new(
@@ -443,26 +437,20 @@ const pushPlan = Effect.fn("ArchiveStore.push")(function* (plan: ArchivePlan) {
       .writeFileString(readmePath, ARCHIVE_README)
       .pipe(Effect.mapError(fsFailure("archive-push-failed", null, readmePath)));
   }
-  yield* runGitOutput(
-    workspace.archiveDir,
-    ["add", "--", ARCHIVE_README_FILE, ...A.map(plan.entries, packetPath)],
-    adapter
-  );
-  yield* runGitOutput(
-    workspace.archiveDir,
-    [
-      "commit",
-      "-q",
-      "-m",
+  yield* git
+    .add(workspace.archiveDir, [ARCHIVE_README_FILE, ...A.map(plan.entries, packetPath)])
+    .pipe(Effect.mapError(pushFailed));
+  yield* git
+    .commit(
+      workspace.archiveDir,
       archiveCommitMessage({
         kindLabel: workspace.kindLabel,
         count: A.length(plan.entries),
         sourceCommit: plan.sourceCommit,
-      }),
-    ],
-    adapter
-  );
-  const commit = yield* runGitOutput(workspace.archiveDir, ["rev-parse", "HEAD"], adapter);
+      })
+    )
+    .pipe(Effect.mapError(pushFailed));
+  const commit = yield* git.revParse(workspace.archiveDir, "HEAD").pipe(Effect.mapError(pushFailed));
 
   // The index names the archive commit, so it lands in a follow-up commit that leaves every packet tree unchanged.
   const indexPath = path.join(workspace.archiveDir, ARCHIVE_INDEX_FILE);
@@ -481,33 +469,38 @@ const pushPlan = Effect.fn("ArchiveStore.push")(function* (plan: ArchivePlan) {
   yield* fs
     .writeFileString(indexPath, renderArchiveIndex(A.appendAll(kept, added)))
     .pipe(Effect.mapError(fsFailure("archive-push-failed", null, indexPath)));
-  yield* runGitOutput(workspace.archiveDir, ["add", "--", ARCHIVE_INDEX_FILE], adapter);
-  yield* runGitOutput(
-    workspace.archiveDir,
-    ["commit", "-q", "-m", `archive(index): ${A.length(plan.entries)} packets from ${plan.sourceCommit}`],
-    adapter
-  );
+  yield* git.add(workspace.archiveDir, [ARCHIVE_INDEX_FILE]).pipe(Effect.mapError(pushFailed));
+  yield* git
+    .commit(workspace.archiveDir, `archive(index): ${A.length(plan.entries)} packets from ${plan.sourceCommit}`)
+    .pipe(Effect.mapError(pushFailed));
   return { commit };
 });
 
 const verifyPlan = Effect.fn("ArchiveStore.verify")(function* (plan: ArchivePlan, commit: string) {
   const workspace = yield* ArchiveWorkspace;
-  const adapter = gitAdapter(workspace.archiveDir, "archive-git-failed");
+  const git = yield* Git;
+  const verifyFailed = gitFailed(workspace.archiveDir, "archive-git-failed");
   return yield* Effect.forEach(plan.entries, (entry) =>
-    Effect.map(runGitOutput(workspace.archiveDir, ["rev-parse", `${commit}:${packetPath(entry)}`], adapter), (hash) =>
-      ArchiveVerification.make({
-        root: entry.root,
-        slug: entry.slug,
-        archiveTreeHash: hash,
-        verified: hash === entry.localTreeHash,
+    git.revParse(workspace.archiveDir, `${commit}:${packetPath(entry)}`).pipe(
+      Effect.mapBoth({
+        onFailure: verifyFailed,
+        onSuccess: (hash) =>
+          ArchiveVerification.make({
+            root: entry.root,
+            slug: entry.slug,
+            archiveTreeHash: hash,
+            verified: hash === entry.localTreeHash,
+          }),
       })
     )
   );
 });
 
+// The child-process services serve the default Biome manifest formatter the tombstone writer runs.
 type ArchiveServices =
   | FileSystem.FileSystem
   | Path.Path
+  | Git
   | ChildProcessSpawner.ChildProcessSpawner
   | SecureRandom.SecureRandom;
 
