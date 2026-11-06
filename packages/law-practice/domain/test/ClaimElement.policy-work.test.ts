@@ -127,6 +127,9 @@ describe("bounded antecedent policy preparation", () => {
     Effect.gen(function* () {
       for (const fixture of [
         { depth: 100, references: 20, limited: false },
+        // A sparse chain still pays for preparing its complete ordered route.
+        // A single reference must abstain if preparation itself exceeds the allowance.
+        { depth: 120, references: 1, limited: true },
         { depth: 120, references: 60, limited: true },
       ]) {
         const claims = deepClaims(fixture.references, fixture.depth);
@@ -157,6 +160,52 @@ describe("bounded antecedent policy preparation", () => {
         } else assert.deepStrictEqual(findings, []);
         assert.deepStrictEqual(antecedentPolicy(trees, claims), findings);
       }
+    })
+  );
+  it.effect("abstains on a dense source even when its dependency chain is short, then recovers", () =>
+    Effect.gen(function* () {
+      // Repeated, separately anchored introductions model dense source-owned
+      // input without depending on the rule decomposer's recognition limits.
+      // This fixture size exercises bounded preparation, not a public term limit.
+      const mentions = 87_376;
+      const phrase = "a sensor1";
+      const body = `${A.join(A.replicate(phrase, mentions), "; ")}.`;
+      const parent = independent(1, body);
+      const ordinary = deepClaims(1, 3);
+      const ordinaryTrees = yield* treesOf(ordinary);
+      const claims = A.prepend(A.drop(ordinary, 1), parent);
+      const start = "A system comprising ".length;
+      const dense = yield* S.decodeEffect(ClaimElementTree)({
+        claimNumber: 1,
+        producer: "rule",
+        elements: [
+          {
+            path: "1",
+            kind: "limitation",
+            anchor: { startChar: start, endChar: parent.claimText.length, quote: body },
+            terms: A.makeBy(mentions, (index) => {
+              const startChar = start + index * (phrase.length + 2);
+              return {
+                anchor: { startChar, endChar: startChar + phrase.length, quote: phrase },
+                determiner: "a",
+                head: "sensor1",
+              };
+            }),
+          },
+        ],
+        edges: [],
+      });
+      // Descendant text and ancestry are unchanged by the parent's additional
+      // introductions, so retain their ordinary source-owned decomposition.
+      const trees = A.prepend(A.drop(ordinaryTrees, 1), dense);
+      const findings = antecedentPolicy(trees, claims);
+      assert.isTrue(A.isReadonlyArrayNonEmpty(findings));
+      assert.isTrue(
+        A.every(findings, ({ kind, rule }) => kind === "pattern-not-covered" && rule === "chain-work-limit")
+      );
+      assert.deepStrictEqual(antecedentPolicy(trees, claims), findings);
+
+      assert.deepStrictEqual(antecedentPolicy(ordinaryTrees, ordinary), []);
     })
   );
   it.effect("preserves ordered alternative-chain advisories and mixed bare coverage", () =>
