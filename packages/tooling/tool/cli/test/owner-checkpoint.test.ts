@@ -613,6 +613,88 @@ const offline = <Value, Error, Requirements>(effect: Effect.Effect<Value, Error,
   );
 
 describe("inert owner native adapter", () => {
+  for (const fault of ["latest-app-pending", "latest-app-failed", "conflicting-app-rules"]) {
+    it.effect(`refuses App-bound context ambiguity: ${fault}`, () => {
+      const runs = [
+        lintRun,
+        {
+          ...lintRun,
+          id: 3,
+          status: fault === "latest-app-pending" ? "in_progress" : "completed",
+          conclusion: fault === "latest-app-pending" ? null : "failure",
+        },
+        { ...lintRun, id: 4, app: { id: 999 } },
+        nativeOwn(),
+      ];
+      const github = recordedGithub((call) => {
+        if (Str.endsWith("/rules/branches/main")(call.path))
+          return {
+            body: [
+              {
+                type: "required_status_checks",
+                parameters: {
+                  required_status_checks: [
+                    { context: "Lint", integration_id: 7 },
+                    { context: "Owner checkpoint" },
+                    ...(fault === "conflicting-app-rules" ? [{ context: "Lint", integration_id: 999 }] : []),
+                  ],
+                },
+              },
+            ],
+          };
+        if (call.path === `{repo}/commits/${head}/check-runs`)
+          return { body: { total_count: runs.length, check_runs: runs } };
+        return upstreamRoute(call);
+      });
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const error = yield* Effect.flip(readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external"));
+        expect(error.reason).toBe("gate");
+      }).pipe(offline, github.provide);
+    });
+  }
+
+  for (const app of [7, 999, null, "malformed", "wrong-owner"]) {
+    it.effect(`binds upstream required checks to their native rule App: ${app}`, () => {
+      const github = recordedGithub((call) => {
+        if (app === "wrong-owner" && call.path === `{repo}/commits/${head}/check-runs`)
+          return {
+            body: {
+              total_count: 3,
+              check_runs: [
+                lintRun,
+                nativeOwn(),
+                { ...nativeOwn(), id: 5, app: { id: 999 }, status: "completed", conclusion: "success" },
+              ],
+            },
+          };
+        if (Str.endsWith("/rules/branches/main")(call.path))
+          return {
+            body: [
+              {
+                type: "required_status_checks",
+                parameters: {
+                  required_status_checks: [
+                    { context: "Lint", integration_id: app === "wrong-owner" ? 7 : app },
+                    { context: "Owner checkpoint", integration_id: app === "wrong-owner" ? 999 : policy.applicationId },
+                  ],
+                },
+              },
+            ],
+          };
+        return upstreamRoute(call);
+      });
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const result = yield* readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external").pipe(
+          Effect.result
+        );
+        expect(Result.isSuccess(result)).toBe(app === 7 || app === null);
+        if (Result.isFailure(result)) expect(result.failure.reason).toBe(app === "malformed" ? "evidence" : "gate");
+      }).pipe(offline, github.provide);
+    });
+  }
+
   for (const failedPage of [false, true]) {
     it.effect(`consumes native checks, statuses and review thread pages; second page failure=${failedPage}`, () => {
       const github = recordedGithub((call) => {

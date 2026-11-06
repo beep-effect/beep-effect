@@ -49,6 +49,61 @@ const NativePullBase = S.Struct({
 });
 const NativeBaseRef = S.Struct({ object: S.Struct({ type: S.Literal("commit"), sha: OwnerCheckpointHead }) });
 
+const NativeRequiredContext = S.Struct({
+  context: S.NonEmptyString,
+  integration_id: S.Int.check(S.isGreaterThan(0)).pipe(S.NullOr, S.optionalKey),
+}).pipe($I.annoteSchema("NativeRequiredContext", { description: "Native required context with its App constraint." }));
+const NativeRule = S.Struct({
+  type: S.String,
+  parameters: S.Struct({ required_status_checks: NativeRequiredContext.pipe(S.Array, S.optionalKey) }).pipe(
+    S.optionalKey
+  ),
+}).pipe(
+  $I.annoteSchema("NativeRule", { description: "Native required context and optional integration App binding." })
+);
+const assertRequiredApplications = Effect.fnUntraced(function* (
+  read: MergeGateRead,
+  checks: ReadonlyArray<typeof NativeCheck.Type>,
+  rules: ReadonlyArray<typeof NativeRule.Type>,
+  selfCheckId: number,
+  policy: OwnerCheckpointPolicy
+) {
+  if (
+    A.some(
+      rules,
+      (rule) => rule.type === "required_status_checks" && rule.parameters?.required_status_checks === undefined
+    )
+  )
+    return yield* refuse("evidence");
+  const required = A.flatMap(rules, (rule) =>
+    rule.type === "required_status_checks" ? (rule.parameters?.required_status_checks ?? []) : []
+  );
+  const names = A.dedupe(A.map(required, (check) => check.context));
+  if (
+    !O.exists(
+      read.requiredContexts,
+      (contexts) => contexts.length === names.length && A.every(names, (name) => A.contains(contexts, name))
+    )
+  )
+    return yield* refuse("evidence");
+  for (const name of names) {
+    const constraints = A.filter(required, (rule) => rule.context === name);
+    const apps = A.dedupe(A.getSomes(A.map(constraints, (rule) => O.fromNullishOr(rule.integration_id))));
+    if (name === policy.context && A.some(apps, (app) => app !== policy.applicationId)) return yield* refuse("gate");
+    if (apps.length > 1) return yield* refuse("gate");
+    for (const app of apps) {
+      const matching = A.filter(checks, (run) => run.name === name && run.app.id === app);
+      const latest = A.reduce(matching, O.none<typeof NativeCheck.Type>(), (found, row) =>
+        O.exists(found, (old) => old.id >= row.id) ? found : O.some(row)
+      );
+      if (O.isNone(latest)) return yield* refuse("gate");
+      const own = latest.value.id === selfCheckId && name === policy.context && app === policy.applicationId;
+      if (!own && (latest.value.status !== "completed" || latest.value.conclusion !== "success"))
+        return yield* refuse("gate");
+    }
+  }
+});
+
 const assertCurrentPull = Effect.fnUntraced(function* (pull: GithubPullRequestRecord, binding: OwnerCheckpointBinding) {
   if (pull.headSha !== binding.head || pull.number !== binding.prNumber || pull.state !== "open" || pull.merged)
     return yield* refuse("binding");
@@ -162,6 +217,16 @@ export const readOwnerCheckpointSnapshot = Effect.fn("OwnerCheckpoint.readNative
     if (checkRows.length > MAX_NATIVE_ROWS) return yield* refuse("evidence");
     const checks = yield* S.decodeUnknownEffect(S.Array(NativeCheck))(checkRows).pipe(Effect.mapError(readFailure));
     yield* assertCheckCensus(read, checks, binding);
+    const ruleRows = yield* client
+      .paginateStream("GET /repos/{owner}/{repo}/rules/branches/{branch}", {
+        owner: repository.owner,
+        repo: repository.repo,
+        branch: base.ref,
+      })
+      .pipe(Stream.take(MAX_NATIVE_ROWS + 1), Stream.runCollect, Effect.mapError(readFailure));
+    if (ruleRows.length > MAX_NATIVE_ROWS) return yield* refuse("evidence");
+    const rules = yield* S.decodeUnknownEffect(S.Array(NativeRule))(ruleRows).pipe(Effect.mapError(readFailure));
+    yield* assertRequiredApplications(read, checks, rules, selfCheckId, policy);
     const own = A.findFirst(checks, (row) => row.id === selfCheckId);
     if (O.isNone(own) || own.value.external_id !== expectedExternalId) return yield* refuse("evidence");
     const selfCheck = yield* projectOwnerCheckpointSelfCheck(own.value);
