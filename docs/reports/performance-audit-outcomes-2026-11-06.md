@@ -82,7 +82,8 @@ reducing coverage floors. Fingerprint refinement #2773 subsequently merged at
 16:50 UTC after current-head hosted coverage and strict merge checks passed.
 Coverage concurrency #2772 merged externally at 17:05 UTC as
 `49661c889c2dd52e36e31450647a8163e29a868f`. Package preflight #2779 also passed current-head hosted coverage and all ten
-unit groups; its review window and merge are separate acceptance steps.
+unit groups, then merged through the strict gate at 17:30 UTC as
+`e66013fb6c6e7b8e9b91ceb590275c32b6c118d2`.
 
 Round-two Fable proposed three more candidates:
 
@@ -120,6 +121,13 @@ Those local follow-ups remain distinct from published and hosted proof. The
 audit sequence is still active and does not establish repository-wide
 exhaustion.
 
+Sol round two identified misleading age warnings for historical baselines.
+The locally verified change retains missing-file and generated-inventory
+warnings while removing age-only baseline adoption advice. A saved status
+block loses four such lines, or 901 characters excluding newlines. Its 703
+focused controls and full package audit/docgen passed. No runtime or token
+saving is inferred from character counts; publication remains pending.
+
 ## Rejected shortcuts and operating lessons
 
 An index copied for hashing missed an assume-unchanged control; the fresh
@@ -139,6 +147,14 @@ A missing tool-session handle does not prove its child process ended. Inspect
 the owned process tree and durable job registry before replacing a monitor.
 Use one monitor per PR and batch a complete fix wave into one push. Preserve
 receipts before retiring merged or superseded lanes.
+
+A cache-policy failure inherited from #2777 exposed a coordination miss: this
+effort opened #2784 while an existing repair, #2778, was already in progress.
+After #2778 merged, the duplicate was closed and its remaining runs cancelled.
+Before claiming a main-unblocking repair, inspect both open and recently merged
+PRs by failing gate, changed files and unblocker label. Actual configuration
+drift requires a reviewed update; it is distinct from the age-only baseline
+warnings described above.
 
 For future audits, begin with compact timing and failure summaries, identify
 the exact revision and workload, and then inspect the relevant source. A
