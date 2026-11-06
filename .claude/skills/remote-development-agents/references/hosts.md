@@ -1,7 +1,7 @@
 # Host profiles
 
 These are routing records, not live health attestations. Last reconciled:
-2026-11-05 (fork T3 build on beep-worker and dankserver; tom-pc-1 stub). The canonical Beep packet is `goals/cloud-agent-readiness` at the
+2026-11-06 (fork T3 build on beep-worker and dankserver; tom-pc-1 distro provisioned). The canonical Beep packet is `goals/cloud-agent-readiness` at the
 repository containing this skill's real path. Read `SPEC.md` before changing a
 boundary. Host-specific receipts are under that packet's `history/` directory.
 
@@ -10,7 +10,7 @@ boundary. Host-specific receipts are under that packet's `history/` directory.
 | `beep-worker` | `environmentId: <beep-worker>` (linked 2026-11-05, Auto access, renew by 2026-12-05; id in the private handoff) | `ssh-beep-worker-yubi` | Existing headless development worker; default wrapper disables forwarding. Runs the fork T3 build as `t3code.service` (pulled from the DankStation mirror by `t3code-fork-pull.timer`; `docs/runbooks/t3code-fleet.md`). Recheck current provider and workload readiness. |
 | `tbk-worker` | `environmentId: <tbk-worker>` once linked (gated on the protective-stop latch release) | `ssh-tbk-worker` | Separate KVM guest, account `worker`, no sudo; initial serialized development verified. Only DankStation has admitted inbound SSH. |
 | `dankserver` | `environmentId: <dankserver>` (linked 2026-11-06, Auto access, renew by 2026-12-06; id in the private handoff) | `ssh-dankserver-worker` | Dedicated bare-metal account `worker`; initial serialized development verified. Runs the fork T3 build as `t3code.service` on loopback (same pull timer), reached through an administrator-owned tailnet-only Serve route on HTTPS 8448. Codex/Claude enabled in T3 there; Cursor/Grok/Muse disabled. |
-| `tom-pc-1` | `environmentId: <tom-pc-1>` once linked (not yet) | none yet (a dedicated WSL distro; see below) | Stub: no agent work until `goals/t3code-fleet-rollout` provisions the distro and links it. |
+| `tom-pc-1` | `environmentId: <tom-pc-1-wsl>` once linked (distro provisioned 2026-11-06; tailnet join and link pending) | key-auth SSH to the PC (`tjopp@tom-pc-1`), then `wsl -d t3-agent -u agent` | Dedicated WSL distro `t3-agent` (user `agent`, automount and interop off, own tailnet node `tom-pc-1-wsl`), kept alive by the `T3AgentWSL` logon task; `docs/runbooks/t3code-fleet.md`. No agent work until the T3 route exists. |
 | `grok-bot-box-1` | out of scope | none | Not a T3 host (exploration ruling 2026-11-01): no operator SSH, no repo record of what runs there, no local credentials allowed. |
 
 ## T3 route
@@ -129,16 +129,16 @@ after verification on October 24 UTC. Beep-worker's existing account was
 verified to see only `BEEP_SECRETS`. Vault visibility does not authorize using
 every credential in it or performing cloud deployments.
 
-## tom-pc-1 (stub)
+## tom-pc-1
 
-A Windows PC whose agent environment is a new dedicated WSL distro (exploration
-ruling 2026-11-01, superseding the 2026-10-26 Hyper-V design): its own Linux
-user and credentials, `/mnt/c` automount and Windows interop off, the T3 server
-inside the distro through the desktop app's WSL backend, and the existing
-Ubuntu distro untouched. Strict-tier rules apply: no Funnel, a tailnet-only or
-loopback listener, no client data in the repo. The Windows desktop app must stay
-open (Windows has no background T3 service) unless `t3 service` under systemd
-inside WSL is proven. Provisioning, the SSH route and the link belong to
-`goals/t3code-fleet-rollout`; this profile records only that no agent work goes
-there until that packet fills in the readiness line and the T3 route.
-
+A Windows PC whose agent environment is the dedicated WSL distro `t3-agent`
+(exploration ruling 2026-11-01, provisioned 2026-11-06): Ubuntu 26.04, Linux
+user `agent` with its own credentials, `/mnt/c` automount and Windows interop
+off, systemd on, hostname `tom-pc-1-wsl`, its own `tailscaled` node (decision
+2026-11-06: the Windows node carries an unrelated Funnel route and gains no T3
+listener). The existing `Ubuntu` distro is untouched. A logon scheduled task
+(`T3AgentWSL`) keeps the distro running, which is also how it returns after a
+reboot. Strict-tier rules apply: no Funnel, a tailnet-only or loopback
+listener, no client data in the repo. Provisioning, the T3 service and the
+link belong to `goals/t3code-fleet-rollout`; its runbook has the steps. No
+agent work goes there until the T3 route above is filled in.

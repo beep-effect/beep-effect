@@ -42,6 +42,20 @@ Before marking the packet closed:
   stamps `<upstream>-fork.<yyyymmdd>.<hhmm>` on hub and archive alike. Runbook:
   `docs/runbooks/t3code-fleet.md`.
 
+- 2026-11-06 P1 (lane `t3code-fleet-p1c`): tom-pc-1 key-auth SSH works again
+  (BatchMode `SSH_OK`), which clears the P0 access blocker. The Windows node
+  turned out to run a pre-existing Funnel route (a loopback proxy on 8765 that
+  is not ours), so the distro joins the tailnet as its own node (decision file).
+  Provisioned: distro `t3-agent` (Ubuntu 26.04.1, user `agent`, automount and
+  interop verified off, systemd `running`, hostname `tom-pc-1-wsl`), Tailscale
+  1.104.5 installed with operator `agent`, linger on, pull script, units, mirror
+  config, installer and `~/t3-finish.sh` staged, `T3AgentWSL` keep-alive task
+  registered and running (the distro stopped within seconds of the last session
+  before it). Open: operator approves the node's login URL; then the finish
+  script, `t3 pair --tailscale`, the hub link and the desktop pairing. dankserver
+  is linked on the agent plane but not yet paired in the desktop app (client
+  plane); the runbook now has that step.
+
 - Preserve unrelated worktree changes.
 - Keep `SPEC.md` normative and update it only when the contract changes.
 - Keep this plan current; archive old run outputs under `history/`.

@@ -79,6 +79,86 @@ Two separate planes:
    `goals/t3code-harness-mcp` owns the renewal reminder. Environment ids and
    tailnet names stay in the private orchestrator handoff, never in the repo.
 
+## Pair a host in the desktop app (client plane)
+
+A host linked on the agent plane does not appear in the composer's "Run on"
+list until the desktop app has also paired with it. On the host:
+
+```sh
+t3 pair --ttl 15m --label dankstation-desktop
+```
+
+Paste the printed pairing URL into **Settings → Environments → Add
+environment** on DankStation. For a host whose server binds loopback behind a
+Serve route (dankserver), the printed URL carries `127.0.0.1:3773`; replace the
+scheme, host and port with the Serve address (`https://<host>.<tailnet>.ts.net:8448`)
+before pasting. The token is what authorizes the pairing; the address only tells
+the app where to connect. Add the host under **Load balancing** afterwards if
+Auto balance should place threads there.
+
+## tom-pc-1 (WSL distro)
+
+tom-pc-1 is the attorney's Windows PC. Its agent environment is a dedicated WSL
+distro, `t3-agent` (Ubuntu 26.04, installed at `C:\WSL\t3-agent`), with its own
+Linux user `agent`, `/mnt/c` automount and Windows interop off, systemd on, and
+hostname `tom-pc-1-wsl`. The existing `Ubuntu` distro stays untouched. The
+distro runs its own `tailscaled` and is its own tailnet node, because the
+Windows node already carries an unrelated Funnel route and must not gain a T3
+listener (decision 2026-11-06). All steps run over the PC's key-auth SSH
+(`tjopp@tom-pc-1`, PowerShell), never through the Desktop remote-control task.
+
+1. Install: `wsl --install Ubuntu-26.04 --name t3-agent --no-launch --location C:\WSL\t3-agent`.
+2. Configure as root (`wsl -d t3-agent -u root`): write `/etc/wsl.conf`
+   (`[boot] systemd=true`, `[automount] enabled=false mountFsTab=false`,
+   `[interop] enabled=false appendWindowsPath=false`, `[user] default=agent`,
+   `[network] hostname=tom-pc-1-wsl`), `useradd -m -s /bin/bash agent`, install
+   `curl ca-certificates tar python3` and Tailscale (`tailscale.com/install.sh`),
+   `loginctl enable-linger agent`, `tailscale set --operator=agent`, then
+   `wsl --terminate t3-agent` so the config applies.
+3. Keep-alive: WSL stops a distro a few seconds after its last session ends,
+   systemd or not. A logon-triggered scheduled task `T3AgentWSL` runs
+   `wscript //B C:\WSL\t3-agent-keepalive.vbs`, which holds a hidden
+   `wsl -d t3-agent -u root --exec /bin/sleep infinity`; execution time limit
+   0, restart on failure. This is also the reboot-survival path: the distro
+   comes back at the PC user's next sign-in. Check with `wsl -l -v`.
+4. Join the tailnet: `tailscale up --hostname tom-pc-1-wsl --ssh=false` prints
+   a login URL; the operator approves it in the admin console.
+5. Install T3 as `agent` with the mirror pinned: stage `ops/t3code-fork-pull.sh`
+   and its units under `~/.local/bin` and `~/.config/systemd/user`, write
+   `~/.config/t3code-fork/pull.env`, then
+   `T3CODE_RELEASE_BASE_URL=<mirror> T3CODE_VERSION=<published version> sh install.sh`
+   (the public `t3.codes/install.sh` honours both), pin the same URL in
+   `~/.t3/service.env`, `t3 service install`, enable the pull timer. The
+   staged `~/t3-finish.sh` does exactly this once Tailscale is up.
+6. Publish and link: `t3 pair --tailscale --ttl 15m` inside the distro (Serve
+   on the distro's own node, no Funnel); on the hub
+   `t3 environment link https://tom-pc-1-wsl.<tailnet>.ts.net --pairing-code <code> --access auto`.
+   Then pair the desktop app the same way as the other hosts.
+
+Rollback: `wsl --unregister t3-agent`, delete the `T3AgentWSL` task and
+`C:\WSL`, and delete the `tom-pc-1-wsl` node in the Tailscale admin console.
+
+## tbk-worker (gated)
+
+Do not run these until the operator releases tbk-worker's protective-stop
+latch (exploration `t3code-fleet-driver`, decision `tbk-worker`). tbk-worker
+is a KVM guest whose network design exposes nothing but SSH to DankStation, so
+its T3 listener stays on loopback and is reached through an SSH port forward,
+not Tailscale Serve.
+
+1. Start the guest through its guarded manual start and confirm the latch is
+   clear; connect with `ssh-tbk-worker` (account `worker`, no sudo).
+2. Install the pull the same way as beep-worker (section above); the service,
+   linger and slice already exist from the worker's readiness packet.
+   `service.env` keeps `T3CODE_HOST=127.0.0.1`.
+3. Link from the hub over a forward:
+   `ssh -N -L 127.0.0.1:3774:127.0.0.1:3773 tbk-worker` kept open by a user
+   unit on DankStation, then `t3 pair --ttl 15m` on the guest and
+   `t3 environment link http://127.0.0.1:3774 --pairing-code <code> --access auto`.
+   The link dies with the forward; the unit must restart it.
+4. Record the receipt under `goals/t3code-fleet-rollout/history/` and fill in
+   the `tbk-worker` row of the host profiles.
+
 ## Gotchas
 
 - The single-executable build needs the exact `engines.node` from the fork's
@@ -90,3 +170,6 @@ Two separate planes:
   unset it resolves the public GitHub release and would replace the fork build.
 - The hub AppImage is built without a GitHub publish config, so the desktop
   updater has no feed; restart T3 Code after a sync to pick up the new build.
+- WSL terminates a distro once its last `wsl.exe` session ends, even with
+  systemd running inside it; the T3 service on tom-pc-1 survives only while the
+  `T3AgentWSL` keep-alive task holds a session open.

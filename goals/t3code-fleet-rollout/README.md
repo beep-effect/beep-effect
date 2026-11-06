@@ -33,12 +33,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — the host profiles landed (#2594), P0 host facts are recorded in `PLAN.md`; the DankStation publish step and the host pull timer are written under `ops/` and are being rolled to beep-worker and dankserver. tom-pc-1 (WSL distro) and the agent-plane links follow.
+P1 Implement — publish and pull run unattended on beep-worker and dankserver (#2705, #2719), both linked on the agent plane. tom-pc-1's WSL distro `t3-agent` is provisioned and kept alive; its tailnet join, T3 install, link and the desktop-app pairing of dankserver wait on the operator (login approval, YubiKey touch).
 
 ## Latest Evidence
 
-2026-11-05: P0 live reads of beep-worker and dankserver (official `t3@0.1.5` services); publish and pull scripts in `ops/`; runbook `docs/runbooks/t3code-fleet.md`.
+2026-11-06: `history/2026-11-06-dankserver-link.md` (Serve route and link) and `history/2026-11-06-tom-pc-1-wsl.md` (distro provisioned, keep-alive task, tailnet join pending); runbook gained the WSL host, client-plane pairing and gated tbk-worker sections.
 
 ## Notes
 
-Host order: beep-worker (already runs T3), dankserver, tom-pc-1 (new WSL distro; restore an access route first). tbk-worker is gated on the operator releasing its latch. grok-bot-box-1 is out of scope.
+Host order: beep-worker (done), dankserver (linked), tom-pc-1 (WSL distro provisioned; tailnet join pending). tbk-worker is gated on the operator releasing its latch. grok-bot-box-1 is out of scope.
