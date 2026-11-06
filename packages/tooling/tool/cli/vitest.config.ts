@@ -1,8 +1,10 @@
 import * as NodeOS from "node:os";
-import * as NodePath from "node:path";
 import * as NodeURL from "node:url";
+import * as NodePath from "@effect/platform-node/NodePath";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import { defineConfig, mergeConfig } from "vitest/config";
 import { BaseSequencer } from "vitest/node";
@@ -14,17 +16,22 @@ import type { TestSpecification } from "vitest/node";
 // hash partition over the unknown set; removed files simply disappear from collection.
 // Other shard counts retain Vitest's default behavior. The plan changes scheduling only.
 class MeasuredSequencer extends BaseSequencer {
-  override async shard(files: TestSpecification[]): Promise<TestSpecification[]> {
+  override shard(files: TestSpecification[]): Promise<TestSpecification[]> {
     const shard = this.ctx.config.shard;
     if (shard === undefined || shard.count !== shardPlan.shards.length) return super.shard(files);
+    const path = Effect.runSync(Effect.provide(Path.Path, NodePath.layer));
     const assignment = (file: TestSpecification) => {
-      const relative = Str.replaceAll(NodePath.sep, "/")(NodePath.relative(this.ctx.config.root, file.moduleId));
+      const relative = Str.replaceAll(path.sep, "/")(path.relative(this.ctx.config.root, file.moduleId));
       return A.findFirstIndex(shardPlan.shards, (entries) => A.contains(entries, relative));
     };
-    const unknown = await super.shard(A.filter(files, (file) => O.isNone(assignment(file))));
-    return A.appendAll(
-      A.filter(files, (file) => O.contains(assignment(file), shard.index - 1)),
-      unknown
+    return Effect.promise(() => super.shard(A.filter(files, (file) => O.isNone(assignment(file))))).pipe(
+      Effect.map((unknown) =>
+        A.appendAll(
+          A.filter(files, (file) => O.contains(assignment(file), shard.index - 1)),
+          unknown
+        )
+      ),
+      Effect.runPromise
     );
   }
 }
