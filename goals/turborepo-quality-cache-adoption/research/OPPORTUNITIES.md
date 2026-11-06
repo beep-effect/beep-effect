@@ -1,5 +1,9 @@
 # Friction and opportunities
 
+## GitHub check-list refusal despite positive quota observations, 2026-11-06
+
+The replacement readiness observers report `Failed to read the complete pull request check census`. The exact `gh pr checks --json ...` command, both branch-inferred and explicitly naming PR #2804, reports `GraphQL: API rate limit already exceeded`. Within the same approved credential lane, the REST quota response at 21:40 UTC reports 4,604 core and 4,831 GraphQL requests remaining; a direct GraphQL rate-limit query at 21:41 reports 4,559 remaining. This does not establish a token, provider or CLI root cause. Current-head REST workflow job inventories remain readable and show no failed jobs at 21:42; they do not establish complete PR merge readiness or replace the review-thread gate. Preserve the running observers, avoid blind restarts or credential changes, and retain the original refusals plus independent quota observations. A diagnostic that preserves the failed census command's safe cause would prevent the generic monitor message from obscuring this distinction.
+
 ## Types lint ignore-policy input gap, 2026-11-06
 
 While preparing the next reviewed pilot, source inspection found `biome check .` reads Git ignore files but inherited types lint inputs omit the root ignore policy. Twelve bounded stable/canary native `run lint --filter=@beep/types --dry=json` plans confirm that adding a types source exclusion to that policy leaves the original task hash unchanged, while the explicit candidate invalidates. Caching remains disabled, so this is a pre-adoption input gap, not evidence of a stale artifact served in production. The input-profile correction and source-bound reports are prepared in the local types pilot lane. Include ignore-policy perturbation in computation qualification before enabling reuse; metadata coverage alone does not establish semantic correctness.
