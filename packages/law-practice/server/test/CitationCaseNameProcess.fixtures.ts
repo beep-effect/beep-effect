@@ -1,7 +1,6 @@
 /** Complete original processing snapshots and native integer source controls.
  * @internal @packageDocumentation @since 0.0.0
  */
-import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationCaseNameProcessConfiguration,
@@ -10,11 +9,9 @@ import {
 import { parseCitationPythonInteger } from "@beep/law-practice-server/internal/Citation/PythonInteger";
 import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
-import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -27,7 +24,8 @@ import {
   assertCitationWorkerCapturedDeadline,
   assertCitationWorkerClosedLifetime,
   assertCitationWorkerCompositionReleased,
-  setupCitationMetadataRuntime,
+  makeCitationMetadataFixture,
+  readCitationOracleFixture,
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
@@ -100,15 +98,7 @@ const CleanerCorpus = S.fromJsonString(
   })
 );
 const load = Effect.fn("CaseNameProcessTest.load")(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const read = Effect.fn("CaseNameProcessTest.read")(function* (name: string, expected: string) {
-    const bytes = yield* fs.readFile(
-      NodeURL.fileURLToPath(new URL(`../../use-cases/test/fixtures/eyecite/${name}.json`, import.meta.url))
-    );
-    const actual = yield* S.decodeEffect(Sha256HexFromBytes)(bytes);
-    expect(actual).toBe(expected);
-    return new TextDecoder().decode(bytes);
-  });
+  const read = readCitationOracleFixture;
   const patterns = yield* read(
     "case-name-process-patterns",
     "3786b74826d9b3f3b88bf03d673da59f43abe4a54ee81f3615fe8871926d7a87"
@@ -123,19 +113,7 @@ const load = Effect.fn("CaseNameProcessTest.load")(function* () {
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   return { patterns, corpus, configuration: { ...patterns.configuration, cleaner: cleaner.configuration } };
 });
-const install = Effect.fn("CaseNameProcessTest.install")(function* (
-  kind: CitationNativeRuntimeKind,
-  maximum?: number,
-  enclosing = false,
-  controlled = false
-) {
-  const loaded = yield* load();
-  const setup = yield* setupCitationMetadataRuntime(kind, maximum, enclosing, controlled, 8192);
-  const stage = yield* makeCitationCaseNameProcess(setup.limits, setup.runtime, loaded.configuration).pipe(
-    Effect.provideContext(setup.provided)
-  );
-  return { ...setup, ...loaded, stage };
-});
+const install = makeCitationMetadataFixture({ load, make: makeCitationCaseNameProcess });
 type Row = (typeof Corpus.Type.cases)[number];
 const request = (row: Row) => ({
   ...row.state,

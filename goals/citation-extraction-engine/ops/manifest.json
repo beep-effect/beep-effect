@@ -445,6 +445,10 @@
     {
       "path": "ops/probe-case-name-process-patterns.py",
       "purpose": "Observe original candidate split/removal profiles and direct CPython integer outcomes, including signed large values, native Unicode, parser whitespace and the 4300-digit ceiling."
+    },
+    {
+      "path": "ops/probe-span-offsets.py",
+      "purpose": "Observe actual DMP/builtin SpanUpdater construction, every left/right lookup and real Document emphasis geometry without claiming a target diff producer."
     }
   ]
 }
