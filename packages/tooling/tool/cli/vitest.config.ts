@@ -76,6 +76,7 @@ const isolatedSuites = [
   "test/laws-schema-tag-idioms-command.test.ts",
   "test/lint-command.test.ts",
   "test/lint-identity-registry.test.ts",
+  "test/lint-program-assignment.test.ts",
   "test/lint-tsconfig-overlay.test.ts",
   "test/lint-workers.test.ts",
   "test/native-runtime.test.ts",
