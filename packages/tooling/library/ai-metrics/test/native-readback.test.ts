@@ -460,3 +460,22 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
     })
   )
 );
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("queries exact managed origin/session/elapsed evidence before declaring backend visibility", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture("000000001", 100000000, true);
+      yield* f.sender.send(f.selection);
+      for (const mode of ["managed-origin", "managed-session", "tokens"]) {
+        yield* Ref.set(f.mode, mode);
+        expect(yield* f.reconcile()).toMatchObject({ _tag: "Mismatch" });
+        expect(yield* f.sender.ledger.state(f.event.eventId)).toMatchObject({
+          value: { state: "accepted-unverified" },
+        });
+      }
+      yield* Ref.set(f.mode, "valid");
+      expect(yield* f.reconcile()).toMatchObject({ _tag: "Visible" });
+      expect(yield* f.sender.ledger.state(f.event.eventId)).toMatchObject({ value: { state: "visible" } });
+    })
+  )
+);
