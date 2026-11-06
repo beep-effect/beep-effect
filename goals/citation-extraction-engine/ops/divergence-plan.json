@@ -159,7 +159,11 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-05-shared-text-capacity.md",
         "packages/law-practice/server/test/CitationCleanerParentBudget.test.ts",
         "packages/law-practice/server/test/CitationTextNativeOrder.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-cleaner-parent-budget.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-cleaner-parent-budget.md",
+        "goals/citation-extraction-engine/ops/probe-html-case-names.py",
+        "goals/citation-extraction-engine/ops/verify-html-case-names.py",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/html-case-names.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-html-case-name-source.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

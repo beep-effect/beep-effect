@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "208d8abc20f24827cc88024da4f799ecf5b60294a93ddce5d78ea8c93f84d603",
+  "planSha256": "a980bae196d87997cc03e97c46a99eeaa9363a0e153d1560db6e181043b71f89",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -633,6 +633,22 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-cleaner-parent-budget.md",
           "sha256": "3dfd9d0d20af312245209a47275d953e3c727c1dfa6263f70262ddbf2f5c6f2c"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-html-case-names.py",
+          "sha256": "5b6a1afeb93c9fb0543e498c17f357a315aa4459694d3a25994c575f5d0c5d68"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/verify-html-case-names.py",
+          "sha256": "7fe482a226599c68c61344690a1944c0f04ef475c45ad7a280cdffb2aaa52f79"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/html-case-names.json",
+          "sha256": "e6231633d7a3d4115295517539aecda42045ce2a8253f565f9db86dacfcf1670"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-html-case-name-source.md",
+          "sha256": "a09447369dbc0a1509751d57b0a15c891c422a293a0c117002660506b284a815"
         }
       ],
       "workflowState": "audit",

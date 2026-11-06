@@ -1,5 +1,12 @@
 # Citation Extraction Engine Plan
 
+HTML case-name source checkpoint (2026-11-06): 128 direct original helper calls
+now freeze metadata/span mutations, original token classes and complete geometry/
+cleanup traces across all five HTML extraction branches. Both hash-seed exports
+match; nine corruption controls and exact oracle replay pass. This source-only
+wave exposes the next geometry-to-metadata connection; target HTML case-name
+parity remains open. See [source evidence](history/evidence/2026-11-06-html-case-name-source.md).
+
 Named generator checkpoint (2026-11-05): server-owned one-shot generators now
 share membership and cleaner consumption through Effect Ref. They remain truthy
 after exhaustion and preserve original created/suspended/closed states. Both

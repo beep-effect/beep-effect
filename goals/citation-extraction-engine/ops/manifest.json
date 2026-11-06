@@ -105,7 +105,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-05-input-document-constructor.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-05-document-cleaner-protocols.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-05-shared-text-capacity.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-05-cleaner-parent-budget.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-cleaner-parent-budget.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-html-case-name-source.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -187,7 +188,8 @@
     "python3 goals/citation-extraction-engine/ops/verify-cleaner-unicode.py",
     "python3 goals/citation-extraction-engine/ops/verify-case-name-process.py --self-test",
     "python goals/citation-extraction-engine/ops/verify-diff-kernel.py",
-    "python goals/citation-extraction-engine/ops/verify-diff-kernel.py --runtime bun"
+    "python goals/citation-extraction-engine/ops/verify-diff-kernel.py --runtime bun",
+    "python3 goals/citation-extraction-engine/ops/verify-html-case-names.py --self-test"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
@@ -488,6 +490,14 @@
     {
       "path": "ops/probe-document-input-modes.py",
       "purpose": "Observe actual Document mode branches, reversed insert arguments, step protocols, generator state, partial fields and original phase order without replacing constructor logic."
+    },
+    {
+      "path": "ops/probe-html-case-names.py",
+      "purpose": "Capture original full/short HTML case-name mutation and ordered geometry/cleanup calls across all five helper branches."
+    },
+    {
+      "path": "ops/verify-html-case-names.py",
+      "purpose": "Seal original HTML case-name evidence, reject corrupted observations and optionally replay the pinned oracle; not target parity."
     }
   ]
 }
