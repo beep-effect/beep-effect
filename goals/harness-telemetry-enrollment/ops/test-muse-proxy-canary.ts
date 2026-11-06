@@ -289,30 +289,37 @@ nativeCase("wrapper bytes drift refuses before consumer invocation", () =>
   })
 );
 
-it.live("external source interruption terminalizes after cleanup", () =>
-  Effect.tryPromise(async () => {
-    const f = await fixture({ mode: "hang" });
-    try {
-      const fiber = Effect.runFork(f.run);
-      await f.started;
-      await Effect.runPromise(Fiber.interrupt(fiber));
-      const result = await Effect.runPromise(Fiber.await(fiber));
-      expect(Exit.hasInterrupts(result)).toBe(true);
-      expect(f.facts).toEqual(["Prepared", "Started", "Finished"]);
-      const text = await Fs.readFile(
-        Path.join(f.request.attemptDirectory, "diagnostic-lifecycle-validated.json"),
-        "utf8"
-      );
-      const diagnostic = await Effect.runPromise(S.decodeEffect(S.fromJsonString(NativeAttemptDiagnostic))(text));
-      expect(diagnostic.lifecycleOutcome).toEqual(O.some("cancelled"));
-      expect(diagnostic.lifecycleDelivery).toEqual(O.some("acknowledged"));
-      expect(diagnostic.nativeExitStatus).toEqual(O.none());
-      expect(text).not.toContain("PRIVATE_");
-    } finally {
-      await f.close();
-    }
-  })
-);
+for (const stop of ["interrupt", "deadline"] as const) {
+  it.live(`external source ${stop} terminalizes as cancelled after cleanup`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ mode: "hang" });
+      try {
+        if (stop === "interrupt") {
+          const fiber = Effect.runFork(f.run);
+          await f.started;
+          await Effect.runPromise(Fiber.interrupt(fiber));
+          expect(Exit.hasInterrupts(await Effect.runPromise(Fiber.await(fiber)))).toBe(true);
+        } else {
+          const result = await Effect.runPromise(f.run.pipe(Effect.timeout("300 millis"), Effect.result));
+          expect(result._tag).toBe("Failure");
+          if (result._tag === "Failure") expect(result.failure).toMatchObject({ _tag: "TimeoutError" });
+        }
+        expect(f.facts).toEqual(["Prepared", "Started", "Finished"]);
+        const text = await Fs.readFile(
+          Path.join(f.request.attemptDirectory, "diagnostic-lifecycle-validated.json"),
+          "utf8"
+        );
+        const diagnostic = await Effect.runPromise(S.decodeEffect(S.fromJsonString(NativeAttemptDiagnostic))(text));
+        expect(diagnostic.lifecycleOutcome).toEqual(O.some("cancelled"));
+        expect(diagnostic.lifecycleDelivery).toEqual(O.some("acknowledged"));
+        expect(diagnostic.nativeExitStatus).toEqual(O.none());
+        expect(text).not.toContain("PRIVATE_");
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
 
 for (const mode of [
   "initial-exe-enoent",
