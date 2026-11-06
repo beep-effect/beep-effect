@@ -9,7 +9,7 @@ Status: `pending`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Tooling | in-progress | Schemas (`ArchiveRecord`, `retentionReason`, harvest row), `beep goals harvest`, `beep goals archive`, doctor check, INDEX column, README doctrine, closeout-skill step; public-CLI smoke on one packet. | Tooling PR merged; ledger committed under the exploration's `research/harvest/` at a named `main` SHA. |
-| P1 Archive repo | pending | Create `beep-effect/beep-effect-goals-archive` (public, mirrored paths, generated index, projection README); add the `beep refs` member. | Repo exists; `beep refs provision` links `.repos/goals-archive`. |
+| P1 Archive repo | complete | Create `beep-effect/beep-effect-goals-archive` (public, mirrored paths, generated index, projection README); add the `beep refs` member. | Repo exists; `beep refs provision` links `.repos/goals-archive`. |
 | P2 Sweep | pending | Batches of about 50 packets, one PR at a time, goals then explorations; each PR = archive output + link rewrites for its batch, opened after hash verification. | Every terminal packet tombstoned; tag `archive/packets-2026-11` on the last batch. |
 | P3 Yeet | pending | Each PR driven to mergeable behind its review window; inherited reds attributed. | All batch PRs merged. |
 | P4 Close | pending | Reflection, `proposedCloseout`, adoption PR; this packet itself is archived by its own command after adoption. | `closeout.status == initiative.status` on `origin/main`. |
@@ -51,6 +51,14 @@ git diff --check -- goals/packet-archive-mechanics
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug packet-archive-mechanics`; add a `kind: checkpoint` file there, never edit this block._
 
 ### P0 tooling implemented locally: harvest, archive plan/write, doctor advisory, INDEX column, doctrine text, 2026-11-06
+
+Reverse: n/a
+
+### P0 tooling PR #2801 open; P1 archive repo created and provisioned, 2026-11-06
+
+Draft PR #2801 carries harvest, archive, doctor, INDEX, doctrine and the goals-archive refs member. beep-effect/beep-effect-goals-archive exists with main at 4ca1a37 and .repos/goals-archive provisions. Next: merge #2801, regenerate the ledger at a main SHA in a ledger PR, then sweep batch 1.
+
+PR #2801
 
 Reverse: n/a
 

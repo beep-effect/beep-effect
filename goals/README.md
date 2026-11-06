@@ -178,7 +178,10 @@ tombstone on `main`. It is the default closeout step once the adoption PR merges
 2. `bun run beep goals archive --kind goals --slug <slug> --write --expect <planId>`
    recomputes the plan, refuses a stale id, commits the mirrored tree to the
    local archive checkout (`--archive-dir`), verifies its tree hash, and only
-   then rewrites `main`. Land the result in a packet-state PR.
+   then rewrites `main`. The command never pushes.
+3. Push the archive checkout (`git -C .repos/goals-archive push`) and confirm
+   `git ls-remote` shows the archive commit before opening the packet-state PR,
+   so no deletion reaches `main` ahead of its archived copy.
 
 The tombstone keeps `ops/manifest.json`, a generated stub `README.md`
 (lifecycle, mission, closeout, `provides`, headline finding, archive URL),

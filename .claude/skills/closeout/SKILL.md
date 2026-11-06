@@ -79,7 +79,8 @@ Prefer these, so prompts read the same across sessions:
   goal is not done, and `/goal` must not stop, until that PR merges.
 - `Archive the <slug> packet (Recommended)` — after the adoption PR merges:
   `bun run beep goals archive --kind goals --slug <slug> --plan`, then
-  `--write --expect <planId>`, landed in a packet-state PR; or set
+  `--write --expect <planId>`, push the archive checkout, then land the
+  tombstone in a packet-state PR; or set
   `retentionReason` in the manifest when the evidence must stay on `main`.
   Explorations use `--kind explorations` once graduated or killed.
 - `Park it: record state and stop` — writes the state to memory or the packet
