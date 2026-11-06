@@ -33,10 +33,12 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
+import * as References from "effect/References";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -109,6 +111,32 @@ const decodeDiagnosticLine = S.decodeEffect(S.fromJsonString(S.Union([diagnostic
 });
 const decodeDiagnosticReport = S.decodeUnknownEffect(diagnosticReport, { onExcessProperty: "error" });
 const encodeDiagnosticError = S.encodeEffect(S.fromJsonString(CursorLifecycleError));
+const diagnosticObservation = S.Struct({
+  listenerReady: S.Boolean,
+  diagnosticAckObserved: S.Boolean,
+  helperExitZero: S.Boolean,
+  report: diagnosticReport,
+});
+const diagnosticEvidence = S.Struct({
+  ...diagnosticObservation.fields,
+  evidence: S.Literals(["synthetic-diagnostic-occurrence-not-retrodiagnosis", "synthetic-regression-fixture"]),
+  testProcessReportsBun: S.Boolean,
+  testProcessReportsNode22: S.Boolean,
+});
+const encodeDiagnosticEvidence = S.encodeEffect(S.fromJsonString(diagnosticEvidence));
+const decodeAssertionMessage = S.decodeUnknownOption(S.Struct({ message: S.String }));
+const diagnosticContext = Effect.fnUntraced(function* (
+  observed: typeof diagnosticObservation.Type,
+  evidence: typeof diagnosticEvidence.Type.evidence = "synthetic-diagnostic-occurrence-not-retrodiagnosis"
+) {
+  const encoded = yield* encodeDiagnosticEvidence({
+    ...observed,
+    evidence,
+    testProcessReportsBun: O.isSome(O.fromUndefinedOr(process.versions.bun)),
+    testProcessReportsNode22: Str.startsWith("22.")(process.versions.node),
+  });
+  return `[cursor-peer-diagnostic] ${encoded}`;
+});
 
 const inspectSyntheticPeer = Effect.fn("CursorLifecycleTest.inspectSyntheticPeer")(
   function* (policy: CursorLifecyclePolicy) {
@@ -549,24 +577,70 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       Effect.gen(function* () {
         const f = yield* fixture();
         const observed = yield* inspectSyntheticPeer(f.policy);
-        const message = yield* encode({
-          evidence: "synthetic-diagnostic-occurrence-not-retrodiagnosis",
-          testProcessReportsBun: O.isSome(O.fromUndefinedOr(process.versions.bun)),
-          testProcessReportsNode22: Str.startsWith("22.")(process.versions.node),
-          ...observed,
-        });
+        const message = yield* diagnosticContext(observed);
         // This schema-closed metadata has no paths, PIDs, argv, environment, callback body or stderr.
-        yield* Effect.logInfo(`[cursor-peer-diagnostic] ${message}`);
-        expect(observed.report.sourceHashMatches).toBe(true);
-        expect(observed.report.predicateAstPreserved).toBe(true);
-        expect(observed.report.shortCircuitOrderPreserved).toBe(true);
-        expect(observed.report.projectedPrintSuppressed).toBe(true);
-        expect(observed.report.ok).toBe(true);
-        expect(observed.diagnosticAckObserved).toBe(true);
-        expect(observed.helperExitZero).toBe(true);
-        expect((yield* f.journal.stats).pages).toBe(0);
+        yield* Effect.logInfo(message);
+        expect(observed.report.sourceHashMatches, message).toBe(true);
+        expect(observed.report.predicateAstPreserved, message).toBe(true);
+        expect(observed.report.shortCircuitOrderPreserved, message).toBe(true);
+        expect(observed.report.projectedPrintSuppressed, message).toBe(true);
+        expect(observed.report.ok, message).toBe(true);
+        expect(observed.diagnosticAckObserved, message).toBe(true);
+        expect(observed.helperExitZero, message).toBe(true);
+        expect((yield* f.journal.stats).pages, message).toBe(0);
       })
     ).pipe(Effect.timeout("15 seconds"))
+  )
+);
+
+it.effect("closed diagnostic assertion context survives when all info logging is filtered", () =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const report = diagnosticReport.make({
+        ok: false,
+        phase: "public_digest",
+        predicate: "source.public_digest.b40.1",
+        exceptionClass: "ValueError",
+        sourceHashMatches: true,
+        predicateAstPreserved: true,
+        shortCircuitOrderPreserved: true,
+        projectedPrintSuppressed: true,
+        checks: { "source.public_digest.b40.1": { observedTrue: true, observedFalse: false } },
+      });
+      const message = yield* diagnosticContext(
+        { listenerReady: true, diagnosticAckObserved: false, helperExitZero: false, report },
+        "synthetic-regression-fixture"
+      );
+      let infoLogs = 0;
+      const logger = Logger.make(() => {
+        infoLogs++;
+      });
+      const loggerContext = yield* Layer.build(Logger.layer([logger]));
+      const assertion = yield* Effect.gen(function* () {
+        yield* Effect.logInfo(message);
+        return yield* Effect.try({
+          try: () => expect(report.ok, message).toBe(true),
+          catch: (error) =>
+            decodeAssertionMessage(error).pipe(
+              O.map((value) => value.message),
+              O.getOrElse(() => "unclassified-assertion")
+            ),
+        }).pipe(Effect.flip);
+      }).pipe(Effect.provideService(References.MinimumLogLevel, "None"), Effect.provideContext(loggerContext));
+      expect(infoLogs).toBe(0);
+      expect(Str.includes(message)(assertion)).toBe(true);
+      expect(Str.includes("source.public_digest.b40.1")(assertion)).toBe(true);
+      for (const forbidden of [
+        "PRIVATE-PROMPT",
+        "private@example",
+        "native-session",
+        "forged-root",
+        "/home/",
+        "argv",
+        "stderr",
+      ])
+        expect(Str.includes(forbidden)(assertion)).toBe(false);
+    })
   )
 );
 
