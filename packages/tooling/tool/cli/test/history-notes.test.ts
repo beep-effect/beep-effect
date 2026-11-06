@@ -64,7 +64,7 @@ const historyLayer = (mapText: string, stubs: Partial<GitStubs>) =>
                 ),
         }),
         Path.layer,
-        Git.layerTest(stubs)
+        Git.layerTest({ isShallow: () => Effect.succeed(false), ...stubs })
       )
     )
   );
@@ -226,6 +226,23 @@ describe("HistoryNotes.check", () => {
       const failure = yield* Effect.flip(runCheck({ abc: "chore: one" }, {}));
       assertInstanceOf(failure, HistoryMapError);
       assert.strictEqual(failure.path, "docs/history/commit-message-map.json");
+    })
+  );
+
+  it.effect("a shallow clone fails closed before listing reachable commits", () =>
+    Effect.gen(function* () {
+      const failure = yield* Effect.flip(
+        runCheck(
+          { [SHA_A]: "chore: one\n" },
+          {
+            isShallow: () => Effect.succeed(true),
+            revList: () => Effect.die("rev-list must not run in a shallow clone"),
+          }
+        )
+      );
+      assertInstanceOf(failure, HistoryGitError);
+      assert.strictEqual(failure.operation, "is-shallow");
+      assert.include(failure.message, "git fetch --unshallow");
     })
   );
 

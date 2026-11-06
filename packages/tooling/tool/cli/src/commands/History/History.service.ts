@@ -79,6 +79,8 @@ export interface HistoryNotesShape {
  */
 export class HistoryNotes extends Context.Service<HistoryNotes, HistoryNotesShape>()($I`HistoryNotes`) {}
 
+const SHALLOW_REMEDIATION = "Fetch full history first (`git fetch --unshallow`, or `fetch-depth: 0` in CI).";
+
 const gitError = (operation: string, message: string) => (cause: unknown) =>
   HistoryGitError.make({ operation, message, cause });
 
@@ -151,6 +153,17 @@ const makeHistoryNotes = Effect.gen(function* () {
     const map = yield* readMap(options.root, options.mapPath);
     const rows = A.sort(R.toEntries(map), byKey);
     const keys = A.map(rows, rowKey);
+    // A shallow clone's rev-list is only the shallow window, so valid keys
+    // would read as unreachable: fail closed instead of reporting them.
+    const shallow = yield* git
+      .isShallow(options.root)
+      .pipe(Effect.mapError(gitError("is-shallow", "Cannot tell whether this clone is shallow.")));
+    if (shallow) {
+      return yield* HistoryGitError.make({
+        operation: "is-shallow",
+        message: `Cannot prove map keys reachable from ${options.base} in a shallow clone. ${SHALLOW_REMEDIATION}`,
+      });
+    }
     const reachable = yield* git.revList(options.root, options.base).pipe(
       Effect.mapBoth({
         onFailure: gitError("rev-list", `Cannot list the commits reachable from ${options.base}.`),
