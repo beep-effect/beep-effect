@@ -37,7 +37,7 @@ pattern_file="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/packages/tooling/
 fallback_pattern() {
   case "$1" in
     desktop) printf '%s' '^(apps/professional-desktop/src-tauri/|\.github/workflows/check\.yml$|scripts/ci-change-profile\.sh$|packages/tooling/tool/cli/src/commands/Ci/CiOperational)' ;;
-    goals) printf '%s' '^(goals/(INDEX|README)\.md|goals/[^/]+/(GOAL|PLAN|README|SPEC|DECISIONS)\.md|goals/[^/]+/ops/manifest\.json)$' ;;
+    goals) printf '%s' '^(goals/(INDEX|README)\.md|goals/[^/]+/(GOAL|PLAN|README|SPEC|DECISIONS)\.md|goals/[^/]+/ops/manifest\.json|goals/[^/]+/(history(/reflections)?|research)/\.gitkeep)$' ;;
     docs) printf '%s' '^docs/|^explorations/|^research/|^\.changeset/[^/]+\.md$|\.md$' ;;
     codeRoots) printf '%s' '^(packages|apps|infra)/' ;;
     *) return 1 ;;
