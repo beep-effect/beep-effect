@@ -6,7 +6,7 @@ Operator request: use the X API to extract alpha from the links below,
 and open an exploration of how the concepts, ideas, patterns,
 architecture, strategy, or systems could improve beep-effect. Follow
 the structure of existing exploration packets. Local clones and one
-paper live under `~/YeeBois/research/11-6-26/`.
+paper are named in the archival ledger, `research/SOURCES.md`.
 
 https://x.com/Connected_Data/status/2118300588446220717
 https://github.com/chenmingtang830/jevgraph
@@ -36,7 +36,7 @@ https://x.com/Connected_Data/status/2116128273176375792
 
 https://www.bcgplatinion.com/insights/lost-in-translation-why-ai-agents-cannot-scale-without-semantic-foundations?utm_source=twitter&utm_medium=social&utm_campaign=CDL25&utm_term=news
 
-/home/elpresidank/YeeBois/research/11-6-26/Ontology-Aware Prompting for Knowledge Graph Construction from Text.pdf
+Ontology-Aware Prompting for Knowledge Graph Construction from Text.pdf
 https://www.alphaxiv.org/abs/2609.31663
 https://www.alphaxiv.org/abs/2210.10709
 https://www.alphaxiv.org/abs/2609.25607
@@ -54,10 +54,10 @@ https://blog.gopenai.com/stop-mixing-rag-knowledge-graphs-semantic-layers-and-ag
 
 https://www.alphaxiv.org/abs/2604.15676?utm_source=extension&utm_medium=link-badge&utm_content=x.com
 
-Local directories present at intake:
+Local directories present at intake, with paths in `research/SOURCES.md`:
 
-- `~/YeeBois/research/11-6-26/jevgraph`
-- `~/YeeBois/research/11-6-26/ontosmith`
-- `~/YeeBois/research/11-6-26/horoi`
-- `~/YeeBois/research/11-6-26/agentic-graphrag`
-- `~/YeeBois/research/11-6-26/Ontology-Aware Prompting for Knowledge Graph Construction from Text.pdf`
+- jevgraph
+- ontosmith
+- horoi
+- agentic-graphrag
+- Ontology-Aware Prompting for Knowledge Graph Construction from Text.pdf

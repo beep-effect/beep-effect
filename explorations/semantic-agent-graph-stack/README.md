@@ -34,6 +34,9 @@ agent-run memory?
 
 ## Trail
 
+- 2026-11-06: machine-local clone paths stay in
+  `research/SOURCES.md`. The live capture names the clones without
+  a home path, so the knowledge-ref gate can read it.
 - 2026-11-06: research packet written against `df3ccd1b`. Stage
   stays `research`. Align was not started. Nothing graduated and
   nothing vendored.
