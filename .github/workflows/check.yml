@@ -20,6 +20,9 @@ env:
   # The event payload is fixed across jobs and partial reruns. Never bind
   # coverage identity or affected scope to a freshly fetched moving ref.
   BEEP_COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
+  # Classify the PR itself; HEAD remains the synthetic merge used for proof.
+  BEEP_CI_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+  BEEP_CI_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
 
 jobs:
   pr-size:
@@ -203,7 +206,7 @@ jobs:
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh "$BEEP_COVERAGE_BASE_SHA")"
+          eval "$(scripts/ci-change-profile.sh)"
           # Docs-only diffs (Heavy admission's path rule) give these lanes
           # nothing to prove. Repo Sanity validates `.changeset/*.md`, which that
           # rule counts as documentation, so only packet prose suppresses it.
@@ -365,7 +368,7 @@ jobs:
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh "$BEEP_COVERAGE_BASE_SHA")"
+          eval "$(scripts/ci-change-profile.sh)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -506,7 +509,7 @@ jobs:
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+          eval "$(scripts/ci-change-profile.sh)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -631,7 +634,7 @@ jobs:
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh "$BEEP_COVERAGE_BASE_SHA")"
+          eval "$(scripts/ci-change-profile.sh)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -785,7 +788,7 @@ jobs:
           [[ "$ADMISSION_RESULT" == "success" ]]
           [[ "$LEGACY_COVERAGE" == "true" || "$LEGACY_COVERAGE" == "false" ]]
           [[ "$UNIT_RESULT" == "success" ]]
-          eval "$(scripts/ci-change-profile.sh "$BEEP_COVERAGE_BASE_SHA")"
+          eval "$(scripts/ci-change-profile.sh)"
           echo "should_run=$([[ "$docs_only" == "true" ]] && echo false || echo true)" >> "$GITHUB_OUTPUT"
 
       # The comparison only reads artifacts through the repo CLI: no Turbo,
@@ -919,7 +922,7 @@ jobs:
           # workflow's changes compile the crate on pull requests; pushes
           # always compile. The toolchain itself is provisioned whenever the
           # lane runs (see "Setup Rust toolchain" below).
-          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+          eval "$(scripts/ci-change-profile.sh)"
           rust_should_run="$desktop_rust_relevant"
 
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
@@ -1032,7 +1035,7 @@ jobs:
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+          eval "$(scripts/ci-change-profile.sh)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -1151,7 +1154,7 @@ jobs:
           set -euo pipefail
           should_run=true
           if [[ "$BASE_FETCH_STATUS" == "0" ]]; then
-            eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}" || true)"
+            eval "$(scripts/ci-change-profile.sh || true)"
             if [[ "${docs_only:-false}" == "true" ]]; then
               should_run=false
             fi
@@ -1277,7 +1280,7 @@ jobs:
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+          eval "$(scripts/ci-change-profile.sh)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi

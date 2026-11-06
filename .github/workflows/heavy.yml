@@ -72,6 +72,11 @@ on:
 permissions:
   contents: read
 
+env:
+  # Classify the PR itself; HEAD remains the synthetic merge used for proof.
+  BEEP_CI_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+  BEEP_CI_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
 jobs:
   verify:
     name: ${{ matrix.name }}
@@ -162,15 +167,19 @@ jobs:
           fi
 
           should_run=true
-          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+          eval "$(scripts/ci-change-profile.sh)"
           if [[ "$goals_only" == "true" ]]; then
             should_run=false
           fi
 
           if [[ "${{ matrix.id }}" == "docgen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            changed_files="$(git diff --name-only "origin/${GITHUB_BASE_REF:-main}...HEAD")"
-            if [[ -z "$changed_files" ]] || ! grep -Eq '(^apps/|^packages/|^infra/|/docgen\.json$|\.(ts|tsx|mts|cts|md)$)' <<< "$changed_files"; then
-              should_run=false
+            if [[ -n "$BEEP_CI_PR_BASE_SHA" && -n "$BEEP_CI_PR_HEAD_SHA" ]] \
+              && changed_files="$(git diff --name-only --no-renames "${BEEP_CI_PR_BASE_SHA}...${BEEP_CI_PR_HEAD_SHA}")"; then
+              if [[ -z "$changed_files" ]] || ! grep -Eq '(^apps/|^packages/|^infra/|/docgen\.json$|\.(ts|tsx|mts|cts|md)$)' <<< "$changed_files"; then
+                should_run=false
+              fi
+            else
+              echo "Docgen PR diff unavailable; retaining verification"
             fi
           fi
 
