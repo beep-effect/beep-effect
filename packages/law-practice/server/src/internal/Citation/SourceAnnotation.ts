@@ -22,9 +22,10 @@ import {
   ownCitationAnnotationReplacements,
   prepareCitationAnnotationEntry,
 } from "./AnnotationEntry.ts";
+import { failCitationAnnotationBoundary } from "./AnnotationFailure.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import { CitationRegexOperation } from "./RegexPolicy.ts";
+import { CitationRegexOperation, decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import { snapshotCitationValue } from "./Snapshot.ts";
 import { makeCitationSourceEvidence } from "./SourceEvidence.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
@@ -171,6 +172,14 @@ const install = makeCitationMetadataStage({
  * @internal @category constructors @since 0.0.0
  */
 export const makeCitationSourceAnnotation = Effect.fn("Citation.makeSourceAnnotation")(
-  (policy: unknown, runtime: unknown, configuration: unknown) =>
-    install(policy, runtime, configuration).pipe(Effect.provideService(CitationRegexOperation, "annotate"))
+  function* (policy: unknown, runtime: unknown, configuration: unknown) {
+    const limits = yield* decodeCitationRegexPolicy(policy, invalid);
+    const stage = yield* install(limits, runtime, configuration);
+    return {
+      annotate: Effect.fn("Citation.annotateSourceBoundary")((raw: unknown) =>
+        stage.annotate(raw).pipe(Effect.catch((error) => failCitationAnnotationBoundary(limits, error)))
+      ),
+    };
+  },
+  Effect.provideService(CitationRegexOperation, "annotate")
 );

@@ -1,5 +1,9 @@
 import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/SourceText";
 import { CitationAnnotationReplacement } from "@beep/law-practice-server/internal/Citation/AnnotationAssembly";
+import {
+  CitationAnnotationAnnotator,
+  CitationAnnotationCallbackResult,
+} from "@beep/law-practice-server/internal/Citation/AnnotationCallback";
 import { CitationAnnotationOffsetUpdater } from "@beep/law-practice-server/internal/Citation/AnnotationEntry";
 import { makeCitationSourceAnnotation } from "@beep/law-practice-server/internal/Citation/SourceAnnotation";
 import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
@@ -11,9 +15,49 @@ import * as S from "effect/Schema";
 import { installCitationAnnotationEntryFixture } from "./CitationAnnotationEntry.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+import type { CitationSourceAnnotationResult } from "@beep/law-practice-server/internal/Citation/SourceAnnotation";
+import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
 
 const word = (text: string) => CitationPythonUnicodeStorage.make({ width: 1, bytes: new TextEncoder().encode(text) });
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("verified raw-source annotation", (it) => {
+  it.effect("closes deferred callback join failures after preserving subsequent callback calls", () =>
+    Effect.gen(function* () {
+      const setup = yield* installCitationAnnotationEntryFixture();
+      const proof = yield* citationFixtureSourceProof("abc");
+      let calls = 0;
+      const resolver = SourceTextResolver.of({
+        resolve: Effect.fn("SourceAnnotationTest.callbackSource")(() =>
+          Effect.succeed(ResolvedSourceText.make({ identity: proof.source, text: "abc" }))
+        ),
+      });
+      const callback = CitationAnnotationAnnotator.of({
+        annotate: Effect.fn("SourceAnnotationTest.nonText")((_before, span) =>
+          Effect.sync(() =>
+            ++calls === 1
+              ? CitationAnnotationCallbackResult.cases.NonText.make({})
+              : CitationAnnotationCallbackResult.cases.Text.make({ text: span })
+          )
+        ),
+      });
+      const entry = yield* makeCitationSourceAnnotation(setup.limits, setup.runtime, setup.configuration).pipe(
+        Effect.provideService(SourceTextResolver, resolver),
+        Effect.provideService(CitationAnnotationAnnotator, callback),
+        Effect.provideContext(setup.provided)
+      );
+      const replacements = [
+        CitationAnnotationReplacement.make({ start: 0, end: 1, before: word(""), after: word("") }),
+        CitationAnnotationReplacement.make({ start: 1, end: 2, before: word(""), after: word("") }),
+      ];
+      const result = yield* entry
+        .annotate({ plain: { source: proof.source, sourceText: "abc" }, replacements })
+        .pipe(Effect.flip);
+      expect(result).toMatchObject({ _tag: "CitationAnnotationError", operation: "annotate" });
+      expect(calls).toBe(2);
+      expect("reason" in result).toBe(false);
+      const state = yield* setup.operation.snapshot;
+      expect(state).toMatchObject({ active: 0, queued: 0 });
+    })
+  );
   for (const kind of ["bun", "node"] as const) {
     it.effect(
       `verifies both source slots and maps original HTML on ${kind}`,
@@ -107,7 +151,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("verified ra
         Effect.provideContext(setup.provided)
       );
       const invocation = entry.annotate({ plain: { source: proof.source, sourceText: "abc" }, replacements });
-      const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
+      const closed: Effect.Effect<CitationSourceAnnotationResult, CitationEngineFailure> = invocation;
       const result = yield* closed;
       expect(result.text).toEqual(word("a[b]c"));
       expect(S.is(VerifiedSourceText)(result.source)).toBe(true);

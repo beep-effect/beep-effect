@@ -1349,6 +1349,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert this checkpoint and accounting change together; restore the parent-budget regression before changing the source reservation contract.
 
+### Close annotation method failure surface, 2026-11-06
+
+Source annotation now exposes only CitationEngineFailure with R=never. Explicit schema/Match translation covers all seventeen private adapter classes without an unknown fallback or missing-capability unsupported substitution. Nine tests pass in 2.67s, including actual callback deferred join ordering, Bun/Node mapping and shared timing; lint/types, declarations, blocking laws and scoped Fallow pass. Public Engine/Layer and all exhaustive proof/accounting remain open. See history/evidence/2026-11-06-annotation-failure-boundary.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the typed annotation translator and source method wrapper together while retaining source corpora, redaction evidence and all unfinished acceptance requirements.
+
 ### Compose admitted native annotation operation, 2026-11-06
 
 The private annotation entry composes original sorting/mapping, skip/wrap and captured callback behavior through the existing admitted metadata owner. All 214 original unchecked cases pass twice with fresh budgets. Actual Bun/Node markup and default mapping controls confirm child retirement. Eleven entry/callback/operation tests pass in 53.10s; lint/types, declaration emission, blocking laws and scoped Fallow pass with zero introduced findings. Complete raw-source/public engine composition and all eleven laws, four fidelity questions and fifteen proof rows remain open. See history/evidence/2026-11-06-admitted-annotation-entry.md.

@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "0004e995bc1ae8bb148fe1f454486c42a5f351ac9afb47321afd1e2e8a679caa",
+  "planSha256": "3c6b72d081dc1a0ed0238b8ea47c8d8df40fe65cd13fbaf020124a1c76fde982",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1492,11 +1492,11 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SourceAnnotation.ts",
-          "sha256": "67d1d4b94e8f26dca13b807ec39f77cc794412dbebf70ea2703e71945f6e65f0"
+          "sha256": "a2d07bce99059055335f90555be07a7b708515a13bc6db571aed18e6ebf47c47"
         },
         {
           "path": "packages/law-practice/server/test/CitationSourceAnnotation.test.ts",
-          "sha256": "6e45c68a3f2239be75ca305cc0431e2ba2b934a766250f0cce7f54a8b66eaf0b"
+          "sha256": "b744ec0367353fb95b7d14b69af61e93222ad21c7091490abff3701e94ae132e"
         },
         {
           "path": "packages/law-practice/server/test/CitationSourceAnnotationTiming.test.ts",
@@ -1505,6 +1505,18 @@
         {
           "path": "packages/law-practice/server/test/CitationAnnotationEntry.fixtures.ts",
           "sha256": "43736573cab801fb34201ec78570191e92139933a2aacf56270458e08bbcc7eb"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-failure-boundary.md",
+          "sha256": "a723b3e690e8b594514bc0977090155348aeeab2cfc0cb4d2c803bc97eb805ff"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/AnnotationFailure.ts",
+          "sha256": "4e4a63a5bc4cb71029533813fca9af93328ddc9d376e0d4b537d31e239781b50"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationAnnotationFailure.test.ts",
+          "sha256": "4cee90f9fcda1d0e582521a92a77365ba94550c791e74621afb8ab5dfffe7281"
         }
       ],
       "workflowState": "audit",

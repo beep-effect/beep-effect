@@ -377,7 +377,10 @@
         "packages/law-practice/server/src/internal/Citation/SourceAnnotation.ts",
         "packages/law-practice/server/test/CitationSourceAnnotation.test.ts",
         "packages/law-practice/server/test/CitationSourceAnnotationTiming.test.ts",
-        "packages/law-practice/server/test/CitationAnnotationEntry.fixtures.ts"
+        "packages/law-practice/server/test/CitationAnnotationEntry.fixtures.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-failure-boundary.md",
+        "packages/law-practice/server/src/internal/Citation/AnnotationFailure.ts",
+        "packages/law-practice/server/test/CitationAnnotationFailure.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
