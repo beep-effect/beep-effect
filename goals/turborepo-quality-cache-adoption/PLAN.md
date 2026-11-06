@@ -1018,6 +1018,31 @@ deployment or native probe ran, and feature counts stay 11 accepted/25 pending.
 Use `research/deployment-boundary-source-review-2026-11-04.json`; all real
 computation qualification, cohort and observation requirements remain unchanged.
 
+### Requested proof ref binding, 2026-11-04
+
+Current-source review found the query/dry-run comparison mismatch in the
+existing scoped Turbo proof. The prepared repair uses the requested refs for
+every child, preserving the surrounding tool environment. One authored hosted
+regression covers affected/filter-range selectors and query plus two dry runs.
+No local suite or quality proof ran. Read
+`research/proof-scm-ref-binding-review-2026-11-04.json`; obtain current hosted
+proof and primary acceptance before relying on the repaired command. Actual
+current-root/caller comparison, qualification and all whole-goal gates remain.
+
+### Explicit native envelopes and current-root cohort, 2026-11-04
+
+The proof reader now distinguishes valid empty arrays from absent/malformed
+task metadata. Generic typed parser failures retain no raw native payload.
+The updated hosted regression set has five top-level cases; none ran locally.
+
+`research/actual-current-law-check-selection-2026-11-04.json` records eight
+actual-root direct-native plans at accepted source31e2ac20. Both frozen clients
+and selector forms agree on zero nodes for no change and the same28-node
+closure for the accepted domain change. These are selected graph nodes, not
+28 executed checks. The wrapper was not invoked and no task executed; actual
+wrapper integration, perturbation/semantic/output/portability/concurrency and
+qualification remain next. Feature counts and whole-goal gates stay unchanged.
+
 ### Individual selector controls, 2026-11-04
 
 The existing composition driver now supports an optional factorial mode. The

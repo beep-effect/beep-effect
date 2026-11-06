@@ -1,15 +1,15 @@
 {
   "schemaVersion": "cache-selector-flag-isolation-checkpoint/v1",
-  "recordedAt": "2026-11-04T00:56:32.175189+00:00",
+  "recordedAt": "2026-11-06T00:06:07.750581+00:00",
   "authority": "Bounded synthetic native selector semantics only; no real task qualification, flag activation, hosted proof or performance claim.",
   "acceptedBase": "31e2ac20f34a1c699a35be55f67881dbf0d8ffd0",
   "sourceState": "working-tree-bound",
   "nativeReport": {
     "path": "research/native-selector-flag-isolation-controls-2026-11-04.json",
-    "sha256": "6c9a905b40c7f46c66f2d989278098044594994eb0ce900f23cb1d66039e18cd",
+    "sha256": "45bbe74cf40d9d1b5fa9b07314e274fa21575185c95cebf5b5146ff4645bb183",
     "byteCount": 328539,
     "driver": "research/native-filter-composition-controls.py",
-    "driverSha256": "10f62d846101a7bcf82718ff3488f84e0e08e89fba5e32144a363eb01d7c4cdb",
+    "driverSha256": "121f4f672e36e1968539fff4708169ec514520501670d69fb475f23e1cc66b80",
     "cases": 320,
     "singleFlagComparisons": 320,
     "clients": {
@@ -27,7 +27,7 @@
     "networkIsolated": true,
     "repositoryNotMounted": true,
     "sourceAndToolsUnchanged": true,
-    "rawCaptureSha256": "ca0a777bbf574bb7936a28b7c12c5f01e0e85496af940975cfd55f2ffb2a276f",
+    "rawCaptureSha256": "b7b3036e7f1e67c1511e41284025aedf8c913154441006c0b34177cc60f80ebb",
     "rawCaptureByteCount": 342939,
     "decodedContentEqualsRawCapture": true,
     "serialization": "Ordinary pre-commit formatting changed JSON bytes only; raw and checked-in digests are separate."

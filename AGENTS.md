@@ -254,6 +254,14 @@ needed only for the escalation list below.
   lane. The orchestrator declares one consolidated unblocker per red episode
   (`unblocks-main` label) and cancels runs, running ones included, on PRs
   that must re-run anyway so the unblocker gets runners and merges first.
+- A base-conflict P0 inbox row is an unconditional "merge `origin/main` into
+  the lane now" for the lane owner, whatever the acceptance or merge
+  arrangement says; no brief or delegation model may forbid a lane from
+  merging main. A goal packet has at most three concurrently open PRs (a
+  fourth is sequenced through one lane or stacked), and the gate merges
+  finals one at a time as they arrive, telling the remaining siblings to
+  merge main between merges (operator 2026-11-05,
+  `goals/agent-pool-doctrine/history/2026-11-05-base-conflict-merge-main.md`).
 - One orchestrator session coordinates the rest: it routes threads, reds and
   conflicts to the owning session, merges at the gate, and relays the
   operator's answers. Sessions report blockers to it, not to the operator.
@@ -490,8 +498,14 @@ If you touch this, load or run this first. Do not hand-author around it.
   is per-packet `claims.jsonl` + single-writer `research/ledger/`, and the
   machine proposes via `SUGGESTED_ACTIONS.md` — agents never auto-append to
   `explorations/INBOX.md` or `goals/` from research output.
-- same-PR packet-state flips: flip goal manifest/lifecycle status and land the
-  closeout reflection in the same PR as the final work.
+- Goal closeout is two PRs: the final PR lands the work, the reflection and
+  `proposedCloseout` (status stays active or paused); after it merges,
+  `goals completion refresh --slug <slug>` verifies it and
+  `goals set-status <slug> <status>` adopts it in a packet-state PR that also
+  rewrites the packet's status prose (README, `statusNote`). A goal is
+  done only once that PR merges and `origin/main`'s manifest has
+  `closeout.status == initiative.status`; `goals doctor` reports a verified,
+  unadopted proposal as `closeout-adoption-pending`.
 - Friction is a first-class output: when work is slower, harder, or riskier
   than it should be, record a receipt — what you were doing, the evidence
   (command, error text, PR/file), what would have prevented it — in the

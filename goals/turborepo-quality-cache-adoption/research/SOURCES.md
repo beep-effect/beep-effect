@@ -654,6 +654,17 @@ production qualification.
   bindings and earlier observation reports resolve against the recorded prior
   Git head, rather than the repaired files now occupying those paths.
 
+### Actual current-root check selection, 2026-11-04
+
+`actual-current-law-check-selection-2026-11-04.json` records eight direct native
+dry plans on clean accepted source31e2ac20. Both frozen clients and selector
+forms agree: identical refs select zero nodes; the actual preceding commit to
+that head selects the same28-node closure for the named domain-check cohort.
+The report supplies immutable refs, exact native argv, source bindings and
+version-content pins. The owned one-off capture driver is retained privately
+under its recorded SHA. No task command, local quality suite or repaired proof
+wrapper executes in this observation. Full qualification remains pending.
+
 ### Selector flag factorial control, 2026-11-04
 
 - `selector-flag-isolation-checkpoint-2026-11-04.json` binds the optional

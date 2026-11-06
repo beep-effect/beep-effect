@@ -595,6 +595,9 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       expect((yield* f.request({ _tag: "Backup", slot: 0, directory: "synthetic-private" })).status).toBe(400);
       expect((yield* f.request({ _tag: "Window", extra: Str.repeat(5000)("x") })).status).toBe(413);
       yield* f.worker.resume;
+      const missingState = yield* f.request({ _tag: "EventState", eventId: id("e") });
+      expect(missingState.status).toBe(200);
+      expect(missingState.text).toBe("null");
       expect((yield* f.post()).status).toBe(200);
       expect((yield* f.request({ _tag: "Backup", slot: 0 })).status).toBe(503);
       expect((yield* f.request({ _tag: "Pages", afterSequence: 0 })).status).toBe(503);

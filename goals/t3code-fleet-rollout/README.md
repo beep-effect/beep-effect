@@ -33,11 +33,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started; blocked until `goals/t3-native-orchestration` merges its host profiles.
+P1 Implement — the host profiles landed (#2594), P0 host facts are recorded in `PLAN.md`; the DankStation publish step and the host pull timer are written under `ops/` and are being rolled to beep-worker and dankserver. tom-pc-1 (WSL distro) and the agent-plane links follow.
 
 ## Latest Evidence
 
-Not started.
+2026-11-05: P0 live reads of beep-worker and dankserver (official `t3@0.1.5` services); publish and pull scripts in `ops/`; runbook `docs/runbooks/t3code-fleet.md`.
 
 ## Notes
 
