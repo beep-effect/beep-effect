@@ -111,7 +111,6 @@ const digest = Sha256Hex.make(Str.repeat(64)("a"));
 const revision = Str.repeat(40)("a");
 const identityDirectory = "packages/foundation/modeling/identity";
 const typesDirectory = "packages/foundation/primitive/types";
-const task = "@beep/identity#lint";
 const dependencyTask = "@beep/types#lint";
 const additionalDirectories: Readonly<Record<string, string>> = {
   "@beep/fc-runs#lint": "packages/tooling/test-kit/fc-runs",

@@ -1317,3 +1317,7 @@ No inspection or protected trial was submitted. Independent adoption metadata
 work continued in an isolated source-bound checkout. Retaining immutable hosted
 source bindings and coordinating a short exact-source approval interval would
 avoid repeated static reads while preserving the final live-ref check.
+
+## Recipe fixture left an unused outer task constant, 2026-11-06
+
+Heavy / Check job 128224640320 on #2824 reported TS6133 at cache-pilot-orchestration.test.ts:114. The parameterized fixture owns its selected task locally, leaving the former identity-only constant unused. Remove only that superseded outer constant. Preserve all fixture branches and authored controls. The failing hosted log is retained against its exact revision; no local suite ran.
