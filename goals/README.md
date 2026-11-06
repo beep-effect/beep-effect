@@ -30,6 +30,13 @@ goals/<slug>/
   history/
 ```
 
+A packet has at most three concurrently open pull requests (operator ruling
+2026-11-05, [`agent-pool-doctrine/history/2026-11-05-base-conflict-merge-main.md`](./agent-pool-doctrine/history/2026-11-05-base-conflict-merge-main.md)).
+Every merge forces each other open sibling into a catch-up merge on the
+packet's shared files, so a fourth change is sequenced behind one of the three
+in the same lane or stacked on it; `bun run beep yeet siblings <pr>` lists a
+PR's open packet siblings and their predicted conflicts.
+
 ### File Roles
 
 | Path | Role |

@@ -112,6 +112,8 @@ const PullWire = S.Struct({
   updated_at: S.DateTimeUtcFromString,
 });
 
+const PullFileWire = S.Struct({ filename: S.String });
+
 const toPullRequestRecord = (wire: typeof PullWire.Type): GithubPullRequestRecord =>
   GithubPullRequestRecord.make({
     number: wire.number,
@@ -305,8 +307,12 @@ export interface GithubRestShape {
     headOwner: string,
     branch: string
   ) => Effect.Effect<O.Option<GithubPullRequestRecord>, GitHubError>;
+  /** Every open pull request (all pages). */
+  readonly openPullRequests: Effect.Effect<ReadonlyArray<GithubPullRequestRecord>, GitHubError>;
   /** One pull request by number. */
   readonly pullRequest: (number: number) => Effect.Effect<GithubPullRequestRecord, GitHubError>;
+  /** The repository-relative paths the pull request changes (all pages). */
+  readonly pullRequestFiles: (number: number) => Effect.Effect<ReadonlyArray<string>, GitHubError>;
   /** The REST rate-limit buckets. */
   readonly rateLimit: Effect.Effect<GithubRateLimitRecord, GitHubError>;
   /** Remove one label; a label that is not there is not an error. */
@@ -386,6 +392,25 @@ const makeGithubRest = Effect.gen(function* () {
         )
       )
     );
+
+  // Suspended: the read is built when run, not when the layer is, so a test client with the
+  // paginator unstubbed still constructs the service.
+  const openPullRequests = Effect.suspend(() =>
+    client
+      .paginate("GET /repos/{owner}/{repo}/pulls", { ...at, state: "open" })
+      .pipe(
+        Effect.flatMap(decodeWith(S.Array(PullWire), "GET /repos/{owner}/{repo}/pulls")),
+        Effect.map(A.map(toPullRequestRecord))
+      )
+  );
+
+  const pullRequestFiles = (number: number) =>
+    client
+      .paginate("GET /repos/{owner}/{repo}/pulls/{pull_number}/files", { ...at, pull_number: number })
+      .pipe(
+        Effect.flatMap(decodeWith(S.Array(PullFileWire), "GET /repos/{owner}/{repo}/pulls/{pull_number}/files")),
+        Effect.map(A.map((file) => file.filename))
+      );
 
   const updatePullRequest = (
     number: number,
@@ -589,7 +614,9 @@ const makeGithubRest = Effect.gen(function* () {
     createIssueComment,
     mergePullRequest,
     openPullRequestForBranch,
+    openPullRequests,
     pullRequest,
+    pullRequestFiles,
     rateLimit,
     reviewTimeline,
     hasReviewComments,

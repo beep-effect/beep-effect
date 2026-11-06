@@ -258,6 +258,14 @@ needed only for the escalation list below.
   lane. The orchestrator declares one consolidated unblocker per red episode
   (`unblocks-main` label) and cancels runs, running ones included, on PRs
   that must re-run anyway so the unblocker gets runners and merges first.
+- A base-conflict P0 inbox row is an unconditional "merge `origin/main` into
+  the lane now" for the lane owner, whatever the acceptance or merge
+  arrangement says; no brief or delegation model may forbid a lane from
+  merging main. A goal packet has at most three concurrently open PRs (a
+  fourth is sequenced through one lane or stacked), and the gate merges
+  finals one at a time as they arrive, telling the remaining siblings to
+  merge main between merges (operator 2026-11-05,
+  `goals/agent-pool-doctrine/history/2026-11-05-base-conflict-merge-main.md`).
 - One orchestrator session coordinates the rest: it routes threads, reds and
   conflicts to the owning session, merges at the gate, and relays the
   operator's answers. Sessions report blockers to it, not to the operator.

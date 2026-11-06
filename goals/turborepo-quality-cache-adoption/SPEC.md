@@ -1029,3 +1029,47 @@ formatter failure, and forbid writes through the check's filesystem service.
 No cache or qualification transition is included. If this repair must be
 withdrawn, suspend the affected checks until repaired rather than restoring
 the destructive generate-then-diff wrappers.
+
+### Freeze the Storybook deployment install, 2026-11-04 UTC
+
+Require `bun install --frozen-lockfile` in Storybook's existing Vercel installer.
+Keep its full-monorepo working directory, build command and output directory.
+This prevents deployment-time lockfile changes; it does not establish the
+actual Vercel Bun version, deployment success or a qualified cache profile.
+Reverse with a reviewed revert while retaining the source finding.
+
+The source review names the actual Vercel, Alchemy and desktop build callers.
+Keep pruning pending until a real app install/build and missing-input comparison
+passes. Keep native boundaries pending until their package semantics are mapped
+to the existing manifest/doctrine owner and aliases. A text scan proves neither
+policy equivalence nor that a new tool has no useful application. Feature counts
+and all whole-goal gates remain unchanged. See
+`research/deployment-boundary-source-review-2026-11-04.json`.
+
+### Align scoped proof comparisons, 2026-11-04
+
+The existing Turbo config proof query supplies the requested base/head, but its
+--affected dry runs inherited ambient/default SCM refs. Bind both query and dry
+children to TurboConfigProofOptions.base/head through the existing runCaptured
+environment, extending the tool environment. Reuse the existing schema/helper
+and retain both selector modes. Add one hosted regression covering both modes
+and all three captured commands per mode; do not run local quality suites.
+
+This source repair grants no qualification or feature acceptance. Immutable
+comparisons still require caller-supplied commit SHAs. Reverse the binding, test
+and packet entries together; prior affected reports need independent actual-ref
+evidence before reuse. Hosted proof remains pending.
+
+The same proof reader also defaulted absent/malformed task arrays to empty
+selections. Decode required query/dry envelopes through private schema-first
+models, retain valid empty arrays, and return generic typed failures without
+retaining native payload values. Four further authored regressions cover ten
+malformed rows, explicit empty selections and three synthetic payload values.
+No local unit suite runs; current hosted proof remains required.
+
+A separately captured current-root observation uses direct pinned native
+commands on accepted source31e2ac20, without invoking the proof wrapper. Eight
+dry plans agree across both clients and selector forms: unchanged refs select
+zero nodes; the actual accepted domain change selects the same28-node closure
+containing @beep/law-practice-domain#check. This does not execute tasks or prove
+semantic input completeness, safe outputs, cache reuse or qualification.
