@@ -540,6 +540,35 @@ const lawsFrozenGrantSetCommand = Command.make(
   })
 ).pipe(Command.withDescription("Check FrozenGrantSet.make stays inside its defining module"));
 
+/** The `--check` and `--json` flags every text-scanning law command takes. */
+const lawCheckFlags = (checkDescription: string) => ({
+  check: Flag.Boolean("check").pipe(Flag.withDefault(false), Flag.withDescription(checkDescription)),
+  json: Flag.Boolean("json").pipe(
+    Flag.withDefault(false),
+    Flag.withDescription("Emit the complete law summary as schema-shaped JSON")
+  ),
+});
+
+/** Print a law summary as JSON or as the prefixed counter lines followed by its findings. */
+const reportLawSummary = Effect.fn("reportLawSummary")(function* (options: {
+  readonly prefix: string;
+  readonly check: boolean;
+  readonly json: boolean;
+  readonly summary: unknown;
+  readonly counters: ReadonlyArray<readonly [name: string, value: number]>;
+  readonly findings: ReadonlyArray<string>;
+}) {
+  if (options.json) {
+    return yield* printCommandJson(options.summary);
+  }
+  yield* Console.log(`[${options.prefix}] mode=${options.check ? "check" : "report"}`);
+  yield* Effect.forEach(options.counters, ([name, value]) => Console.log(`[${options.prefix}] ${name}=${value}`), {
+    discard: true,
+  });
+  yield* Console.log(`[${options.prefix}] findings=${options.findings.length}`);
+  yield* Effect.forEach(options.findings, Console.log, { discard: true });
+});
+
 /**
  * CLI command for the retired Effect module path law.
  *
@@ -554,33 +583,24 @@ const lawsFrozenGrantSetCommand = Command.make(
  */
 const lawsRetiredEffectPathsCommand = Command.make(
   "retired-effect-paths",
-  {
-    check: Flag.Boolean("check").pipe(
-      Flag.withDefault(false),
-      Flag.withDescription("Fail when any git-tracked text file contains a retired Effect module path")
-    ),
-    json: Flag.Boolean("json").pipe(
-      Flag.withDefault(false),
-      Flag.withDescription("Emit the complete law summary as schema-shaped JSON")
-    ),
-  },
+  lawCheckFlags("Fail when any git-tracked text file contains a retired Effect module path"),
   Effect.fn(function* ({ check, json }) {
     const summary = yield* runRetiredEffectPaths(
       RetiredEffectPathsOptions.make({ cwd: process.cwd(), strictCheck: check })
     );
 
-    if (json) {
-      yield* printCommandJson(summary);
-    } else {
-      yield* Console.log(`[effect-governance-retired-effect-paths] mode=${check ? "check" : "report"}`);
-      yield* Console.log(`[effect-governance-retired-effect-paths] scanned_files=${summary.scannedFiles}`);
-      yield* Console.log(`[effect-governance-retired-effect-paths] skipped_binary_files=${summary.skippedBinaryFiles}`);
-      yield* Console.log(`[effect-governance-retired-effect-paths] allowlisted_files=${summary.allowlistedFiles}`);
-      yield* Console.log(`[effect-governance-retired-effect-paths] findings=${summary.findings.length}`);
-      for (const finding of summary.findings) {
-        yield* Console.log(formatRetiredEffectPathFinding(finding));
-      }
-    }
+    yield* reportLawSummary({
+      prefix: "effect-governance-retired-effect-paths",
+      check,
+      json,
+      summary,
+      counters: [
+        ["scanned_files", summary.scannedFiles],
+        ["skipped_binary_files", summary.skippedBinaryFiles],
+        ["allowlisted_files", summary.allowlistedFiles],
+      ],
+      findings: A.map(summary.findings, formatRetiredEffectPathFinding),
+    });
 
     if (summary.strictFailure) {
       return yield* failWithReportedExit("effect-governance-retired-effect-paths: check failed.");
@@ -726,37 +746,26 @@ const lawsMarkdownFencesCommand = Command.make(
  */
 const lawsRetiredIriAuthoritiesCommand = Command.make(
   "retired-iri-authorities",
-  {
-    check: Flag.Boolean("check").pipe(
-      Flag.withDefault(false),
-      Flag.withDescription(
-        "Fail on a retired IRI authority in any git-tracked text file, or a public-origin literal in code outside @beep/identity and @beep/public-site"
-      )
-    ),
-    json: Flag.Boolean("json").pipe(
-      Flag.withDefault(false),
-      Flag.withDescription("Emit the complete law summary as schema-shaped JSON")
-    ),
-  },
+  lawCheckFlags(
+    "Fail on a retired IRI authority in any git-tracked text file, or a public-origin literal in code outside @beep/identity and @beep/public-site"
+  ),
   Effect.fn(function* ({ check, json }) {
     const summary = yield* runRetiredIriAuthorities(
       RetiredIriAuthoritiesOptions.make({ cwd: process.cwd(), strictCheck: check })
     );
 
-    if (json) {
-      yield* printCommandJson(summary);
-    } else {
-      yield* Console.log(`[effect-governance-retired-iri-authorities] mode=${check ? "check" : "report"}`);
-      yield* Console.log(`[effect-governance-retired-iri-authorities] scanned_files=${summary.scannedFiles}`);
-      yield* Console.log(
-        `[effect-governance-retired-iri-authorities] skipped_binary_files=${summary.skippedBinaryFiles}`
-      );
-      yield* Console.log(`[effect-governance-retired-iri-authorities] exempt_files=${summary.exemptFiles}`);
-      yield* Console.log(`[effect-governance-retired-iri-authorities] findings=${summary.findings.length}`);
-      for (const finding of summary.findings) {
-        yield* Console.log(formatRetiredIriAuthorityFinding(finding));
-      }
-    }
+    yield* reportLawSummary({
+      prefix: "effect-governance-retired-iri-authorities",
+      check,
+      json,
+      summary,
+      counters: [
+        ["scanned_files", summary.scannedFiles],
+        ["skipped_binary_files", summary.skippedBinaryFiles],
+        ["exempt_files", summary.exemptFiles],
+      ],
+      findings: A.map(summary.findings, formatRetiredIriAuthorityFinding),
+    });
 
     if (summary.strictFailure) {
       return yield* failWithReportedExit("effect-governance-retired-iri-authorities: check failed.");
@@ -778,30 +787,21 @@ const lawsRetiredIriAuthoritiesCommand = Command.make(
  */
 const lawsSchemaTagIdiomsCommand = Command.make(
   "schema-tag-idioms",
-  {
-    check: Flag.Boolean("check").pipe(
-      Flag.withDefault(false),
-      Flag.withDescription("Fail when any git-tracked file spells a fixed schema tag by hand")
-    ),
-    json: Flag.Boolean("json").pipe(
-      Flag.withDefault(false),
-      Flag.withDescription("Emit the complete law summary as schema-shaped JSON")
-    ),
-  },
+  lawCheckFlags("Fail when any git-tracked file spells a fixed schema tag by hand"),
   Effect.fn(function* ({ check, json }) {
     const summary = yield* runSchemaTagIdioms(SchemaTagIdiomsOptions.make({ cwd: process.cwd(), strictCheck: check }));
 
-    if (json) {
-      yield* printCommandJson(summary);
-    } else {
-      yield* Console.log(`[effect-governance-schema-tag-idioms] mode=${check ? "check" : "report"}`);
-      yield* Console.log(`[effect-governance-schema-tag-idioms] scanned_files=${summary.scannedFiles}`);
-      yield* Console.log(`[effect-governance-schema-tag-idioms] scanned_fences=${summary.scannedFences}`);
-      yield* Console.log(`[effect-governance-schema-tag-idioms] findings=${summary.findings.length}`);
-      for (const finding of summary.findings) {
-        yield* Console.log(formatSchemaTagIdiomFinding(finding));
-      }
-    }
+    yield* reportLawSummary({
+      prefix: "effect-governance-schema-tag-idioms",
+      check,
+      json,
+      summary,
+      counters: [
+        ["scanned_files", summary.scannedFiles],
+        ["scanned_fences", summary.scannedFences],
+      ],
+      findings: A.map(summary.findings, formatSchemaTagIdiomFinding),
+    });
 
     if (summary.strictFailure) {
       return yield* failWithReportedExit("effect-governance-schema-tag-idioms: check failed.");

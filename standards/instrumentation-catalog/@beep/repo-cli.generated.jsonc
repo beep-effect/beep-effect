@@ -3852,6 +3852,7 @@
     {"name":"readRootPackageJson","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"readTurboConfigFile","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"releaseProofLock","owner":"@beep/repo-cli","family":"tooling","conforms":false},
+    {"name":"reportLawSummary","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"resolveActionPath","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"resolveContainedPath","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"resolveContainedPathBase","owner":"@beep/repo-cli","family":"tooling","conforms":false},

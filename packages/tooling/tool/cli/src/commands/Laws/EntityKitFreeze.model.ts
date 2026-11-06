@@ -312,8 +312,8 @@ export class EntityKitFreezeFinding extends S.Opaque<EntityKitFreezeFinding, { r
  */
 export class EntityKitFreezeBaseline extends S.Opaque<EntityKitFreezeBaseline, { readonly brand: unique symbol }>()(
   S.Struct({
-    version: S.Literal(1),
-    rule: S.Literal(ENTITY_KIT_FREEZE_RULE_ID),
+    version: S.tag(1),
+    rule: S.tag(ENTITY_KIT_FREEZE_RULE_ID),
     frozenSince: S.String,
     files: S.Array(S.String),
   }).pipe(

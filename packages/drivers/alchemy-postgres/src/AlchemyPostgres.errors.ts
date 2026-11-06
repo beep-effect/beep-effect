@@ -13,15 +13,22 @@
 
 import { $AlchemyPostgresId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { O } from "@beep/utils";
+import { O, P, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $AlchemyPostgresId.create("AlchemyPostgres.errors");
 
-const decodeMessageOption = S.decodeUnknownOption(S.NonEmptyString);
-const getErrorMessage = (value: unknown): O.Option<string> =>
-  value instanceof Error ? decodeMessageOption(value.message) : O.none();
+const nonEmptyMessage = O.liftPredicate(Str.isNonEmpty);
+const messageOf = (cause: unknown): O.Option<string> =>
+  O.fromNullishOr(cause).pipe(
+    O.filter(P.isError),
+    O.flatMap((error) => nonEmptyMessage(error.message))
+  );
+
+/** An optional diagnostic field: `Option` in the type, absent key when encoded, `None` by default. */
+const optionalDiagnostic = <Schema extends S.Top>(schema: Schema, description: string) =>
+  S.OptionFromOptionalKey(schema).pipe(S.withConstructorDefault(Effect.succeedNone), S.annotateKey({ description }));
 
 /**
  * Driver operation a failure belongs to.
@@ -86,20 +93,12 @@ export class AlchemyPostgresError extends S.TaggedError<AlchemyPostgresError, { 
     operation: AlchemyPostgresOperation.annotateKey({
       description: "Driver operation that failed.",
     }),
-    table: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      S.withConstructorDefault(Effect.succeedNone),
-      S.annotateKey({ description: "Driver table the operation was working on, when known." })
+    table: optionalDiagnostic(S.NonEmptyString, "Driver table the operation was working on, when known."),
+    cause: optionalDiagnostic(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
+      "Original SQL or runtime defect when one was available."
     ),
-    cause: S.OptionFromOptionalKey(
-      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
-    ).pipe(
-      S.withConstructorDefault(Effect.succeedNone),
-      S.annotateKey({ description: "Original SQL or runtime defect when one was available." })
-    ),
-    message: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      S.withConstructorDefault(Effect.succeedNone),
-      S.annotateKey({ description: "Non-empty message extracted from the originating failure." })
-    ),
+    message: optionalDiagnostic(S.NonEmptyString, "Non-empty message extracted from the originating failure."),
   },
   $I.annoteError<AlchemyPostgresError>("AlchemyPostgresError", {
     description: "Technical failure of the Postgres alchemy Platform driver, scoped to one operation.",
@@ -119,6 +118,6 @@ export class AlchemyPostgresError extends S.TaggedError<AlchemyPostgresError, { 
       operation,
       table: O.fromNullishOr(table),
       cause: O.fromNullishOr(cause),
-      message: getErrorMessage(cause),
+      message: messageOf(cause),
     });
 }

@@ -5,6 +5,7 @@ import {
   ProvenanceMapping,
 } from "@beep/alchemy-postgres";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 
@@ -15,7 +16,7 @@ describe("AlchemyPostgresConfig", () => {
       expect(config.tablePrefix).toBe("alchemy_");
       expect(config.pollMillis).toBe(250);
       expect(config.deliveryBatchSize).toBe(100);
-      expect(O.isNone(config.provenance)).toBe(true);
+      assertNone(config.provenance);
     })
   );
 
@@ -36,24 +37,21 @@ describe("AlchemyPostgresConfig", () => {
 describe("AlchemyPostgresError", () => {
   it.effect("wraps an unknown cause with its operation and table", () =>
     Effect.sync(() => {
-      const error = AlchemyPostgresError.fromUnknown(
-        "commit",
-        new Error("deadlock detected"),
-        "alchemy_aggregate_event"
-      );
+      const cause = new Error("deadlock detected");
+      const error = AlchemyPostgresError.fromUnknown("commit", cause, "alchemy_aggregate_event");
       expect(error._tag).toBe("AlchemyPostgresError");
       expect(AlchemyPostgresOperation.is.commit(error.operation)).toBe(true);
       expect(O.getOrThrow(error.table)).toBe("alchemy_aggregate_event");
       expect(O.getOrThrow(error.message)).toBe("deadlock detected");
-      expect(O.isSome(error.cause)).toBe(true);
+      assertSome(error.cause, cause);
     })
   );
 
   it.effect("leaves message and cause empty for a non-error cause", () =>
     Effect.sync(() => {
       const error = AlchemyPostgresError.fromUnknown("listen");
-      expect(O.isNone(error.table)).toBe(true);
-      expect(O.isNone(error.message)).toBe(true);
+      assertNone(error.table);
+      assertNone(error.message);
     })
   );
 });

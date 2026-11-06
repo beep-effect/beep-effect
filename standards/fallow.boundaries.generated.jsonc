@@ -1370,10 +1370,16 @@
       {
         "from": "@beep/alchemy-postgres",
         "allow": [
-          "@beep/alchemy-postgres"
+          "@beep/alchemy-postgres",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
-          "@beep/alchemy-postgres"
+          "@beep/alchemy-postgres",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
         ]
       },
       {

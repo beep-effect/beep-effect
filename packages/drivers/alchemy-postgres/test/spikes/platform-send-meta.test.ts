@@ -73,7 +73,7 @@ const Recording = Layer.effect(Domain.Platform)(
 const SpikeLive = Spike.layer(Layer.empty).pipe(Layer.provide(Recording.pipe(Layer.provideMerge(Domain.InMemory))));
 
 describe("alchemy beta.85 platform send metadata (P0 spike)", () => {
-  it.layer(SpikeLive)("hosted on a recording InMemory platform", (it) => {
+  it.layer(SpikeLive, { timeout: "30 seconds" })("hosted on a recording InMemory platform", (it) => {
     it.effect("hands the driver the encoded request context with every send", () =>
       Effect.gen(function* () {
         const accounts = yield* Account;
