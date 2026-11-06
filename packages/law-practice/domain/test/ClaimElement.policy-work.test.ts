@@ -53,6 +53,35 @@ const deepClaims = (referenceCount: number, depth = 64): PatentClaims =>
   );
 
 describe("bounded antecedent policy preparation", () => {
+  it.effect("abstains when sparse chains exhaust preparation lookup and copy reservations", () =>
+    Effect.gen(function* () {
+      const claims: PatentClaims = A.prepend(
+        A.map(A.range(2, 120), (number) => dependent(number, [number - 1], "the sensor.")),
+        independent(1, "a sensor.")
+      );
+      const sparseTree = Effect.fn("PolicyWorkTest.sparseTree")(function* (number: number) {
+        const claim = O.getOrThrow(A.findFirst(claims, (candidate) => candidate.claimNumber === number));
+        const tree = yield* decomposeClaim(claim, claims);
+        return yield* S.decodeEffect(ClaimElementTree)({
+          ...tree,
+          edges: [],
+          elements: A.map(tree.elements, (element) => ({
+            ...element,
+            terms: A.filter(element.terms, (term) => term.determiner === "the" && term.head === "sensor"),
+          })),
+        });
+      });
+      // One sparse term cannot fund the quadratic copy reservation of a
+      // 120-claim chain. Earlier successful chains can instead leave less
+      // than the next chain's lookup reservation while enumeration still fits.
+      for (const depths of [[120], [20, 21, 95, 50]]) {
+        const trees = yield* Effect.forEach(depths, sparseTree);
+        const findings = antecedentPolicy(trees, claims);
+        assert.isTrue(A.some(findings, ({ rule }) => rule === "chain-work-limit"));
+        assert.deepStrictEqual(antecedentPolicy(trees, claims), findings);
+      }
+    })
+  );
   it.effect("retains every unsupported bare warning without wasting candidate scans", () =>
     Effect.gen(function* () {
       const body = `${A.join(

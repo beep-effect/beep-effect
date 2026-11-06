@@ -142,14 +142,7 @@ export const makeCitationSpanOffsets = Effect.fn("Citation.makeSpanOffsets")(fun
   if (measured.consumed !== before || measured.emitted !== after) return yield* fail("invalid-plan");
   const count = measured.entries;
   const at = yield* build(steps, count);
-  const update = Effect.fn("Citation.updateSpanOffset")(function* (rawPosition: unknown, rawSide: unknown) {
-    const position = yield* S.decodeUnknownEffect(Position)(rawPosition).pipe(
-      Effect.mapError(() => fail("invalid-offset"))
-    );
-    const side = yield* S.decodeUnknownEffect(CitationSpanOffsetSide)(rawSide).pipe(
-      Effect.mapError(() => fail("invalid-offset"))
-    );
-    if (count === 0) return yield* fail("empty-map");
+  const findUpdater = (position: number, side: CitationSpanOffsetSide) => {
     let lower = 0;
     let upper = count;
     while (lower < upper) {
@@ -159,7 +152,17 @@ export const makeCitationSpanOffsets = Effect.fn("Citation.makeSpanOffsets")(fun
       else upper = middle;
     }
     // Python index -1 deliberately chooses the final source updater.
-    const selected = lower === 0 ? count - 1 : lower - 1;
+    return lower === 0 ? count - 1 : lower - 1;
+  };
+  const update = Effect.fn("Citation.updateSpanOffset")(function* (rawPosition: unknown, rawSide: unknown) {
+    const position = yield* S.decodeUnknownEffect(Position)(rawPosition).pipe(
+      Effect.mapError(() => fail("invalid-offset"))
+    );
+    const side = yield* S.decodeUnknownEffect(CitationSpanOffsetSide)(rawSide).pipe(
+      Effect.mapError(() => fail("invalid-offset"))
+    );
+    if (count === 0) return yield* fail("empty-map");
+    const selected = findUpdater(position, side);
     const value = at(selected * 3 + 2);
     return at(selected * 3 + 1) === 0 ? position + value : value;
   });
