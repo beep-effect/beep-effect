@@ -388,7 +388,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SpanOffsets.ts",
-          "sha256": "6ff715ab9a5ac7dd93c844e6a625e6d0f8d80e144cd2530a9503c8544d98378d"
+          "sha256": "2bb27dc143c398fea2fb7a20e98ca09506bc59fa7f61c64ae21ef7b9d659cfeb"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlTagGeometry.ts",
@@ -404,7 +404,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-html-tag-geometry.md",
-          "sha256": "09671da4c8a8f1db289d61fda4928e30f3b062d43110b766d1607db3e0201d44"
+          "sha256": "a86a63616f2cfbc2ba8d21bc73fd20c0fb206540a89be6f703bf10e75512bcba"
         }
       ],
       "workflowState": "audit",
@@ -1549,7 +1549,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SpanOffsets.ts",
-          "sha256": "6ff715ab9a5ac7dd93c844e6a625e6d0f8d80e144cd2530a9503c8544d98378d"
+          "sha256": "2bb27dc143c398fea2fb7a20e98ca09506bc59fa7f61c64ae21ef7b9d659cfeb"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlTagGeometry.ts",
@@ -1565,7 +1565,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-html-tag-geometry.md",
-          "sha256": "09671da4c8a8f1db289d61fda4928e30f3b062d43110b766d1607db3e0201d44"
+          "sha256": "a86a63616f2cfbc2ba8d21bc73fd20c0fb206540a89be6f703bf10e75512bcba"
         }
       ],
       "workflowState": "audit",
