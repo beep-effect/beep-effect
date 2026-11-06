@@ -176,6 +176,13 @@ export const assertCitationCaseNameProcessBudget = Effect.fn("CaseNameProcessTes
   const row = A.getUnsafe(setup.corpus.cases, 13);
   const accepted = yield* setup.stage.apply(request(row));
   expect(accepted.reservedUnits).toBe(54);
+  const bounded = yield* makeCitationCaseNameProcess(
+    { ...setup.limits, tokens: 1 },
+    setup.runtime,
+    setup.configuration
+  ).pipe(Effect.provideContext(setup.provided));
+  const tokens = yield* bounded.apply(request(row)).pipe(Effect.flip);
+  expect(tokens).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "tokens" });
   setup.configuration.patterns.splitV.bytes.fill(0);
   setup.configuration.cleaner.patterns.stopWords.bytes.fill(0);
   const repeated = yield* setup.stage.apply(request(row));
@@ -202,7 +209,22 @@ export const assertCitationCaseNameProcessBudget = Effect.fn("CaseNameProcessTes
 export const assertCitationCaseNameProcessLifetime = Effect.fn("CaseNameProcessTest.lifetime")(function* () {
   const scope = yield* Scope.make();
   const closed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, scope));
+  for (const configuration of [
+    null,
+    {
+      ...closed.configuration,
+      patterns: { ...closed.configuration.patterns, splitV: { width: 1, bytes: new Uint8Array([88]) } },
+    },
+  ]) {
+    const rejected = yield* makeCitationCaseNameProcess(closed.limits, closed.runtime, configuration).pipe(
+      Effect.provideContext(closed.provided),
+      Effect.flip
+    );
+    expect(rejected).toMatchObject({ reason: "invalid-configuration" });
+  }
   const row = A.getUnsafe(closed.corpus.cases, 13);
+  const invalid = yield* closed.stage.apply({}).pipe(Effect.flip);
+  expect(invalid).toMatchObject({ reason: "invalid-input" });
   yield* assertCitationWorkerClosedLifetime(scope, closed.stage.apply(request(row)), closed.observed.snapshot);
   const timed = yield* install("bun", undefined, false, true);
   yield* assertCitationWorkerCapturedDeadline(

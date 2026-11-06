@@ -53,8 +53,9 @@ const expectedCounts = {
 /** Compare reviewed boundary contexts while retaining repeated-profile refusals. */
 export const replayCitationRegexBoundaries = Effect.fn("RegexBoundariesTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
-  full: boolean
+  full: boolean,
+  batch?: number
 ) {
   const corpus = yield* load();
-  yield* replayCitationRegexProgramFamily(kind, full, corpus.patterns, expectedCounts, 8192);
+  yield* replayCitationRegexProgramFamily(kind, full, corpus.patterns, expectedCounts, 8192, batch);
 });

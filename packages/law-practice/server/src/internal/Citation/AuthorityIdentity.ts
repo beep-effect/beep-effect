@@ -121,7 +121,7 @@ const caseAuthorityPreimage = Effect.fn("Citation.caseAuthorityPreimage")(functi
   }
   const groups = A.filter(pairs, ([name]) => name === "volume" || name === "page");
   if (O.isNone(edition) && O.isNone(reporter)) return yield* invalid();
-  const correctedReporter = O.isSome(edition) ? edition.value.shortName : O.getOrElse(reporter, () => null);
+  const correctedReporter = O.isSome(edition) ? edition.value.shortName : O.getOrThrow(reporter);
   return yield* S.encodeEffect(Key)([
     "citation-authority/v1",
     "case",

@@ -37,6 +37,29 @@ const cases = Effect.gen(function* () {
 });
 
 it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical default resolution", (it) => {
+  it.effect("enforces candidate and Id edge ceilings after earlier full decisions", () =>
+    Effect.gen(function* () {
+      const data = yield* cases;
+      const controls: ReadonlyArray<readonly [string, number, number]> = [
+        ["short-ambiguous", 3, 4],
+        ["repeat-and-id", 2, 3],
+      ];
+      for (const [name, denied, accepted] of controls) {
+        const row = yield* Effect.fromOption(A.findFirst(data.cases, (candidate) => candidate.name === name));
+        const input = yield* prepare(row);
+        const failure = yield* resolveCitationMentions({
+          ...input,
+          limits: { ...input.limits, resolutionEdges: denied },
+        }).pipe(Effect.flip);
+        expect(failure).toMatchObject({ _tag: "CitationResolveFailure", reason: "limit-exceeded" });
+        const complete = yield* resolveCitationMentions({
+          ...input,
+          limits: { ...input.limits, resolutionEdges: accepted },
+        });
+        expect(complete.resolutions).toHaveLength(input.mentions.length);
+      }
+    })
+  );
   it.effect("matches all captured extracted and synthetic semantic resource groups", () =>
     Effect.gen(function* () {
       const data = yield* cases;

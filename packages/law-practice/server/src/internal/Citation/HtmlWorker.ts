@@ -81,6 +81,8 @@ export class CitationHtmlCleanerStage extends S.Opaque<CitationHtmlCleanerStage,
   )
 ) {}
 const failure = (reason: CitationHtmlWorkerFailure["reason"]) => CitationHtmlWorkerFailure.make({ reason });
+const invalidRuntime = () => failure("invalid-runtime");
+const invalidInput = () => CitationHtmlInputFailure.make({ reason: "invalid-input" });
 const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
   CitationSafetyLimitExceeded.make({ operation: "clean", limit });
 const Text = S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.sourceUtf16));
@@ -102,7 +104,7 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
   runtimeInput: unknown
 ) {
   const decodedLimits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(policy).pipe(
-    Effect.mapError(() => failure("invalid-runtime"))
+    Effect.mapError(invalidRuntime)
   );
   const limits = CitationEngineLimits.make({
     ...decodedLimits,
@@ -112,7 +114,7 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
     cleanupDeadline: decodedLimits.cleanupDeadline.pipe(Duration.toMillis, Duration.millis),
   });
   const runtime = yield* S.decodeUnknownEffect(CitationNativeProcessRuntime)(runtimeInput).pipe(
-    Effect.mapError(() => failure("invalid-runtime"))
+    Effect.mapError(invalidRuntime)
   );
   const clock = yield* Clock.Clock;
   // Standalone private workers own a local pool. Engine composition supplies one
@@ -120,7 +122,7 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
   const suppliedAdmission = yield* Effect.serviceOption(CitationNativeProcessAdmission);
   const nativeAdmission = O.isSome(suppliedAdmission)
     ? suppliedAdmission.value
-    : yield* makeCitationNativeProcessAdmission(limits).pipe(Effect.mapError(() => failure("invalid-runtime")));
+    : yield* makeCitationNativeProcessAdmission(limits).pipe(Effect.mapError(invalidRuntime));
   const preparation = yield* makeCitationHtmlInput(limits);
   const slots = yield* Semaphore.make(limits.concurrentOperations);
   const queueSlots = yield* Semaphore.make(limits.queuedOperations);
@@ -138,16 +140,12 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
   const reap = nativeOwner.reap;
   const validateSource = Effect.fnUntraced(function* (input: unknown, kind: "raw" | "text" | "bytes" | "unicode") {
     if (kind === "bytes") {
-      yield* S.decodeUnknownEffect(S.Uint8Array)(input).pipe(
-        Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
-      );
+      yield* S.decodeUnknownEffect(S.Uint8Array)(input).pipe(Effect.mapError(invalidInput));
     } else if (kind === "unicode") {
-      yield* S.decodeUnknownEffect(NativeStorage)(input).pipe(
-        Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
-      );
+      yield* S.decodeUnknownEffect(NativeStorage)(input).pipe(Effect.mapError(invalidInput));
     } else {
       const text = yield* S.decodeUnknownEffect(kind === "text" ? StageText : Text)(input).pipe(
-        Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
+        Effect.mapError(invalidInput)
       );
       if (kind === "raw" && Str.length(text) > limits.sourceUtf16) return yield* safety("sourceUtf16");
     }
@@ -155,9 +153,7 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
   const clean = Effect.fn("Citation.cleanHtmlProcess")(
     function* (input: unknown, remaining: number, kind: "raw" | "text" | "bytes" | "unicode") {
       yield* validateSource(input, kind);
-      const outputUtf16 = yield* S.decodeEffect(Output)(remaining).pipe(
-        Effect.mapError(() => failure("invalid-runtime"))
-      );
+      const outputUtf16 = yield* S.decodeEffect(Output)(remaining).pipe(Effect.mapError(invalidRuntime));
       if (outputUtf16 > limits.producedTextUtf16) return yield* safety("producedTextUtf16");
       yield* preflightCitationHtmlControlFrames(limits.processMessageBytes);
       return yield* Effect.uninterruptibleMask(
@@ -214,7 +210,7 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
               limits.processMessageBytes
             );
             const argument = yield* S.encodeEffect(NaturalJson)(limits.processMessageBytes).pipe(
-              Effect.mapError(() => failure("invalid-runtime"))
+              Effect.mapError(invalidRuntime)
             );
             yield* nativeAdmission.acquire("clean").pipe(
               Effect.mapError((error) =>

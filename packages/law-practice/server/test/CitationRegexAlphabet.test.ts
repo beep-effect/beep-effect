@@ -174,3 +174,43 @@ it.effect("captures Clock identity and the shorter total-operation deadline", ()
     expect(citationResult7).toMatchObject({ operation: "extract", limit: "operationDeadline" });
   })
 );
+
+it.effect("preserves source continuity across the complete 4096-symbol encoding chunk", () =>
+  Effect.gen(function* () {
+    const policy = yield* defaultCitationEnginePolicy;
+    const alphabet = yield* makeCitationRegexAlphabet(policy.limits);
+    const result = yield* alphabet.prepare(
+      { atoms: 1, intervals: [{ atom: 0, start: 0, end: 255 }] },
+      { width: 1, bytes: new Uint8Array(4097).fill(65) }
+    );
+    expect(result.pythonLength).toBe(4097);
+    expect(result.source).toBe(letters(A.makeBy(4097, () => 0)));
+    expect(result.atoms).toEqual([`[${letters([0])}]`]);
+  })
+);
+
+it.effect("bounds empty predicate expansion and set metadata before reading source storage", () =>
+  Effect.gen(function* () {
+    const policy = yield* defaultCitationEnginePolicy;
+    const invalidPolicy = yield* makeCitationRegexAlphabet(null).pipe(Effect.flip);
+    expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
+    for (const { maximum, sets } of [
+      { maximum: 6, sets: { atoms: 2, intervals: [] } },
+      { maximum: 1, sets: { atoms: 2, intervals: [] } },
+      {
+        maximum: 1,
+        sets: {
+          atoms: 1,
+          intervals: [
+            { atom: 0, start: 1, end: 1 },
+            { atom: 0, start: 3, end: 3 },
+          ],
+        },
+      },
+    ]) {
+      const alphabet = yield* makeCitationRegexAlphabet({ ...policy.limits, patternUtf16: maximum });
+      const failure = yield* alphabet.prepare(sets, "unread invalid source").pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patternUtf16" });
+    }
+  })
+);

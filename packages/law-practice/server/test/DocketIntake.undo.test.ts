@@ -28,10 +28,11 @@ import {
   IntakeFailed,
   NotDocketItem,
 } from "@beep/law-practice-use-cases/DocketIntake";
+import { GraphEvent } from "@beep/m365";
 import { LocalDate } from "@beep/schema/LocalDate";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
@@ -204,6 +205,32 @@ const plan = Effect.gen(function* () {
 });
 
 describe("@beep/law-practice-server DocketIntake undo", () => {
+  it.layer(UndoLayer, { timeout: "10 seconds" })("a calendar version lost after planning", (it) => {
+    it.effect("keeps a still-provisional event when its change key disappears before apply", () =>
+      Effect.gen(function* () {
+        const fake = yield* FakeGraph;
+        const journalService = yield* DocketIntakeJournal;
+        const original = event({ categories: ["Docket - unverified"], id: "e-unversioned" });
+        yield* Ref.set(fake.events, HashMap.make([original.id, original]));
+        yield* journalService.append([created(RUN, original.id)]);
+        const planned = yield* plan;
+        expect(A.map(planned.events, (target) => [target.eventId, target.action])).toEqual([[original.id, "delete"]]);
+        const unversioned = GraphEvent.make({ ...original, changeKey: O.none() });
+        yield* Ref.update(fake.events, HashMap.set(original.id, unversioned));
+        const report = yield* applyDocketUndo({ mailbox: MAILBOX, plan: planned });
+        expect(report).toMatchObject({ deleted: 0, kept: 1 });
+        const events = yield* Ref.get(fake.events);
+        assertSome(HashMap.get(events, original.id), unversioned);
+        const calls = yield* Ref.get(fake.calls);
+        expect(A.some(calls, Str.startsWith(`deleteEvent ${original.id}`))).toBe(false);
+        const entries = yield* readDocketJournal(DIRECTORY);
+        assertTrue(
+          A.some(entries, (entry) => entry.kind === "undo-event-kept" && O.contains(original.id)(entry.eventId))
+        );
+      })
+    );
+  });
+
   it.layer(UndoLayer, { timeout: "10 seconds" })((it) => {
     it.effect(
       "undo of a reusing run leaves the event, and undo of its creating run deletes it",

@@ -21,6 +21,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -157,3 +158,16 @@ it.layer(BunFileSystem.layer)("HTML worker protocol", (it) => {
     })
   );
 });
+
+it.effect("redacts a failed frame read as a channel failure before invoking the receiver", () =>
+  Effect.gen(function* () {
+    const failure = yield* readCitationHtmlFrames(
+      Stream.fail(PlatformError.systemError({ module: "Stdio", method: "stdin", _tag: "Unknown" })),
+      4096,
+      1,
+      () => Effect.die("failed input stream reached the receiver")
+    ).pipe(Effect.flip);
+    expect(failure).toMatchObject({ _tag: "CitationHtmlWorkerFailure", reason: "channel-failed" });
+    expect("cause" in failure).toBe(false);
+  })
+);
