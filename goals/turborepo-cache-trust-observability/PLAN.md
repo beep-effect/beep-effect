@@ -1508,3 +1508,18 @@ without verify/publish under the operator instruction; retain explicit local
 gate skips and require actual current-head results. Existing native permission
 counterexamples, task/profile qualification, shared #2682 repair, protected
 producer execution, rollout windows and all nine whole-goal criteria stay open.
+
+## Checkpoints
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-cache-trust-observability`; add a `kind: checkpoint` file there, never edit this block._
+
+### Locate the dependency observer memory refusal, 2026-11-06
+
+The released-source inspection passed on run 42209083425, but dependency diagnosis refused with memory-limit. Add only a fixed module family, line number and Python version to that refusal. Preserve private exception/frame data and the original minimal refusal if metadata allocation also fails. Keep the 256 MiB process cap and all archive/digest/publication bounds unchanged. Hosted CI must prove the new privacy regressions; two successful real diagnostics and every whole-goal acceptance criterion remain pending.
+
+Lane `codex/cache-dependency-memory-site-20261106`
+
+Reverse: Revert the optional refusal-location fields and their tests; retain the actual failed observation and its artifact identities.
+
+<!-- beep:decisions:end -->

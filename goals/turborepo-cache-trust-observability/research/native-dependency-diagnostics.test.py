@@ -213,13 +213,45 @@ class DependencyDiagnostics(unittest.TestCase):
                      patch.object(PROBE, "observe", side_effect=failure):
                     self.assertEqual(PROBE.main(), 1)
                 raw = output.read_bytes()
-                self.assertEqual(json.loads(raw), {
+                expected_report = {
                     "schemaVersion": "cache-dependency-diagnostics/v1", "status": "refused", "code": expected,
-                })
+                }
+                if isinstance(failure, MemoryError):
+                    expected_report.update(memoryLocation={"component": "unknown"},
+                                           pythonVersion=list(PROBE.sys.version_info[:3]))
+                self.assertEqual(json.loads(raw), expected_report)
                 self.assertNotIn(private.encode(), raw)
                 self.assertNotIn(str(self.root).encode(), raw)
                 self.assertEqual(output.stat().st_mode & 0o777, 0o600)
                 self.assertLessEqual(len(raw), 256)
+
+    def test_memory_location_excludes_private_module_names_and_frame_context(self):
+        private = "PRIVATE_MEMORY_CONTEXT_SENTINEL"
+        for module, expected in [("tarfile", "tarfile"), ("json.encoder", "json"), (private, "unknown")]:
+            with self.subTest(component=expected), patch.dict(globals(), {"__name__": module}):
+                private_frame_value = str(self.root / private)
+                try:
+                    raise MemoryError(private_frame_value)
+                except MemoryError as error:
+                    location = PROBE.memory_location(error.__traceback__)
+                raw = PROBE.encoded(location)
+                self.assertEqual(location["component"], expected)
+                self.assertEqual(set(location), {"component"} if expected == "unknown" else {"component", "line"})
+                self.assertNotIn(private.encode(), raw)
+                self.assertNotIn(str(self.root).encode(), raw)
+
+    def test_memory_location_allocation_failure_preserves_minimal_refusal(self):
+        output = self.root / "memory-location-refusal.json"
+        arguments = [str(OBSERVER), "--source-report", str(self.source),
+                     "--output", str(output), "--revision", "a" * 40]
+        with patch.object(PROBE.sys, "argv", arguments), \
+             patch.object(PROBE.resource, "setrlimit"), \
+             patch.object(PROBE, "observe", side_effect=MemoryError("PRIVATE_PAYLOAD")), \
+             patch.object(PROBE, "memory_location", side_effect=MemoryError("PRIVATE_LOCATION")):
+            self.assertEqual(PROBE.main(), 1)
+        self.assertEqual(json.loads(output.read_bytes()), {
+            "schemaVersion": "cache-dependency-diagnostics/v1", "status": "refused", "code": "memory-limit",
+        })
 
     def test_publication_cap_includes_failure_reports_and_refuses_special_paths(self):
         source = self.root / "publication-source.json"
