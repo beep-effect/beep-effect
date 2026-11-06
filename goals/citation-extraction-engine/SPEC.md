@@ -1391,6 +1391,14 @@ Lane `citation-extraction-engine`
 
 Reverse: Requires a new explicit operator instruction; this publication exception does not relax any acceptance requirement.
 
+### Continue goal through linked follow-up PRs, 2026-11-05
+
+On 2026-11-05 the operator explicitly authorized linked follow-up PRs for this unchanged goal when active PRs merge, starting with prepared HTML geometry and hosted quality repairs at 7fcf0897c0 after PR #2713 merged. This renews and generalizes the publication exception: preserve links to earlier PRs, exact source and proof receipts, all acceptance requirements, and the active full objective. A PR merge does not establish goal completion and this grants no merge authority, safety waiver or scope reduction.
+
+Lane `citation-extraction-engine`
+
+Reverse: Requires an explicit operator instruction changing this publication authorization; all goal acceptance gates remain binding.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

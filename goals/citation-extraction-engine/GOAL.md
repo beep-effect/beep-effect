@@ -62,10 +62,10 @@ passed/pending checks. Keep PR #2511 ready for review while continuing the full
 goal. Draft status is no acceptance gate; review readiness neither claims
 completion nor authorizes merging. All acceptance requirements remain.
 
-Approved 2026-11-05: after #2511 merged, continue unchanged in a follow-up PR,
-starting with scanner/word-boundary work. Exception: one-PR delivery/reviewability
-only. Keep prior PR/evidence links and all acceptance duties. See
-`decisions/2026-11-05-follow-up-publication.md`.
+Approved 2026-11-05: continue unchanged through linked follow-up PRs when active
+PRs merge, starting with HTML geometry/quality fixes after #2713. Exception:
+one-PR delivery/reviewability only. Keep prior PR/evidence links and all acceptance
+duties. See `decisions/2026-11-05-linked-follow-up-publication.md`.
 
 Stop without weakening scope on incompatible prerequisites, unprovable
 exhaustive parity, unrecorded safety/fidelity divergence, or loss of one-PR

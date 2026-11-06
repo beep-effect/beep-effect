@@ -79,6 +79,7 @@ is inferred, and this is not a whole-repository green claim.
 
 PR #2713 merged at head 0f6159a4efdf54a52aca6b1c21126d1e03937d91 as
 31d8efc09b14d558df48fc3ba75add397a3d2ac1 while this work was local. The
-one-follow-up publication exception does not itself prove goal completion or
-silently authorize another PR. Preserve this work for the operator's publication
-decision; full parity, accounting, resource and lifecycle requirements remain.
+operator subsequently authorized linked follow-up PRs for this unchanged goal,
+including the prepared geometry/quality work. The authorization is recorded in
+decisions/2026-11-05-linked-follow-up-publication.md. It grants no merge authority
+or completion claim; full parity, accounting, resource and lifecycle duties remain.

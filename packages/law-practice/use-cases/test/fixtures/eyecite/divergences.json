@@ -404,7 +404,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-html-tag-geometry.md",
-          "sha256": "f30ae85140187b0f20e403a144d16be2ff1e3f2937438bd6bae078cdacd4fd71"
+          "sha256": "09671da4c8a8f1db289d61fda4928e30f3b062d43110b766d1607db3e0201d44"
         }
       ],
       "workflowState": "audit",
@@ -1565,7 +1565,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-html-tag-geometry.md",
-          "sha256": "f30ae85140187b0f20e403a144d16be2ff1e3f2937438bd6bae078cdacd4fd71"
+          "sha256": "09671da4c8a8f1db289d61fda4928e30f3b062d43110b766d1607db3e0201d44"
         }
       ],
       "workflowState": "audit",
