@@ -15,15 +15,17 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import { makeJsonLinesStore, partitionJsonLines } from "../../internal/state/JsonLinesStore.ts";
+import {
+  makeJsonLinesStore,
+  makeMemoryJsonLinesStore,
+  partitionJsonLines,
+} from "../../internal/state/JsonLinesStore.ts";
 import { repositoryJsonLinesFileName, resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
 import { PrRepository } from "../Yeet/internal/Provenance.ts";
 import { RegisterRow, RegisterRowJson } from "./Register.schemas.ts";
@@ -198,16 +200,10 @@ export const layerOrchestratorRegisterLive = Layer.effect(OrchestratorRegister, 
  */
 export const layerOrchestratorRegisterMemory = Layer.effect(
   OrchestratorRegister,
-  Ref.make(A.empty<RegisterRow>()).pipe(
-    Effect.map((rows) =>
-      OrchestratorRegister.of({
-        append: Effect.fn("OrchestratorRegister.memory.append")((row) => Ref.update(rows, A.append(row))),
-        list: Effect.fn("OrchestratorRegister.memory.list")((repository) =>
-          Ref.get(rows).pipe(Effect.map(A.filter((row) => equivalentRepository(row.repository, repository))))
-        ),
-      })
-    )
-  )
+  makeMemoryJsonLinesStore({
+    partitionOf: (row: RegisterRow) => row.repository,
+    samePartition: equivalentRepository,
+  }).pipe(Effect.map(OrchestratorRegister.of))
 );
 
 /**

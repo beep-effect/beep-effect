@@ -5,6 +5,20 @@
  * @since 0.0.0
  */
 /**
+ * Entity kit freeze law schemas, frozen specifiers, and baseline shape.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./EntityKitFreeze.model.ts";
+/**
+ * Entity kit freeze law: pure scanner, baseline comparison, and repository runner.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./EntityKitFreeze.ts";
+/**
  * Shared package project handed to the law visitors by the package scanner.
  *
  * @category services
