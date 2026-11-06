@@ -78,6 +78,8 @@
       "!packages/law-practice/use-cases/test/fixtures/eyecite/html-bytes.json",
       // Complete source identity relations sealed by ops/verify-cleaner-identities.py.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-identities.json",
+      // Producer-owned bytes sealed by ops/verify-case-name-process.py.
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/case-name-process.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/unicode-dictionary.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/python-hashes.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-unicode.json",
