@@ -1480,3 +1480,19 @@ recovery regressions await hosted CI; no local test or quality suite ran.
 
 Keep the observed PR held, the inherited main repair separate, and every trust
 acceptance criterion open. This repair changes no cache or producer authority.
+
+### Process creation-mask identity repair, 2026-11-03
+
+A supported runtime identity omitted umask despite its effect on file creation
+and cached output restoration. Add a bounded schema field and read it through
+the existing toolchain discovery process. New fingerprints include an observed
+mask; older receipts retain an absent field and their historical serialization.
+Mask-only changes alter toolchain identity while preserving computation config.
+
+Four new hosted regression cases cover real child inheritance without a parent
+mask change, invalid native output, persisted mask bounds, and old/new/different
+mask identities. They are authored, not locally executed. Push to hosted CI
+without verify/publish under the operator instruction; retain explicit local
+gate skips and require actual current-head results. Existing native permission
+counterexamples, task/profile qualification, shared #2682 repair, protected
+producer execution, rollout windows and all nine whole-goal criteria stay open.

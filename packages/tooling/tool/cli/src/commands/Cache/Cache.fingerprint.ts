@@ -36,6 +36,7 @@ import {
   CacheCensusSource,
   CacheComputationConfiguration,
   CacheExecutablePin,
+  CacheFileCreationMask,
   CacheLiveIdentity,
   CacheToolchainSnapshot,
 } from "./Cache.schemas.ts";
@@ -152,6 +153,36 @@ const fingerprintExecutable = Effect.fn("CacheFingerprint.executable")(function*
   return CacheExecutablePin.make({ version, sha256 });
 });
 
+/**
+ * Observe the inherited creation mask in a bounded child of the selected runtime.
+ *
+ * **Details**
+ * The isolated child observes its inherited umask. Dotenv loading is disabled and
+ * only the existing discovery environment is inherited. Invalid or failed
+ * observations fail before an identity can be published.
+ *
+ * **Example** (Prepare a runtime observation)
+ * ```ts
+ * import { collectCacheFileCreationMask } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * console.assert(Effect.isEffect(collectCacheFileCreationMask("/repo", "/tools/bun")))
+ * ```
+ *
+ * @param root - Existing working directory for the runtime observation.
+ * @param executable - Selected Bun executable or a controlled test launcher.
+ * @returns The inherited POSIX creation mask.
+ * @category queries
+ * @since 0.0.0
+ */
+export const collectCacheFileCreationMask = Effect.fn("CacheFingerprint.fileCreationMask")(
+  function* (root: string, executable: string) {
+    const text = yield* captureVersion(root, executable, ["--no-env-file", "-p", "process.umask()"]);
+    const value = yield* S.decodeEffect(S.FiniteFromString)(text);
+    return yield* S.decodeEffect(CacheFileCreationMask)(value);
+  },
+  Effect.mapError(() => CacheCommandError.new("Cannot observe the process file creation mask."))
+);
+
 const toDefinition = (node: CacheCensusNode): CacheCensusDefinition =>
   CacheCensusDefinition.make({
     id: node.id,
@@ -232,6 +263,7 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
   if (bun.version !== Str.trim(new TextDecoder().decode(declaration)))
     return yield* CacheCommandError.new("The observed Bun runtime differs from the repository .bun-version pin.");
   const profile = yield* decodeToolchainProfile(`local-linux-x64-bun${bun.version}`);
+  const fileCreationMask = yield* collectCacheFileCreationMask(root, bunPath);
   const sources = yield* Effect.forEach(
     [
       ".nvmrc",
@@ -255,6 +287,7 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
     profile,
     kernel,
     libc,
+    fileCreationMask: O.some(fileCreationMask),
     bun,
     node: yield* fingerprintExecutable(root, nodePath),
     turbo: yield* fingerprintExecutable(root, turboPath),
