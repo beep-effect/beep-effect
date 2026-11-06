@@ -414,3 +414,37 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
     })
   );
 });
+
+for (const domain of ["managed-controller-trace/v1:", "managed-controller-canary/v1:"]) {
+  it.layer(NodeCrypto.layer)((it) =>
+    it.effect("fails the whole mixed controller batch when identity crypto fails", () =>
+      Effect.gen(function* () {
+        const other = ManagedControllerObservation.make({ ...observation, launchId: id("6") });
+        const first = yield* encodeManagedControllerObservation(observation);
+        const second = yield* encodeManagedControllerObservation(other);
+        // Protobuf concatenation merges repeated resourceSpans into one two-span request.
+        const mixed = new Uint8Array([...first, ...second]);
+        const healthy = yield* projectNativeTraceRequest(request(mixed));
+        expect(healthy.spans).toHaveLength(2);
+        const digest = globalThis.crypto.subtle.digest.bind(globalThis.crypto.subtle);
+        let failedCalls = 0;
+        yield* Effect.acquireRelease(
+          Effect.sync(() =>
+            vi.spyOn(globalThis.crypto.subtle, "digest").mockImplementation((algorithm, data) => {
+              if (new TextDecoder().decode(data) === `${domain}${other.launchId}`) {
+                failedCalls += 1;
+                return Promise.reject(new Error("PRIVATE_CRYPTO_FAILURE"));
+              }
+              return digest(algorithm, data);
+            })
+          ),
+          (mock) => Effect.sync(() => mock.mockRestore())
+        );
+        const error = yield* Effect.flip(projectNativeTraceRequest(request(mixed)));
+        expect(error).toEqual(NativeTraceError.make({ reason: "hash-failure" }));
+        expect(failedCalls).toBe(1);
+        expect(String(error)).not.toContain("PRIVATE_CRYPTO_FAILURE");
+      })
+    )
+  );
+}

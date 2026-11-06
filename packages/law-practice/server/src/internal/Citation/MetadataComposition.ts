@@ -116,6 +116,23 @@ export const copyCitationMetadataPatterns = Effect.fn("Citation.copyMetadataPatt
   );
   return R.fromEntries(entries);
 });
+/** Own the shared pattern/descriptor portion of a metadata configuration.
+ * @internal @category operations @since 0.0.0
+ */
+export const copyCitationMetadataPatternConfiguration = Effect.fn("Citation.copyMetadataPatternConfiguration")(
+  function* <K extends string, P, I, E>(
+    limits: CitationEngineLimits,
+    schema: S.Codec<P, I>,
+    raw: R.ReadonlyRecord<K, CitationPythonUnicodeStorage>,
+    bindings: ReadonlyArray<CitationRegexPatternDescriptor>,
+    fingerprints: R.ReadonlyRecord<K, string>,
+    invalid: () => E
+  ) {
+    const patterns = yield* copyCitationMetadataPatterns(limits, raw, fingerprints, invalid);
+    const owned = yield* S.decodeUnknownEffect(schema)(patterns).pipe(Effect.mapError(invalid));
+    return { patterns: owned, bindings: A.map(bindings, copyCitationRegexDescriptor) };
+  }
+);
 type Dependencies =
   | Digest.Digest
   | ChildProcessSpawner
@@ -189,6 +206,62 @@ export const decodeCitationMetadataRuntimeConfiguration = Effect.fn("Citation.de
     return { ...decoded, runtime: CitationNativeProcessRuntime.make({ ...runtime }) };
   }
 );
+/** Compose typed server callbacks with the existing captured metadata owner.
+ * Callbacks are installation-time composition, never request fields. The returned
+ * invocation has R=never and shares the common admission/timing/result boundary.
+ * @internal @category constructors @since 0.0.0
+ */
+export const makeCitationMetadataStage = <
+  C,
+  I,
+  Owned,
+  Patch,
+  Output,
+  OwnError,
+  WorkError,
+  Env,
+  Invalid,
+  K extends string,
+>(definition: {
+  readonly method: K;
+  readonly schema: S.Codec<C, I>;
+  readonly invalid: () => Invalid;
+  readonly own: (limits: CitationEngineLimits, configuration: C) => Effect.Effect<Owned, OwnError, Env>;
+  readonly prepare: (
+    limits: CitationEngineLimits,
+    runtime: CitationNativeProcessRuntime,
+    configuration: Owned,
+    raw: unknown
+  ) => Effect.Effect<Patch, WorkError, Dependencies>;
+  readonly project: (patch: Patch, reservedUnits: number) => Output;
+}) =>
+  Effect.fn("Citation.installMetadataStage")(function* (policy: unknown, runtimeInput: unknown, input: unknown) {
+    const { limits, configuration, runtime } = yield* decodeCitationMetadataRuntimeConfiguration(
+      policy,
+      runtimeInput,
+      input,
+      definition.schema,
+      definition.invalid
+    );
+    const config = yield* definition.own(limits, configuration);
+    const installed = yield* makeCitationMetadataOperation(
+      limits,
+      (raw: unknown) => definition.prepare(limits, runtime, config, raw),
+      definition.invalid
+    );
+    const invoke = Effect.fn("Citation.invokeMetadataStage")(
+      (raw: unknown) =>
+        installed.operation.run(
+          "extract",
+          Effect.gen(function* () {
+            const [patch, units] = yield* installed.run(raw);
+            return definition.project(patch, units);
+          })
+        ),
+      installed.timing.timed
+    );
+    return R.singleton(definition.method, invoke);
+  });
 /** Shared captured source year pattern and import-time calendar bound.
  * @internal @category models @since 0.0.0
  */

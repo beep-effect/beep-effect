@@ -77,3 +77,7 @@ Missing source access remains an explicit coverage gap; do independent synthetic
 ## Exception ledger
 
 None. Deferred implementation details must be decided with evidence and recorded here, not treated as permission to omit acceptance.
+
+## Native observation decision
+
+2026-11-03: use a fixed, bounded native Codex one-shot solely to qualify metadata, with at-most-once source execution, immutable metadata replay and separate exact backend readback. Reuse retained home/collector/provenance services; do not revive retired sessions, messaging, claims or a generic dispatcher. Keep unknown usage, native retention and real route populations explicit. Reversal is to stop the owned native attempt/worker through its existing lifecycle and retain its private receipts; do not release the historical recovery hold. Fresh source admission must cover the final local snapshot before any real source run.
