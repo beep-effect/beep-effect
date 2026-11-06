@@ -70,8 +70,12 @@ rebuild to its underlying struct: directly calling its annotation method returns
 the structural schema. A suspended document schema preserves the nominal decoded
 type while carrying the same key metadata and encoded representation. The fields
 now annotate that wrapper; chat draft reconciliation behavior is unchanged.
-Focused checks across the five consumer packages pass after this correction.
-The failed first hosted head remains evidence, not an inherited/environment red.
+Focused checks and package audit/docgen across the five consumer packages pass after this correction.
+A later hosted check reproduced an ordered-list declaration-consumer failure in
+law-practice server. Keeping the defaulted start union behind a suspended schema
+boundary simplifies declaration emit and restores that consumer check under the
+current compiler. The accepted zero/positive start values and default remain the
+same. The failed hosted heads remain evidence, not inherited/environment reds.
 
 ## Rejected and qualified inferences
 

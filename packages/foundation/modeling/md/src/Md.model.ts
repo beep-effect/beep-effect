@@ -2131,12 +2131,15 @@ export class Ol extends S.Opaque<Ol, { readonly brand: unique symbol }>()(
     children: ListChildren.annotateKey({
       description: "List items rendered as an ordered list.",
     }),
-    start: OrderedListStart.pipe(
-      S.withConstructorDefault(Effect.succeed(olStartDefault)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(olStartDefault))
-    ).annotateKey({
-      description: "First ordinal used by the ordered list. Defaults to one.",
-    }),
+    // Keep the defaulted union behind a stable schema boundary in declaration emit.
+    start: S.suspend(() => OrderedListStart)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(olStartDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(olStartDefault))
+      )
+      .annotateKey({
+        description: "First ordinal used by the ordered list. Defaults to one.",
+      }),
   }).pipe(
     $I.annoteSchema("Ol", {
       po: "table",
