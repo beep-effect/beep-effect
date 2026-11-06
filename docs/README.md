@@ -19,6 +19,8 @@ External research intake, source acquisition, provenance, and portable navigatio
 [research reference library](runbooks/research-library.md).
 Which TypeScript compiler runs where, how `typescript@7`, its native alias, and the TS6 bridge coexist, and
 how to wire the Effect compiler into WebStorm: [TypeScript toolchain](runbooks/typescript-toolchain.md).
+Measured check, CI and agent-overhead improvements, their validation, and rejected
+shortcuts: [repository performance](runbooks/repository-performance.md).
 Bootstrapping the repo inside Claude cloud sessions, Codex cloud, and Cursor Cloud Agents, with the
 per-account paste text and allowlists: [cloud environments](runbooks/cloud-environments.md).
 The strict `@shadcn/lint` policy for Tailwind classes and style props, its fix recipes, and how a

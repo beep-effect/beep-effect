@@ -2176,6 +2176,8 @@
     {"name":"Lint.policy","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Lint.resolvePackage","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Lint.validateAssignmentEvidence","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Lint.validateProgramAssignment","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Lint.validateRustAssignmentEvidence","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"LintPolicyScope.collectChangeFacts","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"LintPolicyScope.readSeal","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"LintPolicyScope.resolve","owner":"@beep/repo-cli","family":"tooling","conforms":true},

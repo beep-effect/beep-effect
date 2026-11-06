@@ -230,5 +230,22 @@
         }
       }
     ]
-  }
+  },
+  "references": [
+    {
+      "path": "../../drivers/pglite/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/markdown/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/library/repo-utils/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/fc-runs/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-runner/tsconfig.json"
+    }
+  ]
 }

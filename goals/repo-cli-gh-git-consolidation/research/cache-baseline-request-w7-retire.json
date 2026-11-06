@@ -1,5 +1,5 @@
 {
-  "previous": "cb77033ce9542e31c09cc01446c1a435f84b6c6374d52d0f33d325fe3cdf45ae",
+  "previous": "f4cc937caa86117b4c907a59186dec87d8840792e79127fb5a4b79ab2bec5a82",
   "review": {
     "reviewer": "Claude Fable 5.1 (repo-cli-gh-git-consolidation runner retirement, feat/gh-git-w7-retire)",
     "reason": "Record the runner-retirement seal drift: Goals/Doctor.ts moved its ls-files --others --ignored read onto runRepoCommandCaptureRaw and dropped the GoalsGitError adapter, so Goals.errors.ts leaves the goals-doctor and knowledge policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
@@ -16,5 +16,8 @@
   ],
   "profile": "local-linux-x64-bun1.4.4",
   "epoch": "qualification-v3",
-  "subjects": ["//", "@beep/repo-cli"]
+  "subjects": [
+    "//",
+    "@beep/repo-cli"
+  ]
 }

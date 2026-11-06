@@ -3769,13 +3769,13 @@ const packageVerifyCommand = Command.make(
   {
     packageArgs: Argument.String("package").pipe(
       Argument.variadic,
-      Argument.withDescription("Optional workspace package name to verify")
+      Argument.withDescription("Optional workspace package names to verify sequentially")
     ),
     quick: Flag.Boolean("quick").pipe(Flag.withDefault(false), Flag.withDescription("Run lint and check only")),
   },
   ({ packageArgs, quick }) =>
     runQualityProgram(runPackageVerifyCli({ packageArgs: variadicStrings(packageArgs), quick }))
-).pipe(Command.withDescription("Build a package's upstream dependencies, then run package-local verification"));
+).pipe(Command.withDescription("Build upstream dependencies and verify each requested package"));
 
 const changesetGraphCommand = Command.make("changeset-graph", {}, () =>
   runQualityProgram(

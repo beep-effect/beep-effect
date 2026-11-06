@@ -1574,7 +1574,9 @@
         ],
         "env": [
           "VITE_COSMOS_SPIKE",
-          "REGEN_GOLDENS"
+          "REGEN_GOLDENS",
+          "BEEP_LINT_TSGOLINT",
+          "TSRS_FAST"
         ],
         "passThroughEnv": [
           "BEEP_AGENT_SESSION_ID",
@@ -3272,6 +3274,7 @@
             "packages/drivers/git/package.json",
             "packages/drivers/git/src/**",
             "packages/drivers/github-actions/package.json",
+            "packages/drivers/github-actions/src/**",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/**",
             "packages/drivers/gov-legal-mcp/package.json",
@@ -92321,7 +92324,7 @@
       {
         "computation": "@beep/repo-cli#build",
         "command": "bun run beep:build",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#build",
           "@beep/chalk#build",
@@ -92436,7 +92439,7 @@
       {
         "computation": "@beep/repo-cli#check",
         "command": "bun run beep:check",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#build",
           "@beep/chalk#build",
@@ -92537,7 +92540,7 @@
       {
         "computation": "@beep/repo-cli#coverage",
         "command": "bunx vitest run --coverage",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#build",
           "@beep/chalk#build",
@@ -92648,7 +92651,7 @@
       {
         "computation": "@beep/repo-cli#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/repo-cli#transit",
           "@beep/repo-docgen#transit"
@@ -92687,7 +92690,7 @@
       {
         "computation": "@beep/repo-cli#doctest",
         "command": "bun run beep:doctest",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#transit",
           "@beep/chalk#transit",
@@ -92797,7 +92800,7 @@
       {
         "computation": "@beep/repo-cli#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -92830,7 +92833,7 @@
       {
         "computation": "@beep/repo-cli#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#transit",
           "@beep/chalk#transit",
@@ -92956,7 +92959,7 @@
       {
         "computation": "@beep/repo-cli#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -92985,7 +92988,7 @@
       {
         "computation": "@beep/repo-cli#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
         ],
@@ -93040,7 +93043,7 @@
       {
         "computation": "@beep/repo-cli#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
         ],
@@ -93094,7 +93097,7 @@
       {
         "computation": "@beep/repo-cli#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#transit",
           "@beep/chalk#transit",
@@ -93198,7 +93201,7 @@
       {
         "computation": "@beep/repo-cli#test",
         "command": "bun run beep:test",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#transit",
           "@beep/chalk#transit",
@@ -93328,7 +93331,7 @@
       {
         "computation": "@beep/repo-cli#test:property",
         "command": "bun run beep:test",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#transit",
           "@beep/chalk#transit",
@@ -121770,7 +121773,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "9cbf7792e1e4975ed95922355a4ff8bf0a8572e5c7847666d8ba2d623b9e6173"
+        "sha256": "4f8e35a6e90c9d1d6b1eb57180fb0f8079d1bafe9224e3207630410b204bca05"
       }
     ]
   }

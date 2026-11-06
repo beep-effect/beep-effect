@@ -7,7 +7,11 @@ import * as Os from "node:os";
 import * as Path from "node:path";
 import { AiProviderCliCodexHomeLayout, AiProviderCliHome } from "@beep/ai-provider-cli";
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
-import { ObservationLaunchIdentity, ObservationLaunchReceipt } from "@beep/repo-ai-metrics/observation-launch-facts";
+import {
+  ObservationLaunchFact,
+  ObservationLaunchIdentity,
+  ObservationLaunchReceipt,
+} from "@beep/repo-ai-metrics/observation-launch-facts";
 import { ObservationLaunchContext, ObservationLaunchSubmission } from "@beep/repo-ai-metrics/observation-launch-http";
 import { hashPublicTextSha256 } from "@beep/repo-ai-metrics/privacy";
 import { Sha256Hex } from "@beep/schema";
@@ -16,13 +20,17 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Toml from "effect/encoding/Toml";
+import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CodexNativeCanaryRequest, runCodexNativeCanary } from "./codex-native-canary.ts";
+import { NativeAttemptDiagnostic } from "./native-attempt-diagnostic.ts";
 
 const workspaceName = "workspace.v1 with spaces";
 const logName = "logs";
@@ -34,6 +42,9 @@ const output =
 const fixture = async (
   options: {
     readonly rejectTraceOnce?: boolean;
+    readonly nativeExit?: number;
+    readonly hang?: boolean;
+    readonly terminalAck?: "lost" | "refused";
     readonly wrongConstant?: boolean;
     readonly staleEpoch?: boolean;
     readonly nativeHome?: boolean;
@@ -84,6 +95,14 @@ const fixture = async (
     socketPath: Path.join(directory, "o.sock"),
   });
   const facts: Array<string> = [];
+  const factData: Array<ObservationLaunchFact> = [];
+  const factAttempts: Array<string> = [];
+  let sourceReleased = false;
+  let cleanupBeforeFinished = false;
+  let onStarted = () => {};
+  const started = new Promise<void>((resolve) => {
+    onStarted = resolve;
+  });
   const traceBodies: Array<Buffer> = [];
   let traceCount = 0;
   // @effect-diagnostics-next-line asyncFunction:off -- Native filesystem/socket fixture independently exercises the real platform boundary and closes every resource.
@@ -106,7 +125,34 @@ const fixture = async (
       );
     } else if (incoming.url === "/v1/launch-facts") {
       const submitted = await Effect.runPromise(S.decodeEffect(S.fromJsonString(ObservationLaunchSubmission))(body));
-      facts.push(submitted.fact._tag);
+      factAttempts.push(submitted.fact._tag);
+      if (submitted.fact._tag === "Finished") {
+        cleanupBeforeFinished = sourceReleased;
+        if (options.terminalAck === "refused") {
+          response.statusCode = 503;
+          response.end();
+          return;
+        }
+      }
+      const existing = factData.find((fact) => fact._tag === submitted.fact._tag);
+      if (
+        existing !== undefined &&
+        (await Effect.runPromise(S.encodeEffect(S.fromJsonString(ObservationLaunchFact))(existing))) !==
+          (await Effect.runPromise(S.encodeEffect(S.fromJsonString(ObservationLaunchFact))(submitted.fact)))
+      ) {
+        response.statusCode = 409;
+        response.end();
+        return;
+      }
+      if (existing === undefined) {
+        facts.push(submitted.fact._tag);
+        factData.push(submitted.fact);
+      }
+      if (submitted.fact._tag === "Started") onStarted();
+      if (submitted.fact._tag === "Finished" && options.terminalAck === "lost") {
+        response.destroy();
+        return;
+      }
       if (options.configDrift === true && submitted.fact._tag === "Prepared") {
         await Fs.appendFile(
           Path.join(directory, options.nativeHome === true ? "shared/config.toml" : "shadow/config.toml"),
@@ -163,6 +209,8 @@ const fixture = async (
                   : '[{"name":"synthetic","enabled":true,"transport":{"type":"stdio","env":{"TOKEN":"PRIVATE_ENV"}}}]',
             }
           : {
+              exit: options.nativeExit ?? 0,
+              hang: options.hang ?? false,
               stdout:
                 options.wrongConstant === true
                   ? Str.replace("ENROLLMENT_CANARY_OK", "PRIVATE_WRONG_REPLY")(output)
@@ -185,9 +233,27 @@ const fixture = async (
     makeClaudeEnv: ({ baseEnv }) => baseEnv,
     resolveClaudeHome: () => "/synthetic-unused",
   });
+  const observedSpawner = Layer.effect(
+    ChildProcessSpawner.ChildProcessSpawner,
+    Effect.gen(function* () {
+      const underlying = yield* ChildProcessSpawner.ChildProcessSpawner;
+      return ChildProcessSpawner.make((command) =>
+        Effect.gen(function* () {
+          const handle = yield* underlying.spawn(command);
+          if (spawner.spawns.at(-1)?.args[0] === "exec")
+            yield* Effect.addFinalizer(() =>
+              Effect.sync(() => {
+                sourceReleased = true;
+              })
+            );
+          return handle;
+        })
+      );
+    })
+  ).pipe(Layer.provide(spawner.layer));
   const run = runCodexNativeCanary(request).pipe(
     // @effect-diagnostics-next-line strictEffectProvide:off -- Each test owns one isolated runtime and platform layers.
-    Effect.provide(Layer.mergeAll(spawner.layer, NodeCrypto.layer, NodePath.layer)),
+    Effect.provide(Layer.mergeAll(observedSpawner, NodeCrypto.layer, NodePath.layer)),
     Effect.provideService(AiProviderCliHome, home)
   );
   return {
@@ -196,6 +262,10 @@ const fixture = async (
     run,
     spawner,
     facts,
+    factData,
+    factAttempts,
+    started,
+    cleanupBeforeFinished: () => cleanupBeforeFinished,
     traceBodies,
     // @effect-diagnostics-next-line asyncFunction:off -- Native filesystem/socket fixture independently exercises the real platform boundary and closes every resource.
     close: async () => {
@@ -233,6 +303,21 @@ it.live("retries immutable metadata after delivery loss without repeating source
       expect(f.traceBodies[0]?.toString()).not.toContain("PRIVATE_");
       expect(f.traceBodies[0]?.toString()).not.toContain("input_tokens");
       expect(f.facts).toContain("SessionBound");
+      expect(f.facts).toEqual(["Prepared", "Started", "SessionBound", "Finished"]);
+      expect(f.factData.at(-1)).toMatchObject({ _tag: "Finished", outcome: "succeeded" });
+      expect(f.factAttempts).toEqual([
+        "Prepared",
+        "Started",
+        "Prepared",
+        "Started",
+        "SessionBound",
+        "Finished",
+        "Prepared",
+        "Started",
+        "SessionBound",
+        "Finished",
+      ]);
+      expect(await Fs.readdir(f.request.attemptDirectory)).not.toContain("diagnostic-lifecycle-dispatch-intent.json");
       const actual = f.spawner.spawns[4];
       expect(actual?.extendEnv).toBe(false);
       expect(actual?.env).not.toHaveProperty("OPENAI_API_KEY");
@@ -256,7 +341,12 @@ it.live("wrong constant leaves attempted unknown and cannot spawn again", () =>
       expect(second._tag).toBe("Failure");
       expect(f.spawner.spawns).toHaveLength(5);
       expect(f.traceBodies).toHaveLength(0);
-      expect(A.sort(await Fs.readdir(f.request.attemptDirectory), Str.Order)).toEqual(["attempted", "preflight.json"]);
+      expect(A.sort(await Fs.readdir(f.request.attemptDirectory), Str.Order)).toEqual([
+        "attempted",
+        "diagnostic-lifecycle-dispatch-intent.json",
+        "diagnostic-lifecycle-validated.json",
+        "preflight.json",
+      ]);
       expect(String(first)).not.toContain("PRIVATE_");
     } finally {
       await f.close();
@@ -449,3 +539,89 @@ it.effect("private salt wire codec rejects empty and non-string values", () =>
     expect((yield* decode(null).pipe(Effect.result))._tag).toBe("Failure");
   })
 );
+
+for (const [mode, outcome] of [
+  ["native-error", "failed"],
+  ["wire-rejection", "unknown"],
+] as const) {
+  it.live(`Codex closes a failed native collection without a trace: ${mode}`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({
+        nativeExit: mode === "native-error" ? 1 : 0,
+        wrongConstant: mode === "wire-rejection",
+      });
+      try {
+        const result = await Effect.runPromise(f.run.pipe(Effect.result));
+        expect(result._tag).toBe("Failure");
+        expect(f.facts).toEqual(["Prepared", "Started", "Finished"]);
+        expect(f.factData.at(-1)).toMatchObject({ _tag: "Finished", outcome });
+        expect(f.cleanupBeforeFinished()).toBe(true);
+        const text = await Fs.readFile(
+          Path.join(f.request.attemptDirectory, "diagnostic-lifecycle-validated.json"),
+          "utf8"
+        );
+        const diagnostic = await Effect.runPromise(S.decodeEffect(S.fromJsonString(NativeAttemptDiagnostic))(text));
+        expect(diagnostic.lifecycleOutcome).toEqual(O.some(outcome));
+        expect(diagnostic.lifecycleDelivery).toEqual(O.some("acknowledged"));
+        expect(text).not.toContain("PRIVATE_");
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(f.spawner.spawns).toHaveLength(5);
+        expect(f.factAttempts).toEqual(["Prepared", "Started", "Finished"]);
+        expect(f.traceBodies).toHaveLength(0);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+for (const terminalAck of ["lost", "refused"] as const) {
+  it.live(`Codex preserves source failure when terminal ACK is uncertain: ${terminalAck}`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ nativeExit: 1, terminalAck });
+      try {
+        const result = await Effect.runPromise(f.run.pipe(Effect.result));
+        expect(result._tag).toBe("Failure");
+        if (result._tag === "Failure") expect(result.failure).toMatchObject({ phase: "source" });
+        const text = await Fs.readFile(
+          Path.join(f.request.attemptDirectory, "diagnostic-lifecycle-pending.json"),
+          "utf8"
+        );
+        const diagnostic = await Effect.runPromise(S.decodeEffect(S.fromJsonString(NativeAttemptDiagnostic))(text));
+        expect(diagnostic.lifecycleDelivery).toEqual(O.some("pending"));
+        expect(f.factData.filter((fact) => fact._tag === "Finished")).toHaveLength(terminalAck === "lost" ? 1 : 0);
+        expect(f.cleanupBeforeFinished()).toBe(true);
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(f.spawner.spawns).toHaveLength(5);
+        expect(f.traceBodies).toHaveLength(0);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+for (const stop of ["interrupt", "deadline"] as const) {
+  it.live(`Codex interruption terminalizes only after the owned scope closes: ${stop}`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ hang: true });
+      try {
+        if (stop === "interrupt") {
+          const fiber = Effect.runFork(f.run);
+          await f.started;
+          await Effect.runPromise(Fiber.interrupt(fiber));
+          expect(Exit.hasInterrupts(await Effect.runPromise(Fiber.await(fiber)))).toBe(true);
+        } else {
+          const result = await Effect.runPromise(f.run.pipe(Effect.timeout("300 millis"), Effect.result));
+          expect(result._tag).toBe("Failure");
+          if (result._tag === "Failure") expect(result.failure).toMatchObject({ _tag: "TimeoutError" });
+        }
+        expect(f.facts).toEqual(["Prepared", "Started", "Finished"]);
+        expect(f.factData.at(-1)).toMatchObject({ _tag: "Finished", outcome: "cancelled" });
+        expect(f.cleanupBeforeFinished()).toBe(true);
+        expect(f.spawner.spawns).toHaveLength(5);
+        expect(f.traceBodies).toHaveLength(0);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
