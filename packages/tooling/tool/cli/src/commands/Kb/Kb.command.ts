@@ -21,9 +21,11 @@ import { KbLedger, makeKbLedger } from "./Kb.service.ts";
 import { KbGraphExport, makeKbGraphExport } from "./KbGraph.service.ts";
 import type { KbView } from "./Kb.schemas.ts";
 
+const encodeReportJson = S.encodeEffect(S.fromJsonString(KbReport, { space: 2 }));
+
 const ledgerLive = Layer.effect(KbLedger, makeKbLedger);
 const printReport = Effect.fn("Kb.printReport")(function* (report: KbReport) {
-  const json = yield* S.encodeEffect(S.fromJsonString(KbReport, { space: 2 }))(report).pipe(
+  const json = yield* encodeReportJson(report).pipe(
     Effect.mapError(() => KbError.make({ message: "Cannot encode validation report" }))
   );
   yield* Console.log(json);

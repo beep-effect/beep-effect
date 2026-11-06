@@ -1,28 +1,11 @@
-import { Sha256Hex } from "@beep/schema";
-import * as NodeServices from "@effect/platform-node/NodeServices";
-import { describe, expect, it } from "@effect/vitest";
-import * as A from "effect/Array";
-import * as DateTime from "effect/DateTime";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
-import * as Result from "effect/Result";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
-import * as SqlClient from "effect/sql/SqlClient";
-import * as TestClock from "effect/testing/TestClock";
 import {
+  dispatchOwnerCheckpointMerge,
   FinalCheckGate,
   FinalCheckReceipt,
   FinalCheckStepResult,
-} from "../src/commands/Yeet/internal/FinalCheck.schemas.ts";
-import { MergeGateCheckRun, MergeGateRead } from "../src/commands/Yeet/internal/MergeGate.ts";
-import {
-  dispatchOwnerCheckpointMerge,
-  observeOwnerCheckpointMerge,
-} from "../src/commands/Yeet/internal/OwnerCheckpoint.merge.ts";
-import {
+  MergeGateCheckRun,
+  MergeGateRead,
+  makeOwnerCheckpointStore,
   OwnerCheckpointBinding,
   OwnerCheckpointClassicStatus,
   OwnerCheckpointCommand,
@@ -34,20 +17,31 @@ import {
   OwnerCheckpointSnapshot,
   OwnerCheckpointState,
   OwnerCheckpointStatusEvidence,
+  observeOwnerCheckpointMerge,
   projectOwnerCheckpointClassicStatus,
   projectOwnerCheckpointSelfCheck,
-} from "../src/commands/Yeet/internal/OwnerCheckpoint.schemas.ts";
-import { makeOwnerCheckpointStore } from "../src/commands/Yeet/internal/OwnerCheckpoint.store.ts";
-import {
   qualifyOwnerCheckpointEvidence,
   qualifyOwnerCheckpointSnapshot,
-} from "../src/commands/Yeet/internal/OwnerCheckpoint.ts";
-import { YeetReviewWindowElapsed } from "../src/commands/Yeet/internal/ReviewWindow.ts";
-import {
   SquashCommitlintPass,
   SquashCommitlintReport,
   SquashCommitMessage,
-} from "../src/commands/Yeet/internal/SquashCommitlint.ts";
+  YeetReviewWindowElapsed,
+} from "@beep/repo-cli/test/Yeet";
+import { Sha256Hex } from "@beep/schema";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import * as SqlClient from "effect/sql/SqlClient";
+import * as TestClock from "effect/testing/TestClock";
 import pullFixture from "./fixtures/yeet-merge-gate/pull.json" with { type: "json" };
 import { recordedGithub } from "./support/YeetGithub.ts";
 
@@ -368,7 +362,7 @@ describe("offline owner checkpoint", () => {
         const found6 = yield* store.read(binding);
         expect(O.getOrThrow(found6).revision).toBe(0);
         const absentOutbox = yield* store.outbox(binding, 1);
-        expect(O.isNone(absentOutbox)).toBe(true);
+        assertNone(absentOutbox);
       })
     )
   );
@@ -435,32 +429,30 @@ describe("offline owner checkpoint", () => {
     )
   );
   it.effect("persists a dispatch fence across database reopen and refuses another dispatch", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const services = yield* Layer.build(NodeServices.layer);
-        const fs = yield* Effect.provideContext(FileSystem.FileSystem, services);
-        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "owner-checkpoint-" });
-        const filename = `${directory}/owner.sqlite`;
-        yield* withDb(
-          filename,
-          Effect.gen(function* () {
-            const store = yield* claimedStore;
-            yield* store.prepareDispatch(binding, 2);
-          })
-        );
-        yield* withDb(
-          filename,
-          Effect.gen(function* () {
-            const store = yield* makeOwnerCheckpointStore();
-            const found4 = yield* store.outbox(binding, 2);
-            expect(O.getOrThrow(found4).delivery._tag).toBe("Dispatched");
-            expect((yield* Effect.flip(store.prepareDispatch(binding, 2))).reason).toBe("conflict");
-            const found3 = yield* store.read(binding);
-            expect(O.getOrThrow(found3).state._tag).toBe("Claimed");
-          })
-        );
-      })
-    )
+    Effect.gen(function* () {
+      const services = yield* Layer.build(NodeFileSystem.layer);
+      const fs = yield* Effect.provideContext(FileSystem.FileSystem, services);
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "owner-checkpoint-" });
+      const filename = `${directory}/owner.sqlite`;
+      yield* withDb(
+        filename,
+        Effect.gen(function* () {
+          const store = yield* claimedStore;
+          yield* store.prepareDispatch(binding, 2);
+        })
+      );
+      yield* withDb(
+        filename,
+        Effect.gen(function* () {
+          const store = yield* makeOwnerCheckpointStore();
+          const found4 = yield* store.outbox(binding, 2);
+          expect(O.getOrThrow(found4).delivery._tag).toBe("Dispatched");
+          expect((yield* Effect.flip(store.prepareDispatch(binding, 2))).reason).toBe("conflict");
+          const found3 = yield* store.read(binding);
+          expect(O.getOrThrow(found3).state._tag).toBe("Claimed");
+        })
+      );
+    })
   );
   it.effect("serializes the full expected SHA into exactly one native merge request", () => {
     const github = recordedGithub((call) =>
@@ -517,19 +509,19 @@ describe("offline owner checkpoint", () => {
           yield* store.prepareDispatch(binding, 2);
           const result = yield* observeOwnerCheckpointMerge(store, binding, policy);
           expect(result._tag).toBe("Confirmed");
-          if (result._tag === "Confirmed") expect(O.isNone(result.mergeCommit)).toBe(true);
+          if (result._tag === "Confirmed") assertNone(result.mergeCommit);
           const persistedOption = yield* store.read(binding);
           const persisted = O.getOrThrow(persistedOption);
           expect(persisted.state._tag).toBe("Merged");
-          if (persisted.state._tag === "Merged") expect(O.isNone(persisted.state.mergeCommit)).toBe(true);
+          if (persisted.state._tag === "Merged") assertNone(persisted.state.mergeCommit);
           expect(A.filter(github.calls, (call) => call.method === "PUT")).toHaveLength(0);
         })
       )
     );
   });
   it("rejects unknown states and shortened native identities on decode", () => {
-    expect(Result.isFailure(S.decodeResult(OwnerCheckpointBinding)({ ...binding, head: "abc" }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(OwnerCheckpointState)({ _tag: "ReadyAnyway" }))).toBe(true);
+    S.decodeResult(OwnerCheckpointBinding)({ ...binding, head: "abc" }).pipe(Result.isFailure, assertTrue);
+    S.decodeUnknownResult(OwnerCheckpointState)({ _tag: "ReadyAnyway" }).pipe(Result.isFailure, assertTrue);
     expect(OwnerCheckpointError.make({ reason: "uncertain" }).reason).toBe("uncertain");
   });
 });

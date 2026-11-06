@@ -41,6 +41,7 @@ import * as Str from "effect/String";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { GoalPacketReader } from "@beep/repo-cli/commands/Goals/Doctor";
 
+const decodeResearchReports = S.decodeUnknownResult(S.fromJsonString(S.Struct({ researchReports: S.Array(S.String) })));
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const decodeJson = flow(S.decodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
@@ -309,9 +310,7 @@ describe("goal manifest researchReports projection", () => {
         assert.strictEqual(calls.length, 1);
         assert.deepStrictEqual(O.getOrThrow(A.head(calls)).args, ["biome", "format", "--write", manifest]);
         const rewritten = yield* fs.readFileString(manifest);
-        const parsed = Result.getOrThrow(
-          S.decodeUnknownResult(S.fromJsonString(S.Struct({ researchReports: S.Array(S.String) })))(rewritten)
-        );
+        const parsed = Result.getOrThrow(decodeResearchReports(rewritten));
         assert.deepStrictEqual(parsed.researchReports, ["research/SOURCES.md"]);
       })
     );
