@@ -280,7 +280,14 @@
         "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
         "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.behavior.ts",
         "packages/foundation/capability/langextract/test/VerifiedSpanOffsets.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-11-06-full-span-warnings.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-full-span-warnings.md",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-verified-extraction.md",
+        "packages/law-practice/server/src/internal/Citation/CanonicalSource.ts",
+        "packages/law-practice/server/src/internal/Citation/VerifiedExtraction.ts",
+        "packages/law-practice/server/test/CitationCanonicalSource.test.ts",
+        "packages/law-practice/server/test/CitationVerifiedExtraction.fixtures.ts",
+        "packages/law-practice/server/test/CitationVerifiedExtraction.test.ts",
+        "packages/law-practice/server/test/integration/CitationVerifiedExtraction.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

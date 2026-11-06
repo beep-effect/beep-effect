@@ -25,7 +25,8 @@ type Installed = Effect.Success<ReturnType<typeof installCitationDocumentExtract
 type SourceRow = Installed["corpus"]["cases"][number];
 const artifact = Sha256Hex.make(Str.repeat(64)("a"));
 const otherArtifact = Sha256Hex.make(Str.repeat(64)("b"));
-const sourceProof = Effect.fnUntraced(function* (text: string) {
+/** Authenticated fixture input stands in for the upstream source resolver. */
+export const citationFixtureSourceProof = Effect.fnUntraced(function* (text: string) {
   const hash = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text));
   const digest = SourceTextDigest.make(`sha256:${hash}`);
   const source = SourceTextIdentity.make({
@@ -41,16 +42,17 @@ const sourceProof = Effect.fnUntraced(function* (text: string) {
     VerifySourceTextIdentityInput.make({ expectedSource: source, source, sourceText: text })
   );
 });
-const assertNativeRange = (
+/** Compare a canonical anchor with an independent original point range. */
+export const assertCitationNativeRange = Effect.fnUntraced(function* (
   source: string,
   span: readonly [number, number],
   actual: { readonly startChar: number; readonly endChar: number; readonly quote: string }
-) => {
+) {
   const points = A.fromIterable(source);
   const startChar = Str.length(A.join(A.take(points, span[0]), ""));
   const endChar = Str.length(A.join(A.take(points, span[1]), ""));
   expect(actual).toEqual({ startChar, endChar, quote: Str.slice(startChar, endChar)(source) });
-};
+});
 // A source model has two validated views. Controls update both views using
 // explicit original IDs from the sealed corpus, without inferring retained IDs.
 const replaceModelAt = Effect.fnUntraced(function* (
@@ -100,7 +102,7 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
   ) {
     if (result.raw.outcome._tag !== "Document") return yield* Effect.die("expected original Document branch");
     const source = yield* unicode.fromStorage(result.raw.outcome.result.extraction.tokenizer.source);
-    const proof = yield* sourceProof(source.text);
+    const proof = yield* citationFixtureSourceProof(source.text);
     expect(S.is(VerifiedSourceText)(proof)).toBe(true);
     const invocation = stage.project({ source: proof, result });
     const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
@@ -110,9 +112,9 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
     expect(actual.unboundWarnings).toEqual([]);
     expect(actual.mentions).toHaveLength(expected.expected.length);
     for (const [mention, row] of A.zip(actual.mentions, expected.expected)) {
-      assertNativeRange(source.text, row.span, mention.anchor.anchor);
+      yield* assertCitationNativeRange(source.text, row.span, mention.anchor.anchor);
       const fullSpan = O.getOrThrow(A.findFirst(mention.components, (component) => component.name === "fullSpan"));
-      assertNativeRange(source.text, row.fullSpan, fullSpan.anchor.anchor);
+      yield* assertCitationNativeRange(source.text, row.fullSpan, fullSpan.anchor.anchor);
       expect(mention.engineArtifact).toBe(artifact);
     }
     for (const [mention, index] of A.map(actual.mentions, (mention, index) => Tuple.make(mention, index))) {
@@ -169,7 +171,7 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
       const incomplete = yield* stage.project({ source: proof, result: badComponents });
       expect(incomplete.mentions).toHaveLength(2);
       expect(incomplete.unverifiedComponents).toEqual([{ index: 0, name: "fullSpan", reason: "invalid-span" }]);
-      const mismatch = yield* sourceProof(`${source.text} altered`);
+      const mismatch = yield* citationFixtureSourceProof(`${source.text} altered`);
       const failed = yield* stage.project({ source: mismatch, result }).pipe(Effect.flip);
       expect(failed).toMatchObject({ reason: "source-mismatch" });
       const forged = yield* stage
@@ -195,7 +197,7 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
           },
         },
       };
-      const emoji = yield* sourceProof("😀");
+      const emoji = yield* citationFixtureSourceProof("😀");
       const unverified = yield* stage.project({ source: emoji, result: alias });
       expect(unverified.mentions).toEqual([]);
       expect(A.map(unverified.unverified, (row) => row.reason)).toEqual(["native-point-layout", "native-point-layout"]);
@@ -214,7 +216,7 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
     }
   });
   const shortcut = Effect.fn("OccurrenceProjectionTest.shortcut")(function* (result: CitationSemanticExtractionResult) {
-    const source = yield* sourceProof("eyecite");
+    const source = yield* citationFixtureSourceProof("eyecite");
     const actual = yield* stage.project({ source, result });
     expect(actual.mentions).toEqual([]);
     expect(actual.unverified).toHaveLength(1);

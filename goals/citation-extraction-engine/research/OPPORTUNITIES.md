@@ -411,3 +411,10 @@ history/evidence/2026-11-03-edition-inference.md.
   before integrating verified mentions. The same public helper now scans numeric
   coordinates cooperatively; independent former-algorithm range comparisons,
   source-ceiling and interruption controls preserve its contract.
+
+- 2026-11-06 canonical source composition: declaration emission reported TS4094
+  when inferred exported helpers retained the prerequisite's private source-proof
+  class. Explicit public result contracts and Effect dual overloads preserve the
+  opaque alias without weakening evidence. A non-generator fnUntraced callback
+  also erased test effect channels; the typed generator helper prevents that
+  cascade. Declaration generation belongs beside the cheap package check.

@@ -68,7 +68,10 @@ export class CitationSemanticExtractionResult extends S.Opaque<
 const Configuration = S.toType(CitationSemanticExtractionConfiguration);
 const ConfigurationJson = Configuration.pipe(S.toCodecJson);
 const sameBindings = S.toEquivalence(CitationTokenDispatchBindings);
-const own = Effect.fn("Citation.ownSemanticExtraction")(function* (
+/** Capture the complete semantic extraction configuration and its private child services.
+ * @internal @category operations @since 0.0.0
+ */
+export const ownCitationSemanticExtraction = Effect.fn("Citation.ownSemanticExtraction")(function* (
   limits: CitationEngineLimits,
   configuration: CitationSemanticExtractionConfiguration
 ) {
@@ -82,7 +85,7 @@ const own = Effect.fn("Citation.ownSemanticExtraction")(function* (
 const prepare = Effect.fn("Citation.extractSemanticCitations")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  owned: Effect.Success<ReturnType<typeof own>>,
+  owned: Effect.Success<ReturnType<typeof ownCitationSemanticExtraction>>,
   request: unknown
 ) {
   return yield* Effect.gen(function* () {
@@ -109,7 +112,7 @@ export const makeCitationSemanticExtraction = makeCitationMetadataStage({
   method: "extract",
   schema: Configuration,
   invalid,
-  own,
+  own: ownCitationSemanticExtraction,
   prepare,
   project: (result, reservedUnits) => {
     const validated = CitationSemanticExtractionResult.make({ ...result, reservedUnits });

@@ -1237,6 +1237,14 @@ accounting checker.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug citation-extraction-engine`; add a `kind: checkpoint` file there, never edit this block._
 
+### Authenticated source through verified extraction, 2026-11-06
+
+A genuine parent source capability now drives the actual primitive extraction request. Unchanged text retains its existing proof. Changed tokenizer text receives a verified manifestation with preserved artifact/locator/normalization identity and a versioned parent/engine/cleaning-mode/output commitment. Source derivation and occurrence projection share one admitted operation, deadline and cumulative budget with extraction. Plain, Unicode and raw HTML replay pass on both runtimes; output evidence is produced by production code. Determinism, mode/engine changes, malformed-text refusal and shortcut bypass controls pass. Public service/Layer, authenticated runtime asset loading, final document adaptation and full accounting/safety qualification remain open. See history/evidence/2026-11-06-verified-extraction.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert canonical source derivation and its composition; retain the separately qualified raw, semantic and occurrence stages.
+
 ### Builtin semantic citation projection, 2026-11-06
 
 Builtin parsed models now project legal meaning through the domain Citation structured codec and a complete authenticated runtime projection of the reviewed edition mapping. Five focused tests cover all 80 captured models across eight families, all 2533 edition identities, shortcut semantics, short plaintiff absence/null/text, unmapped courts and refusal controls. This is projection evidence, not parser or full-engine acceptance. Public service/Layer, mention adaptation, broader behavioral qualification and all unfinished proof obligations remain open. See history/evidence/2026-11-06-semantic-projection.md.
