@@ -27124,6 +27124,432 @@
         }
       }
     },
+    "@beep/party-server": {
+      "path": "packages/party/server",
+      "lines": 98.56,
+      "statements": 97.71,
+      "branches": 92.27,
+      "functions": 97.87,
+      "uncovered": {
+        "lines": 8,
+        "statements": 15,
+        "branches": 18,
+        "functions": 5
+      },
+      "files": {
+        "packages/party/server/src/ContactEvidence.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/IdentityEvidence.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/Ledger.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/MailCensus.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/MailIndex.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/OrgEvidence.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/ReviewLoop.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/internal/claimFromAssertion.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/values/ContactEvidence/ContactEvidence.behavior.ts": {
+          "lines": 96.55,
+          "statements": 95.52,
+          "branches": 86.36,
+          "functions": 86.36,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 3,
+            "functions": 3
+          }
+        },
+        "packages/party/server/src/values/ContactEvidence/ContactEvidence.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/values/ContactEvidence/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/values/IdentityEvidence/IdentityEvidence.behavior.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/values/IdentityEvidence/IdentityEvidence.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/values/IdentityEvidence/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/values/Ledger/Ledger.memory.ts": {
+          "lines": 98.03,
+          "statements": 95.38,
+          "branches": 81.25,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 3,
+            "branches": 3,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/values/MailCensus/MailCensus.behavior.ts": {
+          "lines": 100,
+          "statements": 97.29,
+          "branches": 81.25,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 3,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/values/MailCensus/MailCensus.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/values/MailCensus/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/values/MailIndex/MailIndex.behavior.ts": {
+          "lines": 97.95,
+          "statements": 97,
+          "branches": 90.36,
+          "functions": 100,
+          "uncovered": {
+            "lines": 3,
+            "statements": 5,
+            "branches": 8,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/values/MailIndex/MailIndex.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/values/MailIndex/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/values/OrgEvidence/OrgEvidence.model.ts": {
+          "lines": 96.96,
+          "statements": 97.5,
+          "branches": 100,
+          "functions": 93.75,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/party/server/src/values/OrgEvidence/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/values/ReviewLoop/ReviewLoop.behavior.ts": {
+          "lines": 98.92,
+          "statements": 99.12,
+          "branches": 97.77,
+          "functions": 97.61,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
+          }
+        },
+        "packages/party/server/src/values/ReviewLoop/ReviewLoop.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/server/src/values/ReviewLoop/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/party-use-cases": {
+      "path": "packages/party/use-cases",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "packages/party/use-cases/src/ContactSource.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/use-cases/src/Ledger.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/use-cases/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/use-cases/src/values/ContactSource/ContactSource.ports.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/use-cases/src/values/ContactSource/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/use-cases/src/values/Ledger/Ledger.ports.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
     "@beep/pdf-tools": {
       "path": "packages/drivers/pdf-tools",
       "lines": 90.47,
