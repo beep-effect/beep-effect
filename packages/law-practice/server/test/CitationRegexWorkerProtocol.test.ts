@@ -30,6 +30,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 
+const encodeDelimiterMessage = S.encodeEffect(S.fromJsonString(S.Struct({ message: S.String })));
 const utf8 = new TextEncoder();
 const nothing = () => Effect.void;
 const setup = Effect.fn("RegexProtocolTest.setup")(function* () {
@@ -431,7 +432,7 @@ it.effect("checks the absolute pattern ceiling even when handed a valid source-r
 
 it.effect("keeps escaped delimiters inside JSON strings and rejects an unmatched closing object", () =>
   Effect.gen(function* () {
-    const text = yield* S.encodeEffect(S.fromJsonString(S.Struct({ message: S.String })))({
+    const text = yield* encodeDelimiterMessage({
       message: 'quote " slash \\ } : {',
     });
     yield* preflightCitationRegexJson(utf8.encode(text), 1);
