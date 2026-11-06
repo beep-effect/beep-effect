@@ -8,7 +8,6 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
-import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { FinalCheckGate } from "./FinalCheck.schemas.ts";
@@ -16,6 +15,7 @@ import { finalCheckRefusal } from "./FinalCheck.ts";
 import { decideMergeGate, MergeGateInput, MergeGateOptions, MergeGateRead } from "./MergeGate.ts";
 import {
   OwnerCheckpointBinding,
+  OwnerCheckpointCommand,
   OwnerCheckpointDelivery,
   OwnerCheckpointError,
   OwnerCheckpointIntent,
@@ -313,14 +313,12 @@ export const transitionOwnerCheckpoint = Effect.fn("OwnerCheckpoint.transition")
   if (!sameBinding(current.binding, request.binding)) return yield* refuse("binding");
   if (current.revision >= Number.MAX_SAFE_INTEGER - 1) return yield* refuse("conflict");
   if (current.revision !== request.expectedRevision) return yield* refuse("conflict");
-  return yield* Match.value(request.command).pipe(
-    Match.tagsExhaustive({
-      Release: (command) => releaseOwner(current, command.releaseId, command.evidence, policy, now),
-      Synchronize: (command) => synchronizeOwner(current, command.head),
-      Revoke: () => revokeOwner(current),
-      Claim: (command) => claimOwner(current, command.claimId, command.snapshot, policy, now),
-      Unknown: (command) => markUnknownOwner(current, command.claimId),
-      Confirm: (command) => confirmOwner(current, command.claimId, command.mergeCommit),
-    })
-  );
+  return yield* OwnerCheckpointCommand.match(request.command, {
+    Release: (command) => releaseOwner(current, command.releaseId, command.evidence, policy, now),
+    Synchronize: (command) => synchronizeOwner(current, command.head),
+    Revoke: () => revokeOwner(current),
+    Claim: (command) => claimOwner(current, command.claimId, command.snapshot, policy, now),
+    Unknown: (command) => markUnknownOwner(current, command.claimId),
+    Confirm: (command) => confirmOwner(current, command.claimId, command.mergeCommit),
+  });
 });
