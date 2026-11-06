@@ -128,7 +128,10 @@ const bound = (index: number, length: number) => Num.max(0, Num.min(length, inde
 const commaSpace = (point: number) => point === 44 || point === 32;
 const versus = (source: CitationPythonUnicodeStorage) =>
   source.bytes.length === source.width && citationPythonPointAt(source, 0) === 118;
-const run = Effect.fn("Citation.extractHtmlCaseName")(function* (
+/** Run the built-in name helper inside an existing captured operation.
+ * @internal @category operations @since 0.0.0
+ */
+export const extractCitationHtmlCaseName = Effect.fn("Citation.extractHtmlCaseName")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
   config: CitationHtmlCaseNameConfiguration,
@@ -295,7 +298,10 @@ const run = Effect.fn("Citation.extractHtmlCaseName")(function* (
   }
   return unchanged;
 });
-const own = Effect.fn("Citation.ownHtmlCaseNameConfiguration")(function* (
+/** Copy trusted helper configuration for enclosing metadata composition.
+ * @internal @category operations @since 0.0.0
+ */
+export const copyCitationHtmlCaseNameConfiguration = Effect.fn("Citation.ownHtmlCaseNameConfiguration")(function* (
   limits: CitationEngineLimits,
   config: CitationHtmlCaseNameConfiguration
 ) {
@@ -317,7 +323,7 @@ export const makeCitationHtmlCaseName = makeCitationMetadataStage({
   method: "extract",
   schema: S.toType(CitationHtmlCaseNameConfiguration),
   invalid: () => fail("invalid-configuration"),
-  own,
-  prepare: run,
+  own: copyCitationHtmlCaseNameConfiguration,
+  prepare: extractCitationHtmlCaseName,
   project: (patch, reservedUnits) => CitationHtmlCaseNameResult.make({ patch, reservedUnits }),
 });

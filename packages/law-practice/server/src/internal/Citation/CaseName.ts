@@ -62,7 +62,10 @@ export class CitationCaseNameResult extends S.Opaque<CitationCaseNameResult, { r
 ) {}
 const invalid = () => CitationCaseNameScanFailure.make({ reason: "invalid-configuration" });
 const noneText = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array([78, 111, 110, 101]) });
-const run = Effect.fn("Citation.findPlainCaseName")(function* (
+/** Run the built-in name helper inside an existing captured operation.
+ * @internal @category operations @since 0.0.0
+ */
+export const findCitationPlainCaseName = Effect.fn("Citation.findPlainCaseName")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
   config: CitationCaseNameConfiguration,
@@ -98,7 +101,10 @@ const run = Effect.fn("Citation.findPlainCaseName")(function* (
   });
   return { state, patch };
 });
-const own = Effect.fn("Citation.ownCaseNameConfiguration")(function* (
+/** Copy trusted helper configuration for enclosing metadata composition.
+ * @internal @category operations @since 0.0.0
+ */
+export const copyCitationCaseNameConfiguration = Effect.fn("Citation.ownCaseNameConfiguration")(function* (
   limits: CitationEngineLimits,
   config: CitationCaseNameConfiguration
 ) {
@@ -114,7 +120,7 @@ export const makeCitationCaseName = makeCitationMetadataStage({
   method: "extract",
   schema: S.toType(CitationCaseNameConfiguration),
   invalid,
-  own,
-  prepare: run,
+  own: copyCitationCaseNameConfiguration,
+  prepare: findCitationPlainCaseName,
   project: (result, reservedUnits) => CitationCaseNameResult.make({ ...result, reservedUnits }),
 });

@@ -178,7 +178,15 @@
         "packages/law-practice/server/src/internal/Citation/CaseName.ts",
         "packages/law-practice/server/test/CitationCaseName.fixtures.ts",
         "packages/law-practice/server/test/CitationCaseName.test.ts",
-        "packages/law-practice/server/test/integration/CitationCaseName.test.ts"
+        "packages/law-practice/server/test/integration/CitationCaseName.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-case-name-selection.md",
+        "goals/citation-extraction-engine/ops/probe-case-name-selection.py",
+        "goals/citation-extraction-engine/ops/verify-case-name-selection.py",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/case-name-selection.json",
+        "packages/law-practice/server/src/internal/Citation/CaseNameSelection.ts",
+        "packages/law-practice/server/test/CitationCaseNameSelection.fixtures.ts",
+        "packages/law-practice/server/test/CitationCaseNameSelection.test.ts",
+        "packages/law-practice/server/test/integration/CitationCaseNameSelection.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

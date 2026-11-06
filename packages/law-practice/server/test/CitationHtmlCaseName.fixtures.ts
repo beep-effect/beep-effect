@@ -83,7 +83,8 @@ const Cleaner = S.fromJsonString(
     }),
   })
 );
-const load = Effect.fn("HtmlCaseNameTest.load")(function* () {
+/** Read the sealed original corpus and reusable native helper configuration. */
+export const readCitationHtmlCaseNameCorpus = Effect.fn("HtmlCaseNameTest.load")(function* () {
   const corpus = yield* readCitationOracleFixture(
     "html-case-names",
     "e6231633d7a3d4115295517539aecda42045ce2a8253f565f9db86dacfcf1670"
@@ -113,7 +114,7 @@ const requestOf = (row: Row, geometry: CitationHtmlTagGeometryInput) => ({
   geometry,
 });
 const install = Effect.fn("HtmlCaseNameTest.install")(function* (kind: CitationNativeRuntimeKind) {
-  const original = yield* load();
+  const original = yield* readCitationHtmlCaseNameCorpus();
   const discovery = yield* readCitationHtmlDiscoveryCorpus();
   const setup = yield* setupCitationMetadataRuntime(kind);
   const fs = yield* FileSystem.FileSystem;

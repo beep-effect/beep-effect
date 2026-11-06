@@ -108,7 +108,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-05-cleaner-parent-budget.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-html-case-name-source.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-html-case-name-target.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-06-plain-case-name-composition.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-plain-case-name-composition.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-case-name-selection.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -192,7 +193,8 @@
     "python goals/citation-extraction-engine/ops/verify-diff-kernel.py",
     "python goals/citation-extraction-engine/ops/verify-diff-kernel.py --runtime bun",
     "python3 goals/citation-extraction-engine/ops/verify-html-case-names.py --self-test",
-    "python3 goals/citation-extraction-engine/ops/verify-plain-case-name.py --self-test"
+    "python3 goals/citation-extraction-engine/ops/verify-plain-case-name.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-case-name-selection.py --self-test"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
@@ -513,6 +515,14 @@
     {
       "path": "ops/verify-plain-case-name.py",
       "purpose": "Seal original whole plain-name evidence, reject corruption and optionally replay the pinned oracle; not target proof."
+    },
+    {
+      "path": "ops/probe-case-name-selection.py",
+      "purpose": "Observe actual original full/short callers selecting HTML and plain helpers, including retained or assigned empty fields, with name-phase and final model state separated."
+    },
+    {
+      "path": "ops/verify-case-name-selection.py",
+      "purpose": "Seal original caller evidence, reject corruption and optionally replay the pinned oracle; not target parity proof."
     }
   ]
 }

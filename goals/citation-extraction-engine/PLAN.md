@@ -1,5 +1,12 @@
 # Citation Extraction Engine Plan
 
+HTML/plain selection checkpoint (2026-11-06): the actual full/short caller
+fallback now composes existing helpers under one captured operation. Source
+capture observes 272 original callers, including assigned and retained empty
+fields that suppress fallback. Both runtime smokes pass with 71 confirmed
+children each. Full hosted replay remains open, as does enclosing metadata
+phase integration. See [selection evidence](history/evidence/2026-11-06-case-name-selection.md).
+
 Plain case-name composition checkpoint (2026-11-06): original default scanning
 and truthy-candidate processing now share one captured operation, Scope and text
 authority. A direct 256-call source corpus freezes the guard, all original scan

@@ -50,7 +50,8 @@ const Corpus = S.fromJsonString(
     description: "Original whole-helper mutations, guard decisions and regex-call counts over all sealed scan inputs.",
   })
 );
-const load = Effect.fn("CaseNameTest.load")(function* () {
+/** Read the sealed original corpus and reusable native helper configuration. */
+export const readCitationCaseNameCorpus = Effect.fn("CaseNameTest.load")(function* () {
   const scan = yield* readCitationCaseNameScanCorpus();
   const process = yield* readCitationCaseNameProcessCorpus();
   const corpus = yield* readCitationOracleFixture(
@@ -59,12 +60,13 @@ const load = Effect.fn("CaseNameTest.load")(function* () {
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   return { scan, corpus, configuration: { scan: scan.configuration, process: process.configuration } };
 });
-const install = makeCitationMetadataFixture({ load, make: makeCitationCaseName });
-const assertPatch = (
-  result: CitationCaseNameResult,
-  row: (typeof Corpus.Type.cases)[number],
+const install = makeCitationMetadataFixture({ load: readCitationCaseNameCorpus, make: makeCitationCaseName });
+/** Compare every name patch field against the original enclosing model snapshot. */
+export const assertCitationCaseNamePatch = Effect.fn("CaseNameTest.assertPatch")(function* (
+  result: Pick<CitationCaseNameResult, "patch">,
+  row: Pick<(typeof Corpus.Type.cases)[number], "id" | "before" | "after">,
   kind: CitationNativeRuntimeKind
-) => {
+) {
   let metadata = row.before.metadata;
   for (const [key, value] of [
     Tuple.make("plaintiff", result.patch.plaintiff),
@@ -79,7 +81,7 @@ const assertPatch = (
     row.after.year === null ? null : BigInt(row.after.year)
   );
   expect(O.getOrElse(result.patch.fullSpanStart, () => row.before.fullSpanStart)).toEqual(row.after.fullSpanStart);
-};
+});
 type Row = (typeof Corpus.Type.cases)[number];
 const assertRow = Effect.fn("CaseNameTest.row")(function* (
   setup: Effect.Success<ReturnType<typeof install>>,
@@ -97,7 +99,7 @@ const assertRow = Effect.fn("CaseNameTest.row")(function* (
   } else {
     const result = yield* effect;
     expect(result.state).toEqual(source.state);
-    assertPatch(result, row, kind);
+    yield* assertCitationCaseNamePatch(result, row, kind);
   }
 });
 /** Retain false-candidate/year guards, source failures, versus and seeded short names. */
