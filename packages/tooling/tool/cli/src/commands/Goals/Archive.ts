@@ -32,10 +32,11 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { ArchivePlan, ArchiveReceipt, ArchiveReceiptEntry, ArchiveRecord } from "./Archive.schemas.ts";
-import { ArchivePlanner, ArchivePlannerLive } from "./Archive.service.ts";
+import { ArchivePlanner, ArchivePlannerLive, ArchivePlanOptions } from "./Archive.service.ts";
 import {
   ArchiveStore,
   ArchiveWorkspace,
+  ArchiveWorkspaceShape,
   archiveCommitMessage,
   InboundLinkRewriter,
   makeArchiveStore,
@@ -47,7 +48,6 @@ import { ArchiveError } from "./Goals.errors.ts";
 import { HarvestKind } from "./Harvest.schemas.ts";
 import { harvestKindRoots } from "./Harvest.ts";
 import { canonicalJsonTextPretty } from "./PacketCore/PacketDigest.ts";
-import type { ArchiveWorkspaceShape } from "./ArchiveExecution.service.ts";
 
 const encodePlan = S.encodeUnknownEffect(ArchivePlan);
 
@@ -120,6 +120,14 @@ export const DEFAULT_ARCHIVE_DIR = ".repos/goals-archive";
 /**
  * Repo-relative directory of archive receipts (ignored by git).
  *
+ * **Example** (Read the path)
+ *
+ * ```ts
+ * import { ARCHIVE_RECEIPTS_DIR } from "@beep/repo-cli/commands/Goals/Archive"
+ *
+ * console.log(ARCHIVE_RECEIPTS_DIR) // ".beep/archive/receipts"
+ * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -158,7 +166,7 @@ export const renderArchiveDryRun = (input: {
   readonly kindLabel: string;
 }): ReadonlyArray<string> => [
   `[goals:archive] dry run of plan ${input.plan.planId}; nothing was written.`,
-  `- archive checkout ${input.archiveDir}: commit "${archiveCommitMessage({ kindLabel: input.kindLabel, count: A.length(input.plan.entries), sourceCommit: input.plan.sourceCommit })}", then refresh ARCHIVE-INDEX.md`,
+  `- archive checkout ${input.archiveDir}: commit "${archiveCommitMessage(input.plan, input.kindLabel)}", then refresh ARCHIVE-INDEX.md`,
   ...A.flatMap(input.plan.entries, (entry) => [
     `- ${entry.root}/${entry.slug}: mirror ${A.length(entry.keep) + A.length(entry.remove)} file(s) and verify tree ${entry.localTreeHash}; delete ${A.length(entry.remove)} file(s) on main; regenerate README.md; write the manifest archive block; rewrite ${A.length(entry.inboundLinks)} inbound link(s)`,
     ...A.map(entry.inboundLinks, (link) => `  - ${link.file}:${link.line} ${link.destination} -> ${link.rewrittenTo}`),
@@ -187,6 +195,7 @@ const rewritableLinks = (plan: ArchivePlan) => {
  * ```ts
  * import { executeArchivePlan } from "@beep/repo-cli/commands/Goals/Archive"
  * import { ArchivePlan } from "@beep/repo-cli/commands/Goals/Archive.schemas"
+ * import { ArchiveWorkspaceShape } from "@beep/repo-cli/commands/Goals/ArchiveExecution.service"
  * import * as Effect from "effect/Effect"
  *
  * const plan = ArchivePlan.make({
@@ -196,7 +205,7 @@ const rewritableLinks = (plan: ArchivePlan) => {
  *   sourceCommit: "c".repeat(40),
  *   entries: [],
  * })
- * const workspace = { repoRoot: "/repo", archiveDir: "/archive", repo: plan.repo, kindLabel: "goals" }
+ * const workspace = ArchiveWorkspaceShape.make({ repoRoot: "/repo", archiveDir: "/archive", repo: plan.repo, kindLabel: "goals" })
  * console.log(Effect.isEffect(executeArchivePlan(plan, workspace))) // true
  * ```
  *
@@ -270,6 +279,49 @@ export const executeArchivePlan = Effect.fn("Goals.executeArchivePlan")(function
   return receipt;
 });
 
+const archiveInputInvalid = (root: string, detail: string): ArchiveError =>
+  ArchiveError.new("archive-input-invalid", null, root, detail);
+
+const validateArchiveInput = Effect.fnUntraced(function* (
+  options: {
+    readonly batch?: number;
+    readonly expect?: string;
+    readonly plan: boolean;
+    readonly repo: string;
+    readonly write: boolean;
+  },
+  root: string
+) {
+  if (options.plan === options.write) {
+    return yield* archiveInputInvalid(root, "pass exactly one of --plan or --write");
+  }
+  if (options.write && options.expect === undefined) {
+    return yield* archiveInputInvalid(root, "--write needs --expect <planId> from a reviewed --plan");
+  }
+  if (options.batch !== undefined && options.batch < 1) {
+    return yield* archiveInputInvalid(root, `--batch must be at least 1, got ${options.batch}`);
+  }
+  return yield* S.decodeEffect(ArchivePlan.fields.repo)(options.repo).pipe(
+    Effect.mapError(() => archiveInputInvalid(root, `--repo must be <owner>/<repo>, got ${options.repo}`))
+  );
+});
+
+const printArchivePlan = (plan: ArchivePlan, json: boolean): Effect.Effect<void> =>
+  json
+    ? encodePlan(plan).pipe(
+        Effect.orDie,
+        Effect.flatMap((encoded) => Console.log(canonicalJsonTextPretty(encoded)))
+      )
+    : Effect.forEach(renderArchivePlanSummary(plan), (line) => Console.log(line), { discard: true });
+
+const planMismatch = (root: string, expected: string | undefined, plan: ArchivePlan): ArchiveError =>
+  ArchiveError.new(
+    "archive-plan-mismatch",
+    null,
+    root,
+    `--expect ${expected ?? ""} does not match the recomputed plan ${plan.planId}; review the new plan with --plan`
+  );
+
 /**
  * Runs `beep goals archive`: print the plan, or execute it after the
  * `--expect` id check (`--dry-run` only reports).
@@ -316,54 +368,23 @@ export const runGoalsArchive = Effect.fn("Goals.runGoalsArchive")(function* (
 ) {
   const path = yield* Path.Path;
   const root = repoRoot ?? (yield* findRepoRoot().pipe(Effect.orElseSucceed(() => ".")));
-  if (options.plan === options.write) {
-    return yield* ArchiveError.new("archive-input-invalid", null, root, "pass exactly one of --plan or --write");
-  }
-  if (options.write && options.expect === undefined) {
-    return yield* ArchiveError.new(
-      "archive-input-invalid",
-      null,
-      root,
-      "--write needs --expect <planId> from a reviewed --plan"
-    );
-  }
-  if (options.batch !== undefined && options.batch < 1) {
-    return yield* ArchiveError.new(
-      "archive-input-invalid",
-      null,
-      root,
-      `--batch must be at least 1, got ${options.batch}`
-    );
-  }
-  const repo = yield* S.decodeEffect(ArchivePlan.fields.repo)(options.repo).pipe(
-    Effect.mapError(() =>
-      ArchiveError.new("archive-input-invalid", null, root, `--repo must be <owner>/<repo>, got ${options.repo}`)
-    )
-  );
+  const repo = yield* validateArchiveInput(options, root);
   const planner = yield* ArchivePlanner;
-  const plan = yield* planner.plan({
-    kinds: harvestKindRoots(options.kind),
-    slugs: options.slugs,
-    ...optionalProp("batchSize", O.fromUndefinedOr(options.batch)),
-    repo,
-    repoRoot: root,
-  });
+  const plan = yield* planner.plan(
+    ArchivePlanOptions.make({
+      kinds: harvestKindRoots(options.kind),
+      slugs: options.slugs,
+      ...optionalProp("batchSize", O.fromUndefinedOr(options.batch)),
+      repo,
+      repoRoot: root,
+    })
+  );
   if (options.plan) {
-    if (options.json) {
-      const encoded = yield* encodePlan(plan).pipe(Effect.orDie);
-      yield* Console.log(canonicalJsonTextPretty(encoded));
-    } else {
-      yield* Effect.forEach(renderArchivePlanSummary(plan), (line) => Console.log(line), { discard: true });
-    }
+    yield* printArchivePlan(plan, options.json);
     return O.none<ArchiveReceipt>();
   }
   if (options.expect !== plan.planId) {
-    return yield* ArchiveError.new(
-      "archive-plan-mismatch",
-      null,
-      root,
-      `--expect ${options.expect ?? ""} does not match the recomputed plan ${plan.planId}; review the new plan with --plan`
-    );
+    return yield* planMismatch(root, options.expect, plan);
   }
   const archiveDir = path.resolve(root, options.archiveDir);
   if (options.dryRun) {
@@ -376,7 +397,7 @@ export const runGoalsArchive = Effect.fn("Goals.runGoalsArchive")(function* (
     );
     return O.none<ArchiveReceipt>();
   }
-  const workspace: ArchiveWorkspaceShape = { repoRoot: root, archiveDir, repo, kindLabel: options.kind };
+  const workspace = ArchiveWorkspaceShape.make({ repoRoot: root, archiveDir, repo, kindLabel: options.kind });
   const receipt = yield* executeArchivePlan(plan, workspace).pipe(
     Effect.provideServiceEffect(ArchiveStore, makeArchiveStore),
     Effect.provideServiceEffect(TombstoneWriter, makeTombstoneWriter),

@@ -834,19 +834,25 @@ export const parseHarvestLedgerText = Effect.fn("Harvest.parseHarvestLedgerText"
  * **Example** (Collect every root)
  *
  * ```ts
- * import type { HarvestCollectOptions } from "@beep/repo-cli/commands/Goals/Harvest.service"
+ * import { HarvestCollectOptions } from "@beep/repo-cli/commands/Goals/Harvest.service"
  *
- * const options: HarvestCollectOptions = { kinds: ["goals", "explorations"], repoRoot: "." }
+ * const options = HarvestCollectOptions.make({ kinds: ["goals", "explorations"], repoRoot: "." })
  * console.log(options.kinds.length) // 2
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export interface HarvestCollectOptions {
-  readonly kinds: ReadonlyArray<PacketRoot>;
-  readonly repoRoot: string;
-}
+export class HarvestCollectOptions extends S.Opaque<HarvestCollectOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
+    kinds: S.Array(PacketRoot),
+    repoRoot: S.String,
+  }).pipe(
+    $I.annoteSchema("HarvestCollectOptions", {
+      description: "Packet roots and checkout root of one harvest collection.",
+    })
+  )
+) {}
 
 /**
  * Service contract: collect the ledger from a checkout, write it, or read a
@@ -855,10 +861,11 @@ export interface HarvestCollectOptions {
  * **Example** (Describe a collection)
  *
  * ```ts
+ * import { HarvestCollectOptions } from "@beep/repo-cli/commands/Goals/Harvest.service"
  * import type { HarvestProjectorShape } from "@beep/repo-cli/commands/Goals/Harvest.service"
  *
  * const collectAll = (projector: HarvestProjectorShape) =>
- *   projector.collect({ kinds: ["goals", "explorations"], repoRoot: "." })
+ *   projector.collect(HarvestCollectOptions.make({ kinds: ["goals", "explorations"], repoRoot: "." }))
  * console.log(collectAll.length) // 1
  * ```
  *

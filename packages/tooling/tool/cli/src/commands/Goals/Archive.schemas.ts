@@ -115,19 +115,20 @@ export type TreeHash = typeof TreeHash.Type;
  * @category models
  * @since 0.0.0
  */
-export class ArchiveRecord extends S.Class<ArchiveRecord, { readonly brand: unique symbol }>($I`ArchiveRecord`)(
-  {
+export class ArchiveRecord extends S.Opaque<ArchiveRecord, { readonly brand: unique symbol }>()(
+  S.Struct({
     repo: ArchiveRepoRef,
     path: S.String,
     commit: GitCommitSha,
     contentHash: TreeHash,
     archivedAt: S.String,
     sourceCommit: GitCommitSha,
-  },
-  $I.annote("ArchiveRecord", {
-    description:
-      "Archive repo, mirrored path, archive commit, verified tree hash, archive time and the main commit it came from.",
-  })
+  }).pipe(
+    $I.annoteSchema("ArchiveRecord", {
+      description:
+        "Archive repo, mirrored path, archive commit, verified tree hash, archive time and the main commit it came from.",
+    })
+  )
 ) {}
 
 /**
@@ -276,16 +277,17 @@ export type ArchivePlanId = typeof ArchivePlanId.Type;
  * @category models
  * @since 0.0.0
  */
-export class InboundLink extends S.Class<InboundLink, { readonly brand: unique symbol }>($I`InboundLink`)(
-  {
+export class InboundLink extends S.Opaque<InboundLink, { readonly brand: unique symbol }>()(
+  S.Struct({
     file: S.String,
     line: S.Int.check(S.isGreaterThanOrEqualTo(1)),
     destination: S.String,
     rewrittenTo: S.String,
-  },
-  $I.annote("InboundLink", {
-    description: "A link from a file outside the packet into a removed packet file, with its archive blob URL.",
-  })
+  }).pipe(
+    $I.annoteSchema("InboundLink", {
+      description: "A link from a file outside the packet into a removed packet file, with its archive blob URL.",
+    })
+  )
 ) {}
 
 /**
@@ -312,10 +314,8 @@ export class InboundLink extends S.Class<InboundLink, { readonly brand: unique s
  * @category models
  * @since 0.0.0
  */
-export class ArchivePlanEntry extends S.Class<ArchivePlanEntry, { readonly brand: unique symbol }>(
-  $I`ArchivePlanEntry`
-)(
-  {
+export class ArchivePlanEntry extends S.Opaque<ArchivePlanEntry, { readonly brand: unique symbol }>()(
+  S.Struct({
     root: PacketRoot,
     slug: PacketSlug,
     status: PacketStatusToken,
@@ -323,10 +323,11 @@ export class ArchivePlanEntry extends S.Class<ArchivePlanEntry, { readonly brand
     remove: S.Array(S.String),
     inboundLinks: S.Array(InboundLink),
     localTreeHash: TreeHash,
-  },
-  $I.annote("ArchivePlanEntry", {
-    description: "One terminal packet's repo-relative keep and remove lists, inbound links and HEAD tree hash.",
-  })
+  }).pipe(
+    $I.annoteSchema("ArchivePlanEntry", {
+      description: "One terminal packet's repo-relative keep and remove lists, inbound links and HEAD tree hash.",
+    })
+  )
 ) {}
 
 /**
@@ -355,17 +356,18 @@ export class ArchivePlanEntry extends S.Class<ArchivePlanEntry, { readonly brand
  * @category models
  * @since 0.0.0
  */
-export class ArchivePlan extends S.Class<ArchivePlan, { readonly brand: unique symbol }>($I`ArchivePlan`)(
-  {
+export class ArchivePlan extends S.Opaque<ArchivePlan, { readonly brand: unique symbol }>()(
+  S.Struct({
     schemaVersion: S.tag("archive-plan/v1"),
     planId: ArchivePlanId,
     repo: ArchiveRepoRef,
     sourceCommit: GitCommitSha,
     entries: S.Array(ArchivePlanEntry),
-  },
-  $I.annote("ArchivePlan", {
-    description: "Content-addressed archive plan: target repo, main source commit and one entry per packet.",
-  })
+  }).pipe(
+    $I.annoteSchema("ArchivePlan", {
+      description: "Content-addressed archive plan: target repo, main source commit and one entry per packet.",
+    })
+  )
 ) {}
 
 /**
@@ -395,18 +397,17 @@ export class ArchivePlan extends S.Class<ArchivePlan, { readonly brand: unique s
  * @category models
  * @since 0.0.0
  */
-export class ArchiveReceiptEntry extends S.Class<ArchiveReceiptEntry, { readonly brand: unique symbol }>(
-  $I`ArchiveReceiptEntry`
-)(
-  {
+export class ArchiveReceiptEntry extends S.Opaque<ArchiveReceiptEntry, { readonly brand: unique symbol }>()(
+  S.Struct({
     root: PacketRoot,
     slug: PacketSlug,
     record: ArchiveRecord,
     verified: S.Boolean,
-  },
-  $I.annote("ArchiveReceiptEntry", {
-    description: "One archived packet's record and whether its archive tree hash matched the local tree hash.",
-  })
+  }).pipe(
+    $I.annoteSchema("ArchiveReceiptEntry", {
+      description: "One archived packet's record and whether its archive tree hash matched the local tree hash.",
+    })
+  )
 ) {}
 
 /**
@@ -429,16 +430,17 @@ export class ArchiveReceiptEntry extends S.Class<ArchiveReceiptEntry, { readonly
  * @category models
  * @since 0.0.0
  */
-export class ArchiveReceipt extends S.Class<ArchiveReceipt, { readonly brand: unique symbol }>($I`ArchiveReceipt`)(
-  {
+export class ArchiveReceipt extends S.Opaque<ArchiveReceipt, { readonly brand: unique symbol }>()(
+  S.Struct({
     schemaVersion: S.tag("archive-receipt/v1"),
     planId: ArchivePlanId,
     archiveCommit: GitCommitSha,
     entries: S.Array(ArchiveReceiptEntry),
-  },
-  $I.annote("ArchiveReceipt", {
-    description: "The archive commit of an executed plan and each packet's record and verification verdict.",
-  })
+  }).pipe(
+    $I.annoteSchema("ArchiveReceipt", {
+      description: "The archive commit of an executed plan and each packet's record and verification verdict.",
+    })
+  )
 ) {}
 
 /**
@@ -462,15 +464,17 @@ export class ArchiveReceipt extends S.Class<ArchiveReceipt, { readonly brand: un
  * @category models
  * @since 0.0.0
  */
-export class ArchiveIndexRow extends S.Class<ArchiveIndexRow, { readonly brand: unique symbol }>($I`ArchiveIndexRow`)(
-  {
+export class ArchiveIndexRow extends S.Opaque<ArchiveIndexRow, { readonly brand: unique symbol }>()(
+  S.Struct({
     root: PacketRoot,
     slug: PacketSlug,
     status: PacketStatusToken,
     archiveCommit: GitCommitSha,
     sourceCommit: GitCommitSha,
-  },
-  $I.annote("ArchiveIndexRow", {
-    description: "One archived packet in ARCHIVE-INDEX.md: kind, slug, status, archive commit and main source commit.",
-  })
+  }).pipe(
+    $I.annoteSchema("ArchiveIndexRow", {
+      description:
+        "One archived packet in ARCHIVE-INDEX.md: kind, slug, status, archive commit and main source commit.",
+    })
+  )
 ) {}

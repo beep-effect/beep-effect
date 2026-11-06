@@ -37,7 +37,7 @@ import * as Str from "effect/String";
 import { ExplorationManifest } from "../Explore/Atlas.ts";
 import { knowledgeLinkDestinations } from "../Knowledge/Knowledge.refs.ts";
 import { decodeReflectionFrontmatterText, reflectionFileNameIsArtifact } from "../Lint/ReflectionArtifact.ts";
-import { ArchiveIndexRow, ArchiveRecord, TombstoneKeep } from "./Archive.schemas.ts";
+import { ArchiveIndexRow, ArchiveRecord, ArchiveRepoRef, TombstoneKeep } from "./Archive.schemas.ts";
 import { ArchiveError } from "./Goals.errors.ts";
 import { decodeGoalManifest, renderGoalCloseoutRecord, renderGoalProposedCloseout } from "./Goals.schemas.ts";
 import { parseGoalManifestText, readmeMissionLine } from "./Inventory.ts";
@@ -50,7 +50,6 @@ import type {
   ArchivePlanEntry,
   ArchiveReceipt,
   ArchiveReceiptEntry,
-  ArchiveRepoRef,
   InboundLink,
 } from "./Archive.schemas.ts";
 
@@ -58,6 +57,14 @@ const $I = $RepoCliId.create("commands/Goals/ArchiveExecution.service");
 
 /**
  * Archive-root file listing every archived packet.
+ *
+ * **Example** (Read the path)
+ *
+ * ```ts
+ * import { ARCHIVE_INDEX_FILE } from "@beep/repo-cli/commands/Goals/ArchiveExecution.service"
+ *
+ * console.log(ARCHIVE_INDEX_FILE) // "ARCHIVE-INDEX.md"
+ * ```
  *
  * @category configuration
  * @since 0.0.0
@@ -78,26 +85,32 @@ const decodeExplorationManifest = S.decodeUnknownOption(ExplorationManifest);
  * **Example** (Describe a workspace)
  *
  * ```ts
- * import type { ArchiveWorkspaceShape } from "@beep/repo-cli/commands/Goals/ArchiveExecution.service"
+ * import { ArchiveWorkspaceShape } from "@beep/repo-cli/commands/Goals/ArchiveExecution.service"
  *
- * const workspace: ArchiveWorkspaceShape = {
+ * const workspace = ArchiveWorkspaceShape.make({
  *   repoRoot: "/repo",
  *   archiveDir: "/repo/.repos/goals-archive",
  *   repo: "beep-effect/beep-effect-goals-archive",
  *   kindLabel: "goals",
- * }
+ * })
  * console.log(workspace.kindLabel) // "goals"
  * ```
  *
  * @category services
  * @since 0.0.0
  */
-export interface ArchiveWorkspaceShape {
-  readonly archiveDir: string;
-  readonly kindLabel: string;
-  readonly repo: ArchiveRepoRef;
-  readonly repoRoot: string;
-}
+export class ArchiveWorkspaceShape extends S.Opaque<ArchiveWorkspaceShape, { readonly brand: unique symbol }>()(
+  S.Struct({
+    archiveDir: S.String,
+    kindLabel: S.String,
+    repo: ArchiveRepoRef,
+    repoRoot: S.String,
+  }).pipe(
+    $I.annoteSchema("ArchiveWorkspaceShape", {
+      description: "Main checkout root, archive checkout directory, archive repo and kind label of one archive run.",
+    })
+  )
+) {}
 
 /**
  * The checkouts and archive identity an archive run operates on.
@@ -105,15 +118,16 @@ export interface ArchiveWorkspaceShape {
  * **Example** (Provide a workspace)
  *
  * ```ts
- * import { ArchiveWorkspace } from "@beep/repo-cli/commands/Goals/ArchiveExecution.service"
+ * import { ArchiveWorkspace, ArchiveWorkspaceShape } from "@beep/repo-cli/commands/Goals/ArchiveExecution.service"
  * import * as Effect from "effect/Effect"
  *
- * const program = Effect.provideService(Effect.map(ArchiveWorkspace, (w) => w.repoRoot), ArchiveWorkspace, {
+ * const workspace = ArchiveWorkspaceShape.make({
  *   repoRoot: "/repo",
  *   archiveDir: "/archive",
  *   repo: "beep-effect/beep-effect-goals-archive",
  *   kindLabel: "goals",
  * })
+ * const program = Effect.provideService(Effect.map(ArchiveWorkspace, (w) => w.repoRoot), ArchiveWorkspace, workspace)
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -144,18 +158,18 @@ export class ArchiveWorkspace extends Context.Service<ArchiveWorkspace, ArchiveW
  * @category models
  * @since 0.0.0
  */
-export class ArchiveVerification extends S.Class<ArchiveVerification, { readonly brand: unique symbol }>(
-  $I`ArchiveVerification`
-)(
-  {
+export class ArchiveVerification extends S.Opaque<ArchiveVerification, { readonly brand: unique symbol }>()(
+  S.Struct({
     root: S.Literals(["goals", "explorations"]),
     slug: S.String,
     archiveTreeHash: S.String,
     verified: S.Boolean,
-  },
-  $I.annote("ArchiveVerification", {
-    description: "The archive commit's tree hash for one mirrored packet and whether it equals the plan's local hash.",
-  })
+  }).pipe(
+    $I.annoteSchema("ArchiveVerification", {
+      description:
+        "The archive commit's tree hash for one mirrored packet and whether it equals the plan's local hash.",
+    })
+  )
 ) {}
 
 /**
@@ -292,21 +306,33 @@ const fsFailure =
  *
  * ```ts
  * import { archiveCommitMessage } from "@beep/repo-cli/commands/Goals/ArchiveExecution.service"
+ * import { ArchivePlan } from "@beep/repo-cli/commands/Goals/Archive.schemas"
  *
- * console.log(archiveCommitMessage({ kindLabel: "goals", count: 3, sourceCommit: "c".repeat(40) }))
- * // "archive(goals): 3 packets from cccccccccccccccccccccccccccccccccccccccc"
+ * const plan = ArchivePlan.make({
+ *   schemaVersion: "archive-plan/v1",
+ *   planId: "d".repeat(64),
+ *   repo: "beep-effect/beep-effect-goals-archive",
+ *   sourceCommit: "c".repeat(40),
+ *   entries: [],
+ * })
+ * console.log(archiveCommitMessage(plan, "goals"))
+ * // "archive(goals): 0 packets from cccccccccccccccccccccccccccccccccccccccc"
  * ```
  *
- * @param input - The `--kind` value, the packet count and the main commit the trees came from.
+ * @param plan - The plan being committed.
+ * @param kindLabel - The `--kind` value.
  * @returns The commit subject.
  * @category formatting
  * @since 0.0.0
  */
-export const archiveCommitMessage = (input: {
-  readonly kindLabel: string;
-  readonly count: number;
-  readonly sourceCommit: string;
-}): string => `archive(${input.kindLabel}): ${input.count} packets from ${input.sourceCommit}`;
+export const archiveCommitMessage: {
+  (plan: ArchivePlan, kindLabel: string): string;
+  (kindLabel: string): (plan: ArchivePlan) => string;
+} = dual(
+  2,
+  (plan: ArchivePlan, kindLabel: string): string =>
+    `archive(${kindLabel}): ${A.length(plan.entries)} packets from ${plan.sourceCommit}`
+);
 
 /**
  * Parse the rows of an `ARCHIVE-INDEX.md` table; lines that are not rows are ignored.
@@ -441,14 +467,7 @@ const pushPlan = Effect.fn("ArchiveStore.push")(function* (plan: ArchivePlan) {
     .add(workspace.archiveDir, [ARCHIVE_README_FILE, ...A.map(plan.entries, packetPath)])
     .pipe(Effect.mapError(pushFailed));
   yield* git
-    .commit(
-      workspace.archiveDir,
-      archiveCommitMessage({
-        kindLabel: workspace.kindLabel,
-        count: A.length(plan.entries),
-        sourceCommit: plan.sourceCommit,
-      })
-    )
+    .commit(workspace.archiveDir, archiveCommitMessage(plan, workspace.kindLabel))
     .pipe(Effect.mapError(pushFailed));
   const commit = yield* git.revParse(workspace.archiveDir, "HEAD").pipe(Effect.mapError(pushFailed));
 
@@ -574,8 +593,8 @@ export const ArchiveStoreLive = Layer.effect(ArchiveStore, makeArchiveStore);
  * @category models
  * @since 0.0.0
  */
-export class TombstoneStub extends S.Class<TombstoneStub, { readonly brand: unique symbol }>($I`TombstoneStub`)(
-  {
+export class TombstoneStub extends S.Opaque<TombstoneStub, { readonly brand: unique symbol }>()(
+  S.Struct({
     root: S.Literals(["goals", "explorations"]),
     title: S.String,
     status: S.String,
@@ -586,10 +605,11 @@ export class TombstoneStub extends S.Class<TombstoneStub, { readonly brand: uniq
     headlineFinding: S.NullOr(S.String),
     archiveUrl: S.String,
     archivedAt: S.String,
-  },
-  $I.annote("TombstoneStub", {
-    description: "Manifest-derived inputs of a tombstoned packet's generated README stub.",
-  })
+  }).pipe(
+    $I.annoteSchema("TombstoneStub", {
+      description: "Manifest-derived inputs of a tombstoned packet's generated README stub.",
+    })
+  )
 ) {}
 
 const nullableLine = (value: string | null, fallback: string): string => value ?? fallback;

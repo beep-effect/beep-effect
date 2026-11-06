@@ -1,9 +1,11 @@
 import { Git } from "@beep/git/Git";
-import { runGoalsHarvest } from "@beep/repo-cli/commands/Goals/Harvest";
+import { HarvestError } from "@beep/repo-cli/commands/Goals/Goals.errors";
+import { harvestKindRoots, runGoalsHarvest } from "@beep/repo-cli/commands/Goals/Harvest";
 import { HarvestLedger } from "@beep/repo-cli/commands/Goals/Harvest.schemas";
 import {
   checkboxItemTexts,
   frictionReceipts,
+  HarvestCollectOptions,
   HarvestProjector,
   HarvestProjectorLive,
   harvestRowId,
@@ -25,6 +27,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { HarvestRow, HarvestSource } from "@beep/repo-cli/commands/Goals/Harvest.schemas";
 
@@ -207,6 +210,30 @@ describe("goals harvest", () => {
     );
   });
 
+  it("renders harvest errors as one reason, path and detail line", () => {
+    const error = HarvestError.new("harvest-drift", "ledger.jsonl", "2 row(s) differ");
+    assert.strictEqual(error.message, "harvest-drift ledger.jsonl: 2 row(s) differ");
+    assert.strictEqual(error._tag, "HarvestError");
+  });
+
+  it("maps each harvest kind to the packet roots it reads", () => {
+    assert.deepStrictEqual(A.map(["goals", "explorations", "all"] as const, harvestKindRoots), [
+      ["goals"],
+      ["explorations"],
+      ["goals", "explorations"],
+    ]);
+  });
+
+  it.effect("refuses a ledger with no header line or an undecodable header", () =>
+    Effect.gen(function* () {
+      const empty = yield* parseHarvestLedgerText("ledger.jsonl", "\n").pipe(Effect.flip);
+      assert.strictEqual(empty.message, "harvest-parse-failed ledger.jsonl: ledger has no header line");
+      const badHeader = yield* parseHarvestLedgerText("ledger.jsonl", "{}\n").pipe(Effect.flip);
+      assert.strictEqual(badHeader.reason, "harvest-parse-failed");
+      assertTrue(Str.startsWith("harvest-parse-failed ledger.jsonl: header: ")(badHeader.message));
+    })
+  );
+
   it("classifies terminal statuses per root", () => {
     assertTrue(isTerminalPacketStatus("goals", "completed-retained"));
     assertTrue(isTerminalPacketStatus("explorations", "killed"));
@@ -251,7 +278,9 @@ describe("goals harvest", () => {
       Effect.gen(function* () {
         const root = yield* makeFixtureRepo();
         const projector = yield* HarvestProjector;
-        const ledger = yield* projector.collect({ kinds: ["goals", "explorations"], repoRoot: root });
+        const ledger = yield* projector.collect(
+          HarvestCollectOptions.make({ kinds: ["goals", "explorations"], repoRoot: root })
+        );
         const rows = ledger.rows;
         assert.strictEqual(ledger.rowCount, A.length(rows));
         assert.match(ledger.sourceCommit, /^[0-9a-f]{40}$/);
@@ -296,7 +325,7 @@ describe("goals harvest", () => {
         const explorationRows = A.filter(rows, (row) => row.packet?.root === "explorations");
         assertTrue(A.every(explorationRows, (row) => !row.terminal && row.status === "active"));
 
-        const goalsOnly = yield* projector.collect({ kinds: ["goals"], repoRoot: root });
+        const goalsOnly = yield* projector.collect(HarvestCollectOptions.make({ kinds: ["goals"], repoRoot: root }));
         assertTrue(A.every(goalsOnly.rows, (row) => row.packet?.root === "goals"));
         assert.strictEqual(A.length(bySource(goalsOnly.rows, "open-question")), 0);
       })
@@ -310,7 +339,7 @@ describe("goals harvest", () => {
         ]);
         const root = yield* makeFixtureRepo();
         const projector = yield* HarvestProjector;
-        const ledger = yield* projector.collect({ kinds: ["goals"], repoRoot: root });
+        const ledger = yield* projector.collect(HarvestCollectOptions.make({ kinds: ["goals"], repoRoot: root }));
         const planTexts = A.map(bySource(ledger.rows, "plan-unchecked"), (row) => row.text);
         assert.deepStrictEqual(planTexts, ["Ship the harvester", "Ledger is committed"]);
         assertFalse(A.some(ledger.rows, (row) => Str.startsWith("goals/_template/")(row.file)));
@@ -323,7 +352,9 @@ describe("goals harvest", () => {
         const path = yield* Path.Path;
         const root = yield* makeFixtureRepo();
         const projector = yield* HarvestProjector;
-        const ledger = yield* projector.collect({ kinds: ["goals", "explorations"], repoRoot: root });
+        const ledger = yield* projector.collect(
+          HarvestCollectOptions.make({ kinds: ["goals", "explorations"], repoRoot: root })
+        );
         const target = path.join(root, "out", "ledger.jsonl");
         yield* projector.write(ledger, target);
         const text = yield* fs.readFileString(target);
@@ -331,7 +362,7 @@ describe("goals harvest", () => {
         assert.strictEqual(A.length(lines), ledger.rowCount + 1);
         assertFalse(Str.includes('"rows"')(lines[0] ?? ""));
         const parsed = yield* parseHarvestLedgerText(target, text);
-        assertInstanceOf(parsed, HarvestLedger);
+        assertTrue(S.is(HarvestLedger)(parsed));
         const rendered = yield* renderHarvestLedger(parsed);
         assert.strictEqual(rendered, text);
         const read = yield* projector.read(target);

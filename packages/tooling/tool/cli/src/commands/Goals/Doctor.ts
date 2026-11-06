@@ -907,6 +907,24 @@ const collectExplorationArchiveFindings = Effect.fn("Goals.collectExplorationArc
   return A.flatten(findings);
 });
 
+const isUndecidedTerminalGoal = (manifest: GoalManifest): boolean =>
+  (GoalStatus.is["completed-retained"](manifest.initiative.status) ||
+    GoalStatus.is.superseded(manifest.initiative.status)) &&
+  manifest.archive === undefined &&
+  manifest.retentionReason === undefined;
+
+const goalArchiveFindings = (slug: string, manifest: GoalManifest): ReadonlyArray<GoalDoctorFinding> =>
+  isUndecidedTerminalGoal(manifest)
+    ? [
+        finding(
+          slug,
+          "archive-decision-missing",
+          "advisory",
+          `${manifest.initiative.status} packet has neither an archive block nor a retentionReason; run bun run beep goals archive or declare retentionReason.`
+        ),
+      ]
+    : A.empty<GoalDoctorFinding>();
+
 const manifestAdvisoryFindings = (
   record: GoalPacketRecord,
   manifest: GoalManifest,
@@ -933,20 +951,7 @@ const manifestAdvisoryFindings = (
     );
   }
 
-  if (
-    (GoalStatus.is["completed-retained"](status) || GoalStatus.is.superseded(status)) &&
-    manifest.archive === undefined &&
-    manifest.retentionReason === undefined
-  ) {
-    push(
-      finding(
-        record.slug,
-        "archive-decision-missing",
-        "advisory",
-        `${status} packet has neither an archive block nor a retentionReason; run bun run beep goals archive or declare retentionReason.`
-      )
-    );
-  }
+  findings = A.appendAll(findings, goalArchiveFindings(record.slug, manifest));
 
   if (GoalStatus.is.superseded(status) && !hasSupersessionPointer(raw)) {
     push(

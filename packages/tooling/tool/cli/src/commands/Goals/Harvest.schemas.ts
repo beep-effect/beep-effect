@@ -140,16 +140,15 @@ export type HarvestRowId = typeof HarvestRowId.Type;
  * @category models
  * @since 0.0.0
  */
-export class HarvestPacketRef extends S.Class<HarvestPacketRef, { readonly brand: unique symbol }>(
-  $I`HarvestPacketRef`
-)(
-  {
+export class HarvestPacketRef extends S.Opaque<HarvestPacketRef, { readonly brand: unique symbol }>()(
+  S.Struct({
     root: PacketRoot,
     slug: PacketSlug,
-  },
-  $I.annote("HarvestPacketRef", {
-    description: "Packet root and slug a harvested row was read from.",
-  })
+  }).pipe(
+    $I.annoteSchema("HarvestPacketRef", {
+      description: "Packet root and slug a harvested row was read from.",
+    })
+  )
 ) {}
 
 /**
@@ -218,8 +217,8 @@ export class HarvestRowDraft extends S.Opaque<HarvestRowDraft, { readonly brand:
  * @category models
  * @since 0.0.0
  */
-export class HarvestRow extends S.Class<HarvestRow, { readonly brand: unique symbol }>($I`HarvestRow`)(
-  {
+export class HarvestRow extends S.Opaque<HarvestRow, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: HarvestRowId,
     packet: S.NullOr(HarvestPacketRef),
     status: S.NullOr(PacketStatusToken),
@@ -231,10 +230,11 @@ export class HarvestRow extends S.Class<HarvestRow, { readonly brand: unique sym
     text: S.String,
     category: S.optionalKey(S.String),
     confidence: S.optionalKey(S.String),
-  },
-  $I.annote("HarvestRow", {
-    description: "One harvested provenance row with its packet, source, file, 1-based line, read commit and text.",
-  })
+  }).pipe(
+    $I.annoteSchema("HarvestRow", {
+      description: "One harvested provenance row with its packet, source, file, 1-based line, read commit and text.",
+    })
+  )
 ) {}
 
 /**
@@ -257,18 +257,17 @@ export class HarvestRow extends S.Class<HarvestRow, { readonly brand: unique sym
  * @category models
  * @since 0.0.0
  */
-export class HarvestLedgerHeader extends S.Class<HarvestLedgerHeader, { readonly brand: unique symbol }>(
-  $I`HarvestLedgerHeader`
-)(
-  {
+export class HarvestLedgerHeader extends S.Opaque<HarvestLedgerHeader, { readonly brand: unique symbol }>()(
+  S.Struct({
     schemaVersion: S.tag("harvest-ledger/v1"),
     sourceCommit: GitCommitSha,
     generatedAt: S.String,
     rowCount: S.Int.check(S.isGreaterThanOrEqualTo(0)),
-  },
-  $I.annote("HarvestLedgerHeader", {
-    description: "First JSON Lines record of a harvest ledger: schema version, source commit, time and row count.",
-  })
+  }).pipe(
+    $I.annoteSchema("HarvestLedgerHeader", {
+      description: "First JSON Lines record of a harvest ledger: schema version, source commit, time and row count.",
+    })
+  )
 ) {}
 
 /**
@@ -298,12 +297,13 @@ export class HarvestLedgerHeader extends S.Class<HarvestLedgerHeader, { readonly
  * @category models
  * @since 0.0.0
  */
-export class HarvestLedger extends S.Class<HarvestLedger, { readonly brand: unique symbol }>($I`HarvestLedger`)(
-  {
+export class HarvestLedger extends S.Opaque<HarvestLedger, { readonly brand: unique symbol }>()(
+  S.Struct({
     ...HarvestLedgerHeader.fields,
     rows: S.Array(HarvestRow),
-  },
-  $I.annote("HarvestLedger", {
-    description: "Harvest provenance ledger: header metadata plus every harvested row, in deterministic order.",
-  })
+  }).pipe(
+    $I.annoteSchema("HarvestLedger", {
+      description: "Harvest provenance ledger: header metadata plus every harvested row, in deterministic order.",
+    })
+  )
 ) {}

@@ -31,18 +31,17 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ExplorationManifest, ExplorationStatus } from "../Explore/Atlas.ts";
 import { knowledgeDocumentLines, knowledgeLinkDestinations } from "../Knowledge/Knowledge.refs.ts";
-import { ArchivePlan, ArchivePlanEntry, InboundLink, tombstoneKeeps } from "./Archive.schemas.ts";
+import { ArchivePlan, ArchivePlanEntry, ArchiveRepoRef, InboundLink, tombstoneKeeps } from "./Archive.schemas.ts";
 import { ArchiveError } from "./Goals.errors.ts";
 import { decodeGoalManifest, GoalStatus } from "./Goals.schemas.ts";
 import { isTerminalPacketStatus } from "./Harvest.service.ts";
 import { GOALS_DIR, listGoalPackets, parseGoalManifestText, TEMPLATE_SLUG } from "./Inventory.ts";
+import { PacketRoot } from "./PacketCore/PacketCore.schemas.ts";
 import { canonicalJsonText, sha256Hex } from "./PacketCore/PacketDigest.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type { KnowledgeDocumentLine } from "../Knowledge/Knowledge.refs.ts";
-import type { ArchiveRepoRef } from "./Archive.schemas.ts";
 import type { GoalManifest } from "./Goals.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
-import type { PacketRoot } from "./PacketCore/PacketCore.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Archive.service");
 
@@ -85,28 +84,35 @@ const encodePlanEntries = S.encodeUnknownEffect(S.Array(ArchivePlanEntry));
  * **Example** (Plan the first three goals)
  *
  * ```ts
- * import type { ArchivePlanOptions } from "@beep/repo-cli/commands/Goals/Archive.service"
+ * import { ArchivePlanOptions } from "@beep/repo-cli/commands/Goals/Archive.service"
  *
- * const options: ArchivePlanOptions = {
+ * const options = ArchivePlanOptions.make({
  *   kinds: ["goals"],
  *   slugs: [],
  *   batchSize: 3,
  *   repo: "beep-effect/beep-effect-goals-archive",
  *   repoRoot: ".",
- * }
+ * })
  * console.log(options.batchSize) // 3
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export interface ArchivePlanOptions {
-  readonly batchSize?: number;
-  readonly kinds: ReadonlyArray<PacketRoot>;
-  readonly repo: ArchiveRepoRef;
-  readonly repoRoot: string;
-  readonly slugs: ReadonlyArray<string>;
-}
+export class ArchivePlanOptions extends S.Opaque<ArchivePlanOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
+    batchSize: S.optionalKey(S.Int.check(S.isGreaterThanOrEqualTo(1))),
+    kinds: S.Array(PacketRoot),
+    repo: ArchiveRepoRef,
+    repoRoot: S.String,
+    slugs: S.Array(S.String),
+  }).pipe(
+    $I.annoteSchema("ArchivePlanOptions", {
+      description:
+        "Packet roots, slug filter, optional batch size, archive repo and checkout root of one archive plan.",
+    })
+  )
+) {}
 
 type Candidate = {
   readonly root: PacketRoot;
@@ -382,10 +388,13 @@ const buildPlan = Effect.fn("Archive.plan")(function* (options: ArchivePlanOptio
  * **Example** (Describe a plan call)
  *
  * ```ts
+ * import { ArchivePlanOptions } from "@beep/repo-cli/commands/Goals/Archive.service"
  * import type { ArchivePlannerShape } from "@beep/repo-cli/commands/Goals/Archive.service"
  *
  * const planGoals = (planner: ArchivePlannerShape) =>
- *   planner.plan({ kinds: ["goals"], slugs: [], repo: "beep-effect/beep-effect-goals-archive", repoRoot: "." })
+ *   planner.plan(
+ *     ArchivePlanOptions.make({ kinds: ["goals"], slugs: [], repo: "beep-effect/beep-effect-goals-archive", repoRoot: "." })
+ *   )
  * console.log(planGoals.length) // 1
  * ```
  *

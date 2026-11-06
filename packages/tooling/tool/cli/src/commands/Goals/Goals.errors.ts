@@ -419,7 +419,6 @@ export class HarvestError extends S.TaggedError<HarvestError, { readonly brand: 
    * @category formatting
    * @since 0.0.0
    */
-  // fallow-ignore-next-line unused-class-member -- HarvestError.message: Error.toString / Effect Cause.pretty reads this Error override.
   override get message(): string {
     return `${this.reason} ${this.path}: ${this.detail}`;
   }
@@ -511,7 +510,6 @@ export class ArchiveError extends S.TaggedError<ArchiveError, { readonly brand: 
    * @category formatting
    * @since 0.0.0
    */
-  // fallow-ignore-next-line unused-class-member -- ArchiveError.message: Error.toString / Effect Cause.pretty reads this Error override.
   override get message(): string {
     return `${this.reason} ${this.slug === null ? "" : `${this.slug} `}${this.path}: ${this.detail}`;
   }

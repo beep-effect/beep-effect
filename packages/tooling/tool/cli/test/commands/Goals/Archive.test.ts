@@ -1,20 +1,28 @@
 import { Git } from "@beep/git/Git";
 import { ExplorationManifest } from "@beep/repo-cli/commands/Explore";
 import { runGoalsArchive } from "@beep/repo-cli/commands/Goals/Archive";
-import { ArchiveRecord, tombstoneKeeps } from "@beep/repo-cli/commands/Goals/Archive.schemas";
-import { ArchivePlanner, ArchivePlannerLive, archivePlanId } from "@beep/repo-cli/commands/Goals/Archive.service";
+import { ArchivePlanEntry, ArchiveRecord, tombstoneKeeps } from "@beep/repo-cli/commands/Goals/Archive.schemas";
+import {
+  ArchivePlanner,
+  ArchivePlannerLive,
+  ArchivePlanOptions,
+  archivePlanId,
+} from "@beep/repo-cli/commands/Goals/Archive.service";
 import {
   explorationArchiveFindings,
   GoalExplorationPathState,
   goalPacketFindings,
 } from "@beep/repo-cli/commands/Goals/Doctor";
+import { ArchiveError } from "@beep/repo-cli/commands/Goals/Goals.errors";
 import { decodeGoalManifest } from "@beep/repo-cli/commands/Goals/Goals.schemas";
 import { GoalPacketRecord } from "@beep/repo-cli/commands/Goals/Inventory";
 import { GoalManifestFormatter } from "@beep/repo-cli/commands/Goals/Manifest.service";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe } from "@effect/vitest";
-import { assertFalse, assertInstanceOf, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -30,6 +38,7 @@ import * as Str from "effect/String";
 import type { GoalPacketReader } from "@beep/repo-cli/commands/Goals/Doctor";
 
 const REPO = "beep-effect/beep-effect-goals-archive";
+const decodeExplorationManifestText = S.decodeOption(S.fromJsonString(ExplorationManifest));
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const parseJson = flow(S.decodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
@@ -245,7 +254,7 @@ describe("goals archive", () => {
       const goal = yield* decodeGoalManifest(
         parseJson(goalManifest("archived", "completed-retained", { archive: ARCHIVE_BLOCK, retentionReason: "Kept." }))
       );
-      assertInstanceOf(goal.archive, ArchiveRecord);
+      assertTrue(S.is(ArchiveRecord)(goal.archive));
       assert.strictEqual(goal.retentionReason, "Kept.");
       const plain = yield* decodeGoalManifest(parseJson(goalManifest("plain", "active")));
       assert.strictEqual(plain.archive, undefined);
@@ -253,19 +262,28 @@ describe("goals archive", () => {
         parseJson(goalManifest("bad", "completed-retained", { archive: { ...ARCHIVE_BLOCK, repo: "no-slash" } }))
       ).pipe(Effect.option);
       assertNone(badRepo);
-      const exploration = S.decodeOption(S.fromJsonString(ExplorationManifest))(
+      const exploration = decodeExplorationManifestText(
         explorationManifest("gone", "graduated", { archive: { ...ARCHIVE_BLOCK, path: "explorations/gone" } })
       );
       assertSome(
         O.map(exploration, (manifest) => manifest.exploration.archive?.path),
         "explorations/gone"
       );
-      const emptyReason = S.decodeOption(S.fromJsonString(ExplorationManifest))(
+      const emptyReason = decodeExplorationManifestText(
         explorationManifest("gone", "graduated", { retentionReason: "" })
       );
       assertNone(emptyReason);
     })
   );
+
+  it("renders archive errors with and without a packet slug", () => {
+    const scoped = ArchiveError.new("archive-verify-mismatch", "demo", "goals/demo", "tree hash differs");
+    assert.strictEqual(scoped.message, "archive-verify-mismatch demo goals/demo: tree hash differs");
+    assert.strictEqual(scoped._tag, "ArchiveError");
+    const unscoped = ArchiveError.new("archive-input-invalid", null, ".", "--batch must be at least 1");
+    assert.strictEqual(unscoped.message, "archive-input-invalid .: --batch must be at least 1");
+    assert.isNull(unscoped.slug);
+  });
 
   it("keeps exactly the tombstone set per root", () => {
     assertTrue(tombstoneKeeps("goals", "history/reflections/a.md"));
@@ -276,6 +294,33 @@ describe("goals archive", () => {
     assertTrue(tombstoneKeeps("explorations", "research/harvest/ledger.jsonl"));
     assertFalse(tombstoneKeeps("explorations", "research/notes.md"));
   });
+
+  it.effect("round-trips generated archive records and plan entries through their codecs", () =>
+    Effect.gen(function* () {
+      const recordEquivalence = S.toEquivalence(ArchiveRecord);
+      const records = yield* Arbitrary.checkEffect(
+        Arbitrary.schema(ArchiveRecord),
+        (record) =>
+          Effect.map(
+            Effect.flatMap(S.encodeEffect(ArchiveRecord)(record), S.decodeUnknownEffect(ArchiveRecord)),
+            (decoded) => recordEquivalence(decoded, record)
+          ),
+        fcRuns(25)
+      );
+      assert.strictEqual(records._tag, "Passed");
+      const entryEquivalence = S.toEquivalence(ArchivePlanEntry);
+      const entries = yield* Arbitrary.checkEffect(
+        Arbitrary.schema(ArchivePlanEntry),
+        (entry) =>
+          Effect.map(
+            Effect.flatMap(S.encodeEffect(ArchivePlanEntry)(entry), S.decodeUnknownEffect(ArchivePlanEntry)),
+            (decoded) => entryEquivalence(decoded, entry)
+          ),
+        fcRuns(25)
+      );
+      assert.strictEqual(entries._tag, "Passed");
+    })
+  );
 
   it.effect("doctor flags a terminal goal with neither archive nor retentionReason as advisory", () =>
     Effect.gen(function* () {
@@ -323,49 +368,62 @@ describe("goals archive", () => {
       Effect.gen(function* () {
         const root = yield* makeFixtureRepo();
         const planner = yield* ArchivePlanner;
-        const plan = yield* planner.plan({ kinds: ["goals", "explorations"], slugs: [], repo: REPO, repoRoot: root });
+        const plan = yield* planner.plan(
+          ArchivePlanOptions.make({ kinds: ["goals", "explorations"], slugs: [], repo: REPO, repoRoot: root })
+        );
         assert.deepStrictEqual(
           A.map(plan.entries, (entry) => `${entry.root}/${entry.slug}`),
           ["goals/done", "goals/old", "explorations/gone"]
         );
-        const [done, , gone] = plan.entries;
-        assert.deepStrictEqual(done?.keep, [
-          "goals/done/README.md",
-          "goals/done/history/reflections/2026-11-05-codex.md",
-          "goals/done/history/reflections/2026-11-06-codex.md",
-          "goals/done/ops/manifest.json",
-          "goals/done/research/OPPORTUNITIES.md",
-        ]);
-        assert.deepStrictEqual(done?.remove, [
-          "goals/done/PLAN.md",
-          "goals/done/SPEC.md",
-          "goals/done/research/notes.md",
-        ]);
-        assert.deepStrictEqual(gone?.keep, [
-          "explorations/gone/BRIEF.md",
-          "explorations/gone/DECISIONS.md",
-          "explorations/gone/README.md",
-          "explorations/gone/ops/manifest.json",
-        ]);
-        assert.deepStrictEqual(gone?.remove, ["explorations/gone/RESEARCH.md"]);
-        assert.match(done?.localTreeHash ?? "", /^[0-9a-f]{40}$/);
-        assert.deepStrictEqual(
-          A.map(
-            done?.inboundLinks ?? [],
+        const partitions = A.map(plan.entries, (entry) => ({
+          packet: `${entry.root}/${entry.slug}`,
+          keep: entry.keep,
+          remove: entry.remove,
+          links: A.map(
+            entry.inboundLinks,
             (link) => [link.file, link.line, link.destination, link.rewrittenTo] as const
           ),
+        }));
+        assert.deepStrictEqual(
+          A.filter(partitions, (partition) => partition.packet !== "goals/old"),
           [
-            [
-              "docs/guide.md",
-              3,
-              "../goals/done/PLAN.md#p1",
-              `https://github.com/${REPO}/blob/main/goals/done/PLAN.md#p1`,
-            ],
+            {
+              packet: "goals/done",
+              keep: [
+                "goals/done/README.md",
+                "goals/done/history/reflections/2026-11-05-codex.md",
+                "goals/done/history/reflections/2026-11-06-codex.md",
+                "goals/done/ops/manifest.json",
+                "goals/done/research/OPPORTUNITIES.md",
+              ],
+              remove: ["goals/done/PLAN.md", "goals/done/SPEC.md", "goals/done/research/notes.md"],
+              links: [
+                [
+                  "docs/guide.md",
+                  3,
+                  "../goals/done/PLAN.md#p1",
+                  `https://github.com/${REPO}/blob/main/goals/done/PLAN.md#p1`,
+                ],
+              ],
+            },
+            {
+              packet: "explorations/gone",
+              keep: [
+                "explorations/gone/BRIEF.md",
+                "explorations/gone/DECISIONS.md",
+                "explorations/gone/README.md",
+                "explorations/gone/ops/manifest.json",
+              ],
+              remove: ["explorations/gone/RESEARCH.md"],
+              links: [],
+            },
           ]
         );
-        assert.strictEqual(A.length(gone?.inboundLinks ?? []), 0);
+        assertTrue(A.every(plan.entries, (entry) => /^[0-9a-f]{40}$/.test(entry.localTreeHash)));
 
-        const again = yield* planner.plan({ kinds: ["goals", "explorations"], slugs: [], repo: REPO, repoRoot: root });
+        const again = yield* planner.plan(
+          ArchivePlanOptions.make({ kinds: ["goals", "explorations"], slugs: [], repo: REPO, repoRoot: root })
+        );
         assert.strictEqual(again.planId, plan.planId);
         const recomputed = yield* archivePlanId({
           repo: plan.repo,
@@ -374,35 +432,41 @@ describe("goals archive", () => {
         });
         assert.strictEqual(recomputed, plan.planId);
 
-        const batch = yield* planner.plan({
-          kinds: ["goals", "explorations"],
-          slugs: [],
-          batchSize: 2,
-          repo: REPO,
-          repoRoot: root,
-        });
+        const batch = yield* planner.plan(
+          ArchivePlanOptions.make({
+            kinds: ["goals", "explorations"],
+            slugs: [],
+            batchSize: 2,
+            repo: REPO,
+            repoRoot: root,
+          })
+        );
         assert.deepStrictEqual(
           A.map(batch.entries, (entry) => entry.slug),
           ["done", "old"]
         );
         assert.notStrictEqual(batch.planId, plan.planId);
-        const explorationsOnly = yield* planner.plan({
-          kinds: ["explorations"],
-          slugs: [],
-          repo: REPO,
-          repoRoot: root,
-        });
+        const explorationsOnly = yield* planner.plan(
+          ArchivePlanOptions.make({
+            kinds: ["explorations"],
+            slugs: [],
+            repo: REPO,
+            repoRoot: root,
+          })
+        );
         assert.deepStrictEqual(
           A.map(explorationsOnly.entries, (entry) => entry.slug),
           ["gone"]
         );
-        const bySlug = yield* planner.plan({ kinds: ["goals"], slugs: ["old"], repo: REPO, repoRoot: root });
+        const bySlug = yield* planner.plan(
+          ArchivePlanOptions.make({ kinds: ["goals"], slugs: ["old"], repo: REPO, repoRoot: root })
+        );
         assert.deepStrictEqual(
           A.map(bySlug.entries, (entry) => entry.slug),
           ["old"]
         );
         const ineligible = yield* planner
-          .plan({ kinds: ["goals"], slugs: ["live", "kept"], repo: REPO, repoRoot: root })
+          .plan(ArchivePlanOptions.make({ kinds: ["goals"], slugs: ["live", "kept"], repo: REPO, repoRoot: root }))
           .pipe(Effect.flip);
         assert.strictEqual(ineligible.reason, "archive-input-invalid");
       })
@@ -440,6 +504,8 @@ describe("goals archive", () => {
         ]);
         const planned = yield* runGoalsArchive({ ...base, plan: true, batch: 1 }, root);
         assertNone(planned);
+        const plannedJson = yield* runGoalsArchive({ ...base, plan: true, json: true }, root);
+        assertNone(plannedJson);
       })
     );
 
@@ -448,7 +514,9 @@ describe("goals archive", () => {
         const root = yield* makeFixtureRepo();
         const archiveDir = yield* makeArchiveCheckout();
         const planner = yield* ArchivePlanner;
-        const plan = yield* planner.plan({ kinds: ["goals", "explorations"], slugs: [], repo: REPO, repoRoot: root });
+        const plan = yield* planner.plan(
+          ArchivePlanOptions.make({ kinds: ["goals", "explorations"], slugs: [], repo: REPO, repoRoot: root })
+        );
         const receipt = yield* runGoalsArchive({ ...writeOptions(archiveDir), expect: plan.planId }, root).pipe(
           Effect.provideService(GoalManifestFormatter, noFormatter)
         );
@@ -528,10 +596,7 @@ describe("goals archive", () => {
         assert.strictEqual(manifest.archive?.path, "goals/done");
         const explorationText = yield* readText(root, "explorations/gone/ops/manifest.json");
         assertSome(
-          O.map(
-            S.decodeOption(S.fromJsonString(ExplorationManifest))(explorationText),
-            (value) => value.exploration.archive?.path
-          ),
+          O.map(decodeExplorationManifestText(explorationText), (value) => value.exploration.archive?.path),
           "explorations/gone"
         );
 
@@ -547,7 +612,9 @@ describe("goals archive", () => {
         // Receipt, and archived packets leave the next plan.
         const receiptWritten = yield* existsAll(root, [`.beep/archive/receipts/${plan.planId}.json`]);
         assert.deepStrictEqual(receiptWritten, [true]);
-        const next = yield* planner.plan({ kinds: ["goals", "explorations"], slugs: [], repo: REPO, repoRoot: root });
+        const next = yield* planner.plan(
+          ArchivePlanOptions.make({ kinds: ["goals", "explorations"], slugs: [], repo: REPO, repoRoot: root })
+        );
         assert.deepStrictEqual(next.entries, []);
       })
     );
@@ -559,7 +626,9 @@ describe("goals archive", () => {
         const root = yield* makeFixtureRepo();
         const archiveDir = yield* makeArchiveCheckout();
         const planner = yield* ArchivePlanner;
-        const plan = yield* planner.plan({ kinds: ["goals"], slugs: ["done"], repo: REPO, repoRoot: root });
+        const plan = yield* planner.plan(
+          ArchivePlanOptions.make({ kinds: ["goals"], slugs: ["done"], repo: REPO, repoRoot: root })
+        );
         // An uncommitted edit diverges the copied working tree from the HEAD tree the plan recorded.
         yield* fs.writeFileString(path.join(root, "goals/done/PLAN.md"), "# Plan (edited)\n");
         const watched = ["goals/done/PLAN.md", "goals/done/ops/manifest.json", "docs/guide.md"];
@@ -582,12 +651,20 @@ describe("goals archive", () => {
         const root = yield* makeFixtureRepo();
         const archiveDir = yield* makeArchiveCheckout();
         const planner = yield* ArchivePlanner;
-        const plan = yield* planner.plan({ kinds: ["goals"], slugs: [], repo: REPO, repoRoot: root });
+        const plan = yield* planner.plan(
+          ArchivePlanOptions.make({ kinds: ["goals"], slugs: [], repo: REPO, repoRoot: root })
+        );
         const stale = yield* runGoalsArchive(
           { ...writeOptions(archiveDir), kind: "goals", expect: Str.repeat(64)("0") },
           root
         ).pipe(Effect.flip);
         assert.strictEqual(stale.reason, "archive-plan-mismatch");
+        const missingCheckout = yield* runGoalsArchive(
+          { ...writeOptions(`${archiveDir}-missing`), kind: "goals", expect: plan.planId },
+          root
+        ).pipe(Effect.flip);
+        assert.strictEqual(missingCheckout.reason, "archive-push-failed");
+        assert.isNull(missingCheckout.slug);
         const dry = yield* runGoalsArchive(
           { ...writeOptions(archiveDir), kind: "goals", expect: plan.planId, dryRun: true },
           root

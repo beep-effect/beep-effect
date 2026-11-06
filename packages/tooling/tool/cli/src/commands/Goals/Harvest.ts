@@ -25,7 +25,12 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import { HarvestKind, HarvestLedger, HarvestRow, HarvestSource } from "./Harvest.schemas.ts";
-import { HarvestProjector, HarvestProjectorLive, renderHarvestLedger } from "./Harvest.service.ts";
+import {
+  HarvestCollectOptions,
+  HarvestProjector,
+  HarvestProjectorLive,
+  renderHarvestLedger,
+} from "./Harvest.service.ts";
 import { PacketRoot } from "./PacketCore/PacketCore.schemas.ts";
 
 /**
@@ -141,7 +146,9 @@ export const runGoalsHarvest = Effect.fn("Goals.runGoalsHarvest")(function* (
   const projector = yield* HarvestProjector;
   const root = repoRoot ?? (yield* findRepoRoot().pipe(Effect.orElseSucceed(() => ".")));
   const target = path.resolve(root, options.out);
-  const fresh = yield* projector.collect({ kinds: harvestKindRoots(options.kind), repoRoot: root });
+  const fresh = yield* projector.collect(
+    HarvestCollectOptions.make({ kinds: harvestKindRoots(options.kind), repoRoot: root })
+  );
   if (!options.check) {
     yield* projector.write(fresh, target);
     yield* Console.log(`[goals:harvest] wrote ${fresh.rowCount} row(s) to ${options.out} at ${fresh.sourceCommit}:`);
