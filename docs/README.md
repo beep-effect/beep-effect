@@ -10,6 +10,7 @@ Tracked, authored documentation for the beep-effect monorepo.
 | `docs/ROADMAP.md` | yes | Canonical cross-portfolio priority layer (lanes, horizons, resume conditions); lifecycle status truth stays in tracked packet manifests. |
 | `docs/product/` | yes | Per-product specs and PRDs (one named file per product — no generic `PRD.md`). |
 | `docs/security/` | yes | Reviewed shared threat models and security context. |
+| `docs/history/` | yes | Commit-history overlay data: the reviewed commit-message map that `beep history notes` projects into `refs/notes/history` (no SHA is ever rewritten). |
 | `docs/runbooks/` | yes | Operational runbooks: step-by-step command sequences with gates (first: `lab-promotion.md`). |
 | `docs/generated/` | **no** (gitignored) | Docgen aggregate output. Produced by `bun run docgen` / `bun run docs:aggregate`; safe to delete, regenerable. |
 | `docs/_internal/` | **no** (gitignored) | Private working notes. This repository is public — never commit anything under `_internal/`. |
