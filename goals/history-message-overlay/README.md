@@ -6,6 +6,18 @@ Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
+## Latest evidence
+
+- Final PR [#2785](https://github.com/beep-effect/beep-effect/pull/2785): map at
+  `docs/history/commit-message-map.json` (940 rows), `beep history notes --check
+  | --write | sync`, bootstrap hooks, `.github/workflows/history-notes-publish.yml`,
+  and the July cutover folder archived to `$HOME/.local/state/beep/archive/beep-effect-cutover/`.
+- `--write` is deterministic (same notes commit from any prior ref state); a
+  scratch-ref run matched 940/940 under `--check --require-published`.
+- Post-merge proof still owed: the first `History Notes Publish` run, then
+  `bun run beep history notes sync && bun run beep history notes --check --require-published`.
+- Reflection: [`history/reflections/2026-11-06-claude.md`](./history/reflections/2026-11-06-claude.md).
+
 ## Mission
 
 History Message Overlay (graduated from explorations/git-history-rewrite).

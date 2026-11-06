@@ -8,7 +8,7 @@
 
 | Source | Title | Location | Theme | Disposition |
 |--------|-------|----------|-------|-------------|
-| `july-census` | Reviewed 939-row commit-message map + exclusion list + validators | `$HOME/YeeBois/projects/beep-effect-cutover/census/` until slice 4, then `docs/history/` (map) and `$HOME/.local/state/beep/archive/beep-effect-cutover/` (rest) | message map | import map to `docs/history/`; archive the rest |
+| `july-census` | Reviewed 939-row commit-message map + exclusion list + validators | map: `docs/history/`; original folder archived 2026-11-06 at `$HOME/.local/state/beep/archive/beep-effect-cutover/census/` | message map | import map to `docs/history/`; archive the rest |
 | `july-cutover`, `july-research` | Rewrite scripts, curation, fleet inventory | same folder → archive | rewrite (rejected) | archive only; never tracked |
 
 ## 2. Upstream repositories & licenses

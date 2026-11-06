@@ -26,16 +26,34 @@ and [`goals/history-message-overlay`](../../goals/history-message-overlay/).
 ## Changing a row
 
 Edit the row in a pull request. Every key must stay an ancestor of
-`origin/main`. After the merge, the publication job rebuilds
-`refs/notes/history` from this file; nobody pushes the notes ref by hand.
+`origin/main`, and each message needs a subject of 72 characters or fewer,
+optionally followed by a blank line and a body. `bun run beep history notes
+--check` proves both locally. After the merge, the `History Notes Publish`
+workflow (`.github/workflows/history-notes-publish.yml`) rebuilds
+`refs/notes/history` with `bun run beep history notes --write`, checks it, and
+force-pushes the notes ref. Nobody pushes the notes ref by hand.
 
 ## Seeing the overlay
 
-Until the sync tooling lands, a clone can fetch and display the ref by hand:
+`bun run beep worktree new` and the cloud bootstrap configure this for you.
+In any other clone, run it once:
 
 ```sh
-git config --add remote.origin.fetch '+refs/notes/history:refs/notes/history'
-git config --add notes.displayRef refs/notes/history
-git fetch origin
+bun run beep history notes sync
 git log 6f33208961 -1
+```
+
+`sync` adds `+refs/notes/history:refs/notes/history` to the `origin` fetch
+refspecs and `refs/notes/history` to `notes.displayRef`, each only if missing,
+then fetches the ref. From then on, plain `git log` and `git show` print a
+`Notes (history):` block under each corrected commit. github.com does not show
+git notes.
+
+## Smaller clones
+
+History is never rewritten, so the old vendored `.repos/` subtree commits stay
+in the object graph. For a lighter clone, fetch file contents on demand:
+
+```sh
+git clone --filter=blob:none git@github.com:beep-effect/beep-effect.git
 ```

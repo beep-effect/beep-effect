@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `pending`
+Status: `P4 Close in progress` — all four slices are in final PR #2785; publication proof follows its merge.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | pending | Slice 1: map import + schema + `@beep/git` notes reads + `history notes --check`. Slice 2: `--write`, `sync`, worktree/cloud bootstrap hooks. Slice 3: post-merge publication workflow. Slice 4: cutover folder archive + docs. (Order: `explorations/git-history-rewrite/MAP.md`.) | Acceptance criteria are met. |
-| P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
+| P1 Implement | complete | Slice 1: map import + schema + `@beep/git` notes reads + `history notes --check`. Slice 2: `--write`, `sync`, worktree/cloud bootstrap hooks. Slice 3: post-merge publication workflow. Slice 4: cutover folder archive + docs. (Order: `explorations/git-history-rewrite/MAP.md`.) | Acceptance criteria are met. |
+| P2 Verify | complete | Run required checks and capture evidence. | Verification is green or blockers are documented. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | in-progress | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Closeout Checklist
 
@@ -65,5 +65,13 @@ beep history notes --write and sync landed with @beep/git replaceNotes and confi
 Lane `docs/git-history-rewrite-exploration` · PR #2785
 
 Reverse: Revert the slice-2 commit on the branch
+
+### Slices 3 and 4 in the lane: publication workflow, docs, folder archived, 2026-11-06
+
+History Notes Publish (.github/workflows/history-notes-publish.yml) runs on main pushes that touch docs/history/commit-message-map.json and on dispatch: full-history checkout, --write, --check --require-published, then a force-push of refs/notes/history with the job token (contents: write, job-scoped). beep ci workflow-lint: clean. docs/history/README.md documents sync, publication and the blobless clone. The cutover folder moved to $HOME/.local/state/beep/archive/beep-effect-cutover/ and goals/legacy-drain has a checkpoint. Remaining acceptance needs main: the first workflow run publishing the ref, then --check against it.
+
+Lane `docs/git-history-rewrite-exploration` · PR #2785
+
+Reverse: Delete .github/workflows/history-notes-publish.yml and restore the folder from the archive
 
 <!-- beep:decisions:end -->

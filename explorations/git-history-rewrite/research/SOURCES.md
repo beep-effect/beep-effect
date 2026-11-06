@@ -1,6 +1,7 @@
 # Git History Rewrite Cutover — Sources & Provenance
 
-- **Cluster / origin:** the July 2026 cutover workspace (out of repo, untracked)
+- **Cluster / origin:** the July 2026 cutover workspace (out of repo, untracked;
+  moved 2026-11-06 from `$HOME/YeeBois/projects/beep-effect-cutover` to the archive path below)
   and a 2026-11-06 re-measure of `origin/main`.
 - **Provenance:** [`../CAPTURE.md`](../CAPTURE.md) 2026-11-06 section.
 
@@ -8,9 +9,9 @@
 
 | Source | Title | Location | Theme | Disposition |
 |--------|-------|----------|-------|-------------|
-| `july-census` | Commit-message rewrite map and fleet validation | `$HOME/YeeBois/projects/beep-effect-cutover/census/` | message rewrite | reference; ownership decision pending (align) |
-| `july-cutover` | Gated cutover and reconvergence scripts, branch curation, decision sheet | `$HOME/YeeBois/projects/beep-effect-cutover/cutover/` | execution plan | reference; ownership decision pending |
-| `july-research` | Blast radius, checkout fleet inventory, `.repos` coupling | `$HOME/YeeBois/projects/beep-effect-cutover/research/` | impact | reference; inventory needs redaction before any tracked copy |
+| `july-census` | Commit-message rewrite map and fleet validation | `$HOME/.local/state/beep/archive/beep-effect-cutover/census/` | message rewrite | reference; ownership decision pending (align) |
+| `july-cutover` | Gated cutover and reconvergence scripts, branch curation, decision sheet | `$HOME/.local/state/beep/archive/beep-effect-cutover/cutover/` | execution plan | reference; ownership decision pending |
+| `july-research` | Blast radius, checkout fleet inventory, `.repos` coupling | `$HOME/.local/state/beep/archive/beep-effect-cutover/research/` | impact | reference; inventory needs redaction before any tracked copy |
 
 ## 2. Upstream repositories & licenses
 
