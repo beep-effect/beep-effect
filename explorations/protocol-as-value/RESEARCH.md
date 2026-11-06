@@ -6,6 +6,29 @@ repo (cited), and what exists inside it (so we compose bricks instead of
 rebuilding them). Date sections; research goes stale.
 -->
 
+## 2026-11-05 — qualifications to the August conclusions
+
+The [adopted contract amendment](./DECISIONS.md#2026-11-05--definition-identity-and-consumer-qualification-amendment)
+narrows the current interpretation of the historical research below. This is
+a contract review, not a new literature search or independent proof run.
+
+- The August sweep did not find a matching composition in its examined
+  sources. It does not prove that no such system exists, and novelty is not
+  required for the engineering value of consolidating the shared contracts.
+- Normalized-definition identity requires explicit encoder/normalizer versions
+  and admitted normalization laws. Equal digests do not establish equivalent
+  interpretation across changed operations, imports, policies, or input bases.
+  Fold uniqueness alone does not equate distinct algebras or environments.
+- A pinned tool definition detects changes to that definition when checked.
+  It does not attest the behavior or authority of its implementation.
+- Request replay is a candidate consumer proof, not proof that a global
+  protocol or its role projections are necessary. The revised BRIEF defines
+  the qualification gate and preserves Wave 1's two-migration appetite.
+
+The August text and source digest below remain the historical record; their
+unqualified novelty, semantic-equality, and refactor claims are superseded by
+this qualification and the current BRIEF.
+
 ## 2026-08-23 — Eight-track sweep
 
 Six external tracks (web) + two in-repo gap checks, run as a parallel research

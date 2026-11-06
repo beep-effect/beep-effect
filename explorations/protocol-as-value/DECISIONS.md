@@ -157,3 +157,46 @@ hold the packet open; a fired gate reopens it at decompose.
 the call and after the substrate survives two migrations. Rejected:
 promised-now (graduates a goal with no live consumer); separate-exploration
 (severs thesis from substrate, duplicates provenance).
+
+## 2026-11-05 — definition identity and consumer qualification amendment
+
+**Question:** What guarantees do digest equality and replay establish, and
+what must a first consumer demonstrate before the global protocol kit starts?
+
+**Answer (operator-authorized amendment):** Adopt the revised BRIEF contracts.
+The meaning-digest name remains, but v1 establishes normalized-definition
+identity under a versioned normalizer and the hash assumptions. Interpretation
+also depends on pinned operations, imports, policy, evidence, and context.
+Fold uniqueness does not equate different algebras or environments. This
+supersedes the August naming decision's unqualified refactor-stability and
+"digest equality = meaning equality" wording; the original entry is retained
+as history. Definition pinning detects definition changes, not implementation
+behavior. Novelty remains a dated search result, not proof of absence.
+
+Wave 2 still requires merged Wave 1 work and a concrete consumer, now with
+owned scope and a runnable qualification case explaining why role projection
+adds value beyond a request/observation journal. A request consumer binds
+answers to their relevant basis, answerer policy, and occurrence. Content
+equality alone grants neither cross-run reuse nor authority. The BRIEF's
+qualification table specifies replay, invalidation, duplicate/conflict, and
+late-answer cases. This refines the August Wave 2 gate; no gate has fired.
+
+**Rationale:** Stable definition bytes can refer to changed semantics, and a
+stable document location can acquire a different question. Explicit bases and
+occurrences prevent stale approval reuse. A consumer needing only a journal
+does not justify global role projections.
+
+**Scope:** Wave 1 still has exactly two proof migrations, with legacy bytes,
+filenames, chains, and seals preserved. No additional runtime, resolver, or
+request schema is added. The oracle lab can exercise a bounded fixture without
+depending on Wave 1. The document-hub inversion is unchanged. This adoption
+updates planning contracts only; it does not approve the full shape, advance
+the lifecycle, or report implementation or consumer qualification.
+
+**Rejected:** Treating all behavior-preserving refactors as digest-preserving;
+reusing approvals by model path or content hash alone; activating role
+projection because a request/replay example exists.
+
+**Reversal:** Amend these contracts through a later dated decision, retain
+historical receipts, and withdraw any claim whose qualifying evidence no
+longer applies. Any replacement digest guarantee must match its implementation.
