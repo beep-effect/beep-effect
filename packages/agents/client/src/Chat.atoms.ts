@@ -455,7 +455,7 @@ export class StreamingTurn extends S.Opaque<StreamingTurn, { readonly brand: uni
       description: "Client request id used for exact persistence reconciliation when available.",
     }),
     /** Optimistic rendering of the just-sent user message. */
-    userContent: Document.annotateKey({
+    userContent: S.suspend(() => Document).annotateKey({
       description: "Optimistic rendering of the just-sent user message.",
     }),
     /** For edits: hide this turn and everything after it while rendered locally. */
@@ -601,7 +601,7 @@ export class EditTarget extends S.Opaque<EditTarget, { readonly brand: unique sy
     turnId: WorkspaceIdentity.TurnId.annotateKey({
       description: "Turn being edited.",
     }),
-    content: Document.annotateKey({
+    content: S.suspend(() => Document).annotateKey({
       description: "Replacement user content for the edited turn.",
     }),
   }).pipe(

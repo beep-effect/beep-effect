@@ -60,9 +60,10 @@ the annotation reference for schemas and the grep reference for multi-file audit
 - Tags follow all body sections.
 
 `**Example** (Title)` is canonical everywhere. The legacy `@example`/`@remarks`
-carriers are retired repo-wide: `beep quality jsdoc-ratchet` fails on any
-occurrence in `packages/**/src` (generated files included; the sole allowlisted
-residual is acp `schema.gen.ts` until its resync PR lands).
+carriers are retired repo-wide. The default `beep quality jsdoc-ratchet` scan
+covers non-generated `{packages,apps}/**/src`; use `--include-generated` when
+proving generator output. A default pass does not prove generated compliance.
+The generated residual allowlist is currently empty.
 
 ## Kind split
 
@@ -109,8 +110,8 @@ whether the file was touched.
 ## Escalation
 
 - `schema-first-development` — schema modeling beyond annotation work.
-- `effect-first-development` — code changes broader than documentation.
-- `effect-error-handling` — new tagged-error hierarchies.
+- `effect-first-development` — code changes broader than documentation, including
+  new tagged-error hierarchies.
 
 ## Source references
 

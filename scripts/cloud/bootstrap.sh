@@ -8,18 +8,19 @@
 # dashboards. Runbook: docs/runbooks/cloud-environments.md.
 #
 # Contract
-#   - Idempotent and snapshot-safe: re-runs are cheap no-ops when the pinned
-#     toolchain and the lockfile-matched dependency tree are already on disk, so
-#     the same file serves a cached setup script and a per-session hook.
+#   - Reuses matching toolchain/install/prepare state for cached setup and
+#     per-session hooks. Optional fetches and version probes can still run;
+#     matching stamps are not a full dependency-content audit or a timing promise.
 #   - Durable preparation only: toolchain + workspace dependencies + the tsgo
-#     patch. No dev servers, no secrets, no background processes.
+#     patch. No dev servers, secrets or persistent background services.
 #   - Fail loud on the core toolchain (bun, pinned Node, dependencies, tsgo patch);
 #     best-effort on the optional tools (portless, 1Password CLI, and the
 #     publication hook tools typos + gitleaks, whose absence is reported as
 #     "publication tools: NOT ready" rather than hidden).
 #   - Scoped to cloud VMs: without a cloud marker the script exits 0 untouched,
 #     so a SessionStart hook can call it unconditionally. BEEP_CLOUD_FORCE=1
-#     overrides the guard for local dry runs.
+#     bypasses that guard for a real setup run, not a dry run. Forced tests need
+#     disposable filesystem isolation; scratch HOME alone does not confine writes.
 #
 # Vendor detection (BEEP_CLOUD_VENDOR wins when set):
 #   claude  CLAUDE_CODE_REMOTE=true   (Claude cloud sessions set it on the VM)
