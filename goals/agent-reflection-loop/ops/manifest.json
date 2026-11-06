@@ -72,5 +72,6 @@
     "The implementation would exceed named scope.",
     "Enforcement would change existing public wire formats, migrations, auth, infra, security, drivers, or dependencies.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "researchReports": ["research/reflection-frontier-report.md"]
 }

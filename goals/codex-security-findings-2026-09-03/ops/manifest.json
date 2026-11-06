@@ -33,7 +33,7 @@
     "goals/codex-security-findings-2026-09-03/ops/closures.json",
     "goals/codex-security-findings-2026-09-03/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

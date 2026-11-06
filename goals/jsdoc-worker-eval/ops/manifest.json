@@ -122,5 +122,12 @@
   "reflectionRequired": true,
   "statusNote": "legacy status: p0-p6-implemented-runpod-10-packet-evidence-complete",
   "lifecycle": "completed-retained",
-  "packetPath": "goals/jsdoc-worker-eval"
+  "packetPath": "goals/jsdoc-worker-eval",
+  "researchReports": [
+    "research/2026-05-12-codex-gpt-5.4-mini-low-worker-eval.md",
+    "research/2026-05-12-ollama-qwen3-coder-30b-host-eval.md",
+    "research/2026-05-16-runpod-ollama-qwen3-coder-30b-worker-eval-10-packet.md",
+    "research/2026-05-16-runpod-ollama-qwen3-coder-30b-worker-eval.md",
+    "research/README.md"
+  ]
 }

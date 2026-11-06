@@ -31,10 +31,33 @@
     "goals/speed-loop/research/GRILL-DECISIONS.md"
   ],
   "researchReports": [
-    "research/OPPORTUNITIES.md",
     "research/GRILL-DECISIONS.md",
+    "research/OPPORTUNITIES.md",
+    "research/PR-E-TRIAGE.md",
+    "research/SYNTHESIS-2.md",
     "research/SYNTHESIS.md",
-    "research/SYNTHESIS-2.md"
+    "research/adhd/antcolony.json",
+    "research/adhd/assumption.json",
+    "research/adhd/deep-attestation.json",
+    "research/adhd/deep-failure-capsule.json",
+    "research/adhd/deep-merged-object.json",
+    "research/adhd/logistics.json",
+    "research/adhd/oncall.json",
+    "research/adhd/speedrunner.json",
+    "research/o1-jsdoc-incremental.md",
+    "research/o2-turbo-cache-keys.md",
+    "research/o3-battery-process-model.md",
+    "research/o4-testlanes.md",
+    "research/o5-instantiation-stages.md",
+    "research/o6-execution-plan.md",
+    "research/o6-owned-runners.md",
+    "research/r1-failfast-yeet.md",
+    "research/r2-ci-shared-setup.md",
+    "research/r3-package-deletions.md",
+    "research/r4-gate-value-audit.md",
+    "research/r5-grit-candidates.md",
+    "research/runner-secrets.md",
+    "research/upstream-tsgo-effectfn-issue.md"
   ],
   "agentLaunchers": [
     {

@@ -37,15 +37,15 @@
     "goals/knowledge-surface-automation/research/p2-grill-decisions.md"
   ],
   "researchReports": [
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
-    "research/surface-census.md",
-    "research/existing-capabilities.md",
+    "research/acceptance-matrix.md",
+    "research/adhd.md",
     "research/decisions.md",
     "research/evidence-contract.md",
+    "research/existing-capabilities.md",
     "research/jev-evaluation.md",
-    "research/adhd.md",
-    "research/acceptance-matrix.md",
-    "research/OPPORTUNITIES.md"
+    "research/surface-census.md"
   ],
   "agentLaunchers": [
     {

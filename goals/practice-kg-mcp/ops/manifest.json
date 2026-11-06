@@ -36,7 +36,13 @@
     "goals/practice-kg-mcp/research/SOURCES.md"
   ],
   "researchReports": [
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
+    "research/acceptance-gauntlet.md",
+    "research/attorney-session.md",
+    "research/bundle-contract.md",
+    "research/install-manifest.json",
+    "research/install-runbook.md",
     "research/matter-lookup-contract.md"
   ],
   "agentLaunchers": [

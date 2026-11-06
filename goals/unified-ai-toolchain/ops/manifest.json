@@ -262,5 +262,10 @@
     "Required source files are missing or materially contradictory."
   ],
   "nextAction": "No active implementation; reopen V2.1 only after a real agent-config drift incident.",
-  "statusNote": "Portfolio closeout recorded 2026-07-14: V1 is the retained deliverable; all ten V2/V3 phases are wont-do until a real agent-config drift incident. Known drift for claude-code-settings, rulesync-config, and rulesync-mcp remains documented as-is."
+  "statusNote": "Portfolio closeout recorded 2026-07-14: V1 is the retained deliverable; all ten V2/V3 phases are wont-do until a real agent-config drift incident. Known drift for claude-code-settings, rulesync-config, and rulesync-mcp remains documented as-is.",
+  "researchReports": [
+    "research/claude-web-source-map.md",
+    "research/codegen-and-drift-architecture.md",
+    "research/sources-of-truth.md"
+  ]
 }

@@ -1,10 +1,14 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   buildJSDocDocumentationInventory,
   JSDocDocumentationInventoryOptions,
   listSourceFiles,
+  runTurboConfigProof,
   summarizeTurboDryRunOutput,
   summarizeTurboQueryAffectedOutput,
+  TurboConfigProofOptions,
+  TurboConfigProofSelectorMode,
   writeJSDocDocumentationInventory,
   zeroLegacyCorpusFiles,
 } from "@beep/repo-cli/test/Quality";
@@ -29,6 +33,7 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(
@@ -537,6 +542,95 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
       expect(summary.total).toBe(3);
       expect(summary.byTask).toEqual({ check: 1, lint: 2 });
       expect(summary.byReason).toEqual({ TaskFileChanged: 2, TaskGlobalDepsChanged: 1 });
+    })
+  );
+
+  it.effect("binds the requested source range to the query and every dry run for both selectors", () =>
+    Effect.forEach(
+      [TurboConfigProofSelectorMode.Enum.affected, TurboConfigProofSelectorMode.Enum["filter-range"]],
+      (selector) =>
+        Effect.gen(function* () {
+          const spawner = ScriptedSpawner.make((_command, args) => ({
+            stdout: A.contains(args, "query")
+              ? '{"data":{"affectedTasks":{"items":[]}}}'
+              : '{"packages":[],"tasks":[]}',
+          }));
+          const base = "refs/tags/requested-proof-base";
+          const head = "refs/heads/requested-proof-head";
+          const report = yield* runTurboConfigProof(
+            "/repo",
+            TurboConfigProofOptions.make({ base, head, selector, tasks: ["lint", "check"] })
+          ).pipe(provideSpawner(spawner));
+
+          const requestedRange = expect.objectContaining({
+            env: expect.objectContaining({ TURBO_SCM_BASE: base, TURBO_SCM_HEAD: head }),
+            extendEnv: true,
+          });
+          expect(spawner.spawns).toEqual([requestedRange, requestedRange, requestedRange]);
+          expect(spawner.spawns[0]?.args).toContain(base);
+          expect(spawner.spawns[0]?.args).toContain(head);
+          expect(report.base).toBe(base);
+          expect(report.head).toBe(head);
+          expect(A.map(report.dryRuns, (dryRun) => dryRun.task)).toEqual(["lint", "check"]);
+        }),
+      { concurrency: 1 }
+    )
+  );
+
+  it.effect("rejects absent or malformed affected-query task arrays", () =>
+    Effect.forEach(
+      [
+        "",
+        "{}",
+        '{"data":null}',
+        '{"data":{"affectedTasks":{"items":{}}}}',
+        '{"data":{"affectedTasks":{"items":[null]}}}',
+      ],
+      (output) =>
+        summarizeTurboQueryAffectedOutput(output).pipe(
+          Effect.flip,
+          Effect.map((error) => expect(error._tag).toBe("TurboConfigProofError"))
+        ),
+      { concurrency: 1 }
+    )
+  );
+
+  it.effect("rejects absent or malformed dry-run task arrays", () =>
+    Effect.forEach(
+      ["", "{}", '{"tasks":"missing"}', '{"tasks":[null]}', '{"tasks":[],"packages":{}}'],
+      (output) =>
+        summarizeTurboDryRunOutput(output).pipe(
+          Effect.flip,
+          Effect.map((error) => expect(error._tag).toBe("TurboConfigProofError"))
+        ),
+      { concurrency: 1 }
+    )
+  );
+
+  it.effect("does not retain synthetic native payload values in parser failures", () => {
+    const sentinel = "synthetic-native-payload-must-not-be-retained";
+    return Effect.forEach(
+      [
+        summarizeTurboDryRunOutput(`{"${sentinel}":`),
+        summarizeTurboDryRunOutput(encodeJson({ tasks: sentinel })),
+        summarizeTurboQueryAffectedOutput(encodeJson({ data: { affectedTasks: { items: sentinel } } })),
+      ],
+      (parse) =>
+        parse.pipe(
+          Effect.flip,
+          Effect.map((error) => expect(encodeJson(error)).not.toContain(sentinel))
+        ),
+      { concurrency: 1 }
+    );
+  });
+
+  it.effect("preserves explicitly empty native selections", () =>
+    Effect.gen(function* () {
+      const query = yield* summarizeTurboQueryAffectedOutput('{"data":{"affectedTasks":{"items":[]}}}');
+      const dry = yield* summarizeTurboDryRunOutput('{"tasks":[]}');
+      expect(query.total).toBe(0);
+      expect(dry.total).toBe(0);
+      expect(dry.packages).toBe(0);
     })
   );
 

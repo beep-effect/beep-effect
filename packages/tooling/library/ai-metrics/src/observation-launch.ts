@@ -54,6 +54,7 @@ export class ObservationLaunchConfig extends S.Opaque<ObservationLaunchConfig, {
     intake: TranscriptIntakeConfig,
     route: S.Struct({
       routeId: NativeHttpPolicy.fields.routeId,
+      producer: NativeHttpPolicy.fields.producer,
       approvedModels: NativeHttpPolicy.fields.approvedModels,
       usageConvention: NativeHttpPolicy.fields.usageConvention,
       syntheticFixtureMetadata: NativeHttpPolicy.fields.syntheticFixtureMetadata,

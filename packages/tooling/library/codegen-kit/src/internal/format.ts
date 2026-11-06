@@ -20,11 +20,12 @@ const formatFailure = (message: string, cause: unknown): CodegenFormatError =>
 // VCS ignore files, including a clone's `.git/info/exclude`, which Turbo never
 // hashes, so an ambient ignore rule could turn a drift check red under an unchanged
 // key (time-to-certainty ruling 83).
-export const makeFormatter = Effect.fn("CodegenKit.makeFormatter")(function* () {
+export const makeFormatter = Effect.fn("CodegenKit.makeFormatter")(function* (projectConfiguration: boolean) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const biome = path.join(import.meta.dirname, "..", "..", "..", "..", "..", "..", "node_modules", ".bin", "biome");
+  const repositoryRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..", "..", "..");
 
   const file = Effect.fn("CodegenKit.formatFile")(function* (filePath: string) {
     const exitCode = yield* spawner
@@ -61,33 +62,41 @@ export const makeFormatter = Effect.fn("CodegenKit.makeFormatter")(function* () 
   });
 
   const content = Effect.fn("CodegenKit.formatContent")(function* (source: string, outputPath: string) {
-    const formatterPath = path.join(import.meta.dirname, "generated.ts");
-    const formatted = yield* spawner
-      .string(
-        ChildProcess.make(
-          biome,
-          [
-            "check",
-            "--write",
-            "--unsafe",
-            "--linter-enabled=false",
-            "--assist-enabled=false",
-            "--javascript-formatter-indent-style=space",
-            "--javascript-formatter-indent-width=2",
-            "--javascript-formatter-line-width=80",
-            "--trailing-commas=all",
-            "--vcs-use-ignore-file=false",
-            "--stdin-file-path",
-            formatterPath,
-          ],
-          {
+    const formatterPath = projectConfiguration ? outputPath : path.join(import.meta.dirname, "generated.ts");
+    const arguments_ = projectConfiguration
+      ? ["check", "--write", "--vcs-use-ignore-file=false", "--config-path", repositoryRoot]
+      : [
+          "check",
+          "--write",
+          "--unsafe",
+          "--linter-enabled=false",
+          "--assist-enabled=false",
+          "--javascript-formatter-indent-style=space",
+          "--javascript-formatter-indent-width=2",
+          "--javascript-formatter-line-width=80",
+          "--trailing-commas=all",
+          "--vcs-use-ignore-file=false",
+        ];
+    const [formatted, exitCode] = yield* Effect.scoped(
+      Effect.gen(function* () {
+        const handle = yield* spawner.spawn(
+          ChildProcess.make(biome, [...arguments_, "--stdin-file-path", formatterPath], {
             stdin: Stream.make(source).pipe(Stream.encodeText),
             stdout: "pipe",
             stderr: "inherit",
-          }
-        )
-      )
-      .pipe(Effect.mapError((cause) => formatFailure(`Biome could not format ${outputPath}`, cause)));
+          })
+        );
+        return yield* Effect.all([handle.stdout.pipe(Stream.decodeText, Stream.mkString), handle.exitCode], {
+          concurrency: 2,
+        });
+      })
+    ).pipe(Effect.mapError((cause) => formatFailure(`Biome could not format ${outputPath}`, cause)));
+    if (exitCode !== 0) {
+      return yield* formatFailure(
+        `Biome failed for ${outputPath} with exit code ${exitCode}`,
+        `Biome exit code ${exitCode}`
+      );
+    }
     if (Str.isEmpty(formatted)) {
       return yield* formatFailure(`Biome returned empty output for ${outputPath}`, "Biome returned empty output");
     }

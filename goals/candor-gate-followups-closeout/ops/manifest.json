@@ -41,11 +41,12 @@
     "goals/patent-citation-candor-gate/research/01-gate-shape-check.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
-    "research/DECISIONS.md",
     "research/01-identity-authority.md",
     "research/02-query-plan-evidence.md",
-    "research/03-test-crypto-audit.md"
+    "research/03-test-crypto-audit.md",
+    "research/DECISIONS.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {

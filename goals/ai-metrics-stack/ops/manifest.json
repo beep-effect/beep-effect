@@ -284,5 +284,11 @@
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
-  }
+  },
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/agent-metrics-capture-2026-06-15.md",
+    "research/backend-shortlist.md",
+    "research/effect-native-observability.md"
+  ]
 }
