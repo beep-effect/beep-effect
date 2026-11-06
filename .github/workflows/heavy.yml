@@ -350,6 +350,10 @@ jobs:
     runs-on: beep-ec2-heavy
     timeout-minutes: 10
     environment: turbo-cache-write
+    env:
+      # Candidate source-only preparation: keep imports from writing volatile
+      # bytecode into the dependency tree. The canonical digest still includes all bytes.
+      PYTHONDONTWRITEBYTECODE: "1"
     steps:
       - name: Checkout exact main source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
