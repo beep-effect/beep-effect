@@ -1073,3 +1073,20 @@ dry plans agree across both clients and selector forms: unchanged refs select
 zero nodes; the actual accepted domain change selects the same28-node closure
 containing @beep/law-practice-domain#check. This does not execute tasks or prove
 semantic input completeness, safe outputs, cache reuse or qualification.
+
+### Isolate the enabled selector flags, 2026-11-04
+
+Extend the existing bounded, network-isolated filter driver with an optional
+two-by-two selector-flag mode. Compare each flag false/true while holding the
+other flag false and then true; keep globalConfiguration fixed. Both pinned
+clients pass 320 explicit selection cases and 320 one-flag comparisons.
+
+The controls falsify a simple independence assumption: either enabled flag
+narrows --affected against declared task inputs, while a bare Git-range filter
+follows filterUsingTasks and does not automatically include dependents. Keep
+these measured distinctions in any later current-root or caller change.
+
+This is feature evidence, without task execution, current-root qualification,
+performance claims or activation. Preserve all 25 pending feature decisions and
+all whole-goal gates. Revert the optional driver mode, its reports and evidence
+links together to reverse this component; runtime configuration is unchanged.
