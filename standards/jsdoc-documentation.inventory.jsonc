@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-06T11:42:25.561Z",
+  "generatedAt": "2026-11-06T11:46:50.371Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -251134,8 +251134,8 @@
           "exportKind": "class",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2129,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2129-ol",
+          "line": 2134,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2134-ol",
           "currentTags": [
             "@category",
             "@since"
@@ -251156,8 +251156,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2168,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2168-ol",
+          "line": 2173,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2173-ol",
           "currentTags": [
             "@category",
             "@since"
@@ -251178,8 +251178,8 @@
           "exportKind": "class",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2203,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2203-taskitem",
+          "line": 2208,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2208-taskitem",
           "currentTags": [
             "@category",
             "@since"
@@ -251200,8 +251200,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2243,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2243-taskitem",
+          "line": 2248,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2248-taskitem",
           "currentTags": [
             "@category",
             "@since"
@@ -251222,8 +251222,8 @@
           "exportKind": "const",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2283,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2283-tasklistitemspec",
+          "line": 2288,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2288-tasklistitemspec",
           "currentTags": [
             "@category",
             "@since"
@@ -251244,8 +251244,8 @@
           "exportKind": "type",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2305,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2305-tasklistitemspec",
+          "line": 2310,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2310-tasklistitemspec",
           "currentTags": [
             "@category",
             "@since"
@@ -251266,8 +251266,8 @@
           "exportKind": "const",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2326,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2326-taskitemchildren",
+          "line": 2331,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2331-taskitemchildren",
           "currentTags": [
             "@category",
             "@since"
@@ -251288,8 +251288,8 @@
           "exportKind": "type",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2350,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2350-taskitemchildren",
+          "line": 2355,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2355-taskitemchildren",
           "currentTags": [
             "@category",
             "@since"
@@ -251310,8 +251310,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2368,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2368-taskitemchildren",
+          "line": 2373,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2373-taskitemchildren",
           "currentTags": [
             "@category",
             "@since"
@@ -251332,8 +251332,8 @@
           "exportKind": "class",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2395,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2395-tasklist",
+          "line": 2400,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2400-tasklist",
           "currentTags": [
             "@category",
             "@since"
@@ -251354,8 +251354,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2431,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2431-tasklist",
+          "line": 2436,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2436-tasklist",
           "currentTags": [
             "@category",
             "@since"
@@ -251376,8 +251376,8 @@
           "exportKind": "class",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2464,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2464-blockquote",
+          "line": 2469,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2469-blockquote",
           "currentTags": [
             "@category",
             "@since"
@@ -251398,8 +251398,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2500,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2500-blockquote",
+          "line": 2505,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2505-blockquote",
           "currentTags": [
             "@category",
             "@since"
@@ -251420,8 +251420,8 @@
           "exportKind": "class",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2534,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2534-pre",
+          "line": 2539,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2539-pre",
           "currentTags": [
             "@category",
             "@since"
@@ -251442,8 +251442,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2586,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2586-pre",
+          "line": 2591,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2591-pre",
           "currentTags": [
             "@category",
             "@since"
@@ -251464,8 +251464,8 @@
           "exportKind": "class",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2625,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2625-tablecell",
+          "line": 2630,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2630-tablecell",
           "currentTags": [
             "@category",
             "@since"
@@ -251486,8 +251486,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2662,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2662-tablecell",
+          "line": 2667,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2667-tablecell",
           "currentTags": [
             "@category",
             "@since"
@@ -251508,8 +251508,8 @@
           "exportKind": "class",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2695,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2695-tablerow",
+          "line": 2700,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2700-tablerow",
           "currentTags": [
             "@category",
             "@since"
@@ -251530,8 +251530,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2730,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2730-tablerow",
+          "line": 2735,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2735-tablerow",
           "currentTags": [
             "@category",
             "@since"
@@ -251552,8 +251552,8 @@
           "exportKind": "class",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2767,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2767-table",
+          "line": 2772,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2772-table",
           "currentTags": [
             "@category",
             "@since"
@@ -251574,8 +251574,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2824,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2824-table",
+          "line": 2829,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2829-table",
           "currentTags": [
             "@category",
             "@since"
@@ -251596,8 +251596,8 @@
           "exportKind": "class",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2861,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2861-youtube",
+          "line": 2866,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2866-youtube",
           "currentTags": [
             "@category",
             "@since"
@@ -251618,8 +251618,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2901,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2901-youtube",
+          "line": 2906,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2906-youtube",
           "currentTags": [
             "@category",
             "@since"
@@ -251640,8 +251640,8 @@
           "exportKind": "class",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2931,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2931-mathblock",
+          "line": 2936,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2936-mathblock",
           "currentTags": [
             "@category",
             "@since"
@@ -251662,8 +251662,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2966,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2966-mathblock",
+          "line": 2971,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2971-mathblock",
           "currentTags": [
             "@category",
             "@since"
@@ -251684,8 +251684,8 @@
           "exportKind": "class",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 2999,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-2999-footnotedefinition",
+          "line": 3004,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3004-footnotedefinition",
           "currentTags": [
             "@category",
             "@since"
@@ -251706,8 +251706,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 3048,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3048-footnotedefinition",
+          "line": 3053,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3053-footnotedefinition",
           "currentTags": [
             "@category",
             "@since"
@@ -251728,8 +251728,8 @@
           "exportKind": "class",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 3088,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3088-admonition",
+          "line": 3093,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3093-admonition",
           "currentTags": [
             "@category",
             "@since"
@@ -251750,8 +251750,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 3138,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3138-admonition",
+          "line": 3143,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3143-admonition",
           "currentTags": [
             "@category",
             "@since"
@@ -251772,8 +251772,8 @@
           "exportKind": "class",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 3175,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3175-embed",
+          "line": 3180,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3180-embed",
           "currentTags": [
             "@category",
             "@since"
@@ -251794,8 +251794,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 3240,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3240-embed",
+          "line": 3245,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3245-embed",
           "currentTags": [
             "@category",
             "@since"
@@ -251816,8 +251816,8 @@
           "exportKind": "class",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 3279,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3279-hr",
+          "line": 3284,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3284-hr",
           "currentTags": [
             "@category",
             "@since"
@@ -251838,8 +251838,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 3307,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3307-hr",
+          "line": 3312,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3312-hr",
           "currentTags": [
             "@category",
             "@since"
@@ -251860,8 +251860,8 @@
           "exportKind": "const",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 3341,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3341-block",
+          "line": 3346,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3346-block",
           "currentTags": [
             "@category",
             "@since"
@@ -251882,8 +251882,8 @@
           "exportKind": "type",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 3420,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3420-block",
+          "line": 3425,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3425-block",
           "currentTags": [
             "@category",
             "@since"
@@ -251904,8 +251904,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 3438,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3438-block",
+          "line": 3443,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3443-block",
           "currentTags": [
             "@category",
             "@since"
@@ -251926,8 +251926,8 @@
           "exportKind": "class",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 3494,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3494-document",
+          "line": 3499,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3499-document",
           "currentTags": [
             "@category",
             "@since"
@@ -251948,8 +251948,8 @@
           "exportKind": "namespace",
           "filePath": "src/Md.model.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.model.ts",
-          "line": 3534,
-          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3534-document",
+          "line": 3539,
+          "anchor": "packages-foundation-modeling-md-src-md-model-ts-3539-document",
           "currentTags": [
             "@category",
             "@since"
@@ -253204,8 +253204,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 869,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-869-safedocument",
+          "line": 870,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-870-safedocument",
           "currentTags": [
             "@invariant",
             "@see",
@@ -253228,8 +253228,8 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 896,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-896-safedocument",
+          "line": 897,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-897-safedocument",
           "currentTags": [
             "@category",
             "@since"
@@ -253250,8 +253250,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 913,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-913-decodesafedocument",
+          "line": 914,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-914-decodesafedocument",
           "currentTags": [
             "@category",
             "@since"
@@ -253272,8 +253272,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 933,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-933-decodesafedocumenteffect",
+          "line": 934,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-934-decodesafedocumenteffect",
           "currentTags": [
             "@category",
             "@since"
@@ -253294,8 +253294,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 952,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-952-decodesafedocumentunsafe",
+          "line": 953,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-953-decodesafedocumentunsafe",
           "currentTags": [
             "@category",
             "@since"
@@ -253316,8 +253316,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 970,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-970-refinesafedocument",
+          "line": 971,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-971-refinesafedocument",
           "currentTags": [
             "@category",
             "@since"
@@ -254130,8 +254130,8 @@
           "exportKind": "const",
           "filePath": "src/Md.syntax.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.syntax.ts",
-          "line": 2144,
-          "anchor": "packages-foundation-modeling-md-src-md-syntax-ts-2144-frommarkdowndocument",
+          "line": 2214,
+          "anchor": "packages-foundation-modeling-md-src-md-syntax-ts-2214-frommarkdowndocument",
           "currentTags": [
             "@category",
             "@since"
@@ -254152,8 +254152,8 @@
           "exportKind": "const",
           "filePath": "src/Md.syntax.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.syntax.ts",
-          "line": 2187,
-          "anchor": "packages-foundation-modeling-md-src-md-syntax-ts-2187-locateviolations",
+          "line": 2257,
+          "anchor": "packages-foundation-modeling-md-src-md-syntax-ts-2257-locateviolations",
           "currentTags": [
             "@category",
             "@since"
@@ -254174,8 +254174,8 @@
           "exportKind": "const",
           "filePath": "src/Md.syntax.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.syntax.ts",
-          "line": 2210,
-          "anchor": "packages-foundation-modeling-md-src-md-syntax-ts-2210-refinesafe",
+          "line": 2280,
+          "anchor": "packages-foundation-modeling-md-src-md-syntax-ts-2280-refinesafe",
           "currentTags": [
             "@category",
             "@since"
@@ -582912,8 +582912,8 @@
           "exportKind": "class",
           "filePath": "src/entities/Message/Message.model.ts",
           "repoPath": "packages/workspace/domain/src/entities/Message/Message.model.ts",
-          "line": 31,
-          "anchor": "packages-workspace-domain-src-entities-message-message-model-ts-31-message",
+          "line": 32,
+          "anchor": "packages-workspace-domain-src-entities-message-message-model-ts-32-message",
           "currentTags": [
             "@category",
             "@since"
