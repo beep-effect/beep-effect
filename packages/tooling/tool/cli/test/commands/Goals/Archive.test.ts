@@ -471,6 +471,47 @@ describe("goals archive", () => {
       })
     );
 
+    it.effect("refuses a bare slug that names packets under both roots and accepts root-qualified slugs", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* makeFixtureRepo();
+        const collision = path.join(root, "explorations/done/ops/manifest.json");
+        yield* fs.makeDirectory(path.dirname(collision), { recursive: true });
+        yield* fs.writeFileString(collision, explorationManifest("done", "graduated"));
+        yield* git(root, ["add", "-A"]);
+        yield* git(root, [
+          "-c",
+          "user.name=archive",
+          "-c",
+          "user.email=archive@example.invalid",
+          "-c",
+          "commit.gpgsign=false",
+          "commit",
+          "-q",
+          "--no-verify",
+          "-m",
+          "collision",
+        ]);
+        const planner = yield* ArchivePlanner;
+        const options = (slugs: ReadonlyArray<string>) =>
+          ArchivePlanOptions.make({ kinds: ["goals", "explorations"], slugs, repo: REPO, repoRoot: root });
+        const ambiguous = yield* planner.plan(options(["done"])).pipe(Effect.flip);
+        assert.strictEqual(ambiguous.reason, "archive-input-invalid");
+        assert.match(ambiguous.detail, /goals\/done, explorations\/done/);
+        const qualified = yield* planner.plan(options(["explorations/done"]));
+        assert.deepStrictEqual(
+          A.map(qualified.entries, (entry) => `${entry.root}/${entry.slug}`),
+          ["explorations/done"]
+        );
+        const unique = yield* planner.plan(options(["old"]));
+        assert.deepStrictEqual(
+          A.map(unique.entries, (entry) => `${entry.root}/${entry.slug}`),
+          ["goals/old"]
+        );
+      })
+    );
+
     it.effect("validates the mode, --expect and --repo before planning", () =>
       Effect.gen(function* () {
         const root = yield* makeFixtureRepo();

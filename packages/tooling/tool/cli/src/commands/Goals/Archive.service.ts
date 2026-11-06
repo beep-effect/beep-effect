@@ -196,14 +196,19 @@ const explorationCandidates = Effect.fnUntraced(function* (repoRoot: string) {
   return A.sort(A.getSomes(decoded), candidateOrder(ExplorationStatus.literals));
 });
 
+const packetDir = (candidate: Candidate): string => `${candidate.root}/${candidate.slug}`;
+
 const selectCandidates = Effect.fnUntraced(function* (options: ArchivePlanOptions) {
   const goals = A.contains(options.kinds, "goals") ? yield* goalCandidates(options.repoRoot) : A.empty<Candidate>();
   const explorations = A.contains(options.kinds, "explorations")
     ? yield* explorationCandidates(options.repoRoot)
     : A.empty<Candidate>();
   const ordered = A.appendAll(goals, explorations);
-  const eligible = HashSet.fromIterable(A.map(ordered, (candidate) => candidate.slug));
-  const unknown = A.filter(options.slugs, (slug) => slug === TEMPLATE_SLUG || !HashSet.has(eligible, slug));
+  const matches = (selector: string): ReadonlyArray<Candidate> =>
+    selector === TEMPLATE_SLUG
+      ? A.empty<Candidate>()
+      : A.filter(ordered, (candidate) => candidate.slug === selector || packetDir(candidate) === selector);
+  const unknown = A.filter(options.slugs, (selector) => A.isReadonlyArrayEmpty(matches(selector)));
   if (A.isReadonlyArrayNonEmpty(unknown)) {
     return yield* ArchiveError.new(
       "archive-input-invalid",
@@ -212,14 +217,24 @@ const selectCandidates = Effect.fnUntraced(function* (options: ArchivePlanOption
       `not an archivable terminal packet of the selected kind (or already archived or retained): ${A.join(unknown, ", ")}`
     );
   }
-  const requested = HashSet.fromIterable(options.slugs);
+  const ambiguous = A.filter(options.slugs, (selector) => A.length(matches(selector)) > 1);
+  if (A.isReadonlyArrayNonEmpty(ambiguous)) {
+    return yield* ArchiveError.new(
+      "archive-input-invalid",
+      A.headNonEmpty(ambiguous),
+      options.repoRoot,
+      `slug names packets under more than one root; pass goals/<slug> or explorations/<slug>: ${A.join(
+        A.map(A.flatMap(ambiguous, matches), packetDir),
+        ", "
+      )}`
+    );
+  }
+  const requested = HashSet.fromIterable(A.map(A.flatMap(options.slugs, matches), packetDir));
   const selected = A.isReadonlyArrayEmpty(options.slugs)
     ? ordered
-    : A.filter(ordered, (candidate) => HashSet.has(requested, candidate.slug));
+    : A.filter(ordered, (candidate) => HashSet.has(requested, packetDir(candidate)));
   return options.batchSize === undefined ? selected : A.take(selected, options.batchSize);
 });
-
-const packetDir = (candidate: Candidate): string => `${candidate.root}/${candidate.slug}`;
 
 /**
  * Resolve a link destination written in `file` to a repo-relative path, or

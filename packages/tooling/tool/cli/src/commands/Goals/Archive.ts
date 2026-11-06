@@ -413,7 +413,9 @@ const kindFlag = Flag.Literals("kind", HarvestKind.literals).pipe(
 );
 const slugFlag = Flag.String("slug").pipe(
   Flag.atLeast(0),
-  Flag.withDescription("Restrict the plan to these terminal packet slugs (repeatable)")
+  Flag.withDescription(
+    "Restrict the plan to these terminal packets: <slug>, or goals/<slug> | explorations/<slug> when the slug exists under both roots (repeatable)"
+  )
 );
 const batchFlag = Flag.Int("batch").pipe(
   Flag.optional,
