@@ -5,19 +5,16 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
-import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
-import { readCitationByteFrames } from "./ByteFrames.ts";
+import { makeCitationNativeFrameReader } from "./ByteFrames.ts";
+import { citationNativeBase64Length, citationNativeBytes, makeCitationNativeJsonDecoder } from "./NativeJson.ts";
 import { CitationNativeProcessFailureReason } from "./NativeProcess.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationRegexSourceFlags } from "./RegexEngine.ts";
 import { CitationRegexInputLayout, makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import type * as PlatformError from "effect/PlatformError";
-import type * as Stream from "effect/Stream";
 import type { CitationPreparedRegexInput } from "./RegexInput.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexWorkerProtocol");
@@ -34,24 +31,8 @@ export class CitationRegexWorkerFailure extends S.TaggedError<
 ) {}
 const invalid = () => CitationRegexWorkerFailure.make({ reason: "invalid-frame" });
 const exceeded = () => CitationSafetyLimitExceeded.make({ operation: "extract", limit: "processMessageBytes" });
-const paddedLength = (bytes: number) => 4 * ((bytes + 2 - ((bytes + 2) % 3)) / 3);
-const bytesCodec = (name: string, maximum: number) =>
-  S.String.check(
-    S.isMaxLength(paddedLength(maximum)),
-    S.makeFilter(
-      (text) => {
-        const length = Str.length(text);
-        const padding = Str.endsWith("==")(text) ? 2 : Str.endsWith("=")(text) ? 1 : 0;
-        return length % 4 === 0 && (length / 4) * 3 - padding <= maximum;
-      },
-      $I.annote(`${name}EncodedBound`, { description: "Bound the decoded count before base64 allocation." })
-    )
-  )
-    .pipe(S.decodeTo(S.Uint8ArrayFromBase64))
-    .check(S.isMaxLength(maximum))
-    .pipe($I.annoteSchema(name, { description: "Bounded padded base64/native bytes with a post-decode byte check." }));
-const PatternBytes = bytesCodec("PatternBytes", 4 * CitationEngineAbsoluteMaxima.patternUtf16);
-const SourceBytes = bytesCodec("SourceBytes", 4 * CitationEngineAbsoluteMaxima.producedTextUtf16);
+const PatternBytes = citationNativeBytes("PatternBytes", 4 * CitationEngineAbsoluteMaxima.patternUtf16);
+const SourceBytes = citationNativeBytes("SourceBytes", 4 * CitationEngineAbsoluteMaxima.producedTextUtf16);
 const Flags = CitationRegexSourceFlags;
 /** Source operation selection is closed data, independent of regex flags.
  * @internal @category models @since 0.0.0
@@ -96,7 +77,6 @@ const JobType = S.toType(CitationRegexWorkerJob);
 const propertyCeiling = R.keys(CitationRegexWorkerJob.fields).length;
 const Layout = S.toType(CitationRegexInputLayout);
 const encoder = new TextEncoder();
-const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const emptyJobHeader = Effect.fnUntraced(function* (
   patternWidth: CitationRegexWorkerJob["patternWidth"],
   sourceWidth: CitationRegexWorkerJob["sourceWidth"],
@@ -138,7 +118,10 @@ export const preflightCitationRegexJob = Effect.fn("Citation.preflightRegexJob")
   const limit = yield* S.decodeEffect(Limit)(maximum).pipe(Effect.mapError(invalid));
   const header = yield* emptyJobHeader(pattern.width, source.width, flags, maxMatches, mode);
   const bytes =
-    encoder.encode(header).byteLength + 1 + paddedLength(pattern.byteLength) + paddedLength(source.byteLength);
+    encoder.encode(header).byteLength +
+    1 +
+    citationNativeBase64Length(pattern.byteLength) +
+    citationNativeBase64Length(source.byteLength);
   if (bytes > limit) return yield* exceeded();
   return bytes;
 });
@@ -156,8 +139,8 @@ export const encodeCitationRegexJob = Effect.fn("Citation.encodeRegexJob")(funct
   const count =
     encoder.encode(header).byteLength +
     1 +
-    paddedLength(job.patternBytes.byteLength) +
-    paddedLength(job.sourceBytes.byteLength);
+    citationNativeBase64Length(job.patternBytes.byteLength) +
+    citationNativeBase64Length(job.sourceBytes.byteLength);
   if (count > limit) return yield* exceeded();
   const text = yield* S.encodeEffect(JobJson)(job).pipe(Effect.mapError(invalid));
   const frame = encoder.encode(`${text}\n`);
@@ -166,76 +149,21 @@ export const encodeCitationRegexJob = Effect.fn("Citation.encodeRegexJob")(funct
 });
 // The request is flat. Reject structural amplification before JSON.parse or
 // base64 decoding; punctuation inside quoted strings is not structure.
-/** Bounded JSON structure guard shared by closed regex messages.
- * @internal @category operations @since 0.0.0
- */
-export const preflightCitationRegexJson = Effect.fn("Citation.preflightRegexJson")(function* (
-  bytes: Uint8Array,
-  propertyCeiling: number,
-  maximumDepth = 1
-) {
-  let quoted = false;
-  let escaped = false;
-  let depth = 0;
-  let properties = 0;
-  const quotedByte = (byte: number) => {
-    if (escaped) escaped = false;
-    else if (byte === 92) escaped = true;
-    else if (byte === 34) quoted = false;
-  };
-  const openObject = Effect.fnUntraced(function* () {
-    depth++;
-    if (depth > maximumDepth) return yield* invalid();
-  });
-  const closeObject = Effect.fnUntraced(function* () {
-    depth--;
-    if (depth < 0) return yield* invalid();
-  });
-  const property = Effect.fnUntraced(function* () {
-    properties++;
-    if (properties > propertyCeiling) return yield* invalid();
-  });
-  const structuralByte = (byte: number | undefined) =>
-    Match.value(byte).pipe(
-      Match.when(34, () =>
-        Effect.sync(() => {
-          quoted = true;
-        })
-      ),
-      Match.whenOr(91, 93, () => Effect.fail(invalid())),
-      Match.when(123, openObject),
-      Match.when(125, closeObject),
-      Match.when(58, property),
-      Match.orElse(() => Effect.void)
-    );
-  for (let index = 0; index < bytes.byteLength; index++) {
-    if (index % 4096 === 0) yield* Effect.yieldNow;
-    const byte = bytes[index];
-    if (quoted) quotedByte(byte ?? -1);
-    else yield* structuralByte(byte);
-  }
-  const complete = () => !quoted && !escaped && depth === 0;
-  if (!complete()) return yield* invalid();
-});
 /** Decode a complete bounded frame body. Structural and encoded-byte ceilings
  * precede variable decoding allocations; unknown properties are rejected.
  * @internal @category operations @since 0.0.0
  */
-export const decodeCitationRegexJob = Effect.fn("Citation.decodeRegexJob")(function* (bytes: Uint8Array) {
-  yield* preflightCitationRegexJson(bytes, propertyCeiling);
-  const text = yield* Effect.try({ try: () => decoder.decode(bytes), catch: invalid });
-  return yield* S.decodeEffect(JobJson, { onExcessProperty: "error" })(text).pipe(Effect.mapError(invalid));
+export const decodeCitationRegexJob = makeCitationNativeJsonDecoder({
+  codec: JobJson,
+  propertyCeiling: propertyCeiling,
+  maximumDepth: 1,
+  invalid,
 });
 /** @internal @category operations @since 0.0.0 */
-export const readCitationRegexFrames = Effect.fn("Citation.readRegexFrames")(function* (
-  source: Stream.Stream<Uint8Array, PlatformError.PlatformError>,
-  maximum: number,
-  expected: 1 | 3,
-  onFrame: (bytes: Uint8Array) => Effect.Effect<void, CitationRegexWorkerFailure | CitationSafetyLimitExceeded>
-) {
-  yield* readCitationByteFrames(source, maximum, expected, onFrame, invalid, exceeded, () =>
-    CitationRegexWorkerFailure.make({ reason: "channel-failed" })
-  );
+export const readCitationRegexFrames = makeCitationNativeFrameReader({
+  invalid,
+  exceeded,
+  failed: () => CitationRegexWorkerFailure.make({ reason: "channel-failed" }),
 });
 
 /** Join native pattern/source preparation with exact full-frame preflight.

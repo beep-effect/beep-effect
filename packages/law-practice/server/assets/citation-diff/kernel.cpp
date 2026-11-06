@@ -13,16 +13,19 @@
 #include "diff_match_patch.h"
 static_assert(sizeof(wchar_t) == 4, "The pinned Python oracle uses four-byte wchar_t");
 static std::vector<uint32_t> steps;
+static uint32_t required_steps = 0;
 extern "C" {
 clock_t clock() { return 0; }
 uint32_t citation_diff_version() { return 20001; }
 uint32_t citation_diff_run(const wchar_t* before, uint32_t before_length,
                            const wchar_t* after, uint32_t after_length, uint32_t ceiling) {
   steps.clear();
+  required_steps = 0;
   if (uint64_t(before_length) + after_length > 4000000 || ceiling > 2000000) return 2;
   diff_match_patch<std::wstring> dmp;
   dmp.Diff_Timeout = 0;
   const auto diffs = dmp.diff_main(std::wstring(before, before_length), std::wstring(after, after_length), false);
+  required_steps = static_cast<uint32_t>(diffs.size());
   if (diffs.size() > ceiling) return 1;
   steps.reserve(diffs.size() * 2);
   for (const auto& diff : diffs) {
@@ -33,5 +36,6 @@ uint32_t citation_diff_run(const wchar_t* before, uint32_t before_length,
 }
 const uint32_t* citation_diff_output() { return steps.data(); }
 uint32_t citation_diff_steps() { return steps.size() / 2; }
-void citation_diff_release() { std::vector<uint32_t>().swap(steps); }
+uint32_t citation_diff_required_steps() { return required_steps; }
+void citation_diff_release() { std::vector<uint32_t>().swap(steps); required_steps = 0; }
 }

@@ -29,6 +29,13 @@ import {
 } from "./NativeWasm.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlKernel");
+/** Pinned private binary identity shared by the loader and authenticated host.
+ * @internal @category models @since 0.0.0
+ */
+export const citationHtmlKernelAsset = CitationNativeWasmAsset.make({
+  byteLength: 1753104,
+  sha256: Sha256Hex.make("99e76b7cdfe01e574886d7b93b685174cbe7cb5944f8ba964c97019d8f53156a"),
+});
 const Reason = LiteralKit([
   "invalid-asset",
   "invalid-input",
@@ -92,14 +99,7 @@ const nativeResource = () =>
  */
 export const makeCitationHtmlKernel = Effect.fn("Citation.makeHtmlKernel")(function* (input: unknown) {
   const crypto = yield* Digest.Digest;
-  const compiled = yield* compileCitationNativeWasm(
-    input,
-    CitationNativeWasmAsset.make({
-      byteLength: 1753104,
-      sha256: Sha256Hex.make("99e76b7cdfe01e574886d7b93b685174cbe7cb5944f8ba964c97019d8f53156a"),
-    }),
-    () => fail("invalid-asset")
-  );
+  const compiled = yield* compileCitationNativeWasm(input, citationHtmlKernelAsset, () => fail("invalid-asset"));
   return {
     run: Effect.fn("Citation.runHtmlKernel")(
       function* (request: unknown) {
@@ -107,12 +107,7 @@ export const makeCitationHtmlKernel = Effect.fn("Citation.makeHtmlKernel")(funct
           Effect.mapError(() => fail("invalid-input"))
         );
         if (!boundedBytes(input.bytes)) return yield* fail("invalid-input");
-        const created = yield* compiled.instantiate(() => fail("kernel-failed"));
-        const abi = yield* S.decodeUnknownEffect(Exports)(created.exports).pipe(
-          Effect.mapError(() => fail("kernel-failed"))
-        );
-        yield* created.bindMemory(abi.memory);
-        yield* Effect.try({ try: () => abi._initialize(), catch: () => fail("kernel-failed") });
+        const abi = yield* compiled.initialize(Exports, () => fail("kernel-failed"));
         if (abi.html_version() !== 21203 || abi.html_iconv_version() !== 0x111) return yield* fail("invalid-asset");
         const inventory = yield* Effect.try({
           try: () => {

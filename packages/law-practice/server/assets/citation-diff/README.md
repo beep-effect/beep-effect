@@ -13,6 +13,9 @@ distinct. `citation_diff_run` returns 0 for complete output, 1 for step-ceiling
 refusal, and 2 for absolute count-bound refusal. Refusal clears the published
 result count. Native traps publish no result. `citation_diff_release` releases
 the retained output allocation. The ABI uses WebAssembly little-endian words.
+`citation_diff_required_steps` reports the complete algorithm result count even
+when packed emission is refused. The host clamps emission to both the policy
+step quota and the exact success-frame capacity before vector allocation.
 
 The source configuration fixes timeout=0, checklines=false and cleanup="No".
 The authored clock shim returns zero because the source's disabled deadline is
@@ -31,7 +34,8 @@ from any directory for the sealed portable exact-step and refusal replay.
 This core must run only inside an independently stoppable, parent-owned worker.
 The private Effect host authenticates a snapshot, validates native input and
 effective combined UTF-16, and releases fresh instance allocations through Scope.
-It is not yet connected to the production worker. Parent input ownership,
-effective UTF-16 limits, complete framing, admission, deadlines, retirement,
-quarantine and whole-engine accounting remain integration obligations. No
-parent-thread evaluator or complete engine parity is claimed by this asset.
+The private diff worker connects this host through the existing Effect RPC,
+native admission and physical retirement owner. Both runtimes pass source smoke
+and deadline/cancellation/quarantine controls; the complete hosted source replay
+is pending. Whole-engine accounting and public composition remain integration
+obligations. No parent-thread evaluator or complete engine parity is claimed.

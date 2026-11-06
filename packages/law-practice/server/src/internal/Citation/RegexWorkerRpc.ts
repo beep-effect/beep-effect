@@ -1,6 +1,7 @@
 /** Typed regex procedure and closed native conversation; no process authority.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationEngineAbsoluteMaxima,
@@ -14,15 +15,12 @@ import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { makeCitationNativeJsonDecoder } from "./NativeJson.ts";
 import { CitationRegexDescriptorFailure, CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { CitationRegexEngine } from "./RegexEngine.ts";
 import { CitationRegexResultEnvelope } from "./RegexResult.ts";
 import { CitationRegexTranslationFailure } from "./RegexTranslator.ts";
-import {
-  CitationRegexWorkerFailure,
-  CitationRegexWorkerJob,
-  preflightCitationRegexJson,
-} from "./RegexWorkerProtocol.ts";
+import { CitationRegexWorkerFailure, CitationRegexWorkerJob } from "./RegexWorkerProtocol.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexWorkerRpc");
 const Reason = LiteralKit(["unsupported-profile", "native-failed"]).pipe(
@@ -120,7 +118,6 @@ const Args = S.Tuple([S.String.check(S.isMaxLength(argumentBound)).pipe(S.decode
 const invalid = () => CitationRegexWorkerFailure.make({ reason: "invalid-frame" });
 const runtime = () => CitationRegexWorkerFailure.make({ reason: "invalid-runtime" });
 const encoder = new TextEncoder();
-const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 /** @internal @category operations @since 0.0.0 */
 export const encodeCitationRegexStartup = Effect.fn("Citation.encodeRegexStartup")(function* (
   value: CitationRegexWorkerStartup
@@ -154,10 +151,11 @@ export const encodeCitationRegexControl = Effect.fn("Citation.encodeRegexControl
   return bytes;
 });
 /** @internal @category operations @since 0.0.0 */
-export const decodeCitationRegexReply = Effect.fn("Citation.decodeRegexReply")(function* (bytes: Uint8Array) {
-  yield* preflightCitationRegexJson(bytes, 8, 2);
-  const text = yield* Effect.try({ try: () => decoder.decode(bytes), catch: invalid });
-  return yield* S.decodeEffect(ReplyJson, { onExcessProperty: "error" })(text).pipe(Effect.mapError(invalid));
+export const decodeCitationRegexReply = makeCitationNativeJsonDecoder({
+  codec: ReplyJson,
+  propertyCeiling: 8,
+  maximumDepth: 2,
+  invalid,
 });
 /** A resource failure must fit even when the original result/error cannot.
  * @internal @category operations @since 0.0.0

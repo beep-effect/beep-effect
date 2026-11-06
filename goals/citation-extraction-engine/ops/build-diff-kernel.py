@@ -12,7 +12,7 @@ import tempfile
 SOURCE_SHA = 'ec335bbd9780d2182c351b5c486e5c80d8975ea91772eaf02014dfe9e9907a5d'
 SDK_SHA = 'b761e3a0721dbae9c09a0059e5fdb2bf917d1b4a8a7b430fb3b5aafb0984b2c4'
 EXPORTS = ['citation_diff_version', 'citation_diff_run', 'citation_diff_output',
-           'citation_diff_steps', 'citation_diff_release', 'malloc', 'free']
+           'citation_diff_steps', 'citation_diff_required_steps', 'citation_diff_release', 'malloc', 'free']
 
 
 def sha(path):

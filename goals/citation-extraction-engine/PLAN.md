@@ -1,5 +1,14 @@
 # Citation Extraction Engine Plan
 
+Default diff-worker checkpoint (2026-11-05): the authenticated core now runs in
+owned Bun/Node children through shared Effect RPC, admission and retirement.
+Exact request/reply preflight bounds native packed emission before allocation.
+Sixty-two focused regressions pass, including deadline/cancellation/quarantine
+controls in both runtimes. Full hosted replay requires 1,005 source maps and
+independent exits per runtime and remains pending. Builtin difflib, HTML discovery,
+full engine composition/accounting and all remaining acceptance duties stay open.
+See [diff-worker evidence](history/evidence/2026-11-05-diff-worker.md).
+
 Default diff-host checkpoint (2026-11-05): HTML and diff now share the existing
 restricted WASM environment. The authenticated Effect adapter checks native
 inputs and effective combined UTF-16 before native allocation, owns fresh

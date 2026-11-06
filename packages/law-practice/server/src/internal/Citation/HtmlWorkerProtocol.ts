@@ -11,15 +11,13 @@ import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep
 import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
-import { readCitationByteFrames } from "./ByteFrames.ts";
+import { makeCitationNativeFrameReader } from "./ByteFrames.ts";
 import { CitationHtmlCompletionFailure } from "./HtmlCompletion.ts";
 import { CitationHtmlInput, CitationHtmlInputLayout } from "./HtmlInput.ts";
 import { CitationHtmlKernelFailure } from "./HtmlKernel.ts";
+import { citationNativeBase64Length, citationNativeBytes, makeCitationNativeJsonDecoder } from "./NativeJson.ts";
 import { CitationNativeProcessFailureReason } from "./NativeProcess.ts";
 import { visitCitationTextPoints } from "./TextPoints.ts";
-import type * as PlatformError from "effect/PlatformError";
-import type * as Stream from "effect/Stream";
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlWorkerProtocol");
 /**
@@ -41,29 +39,7 @@ export class CitationHtmlWorkerFailure extends S.TaggedError<
 const invalid = () => CitationHtmlWorkerFailure.make({ reason: "invalid-frame" });
 const exceeded = () => CitationSafetyLimitExceeded.make({ operation: "clean", limit: "processMessageBytes" });
 const inputMax = 4 * CitationEngineAbsoluteMaxima.producedTextUtf16;
-const base64Max = 4 * ((inputMax + 2 - ((inputMax + 2) % 3)) / 3);
-const Bytes = S.String.check(
-  S.isMaxLength(base64Max),
-  S.makeFilter(
-    (value) => {
-      const size = Str.length(value);
-      const padding = Str.endsWith("==")(value) ? 2 : Str.endsWith("=")(value) ? 1 : 0;
-      return size % 4 === 0 && (size / 4) * 3 - padding <= inputMax;
-    },
-    $I.annote("EncodedInputByteBound", {
-      title: "Encoded input byte bound",
-      description:
-        "Require padded base64 with a decoded byte count within the native input ceiling before decoding allocation.",
-    })
-  )
-)
-  .pipe(S.decodeTo(S.Uint8ArrayFromBase64))
-  .check(S.isMaxLength(inputMax))
-  .pipe(
-    $I.annoteSchema("Bytes", {
-      description: "Bound the encoded payload before base64 decoding, then enforce the exact native byte ceiling.",
-    })
-  );
+const Bytes = citationNativeBytes("Bytes", inputMax);
 /**
  * One immutable-data native invocation; the process itself supplies correlation.
  * @internal
@@ -138,7 +114,6 @@ export type CitationHtmlWorkerReply = typeof CitationHtmlWorkerReply.Type;
 const JobCodec = S.fromJsonString(CitationHtmlWorkerJob);
 const ReplyCodec = S.fromJsonString(CitationHtmlWorkerReply);
 const encoder = new TextEncoder();
-const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const Limit = S.Int.check(
   S.isGreaterThanOrEqualTo(1),
   S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima.processMessageBytes)
@@ -197,8 +172,7 @@ export const preflightCitationHtmlJob = Effect.fn("Citation.preflightHtmlJob")(f
       bytes: new Uint8Array(0),
     })
   ).pipe(Effect.mapError(invalid));
-  const count =
-    encoder.encode(header).byteLength + 1 + 4 * ((layout.byteLength + 2 - ((layout.byteLength + 2) % 3)) / 3);
+  const count = encoder.encode(header).byteLength + 1 + citationNativeBase64Length(layout.byteLength);
   if (count > limit) return yield* exceeded();
   return count;
 });
@@ -255,51 +229,18 @@ export const preflightCitationHtmlControlFrames = Effect.fn("Citation.preflightH
   );
 });
 /** @internal @category operations @since 0.0.0 */
-const preflightJson = Effect.fn("Citation.preflightHtmlJson")(function* (bytes: Uint8Array) {
-  let quoted = false;
-  let escaped = false;
-  let depth = 0;
-  let properties = 0;
-  const propertyCeiling = R.keys(CitationHtmlWorkerJob.fields).length;
-  const consumeQuoted = (byte: number | undefined) => {
-    if (escaped) escaped = false;
-    else if (byte === 92) escaped = true;
-    else if (byte === 34) quoted = false;
-  };
-  const adjustDepth = Effect.fnUntraced(function* (delta: number) {
-    depth += delta;
-    if (depth < 0 || depth > 2) return yield* invalid();
-  });
-  const consumeStructure = Effect.fnUntraced(function* (byte: number | undefined) {
-    if (byte === 34) {
-      quoted = true;
-      return;
-    }
-    if (byte === 91 || byte === 93) return yield* invalid();
-    if (byte === 123) return yield* adjustDepth(1);
-    if (byte === 125) return yield* adjustDepth(-1);
-    if (byte !== 58) return;
-    properties++;
-    if (properties > propertyCeiling) return yield* invalid();
-  });
-  for (let index = 0; index < bytes.byteLength; index++) {
-    if (index % 4096 === 0) yield* Effect.yieldNow;
-    if (quoted) consumeQuoted(bytes[index]);
-    else yield* consumeStructure(bytes[index]);
-  }
-  if (quoted || escaped || depth !== 0) return yield* invalid();
+export const decodeCitationHtmlJob = makeCitationNativeJsonDecoder({
+  codec: JobCodec,
+  propertyCeiling: R.keys(CitationHtmlWorkerJob.fields).length,
+  maximumDepth: 2,
+  invalid,
 });
 /** @internal @category operations @since 0.0.0 */
-export const decodeCitationHtmlJob = Effect.fn("Citation.decodeHtmlJob")(function* (bytes: Uint8Array) {
-  yield* preflightJson(bytes);
-  const text = yield* Effect.try({ try: () => decoder.decode(bytes), catch: invalid });
-  return yield* S.decodeEffect(JobCodec, { onExcessProperty: "error" })(text).pipe(Effect.mapError(invalid));
-});
-/** @internal @category operations @since 0.0.0 */
-export const decodeCitationHtmlReply = Effect.fn("Citation.decodeHtmlReply")(function* (bytes: Uint8Array) {
-  yield* preflightJson(bytes);
-  const text = yield* Effect.try({ try: () => decoder.decode(bytes), catch: invalid });
-  return yield* S.decodeEffect(ReplyCodec, { onExcessProperty: "error" })(text).pipe(Effect.mapError(invalid));
+export const decodeCitationHtmlReply = makeCitationNativeJsonDecoder({
+  codec: ReplyCodec,
+  propertyCeiling: R.keys(CitationHtmlWorkerJob.fields).length,
+  maximumDepth: 2,
+  invalid,
 });
 /**
  * Consume only complete, bounded LF frames. Reject extra, missing or partial
@@ -310,13 +251,8 @@ export const decodeCitationHtmlReply = Effect.fn("Citation.decodeHtmlReply")(fun
  * @category operations
  * @since 0.0.0
  */
-export const readCitationHtmlFrames = Effect.fn("Citation.readHtmlFrames")(function* (
-  source: Stream.Stream<Uint8Array, PlatformError.PlatformError>,
-  maximum: number,
-  expected: 1 | 3,
-  onFrame: (bytes: Uint8Array) => Effect.Effect<void, CitationHtmlWorkerFailure | CitationSafetyLimitExceeded>
-) {
-  yield* readCitationByteFrames(source, maximum, expected, onFrame, invalid, exceeded, () =>
-    CitationHtmlWorkerFailure.make({ reason: "channel-failed" })
-  );
+export const readCitationHtmlFrames = makeCitationNativeFrameReader({
+  invalid,
+  exceeded,
+  failed: () => CitationHtmlWorkerFailure.make({ reason: "channel-failed" }),
 });

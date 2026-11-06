@@ -4,10 +4,14 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import * as A from "effect/Array";
+import * as Bytes from "effect/Bytes";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 const $I = $LawPracticeServerId.create("internal/Citation/NativeWasm");
 /** Authenticated ABI callable; shape is checked only after asset authentication.
@@ -78,6 +82,9 @@ export const CitationNativeWasmInstance = S.Struct({ exports: S.Unknown }).pipe(
 );
 /** @internal @category models @since 0.0.0 */
 export type CitationNativeWasmInstance = typeof CitationNativeWasmInstance.Type;
+const InitializationExports = S.Struct({ memory: CitationNativeWasmMemory, _initialize: CitationNativeWasmVoid0 }).pipe(
+  $I.annoteSchema("InitializationExports", { description: "Common authenticated reactor initialization capability." })
+);
 /** Static authenticated asset identity supplied by a trusted kernel adapter.
  * @internal @category models @since 0.0.0
  */
@@ -88,6 +95,23 @@ export class CitationNativeWasmAsset extends S.Opaque<CitationNativeWasmAsset, {
     })
   )
 ) {}
+/** Read at most the pinned asset length plus one byte before concatenation.
+ * Filesystem errors are translated without retaining their source-bearing cause.
+ * @internal @category operations @since 0.0.0
+ */
+export const loadCitationNativeWasmAsset = Effect.fn("Citation.loadNativeWasmAsset")(function* <E>(
+  path: string,
+  expected: CitationNativeWasmAsset,
+  failed: () => E
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const chunks = yield* fs
+    .stream(path, { bytesToRead: expected.byteLength + 1 })
+    .pipe(Stream.runCollect, Effect.mapError(failed));
+  if (A.reduce(chunks, 0, (count, bytes) => count + bytes.byteLength) !== expected.byteLength)
+    return yield* Effect.fail(failed());
+  return Bytes.concat(chunks);
+});
 /** Authenticate a copied asset and compile once. Each instantiate call creates
  * a fresh restricted environment; its caller decodes the pinned ABI and binds
  * memory before initialization. Functions are trusted local adapters, not wire data.
@@ -112,15 +136,25 @@ export const compileCitationNativeWasm = Effect.fn("Citation.compileNativeWasm")
     try: () => new runtime.WebAssembly.Module(snapshot),
     catch: invalid,
   });
+  const instantiate = Effect.fn("Citation.instantiateNativeWasm")(function* <F>(failed: () => F) {
+    const host = yield* makeCitationClosedNativeWasi();
+    const instance = yield* Effect.try({
+      try: () => new runtime.WebAssembly.Instance(module, { wasi_snapshot_preview1: host.imports }),
+      catch: failed,
+    });
+    const created = yield* S.decodeUnknownEffect(CitationNativeWasmInstance)(instance).pipe(Effect.mapError(failed));
+    return { exports: created.exports, bindMemory: host.bindMemory };
+  });
   return {
-    instantiate: Effect.fn("Citation.instantiateNativeWasm")(function* <F>(failed: () => F) {
-      const host = yield* makeCitationClosedNativeWasi();
-      const instance = yield* Effect.try({
-        try: () => new runtime.WebAssembly.Instance(module, { wasi_snapshot_preview1: host.imports }),
-        catch: failed,
-      });
-      const created = yield* S.decodeUnknownEffect(CitationNativeWasmInstance)(instance).pipe(Effect.mapError(failed));
-      return { exports: created.exports, bindMemory: host.bindMemory };
+    initialize: Effect.fn("Citation.initializeNativeWasm")(function* <
+      Codec extends S.ConstraintDecoder<typeof InitializationExports.Type>,
+      F,
+    >(codec: Codec, failed: () => F) {
+      const created = yield* instantiate(failed);
+      const abi = yield* S.decodeUnknownEffect(codec)(created.exports).pipe(Effect.mapError(failed));
+      yield* created.bindMemory(abi.memory);
+      yield* Effect.try({ try: () => abi._initialize(), catch: failed });
+      return abi;
     }),
   };
 });

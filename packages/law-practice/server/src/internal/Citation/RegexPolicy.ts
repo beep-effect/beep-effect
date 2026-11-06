@@ -39,5 +39,14 @@ export const makeCitationRegexTiming = Effect.fn("Citation.makeRegexTiming")(fun
       }),
       Effect.provideService(Clock.Clock, clock)
     );
-  return { deadline, deadlineLimit, timed };
+  const operationTimed = <A, E>(body: Effect.Effect<A, E>) =>
+    body.pipe(
+      Effect.timeoutOrElse({
+        duration: limits.operationDeadline,
+        orElse: () =>
+          Effect.fail(CitationSafetyLimitExceeded.make({ operation: "extract", limit: "operationDeadline" })),
+      }),
+      Effect.provideService(Clock.Clock, clock)
+    );
+  return { deadline, deadlineLimit, timed, operationTimed };
 });

@@ -5,8 +5,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Rpc from "effect/rpc/Rpc";
 import * as RpcClient from "effect/rpc/RpcClient";
@@ -21,7 +21,14 @@ import {
   encodeCitationHtmlJob,
   readCitationHtmlFrames,
 } from "./HtmlWorkerProtocol.ts";
-import { makeCitationNativeRpcTransport } from "./NativeRpc.ts";
+import {
+  citationNativeRpcExit,
+  citationNativeRpcFailure,
+  makeCitationNativeRpcDelivery,
+  makeCitationNativeRpcTransport,
+  receiveCitationNativeConversation,
+} from "./NativeRpc.ts";
+import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
 
 /**
@@ -56,46 +63,33 @@ export const prepareCitationHtmlRpc = Effect.fn("Citation.prepareHtmlRpc")(funct
         const transport = yield* makeCitationNativeRpcTransport(child, frame, () =>
           CitationHtmlWorkerFailure.make({ reason: "channel-failed" })
         );
-        const requestId = transport.requestId;
         const rpc = yield* RpcClient.makeNoSerialization(CitationHtmlRpcs, transport.options);
-        let step = 0;
-        let terminal = O.none<CitationHtmlWorkerReply>();
-        const receive = readCitationHtmlFrames(
-          child.stdout,
-          maximum,
-          3,
-          Effect.fnUntraced(function* (bytes) {
-            const message = yield* decodeCitationHtmlReply(bytes);
-            if (
-              (step === 0 && !CitationHtmlWorkerReply.guards.Ready(message)) ||
-              (step === 1 && !CitationHtmlWorkerReply.guards.Started(message)) ||
-              (step === 2 && !CitationHtmlWorkerReply.isAnyOf(["Success", "Failure"])(message))
-            )
-              return yield* invalid();
-            if (step === 2) terminal = O.some(message);
-            step++;
-          })
-        ).pipe(
-          Effect.andThen(
-            Effect.gen(function* () {
-              const reply = yield* Effect.fromOption(terminal).pipe(Effect.mapError(invalid));
-              if (!CitationHtmlWorkerReply.isAnyOf(["Success", "Failure"])(reply)) return yield* invalid();
-              // A complete early reply cannot precede registration of its call
-              // or interrupt a still-pending request write.
-              yield* transport.sent;
-              yield* rpc.write({
-                _tag: "Exit",
-                clientId: 0,
-                requestId,
-                exit: CitationHtmlWorkerReply.guards.Success(reply)
-                  ? Exit.succeed(reply.text)
-                  : Exit.fail(reply.failure),
-              });
-            })
-          )
-        );
-        const [, text] = yield* Effect.all([receive, rpc.client.Clean(job)], { concurrency: 2 });
-        return text;
+        const deliver = makeCitationNativeRpcDelivery({
+          sent: transport.sent,
+          write: rpc.write,
+          requestId: transport.requestId,
+        });
+        const errorOf = citationNativeRpcFailure(CitationHtmlWorkerReply.guards.Failure);
+        const receive = receiveCitationNativeConversation<
+          CitationHtmlWorkerReply,
+          string,
+          typeof CitationHtmlWorkerError.fields.failure.Type,
+          CitationHtmlWorkerFailure | CitationSafetyLimitExceeded
+        >({
+          read: (onFrame) => readCitationHtmlFrames(child.stdout, maximum, 3, onFrame),
+          decode: decodeCitationHtmlReply,
+          isReady: CitationHtmlWorkerReply.guards.Ready,
+          isStarted: CitationHtmlWorkerReply.guards.Started,
+          isTerminal: CitationHtmlWorkerReply.isAnyOf(["Success", "Failure"]),
+          terminal: (reply) =>
+            citationNativeRpcExit(
+              CitationHtmlWorkerReply.guards.Success(reply) ? O.some(reply.text) : O.none(),
+              errorOf(reply),
+              invalid
+            ),
+          invalid,
+        }).pipe(Effect.flatMap(deliver));
+        return yield* Effect.zipWith(receive, rpc.client.Clean(job), (_received, value) => value, { concurrent: true });
       })
     )
   );

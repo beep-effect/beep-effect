@@ -159,6 +159,23 @@ export const makeCitationObservedSpawner = Effect.fn("NativeSourceTest.makeSpawn
   });
   return { spawner, snapshot: Effect.sync(() => CitationNativeExitCounts.make({ spawned, confirmed })) };
 });
+/** Delay kill acknowledgement independently of the actual OS exit, preserving
+ * the existing observed-spawner proof and enabling quarantine controls.
+ * @internal @category testing @since 0.0.0
+ */
+export const makeCitationNativeAcknowledgementSpawner = Effect.fn("NativeSourceTest.acknowledgementSpawner")(function* (
+  afterKill: Effect.Effect<void>
+) {
+  const observed = yield* makeCitationObservedSpawner();
+  const spawner = ChildProcessSpawner.of({
+    ...observed.spawner,
+    spawn: Effect.fn("NativeSourceTest.delayedAcknowledgement")(function* (command) {
+      const handle = yield* observed.spawner.spawn(command);
+      return { ...handle, kill: (options) => handle.kill(options).pipe(Effect.andThen(afterKill)) };
+    }),
+  });
+  return { spawner, snapshot: observed.snapshot };
+});
 
 const StringJson = S.fromJsonString(S.String);
 const quoted = Effect.fn("WorkerTest.quote")((value: string) => S.encodeEffect(StringJson)(value));
@@ -207,7 +224,7 @@ export const makeCitationNativeManualClock = Effect.fn("WorkerTest.manualSleep")
 /** @internal @category testing @since 0.0.0 */
 export const makeCitationNativeWorkerFixture = Effect.fn("WorkerTest.fixture")(function* (
   kind: "busy" | "released",
-  family: "html" | "regex" = "html",
+  family: "html" | "regex" | "diff" = "html",
   runtimeKind: CitationNativeRuntimeKind = "bun"
 ) {
   const version = family === "regex" ? "v2" : "v1";

@@ -1,6 +1,7 @@
 /** Bounded complete regex results retaining Python source-point capture spans.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
@@ -9,8 +10,9 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { preflightCitationNativeJson } from "./NativeJson.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { CitationRegexWorkerFailure, preflightCitationRegexJson } from "./RegexWorkerProtocol.ts";
+import { CitationRegexWorkerFailure } from "./RegexWorkerProtocol.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexResult");
 const max = CitationEngineAbsoluteMaxima;
@@ -178,7 +180,7 @@ export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(fun
     const maximumMatches = yield* S.decodeUnknownEffect(Count)(maximumMatchesInput).pipe(Effect.mapError(invalid));
     if (maximumMatches > limits.patternMatches) return yield* safety("patternMatches");
     if (body.byteLength + 1 > limits.processMessageBytes) return yield* safety("processMessageBytes");
-    yield* preflightCitationRegexJson(body, 5);
+    yield* preflightCitationNativeJson(body, 5, invalid);
     const text = yield* Effect.try({ try: () => decoder.decode(body), catch: invalid });
     const wire = yield* S.decodeEffect(Json, { onExcessProperty: "error" })(text).pipe(Effect.mapError(invalid));
     if (wire.groups !== groups) return yield* invalid();

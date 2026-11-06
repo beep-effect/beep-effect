@@ -7,20 +7,17 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
-import * as A from "effect/Array";
-import * as Bytes from "effect/Bytes";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import { CitationHtmlInput } from "./HtmlInput.ts";
-import { makeCitationHtmlKernel } from "./HtmlKernel.ts";
+import { citationHtmlKernelAsset, makeCitationHtmlKernel } from "./HtmlKernel.ts";
 import {
   CitationHtmlWorkerError,
   CitationHtmlWorkerFailure,
@@ -34,6 +31,7 @@ import {
 } from "./HtmlWorkerProtocol.ts";
 import { CitationHtmlRpcs } from "./HtmlWorkerRpc.ts";
 import { citationNativeRpcRequest, makeCitationNativeRpcServer } from "./NativeRpc.ts";
+import { loadCitationNativeWasmAsset } from "./NativeWasm.ts";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import type * as RpcGroup from "effect/rpc/RpcGroup";
 import type * as RpcMessage from "effect/rpc/RpcMessage";
@@ -66,17 +64,11 @@ export const citationHtmlWorkerProgram = Effect.gen(function* () {
   const citationResult1 = yield* stdio.args;
   const [maximum] = yield* S.decodeUnknownEffect(Args)(citationResult1).pipe(Effect.mapError(badRuntime));
   yield* preflightCitationHtmlControlFrames(maximum);
-  const fs = yield* FileSystem.FileSystem;
   const citationResult2 = yield* Path.Path;
   const assetPath = yield* citationResult2
     .fromFileUrl(new URL("../../../assets/citation-html/kernel.wasm", import.meta.url))
     .pipe(Effect.mapError(badRuntime));
-  const chunks = yield* Stream.runCollect(fs.stream(assetPath, { bytesToRead: 1753105 })).pipe(
-    Effect.mapError(badRuntime)
-  );
-  const length = A.reduce(chunks, 0, (size, bytes) => size + bytes.byteLength);
-  if (length !== 1753104) return yield* badRuntime();
-  const asset = Bytes.concat(chunks);
+  const asset = yield* loadCitationNativeWasmAsset(assetPath, citationHtmlKernelAsset, badRuntime);
   const kernel = yield* makeCitationHtmlKernel(asset);
   const send = Effect.fn("Citation.sendHtmlWorkerReply")((reply: CitationHtmlWorkerReply) =>
     encodeCitationHtmlReply(reply, maximum).pipe(

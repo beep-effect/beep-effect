@@ -6,6 +6,7 @@ import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as TxRef from "effect/TxRef";
@@ -58,6 +59,35 @@ export class CitationNativeProcessAdmission extends Context.Service<
     readonly snapshot: Effect.Effect<CitationNativeAdmissionSnapshot>;
   }
 >()($I`CitationNativeProcessAdmission`) {}
+/** Capture the existing composed owner, or install the standalone fallback.
+ * @internal @category operations @since 0.0.0
+ */
+export const captureCitationNativeAdmission = Effect.fn("Citation.captureNativeAdmission")(function* <E>(
+  policy: unknown,
+  invalid: () => E
+) {
+  const supplied = yield* Effect.serviceOption(CitationNativeProcessAdmission);
+  return O.isSome(supplied)
+    ? supplied.value
+    : yield* makeCitationNativeProcessAdmission(policy).pipe(Effect.mapError(invalid));
+});
+/** Preserve the existing total/regex acquisition and closed boundary translation.
+ * @internal @category operations @since 0.0.0
+ */
+export const acquireCitationNativeLease = Effect.fn("Citation.acquireNativeLease")(function* <E>(
+  admission: CitationNativeProcessAdmission["Service"],
+  operation: CitationSafetyLimitExceeded["operation"],
+  regex: boolean,
+  failed: (reason: "quarantined" | "closed") => E
+) {
+  return yield* (regex ? admission.acquireRegex(operation) : admission.acquire(operation)).pipe(
+    Effect.mapError((error) =>
+      error._tag === "CitationSafetyLimitExceeded"
+        ? error
+        : failed(error.reason === "quarantined" ? "quarantined" : "closed")
+    )
+  );
+});
 /** Capture policy, Clock and Scope. A single atomic reservation checks the total
  * and regex ceilings together, without holding one capacity while waiting for
  * the other. One bounded queue/deadline applies to the entire wait. Closure

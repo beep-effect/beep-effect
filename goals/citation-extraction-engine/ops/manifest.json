@@ -94,7 +94,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-10-31-python-hashes.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-02-cleaner-unicode.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-kernel.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-host.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-host.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-worker.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -175,7 +176,8 @@
     "bun run goals/citation-extraction-engine/ops/check-cleaner-pipeline.ts",
     "python3 goals/citation-extraction-engine/ops/verify-cleaner-unicode.py",
     "python3 goals/citation-extraction-engine/ops/verify-case-name-process.py --self-test",
-    "python goals/citation-extraction-engine/ops/verify-diff-kernel.py"
+    "python goals/citation-extraction-engine/ops/verify-diff-kernel.py",
+    "python goals/citation-extraction-engine/ops/verify-diff-kernel.py --runtime bun"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",

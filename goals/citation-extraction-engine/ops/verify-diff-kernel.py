@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Portable exact-step replay of the pinned private DMP kernel, not worker proof."""
 import hashlib
+import argparse
 import json
 from pathlib import Path
 import subprocess
@@ -51,11 +52,13 @@ for(const file of process.argv.slice(2)) {
     const before = native(row.before), after = native(row.after);
     assert.equal(abi.citation_diff_run(before.address,before.length,after.address,after.length,2000000),0);
     assert.deepEqual(output(),row.steps,'exact map '+row.id+' from '+file);
+    assert.equal(abi.citation_diff_required_steps(),row.steps.length);
     maps++; steps += row.steps.length;
     // Refusal must clear an earlier successful result and expose no prefix.
     if(row.steps.length) {
       assert.equal(abi.citation_diff_run(before.address,before.length,after.address,after.length,row.steps.length-1),1);
       assert.equal(abi.citation_diff_steps(),0);
+      assert.equal(abi.citation_diff_required_steps(),row.steps.length);
     }
     abi.free(before.address); abi.free(after.address); abi.citation_diff_release();
   }
@@ -72,11 +75,14 @@ def sha(path):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--runtime', choices=['node', 'bun'], default='node')
+    args = parser.parse_args()
     root = Path(__file__).resolve().parents[3]
     assets = root / 'packages/law-practice/server/assets/citation-diff'
     fixtures = root / 'packages/law-practice/use-cases/test/fixtures/eyecite'
     receipt = json.loads((assets / 'build-receipt.json').read_text())
-    expected_wasm = '186b72b1410982b2b384e74c84fc448bddc16aa479fdcf85c01f493a5d8359ec'
+    expected_wasm = 'eede49e6c281c6d4735ce8dea2a0d218fd39364008cf3c811e12efda491df2bf'
     assert sha(assets / 'kernel.wasm') == receipt['wasmSha256'] == expected_wasm
     assert sha(assets / 'kernel.cpp') == receipt['kernelSourceSha256']
     assert sha(Path(__file__).with_name('build-diff-kernel.py')) == receipt['producerSha256']
@@ -95,7 +101,7 @@ def main():
     corpus = json.loads((fixtures / 'diff-kernel.json').read_text())
     assert corpus['producerSha256'] == sha(Path(__file__).with_name('probe-diff-kernel.py'))
     assert len(corpus['maps']) == 1005
-    subprocess.run(['node', '-e', NODE, str(assets / 'kernel.wasm'),
+    subprocess.run([args.runtime, '-e', NODE, str(assets / 'kernel.wasm'),
                     *[str(fixtures / (name + '.json')) for name in expected]], check=True, timeout=60)
 
 
