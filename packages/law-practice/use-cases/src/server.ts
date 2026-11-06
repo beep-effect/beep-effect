@@ -6,6 +6,20 @@
  * @since 0.0.0
  */
 
+/** Server-only captured cleaner port and runtime capabilities; not raw request callbacks.
+ * @category services
+ * @since 0.0.0
+ */
+export {
+  CitationCleaner,
+  CitationCleanerFailure,
+  CitationCleanerObject,
+  CitationCleanerProduced,
+  CitationCleanerRun,
+  CitationCleanerTextCharge,
+  CitationCleanerWorkSnapshot,
+  CitationLiveCleanerObject,
+} from "./CitationEngine/CitationEngine.cleaner.ts";
 /**
  * Closed server citation failures; raw sources and private causes are excluded.
  * @category errors
@@ -281,3 +295,8 @@ export * from "./Tools.ts";
  * @since 0.0.0
  */
 export * as VerdictProjector from "./VerdictProjector/index.ts";
+/** Captured cursor and reservation capabilities; all methods require no services.
+ * @category services
+ * @since 0.0.0
+ */
+export type { CitationCleanerCursor, CitationCleanerWork } from "./CitationEngine/CitationEngine.cleaner.ts";

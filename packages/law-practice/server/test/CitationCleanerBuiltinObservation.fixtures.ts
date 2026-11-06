@@ -5,11 +5,12 @@
 
 import * as Effect from "effect/Effect";
 import type {
+  CitationBuiltinCleanerName,
   CitationCleanerFailure,
   CitationCleanerObject,
   CitationCleanerProduced,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
-import type { CitationBuiltinCleanerName, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 import type * as S from "effect/Schema";
 
 const sourceFailureType = (error: CitationCleanerFailure) => {

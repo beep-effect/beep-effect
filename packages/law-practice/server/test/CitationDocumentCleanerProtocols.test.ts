@@ -1,8 +1,5 @@
 import { CitationBuiltinCleaners } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
-import {
-  CitationCleanerRuntime,
-  makeCitationCleanerPipeline,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { makeCitationCleanerPipeline } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import {
   CitationCleanerProtocols,
   makeCitationCleanerRegistry,
@@ -10,6 +7,7 @@ import {
 import { CitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { makeCitationDocumentCleanerProtocols } from "@beep/law-practice-server/internal/Citation/DocumentCleanerProtocols";
 import { CitationDocumentInputProtocols } from "@beep/law-practice-server/internal/Citation/InputDocument";
+import { CitationCleaner } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -41,7 +39,7 @@ const setup = Effect.fn("DocumentCleanerProtocolsTest.setup")(function* (
     Effect.provideService(CitationCleanerProtocols, adapter.cleaner)
   );
   const pipeline = yield* makeCitationCleanerPipeline(policy.limits).pipe(
-    Effect.provideService(CitationCleanerRuntime, registry.runtime)
+    Effect.provideService(CitationCleaner, registry.runtime)
   );
   return { h, policy, adapter, pipeline };
 });

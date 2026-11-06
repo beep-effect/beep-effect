@@ -39,6 +39,12 @@ adds independently identified plain/markup slots, retaining empty supplied
 identities. Private single/pair extraction shares admission, timing and cumulative
 budgets. Retained-Document dispatch and the complete service remain unfinished.
 
+`CitationCleaner` is the captured server execution port. Its owned-value,
+lazy-cursor and reservation contracts have one owner here; issuance and native
+execution remain server implementations. Decoding handle data grants no runtime
+ownership. Declared cleaner-port failures remain distinct from the five engine
+boundary failures and require engine translation.
+
 `CitationEngineReport` and `CitationExtractionMeasurements` describe completed
 operations separately from semantic citations. Counts, captured policy and engine
 identity compare deterministically; measured work duration does not. Reports have

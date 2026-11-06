@@ -2,10 +2,12 @@
  * Source behavior adapts eyecite 2.7.6, Free Law Project, BSD-2-Clause.
  * @internal @packageDocumentation @since 0.0.0
  */
+
+import { CitationCleaner, CitationCleanerFailure } from "@beep/law-practice-use-cases/server";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { CitationBuiltinCleaners, makeCitationBuiltinCleaners } from "./BuiltinCleaners.ts";
-import { CitationCleanerFailure, CitationCleanerRuntime, makeCitationCleanerPipeline } from "./CleanerPipeline.ts";
+import { makeCitationCleanerPipeline } from "./CleanerPipeline.ts";
 import { CitationCleanerProtocols, makeCitationCleanerRegistry } from "./CleanerRegistry.ts";
 import { CitationCleanerValues, makeCitationCleanerValues } from "./CleanerValues.ts";
 import { CitationDocumentStepContainers, makeCitationDocumentCleanerProtocols } from "./DocumentCleanerProtocols.ts";
@@ -41,11 +43,11 @@ export const makeCitationDocumentServices = Effect.fn("Citation.makeDocumentServ
     Effect.provideService(CitationCleanerProtocols, adapter.cleaner)
   );
   const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
-    Effect.provideService(CitationCleanerRuntime, registry.runtime)
+    Effect.provideService(CitationCleaner, registry.runtime)
   );
   const context = Context.make(CitationCleanerValues, values).pipe(
     Context.add(CitationDocumentInputProtocols, adapter.document),
-    Context.add(CitationCleanerRuntime, registry.runtime),
+    Context.add(CitationCleaner, registry.runtime),
     Context.add(CitationDocumentStepContainers, CitationDocumentStepContainers.of({ create: adapter.create }))
   );
   return { values, builtins, adapter, registry, pipeline, context };

@@ -12,7 +12,7 @@ import { citationPrimitiveCleanerProtocols } from "./CitationDocumentServices.fi
 import { makeCitationHtmlTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
-import type { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import type { CitationCleanerObject } from "@beep/law-practice-use-cases/server";
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("production document services", (it) => {
   it.effect(

@@ -7,7 +7,10 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationBuiltinCleanerName,
+  CitationCleaner,
+  CitationCleanerFailure,
   CitationEngineLimits,
+  CitationLiveCleanerObject,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
@@ -21,7 +24,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { CitationBuiltinCleaners } from "./BuiltinCleaners.ts";
-import { CitationCleanerFailure, CitationCleanerRuntime, CitationLiveCleanerObject } from "./CleanerPipeline.ts";
 import { CitationCleanerValues } from "./CleanerValues.ts";
 import { makeCitationPythonHash } from "./PythonHash.ts";
 import {
@@ -35,7 +37,7 @@ import type {
   CitationCleanerObject,
   CitationCleanerProduced,
   CitationCleanerWork,
-} from "./CleanerPipeline.ts";
+} from "@beep/law-practice-use-cases/server";
 import type { CitationPythonHashFailure } from "./PythonHash.ts";
 
 const crossPrimitiveKinds = (leftText: boolean, rightText: boolean, leftBytes: boolean, rightBytes: boolean) =>
@@ -306,7 +308,7 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
   );
   const checkWork = (work: CitationCleanerWork) =>
     work.snapshot.pipe(Effect.flatMap((snapshot) => (snapshot.closed ? Effect.fail(fail("closed-work")) : ensureOpen)));
-  const runtime = CitationCleanerRuntime.of({
+  const runtime = CitationCleaner.of({
     fromText: Effect.fn("Citation.registrySource")((text) => ensureOpen.pipe(Effect.andThen(values.sourceText(text)))),
     assertOwned: Effect.fn("Citation.registryAssertOwned")((value) =>
       ensureOpen.pipe(Effect.andThen(values.assertOwned(value)))

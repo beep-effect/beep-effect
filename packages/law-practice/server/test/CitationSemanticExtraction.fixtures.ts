@@ -13,7 +13,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
-import { citationExtractionRawRequest } from "./CitationExtractionEntry.fixtures.ts";
+import { invokeCitationRawExtraction } from "./CitationExtractionEntry.fixtures.ts";
 import { makeCitationOccurrenceTestAdapter } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { assertCitationTokenizedExtractionRow } from "./CitationTokenizedExtraction.fixtures.ts";
@@ -118,10 +118,7 @@ export const replayCitationSemanticExtraction = Effect.fn("SemanticExtractionTes
   expect(before).toEqual({ spawned: 0, confirmed: 0 });
   const unicode = yield* makeCitationPythonUnicode(setup.limits).pipe(Effect.provideContext(provided));
   for (const row of rows) {
-    const request = yield* citationExtractionRawRequest(unicode, row);
-    const invocation = stage.extract(request);
-    const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
-    const result = yield* closed;
+    const result = yield* invokeCitationRawExtraction(stage.extract, unicode, row);
     if (result.raw.outcome._tag !== "Document") return yield* Effect.die("expected original Document branch");
     yield* assertCitationTokenizedExtractionRow(result.raw.outcome.result.extraction, row, translated);
     const projectedUnits = yield* assertSemanticDocument(unicode, result.citations, row.expected);

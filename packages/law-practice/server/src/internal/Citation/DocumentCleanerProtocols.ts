@@ -7,6 +7,7 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationBuiltinCleanerName,
   CitationCleanerContainerKind,
+  CitationCleanerFailure,
   CitationEngineLimits,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
@@ -19,11 +20,10 @@ import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { CitationCleanerFailure } from "./CleanerPipeline.ts";
 import { CitationCleanerProtocols } from "./CleanerRegistry.ts";
 import { CitationCleanerValues } from "./CleanerValues.ts";
 import { CitationDocumentInputFailure, CitationDocumentInputProtocols } from "./InputDocument.ts";
-import type { CitationCleanerObject } from "./CleanerPipeline.ts";
+import type { CitationCleanerObject } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/DocumentCleanerProtocols");
 const GeneratorState = S.Struct({

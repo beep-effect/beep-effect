@@ -1,10 +1,6 @@
-import {
-  CitationCleanerObject,
-  CitationCleanerProduced,
-  CitationCleanerRuntime,
-  makeCitationCleanerPipeline,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { makeCitationCleanerPipeline } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import { CitationPythonUnicodeStorage } from "@beep/law-practice-server/internal/Citation/PythonHash";
+import { CitationCleaner, CitationCleanerObject, CitationCleanerProduced } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -26,7 +22,7 @@ it.effect("bounds owned-value preflight with the captured cleaner deadline", () 
     const value = yield* h.values.sourceUnicode(original);
     const entered = yield* Deferred.make<void>();
     const policy = yield* defaultCitationEnginePolicy;
-    const runtime = CitationCleanerRuntime.of({
+    const runtime = CitationCleaner.of({
       ...h.registry.runtime,
       textUnits: Effect.fn("CleanerOwnedTest.blockingUnits")(() =>
         Deferred.succeed(entered, undefined).pipe(Effect.andThen(Effect.never))
@@ -36,7 +32,7 @@ it.effect("bounds owned-value preflight with the captured cleaner deadline", () 
       ...policy.limits,
       cleanDeadline: Duration.millis(50),
       operationDeadline: Duration.millis(100),
-    }).pipe(Effect.provideService(CitationCleanerRuntime, runtime));
+    }).pipe(Effect.provideService(CitationCleaner, runtime));
     const waiting = yield* pipeline.runOwned({ value, plan: "blocked-preflight" }).pipe(Effect.flip, Effect.forkChild);
     yield* Deferred.await(entered);
     yield* TestClock.adjust(Duration.millis(50));
@@ -104,7 +100,7 @@ it.effect("rejects forged handles and native source overflow before invoking a p
     expect(rejected).toMatchObject({ _tag: "CitationCleanerFailure", reason: "unissued-value" });
     const policy = yield* defaultCitationEnginePolicy;
     const tight = yield* makeCitationCleanerPipeline({ ...policy.limits, sourceUtf16: 1 }).pipe(
-      Effect.provideService(CitationCleanerRuntime, h.registry.runtime)
+      Effect.provideService(CitationCleaner, h.registry.runtime)
     );
     const refused = yield* tight.runOwned({ value, plan: "too-large" }).pipe(Effect.flip);
     expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "sourceUtf16" });

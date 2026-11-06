@@ -55,34 +55,23 @@ const extractPrepared = Effect.fn("Citation.extractPreparedSource")(function* (
     return yield* extraction.extract(request);
   }).pipe(Effect.provideContext(owned.children));
 });
-const prepare = Effect.fn("Citation.extractResolvedSource")(function* (
-  limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
-  owned: Effect.Success<ReturnType<typeof own>>,
-  raw: unknown
-) {
-  const [workDuration, result] = yield* Effect.timed(
-    Effect.gen(function* () {
-      const request = yield* owned.source.prepare(raw);
-      return yield* extractPrepared(limits, runtime, owned, request);
-    })
-  );
-  return { result, workDuration, limits, engineArtifact: owned.config.engineArtifact };
-});
-const preparePair = Effect.fn("Citation.extractResolvedSourcePair")(function* (
-  limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
-  owned: Effect.Success<ReturnType<typeof own>>,
-  raw: unknown
-) {
-  const [workDuration, result] = yield* Effect.timed(
-    Effect.gen(function* () {
-      const request = yield* owned.source.preparePair(raw);
-      return yield* extractPrepared(limits, runtime, owned, request);
-    })
-  );
-  return { result, workDuration, limits, engineArtifact: owned.config.engineArtifact };
-});
+const prepareSource = (method: keyof Effect.Success<ReturnType<typeof makeCitationSourceRequestAdapter>>) =>
+  Effect.fn("Citation.extractResolvedSource")(function* (
+    limits: CitationEngineLimits,
+    runtime: CitationNativeProcessRuntime,
+    owned: Effect.Success<ReturnType<typeof own>>,
+    raw: unknown
+  ) {
+    const [workDuration, result] = yield* Effect.timed(
+      Effect.gen(function* () {
+        const request = yield* owned.source[method](raw);
+        return yield* extractPrepared(limits, runtime, owned, request);
+      })
+    );
+    return { result, workDuration, limits, engineArtifact: owned.config.engineArtifact };
+  });
+const prepare = prepareSource("prepare");
+const preparePair = prepareSource("preparePair");
 /** Admit before resolver work and retain one enclosing deadline and cumulative
  * text budget through verified occurrence production. Child extraction reuses
  * the existing parent admission Context rather than acquiring another permit.

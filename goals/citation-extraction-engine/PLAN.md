@@ -1261,6 +1261,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the semantic projection wave; retain the sealed source mapping and private extraction pipeline.
 
+### Publish the existing owned cleaner execution port, 2026-11-06
+
+Move the full existing lazy owned-value cleaner contract into the server use-case subpath as CitationCleaner. Default production Context and all source/test consumers use it directly, without aliases or a second implementation. Declared port failures stay separate from the five engine-boundary failures. Repair hosted duplicate timing/test controls without dropping assertions or weakening gates. Tokenizer/service/Layer and remaining acceptance stay open. See history/evidence/2026-11-06-cleaner-port.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Move the cleaner contract back into the private pipeline and restore direct imports, preserving existing issuance, runtime behavior and sealed evidence.
+
 ### Commit installed engine configuration with explicit build trust, 2026-11-06
 
 The versioned engine commitment combines trusted installer build/runtime/selected-port metadata with actual authenticated default assets, captured calendar and encoded policy. Existing Schema snapshot and SHA-256 primitives are reused. Build metadata is snapshotted before asset loading; runtime kind matches the installed diff backend. This commits installer claims rather than attesting arbitrary code. Connected extraction uses the producer with explicit fake deployment metadata; actual deployment/Layer port binding and all broader acceptance remain open. See history/evidence/2026-11-06-engine-artifact.md.

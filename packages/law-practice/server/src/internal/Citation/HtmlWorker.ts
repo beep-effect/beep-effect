@@ -9,6 +9,7 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
+  CitationCleanerProduced,
   CitationEngineAbsoluteMaxima,
   CitationEngineLimits,
   CitationSafetyLimitExceeded,
@@ -22,7 +23,6 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
-import { CitationCleanerProduced } from "./CleanerPipeline.ts";
 import { CitationCleanerTextAllocation, citationCleanerHtmlTextOutput } from "./CleanerTextIdentity.ts";
 import { CitationHtmlInputFailure, makeCitationHtmlInput } from "./HtmlInput.ts";
 import {
@@ -39,7 +39,7 @@ import {
   makeCitationNativeProcessOwner,
 } from "./NativeProcess.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
-import type { CitationCleanerWork } from "./CleanerPipeline.ts";
+import type { CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessLease } from "./NativeAdmission.ts";
 import type { CitationOwnedNativeProcess } from "./NativeProcess.ts";
 

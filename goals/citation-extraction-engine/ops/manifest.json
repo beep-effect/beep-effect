@@ -170,7 +170,9 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-06-paired-source-extraction.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-retained-document-reuse.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-reports.md",
-    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.report.ts"
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.report.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-cleaner-port.md",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.cleaner.ts"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

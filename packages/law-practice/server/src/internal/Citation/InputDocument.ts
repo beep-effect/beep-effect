@@ -4,19 +4,19 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
+import {
+  CitationCleaner,
+  CitationCleanerRun,
+  CitationEngineAbsoluteMaxima,
+  CitationLiveCleanerObject,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import {
-  CitationCleanerRun,
-  CitationCleanerRuntime,
-  CitationLiveCleanerObject,
-  makeCitationCleanerPipeline,
-} from "./CleanerPipeline.ts";
+import { makeCitationCleanerPipeline } from "./CleanerPipeline.ts";
 import { CitationCleanerValues, copyCitationCleanerUnicode } from "./CleanerValues.ts";
 import {
   CitationHtmlGeometryPreparationConfiguration,
@@ -26,8 +26,12 @@ import {
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { CitationTextBudget } from "./TextBudget.ts";
-import type { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import type { CitationCleanerFailure, CitationCleanerObject } from "./CleanerPipeline.ts";
+import type {
+  CitationCleanerFailure,
+  CitationCleanerObject,
+  CitationEngineLimits,
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/InputDocument");
@@ -136,7 +140,7 @@ const own = Effect.fn("Citation.captureInputDocument")(function* (
   const configuration = yield* copyCitationHtmlGeometryConfiguration(limits, config);
   const values = yield* CitationCleanerValues;
   const protocols = yield* CitationDocumentInputProtocols;
-  const cleanerRuntime = yield* CitationCleanerRuntime;
+  const cleanerRuntime = yield* CitationCleaner;
   const empty = yield* values.text("");
   return { configuration, values, protocols, cleanerRuntime, limits, empty };
 });
@@ -160,7 +164,7 @@ const cleanValue = Effect.fn("Citation.cleanDocumentInput")(function* (
 ) {
   const plan = yield* owned.protocols.plan(input.steps);
   const pipeline = yield* makeCitationCleanerPipeline(owned.limits).pipe(
-    Effect.provideService(CitationCleanerRuntime, owned.cleanerRuntime)
+    Effect.provideService(CitationCleaner, owned.cleanerRuntime)
   );
   return yield* pipeline.runOwned({ value, plan });
 });

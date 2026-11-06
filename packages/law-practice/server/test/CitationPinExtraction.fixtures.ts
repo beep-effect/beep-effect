@@ -22,6 +22,7 @@ import {
   assertCitationMetadataEnclosingRefusal,
   assertCitationMetadataFailure,
   assertCitationMetadataFixtureLifetime,
+  assertCitationMetadataInstallControls,
   assertCitationMetadataRefusal,
   assertCitationWorkerCompositionReleased,
   citationMetadataDeadlineText,
@@ -156,19 +157,7 @@ export const assertCitationPinExtractionLifetime = Effect.fn("PinExtractionTest.
 export const assertCitationPinExtractionConfiguration = Effect.fn("PinExtractionTest.configuration")(function* () {
   const corpus = yield* readCitationPinExtractionCorpus();
   const setup = yield* setupCitationMetadataRuntime("bun");
-  const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
-  for (const [policy, runtime, configuration] of [
-    [{}, setup.runtime, corpus.configuration],
-    [setup.limits, setup.runtime, {}],
-    [setup.limits, {}, corpus.configuration],
-    [setup.limits, setup.runtime, { ...corpus.configuration, pattern: changedPattern }],
-  ]) {
-    const failed = yield* makeCitationPinExtraction(policy, runtime, configuration).pipe(
-      Effect.provideContext(setup.provided),
-      Effect.flip
-    );
-    expect(failed).toMatchObject({ reason: "invalid-configuration" });
-  }
+  yield* assertCitationMetadataInstallControls(makeCitationPinExtraction, setup, corpus.configuration);
   const oversized = yield* makeCitationTextBudget({
     ...setup.limits,
     producedTextUtf16: setup.limits.producedTextUtf16 + 1,

@@ -3,11 +3,7 @@ import {
   CitationBuiltinCleaners,
   makeCitationBuiltinCleaners,
 } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
-import {
-  CitationCleanerFailure,
-  CitationCleanerRuntime,
-  makeCitationCleanerPipeline,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { makeCitationCleanerPipeline } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import {
   CitationCleanerProtocols,
   makeCitationCleanerRegistry,
@@ -17,7 +13,11 @@ import {
   makeCitationCleanerValues,
 } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { makeCitationPythonHash } from "@beep/law-practice-server/internal/Citation/PythonHash";
-import { CitationBuiltinCleanerName } from "@beep/law-practice-use-cases/server";
+import {
+  CitationBuiltinCleanerName,
+  CitationCleaner,
+  CitationCleanerFailure,
+} from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -27,13 +27,13 @@ import * as Path from "effect/Path";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
+import type { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type {
   CitationCleanerObject,
   CitationCleanerProduced,
   CitationCleanerWork,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
-import type { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
-import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 
 type BuiltinObservation = (
   name: CitationBuiltinCleanerName,
@@ -125,7 +125,7 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
     Effect.provideService(CitationCleanerProtocols, protocols)
   );
   const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
-    Effect.provideService(CitationCleanerRuntime, registry.runtime)
+    Effect.provideService(CitationCleaner, registry.runtime)
   );
   return {
     values,

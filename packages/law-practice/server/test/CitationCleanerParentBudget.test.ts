@@ -1,9 +1,6 @@
-import {
-  CitationCleanerProduced,
-  CitationCleanerRuntime,
-  makeCitationCleanerPipeline,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { makeCitationCleanerPipeline } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { CitationCleaner, CitationCleanerProduced } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -22,7 +19,7 @@ const install = Effect.fn("CleanerParentBudgetTest.install")(function* (maximum:
       ? yield* makeCitationCleanerRegistryHarness(undefined, undefined, observed.spawner)
       : yield* makeCitationCleanerRegistryHarness();
   const pipeline = yield* makeCitationCleanerPipeline({ ...policy, producedTextUtf16: 8 }).pipe(
-    Effect.provideService(CitationCleanerRuntime, h.registry.runtime),
+    Effect.provideService(CitationCleaner, h.registry.runtime),
     Effect.provideService(CitationTextBudget, budget)
   );
   return { h, pipeline, budget, observed };

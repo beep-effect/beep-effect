@@ -3,11 +3,7 @@ import {
   makeCitationOperationAdmission,
 } from "@beep/law-practice-server/internal/Citation/Admission";
 import { makeCitationCleanerOperation } from "@beep/law-practice-server/internal/Citation/CleanerOperation";
-import {
-  CitationCleanerFailure,
-  CitationCleanerProduced,
-  CitationCleanerRuntime,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { CitationCleaner, CitationCleanerFailure, CitationCleanerProduced } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -29,11 +25,11 @@ it.layer(BunCrypto.layer)("admitted cleaner operations", (it) => {
       const admission = yield* makeCitationOperationAdmission(limits);
       const first = yield* makeCitationCleanerOperation(limits).pipe(
         Effect.provideService(CitationOperationAdmission, admission),
-        Effect.provideService(CitationCleanerRuntime, h.registry.runtime)
+        Effect.provideService(CitationCleaner, h.registry.runtime)
       );
       const second = yield* makeCitationCleanerOperation(limits).pipe(
         Effect.provideService(CitationOperationAdmission, admission),
-        Effect.provideService(CitationCleanerRuntime, h.registry.runtime)
+        Effect.provideService(CitationCleaner, h.registry.runtime)
       );
       const entered = yield* Deferred.make<void>();
       const release = yield* Deferred.make<void>();

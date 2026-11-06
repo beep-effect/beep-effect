@@ -22,6 +22,7 @@ import * as S from "effect/Schema";
 import {
   assertCitationMetadataEnclosingRefusal,
   assertCitationMetadataFixtureLifetime,
+  assertCitationMetadataInstallControls,
   assertCitationMetadataRefusal,
   assertCitationWorkerCompositionReleased,
   citationMetadataDeadlineText,
@@ -189,19 +190,7 @@ export const assertCitationPostCaseMetadataConfiguration = Effect.fn("PostCaseMe
   function* () {
     const corpus = yield* readCitationPostCaseMetadataCorpus();
     const setup = yield* setupCitationMetadataRuntime("bun");
-    const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
-    for (const [policy, runtime, configuration] of [
-      [{}, setup.runtime, corpus.configuration],
-      [setup.limits, setup.runtime, {}],
-      [setup.limits, {}, corpus.configuration],
-      [setup.limits, setup.runtime, { ...corpus.configuration, pattern: changedPattern }],
-    ]) {
-      const failed = yield* makeCitationPostCaseMetadata(policy, runtime, configuration).pipe(
-        Effect.provideContext(setup.provided),
-        Effect.flip
-      );
-      expect(failed).toMatchObject({ reason: "invalid-configuration" });
-    }
+    yield* assertCitationMetadataInstallControls(makeCitationPostCaseMetadata, setup, corpus.configuration);
     const oversized = yield* makeCitationTextBudget({
       ...setup.limits,
       producedTextUtf16: setup.limits.producedTextUtf16 + 1,

@@ -1,16 +1,16 @@
 import { CitationBuiltinCleaners } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
 import {
-  CitationCleanerFailure,
-  CitationCleanerObject,
-  CitationCleanerProduced,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
-import {
   CitationCleanerProtocols,
   makeCitationCleanerRegistry,
 } from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
 import { CitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { CitationPythonUnicodeStorage } from "@beep/law-practice-server/internal/Citation/PythonHash";
-import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
+import {
+  CitationCleanerFailure,
+  CitationCleanerObject,
+  CitationCleanerProduced,
+  CitationEngineAbsoluteMaxima,
+} from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";

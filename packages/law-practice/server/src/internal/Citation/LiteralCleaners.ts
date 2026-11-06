@@ -8,6 +8,7 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
+  CitationCleanerProduced,
   CitationEngineAbsoluteMaxima,
   CitationEngineLimits,
   CitationSafetyLimitExceeded,
@@ -23,12 +24,11 @@ import * as MutableList from "effect/MutableList";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { CitationCleanerProduced } from "./CleanerPipeline.ts";
 import { CitationCleanerTextAllocation, CitationCleanerTextOutput } from "./CleanerTextIdentity.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { citationPythonTextData } from "./PythonTextData.ts";
 import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import type { CitationCleanerTextCharge, CitationCleanerWork } from "./CleanerPipeline.ts";
+import type { CitationCleanerTextCharge, CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 
 const CitationEngineLimitsType = S.toType(CitationEngineLimits);
 

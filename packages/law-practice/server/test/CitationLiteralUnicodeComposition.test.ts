@@ -1,11 +1,9 @@
-import {
-  CitationCleanerRuntime,
-  makeCitationCleanerPipeline,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { makeCitationCleanerPipeline } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import {
   CitationPythonUnicodeStorage,
   makeCitationPythonHash,
 } from "@beep/law-practice-server/internal/Citation/PythonHash";
+import { CitationCleaner } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -59,7 +57,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
       const pipeline = yield* makeCitationCleanerPipeline({
         ...citationResult5.limits,
         producedTextUtf16: input.budget,
-      }).pipe(Effect.provideService(CitationCleanerRuntime, owned.runtime));
+      }).pipe(Effect.provideService(CitationCleaner, owned.runtime));
       const affordable = (input.budget - (input.budget % 2)) / 2;
       if (input.budget >= input.repetitions * 2) {
         const citationResult6 = yield* pipeline.run({ text: "", plan: "source-native-history" });
@@ -156,7 +154,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
       const pipeline = yield* makeCitationCleanerPipeline({
         ...citationResult16.limits,
         producedTextUtf16: 2,
-      }).pipe(Effect.provideService(CitationCleanerRuntime, owned.runtime));
+      }).pipe(Effect.provideService(CitationCleaner, owned.runtime));
       const citationResult17 = yield* Effect.flip(pipeline.run({ text: "", plan: "source-native-history" }));
       expect(citationResult17).toMatchObject({
         _tag: "CitationSafetyLimitExceeded",

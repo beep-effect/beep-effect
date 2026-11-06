@@ -6,22 +6,21 @@ import {
   makeCitationOperationAdmission,
 } from "@beep/law-practice-server/internal/Citation/Admission";
 import { makeCitationCleanerOperation } from "@beep/law-practice-server/internal/Citation/CleanerOperation";
-import { CitationCleanerRuntime } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { CitationCleaner } from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
-import type { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
-import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationCleanerObject, CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 /** Allocate a new admission owner and capture the exact replay runtime.
  * @internal @category testing @since 0.0.0
  */
 export const makeCitationReplayCleanerOperation = Effect.fn("CleanerReplayTest.makeOperation")(function* (
   limits: CitationEngineLimits,
-  runtime: CitationCleanerRuntime["Service"]
+  runtime: CitationCleaner["Service"]
 ) {
   const admission = yield* makeCitationOperationAdmission(limits);
   const operation = yield* makeCitationCleanerOperation(limits).pipe(
     Effect.provideService(CitationOperationAdmission, admission),
-    Effect.provideService(CitationCleanerRuntime, runtime)
+    Effect.provideService(CitationCleaner, runtime)
   );
   return { operation, admission };
 });

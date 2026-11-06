@@ -2,8 +2,9 @@
  * Custom host/callback coverage retains its separate stateful protocol harness.
  * @internal @packageDocumentation @since 0.0.0
  */
-import { CitationCleanerFailure } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+
 import { CitationCleanerProtocols } from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
+import { CitationCleanerFailure } from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
 
 const failed = Effect.fail(CitationCleanerFailure.make({ reason: "callback-failed" }));

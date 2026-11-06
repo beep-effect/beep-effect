@@ -16,7 +16,7 @@ import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/intern
 
 type SourceRow = Effect.Success<ReturnType<typeof installCitationDocumentExtractionFixture>>["corpus"]["cases"][number];
 /** Convert an authenticated source row into primitive request data for entry compositions. */
-export const citationExtractionRawRequest = Effect.fn("ExtractionEntryTest.request")(function* (
+const citationExtractionRawRequest = Effect.fn("ExtractionEntryTest.request")(function* (
   unicode: Effect.Success<ReturnType<typeof makeCitationPythonUnicode>>,
   row: SourceRow
 ) {
@@ -90,10 +90,7 @@ export const replayCitationExtractionEntry = Effect.fn("ExtractionEntryTest.repl
   const unicode = yield* makeCitationPythonUnicode(setup.limits).pipe(Effect.provideContext(provided));
   const rows = A.filter(corpus.cases, (row) => full || A.contains([0, 4, 18, 20, 32], row.id));
   for (const row of rows) {
-    const request = yield* citationExtractionRawRequest(unicode, row);
-    const invocation = stage.extract(request);
-    const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
-    const result = yield* closed;
+    const result = yield* invokeCitationRawExtraction(stage.extract, unicode, row);
     if (result.outcome._tag !== "Document") return yield* Effect.die("expected original Document branch");
     yield* assertCitationTokenizedExtractionRow(result.outcome.result.extraction, row, translated);
     expect(result.reservedUnits).toBe(result.outcome.result.reservedUnits);
@@ -102,4 +99,17 @@ export const replayCitationExtractionEntry = Effect.fn("ExtractionEntryTest.repl
   const malformed = yield* stage.extract({ plain: 5 }).pipe(Effect.flip);
   expect(malformed).toMatchObject({ _tag: "CitationExtractionEntryFailure", reason: "invalid-input" });
   yield* assertCitationWorkerCompositionObserved(setup.operation, setup.admission, setup.observed.snapshot);
+});
+
+/** Invoke a captured R=never stage against the original prepared raw row.
+ * @internal @category testing @since 0.0.0
+ */
+export const invokeCitationRawExtraction = Effect.fn("ExtractionTest.invokeRaw")(function* <A, E>(
+  extract: (raw: unknown) => Effect.Effect<A, E>,
+  unicode: Parameters<typeof citationExtractionRawRequest>[0],
+  row: Parameters<typeof citationExtractionRawRequest>[1]
+) {
+  const request = yield* citationExtractionRawRequest(unicode, row);
+  const closed: Effect.Effect<A, E> = extract(request);
+  return yield* closed;
 });

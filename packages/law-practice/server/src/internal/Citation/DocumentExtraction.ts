@@ -3,12 +3,12 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationCleaner } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { CitationCleanerRuntime } from "./CleanerPipeline.ts";
 import { CitationCleanerValues, copyCitationCleanerUnicode } from "./CleanerValues.ts";
 import { captureCitationExtractionChildren } from "./ExtractionChildren.ts";
 import { CitationHtmlGeometryPreparationConfiguration } from "./HtmlGeometryPreparation.ts";
@@ -26,8 +26,7 @@ import {
   CitationTokenizedExtractionResult,
   makeCitationTokenizedExtraction,
 } from "./TokenizedExtraction.ts";
-import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
-import type { CitationCleanerObject } from "./CleanerPipeline.ts";
+import type { CitationCleanerObject, CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/DocumentExtraction");
@@ -125,11 +124,11 @@ export const ownCitationDocumentExtraction = Effect.fn("Citation.ownDocumentExtr
   );
   const values = yield* CitationCleanerValues;
   const protocols = yield* CitationDocumentInputProtocols;
-  const runtime = yield* CitationCleanerRuntime;
+  const runtime = yield* CitationCleaner;
   const children = (yield* captureCitationExtractionChildren()).pipe(
     Context.add(CitationCleanerValues, values),
     Context.add(CitationDocumentInputProtocols, protocols),
-    Context.add(CitationCleanerRuntime, runtime)
+    Context.add(CitationCleaner, runtime)
   );
   return { config, values, children };
 });

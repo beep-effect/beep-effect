@@ -260,7 +260,6 @@
     {"name":"Citation.extractRawPrimitiveRequest","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.extractReferenceToken","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.extractResolvedSource","owner":"@beep/law-practice-server","family":"slice","conforms":true},
-    {"name":"Citation.extractResolvedSourcePair","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.extractRetainedDocument","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.extractSemanticCitations","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.extractShortHtmlName","owner":"@beep/law-practice-server","family":"slice","conforms":true},

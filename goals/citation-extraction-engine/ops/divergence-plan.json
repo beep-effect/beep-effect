@@ -302,7 +302,8 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-06-admitted-source-extraction.md",
         "goals/citation-extraction-engine/history/evidence/2026-11-06-paired-source-extraction.md",
         "goals/citation-extraction-engine/history/evidence/2026-11-06-retained-document-reuse.md",
-        "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-reports.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-reports.md",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-cleaner-port.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

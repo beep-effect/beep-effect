@@ -7,6 +7,8 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationBuiltinCleanerName,
+  CitationCleanerFailure,
+  CitationCleanerObject,
   CitationEngineLimits,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
@@ -20,11 +22,11 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
-import { CitationCleanerFailure, CitationCleanerObject } from "./CleanerPipeline.ts";
 import { CitationCleanerTextDescriptor, CitationCleanerTextOutput } from "./CleanerTextIdentity.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationPythonUnicodeValue, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { CitationTextBudget } from "./TextBudget.ts";
+import type { CitationLiveCleanerObject } from "@beep/law-practice-use-cases/server";
 import type { CitationPythonUnicodeFailure } from "./PythonUnicode.ts";
 
 const Limits = S.toType(CitationEngineLimits);
@@ -79,7 +81,7 @@ export class CitationCleanerValues extends Context.Service<
       value: CitationCleanerObject
     ) => Effect.Effect<O.Option<CitationCleanerTextDescriptor>, CitationCleanerFailure>;
     readonly getHost: (value: CitationCleanerObject) => Effect.Effect<O.Option<unknown>, CitationCleanerFailure>;
-    readonly assertOwned: (value: CitationCleanerObject) => Effect.Effect<void, CitationCleanerFailure>;
+    readonly assertOwned: (value: CitationLiveCleanerObject) => Effect.Effect<void, CitationCleanerFailure>;
     readonly same: (
       left: CitationCleanerObject,
       right: CitationCleanerObject

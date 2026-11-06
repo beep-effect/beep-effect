@@ -4,10 +4,6 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationBuiltinCleaners } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
 import {
-  CitationCleanerProduced,
-  CitationCleanerRuntime,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
-import {
   CitationCleanerProtocols,
   makeCitationCleanerRegistry,
 } from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
@@ -18,6 +14,7 @@ import {
   CitationDocumentInputProtocols,
   makeCitationInputDocument,
 } from "@beep/law-practice-server/internal/Citation/InputDocument";
+import { CitationCleaner, CitationCleanerProduced } from "@beep/law-practice-use-cases/server";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -31,12 +28,12 @@ import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixture
 import { makeCitationHtmlTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { readCitationOracleFixture, setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
-import type { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import type { CitationInputDocument } from "@beep/law-practice-server/internal/Citation/InputDocument";
 import type {
   CitationNativeProcessRuntime,
   CitationNativeRuntimeKind,
 } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import type { CitationCleanerObject } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("test/CitationInputDocument");
 const Value = S.Union([
@@ -238,7 +235,7 @@ const makeCase = Effect.fn("InputDocumentTest.case")(function* (
   }).pipe(
     Effect.provideContext(setup.provided),
     Effect.provideService(CitationCleanerValues, h.values),
-    Effect.provideService(CitationCleanerRuntime, registry.runtime),
+    Effect.provideService(CitationCleaner, registry.runtime),
     Effect.provideService(CitationDocumentInputProtocols, adapter.document)
   );
   const state = Effect.gen(function* () {

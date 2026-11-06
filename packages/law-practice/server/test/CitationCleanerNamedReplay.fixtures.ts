@@ -3,10 +3,10 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
+  CitationBuiltinCleanerName,
+  CitationCleaner,
   CitationCleanerFailure,
-  CitationCleanerRuntime,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
-import { CitationBuiltinCleanerName } from "@beep/law-practice-use-cases/server";
+} from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { LiteralKit } from "@beep/schema";
 import { expect } from "@effect/vitest";
@@ -22,7 +22,7 @@ import {
 } from "./CitationCleanerOperation.fixtures.ts";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
 import { loadCitationCleanerSource } from "./CitationCleanerSource.fixtures.ts";
-import type { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import type { CitationCleanerObject } from "@beep/law-practice-use-cases/server";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $LawPracticeServerId.create("test/CitationCleanerNamedReplay");
@@ -117,7 +117,7 @@ export const replayNamedCleanerScenes = Effect.fn("NamedCorpusTest.replay")(func
     return { kind: "text", text: descriptor.text, subtype: descriptor.subtype === "plain" ? "plain" : "marked" };
   });
   let initial = O.none<CitationCleanerObject>();
-  const runtime = CitationCleanerRuntime.of({
+  const runtime = CitationCleaner.of({
     ...h.registry.runtime,
     fromText: Effect.fn("NamedCorpusTest.captureSource")((source) =>
       captureCitationReplaySource(h.registry.runtime.fromText(source), (value) => {

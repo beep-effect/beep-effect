@@ -1,12 +1,11 @@
 import * as NodeURL from "node:url";
-import { CitationCleanerWorkSnapshot } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import {
   CitationLiteralCleaner,
   makeCitationLiteralCleaners,
 } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
 import { citationPythonTextData } from "@beep/law-practice-server/internal/Citation/PythonTextData";
 import { encodeCitationRuntimeString } from "@beep/law-practice-server/internal/Citation/RuntimeHashEncoding";
-import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationCleanerWorkSnapshot, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -26,8 +25,8 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { CitationCleanerWork } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import type { CitationLiteralCleanerFailure } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
+import type { CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 
 const Corpus = S.fromJsonString(
   S.Struct({
