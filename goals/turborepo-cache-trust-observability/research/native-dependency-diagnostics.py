@@ -53,15 +53,28 @@ def encoded(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
 
 
-def read_source(path):
+def read_source(path, expected=None):
+    """Read bounded source bytes, or compare retained bytes without a full copy."""
     fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     with os.fdopen(fd, "rb") as handle:
         info = os.fstat(handle.fileno())
         require(stat.S_ISREG(info.st_mode), "source-not-regular")
         require(0 < info.st_size < ARTIFACT_LIMIT, "source-size-bound")
-        data = handle.read(ARTIFACT_LIMIT)
-        require(len(data) == info.st_size, "source-read-drift")
-    return data
+        if expected is None:
+            data = handle.read(info.st_size + 1)
+            require(len(data) == info.st_size, "source-read-drift")
+            return data
+        if info.st_size != len(expected):
+            return False
+        view = memoryview(expected)
+        for offset in range(0, info.st_size, 64 * 1024):
+            size = min(64 * 1024, info.st_size - offset)
+            chunk = handle.read(size)
+            require(len(chunk) == size, "source-read-drift")
+            if chunk != view[offset:offset + size]:
+                return False
+        require(handle.read(1) == b"", "source-read-drift")
+        return True
 
 
 def memory_location(trace):
@@ -231,7 +244,7 @@ def observe(source_path, revision):
     changed = sorted(key for key in before.keys() | after.keys() if before.get(key) != after.get(key))
     stable = first == second
     matched = first["sha256"] == declared["sha256"]
-    unchanged = source_bytes == read_source(source_path)
+    unchanged = read_source(source_path, source_bytes)
     report = {
         "schemaVersion": "cache-dependency-diagnostics/v1",
         "authority": "Observation only; no producer approval, qualification or digest normalization.",

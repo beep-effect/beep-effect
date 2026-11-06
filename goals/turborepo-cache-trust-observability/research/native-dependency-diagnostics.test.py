@@ -190,6 +190,59 @@ class DependencyDiagnostics(unittest.TestCase):
         with self.assertRaisesRegex(PROBE.Refusal, "source-not-regular"):
             PROBE.read_source(fifo)
 
+    def test_chunked_source_comparison_checks_every_byte_and_length(self):
+        original = b"a" * (128 * 1024) + b"tail"
+        self.source.write_bytes(original)
+        self.assertEqual(PROBE.read_source(self.source), original)
+        self.assertTrue(PROBE.read_source(self.source, original))
+        for index in [0, 64 * 1024, len(original) - 1]:
+            with self.subTest(changed_byte=index):
+                changed = bytearray(original)
+                changed[index] ^= 1
+                self.source.write_bytes(changed)
+                self.assertFalse(PROBE.read_source(self.source, original))
+        for changed in [original[:-1], original + b"extra"]:
+            self.source.write_bytes(changed)
+            self.assertFalse(PROBE.read_source(self.source, original))
+
+    def test_source_comparison_survives_pressure_that_refuses_a_full_report_read(self):
+        self.source.write_bytes(b"a" * (3 * 1024 * 1024))
+        script = """
+import importlib.util
+from pathlib import Path
+import resource
+import sys
+spec = importlib.util.spec_from_file_location("dependency_diagnostics", sys.argv[1])
+probe = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(probe)
+path = Path(sys.argv[2])
+original = probe.read_source(path)
+resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024, 256 * 1024 * 1024))
+pressure = []
+try:
+    while True:
+        pressure.append(bytearray(1024 * 1024))
+except MemoryError:
+    pass
+assert len(pressure) >= 2, "Insufficient room to construct bounded pressure fixture"
+del pressure[-2:]
+try:
+    with path.open("rb") as handle:
+        handle.read(probe.ARTIFACT_LIMIT)
+except MemoryError:
+    pass
+else:
+    raise AssertionError("Pressure fixture did not refuse the full report allocation")
+assert probe.read_source(path, original) is True
+print("bounded-source-comparison-ok")
+"""
+        result = subprocess.run(
+            ["/usr/bin/python3", "-I", "-S", "-c", script, str(OBSERVER), str(self.source)],
+            env={"PATH": "/usr/bin"}, capture_output=True, timeout=10,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), b"bounded-source-comparison-ok")
+
     def test_refusal_codes_distinguish_failures_without_retaining_exception_details(self):
         private = "PRIVATE_EXCEPTION_PAYLOAD_SENTINEL"
         failures = [

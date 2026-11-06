@@ -2448,3 +2448,15 @@ artifact hashes. A fixed module family, line and Python version can locate the
 next refusal without publishing exception messages, file paths or frame locals.
 The 256 MiB process cap, archive digest and every other numeric bound remain
 unchanged. This attempt is a refusal and grants no producer approval.
+
+
+### 2026-11-06 — A bounded report reread still reserves the entire report cap
+
+Accepted-source observation 42220475249 passed source inspection but refused
+at the full-report read in the observer, on Python 3.9.25. Its retained 170-byte
+refusal identifies observer line 62; the phase is not explicitly recorded.
+Preserve source type, size and growth checks while comparing retained source
+bytes in bounded chunks instead of allocating another full report at final
+verification. Keep the 256 MiB limit and prove the repair with hosted pressure
+regressions and two real comparable observations. Narrow component/line
+metadata prevented further speculative tar-parser repairs.

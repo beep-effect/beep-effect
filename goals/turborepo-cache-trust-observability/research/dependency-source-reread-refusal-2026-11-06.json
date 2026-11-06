@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "cache-dependency-source-read-refusal/v1",
+  "sourceRevision": "d0fd08152add747d7c4b68cfefb0143f401e11e6",
+  "runId": 42220475249,
+  "jobId": 127900971485,
+  "sourceInspectionPassed": true,
+  "diagnosticStatus": "refused",
+  "diagnosticCode": "memory-limit",
+  "memoryLocation": {
+    "component": "observer",
+    "line": 62
+  },
+  "pythonVersion": [3, 9, 25],
+  "artifacts": [
+    {
+      "id": 13503142106,
+      "reportBytes": 2740991,
+      "reportSha256": "90144bd9dab8018ebac0a8cd21c4f131c30a8896addabfb337ebb861003e537a",
+      "archiveSha256": "815a170f68124c75419744aed87ebd6460cd8c4898c2962fe3602ec6de29c7d4",
+      "expiresAt": "2026-11-07T12:51:24Z"
+    },
+    {
+      "id": 13503750856,
+      "reportBytes": 170,
+      "reportSha256": "59befec9bd30784d47a74b4926c3417ca83c22dc722d2d309a928590731ee300",
+      "archiveSha256": "248c7d79b14699d23b3a4fb343d23319eb6f3f9d14117bb04a9d359123513e0f",
+      "expiresAt": "2026-11-07T12:51:25Z"
+    }
+  ],
+  "aggregateReportBytes": 2741161,
+  "observedFailingExpression": "read_source: handle.read(ARTIFACT_LIMIT)",
+  "attribution": "The failure identifies the full-report allocation shared by the initial read and final unchanged-source read. The phase is not explicitly recorded; no tar-parser failure or changed dependency digest is inferred.",
+  "repair": "Initial read requests the declared size plus one growth-detection byte; final verification compares bounded 64 KiB chunks with retained bytes, preserving exact byte equality and source type/size/drift guards.",
+  "hostedRegressionRequired": "Existing CacheDependencies hosted suite runs unchanged production-digest controls plus added per-byte/length checks and an isolated 256 MiB pressure fixture that rejects a full-report allocation while bounded comparison succeeds.",
+  "localTestsExecuted": false,
+  "actualFullTreeRepairProven": false,
+  "remainingSuccessfulComparableObservationsRequired": 2,
+  "boundsChanged": false,
+  "taskBodiesExecuted": false,
+  "producerApprovalGranted": false
+}
