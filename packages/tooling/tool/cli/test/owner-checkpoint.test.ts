@@ -64,8 +64,22 @@ import { recordedGithub } from "./support/YeetGithub.ts";
 import type { OwnerCheckpointOutbox } from "@beep/repo-cli/test/Yeet";
 import type { GithubAnswer, GithubCall, GithubRoutes } from "./support/YeetGithub.ts";
 
-const CorruptOutboxJson = S.fromJsonString(S.Unknown);
-const encodeCorruptOutbox = S.encodeUnknownEffect(CorruptOutboxJson);
+const UnknownJson = S.fromJsonString(S.Unknown);
+const encodeUnknownJson = S.encodeUnknownEffect(UnknownJson);
+const PaginationBody = S.Struct({ variables: S.Struct({ after: S.String.pipe(S.NullOr, S.optionalKey) }) });
+const decodePaginationBody = S.decodeUnknownResult(PaginationBody);
+const ExternalCheckBody = S.Struct({ external_id: S.String });
+const decodeExternalCheckBody = S.decodeUnknownResult(ExternalCheckBody);
+const CompletedCheckBody = S.Struct({ external_id: S.String, conclusion: S.String });
+const decodeCompletedCheckBody = S.decodeUnknownResult(CompletedCheckBody);
+const ObserverJson = S.toCodecJson(OwnerCheckpointObserver);
+const encodeObserverJson = S.encodeEffect(ObserverJson);
+const UnknownRecord = S.Record(S.String, S.Unknown);
+const decodeUnknownRecord = S.decodeUnknownEffect(UnknownRecord);
+const SnapshotJson = S.toCodecJson(OwnerCheckpointSnapshot);
+const encodeSnapshotJson = S.encodeEffect(SnapshotJson);
+const FinalCheckJson = S.toCodecJson(FinalCheckReceipt);
+const encodeFinalCheckJson = S.encodeEffect(FinalCheckJson);
 
 const head = Str.repeat(40)("a");
 const merge = Str.repeat(40)("b");
@@ -1112,7 +1126,7 @@ describe("dispatch actual base and causal release fence", () => {
         const store = yield* claimedStore;
         const sql = yield* SqlClient.SqlClient;
         const priorOption = yield* store.outbox(binding, 1);
-        const payload = yield* encodeCorruptOutbox(fixture.edit(O.getOrThrow(priorOption)));
+        const payload = yield* encodeUnknownJson(fixture.edit(O.getOrThrow(priorOption)));
         yield* sql`UPDATE yeet_owner_checkpoint_outbox SET payload=${payload} WHERE revision=1`;
         yield* Effect.flip(store.prepareDispatch(binding, 2, snapshot().base));
         yield* Effect.flip(dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy));
@@ -1396,11 +1410,7 @@ describe("inert owner native adapter", () => {
                 },
               };
         if (call.path === "/graphql") {
-          const body = Result.getOrThrow(
-            S.decodeUnknownResult(S.Struct({ variables: S.Struct({ after: S.String.pipe(S.NullOr, S.optionalKey) }) }))(
-              call.body
-            )
-          );
+          const body = Result.getOrThrow(decodePaginationBody(call.body));
           const last = body.variables.after === "page-2";
           return {
             body: {
@@ -1512,7 +1522,7 @@ describe("inert owner publication fence", () => {
       const github = recordedGithub((call) => {
         if (call.method === "POST" && call.path === "{repo}/check-runs") {
           created = true;
-          const body = S.decodeUnknownResult(S.Struct({ external_id: S.String }))(call.body);
+          const body = decodeExternalCheckBody(call.body);
           own = nativeOwn(Result.getOrThrow(body).external_id);
           return createPublicationFixture(fault, own);
         }
@@ -1536,7 +1546,7 @@ describe("inert owner publication fence", () => {
         expect(second._tag).toBe(
           fault === "duplicates" || fault === "wrong-identity" ? "Held" : fault === "zero" ? "Unknown" : "Published"
         );
-        const output = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))([first, second]);
+        const output = yield* encodeUnknownJson([first, second]);
         expect(output).not.toContain("PRIVATE_");
         expect(output).not.toContain(binding.owner);
       }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
@@ -1546,14 +1556,12 @@ describe("inert owner publication fence", () => {
     let own = nativeOwn();
     const github = recordedGithub((call) => {
       if (call.method === "POST" && call.path === "{repo}/check-runs") {
-        const data = Result.getOrThrow(S.decodeUnknownResult(S.Struct({ external_id: S.String }))(call.body));
+        const data = Result.getOrThrow(decodeExternalCheckBody(call.body));
         own = nativeOwn(data.external_id);
         return { body: own };
       }
       if (call.method === "PATCH") {
-        const data = Result.getOrThrow(
-          S.decodeUnknownResult(S.Struct({ external_id: S.String, conclusion: S.String }))(call.body)
-        );
+        const data = Result.getOrThrow(decodeCompletedCheckBody(call.body));
         own = { ...own, external_id: data.external_id, status: "completed", conclusion: data.conclusion };
         return { body: own };
       }
@@ -1604,8 +1612,8 @@ const mutateReceiptFixtureFile = Effect.fnUntraced(function* (
   }
 });
 const observerReceiptFixture = Effect.fnUntraced(function* (fault: string) {
-  const rawObserver = yield* S.encodeEffect(S.toCodecJson(OwnerCheckpointObserver))(evidence.observer);
-  const encodedObserver = yield* S.decodeUnknownEffect(S.Record(S.String, S.Unknown))(rawObserver);
+  const rawObserver = yield* encodeObserverJson(evidence.observer);
+  const encodedObserver = yield* decodeUnknownRecord(rawObserver);
   return {
     ...encodedObserver,
     ...(fault === "unfinished" ? { phase: "running" } : {}),
@@ -1634,7 +1642,7 @@ describe("authority receipt root", () => {
           const root = yield* fs.makeTempDirectoryScoped({ prefix: "checkpoint-receipts-" });
           yield* fs.chmod(root, 0o700);
           const write = Effect.fnUntraced(function* (value: unknown) {
-            const text = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(value);
+            const text = yield* encodeUnknownJson(value);
             const hash = yield* sha256Hex(text);
             const sha256 = Sha256Hex.make(hash);
             const ref = OwnerCheckpointReceiptRef.make({ name: `${sha256}.json`, sha256 });
@@ -1644,13 +1652,13 @@ describe("authority receipt root", () => {
           });
           const observerValue = yield* observerReceiptFixture(fault);
           const observer = yield* write(observerValue);
-          const encodedClassic = yield* S.encodeEffect(S.toCodecJson(OwnerCheckpointSnapshot))(
+          const encodedClassic = yield* encodeSnapshotJson(
             fault === "base-moved"
               ? OwnerCheckpointSnapshot.make({ ...evidence.classic, base: { ...evidence.classic.base, sha: head } })
               : evidence.classic
           );
           const classic = yield* write(encodedClassic);
-          const encodedFinal = yield* S.encodeEffect(S.toCodecJson(FinalCheckReceipt))(
+          const encodedFinal = yield* encodeFinalCheckJson(
             FinalCheckReceipt.make({
               ...finalCheck,
               ...(fault === "post-finalization" ? { finishedAt: DateTime.formatIso(now) } : {}),

@@ -21,6 +21,8 @@ import type { ConcludeCheckRun } from "@beep/github/CheckRun";
 
 const JsonBody = S.fromJsonString(S.Unknown);
 const JsonRecord = S.fromJsonString(S.Record(S.String, S.Unknown));
+const CheckRunRefJson = S.fromJsonString(CheckRunRef);
+const encodeCheckRunRef = S.encodeEffect(CheckRunRefJson);
 
 const output = CheckRunOutput.make({ title: "lint", summary: "passed" });
 const ref = CheckRunRef.make({ id: 3, name: "lint", url: "stub", status: "completed" });
@@ -230,7 +232,7 @@ it.layer(CheckRun.layer.pipe(Layer.provideMerge(ownedRead.base)), { timeout: "30
           conclusion: "success",
         })
       );
-      const serialized = yield* S.encodeEffect(S.fromJsonString(CheckRunRef))(result);
+      const serialized = yield* encodeCheckRunRef(result);
       assert.isFalse(Str.includes("PRIVATE_UNSELECTED_BODY")(serialized));
     })
   );

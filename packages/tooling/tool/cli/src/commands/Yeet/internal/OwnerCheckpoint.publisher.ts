@@ -43,6 +43,8 @@ const Publication = S.Struct({
 );
 const PublicationJson = S.fromJsonString(Publication);
 const NativeCorrelation = S.Struct({ id: PositiveId, external_id: S.NullOr(S.String) });
+const NativeCorrelations = S.Array(NativeCorrelation);
+const decodeNativeCorrelations = S.decodeUnknownEffect(NativeCorrelations);
 const refuse = (reason: OwnerCheckpointError["reason"]) => OwnerCheckpointError.make({ reason });
 const storage = () => refuse("storage");
 
@@ -229,9 +231,7 @@ export const makeOwnerCheckpointPublisher = Effect.fn("OwnerCheckpoint.makePubli
         Effect.mapError(() => refuse("publication"))
       );
     if (rows.length > 2000) return yield* refuse("publication");
-    const selected = yield* S.decodeUnknownEffect(S.Array(NativeCorrelation))(rows).pipe(
-      Effect.mapError(() => refuse("publication"))
-    );
+    const selected = yield* decodeNativeCorrelations(rows).pipe(Effect.mapError(() => refuse("publication")));
     return A.filter(selected, (row) => row.external_id === externalId);
   });
   const remember = Effect.fnUntraced(function* (entry: OwnerCheckpointOutbox, externalId: string, id: number) {

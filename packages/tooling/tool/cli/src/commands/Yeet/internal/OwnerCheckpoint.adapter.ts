@@ -61,6 +61,10 @@ const NativeRule = S.Struct({
 }).pipe(
   $I.annoteSchema("NativeRule", { description: "Native required context and optional integration App binding." })
 );
+const NativeChecks = S.Array(NativeCheck);
+const decodeNativeChecks = S.decodeUnknownEffect(NativeChecks);
+const NativeRules = S.Array(NativeRule);
+const decodeNativeRules = S.decodeUnknownEffect(NativeRules);
 const collectNativeRows = Effect.fnUntraced(function* <Value, Error, Requirements>(
   stream: Stream.Stream<Value, Error, Requirements>
 ): Effect.fn.Return<ReadonlyArray<Value>, OwnerCheckpointError, Requirements> {
@@ -235,7 +239,7 @@ export const readOwnerCheckpointSnapshot = Effect.fn("OwnerCheckpoint.readNative
     const checkRows = yield* client
       .paginateStream("GET /repos/{owner}/{repo}/commits/{ref}/check-runs", at)
       .pipe(collectNativeRows);
-    const checks = yield* S.decodeUnknownEffect(S.Array(NativeCheck))(checkRows).pipe(Effect.mapError(readFailure));
+    const checks = yield* decodeNativeChecks(checkRows).pipe(Effect.mapError(readFailure));
     yield* assertCheckCensus(read, checks, binding);
     const ruleRows = yield* client
       .paginateStream("GET /repos/{owner}/{repo}/rules/branches/{branch}", {
@@ -244,7 +248,7 @@ export const readOwnerCheckpointSnapshot = Effect.fn("OwnerCheckpoint.readNative
         branch: base.ref,
       })
       .pipe(collectNativeRows);
-    const rules = yield* S.decodeUnknownEffect(S.Array(NativeRule))(ruleRows).pipe(Effect.mapError(readFailure));
+    const rules = yield* decodeNativeRules(ruleRows).pipe(Effect.mapError(readFailure));
     yield* assertRequiredApplications(read, checks, rules, selfCheckId, policy);
     const own = A.findFirst(checks, (row) => row.id === selfCheckId);
     if (O.isNone(own) || own.value.external_id !== expectedExternalId) return yield* refuse("evidence");
