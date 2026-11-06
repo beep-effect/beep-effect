@@ -1529,3 +1529,20 @@ Lane `codex/cache-dependency-memory-site-20261106`
 Reverse: Revert the optional refusal-location fields and their tests; retain the actual failed observation and its artifact identities.
 
 <!-- beep:decisions:end -->
+
+### Two successful source observations expose a remaining content mismatch, 2026-11-06
+
+After #2764, actual runs 42236224771 and 42238818447 both passed source inspection
+and dependency diagnostics under the unchanged 256 MiB process ceiling. Each
+verified both snapshots against its declared digest and retained source bytes.
+The cross-run pair still fails: only node-gyp content differs; all group counts,
+bytes, modes, links and headers agree. The changed package has 340 regular files.
+The source revisions differ only by reviewed audit documentation and skills-lock.
+`research/paired-dependency-source-observations-2026-11-06.json` preserves both
+real identities, report hashes and non-comparability. Bounded opaque per-file
+hashes for this diagnostic target must identify the differing bytes before any
+installation or digest-policy change. Python bytecode remains a hypothesis.
+No task qualification, producer grant, signing activation or whole-goal/window
+acceptance follows. The CLI test, test:property and coverage tasks explicitly declare both consumed
+Python files as inputs; a native metadata-only dry-run includes them without executing
+a task body. Hosted regression proof and primary acceptance remain required.

@@ -30,6 +30,11 @@ ENTRY_LIMIT = 600_000
 GROUP_LIMIT = 4096
 HEADER_LIMIT = 64 * 1024
 DEADLINE_SECONDS = 300
+# The real paired observation isolated byte drift to this one package. These
+# additional hashes never filter, normalize or replace the canonical tar digest.
+FILE_DETAIL_GROUP = "node-gyp"
+FILE_DETAIL_ENTRY_LIMIT = 512
+FILE_DETAIL_BYTES_LIMIT = 128 * 1024
 HEX64 = re.compile(r"[a-f0-9]{64}")
 SAFE_LABEL = re.compile(r"[A-Za-z0-9@._+~%/=-]{1,180}")
 TAR_ARGS = [
@@ -159,6 +164,8 @@ def snapshot(deadline):
     require(stat.S_ISDIR(os.lstat("node_modules").st_mode), "dependency-root-not-physical")
     groups = {}
     entries = 0
+    file_details = []
+    file_detail_bytes = 2
     # stderr is never printed. Its file is bounded even on pathological input.
     with tempfile.TemporaryFile() as errors:
         child = subprocess.Popen(
@@ -199,6 +206,16 @@ def snapshot(deadline):
                         group["files"] += 1
                         group["bytes"] += consumed
                         group["content"].update(identity + payload.digest())
+                        if label == FILE_DETAIL_GROUP:
+                            require(len(file_details) < FILE_DETAIL_ENTRY_LIMIT, "file-detail-entry-bound")
+                            suffix = PurePosixPath(member.name).suffix
+                            kind = ("python-bytecode" if suffix in (".pyc", ".pyo") else
+                                    "python-source" if suffix == ".py" else "other")
+                            row = [hashlib.sha256(member.name.encode()).hexdigest(), kind,
+                                   consumed, payload.hexdigest()]
+                            file_detail_bytes += len(encoded(row)) + 1
+                            require(file_detail_bytes <= FILE_DETAIL_BYTES_LIMIT, "file-detail-byte-bound")
+                            file_details.append(row)
                     else:
                         group["content"].update(identity)
                     if member.issym():
@@ -217,7 +234,16 @@ def snapshot(deadline):
                 rows.append([group["label"], group["entries"], group["files"], group["bytes"]] + [
                     group[key].hexdigest() for key in ["content", "mode", "links", "headers"]
                 ])
-            return {"sha256": stream.digest.hexdigest(), "archiveBytes": stream.bytes, "groups": rows}
+            result = {"sha256": stream.digest.hexdigest(), "archiveBytes": stream.bytes, "groups": rows}
+            if file_details:
+                result["fileDetails"] = {
+                    "group": FILE_DETAIL_GROUP,
+                    "columns": ["nameSha256", "kind", "bytes", "contentSha256"],
+                    "rows": file_details,
+                    "entryLimit": FILE_DETAIL_ENTRY_LIMIT,
+                    "encodedBytesLimit": FILE_DETAIL_BYTES_LIMIT,
+                }
+            return result
         finally:
             stream.close()
             if child.poll() is None:

@@ -1,5 +1,7 @@
 import { SparVocab } from "@beep/identity";
 import { CITO_NAMESPACE, CITO_TERMS } from "@beep/rdf/Vocab/Cito";
+import * as Dcat from "@beep/rdf/Vocab/Dcat";
+import { DCAT_NAMESPACE, DCAT_TERMS } from "@beep/rdf/Vocab/Dcat";
 import { DCTERMS_NAMESPACE, DCTERMS_TERMS } from "@beep/rdf/Vocab/Dcterms";
 import { DEO_NAMESPACE, DEO_TERMS } from "@beep/rdf/Vocab/Deo";
 import { DOCO_NAMESPACE, DOCO_TERMS } from "@beep/rdf/Vocab/Doco";
@@ -15,6 +17,7 @@ import * as A from "effect/Array";
 import * as Str from "effect/String";
 
 const vocabCases = [
+  { moduleName: "Dcat", namespace: DCAT_NAMESPACE, prefix: "dcat", terms: DCAT_TERMS },
   { moduleName: "Doco", namespace: DOCO_NAMESPACE, prefix: "doco", terms: DOCO_TERMS },
   { moduleName: "Deo", namespace: DEO_NAMESPACE, prefix: "deo", terms: DEO_TERMS },
   { moduleName: "Fabio", namespace: FABIO_NAMESPACE, prefix: "fabio", terms: FABIO_TERMS },
@@ -65,6 +68,26 @@ const difference = (left: readonly string[], right: readonly string[]) =>
   );
 
 describe("@beep/rdf vocabulary drift", () => {
+  it("exposes curated DCAT terms as named nodes", () => {
+    const nodes = [
+      [Dcat.DCAT_CATALOG, "Catalog"],
+      [Dcat.DCAT_DATASET, "Dataset"],
+      [Dcat.DCAT_DISTRIBUTION, "Distribution"],
+      [Dcat.DCAT_DATA_SERVICE, "DataService"],
+      [Dcat.DCAT_DOWNLOAD_URL, "downloadURL"],
+      [Dcat.DCAT_ACCESS_URL, "accessURL"],
+      [Dcat.DCAT_MEDIA_TYPE, "mediaType"],
+      [Dcat.DCAT_BYTE_SIZE, "byteSize"],
+      [Dcat.DCAT_DISTRIBUTION_PREDICATE, "distribution"],
+      [Dcat.DCAT_DATASET_PREDICATE, "dataset"],
+    ] as const;
+
+    for (const [node, term] of nodes) {
+      expect(node.termType).toBe("NamedNode");
+      expect(node.value).toBe(`${DCAT_NAMESPACE}${term}`);
+    }
+  });
+
   it("keeps RDF vocabulary namespace and term constants aligned with identity SparVocab", () => {
     for (const current of vocabCases) {
       const registry = SparVocab[current.prefix];
