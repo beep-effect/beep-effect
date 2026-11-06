@@ -14,6 +14,7 @@ import {
   CacheLinkedFile,
   CacheLinkerResolution,
   CacheLiveIdentity,
+  CachePilotOutcome,
   CachePilotReceipt,
   CachePilotRequest,
   CacheQualificationService,
@@ -202,8 +203,14 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   requestedLinker: CacheRuntimeLinkerSnapshot = linker,
   profile: typeof S.Boolean.Type = false,
   observeProfile: typeof S.Boolean.Type = true,
-  closureFault: typeof closureFaultDomain.Type = "none"
+  closureFault: typeof closureFaultDomain.Type = "none",
+  computation: CacheQualificationKey["computation"] = "@beep/identity#lint"
 ) {
+  const task = computation;
+  const typesLeaf = computation === dependencyTask;
+  const selectedDirectory = typesLeaf ? typesDirectory : identityDirectory;
+  const selectedAdditionalDirectories = typesLeaf ? R.empty<string, string>() : additionalDirectories;
+  const selectedDependencyTasks = typesLeaf ? A.empty<string>() : dependencyTasks;
   const crypto = yield* Digest.Digest;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -233,7 +240,11 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
     if (profile) {
       yield* writeCacheIdentityLintProfile(directory);
     }
-    for (const packageDirectory of [identityDirectory, typesDirectory, ...R.values(additionalDirectories)]) {
+    for (const packageDirectory of A.dedupe([
+      selectedDirectory,
+      typesDirectory,
+      ...R.values(selectedAdditionalDirectories),
+    ])) {
       yield* write(directory, `${packageDirectory}/src/index.ts`, "export const fixture = 1;\n");
       yield* write(directory, `${packageDirectory}/README.md`, "Fixture\n");
       yield* write(directory, `${packageDirectory}/AGENTS.md`, "Fixture instructions\n");
@@ -242,7 +253,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
       yield* write(
         directory,
         `${packageDirectory}/turbo.json`,
-        packageDirectory === identityDirectory ? before : unprofiled
+        packageDirectory === selectedDirectory ? before : unprofiled
       );
     }
   });
@@ -270,7 +281,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
     tools: {},
   });
   const selectedDependencies =
-    closureFault === "unexpected" ? [...dependencyTasks, "@beep/unreviewed#lint"] : dependencyTasks;
+    closureFault === "unexpected" ? [...selectedDependencyTasks, "@beep/unreviewed#lint"] : selectedDependencyTasks;
   const nodes = A.map(A.prepend(selectedDependencies, task), (id) =>
     CacheCensusNode.make({
       id,
@@ -297,8 +308,8 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
         name: node.workspace,
         directory:
           node.id === task
-            ? identityDirectory
-            : O.getOrElse(R.get(additionalDirectories, node.id), () => typesDirectory),
+            ? selectedDirectory
+            : O.getOrElse(R.get(selectedAdditionalDirectories, node.id), () => typesDirectory),
         scripts: { lint: "bun run beep:lint" },
       })
     ),
@@ -336,7 +347,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
     }),
   });
   const activation = CacheActivationProjection.make({
-    path: `${identityDirectory}/turbo.json`,
+    path: `${selectedDirectory}/turbo.json`,
     before: yield* reference("before.json", before),
     after: yield* reference("after.json", after),
     sourceConfiguration: digest,
@@ -432,13 +443,13 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
             const guest = O.getOrThrow(
               O.flatMap(A.findFirstIndex(args, Equal.equals("--chdir")), (index) => A.get(args, index + 1))
             );
-            const identity = mounted(`${guest}/${identityDirectory}`);
+            const identity = mounted(`${guest}/${selectedDirectory}`);
             const types = mounted(`${guest}/${typesDirectory}`);
             for (const overlay of [identity, types]) {
               const readLink2 = yield* fs.readLink(path.join(overlay, "CLAUDE.md"));
               expect(readLink2).toBe("AGENTS.md");
             }
-            for (const relative of R.values(additionalDirectories)) {
+            for (const relative of R.values(selectedAdditionalDirectories)) {
               const overlay = mounted(`${guest}/${relative}`);
               const readLink1 = yield* fs.readLink(path.join(overlay, "CLAUDE.md"));
               expect(readLink1).toBe("AGENTS.md");
@@ -700,7 +711,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                         const body = NodeBuffer.Buffer.from(log);
                         const tar = NodeBuffer.Buffer.alloc(512 + Math.ceil(body.length / 512) * 512 + 1024);
                         new Header({
-                          path: `${identityDirectory}/.turbo/turbo-lint.log`,
+                          path: `${selectedDirectory}/.turbo/turbo-lint.log`,
                           type: "File",
                           size: body.length,
                           mode: 0o644,
@@ -727,7 +738,8 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                       : enabled
                         ? "cache miss, executing"
                         : "cache bypass, force executing";
-                    stdout = `@beep/identity:lint: ${progress} ${taskHash}\n@beep/identity:lint: ${log}`;
+                    const prefix = Str.replace("#", ":")(task);
+                    stdout = `${prefix}: ${progress} ${taskHash}\n${prefix}: ${log}`;
                   });
                   yield* writeObservation();
                   const exists4 = yield* fs.exists(path.join(types, "src/index.ts"));
@@ -938,6 +950,58 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
 afterEach(() => vi.restoreAllMocks());
 
 it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process boundary", (it) => {
+  it.effect("observes types lint with its own empty closure and no fabricated dependency mutation", () =>
+    Effect.gen(function* () {
+      const { run } = yield* fixture("none", linker, false, true, "none", "@beep/types#lint");
+      const receipt = yield* run();
+      expect(receipt.key.computation).toBe("@beep/types#lint");
+      expect(A.every(receipt.checks, (check) => check.passed)).toBe(true);
+      expect(A.every(receipt.runs, (run) => A.isReadonlyArrayEmpty(run.dependencies))).toBe(true);
+      expect(receipt.shadowDecisions).toHaveLength(10);
+      expect(receipt.mutations).toHaveLength(7);
+      expect(A.some(receipt.mutations, (mutation) => mutation.id === "dependency-source")).toBe(false);
+      expect(
+        A.every(
+          receipt.runs,
+          (run) =>
+            CachePilotOutcome.isAnyOf(["Executed"])(run.outcome) &&
+            run.outcome.selected.computation === "@beep/types#lint"
+        )
+      ).toBe(true);
+    })
+  );
+  it.effect("rejects a borrowed dependency graph for the types leaf recipe", () =>
+    Effect.gen(function* () {
+      const { run, calls } = yield* fixture("none", linker, false, true, "unexpected", "@beep/types#lint");
+      const failure = yield* run().pipe(Effect.flip);
+      expect(failure.message).toContain("empty dependency closure");
+      expect(calls).toHaveLength(0);
+    })
+  );
+  it.effect("rejects identity scanner routing for a types observation", () =>
+    Effect.gen(function* () {
+      const { run, calls } = yield* fixture("none", linker, true, true, "none", "@beep/types#lint");
+      const failure = yield* run().pipe(Effect.flip);
+      expect(failure.message).toContain("does not admit the identity scanner profile");
+      expect(calls).toHaveLength(0);
+    })
+  );
+  it.effect("refuses signed types execution before any task can run", () =>
+    Effect.gen(function* () {
+      const { runSigned, calls } = yield* fixture("none", linker, false, true, "none", "@beep/types#lint");
+      const failure = yield* runSigned().pipe(Effect.flip);
+      expect(failure.message).toContain("Signed types pilot execution is not admitted");
+      expect(calls).toHaveLength(0);
+    })
+  );
+  it.effect("rejects an activation without a reviewed execution recipe", () =>
+    Effect.gen(function* () {
+      const { run, calls } = yield* fixture("none", linker, false, true, "none", "@beep/unreviewed#lint");
+      const failure = yield* run().pipe(Effect.flip);
+      expect(failure.message).toContain("no reviewed execution recipe");
+      expect(calls).toHaveLength(0);
+    })
+  );
   it.effect("submits the local experiment to admission and preserves a rejected admission", () =>
     Effect.gen(function* () {
       const { root, runAdmitted } = yield* fixture();

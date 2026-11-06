@@ -1094,6 +1094,14 @@ links together to reverse this component; runtime configuration is unchanged.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-quality-cache-adoption`; add a `kind: decision` file there, never edit this block._
 
+### Prepare an unpublished local types pilot behind the recipe parent, 2026-11-06
+
+Prepare the next implementation while three owned PRs remain open. The publication cap does not forbid an unpublished dependent worktree: start from parent #2813 head 563b0b210647b6909ea9f3de8638a28c5513bf86, then replay only this unpublished work onto accepted main after the parent lands, before opening another PR. Select the reviewed recipe from the verified activation preview. Types lint has no dependency tasks, uses local-only observations, rejects identity scanner routing and signed execution, and does not fabricate a dependency-source control. Unknown computations fail before task execution. Existing input, native plan, runtime key, capture and integrity checks remain required; failed candidate comparisons remain failed observations. Five process-boundary tests are authored but unrun. No local verify, publish, tests, check, docgen, package verification or manual source generator is run, per operator instruction; ordinary hooks are allowed. Syntax parsing alone is not type or runtime proof. Types caching remains disabled, and no qualification, signing, credential or production grant changes. Types input-profile review and admitted native comparisons remain necessary before any adoption.
+
+Lane `codex/cache-types-pilot-20261106`
+
+Reverse: Revert local types observation support; identity remains the only execution recipe. No deployment or qualification state changes.
+
 ### Bind pilot selection and mounts to one reviewed recipe, 2026-11-06
 
 Centralize the existing identity pilot computation, package filter, selected package path, and fresh dependency paths in one internal schema-backed recipe. Route activation, closure validation, native summary selection, filters, sandbox mounts, and mutation paths through that recipe. Identity remains the sole admitted recipe. This is the first implementation step toward additional reviewed computation recipes, beginning with dependency-free types lint; it does not add types execution or reuse authority. Static substitution of the unchanged recipe values reproduces the prior runner source exactly before formatting. Hosted CI remains required runtime and type-check evidence. No manual local verify, publish, tests, check, docgen or package verification was run, per operator instruction. Both whole goals and all qualification and rollout obligations remain open.

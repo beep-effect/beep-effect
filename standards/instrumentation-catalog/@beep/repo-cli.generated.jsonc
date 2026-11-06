@@ -339,6 +339,7 @@
     {"name":"CachePilot.prepareInvocation","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.prepareMutationBaseline","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.prepareNonExecution","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CachePilot.preparePrimaryDependency","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.producerUploadExperiment","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.profileObservation","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.renderSignedWorker","owner":"@beep/repo-cli","family":"tooling","conforms":true},
