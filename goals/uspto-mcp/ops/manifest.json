@@ -33,11 +33,7 @@
     "goals/uspto-mcp/research/SOURCES.md",
     "goals/mcp-kit/SPEC.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/mcp-auth-gated-registration/research/SOURCES.md",
-    "../../explorations/mcp-auth-gated-registration/reviews/2026-07-01-codex-verification.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "links": {
     "goals": ["mcp-kit", "mcp-host-retrofit"]
   },
@@ -91,5 +87,9 @@
     "The implementation would exceed named scope (nlp-mcp/m365-mcp retrofit, gov-legal driver depth, write operations).",
     "Verification requires a real USPTO_API_KEY, a live network call, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
+  ],
+  "researchReferences": [
+    "../../explorations/mcp-auth-gated-registration/research/SOURCES.md",
+    "../../explorations/mcp-auth-gated-registration/reviews/2026-07-01-codex-verification.md"
   ]
 }

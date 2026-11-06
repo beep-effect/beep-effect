@@ -34,7 +34,15 @@
     "goals/attorney-question-loop/GOAL.md",
     "goals/attorney-question-loop/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/P0-SCHEMA.md",
+    "research/P1-CONTRACT.md",
+    "research/P3B-HUB.md",
+    "research/SOURCES.md",
+    "research/review-hub-cache-review-2.md",
+    "research/review-hub-cache-review.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

@@ -47,5 +47,6 @@
   "schemaVersion": "initiative-manifest/v2",
   "lifecycle": "completed-retained",
   "mergedPullRequest": 165,
-  "packetPath": "goals/repo-quality-convergence"
+  "packetPath": "goals/repo-quality-convergence",
+  "researchReports": ["research/repo-health-scorecard.md"]
 }

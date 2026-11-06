@@ -31,7 +31,12 @@
     "goals/codex-security-findings-2026-09-16/GOAL.md",
     "goals/codex-security-findings-2026-09-16/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/issue-1137.md",
+    "research/verification.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

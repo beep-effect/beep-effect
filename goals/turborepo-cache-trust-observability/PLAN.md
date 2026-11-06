@@ -1468,3 +1468,15 @@ are authored; no local suite ran and current hosted proof is pending. See
 `research/signed-key-floor-review-2026-11-04.json`. The recorded native 168-case
 experiment is historical evidence, not a fresh run. No live signing, credential,
 profile qualification, phase completion or representative window is granted.
+
+### Hold readiness after a failed check capture, 2026-11-03
+
+[The regression receipt](research/readiness-unread-check-regression-2026-11-03.json)
+records a live closeout that printed ready while an independent exact-head read
+still showed two CI failures. The collector retained a typed read failure, but
+the shared status/completion readiness policy ignored it. Require a complete
+read before the checks criterion can pass and label an incomplete check summary. Authored partition, zero-count and
+recovery regressions await hosted CI; no local test or quality suite ran.
+
+Keep the observed PR held, the inherited main repair separate, and every trust
+acceptance criterion open. This repair changes no cache or producer authority.

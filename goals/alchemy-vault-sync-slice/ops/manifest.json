@@ -34,12 +34,7 @@
     "goals/alchemy-vault-sync-slice/GOAL.md",
     "goals/alchemy-vault-sync-slice/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/alchemy-domain-adoption/research/01-astra-source-analysis.md",
-    "../../explorations/alchemy-domain-adoption/research/02-muse-deep-research.md",
-    "../../explorations/alchemy-domain-adoption/research/03-grok-deep-research.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -89,5 +84,10 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
+  ],
+  "researchReferences": [
+    "../../explorations/alchemy-domain-adoption/research/01-astra-source-analysis.md",
+    "../../explorations/alchemy-domain-adoption/research/02-muse-deep-research.md",
+    "../../explorations/alchemy-domain-adoption/research/03-grok-deep-research.md"
   ]
 }

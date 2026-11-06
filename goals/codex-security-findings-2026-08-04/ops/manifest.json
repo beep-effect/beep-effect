@@ -32,8 +32,8 @@
     "goals/codex-security-findings-2026-08-04/research/SOURCES.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
-    "research/FABLE-5-BEEP-SECURITY-CAPTURE-HANDOFF.md"
+    "research/FABLE-5-BEEP-SECURITY-CAPTURE-HANDOFF.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {

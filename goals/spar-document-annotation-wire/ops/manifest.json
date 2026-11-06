@@ -44,8 +44,10 @@
     "explorations/document-structure-ontologies/DECISIONS.md"
   ],
   "researchReports": [
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
-    "../../explorations/document-structure-ontologies/research/SOURCES.md"
+    "research/cache-policy-review.md",
+    "research/retained-private-release-notes.md"
   ],
   "agentLaunchers": [
     {
@@ -94,5 +96,8 @@
     "Exact upstream artifacts, licenses, or notices cannot be pinned.",
     "The implementation would hand-edit generator-owned output.",
     "The work would absorb patent, taxonomy, or MCP scope."
+  ],
+  "researchReferences": [
+    "../../explorations/document-structure-ontologies/research/SOURCES.md"
   ]
 }

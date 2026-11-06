@@ -109,5 +109,10 @@
     "The implementation would exceed named scope (formatting changes or type-aware check migration).",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
+  ],
+  "researchReports": [
+    "research/p0-spike-result.md",
+    "research/recon-2026-06-20.md",
+    "research/rule-inventory.md"
   ]
 }
