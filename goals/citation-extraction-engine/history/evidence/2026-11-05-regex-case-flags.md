@@ -54,6 +54,13 @@ The final cooperative-yield refactor preserves the tested state transitions.
 Normal commit hooks also apply. The complete hosted integration requires 1,234
 CPython and 2,115 V0 requests per runtime; it is registered and not locally run.
 
+The full repository effect-vitest policy scan reports two findings in
+technical-drawing/test/Generate.check.test.ts and codegen-kit/test/CodegenKit.test.ts.
+Both files match origin/main exactly; neither is changed in this PR. This is an
+inherited failing policy receipt, not a whole-repository pass. The post-commit
+divergence audit passes after regenerating the seal from formatted plan bytes:
+11 representation laws, four fidelity questions and 15 unfinished proof rows.
+
 Nullable finditer advancement remains unqualified and is excluded by the existing
 shared replay rule. Parser/capture success does not establish raw-pattern safety,
 family scaling, complete inline-flag grammar or whole-engine parity. Candidate

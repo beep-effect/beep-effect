@@ -320,7 +320,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-regex-case-flags.md",
-          "sha256": "c912f4f7c21266c66956e7284bad749ba7c6069a04f613de46827dfb6c03e1f9"
+          "sha256": "9b188e0ac94f038c6df396f097061bd7d6b3c5d6f1cf15020703a14893bb1f3c"
         }
       ],
       "workflowState": "audit",
@@ -1365,7 +1365,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-regex-case-flags.md",
-          "sha256": "c912f4f7c21266c66956e7284bad749ba7c6069a04f613de46827dfb6c03e1f9"
+          "sha256": "9b188e0ac94f038c6df396f097061bd7d6b3c5d6f1cf15020703a14893bb1f3c"
         }
       ],
       "workflowState": "audit",
