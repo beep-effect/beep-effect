@@ -64,10 +64,20 @@ export const HISTORY_NOTES_REF = "refs/notes/history";
  */
 export const HISTORY_SUBJECT_MAX_LENGTH = 72;
 
-/** The message's lines, with the trailing newline(s) a map row may end with dropped first. */
+/**
+ * The message's lines, with the trailing newline(s) a map row may end with dropped first.
+ *
+ * @param message - One map row's commit message.
+ * @returns Its lines in order, without the empty tail a trailing newline would add.
+ */
 const messageLines = (message: string): ReadonlyArray<string> => Str.split("\n")(Str.replace(/\n+$/u, "")(message));
 
-/** The first line of a message. */
+/**
+ * The first line of a message.
+ *
+ * @param message - One map row's commit message.
+ * @returns The subject line, which is the whole message when it has no newline.
+ */
 const subjectOf = (message: string): string => A.headNonEmpty(Str.split("\n")(message));
 
 /**
@@ -216,6 +226,8 @@ const decodeMapText = S.decodeEffect(S.fromJsonString(HistoryCommitMessageMap), 
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
+ * @param text - The raw JSON text of the map file.
+ * @returns The decoded map, or a `SchemaError` listing every invalid row and key.
  * @category decoding
  * @since 0.0.0
  */
@@ -229,8 +241,8 @@ export const decodeHistoryCommitMessageMap = (text: string): Effect.Effect<Histo
  * **Details**
  *
  * This is the byte-for-byte text a `refs/notes/history` note must hold, and
- * the writer must produce exactly it. It equals what `git notes add -m
- * <message>` stores, because git's stripspace cleanup also collapses the
+ * the writer must produce exactly it. It equals what
+ * `git notes add -m <message>` stores, because git's stripspace cleanup also collapses the
  * end of the text to one newline; the map rows themselves may end with one
  * newline or none.
  *
@@ -242,6 +254,9 @@ export const decodeHistoryCommitMessageMap = (text: string): Effect.Effect<Histo
  * console.log(historyNoteBody("chore: x\n") === "chore: x\n") // true
  * console.log(historyNoteBody("chore: x") === "chore: x\n") // true
  * ```
+ *
+ * @param message - One decoded map row's commit message.
+ * @returns The exact note text to store for that row, ending in one newline.
  *
  * @category utilities
  * @since 0.0.0

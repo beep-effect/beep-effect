@@ -136,7 +136,12 @@ const gitError = (operation: string, message: string) => (cause: unknown) =>
   HistoryGitError.make({ operation, message, cause });
 
 const sortShas = A.sort(Order.String);
-/** The commit SHA of one map row. */
+/**
+ * The commit SHA of one map row.
+ *
+ * @param row - A `[sha, message]` map entry.
+ * @returns The entry's commit SHA.
+ */
 const rowKey = ([key]: readonly [string, HistoryCommitMessage]): string => key;
 const byKey = Order.mapInput(Order.String, rowKey);
 
@@ -380,6 +385,9 @@ export const HistoryNotesLive: Layer.Layer<HistoryNotes, never, FileSystem.FileS
  * console.log(historyNotesCheckProblems(report).length) // 0
  * ```
  *
+ * @param report - The check report to judge.
+ * @returns One sentence per failing condition, in a fixed order; empty when the check passed.
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -398,7 +406,13 @@ export const historyNotesCheckProblems = (report: HistoryNotesCheckReport): Read
     ),
   ]);
 
-/** One labelled SHA category, listing at most {@link LISTED_SHAS} and counting the rest. */
+/**
+ * One labelled SHA category, listing at most {@link LISTED_SHAS} and counting the rest.
+ *
+ * @param label - The category name printed before each SHA.
+ * @param shas - The category's SHAs, already sorted.
+ * @returns One indented line per listed SHA, plus an "and N more" line when elided.
+ */
 const shaLines = (label: string, shas: ReadonlyArray<string>): ReadonlyArray<string> => [
   ...A.map(A.take(shas, LISTED_SHAS), (sha) => `  ${label}: ${sha}`),
   ...(shas.length > LISTED_SHAS ? [`  ${label}: ... and ${shas.length - LISTED_SHAS} more`] : []),
@@ -428,6 +442,9 @@ const shaLines = (label: string, shas: ReadonlyArray<string>): ReadonlyArray<str
  * })
  * console.log(renderHistoryNotesCheck(report).at(-1)) // "result: ok"
  * ```
+ *
+ * @param report - The check report to render.
+ * @returns The summary lines, ending with a `result:` line.
  *
  * @category utilities
  * @since 0.0.0
@@ -472,6 +489,9 @@ export const renderHistoryNotesCheck = (report: HistoryNotesCheckReport): Readon
  * console.log(renderHistoryNotesWrite(report)[0]) // "history notes write: refs/notes/history unchanged (940 notes)"
  * ```
  *
+ * @param report - The write report to render.
+ * @returns The summary lines: the outcome, commit and tree, plus the previous commit when the ref moved.
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -493,6 +513,9 @@ export const renderHistoryNotesWrite = (report: HistoryNotesWriteReport): Readon
  * const report = HistoryNotesSyncReport.make({ origin: true, fetchRefspec: "added", displayRef: "present", fetch: "skipped" })
  * console.log(renderHistoryNotesSync(report)[1]) // "  remote.origin.fetch +refs/notes/history:refs/notes/history: added"
  * ```
+ *
+ * @param report - The sync report to render.
+ * @returns One header line and one line each for the fetch refspec, the display ref and the fetch.
  *
  * @category utilities
  * @since 0.0.0
