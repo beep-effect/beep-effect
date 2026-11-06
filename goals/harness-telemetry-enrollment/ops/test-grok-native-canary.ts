@@ -21,17 +21,21 @@ import { Sha256Hex } from "@beep/schema";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
+import { assertFalse, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Toml from "effect/encoding/Toml";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { vi } from "vitest";
 import {
   GrokNativeCanaryDiagnostic,
+  GrokNativeCanaryError,
   GrokNativeCanaryEvidence,
   GrokNativeCanaryRequest,
   GrokNativeSessionContext,
@@ -51,6 +55,7 @@ import { NativeAttemptDiagnostic } from "./native-attempt-diagnostic.ts";
 const id = (c: string) => Sha256Hex.make(Str.repeat(64)(c));
 const digest = (text: string | Uint8Array) => createHash("sha256").update(text).digest("hex");
 const compile = promisify(execFile);
+const decodeCanaryError = S.decodeUnknownEffect(GrokNativeCanaryError);
 const nativeFixture = String.raw`
 #include <stdio.h>
 #include <stdlib.h>
@@ -337,6 +342,42 @@ const fixture = async (
 // globally concurrent tests. No real session bus or login shell is used.
 const nativeCase = (name: string, body: () => Effect.Effect<void, unknown>) =>
   it.live(name, body, { concurrent: false });
+
+it.effect("declares only the fixed cold-catalog model identity without transport or credential overrides", () =>
+  Effect.gen(function* () {
+    const profile = yield* Effect.fromResult(Toml.parse(grokCanaryProfile));
+    const expected = yield* Effect.fromResult(Toml.parse('[model."grok-4.7"]\nmodel="grok-4.7"\n'));
+    const models = R.get(profile, "model");
+    const expectedModels = R.get(expected, "model");
+    const expectedModel = O.getOrThrow(expectedModels);
+    assertSome(models, expectedModel);
+    const hasEndpoints = R.has(profile, "endpoints");
+    const hasProviders = R.has(profile, "model_providers");
+    const hasAuth = R.has(profile, "auth");
+    assertFalse(hasEndpoints);
+    assertFalse(hasProviders);
+    assertFalse(hasAuth);
+  })
+);
+
+nativeCase("a legacy profile without the model declaration refuses before native inventory and cannot replay", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture();
+    try {
+      const legacy = Str.replace('\n[model."grok-4.7"]\nmodel = "grok-4.7"\n', "")(grokCanaryProfile);
+      await Fs.writeFile(Path.join(f.request.nativeHome, "config.toml"), legacy, { mode: 0o600 });
+      const refused = await f.run.pipe(Effect.flip, Effect.flatMap(decodeCanaryError), Effect.runPromise);
+      expect(refused.phase).toBe("source");
+      await Fs.writeFile(Path.join(f.request.nativeHome, "config.toml"), grokCanaryProfile, { mode: 0o600 });
+      const replay = await f.run.pipe(Effect.flip, Effect.flatMap(decodeCanaryError), Effect.runPromise);
+      expect(replay.phase).toBe("attempted-unknown");
+      expect(await f.count("inspect-count")).toBe(0);
+      expect(await f.count("source-count")).toBe(0);
+    } finally {
+      await f.close();
+    }
+  })
+);
 
 nativeCase("serialized admission round-trips a redacted salt and spawns nothing", () =>
   Effect.tryPromise(async () => {
