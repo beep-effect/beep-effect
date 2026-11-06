@@ -182,14 +182,14 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
       yield* ensureOpen;
       if (total !== actual) return yield* fail("invalid-reservation");
     });
-    const consumeUnchanged = Effect.fnUntraced(function* (value: CitationCleanerObject) {
+    const consumeUnchanged = Effect.fnUntraced(function* (value: CitationCleanerObject, chargeParent: boolean) {
       const units = yield* runtime.textUnits(value);
       if (O.isSome(units)) {
         const amount = yield* S.decodeEffect(S.Natural)(units.value).pipe(
           Effect.mapError(() => fail("invalid-reservation"))
         );
         if (amount > 0) {
-          const charge = yield* reserveText(amount);
+          const charge = yield* chargeParent ? reserveText(amount) : exclusive(reserveUnlocked(amount));
           yield* consume([charge], amount);
         }
       }
@@ -201,7 +201,8 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
     });
     const execute = Effect.fn("Citation.executeCleanerPlan")(function* (
       plan: string,
-      initial: CitationCleanerObject
+      initial: CitationCleanerObject,
+      chargeUnchangedParent = true
     ): Effect.fn.Return<CitationCleanerObject, Failure> {
       yield* ensureOpen;
       const selected = yield* S.decodeEffect(Plan)(plan).pipe(Effect.mapError(() => fail("invalid-input")));
@@ -214,7 +215,7 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
         yield* Effect.yieldNow;
         const next = yield* cursor.next;
         if (O.isNone(next)) {
-          if (steps === 0) yield* consumeUnchanged(value);
+          if (steps === 0) yield* consumeUnchanged(value, chargeUnchangedParent);
           return value;
         }
         yield* runtime.assertOwned(next.value);
@@ -242,20 +243,22 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
     };
     return {
       work,
+      execute,
       close: Ref.update(state, (current) => CitationCleanerWorkSnapshot.make({ ...current, closed: true })),
     };
   });
   const runInitial = Effect.fn("Citation.runOwnedCleanerPlan")(function* (
     plan: string,
-    initial: Effect.Effect<CitationCleanerObject, Failure>
+    initial: Effect.Effect<CitationCleanerObject, Failure>,
+    chargeUnchangedParent = true
   ) {
     return yield* Effect.acquireUseRelease(
       makeWork,
-      ({ work }) =>
+      ({ work, execute }) =>
         sanitize(
           Effect.gen(function* () {
             const value = yield* initial;
-            const result = yield* work.nested(plan, value);
+            const result = yield* execute(plan, value, chargeUnchangedParent);
             return CitationCleanerRun.make({
               value: result,
               producedTextUtf16: (yield* work.snapshot).producedTextUtf16,
@@ -289,7 +292,9 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
     ),
     /** Run an already-issued value without projecting native words or replacing
      * its object identity. The enclosing document owns the initial handle.
-     * Uses the same work ledger, timers, invocation and close path as raw text.
+     * Unchanged input is counted locally without another parent allocation:
+     * the enclosing operation owns its source reservation. New callback/builtin
+     * output still charges both ledgers. Uses the same timers and close path.
      */
     runOwned: Effect.fn("Citation.runOwnedCleanerPipeline")(
       function* (input: unknown) {
@@ -303,7 +308,8 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
             const units = yield* runtime.textUnits(request.value);
             if (O.isSome(units) && units.value > limits.sourceUtf16) return yield* safety("sourceUtf16");
             return request.value;
-          })
+          }),
+          false
         );
       },
       sanitize,

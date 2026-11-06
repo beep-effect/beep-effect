@@ -1,4 +1,7 @@
 import { makeCitationCleanerPipeline } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { CitationCleanerProtocols } from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
+import { CitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
+import { makeCitationDocumentCleanerProtocols } from "@beep/law-practice-server/internal/Citation/DocumentCleanerProtocols";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationCleaner, CitationCleanerProduced, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
@@ -61,6 +64,32 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("cleaner par
       const work = yield* h.work;
       const snapshot = yield* work.snapshot;
       expect(snapshot).toEqual({ producedTextUtf16: 0, closed: true });
+    })
+  );
+  it.effect("counts an unchanged owned input locally without reserving its parent source twice", () =>
+    Effect.gen(function* () {
+      const { h, pipeline, budget } = yield* install(4);
+      yield* budget.reserve(4);
+      const value = yield* h.values.sourceText("ABCD");
+      const policy = (yield* defaultCitationEnginePolicy).limits;
+      const adapter = yield* makeCitationDocumentCleanerProtocols(policy).pipe(
+        Effect.provideService(CitationCleanerValues, h.values),
+        Effect.provideService(CitationCleanerProtocols, h.protocols)
+      );
+      h.hooks({ open: adapter.cleaner.open });
+      const generator = yield* adapter.create({ kind: "generator", names: [] });
+      const truthy = yield* adapter.document.truth(generator);
+      expect(truthy).toBe(true);
+      const plan = yield* adapter.document.plan(generator);
+      const result = yield* pipeline.runOwned({ value, plan });
+      expect(result.value).toBe(value);
+      expect(result.producedTextUtf16).toBe(4);
+      const used = yield* budget.snapshot;
+      expect(used).toBe(4);
+      const state = yield* adapter.inspect(generator);
+      expect(O.getOrThrow(O.getOrThrow(state).generator).state).toBe("GEN_CLOSED");
+      const raw = yield* pipeline.run({ text: "ABCD", plan }).pipe(Effect.flip);
+      expect(raw).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
     })
   );
   it.effect("settles bounded real builtin output in both ledgers exactly once", () =>

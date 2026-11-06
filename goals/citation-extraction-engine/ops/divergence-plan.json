@@ -304,7 +304,8 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-06-retained-document-reuse.md",
         "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-reports.md",
         "goals/citation-extraction-engine/history/evidence/2026-11-06-cleaner-port.md",
-        "goals/citation-extraction-engine/history/evidence/2026-11-06-tokenizer-port.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-tokenizer-port.md",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-cleaner-unchanged-reservation.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

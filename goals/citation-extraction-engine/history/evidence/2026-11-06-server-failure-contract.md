@@ -58,7 +58,7 @@ Its scanner failure still awaits independent policy PR #2786 landing on main.
 ```sh
 bun run beep quality package-verify @beep/law-practice-use-cases --quick
 bun run beep quality package-verify @beep/law-practice-server --quick
-bun run beep lint laws --package packages/law-practice-use-cases
+bun run beep lint laws --package packages/law-practice/use-cases
 bun run beep lint laws --package packages/law-practice/server
 cd packages/law-practice/use-cases
 bun run beep:build

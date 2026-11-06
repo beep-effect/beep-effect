@@ -1269,6 +1269,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Move the cleaner contract back into the private pipeline and restore direct imports, preserving existing issuance, runtime behavior and sealed evidence.
 
+### Avoid reserving unchanged owned cleaner input twice, 2026-11-06
+
+PR review found that an empty truthy generator charged an already-reserved source twice. Top-level runOwned now settles unchanged input locally while raw input and newly produced/nested text retain parent enforcement. The actual generator regression proves identity, four local units, four parent units, generator closure and raw-input refusal against the exhausted parent. Twenty-five focused tests, type/declaration checks, blocking laws and scoped Fallow pass. The evidence command uses the existing use-case package path. See history/evidence/2026-11-06-cleaner-unchanged-reservation.md. No parity obligations are promoted.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert this checkpoint and accounting change together; restore the parent-budget regression before changing the source reservation contract.
+
 ### Commit installed engine configuration with explicit build trust, 2026-11-06
 
 The versioned engine commitment combines trusted installer build/runtime/selected-port metadata with actual authenticated default assets, captured calendar and encoded policy. Existing Schema snapshot and SHA-256 primitives are reused. Build metadata is snapshotted before asset loading; runtime kind matches the installed diff backend. This commits installer claims rather than attesting arbitrary code. Connected extraction uses the producer with explicit fake deployment metadata; actual deployment/Layer port binding and all broader acceptance remain open. See history/evidence/2026-11-06-engine-artifact.md.
