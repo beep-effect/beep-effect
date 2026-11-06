@@ -864,7 +864,7 @@ const readReviewerReadyAt = Effect.fnUntraced(function* (context: RepoRunContext
     "--slurp",
   ]).pipe(Effect.flatMap((value) => decodeReviewerResponse(ReviewerRequestReadyEvent.pipe(S.Array, S.Array), value)));
   const readyEvents = A.filter(A.flatten(events), (event) => event.event === "ready_for_review");
-  if (A.isReadonlyArrayEmpty(readyEvents) || A.some(readyEvents, (event) => O.isNone(event.created_at))) {
+  if (A.some(readyEvents, (event) => O.isNone(event.created_at))) {
     return yield* YeetCommandError.make({
       message: "reviewer request refused: latest ready event is missing or has no timestamp",
       exitCode: 1,
@@ -1210,23 +1210,13 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
         })
       ),
     "already-ready": Effect.fnUntraced(function* ({ prNumber }) {
-      yield* requireFinalCheck(
-        context,
-        dependencies,
-        prNumber,
-        O.getOrElse(read.remote.headSha, () => "unknown")
-      );
+      const currentHead = O.getOrElse(read.remote.headSha, () => "unknown");
+      yield* requireFinalCheck(context, dependencies, prNumber, currentHead);
       yield* Console.log(
         `[yeet] pull request #${prNumber} is already ready for review; current-head final-check proof verified, nothing to flip`
       );
       yield* adviseSquashCommitlint(context, dependencies, prNumber);
-      yield* ensureReviewerRequest(
-        context,
-        dependencies,
-        prNumber,
-        O.getOrElse(read.remote.headSha, () => "unknown"),
-        false
-      );
+      yield* ensureReviewerRequest(context, dependencies, prNumber, currentHead, false);
     }),
     flip: Effect.fnUntraced(function* ({ prNumber, headSha }) {
       yield* requireFinalCheck(

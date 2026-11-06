@@ -187,6 +187,28 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
     );
   }
 
+  for (const changed of [
+    pull({ draft: true }),
+    pull({ state: "closed" }),
+    pull({ head: { sha: Str.repeat(40)("b") } }),
+  ]) {
+    it.effect(`refuses initial unsupported live state ${json(changed)}`, () =>
+      Effect.gen(function* () {
+        const runner = ScriptedSpawner.make((command) => {
+          expect(command).toBe("gh");
+          return { stdout: json(changed) };
+        });
+        const error = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(
+          provideSpawner(runner),
+          Effect.flip
+        );
+        expect(error.message).toContain("no longer open and ready at the proven head");
+        expect(runner.spawns).toHaveLength(1);
+        assertSome(A.head(A.map(runner.spawns, (spawn) => spawn.args)), ["api", "repos/{owner}/{repo}/pulls/42"]);
+      })
+    );
+  }
+
   it.effect("refuses an unsupported authenticated identity without posting or pushing", () =>
     Effect.gen(function* () {
       const runner = ScriptedSpawner.make((command, args) => {

@@ -501,22 +501,31 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       })
     );
 
-    it.effect("keeps the flip when the reviewer re-request push fails", () =>
+    it.effect("keeps the flip and prints a canonical manual request when the comment fails", () =>
       Effect.gen(function* () {
+        const commentHead = Str.repeat(40)("a");
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const decision = yield* runYeetReadyGate(context, {
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
-          read: () => Effect.succeed(prView()),
+          read: () => Effect.succeed(prView({ headSha: O.some(commentHead) })),
           markReady: recordingMarkReady(calls),
           requestReview: () =>
-            Effect.fail(YeetCommandError.make({ message: "git push failed", command: "git push", exitCode: 1 })),
+            Effect.fail(
+              YeetCommandError.make({ message: "comment POST failed", command: "gh api comment", exitCode: 1 })
+            ),
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
         const got4 = yield* Ref.get(calls);
         expect(got4).toEqual([["ready", "42"]]);
+        const lines = yield* TestConsole.logLines;
+        const printed = A.join(A.map(lines, String), "\n");
+        expect(printed).toContain("could not create the beep-reviewer re-request: comment POST failed");
+        expect(printed).toContain(`<!-- beep-reviewer:request sha=${commentHead} -->`);
+        expect(printed).toContain("Requesting beep-reviewer review of this ready PR head.");
+        expect(printed).not.toContain("posted beep-reviewer request");
       })
     );
 
