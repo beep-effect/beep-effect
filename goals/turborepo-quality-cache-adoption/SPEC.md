@@ -1128,6 +1128,12 @@ authoritative, with no local task bodies or quality suites executed.
 
 Reverse: Restore the prior property-test and coverage input arrays while retaining the diagnostic Python inputs, metadata receipt and unchanged coverage cache false policy.
 
+### Preserve unsplit integration owners in scoped quality execution, 2026-11-06
+
+The existing scoped branch drops the plain integration bucket, including current owners with integration source. Retain caller scope and prepend only split-owner exclusions; do not add positive unsplit filters to an affected selection because native Turbo unions them and could broaden scope. Keep the empty-owner no-op and existing unscoped owner filters. Twenty pinned native metadata plans (default and repository-enabled flag fixtures) validate the negative-filter behavior without task execution. The helper regression is authored but unrun; no local quality suites or source-generator entrypoints are used. Prepare unpublished until an owned PR slot opens, then consume accepted main and push for hosted proof. See research/scoped-unsplit-integration-selection-2026-11-06.json and its limitations.
+
+Reverse: Revert the integration argument resolver and its regression controls; retain uncached integration policy and all historical evidence.
+
 ### Count native query packages and bind prepared-source history, 2026-11-06
 
 After accepted PR #2695, nonempty affected-query summaries still reported zero packages. Count distinct valid package.name identities with existing Effect helpers; retain the accepted optional-array codec fix. Extend the three-task/two-package and explicit-empty assertions for hosted CI without running local quality suites. Bind the initial SCM report explicitly to f48bf842, whose two recorded hashes match, and preserve every historical hash and native capture. Record the current repair source separately. This changes diagnostic metadata only and grants no qualification, signing, capacity or whole-goal completion.

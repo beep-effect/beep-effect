@@ -1,5 +1,13 @@
 # Friction and opportunities
 
+## Hosted Integration interrupted by runner loss, 2026-11-06
+
+PR #2804 Integration job 128166148577 failed on head 0bdabf78490c3ee2e8ac86fb356bbaa837d481b3 after the self-hosted runner lost communication. GitHub's sole failure annotation identifies runner loss; the verification step remains in progress in the terminal job record and no step reports a test failure. The completed-job log endpoint returns provider `BlobNotFound` instead of a test log; preserve that response separately and never claim it as captured test output. After rechecking the unchanged open PR head and completed failed run, request one retry of only the interrupted job. Its request was accepted; replacement-job execution still needs verification. Do not patch tests or rerun the whole workflow from this evidence. A subsequent REST status read hit the account's real API quota, so further REST verification waits for reset without changing credentials. This operational interruption is separate from the scoped integration routing omission prepared in this lane.
+
+## Scoped integration routing omits plain-only script owners, 2026-11-06
+
+While following the remaining hosted Integration jobs, source review found that the root Quality runner sets its plain integration bucket empty for every affected or explicit-filter invocation. Seven current plain-only owners contain integration source files. Preserve those owners under the original caller scope and exclude split owners to avoid duplicate execution. Native stable/canary metadata fixtures confirm that negative exclusions preserve both explicit and affected selection; the source resolver and helper regression are prepared in the unpublished integration-scope lane, with hosted correctness still required. This is a fresh-test coverage repair, not a reason to cache live integration verdicts.
+
 ## Captured output lost at timeout, 2026-11-03
 
 Heavy / Lint Policy on #2686 timed out in `knowledge doctor ci` after its

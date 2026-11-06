@@ -189,6 +189,8 @@
     "research/refresh-current-population.py",
     "research/remaining-mutating-fixer-disposition-review.json",
     "research/remaining-persistent-service-disposition-review.json",
+    "research/scoped-unsplit-integration-selection-2026-11-06.json",
+    "research/scoped-unsplit-integration-selection-2026-11-06.md",
     "research/selection-current-canary-checkpoint.json",
     "research/selection-current-driver-controls.json",
     "research/selection-review-source-controls.json",
