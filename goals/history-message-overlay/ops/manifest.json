@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "history-message-overlay",
+    "packetId": "goal-packet/v1:57aca20f21dde7e51af0ea5bd89e6572dcbdb8d3e4753966b9448706183bdf7d",
+    "title": "History Message Overlay",
+    "status": "active",
+    "created": "2026-11-06",
+    "updated": "2026-11-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/history-message-overlay",
+  "lifecycle": "active",
+  "mission": "History Message Overlay (graduated from explorations/git-history-rewrite).",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/git-history-rewrite",
+    "graduated": "2026-11-06"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/history-message-overlay/README.md",
+    "goals/history-message-overlay/SPEC.md",
+    "goals/history-message-overlay/PLAN.md",
+    "goals/history-message-overlay/GOAL.md",
+    "goals/history-message-overlay/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/history-message-overlay/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/history-message-overlay/GOAL.md)\" -le 4000",
+    "jq . goals/history-message-overlay/ops/manifest.json",
+    "rg -n \"history-message-overlay|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/history-message-overlay",
+    "git diff --check -- goals/history-message-overlay",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
