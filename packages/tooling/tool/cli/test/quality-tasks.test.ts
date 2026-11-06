@@ -60,6 +60,7 @@ import {
   compareCoverageRegressionSnapshotsForTesting,
   compareCoverageRegressionSnapshotsWithProposedForTesting,
   compareJSDocTotalsForTesting,
+  completeCounterlessCoverageFilesForTesting,
   coverageBaselineChangeSetFromChangedFiles,
   coverageBaselineRowDelta,
   coverageBaselineRowDeltaFromBase,
@@ -111,6 +112,7 @@ import {
   planCoverageAffectedScope,
   planCoverageAffectedScopeWithBaseline,
   planCoverageBaselineWrite,
+  planCoverageFileIdentityAdditions,
   planCoverageFullShards,
   planCoverageSelfJudgeScope,
   planWorkspaceCoverageAffectedScope,
@@ -810,6 +812,249 @@ const artifactPlanConfiguration = ConfigProvider.fromUnknown({
 });
 
 it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
+  describe("counterless coverage geometry and additive file identities", () => {
+    it.effect("restores only existing parsed external re-exports without changing package counters", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "coverage-counterless-" });
+        const sourceRoot = path.join(root, "packages/existing/src");
+        yield* fs.makeDirectory(sourceRoot, { recursive: true });
+        const cases: ReadonlyArray<readonly [string, string, boolean]> = [
+          ["Star.ts", "export * from './Body.ts';", true],
+          ["Named.ts", "export { value as renamed } from './Body.ts';", true],
+          ["Namespace.ts", "export * as Body from './Body.ts';", true],
+          ["Types.ts", "export type { Value } from './Body.ts';", true],
+          ["Runtime.ts", "export const value = 1;", false],
+          ["SideEffect.ts", "import './Body.ts'; export * from './Body.ts';", false],
+          ["Local.ts", "export { value };", false],
+          ["Invalid.ts", "export { from './Body.ts';", false],
+          ["Empty.ts", "// no exports", false],
+        ];
+        const files = R.empty<string, CoverageFileBaseline>();
+        for (const [name, text] of cases) {
+          yield* fs.writeFileString(path.join(sourceRoot, name), text);
+          R.assignProperty(files, `packages/existing/src/${name}`, coverageFileBaseline(100, 0));
+        }
+        R.assignProperty(files, "packages/existing/src/Deleted.ts", coverageFileBaseline(100, 0));
+        yield* fs.writeFileString(path.join(root, "Outside.ts"), "export * from './Other.ts';");
+        yield* fs.symlink(path.join(root, "Outside.ts"), path.join(sourceRoot, "Escaped.ts"));
+        R.assignProperty(files, "packages/existing/src/Escaped.ts", coverageFileBaseline(100, 0));
+        yield* fs.writeFileString(path.join(sourceRoot, "NotBaselined.ts"), "export * from './Body.ts';");
+        yield* fs.writeFileString(path.join(sourceRoot, "Reported.ts"), "export * from './Body.ts';");
+        R.assignProperty(files, "packages/existing/src/Reported.ts", coverageFileBaseline(100, 0));
+        const base = CoverageRegressionBaseline.make({
+          ...coverageRegressionBaseline,
+          packages: {
+            "@beep/existing": CoveragePackageBaseline.make({
+              path: "packages/existing",
+              ...coveragePercentages(50),
+              uncovered: coverageUncovered(2),
+              files,
+            }),
+          },
+        });
+        const baselineRow = yield* Effect.fromOption(R.get(base.packages, "@beep/existing"));
+        const measured = CoveragePackageBaseline.make({
+          ...baselineRow,
+          files: { "packages/existing/src/Reported.ts": coverageFileBaseline(50, 1) },
+        });
+        const entries = yield* completeCounterlessCoverageFilesForTesting(root, base, [
+          CoverageSnapshotEntry.make({ packageName: "@beep/existing", baseline: measured }),
+        ]);
+        const completed = A.getUnsafe(entries, 0).baseline;
+        for (const [name, , counterless] of cases)
+          expect(R.has(completed.files, `packages/existing/src/${name}`)).toBe(counterless);
+        expect(R.has(completed.files, "packages/existing/src/Deleted.ts")).toBe(false);
+        expect(R.has(completed.files, "packages/existing/src/Escaped.ts")).toBe(false);
+        expect(R.has(completed.files, "packages/existing/src/NotBaselined.ts")).toBe(false);
+        expect(completed.files["packages/existing/src/Reported.ts"]).toEqual(
+          measured.files["packages/existing/src/Reported.ts"]
+        );
+        expect(completed.uncovered).toEqual(measured.uncovered);
+        expect({ ...completed, files: measured.files }).toEqual(measured);
+        const failures = compareCoverageRegressionSnapshotsForTesting(base, entries, true).failures;
+        expect(failures).toHaveLength(32);
+        expect(
+          A.some(failures, (failure) => O.exists(failure.filePath, (file) => Str.endsWith("Deleted.ts")(file)))
+        ).toBe(true);
+      })
+    );
+    it.effect("adds only new measured identities while preserving every committed floor and unrelated owner", () =>
+      Effect.gen(function* () {
+        const existing = "packages/existing/src/Existing.ts";
+        const added = "packages/existing/src/Added.ts";
+        const previous = CoveragePackageBaseline.make({
+          path: "packages/existing",
+          ...coveragePercentages(90),
+          uncovered: coverageUncovered(2),
+          files: { [existing]: coverageFileBaseline(100, 0) },
+        });
+        const unchanged = coveragePackageBaseline("packages/unchanged", 95);
+        const actual = CoveragePackageBaseline.make({
+          path: "packages/existing",
+          ...coveragePercentages(10),
+          uncovered: coverageUncovered(200),
+          files: { [existing]: coverageFileBaseline(0, 20), [added]: coverageFileBaseline(75, 1) },
+        });
+        const entry = CoverageSnapshotEntry.make({ packageName: "@beep/existing", baseline: actual });
+        const plan = yield* planCoverageFileIdentityAdditions(
+          { "@beep/existing": previous, "@beep/unchanged": unchanged },
+          [entry],
+          ["@beep/existing"]
+        );
+        expect(plan.packages["@beep/existing"]).toEqual({
+          ...previous,
+          files: { ...previous.files, [added]: actual.files[added] },
+        });
+        expect(plan.packages["@beep/unchanged"]).toEqual(unchanged);
+        for (const invalid of [
+          planCoverageFileIdentityAdditions({ "@beep/existing": previous }, [entry], []),
+          planCoverageFileIdentityAdditions({}, [entry], ["@beep/existing"]),
+          planCoverageFileIdentityAdditions({ "@beep/existing": previous }, [entry], ["@beep/other"]),
+          planCoverageFileIdentityAdditions({ "@beep/existing": previous }, [], ["@beep/existing"]),
+          planCoverageFileIdentityAdditions(
+            { "@beep/existing": previous },
+            [
+              CoverageSnapshotEntry.make({
+                ...entry,
+                baseline: CoveragePackageBaseline.make({
+                  ...actual,
+                  files: { "packages/foreign/src/Code.ts": coverageFileBaseline(100, 0) },
+                }),
+              }),
+            ],
+            ["@beep/existing"]
+          ),
+        ]) {
+          const failed = yield* invalid.pipe(Effect.flip);
+          expect(failed._tag).toBe("QualityTaskConfigurationError");
+        }
+      })
+    );
+    it.effect("writes additive identities while retaining every existing package and file floor", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "coverage-additive-writer-" });
+        yield* fs.makeDirectory(path.join(root, "packages/existing/coverage"), { recursive: true });
+        yield* fs.makeDirectory(path.join(root, "standards"), { recursive: true });
+        const rootManifest = yield* encodeJson({ name: "@beep/root", private: true, workspaces: ["packages/*"] });
+        yield* fs.writeFileString(path.join(root, "package.json"), rootManifest);
+        const packageManifest = yield* encodeJson({
+          name: "@beep/existing",
+          scripts: { coverage: "vitest run --coverage" },
+        });
+        yield* fs.writeFileString(path.join(root, "packages/existing/package.json"), packageManifest);
+        const previous = CoverageRegressionBaseline.make({
+          ...coverageRegressionBaseline,
+          packages: {
+            "@beep/existing": CoveragePackageBaseline.make({
+              path: "packages/existing",
+              ...coveragePercentages(95),
+              uncovered: coverageUncovered(2),
+              files: { "packages/existing/src/Existing.ts": coverageFileBaseline(100, 0) },
+            }),
+          },
+        });
+        const baselinePath = path.join(root, "standards/coverage.regression-baseline.jsonc");
+        const original = yield* encodeCoverageRegressionBaseline(previous).pipe(Effect.flatMap(encodeJson));
+        yield* fs.writeFileString(baselinePath, original);
+        const measuredSummary = yield* encodeJson({
+          total: vitestCoverageMetrics(10, 1, 10),
+          "src/Existing.ts": vitestCoverageMetrics(10, 0, 0),
+          "src/Added.ts": vitestCoverageMetrics(4, 3, 75),
+        });
+        yield* fs.writeFileString(path.join(root, "packages/existing/coverage/coverage-summary.json"), measuredSummary);
+        const legacy = yield* encodeJson({
+          schema_version: 1,
+          generated_at: "2026-07-06T00:00:00.000Z",
+          git_sha: "legacy-fixture",
+          command: "bun run coverage:baseline:write",
+          epsilon: 0.001,
+          packages: { "@beep/existing": { path: "packages/existing" } },
+        });
+        yield* fs.writeFileString(baselinePath, legacy);
+        const unsupported = yield* writeCoverageRegressionBaseline(root, true, ["@beep/existing"], {
+          addMissingFilesOnly: true,
+        }).pipe(Effect.flip);
+        expect(unsupported._tag).toBe("QualityTaskConfigurationError");
+        expect(unsupported.message).toContain("schema-v2 baseline write");
+        const retainedLegacy = yield* fs.readFileString(baselinePath);
+        expect(retainedLegacy).toBe(legacy);
+        yield* fs.remove(baselinePath);
+        const absent = yield* writeCoverageRegressionBaseline(root, true, ["@beep/existing"], {
+          addMissingFilesOnly: true,
+        }).pipe(Effect.flip);
+        expect(absent._tag).toBe("QualityTaskConfigurationError");
+        expect(absent.message).toContain("schema-v2 baseline write");
+        const created = yield* fs.exists(baselinePath);
+        expect(created).toBe(false);
+        yield* fs.writeFileString(baselinePath, original);
+        for (const rejected of [
+          writeCoverageRegressionBaseline(root, false, ["@beep/existing"], { addMissingFilesOnly: true }),
+          writeCoverageRegressionBaseline(root, true, ["@beep/existing"], {
+            addMissingFilesOnly: true,
+            replaceAll: true,
+          }),
+          writeCoverageRegressionBaseline(root, true, [], { addMissingFilesOnly: true }),
+        ]) {
+          const failed = yield* rejected.pipe(Effect.flip);
+          expect(failed._tag).toBe("QualityTaskConfigurationError");
+          const retained = yield* fs.readFileString(baselinePath);
+          expect(retained).toBe(original);
+        }
+        yield* runGit(root, ["init"]);
+        yield* runGit(root, ["config", "user.name", "Coverage Identity Fixture"]);
+        yield* runGit(root, ["config", "user.email", "coverage@example.invalid"]);
+        yield* runGit(root, ["add", "package.json"]);
+        yield* runGit(root, ["commit", "-m", "test: seed additive coverage fixture"]);
+        const git = yield* Git;
+        const measuredHead = yield* git.revParse(root, "HEAD");
+        const writeTimestamp = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+        yield* writeCoverageRegressionBaseline(root, true, ["@beep/existing"], { addMissingFilesOnly: true });
+        const written = yield* fs
+          .readFileString(baselinePath)
+          .pipe(Effect.flatMap(decodeCoverageRegressionBaselineJsoncForTesting));
+        const originalRow = yield* Effect.fromOption(R.get(previous.packages, "@beep/existing"));
+        expect(written).toEqual({
+          ...previous,
+          generated_at: writeTimestamp,
+          git_sha: measuredHead,
+          command: "bun run coverage -- --filter=@beep/existing --write-baseline --add-missing-files-only",
+          packages: {
+            "@beep/existing": {
+              ...originalRow,
+              files: { ...originalRow.files, "packages/existing/src/Added.ts": coverageFileBaseline(75, 1) },
+            },
+          },
+        });
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+    it.effect("requires exact scoped selectors for additive file writes and strips the control flag", () =>
+      Effect.gen(function* () {
+        const repoRoot = yield* findRepoRoot();
+        for (const args of [
+          ["--add-missing-files-only"],
+          ["--write-baseline", "--add-missing-files-only"],
+          ["--write-baseline", "--add-missing-files-only", "--replace-all", "--filter=@beep/repo-cli"],
+          ["--write-baseline", "--add-missing-files-only", "--affected"],
+          ["--write-baseline", "--add-missing-files-only", "--filter=...@beep/repo-cli"],
+        ]) {
+          const failure = yield* validateCoverageTaskArgsForTesting(repoRoot, args).pipe(Effect.flip);
+          expect(failure._tag).toBe("QualityTaskConfigurationError");
+        }
+        const options = yield* validateCoverageTaskArgsForTesting(repoRoot, [
+          "--write-baseline",
+          "--add-missing-files-only",
+          "--filter=@beep/repo-cli",
+        ]);
+        expect(options.addMissingFilesOnly).toBe(true);
+        expect(options.expectedPackageNames).toEqual(["@beep/repo-cli"]);
+        expect(options.args).not.toContain("--add-missing-files-only");
+      })
+    );
+  });
   describe("CI coverage artifact planning", () => {
     it("keeps ordinary tests enabled while supplying deterministic coverage inputs", () => {
       const env = coverageProducerEnvironment();

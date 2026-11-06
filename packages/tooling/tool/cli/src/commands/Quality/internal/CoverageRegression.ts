@@ -13,6 +13,7 @@ import { formatJsonc, readArtifact, writeArtifact } from "@beep/repo-cli-kit/art
 import { messageWithCause } from "@beep/repo-cli-kit/cli/CommandErrorFields";
 import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
 import { formatCommandLine } from "@beep/repo-cli-kit/process/StepExec";
+import { createInMemoryTsMorphProject } from "@beep/repo-cli-kit/tsmorph/ProjectFactory";
 import { DomainError } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { HUNDRED as HUNDRED_PERCENTAGE, Percentage, ZERO as ZERO_PERCENTAGE } from "@beep/schema/Percentage";
@@ -35,6 +36,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
+import { Node } from "ts-morph";
 import { enforceRatchet } from "../../../internal/ratchet/index.ts";
 import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../../internal/repo-run/ChangedFiles.ts";
 import { adaptGitKitError, resolveGitCommit, resolveGitMergeBase } from "../../../internal/repo-run/GitExec.ts";
@@ -1295,6 +1297,156 @@ const toCoveragePackageBaseline = Effect.fn("CoverageRegression.toCoveragePackag
     functions: coveragePercentageFromCounts(VitestCoverageMetric.make(summary.total.functions)),
     uncovered: toCoverageUncoveredCounts(summary.total),
     files,
+  });
+});
+
+/** Complete only omitted, still-existing external re-export modules with truthful zero-unit coverage.
+ * Local runtime statements, unreadable/deleted paths and invalid syntax retain their missing-file failures.
+ * Package counters and percentages are never changed.
+ *
+ * **Example** (An empty measurement does not invent package coverage)
+ * ```ts
+ * import { completeCounterlessCoverageFilesForTesting, CoverageRegressionBaseline } from "@beep/repo-cli/test/Quality"
+ * import { ZERO } from "@beep/schema/Percentage"
+ * import * as Effect from "effect/Effect"
+ * const baseline = CoverageRegressionBaseline.make({
+ *   schema_version: 2, generated_at: "2026-11-05T00:00:00.000Z", git_sha: "example",
+ *   command: "bun run coverage:baseline:write", epsilon: 0.001,
+ *   minimum: { lines: ZERO, statements: ZERO, functions: ZERO, branches: ZERO },
+ *   packages: {}, exemptions: {}, follow_ups: {},
+ * })
+ * const empty = completeCounterlessCoverageFilesForTesting("/repo", baseline, []).pipe(
+ *   Effect.map((entries) => entries.length === 0)
+ * )
+ * ```
+ * @internal @category testing @since 0.0.0
+ */
+export const completeCounterlessCoverageFilesForTesting = Effect.fn("CoverageRegression.completeCounterlessFiles")(
+  function* (repoRoot: string, baseline: CoverageRegressionBaseline, entries: ReadonlyArray<CoverageSnapshotEntry>) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    return yield* Effect.forEach(
+      entries,
+      Effect.fnUntraced(function* (entry) {
+        const previous = R.get(baseline.packages, entry.packageName);
+        if (O.isNone(previous)) return entry;
+        const files = { ...entry.baseline.files };
+        const packageRoot = path.resolve(repoRoot, entry.baseline.path);
+        for (const filePath of R.keys(previous.value.files)) {
+          if (
+            R.has(files, filePath) ||
+            !Str.startsWith(`${entry.baseline.path}/src/`)(filePath) ||
+            !(Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath)) ||
+            Str.endsWith(".d.ts")(filePath)
+          )
+            continue;
+          const absolute = path.resolve(repoRoot, filePath);
+          const resolved = yield* fs.realPath(absolute).pipe(Effect.option);
+          if (O.isNone(resolved) || !Str.startsWith(`${packageRoot}${path.sep}`)(resolved.value)) continue;
+          const text = yield* fs.readFileString(absolute).pipe(Effect.option);
+          if (O.isNone(text)) continue;
+          const project = createInMemoryTsMorphProject();
+          const source = project.createSourceFile(filePath, text.value, { overwrite: true });
+          const statements = source.getStatements();
+          if (
+            project.getProgram().getSyntacticDiagnostics(source).length > 0 ||
+            A.isReadonlyArrayEmpty(statements) ||
+            !A.every(
+              statements,
+              (statement) =>
+                Node.isExportDeclaration(statement) &&
+                O.exists(
+                  O.fromUndefinedOr(statement.getModuleSpecifier()),
+                  (specifier) => Str.length(specifier.getLiteralValue()) > 0
+                )
+            )
+          )
+            continue;
+          R.assignProperty(
+            files,
+            filePath,
+            CoverageFileBaseline.make({
+              lines: HUNDRED_PERCENTAGE,
+              statements: HUNDRED_PERCENTAGE,
+              functions: HUNDRED_PERCENTAGE,
+              branches: HUNDRED_PERCENTAGE,
+              uncovered: CoverageUncoveredCounts.make({ lines: 0, statements: 0, functions: 0, branches: 0 }),
+            })
+          );
+        }
+        return CoverageSnapshotEntry.make({
+          ...entry,
+          baseline: CoveragePackageBaseline.make({ ...entry.baseline, files }),
+        });
+      }),
+      { concurrency: 1 }
+    );
+  }
+);
+
+/** Add measured file identities without replacing any committed package or file floor.
+ * Exact selected existing packages are required; extra measured owners and foreign file paths fail closed.
+ *
+ * **Example** (Reject an unscoped identity write)
+ * ```ts
+ * import { planCoverageFileIdentityAdditions } from "@beep/repo-cli/test/Quality"
+ * import * as Effect from "effect/Effect"
+ * const refusal = planCoverageFileIdentityAdditions({}, [], []).pipe(
+ *   Effect.flip,
+ *   Effect.map((error) => error.message)
+ * )
+ * ```
+ * @internal @category testing @since 0.0.0
+ */
+export const planCoverageFileIdentityAdditions = Effect.fn("CoverageRegression.planFileIdentityAdditions")(function* (
+  previousPackages: Readonly<Record<string, CoveragePackageBaseline>>,
+  entries: ReadonlyArray<CoverageSnapshotEntry>,
+  expectedPackageNames: ReadonlyArray<string>
+) {
+  if (A.isReadonlyArrayEmpty(expectedPackageNames))
+    return yield* QualityTaskConfigurationError.new(
+      "Adding coverage file identities requires exact existing package selectors."
+    );
+  const packages = { ...previousPackages };
+  const dispositions = R.empty<string, CoverageBaselineRowDisposition>();
+  for (const packageName of R.keys(previousPackages))
+    R.assignProperty(dispositions, packageName, CoverageBaselineRowDisposition.Enum.held);
+  for (const entry of entries) {
+    const previous = R.get(previousPackages, entry.packageName);
+    if (
+      !A.contains(expectedPackageNames, entry.packageName) ||
+      O.isNone(previous) ||
+      previous.value.path !== entry.baseline.path
+    )
+      return yield* QualityTaskConfigurationError.new(
+        `Refusing coverage file additions for unselected, absent or relocated package ${coverageDiagnosticFragment(entry.packageName)}.`
+      );
+    if (A.some(R.keys(entry.baseline.files), (filePath) => !Str.startsWith(`${previous.value.path}/src/`)(filePath)))
+      return yield* QualityTaskConfigurationError.new(
+        "Coverage file additions must belong to the selected package source directory."
+      );
+    const committed = previous.value;
+    const additions = R.filter(entry.baseline.files, (_value, filePath) => !R.has(committed.files, filePath));
+    R.assignProperty(
+      packages,
+      entry.packageName,
+      CoveragePackageBaseline.make({
+        ...committed,
+        files: { ...committed.files, ...additions },
+      })
+    );
+    R.assignProperty(dispositions, entry.packageName, CoverageBaselineRowDisposition.Enum.replaced);
+  }
+  yield* validateCoverageSnapshotCompleteness(entries, expectedPackageNames);
+  return CoverageBaselineWritePlan.make({
+    packages,
+    dispositions,
+    carriedUnmeasured: [],
+    changeSet: CoverageBaselineChangeSet.make({
+      baseDescription: "explicit new-file identities only",
+      packageNames: expectedPackageNames,
+      fullReasons: [],
+    }),
   });
 });
 
@@ -2609,7 +2761,7 @@ export const coverageBaselineWriteReport: {
  * @param repoRoot - Repository root.
  * @param scoped - Whether the coverage run was intentionally filtered or affected-scoped.
  * @param expectedPackageNames - Exact scoped package names that must emit summaries before the baseline is written.
- * @param options - Optional escape hatch for replacing every measured package row.
+ * @param options - Choose whole-row replacement or an exact scoped additions-only identity write.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2618,14 +2770,14 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
     repoRoot: string,
     scoped: boolean,
     expectedPackageNames: ReadonlyArray<string> = A.empty<string>(),
-    options: { readonly replaceAll?: boolean } = {}
+    options: { readonly replaceAll?: boolean; readonly addMissingFilesOnly?: boolean } = {}
   ): Effect.fn.Return<
     void,
     CoverageRegressionError,
     FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
   > {
     const path = yield* Path.Path;
-    const entries = yield* collectCoverageSnapshot(repoRoot);
+    let entries = yield* collectCoverageSnapshot(repoRoot);
     yield* validateCoverageSnapshotCompleteness(entries, expectedPackageNames);
 
     // Absent and unreadable are different answers. Collapsing a read or decode
@@ -2634,6 +2786,17 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
     // missing file yields `None`; anything else propagates.
     const previous = yield* readPreviousBaseline(repoRoot);
     const replaceAll = options.replaceAll === true;
+    if (
+      options.addMissingFilesOnly === true &&
+      (!scoped ||
+        replaceAll ||
+        A.isReadonlyArrayEmpty(expectedPackageNames) ||
+        O.isNone(previous) ||
+        !isCurrentCoverageRegressionBaseline(previous.value))
+    )
+      return yield* QualityTaskConfigurationError.new(
+        "--add-missing-files-only requires a scoped schema-v2 baseline write with exact existing packages and cannot use --replace-all."
+      );
 
     if (
       scoped &&
@@ -2671,6 +2834,29 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
     }
 
     const currentPrevious = pipe(previous, O.filter(isCurrentCoverageRegressionBaseline));
+    if (O.isSome(currentPrevious))
+      entries = yield* completeCounterlessCoverageFilesForTesting(repoRoot, currentPrevious.value, entries);
+    if (options.addMissingFilesOnly === true && O.isSome(currentPrevious)) {
+      const additions = yield* planCoverageFileIdentityAdditions(
+        currentPrevious.value.packages,
+        entries,
+        expectedPackageNames
+      );
+      const retained = yield* baselineDocumentFromSnapshot(repoRoot, entries, previous, true, O.some(additions));
+      const generatedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+      const gitSha = yield* readGitSha(repoRoot);
+      const baseline = CoverageRegressionBaseline.make({
+        ...retained,
+        generated_at: generatedAt,
+        git_sha: gitSha,
+        command: `${coverageScopedBaselineWriteCommand(expectedPackageNames)} --add-missing-files-only`,
+      });
+      yield* writeBaselineDocument(repoRoot, baseline);
+      yield* Console.log(
+        "[coverage-ratchet] added measured file identities only; all committed package and file floors retained."
+      );
+      return;
+    }
     // Scoped and unscoped writes share one plan. A scoped write used to spread
     // its whole measured block over the committed document, so one workstation
     // run replaced every row of every package it touched — including files the
@@ -4227,7 +4413,8 @@ export const compareCoverageRegressionBaseline = Effect.fn("CoverageRegression.c
   > {
     const baselines = yield* readComparisonBaseline(repoRoot, base);
     const baseline = baselines.baseline;
-    const actuals = validatedActuals ?? (yield* collectCoverageSnapshot(repoRoot));
+    const measured = validatedActuals ?? (yield* collectCoverageSnapshot(repoRoot));
+    const actuals = yield* completeCounterlessCoverageFilesForTesting(repoRoot, baseline, measured);
     const result = compareCoverage(baselines, actuals, scoped, expectedPackageNames);
     const path = yield* Path.Path;
     const dispositionGaps = yield* workspaceCoverageDispositionGaps(repoRoot, path, baseline.exemptions);
