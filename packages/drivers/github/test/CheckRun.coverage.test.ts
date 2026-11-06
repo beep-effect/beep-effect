@@ -9,6 +9,7 @@ import {
 import { Repo, RepoRef } from "@beep/github/Repo";
 import { assert, it } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -182,6 +183,33 @@ it.layer(CheckRun.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" 
     })
   );
 });
+
+const JsonCheckRunRef = S.fromJsonString(CheckRunRef);
+const sameRun = S.toEquivalence(CheckRunRef);
+const sameIdentity = S.toEquivalence(CheckRunNativeIdentity);
+const sameCorrelation = S.toEquivalence(CheckRunCorrelationOptions);
+const JsonNativeIdentity = S.fromJsonString(CheckRunNativeIdentity);
+const JsonCorrelation = S.fromJsonString(CheckRunCorrelationOptions);
+it.effect.prop(
+  "round-trips schema-derived check run references, native identities and correlation through JSON",
+  [
+    Arbitrary.schema(CheckRunRef),
+    Arbitrary.schema(CheckRunNativeIdentity),
+    Arbitrary.schema(CheckRunCorrelationOptions),
+  ],
+  ([run, identity, correlation]) =>
+    Effect.gen(function* () {
+      const runJson = yield* S.encodeEffect(JsonCheckRunRef)(run);
+      const identityJson = yield* S.encodeEffect(JsonNativeIdentity)(identity);
+      const correlationJson = yield* S.encodeEffect(JsonCorrelation)(correlation);
+      const runAgain = yield* S.decodeEffect(JsonCheckRunRef)(runJson);
+      const identityAgain = yield* S.decodeEffect(JsonNativeIdentity)(identityJson);
+      const correlationAgain = yield* S.decodeEffect(JsonCorrelation)(correlationJson);
+      assert.isTrue(sameRun(runAgain, run));
+      assert.isTrue(sameIdentity(identityAgain, identity));
+      assert.isTrue(sameCorrelation(correlationAgain, correlation));
+    })
+);
 
 const ownedHead = "0123456789012345678901234567890123456789";
 const nativeOwnedRow = {
