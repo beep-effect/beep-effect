@@ -6,7 +6,7 @@
     "title": "Hold Ledger",
     "status": "active",
     "created": "2026-10-31",
-    "updated": "2026-11-01",
+    "updated": "2026-11-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/hold-ledger",

@@ -34,16 +34,21 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3/P4 — the final PR #2453 meets the last acceptance criteria; the closeout reflection is in `history/reflections/`. The `completed-retained` proposal follows once #2453 has gating Yeet readiness evidence. Slice 1 (`beep holds list` and `probe`,
-the statelyai record) merged in #2404; slice 2 (every site recorded, the syncpack
-held list derived from the ledger, `beep holds lint` in the cheap gate) merged
-in #2450. Slice 3 (`feat/hold-ledger-sweep`) adds `beep holds update` as the
-`deps:update` pre-step, `beep holds why` and the
-[hold ledger runbook](../../docs/runbooks/hold-ledger.md); it meets the last
-acceptance criteria.
+Closed. Slice 1 (`beep holds list` and `probe`, the statelyai record) merged in
+#2404; slice 2 (every site recorded, the syncpack held list derived from the
+ledger, `beep holds lint` in the cheap gate) merged in #2450; slice 3
+(`beep holds update` as the `deps:update` pre-step, `beep holds why` and the
+[hold ledger runbook](../../docs/runbooks/hold-ledger.md)) merged in #2453. The
+first two ledger-driven unpins (#2462 statelyai, #2465 jsdom) proved the loop
+end to end. #2453 was pushed without a Yeet publish verdict, so this docs-only
+final PR carries the `completed-retained` proposal and the gating verdict; the
+closeout reflection is `history/reflections/2026-11-01-claude.md`.
 
 ## Latest Evidence
 
+- 2026-11-06: closeout. Every `SPEC.md` acceptance criterion is checked with
+  its PR; the sweep slice shipped as #2453 and both unpins it planned have
+  merged. The final PR proposes `completed-retained`.
 - 2026-11-01: jsdom unpinned by hand (a `Judgement` hold, so `holds update`
   never retires it): on jsdom 30.1.3 all 11 jsdom workspaces (126 files, 1,225
   tests) pass under `bunx --bun vitest`; tombstone
