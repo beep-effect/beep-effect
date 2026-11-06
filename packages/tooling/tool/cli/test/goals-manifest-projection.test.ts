@@ -332,6 +332,13 @@ describe("goal manifest researchReports projection", () => {
           .format(process.cwd(), [path.join(root, "missing", "manifest.json")])
           .pipe(Effect.flip);
         assertInstanceOf(failed, CliReportedExit);
+        const missingCwd = yield* biomeManifestFormatter
+          .format(path.join(root, "missing"), ["manifest.json"])
+          .pipe(Effect.flip);
+        assertInstanceOf(missingCwd, CliReportedExit);
+        const manifest = path.join(root, "manifest.json");
+        yield* fs.writeFileString(manifest, manifestText({}));
+        yield* biomeManifestFormatter.format(root, ["manifest.json"]);
       })
     );
 
@@ -352,6 +359,10 @@ describe("goal manifest researchReports projection", () => {
         exclusive.pipe(Exit.isFailure, assertTrue);
         const checked = yield* Effect.exit(run(["--check"]));
         checked.pipe(Exit.isFailure, assertTrue);
+        const rows = yield* collectManifestProjectionRows();
+        assert.strictEqual(rows.length, 1);
+        yield* run(["--write"]);
+        yield* run(["--check"]);
       })
     );
   });

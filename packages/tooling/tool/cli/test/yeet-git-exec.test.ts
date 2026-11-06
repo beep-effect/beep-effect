@@ -111,6 +111,9 @@ it("git errors preserve custom spawn wording and omit an unspecified truncation 
   expect(truncated.message).toBe("git status exceeded the read bound.");
   expect(truncated.command).toBe("git status");
   expect(truncated.exitCode).toBeUndefined();
+  expect(adapter.onNonZeroExit({ commandLine: "git status", exitCode: 128, output: "fatal" }).message).toBe(
+    "git status exited with code 128."
+  );
 });
 
 it("optionFromNonEmpty trims to Some and drops blank text", () => {

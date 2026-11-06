@@ -1776,6 +1776,7 @@
     {"name":"Goals.runSetStatusProgram","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.scanGoalPacket","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.scanGoalPackets","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Goals.selectDecisionPacket","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.selectDecisionPackets","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.setStatusForSlug","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.structuredCompletionAdvisory","owner":"@beep/repo-cli","family":"tooling","conforms":true},
