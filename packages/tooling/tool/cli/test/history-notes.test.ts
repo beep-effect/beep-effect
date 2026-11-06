@@ -1,4 +1,4 @@
-import { Git, NoteEntry, UnknownRefError } from "@beep/git/Git";
+import { Git, GitCommandError, NoteEntry, UnknownRefError } from "@beep/git/Git";
 import {
   decodeHistoryCommitMessageMap,
   HistoryCommitMessage,
@@ -7,9 +7,12 @@ import {
   HistoryNotes,
   HistoryNotesCheckOptions,
   HistoryNotesLive,
+  HistoryNotesWriteReport,
   historyNoteBody,
   historyNotesCheckProblems,
   renderHistoryNotesCheck,
+  renderHistoryNotesSync,
+  renderHistoryNotesWrite,
 } from "@beep/repo-cli/commands/History";
 import { assert, describe, it } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
@@ -17,6 +20,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
@@ -270,4 +274,104 @@ describe("renderHistoryNotesCheck", () => {
       assert.include(lines, "  unreachable: ... and 5 more");
     })
   );
+});
+
+describe("HistoryNotes.sync", () => {
+  const runSync = (stubs: Partial<GitStubs>, fetch: boolean) =>
+    Layer.build(historyLayer("{}", stubs)).pipe(
+      Effect.flatMap((context) =>
+        Effect.provideContext(
+          HistoryNotes.use((history) => history.sync({ root: "/repo", fetch })),
+          context
+        )
+      )
+    );
+
+  it.effect("without an origin remote only the display ref is configured and nothing is fetched", () =>
+    Effect.gen(function* () {
+      const added: Array<string> = [];
+      const report = yield* runSync(
+        {
+          remoteUrl: () => Effect.succeedNone,
+          configGetAll: () => Effect.succeed([]),
+          configSet: (_cwd, key, value) => Effect.sync(() => added.push(`${key}=${value}`)),
+        },
+        true
+      );
+      assert.deepStrictEqual(
+        [report.origin, report.fetchRefspec, report.displayRef, report.fetch],
+        [false, "skipped", "added", "skipped"]
+      );
+      assert.deepStrictEqual(added, ["notes.displayRef=refs/notes/history"]);
+      assert.deepStrictEqual(renderHistoryNotesSync(report), [
+        "history notes sync:",
+        "  remote.origin.fetch +refs/notes/history:refs/notes/history: skipped (no origin remote)",
+        "  notes.displayRef refs/notes/history: added",
+        "  fetch: skipped",
+      ]);
+    })
+  );
+
+  it.effect("a failing fetch other than an unpublished ref fails as HistoryGitError", () =>
+    Effect.gen(function* () {
+      const failure = yield* Effect.flip(
+        runSync(
+          {
+            remoteUrl: () => Effect.succeedSome("git@example.com:repo.git"),
+            configGetAll: (_cwd, key) =>
+              Effect.succeed(
+                key === "notes.displayRef" ? ["refs/notes/history"] : ["+refs/notes/history:refs/notes/history"]
+              ),
+            fetch: (cwd) =>
+              Effect.fail(GitCommandError.make({ kind: "failed", args: ["fetch"], cwd, stderr: "network down" })),
+          },
+          true
+        )
+      );
+      assertInstanceOf(failure, HistoryGitError);
+      assert.strictEqual(failure.operation, "fetch");
+    })
+  );
+});
+
+describe("HistoryNotes map reading and write rendering", () => {
+  it.effect("a missing map file fails as HistoryMapError naming the path", () =>
+    Effect.gen(function* () {
+      const missing = HistoryNotesCheckOptions.make({
+        root: "/elsewhere",
+        mapPath: "docs/history/commit-message-map.json",
+        ref: "refs/notes/history",
+        base: "origin/main",
+        requirePublished: false,
+      });
+      const failure = yield* Layer.build(historyLayer("{}", {})).pipe(
+        Effect.flatMap((context) =>
+          Effect.provideContext(
+            HistoryNotes.use((history) => history.check(missing)),
+            context
+          )
+        ),
+        Effect.flip
+      );
+      assertInstanceOf(failure, HistoryMapError);
+      assert.strictEqual(failure.message, "Cannot read docs/history/commit-message-map.json.");
+    })
+  );
+
+  it("renders an unchanged write without a previous line", () => {
+    const commit = Str.repeat(40)("a");
+    const report = HistoryNotesWriteReport.make({
+      ref: "refs/notes/history",
+      rows: 2,
+      previous: O.some(commit),
+      commit,
+      tree: Str.repeat(40)("b"),
+      changed: false,
+    });
+    assert.deepStrictEqual(renderHistoryNotesWrite(report), [
+      "history notes write: refs/notes/history unchanged (2 notes)",
+      `  commit: ${commit}`,
+      `  tree: ${Str.repeat(40)("b")}`,
+    ]);
+  });
 });

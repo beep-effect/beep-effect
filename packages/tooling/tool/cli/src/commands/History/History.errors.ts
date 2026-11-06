@@ -84,3 +84,29 @@ export class HistoryNotesCheckError extends S.TaggedError<HistoryNotesCheckError
     description: "The commit-message overlay check found problems.",
   })
 ) {}
+
+/**
+ * `--write` refused to rebuild the notes ref, because a map key is not on the
+ * base history.
+ *
+ * **Example** (Explain a refused write)
+ *
+ * ```ts
+ * import { HistoryNotesWriteError } from "@beep/repo-cli/commands/History"
+ *
+ * const error = HistoryNotesWriteError.make({ message: "1 map key is not reachable from origin/main." })
+ * console.log(error._tag) // "HistoryNotesWriteError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class HistoryNotesWriteError extends S.TaggedError<HistoryNotesWriteError, { readonly brand: unique symbol }>(
+  $I`HistoryNotesWriteError`
+)(
+  "HistoryNotesWriteError",
+  { message: S.String },
+  $I.annoteError<HistoryNotesWriteError>("HistoryNotesWriteError", {
+    description: "The history notes write was refused before any ref changed.",
+  })
+) {}

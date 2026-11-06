@@ -551,8 +551,22 @@ export const parseRevListCount = (output: string): Result.Result<number, string>
     () => `expected one decimal count, received ${quoteRecord(output)}`
   );
 
-/** A full object id: 40 hex digits (SHA-1) or 64 (SHA-256). */
-const isObjectId = S.is(S.String.check(S.isPattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/)));
+/**
+ * Whether a string is one full lowercase object id: 40 hex digits (SHA-1)
+ * or 64 (SHA-256).
+ *
+ * **Example** (Recognize a full object id)
+ *
+ * ```ts import.meta.vitest name="Recognize a full object id"
+ * import { isObjectId } from "@beep/git/internal/parsers";
+ *
+ * [isObjectId("a".repeat(40)), isObjectId("abc")] // => [true, false]
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const isObjectId = S.is(S.String.check(S.isPattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/)));
 
 /**
  * Parses `GitCommand.notesList`'s output: one `<note blob> <annotated object>`

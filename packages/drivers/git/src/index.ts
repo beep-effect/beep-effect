@@ -31,6 +31,8 @@ export {
   NonFastForwardError,
   NotARepositoryError,
   NoteEntry,
+  NotesCommit,
+  NoteWrite,
   RefEntry,
   StashEntry,
   StatusEntry,

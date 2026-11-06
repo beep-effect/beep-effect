@@ -776,6 +776,77 @@ export class NoteEntry extends S.Opaque<NoteEntry, { readonly brand: unique symb
 ) {}
 
 /**
+ * One note to write: the object it annotates and the exact note text.
+ *
+ * **Details**
+ *
+ * `body` is stored byte for byte; nothing trims it or appends a newline, so
+ * a caller that wants `git notes add -m` semantics ends it with one `\n`.
+ *
+ * **Example** (Describe a note to write)
+ *
+ * ```ts import.meta.vitest name="Describe a note to write"
+ * import { NoteWrite } from "@beep/git/Git";
+ *
+ * const note = NoteWrite.make({ object: "b".repeat(40), body: "fix: subject\n" });
+ * note.body.endsWith("\n") // => true
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export class NoteWrite extends S.Opaque<NoteWrite, { readonly brand: unique symbol }>()(
+  S.Struct({
+    /** The full id of the object the note annotates. */
+    object: S.String.pipe(
+      $I.annoteKey("NoteWrite.object", { description: "The full id of the object the note annotates." })
+    ),
+    /** The exact note text, stored byte for byte. */
+    body: S.String.pipe($I.annoteKey("NoteWrite.body", { description: "The exact note text, stored byte for byte." })),
+  }).pipe($I.annoteSchema("NoteWrite", { description: "One note to write onto a notes ref." }))
+) {}
+
+/**
+ * The fixed metadata of a notes commit: message, one identity used as both
+ * author and committer, and a timestamp in seconds since the epoch (UTC).
+ *
+ * **Details**
+ *
+ * Fixing all three makes the commit id a pure function of the notes, which
+ * is what lets a projection rewrite its ref idempotently.
+ *
+ * **Example** (Describe a reproducible notes commit)
+ *
+ * ```ts import.meta.vitest name="Describe a reproducible notes commit"
+ * import { NotesCommit } from "@beep/git/Git";
+ *
+ * const commit = NotesCommit.make({ message: "notes", name: "bot", email: "bot@example.com", timestamp: 0 });
+ * commit.timestamp // => 0
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export class NotesCommit extends S.Opaque<NotesCommit, { readonly brand: unique symbol }>()(
+  S.Struct({
+    /** The commit message. */
+    message: S.String.pipe($I.annoteKey("NotesCommit.message", { description: "The commit message." })),
+    /** The author and committer name. */
+    name: S.String.pipe($I.annoteKey("NotesCommit.name", { description: "The author and committer name." })),
+    /** The author and committer email. */
+    email: S.String.pipe($I.annoteKey("NotesCommit.email", { description: "The author and committer email." })),
+    /** Author and committer time, in whole seconds since the epoch, UTC. */
+    timestamp: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+      $I.annoteKey("NotesCommit.timestamp", {
+        description: "Author and committer time, in whole seconds since the epoch, UTC.",
+      })
+    ),
+  }).pipe($I.annoteSchema("NotesCommit", { description: "The fixed metadata of a reproducible notes commit." }))
+) {}
+
+/**
  * One configuration entry, from `git config --list`.
  *
  * **Example** (Represent a valueless config key)

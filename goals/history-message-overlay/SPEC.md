@@ -121,6 +121,14 @@ Lane `docs/git-history-rewrite-exploration`
 
 Reverse: Restore the folder from ~/.local/state/beep/archive/beep-effect-cutover/
 
+### The write mode builds one parentless, fixed-identity notes commit via fast-import, 2026-11-06
+
+Git.replaceNotes streams git fast-import one parentless commit with a fixed identity (beep history notes, noreply@beep-effect.com), fixed time 1793923200 and a fixed message, one inline note per sorted row. The commit id depends only on the map: two writes and a write from a different prior ref state all gave b40fd076d8 on this clone, and the check with require-published then matched 940/940. Consequence for slice 3: each changed overlay replaces the ref with an unrelated commit, so publication force-pushes refs/notes/history (a notes ref, never a branch) and the sync fetch refspec carries the + prefix.
+
+Lane `docs/git-history-rewrite-exploration` · PR #2785
+
+Reverse: Switch Git.replaceNotes to git notes add per row and drop the determinism guarantee
+
 ### Map at docs/history/, command as new beep history family, 2026-11-06
 
 The map outlives the goal packet so it lives in docs/history/ with a README; beep refs already means the .repos reference workspace, so a new History family owns the command. Source: explorations/git-history-rewrite/DECISIONS.md (2026-11-06).
@@ -152,6 +160,14 @@ beep history notes --write builds the ref deterministically from docs/history/co
 Lane `docs/git-history-rewrite-exploration`
 
 Reverse: Remove the workflow and the History command; the tracked map stays as plain data
+
+### worktree new and cloud bootstrap run sync, and never fail on it, 2026-11-06
+
+worktree new calls syncHistoryNotesConfig (config only, no fetch); scripts/cloud/bootstrap.sh step 4 runs bun run beep history notes sync. Both turn failures into warnings. sync adds the +refs/notes/history fetch refspec and the notes.displayRef only when absent.
+
+Lane `docs/git-history-rewrite-exploration` · PR #2785
+
+Reverse: Remove syncHistoryNotesConfig from runWorktreeNew and step 4 from scripts/cloud/bootstrap.sh
 
 ### July validator scripts are archived, not tracked, 2026-11-06
 

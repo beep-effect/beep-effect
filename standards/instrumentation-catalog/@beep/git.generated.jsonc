@@ -52,6 +52,7 @@
     {"name":"Git.remoteRemove","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"Git.remoteSetUrl","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"Git.remoteUrl","owner":"@beep/git","family":"driver","conforms":true},
+    {"name":"Git.replaceNotes","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"Git.repoRoot","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"Git.reset","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"Git.restore","owner":"@beep/git","family":"driver","conforms":true},

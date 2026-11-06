@@ -5,7 +5,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Git } from "@beep/git/Git";
+import { Git, NotesCommit, NoteWrite } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -19,9 +19,27 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
-import { HistoryGitError, HistoryMapError } from "./History.errors.ts";
-import { decodeHistoryCommitMessageMap, HistoryNotesCheckReport, historyNoteBody } from "./History.schemas.ts";
-import type { HistoryCommitMessage, HistoryCommitMessageMap, HistoryNotesCheckOptions } from "./History.schemas.ts";
+import { HistoryGitError, HistoryMapError, HistoryNotesWriteError } from "./History.errors.ts";
+import {
+  decodeHistoryCommitMessageMap,
+  HISTORY_NOTES_COMMIT_TIMESTAMP,
+  HISTORY_NOTES_COMMITTER_EMAIL,
+  HISTORY_NOTES_COMMITTER_NAME,
+  HISTORY_NOTES_FETCH_REFSPEC,
+  HISTORY_NOTES_REF,
+  HistoryConfigChange,
+  HistoryNotesCheckReport,
+  HistoryNotesFetchOutcome,
+  HistoryNotesSyncReport,
+  HistoryNotesWriteReport,
+  historyNoteBody,
+} from "./History.schemas.ts";
+import type {
+  HistoryCommitMessage,
+  HistoryCommitMessageMap,
+  HistoryNotesCheckOptions,
+  HistoryNotesWriteOptions,
+} from "./History.schemas.ts";
 
 const $I = $RepoCliId.create("commands/History/History.service");
 
@@ -53,6 +71,39 @@ export interface HistoryNotesShape {
   readonly check: (
     options: HistoryNotesCheckOptions
   ) => Effect.Effect<HistoryNotesCheckReport, HistoryMapError | HistoryGitError>;
+  /**
+   * Makes the clone at `root` fetch and display the overlay: adds
+   * `+refs/notes/history:refs/notes/history` to `remote.origin.fetch` and
+   * `refs/notes/history` to `notes.displayRef` when absent, then (with
+   * `fetch`) fetches the ref.
+   *
+   * **Details**
+   *
+   * Idempotent: a value already present is never added twice. Linked
+   * worktrees share their clone's config, so one run per clone suffices. A
+   * clone without an `origin` remote gets only the display ref. A remote that
+   * has not published the ref yet is a notice (`unpublished`), not a failure.
+   */
+  readonly sync: (options: {
+    readonly root: string;
+    readonly fetch: boolean;
+  }) => Effect.Effect<HistoryNotesSyncReport, HistoryGitError>;
+  /**
+   * Rebuilds `options.ref` from the map as one parentless notes commit with
+   * a fixed identity, time and message, so the same map always yields the
+   * same commit and tree.
+   *
+   * **Details**
+   *
+   * The same decode, shallow and ancestry guards as `check` run first; any
+   * unreachable key refuses the write before the ref changes. Each note body
+   * is `historyNoteBody(row)`. When the ref already holds the computed
+   * commit, nothing moves and the report says `changed: false`. The index and
+   * work tree are never touched.
+   */
+  readonly write: (
+    options: HistoryNotesWriteOptions
+  ) => Effect.Effect<HistoryNotesWriteReport, HistoryMapError | HistoryGitError | HistoryNotesWriteError>;
 }
 
 /**
@@ -148,29 +199,36 @@ const makeHistoryNotes = Effect.gen(function* () {
     };
   });
 
-  const check: HistoryNotesShape["check"] = Effect.fn("HistoryNotes.check")(function* (options) {
-    yield* Effect.annotateCurrentSpan({ ref: options.ref, base: options.base });
-    const map = yield* readMap(options.root, options.mapPath);
+  // Decodes the map and proves every key reachable from `base`; shared by
+  // check and write so both refuse a shallow clone the same way.
+  const loadRows = Effect.fn("HistoryNotes.loadRows")(function* (root: string, mapPath: string, base: string) {
+    const map = yield* readMap(root, mapPath);
     const rows = A.sort(R.toEntries(map), byKey);
     const keys = A.map(rows, rowKey);
     // A shallow clone's rev-list is only the shallow window, so valid keys
     // would read as unreachable: fail closed instead of reporting them.
     const shallow = yield* git
-      .isShallow(options.root)
+      .isShallow(root)
       .pipe(Effect.mapError(gitError("is-shallow", "Cannot tell whether this clone is shallow.")));
     if (shallow) {
       return yield* HistoryGitError.make({
         operation: "is-shallow",
-        message: `Cannot prove map keys reachable from ${options.base} in a shallow clone. ${SHALLOW_REMEDIATION}`,
+        message: `Cannot prove map keys reachable from ${base} in a shallow clone. ${SHALLOW_REMEDIATION}`,
       });
     }
-    const reachable = yield* git.revList(options.root, options.base).pipe(
+    const reachable = yield* git.revList(root, base).pipe(
       Effect.mapBoth({
-        onFailure: gitError("rev-list", `Cannot list the commits reachable from ${options.base}.`),
+        onFailure: gitError("rev-list", `Cannot list the commits reachable from ${base}.`),
         onSuccess: HashSet.fromIterable,
       })
     );
     const unreachable = A.filter(keys, (key) => !HashSet.has(reachable, key));
+    return { map, rows, keys, unreachable };
+  });
+
+  const check: HistoryNotesShape["check"] = Effect.fn("HistoryNotes.check")(function* (options) {
+    yield* Effect.annotateCurrentSpan({ ref: options.ref, base: options.base });
+    const { map, rows, keys, unreachable } = yield* loadRows(options.root, options.mapPath, options.base);
     const published = yield* git
       .refExists(options.root, options.ref)
       .pipe(Effect.mapError(gitError("ref exists", `Cannot tell whether ${options.ref} exists.`)));
@@ -189,7 +247,86 @@ const makeHistoryNotes = Effect.gen(function* () {
     });
   });
 
-  return HistoryNotes.of({ check });
+  const write: HistoryNotesShape["write"] = Effect.fn("HistoryNotes.write")(function* (options) {
+    yield* Effect.annotateCurrentSpan({ ref: options.ref, base: options.base });
+    const { rows, unreachable } = yield* loadRows(options.root, options.mapPath, options.base);
+    if (A.isReadonlyArrayNonEmpty(unreachable)) {
+      return yield* HistoryNotesWriteError.make({
+        message: `Refusing to write ${options.ref}: ${unreachable.length} map keys are not reachable from ${options.base} (first: ${A.headNonEmpty(unreachable)}).`,
+      });
+    }
+    const exists = yield* git
+      .refExists(options.root, options.ref)
+      .pipe(Effect.mapError(gitError("ref exists", `Cannot tell whether ${options.ref} exists.`)));
+    const previous = exists
+      ? yield* git
+          .revParse(options.root, options.ref)
+          .pipe(
+            Effect.mapBoth({ onFailure: gitError("rev-parse", `Cannot resolve ${options.ref}.`), onSuccess: O.some })
+          )
+      : O.none<string>();
+    const commit = yield* git
+      .replaceNotes(
+        options.root,
+        options.ref,
+        A.map(rows, ([object, message]) => NoteWrite.make({ object, body: historyNoteBody(message) })),
+        NotesCommit.make({
+          message: `notes: project ${options.mapPath}`,
+          name: HISTORY_NOTES_COMMITTER_NAME,
+          email: HISTORY_NOTES_COMMITTER_EMAIL,
+          timestamp: HISTORY_NOTES_COMMIT_TIMESTAMP,
+        })
+      )
+      .pipe(Effect.mapError(gitError("fast-import", `Cannot write the notes on ${options.ref}.`)));
+    const tree = yield* git
+      .revParse(options.root, `${commit}^{tree}`)
+      .pipe(Effect.mapError(gitError("rev-parse", `Cannot resolve the tree of ${commit}.`)));
+    return HistoryNotesWriteReport.make({
+      ref: options.ref,
+      rows: rows.length,
+      previous,
+      commit,
+      tree,
+      changed: !O.contains(previous, commit),
+    });
+  });
+
+  // Appends `value` to the multi-valued `key` unless some value already equals it.
+  const ensureConfigValue = Effect.fn("HistoryNotes.ensureConfigValue")(function* (
+    root: string,
+    key: string,
+    value: string
+  ) {
+    const values = yield* git.configGetAll(root, key).pipe(Effect.mapError(gitError("config", `Cannot read ${key}.`)));
+    if (A.contains(values, value)) return HistoryConfigChange.Enum.present;
+    yield* git
+      .configSet(root, key, value, { add: true })
+      .pipe(Effect.mapError(gitError("config", `Cannot add ${value} to ${key}.`)));
+    return HistoryConfigChange.Enum.added;
+  });
+
+  const sync: HistoryNotesShape["sync"] = Effect.fn("HistoryNotes.sync")(function* (options) {
+    yield* Effect.annotateCurrentSpan({ fetch: options.fetch });
+    const origin = yield* git
+      .remoteUrl(options.root, { remote: "origin" })
+      .pipe(Effect.mapBoth({ onFailure: gitError("config", "Cannot read the origin remote."), onSuccess: O.isSome }));
+    const fetchRefspec = origin
+      ? yield* ensureConfigValue(options.root, "remote.origin.fetch", HISTORY_NOTES_FETCH_REFSPEC)
+      : HistoryConfigChange.Enum.skipped;
+    const displayRef = yield* ensureConfigValue(options.root, "notes.displayRef", HISTORY_NOTES_REF);
+    const fetch =
+      origin && options.fetch
+        ? yield* git.fetch(options.root, { remote: "origin", ref: HISTORY_NOTES_FETCH_REFSPEC, noTags: true }).pipe(
+            Effect.as(HistoryNotesFetchOutcome.Enum.fetched),
+            // The remote has not published the ref yet: a notice, not a failure.
+            Effect.catchTag("UnknownRefError", () => Effect.succeed(HistoryNotesFetchOutcome.Enum.unpublished)),
+            Effect.mapError(gitError("fetch", `Cannot fetch ${HISTORY_NOTES_REF} from origin.`))
+          )
+        : HistoryNotesFetchOutcome.Enum.skipped;
+    return HistoryNotesSyncReport.make({ origin, fetchRefspec, displayRef, fetch });
+  });
+
+  return HistoryNotes.of({ check, write, sync });
 });
 
 /**
@@ -313,3 +450,60 @@ export const renderHistoryNotesCheck = (report: HistoryNotesCheckReport): Readon
     }),
   ];
 };
+
+/**
+ * Renders a write report as the command's human summary.
+ *
+ * **Example** (Render an unchanged rewrite)
+ *
+ * ```ts
+ * import { HistoryNotesWriteReport, renderHistoryNotesWrite } from "@beep/repo-cli/commands/History"
+ * import * as O from "effect/Option"
+ *
+ * const commit = "a".repeat(40)
+ * const report = HistoryNotesWriteReport.make({
+ *   ref: "refs/notes/history",
+ *   rows: 940,
+ *   previous: O.some(commit),
+ *   commit,
+ *   tree: "b".repeat(40),
+ *   changed: false,
+ * })
+ * console.log(renderHistoryNotesWrite(report)[0]) // "history notes write: refs/notes/history unchanged (940 notes)"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const renderHistoryNotesWrite = (report: HistoryNotesWriteReport): ReadonlyArray<string> => [
+  `history notes write: ${report.ref} ${report.changed ? "updated" : "unchanged"} (${report.rows} notes)`,
+  `  commit: ${report.commit}`,
+  `  tree: ${report.tree}`,
+  ...(report.changed ? [`  previous: ${O.getOrElse(report.previous, () => "(none)")}`] : []),
+];
+
+/**
+ * Renders a sync report as the command's human summary.
+ *
+ * **Example** (Render a configure-only sync)
+ *
+ * ```ts
+ * import { HistoryNotesSyncReport, renderHistoryNotesSync } from "@beep/repo-cli/commands/History"
+ *
+ * const report = HistoryNotesSyncReport.make({ origin: true, fetchRefspec: "added", displayRef: "present", fetch: "skipped" })
+ * console.log(renderHistoryNotesSync(report)[1]) // "  remote.origin.fetch +refs/notes/history:refs/notes/history: added"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const renderHistoryNotesSync = (report: HistoryNotesSyncReport): ReadonlyArray<string> => [
+  "history notes sync:",
+  `  remote.origin.fetch ${HISTORY_NOTES_FETCH_REFSPEC}: ${report.origin ? report.fetchRefspec : "skipped (no origin remote)"}`,
+  `  notes.displayRef ${HISTORY_NOTES_REF}: ${report.displayRef}`,
+  `  fetch: ${HistoryNotesFetchOutcome.match(report.fetch, {
+    fetched: () => `fetched ${HISTORY_NOTES_REF} from origin`,
+    unpublished: () => `origin has not published ${HISTORY_NOTES_REF} yet`,
+    skipped: () => "skipped",
+  })}`,
+];

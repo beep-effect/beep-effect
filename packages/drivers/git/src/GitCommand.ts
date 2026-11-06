@@ -11,11 +11,13 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import type { NotesCommit, NoteWrite } from "./Git.models.ts";
 
 const $I = $GitId.create("GitCommand");
 
@@ -401,8 +403,8 @@ const sparseCheckoutSet: {
 );
 
 // Implementation of GitCommand.configSet; the public contract lives on the static.
-const configSet = (key: string, value: string, file?: string): GitInvocation =>
-  git(["config", ...(file !== undefined ? ["-f", file] : []), key, secretValue(value)]);
+const configSet = (key: string, value: string, file?: string, add = false): GitInvocation =>
+  git(["config", ...(file !== undefined ? ["-f", file] : []), ...(add ? ["--add"] : []), key, secretValue(value)]);
 
 // Implementation of GitCommand.add; the public contract lives on the static.
 const add = (paths: ReadonlyArray<string>, force = false): GitInvocation =>
@@ -980,6 +982,34 @@ const notesList = (ref: string): GitInvocation => git(["notes", `--ref=${ref}`, 
 // Implementation of GitCommand.hashObject; the public contract lives on the static.
 // No `-w`: the object id is computed, never written to the object store.
 const hashObject = (content: string): GitInvocation => git(["hash-object", "--no-filters", "--stdin"], content);
+
+/** A fast-import `data` block: the exact UTF-8 byte count, the bytes, and the optional closing LF. */
+const fastImportData = (content: string): string => `data ${new TextEncoder().encode(content).length}\n${content}\n`;
+
+/** The `<name> <<email>> <seconds> +0000` identity line body fast-import's raw date format expects. */
+const fastImportIdent = (commit: NotesCommit): string => `${commit.name} <${commit.email}> ${commit.timestamp} +0000`;
+
+const byNoteObject = Order.mapInput(Order.String, (note: NoteWrite) => note.object);
+
+// Implementation of GitCommand.replaceNotes; the public contract lives on the static.
+// No `from`: the commit is parentless, so the same notes and metadata always
+// give the same commit id whatever the ref held before. `--done` makes a
+// truncated stream fail instead of committing a partial tree.
+const replaceNotes = (ref: string, notes: ReadonlyArray<NoteWrite>, commit: NotesCommit): GitInvocation =>
+  git(
+    ["fast-import", "--quiet", "--force", "--done"],
+    A.join(
+      [
+        `commit ${ref}\n`,
+        `author ${fastImportIdent(commit)}\n`,
+        `committer ${fastImportIdent(commit)}\n`,
+        fastImportData(commit.message),
+        ...A.map(A.sort(notes, byNoteObject), (note) => `N inline ${note.object}\n${fastImportData(note.body)}`),
+        "done\n",
+      ],
+      ""
+    )
+  );
 
 // Implementation of GitCommand.mergeTree; the public contract lives on the static.
 const mergeTree: {
@@ -2018,8 +2048,10 @@ export class GitCommand {
    *
    * **Details**
    *
-   * Mutating: `git config [-f <file>] <key> <value>` — writes a configuration value,
+   * Mutating: `git config [-f <file>] [--add] <key> <value>` — writes a configuration value,
    * optionally into an explicit configuration file (e.g., `.gitmodules`).
+   * With `add`, the value is appended as one more value of a multi-valued
+   * key (`remote.origin.fetch`, `notes.displayRef`) instead of replacing it.
    *
    * `value` may be a secret (a token, a credential-bearing URL), so it is
    * masked wholesale — as `<redacted>` — in
@@ -3248,6 +3280,48 @@ export class GitCommand {
    * @since 0.0.0
    */
   static readonly hashObject = hashObject;
+
+  /**
+   * Builds an invocation that replaces a notes ref with a single parentless
+   * commit holding exactly the given notes.
+   *
+   * **Details**
+   *
+   * `git fast-import --quiet --force --done` reading a generated stream: one
+   * `commit <ref>` with fixed author, committer and message, an `N inline`
+   * note per entry (sorted by object id), and `done`. fast-import lays the
+   * notes tree out with the same fan-out `git notes` uses, so `git notes`
+   * and `git log --notes` read the result, and the tree id equals the one a
+   * `git notes add` sequence would build. The commit has no parent, so the
+   * same notes and {@link NotesCommit} always produce the same commit id;
+   * `--force` lets that parentless commit replace whatever the ref held.
+   * Nothing touches the index or the work tree.
+   *
+   * **Gotchas**
+   *
+   * The constructor renders its inputs verbatim. `Git.replaceNotes` refuses
+   * refs outside `refs/notes/`, malformed or duplicate object ids, and
+   * identities containing `<`, `>` or a newline before building it.
+   *
+   * **Example** (Inspect replace-notes argv)
+   *
+   * ```ts
+   * import { NotesCommit, NoteWrite } from "@beep/git/Git";
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.replaceNotes(
+   *   "refs/notes/history",
+   *   [NoteWrite.make({ object: "b".repeat(40), body: "fix: subject\n" })],
+   *   NotesCommit.make({ message: "notes", name: "bot", email: "bot@example.com", timestamp: 0 })
+   * );
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // fast-import --quiet --force --done
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly replaceNotes = replaceNotes;
 
   /**
    * Builds an invocation to merge two commits in the object store only.

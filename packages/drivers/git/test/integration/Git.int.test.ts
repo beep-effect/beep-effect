@@ -23,7 +23,15 @@
 // surface) and the real Git service itself for checkout, which IS part of
 // the surface this package owns.
 
-import { Git, GitCommandError, GitOptions, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
+import {
+  Git,
+  GitCommandError,
+  GitOptions,
+  NotARepositoryError,
+  NotesCommit,
+  NoteWrite,
+  UnknownRefError,
+} from "@beep/git/Git";
 import { runCollected } from "@beep/git/internal/run";
 import { $GitId } from "@beep/identity/packages";
 import { NodeServices } from "@effect/platform-node";
@@ -583,6 +591,58 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
             A.map(after, (entry) => [entry.note, entry.object]),
             [[expected, commit]]
           );
+        })
+      );
+    });
+
+    describe("replaceNotes, in its own repository", () => {
+      it.effect("matches git notes' own fan-out tree, is shown by git log, and is reproducible", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const fs = yield* FileSystem.FileSystem;
+          const dir = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-int-replace-notes-" });
+          const raw = (args: ReadonlyArray<string>) => runFixtureGit(dir, args);
+          yield* raw(["-c", "init.defaultBranch=main", "init"]);
+          yield* raw(["config", "user.email", "git-integration@example.com"]);
+          yield* raw(["config", "user.name", "Git Integration"]);
+          // 300 notes is past the point where git notes fans the tree out into `ab/cdef…` directories.
+          for (const index of A.range(1, 300)) {
+            yield* raw(["-c", "commit.gpgsign=false", "commit", "--allow-empty", "-q", "-m", `c${index}`]);
+          }
+          const listed = yield* raw(["rev-list", "main"]);
+          const commits = A.filter(Str.split("\n")(listed), Str.isNonEmpty);
+          const notes = A.map(commits, (object) => NoteWrite.make({ object, body: `fix: note for ${object}\n` }));
+          for (const note of notes) {
+            yield* raw(["notes", "--ref=refs/notes/reference", "add", "-m", Str.trim(note.body), note.object]);
+          }
+          const metadata = NotesCommit.make({
+            message: "notes: project the map",
+            name: "beep history notes",
+            email: "noreply@beep-effect.com",
+            timestamp: 1793923200,
+          });
+
+          const first = yield* git.replaceNotes(dir, "refs/notes/history", notes, metadata);
+          const tree = yield* git.revParse(dir, "refs/notes/history^{tree}");
+          const reference = yield* git.revParse(dir, "refs/notes/reference^{tree}");
+          assert.strictEqual(tree, reference);
+          const topLevel = yield* raw(["ls-tree", "refs/notes/history"]);
+          assert.isTrue(Str.startsWith("040000 tree")(topLevel));
+
+          // A second run, and a run over a ref that held something else, land on the same commit.
+          const second = yield* git.replaceNotes(dir, "refs/notes/history", A.reverse(notes), metadata);
+          yield* raw(["update-ref", "refs/notes/history", "refs/notes/reference"]);
+          const third = yield* git.replaceNotes(dir, "refs/notes/history", notes, metadata);
+          assert.strictEqual(second, first);
+          assert.strictEqual(third, first);
+          const parents = yield* raw(["rev-list", "--count", "refs/notes/history"]);
+          assert.strictEqual(Str.trim(parents), "1");
+
+          const head = A.headNonEmpty(Str.split("\n")(listed));
+          const shown = yield* raw(["log", "-1", "--notes=history", "--format=%N", head]);
+          assert.strictEqual(shown, `fix: note for ${head}\n\n`);
+          const listedNotes = yield* git.notesList(dir, "refs/notes/history");
+          assert.strictEqual(listedNotes.length, 300);
         })
       );
     });

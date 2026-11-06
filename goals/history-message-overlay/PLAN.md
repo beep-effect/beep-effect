@@ -58,4 +58,12 @@ Lane `docs/git-history-rewrite-exploration` · PR #2785
 
 Reverse: Revert the slice-1 commits on the branch
 
+### Slice 2 in the lane: --write, sync, bootstrap hooks, 2026-11-06
+
+beep history notes --write and sync landed with @beep/git replaceNotes and configSet; History files at 100% coverage (scoped run), worktree hook tested; policy fingerprint regenerated for the new import. Next: slice 3 (post-merge publication workflow with fetch-depth 0 and a force-push of refs/notes/history).
+
+Lane `docs/git-history-rewrite-exploration` · PR #2785
+
+Reverse: Revert the slice-2 commit on the branch
+
 <!-- beep:decisions:end -->

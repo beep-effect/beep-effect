@@ -1,4 +1,12 @@
-import { Git, GitCommandError, NotARepositoryError, NoteEntry, UnknownRefError } from "@beep/git/Git";
+import {
+  Git,
+  GitCommandError,
+  NotARepositoryError,
+  NoteEntry,
+  NotesCommit,
+  NoteWrite,
+  UnknownRefError,
+} from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { parseNotesList, parseObjectId } from "@beep/git/internal/parsers";
 import { assert, describe, it } from "@effect/vitest";
@@ -13,12 +21,14 @@ import * as Result from "effect/Result";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { scripted } from "./fixtures.ts";
+import type { GitInvocation } from "@beep/git/GitCommand";
 import type { ScriptResult } from "./fixtures.ts";
 
 const cwd = "/repo";
 const noteBlob = Str.repeat(40)("a");
 const commitA = Str.repeat(40)("b");
 const commitB = Str.repeat(40)("c");
+const commitC = Str.repeat(40)("d");
 
 const isSshProbe = (args: ReadonlyArray<string>): boolean =>
   args[0] === "config" && args[1] === "--get" && (args[2] === "core.sshCommand" || args[2] === "ssh.variant");
@@ -50,7 +60,7 @@ const run = <A, E>(
     )
   );
 
-const decodeStdin = Effect.fnUntraced(function* (invocation: ReturnType<typeof GitCommand.hashObject>) {
+const decodeStdin = Effect.fnUntraced(function* (invocation: GitInvocation) {
   const stdin = invocation.command.options.stdin;
   if (stdin === undefined || typeof stdin === "string" || "stream" in stdin) return O.none<string>();
   const chunks = yield* Stream.runCollect(stdin);
@@ -215,6 +225,104 @@ describe("Git.hashObject", () => {
         Cause.findDie(cause).pipe(Result.map((reason) => reason.defect)),
         'Git.hashObject: unexpected classification "unknownRef"'
       );
+    })
+  );
+});
+
+const commit = NotesCommit.make({
+  message: "notes: project the map",
+  name: "beep history notes",
+  email: "noreply@beep-effect.com",
+  timestamp: 1793923200,
+});
+
+describe("GitCommand.replaceNotes", () => {
+  it.effect("renders one parentless fast-import commit with notes sorted by object and byte-counted data", () =>
+    Effect.gen(function* () {
+      const invocation = GitCommand.replaceNotes(
+        "refs/notes/history",
+        [
+          NoteWrite.make({ object: commitB, body: "fix: é\n" }),
+          NoteWrite.make({ object: commitA, body: "feat: one\n" }),
+        ],
+        commit
+      );
+      assert.deepStrictEqual(invocation.redactedArgs, ["fast-import", "--quiet", "--force", "--done"]);
+      const stdin = yield* decodeStdin(invocation);
+      assert.deepStrictEqual(
+        stdin,
+        O.some(
+          A.join(
+            [
+              "commit refs/notes/history",
+              "author beep history notes <noreply@beep-effect.com> 1793923200 +0000",
+              "committer beep history notes <noreply@beep-effect.com> 1793923200 +0000",
+              "data 22",
+              "notes: project the map",
+              `N inline ${commitA}`,
+              "data 10",
+              "feat: one\n",
+              `N inline ${commitB}`,
+              "data 8",
+              "fix: é\n",
+              "done",
+              "",
+            ],
+            "\n"
+          )
+        )
+      );
+    })
+  );
+
+  it("configSet with add appends instead of replacing", () => {
+    assert.deepStrictEqual(
+      GitCommand.configSet("notes.displayRef", "refs/notes/history", undefined, true).redactedArgs,
+      ["config", "--add", "notes.displayRef", "<redacted>"]
+    );
+  });
+});
+
+describe("Git.replaceNotes", () => {
+  const note = NoteWrite.make({ object: commitA, body: "feat: one\n" });
+
+  it.effect("runs fast-import and answers the ref's new commit id", () =>
+    Effect.gen(function* () {
+      const seen: Array<ReadonlyArray<string>> = [];
+      const id = yield* run(
+        Effect.flatMap(Git, (git) => git.replaceNotes(cwd, "refs/notes/history", [note], commit)),
+        (args) => (args[0] === "rev-parse" ? { stdout: `${commitC}\n` } : { exit: 0 }),
+        seen
+      );
+      assert.strictEqual(id, commitC);
+      assert.deepStrictEqual(
+        A.map(seen, (args) => args[0]),
+        ["fast-import", "rev-parse"]
+      );
+    })
+  );
+
+  it.effect("refuses bad refs, object ids, duplicates and identities before spawning", () =>
+    Effect.gen(function* () {
+      const cases = [
+        ["refs/heads/main", [note], commit],
+        ["refs/notes/history", [NoteWrite.make({ object: "HEAD", body: "x\n" })], commit],
+        ["refs/notes/history", [note, note], commit],
+        ["refs/notes/history", [note], NotesCommit.make({ ...commit, email: "a>b" })],
+      ] as const;
+      for (const [ref, notes, metadata] of cases) {
+        const seen: Array<ReadonlyArray<string>> = [];
+        const failure = yield* Effect.flip(
+          run(
+            Effect.flatMap(Git, (git) => git.replaceNotes(cwd, ref, notes, metadata)),
+            () => ({ exit: 0 }),
+            seen
+          )
+        );
+        assert.instanceOf(failure, GitCommandError);
+        assert.strictEqual(failure.kind, "refused");
+        assert.deepStrictEqual(seen, []);
+      }
     })
   );
 });

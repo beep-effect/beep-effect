@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -364,4 +365,252 @@ export class HistoryNotesCheckReport extends S.Opaque<HistoryNotesCheckReport, {
       })
     ),
   }).pipe($I.annoteSchema("HistoryNotesCheckReport", { description: "The outcome of one history notes check." }))
+) {}
+
+/**
+ * The author and committer name of every notes commit `--write` produces.
+ *
+ * **Example** (Read the writer identity)
+ *
+ * ```ts
+ * import { HISTORY_NOTES_COMMITTER_NAME } from "@beep/repo-cli/commands/History"
+ *
+ * console.log(HISTORY_NOTES_COMMITTER_NAME) // "beep history notes"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HISTORY_NOTES_COMMITTER_NAME = "beep history notes";
+
+/**
+ * The author and committer email of every notes commit `--write` produces.
+ *
+ * **Example** (Read the writer email)
+ *
+ * ```ts
+ * import { HISTORY_NOTES_COMMITTER_EMAIL } from "@beep/repo-cli/commands/History"
+ *
+ * console.log(HISTORY_NOTES_COMMITTER_EMAIL) // "noreply@beep-effect.com"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HISTORY_NOTES_COMMITTER_EMAIL = "noreply@beep-effect.com";
+
+/**
+ * The fixed author and committer time of every notes commit, in seconds
+ * since the epoch: 2026-11-06T00:00:00Z, the day the overlay was adopted.
+ *
+ * **Details**
+ *
+ * A fixed time (with the fixed identity and message, and no parent) makes
+ * the notes commit id a function of the map alone, so `--write` over an
+ * unchanged map is a no-op wherever it runs.
+ *
+ * **Example** (Read the fixed commit time)
+ *
+ * ```ts
+ * import { HISTORY_NOTES_COMMIT_TIMESTAMP } from "@beep/repo-cli/commands/History"
+ *
+ * console.log(new Date(HISTORY_NOTES_COMMIT_TIMESTAMP * 1000).toISOString()) // "2026-11-06T00:00:00.000Z"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HISTORY_NOTES_COMMIT_TIMESTAMP = 1793923200;
+
+/**
+ * The fetch refspec `sync` adds to `remote.origin.fetch`. The `+` is
+ * required: every `--write` commit is parentless, so a changed overlay never
+ * fast-forwards.
+ *
+ * **Example** (Read the overlay refspec)
+ *
+ * ```ts
+ * import { HISTORY_NOTES_FETCH_REFSPEC } from "@beep/repo-cli/commands/History"
+ *
+ * console.log(HISTORY_NOTES_FETCH_REFSPEC) // "+refs/notes/history:refs/notes/history"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HISTORY_NOTES_FETCH_REFSPEC = `+${HISTORY_NOTES_REF}:${HISTORY_NOTES_REF}`;
+
+/**
+ * Inputs of one `beep history notes --write` run.
+ *
+ * **Example** (Describe a write of a scratch ref)
+ *
+ * ```ts
+ * import { HistoryNotesWriteOptions } from "@beep/repo-cli/commands/History"
+ *
+ * const options = HistoryNotesWriteOptions.make({
+ *   root: "/repo",
+ *   mapPath: "docs/history/commit-message-map.json",
+ *   ref: "refs/notes/history-scratch",
+ *   base: "origin/main",
+ * })
+ * console.log(options.ref) // "refs/notes/history-scratch"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HistoryNotesWriteOptions extends S.Opaque<HistoryNotesWriteOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
+    root: S.String.pipe($I.annoteKey("HistoryNotesWriteOptions.root", { description: "Repository root to write in." })),
+    mapPath: S.String.pipe(
+      $I.annoteKey("HistoryNotesWriteOptions.mapPath", {
+        description: "Path of the commit-message map, relative to the repository root.",
+      })
+    ),
+    ref: S.String.pipe(
+      $I.annoteKey("HistoryNotesWriteOptions.ref", { description: "The notes ref rebuilt from the map." })
+    ),
+    base: S.String.pipe(
+      $I.annoteKey("HistoryNotesWriteOptions.base", { description: "The ref every map key must be reachable from." })
+    ),
+  }).pipe($I.annoteSchema("HistoryNotesWriteOptions", { description: "Inputs of one history notes write." }))
+) {}
+
+/**
+ * The outcome of one `beep history notes --write` run.
+ *
+ * **Example** (Represent an unchanged rewrite)
+ *
+ * ```ts
+ * import { HistoryNotesWriteReport } from "@beep/repo-cli/commands/History"
+ * import * as O from "effect/Option"
+ *
+ * const commit = "a".repeat(40)
+ * const report = HistoryNotesWriteReport.make({
+ *   ref: "refs/notes/history",
+ *   rows: 940,
+ *   previous: O.some(commit),
+ *   commit,
+ *   tree: "b".repeat(40),
+ *   changed: false,
+ * })
+ * console.log(report.changed) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HistoryNotesWriteReport extends S.Opaque<HistoryNotesWriteReport, { readonly brand: unique symbol }>()(
+  S.Struct({
+    ref: S.String.pipe($I.annoteKey("HistoryNotesWriteReport.ref", { description: "The notes ref written." })),
+    rows: S.Int.pipe($I.annoteKey("HistoryNotesWriteReport.rows", { description: "Number of notes written." })),
+    previous: S.Option(S.String).pipe(
+      $I.annoteKey("HistoryNotesWriteReport.previous", { description: "The commit the ref held before, if any." })
+    ),
+    commit: S.String.pipe(
+      $I.annoteKey("HistoryNotesWriteReport.commit", { description: "The notes commit the ref holds now." })
+    ),
+    tree: S.String.pipe(
+      $I.annoteKey("HistoryNotesWriteReport.tree", { description: "The notes tree of that commit." })
+    ),
+    changed: S.Boolean.pipe($I.annoteKey("HistoryNotesWriteReport.changed", { description: "Whether the ref moved." })),
+  }).pipe($I.annoteSchema("HistoryNotesWriteReport", { description: "The outcome of one history notes write." }))
+) {}
+
+/**
+ * What `sync` did to one multi-valued config key.
+ *
+ * **Example** (Name a config outcome)
+ *
+ * ```ts
+ * import { HistoryConfigChange } from "@beep/repo-cli/commands/History"
+ *
+ * console.log(HistoryConfigChange.Enum.added) // "added"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HistoryConfigChange = LiteralKit(["added", "present", "skipped"]).pipe(
+  $I.annoteSchema("HistoryConfigChange", {
+    description: "Whether sync added a config value, found it present, or skipped the key.",
+  })
+);
+
+/**
+ * Decoded type of {@link HistoryConfigChange}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HistoryConfigChange = typeof HistoryConfigChange.Type;
+
+/**
+ * What `sync` did about fetching the overlay ref.
+ *
+ * **Example** (Name a fetch outcome)
+ *
+ * ```ts
+ * import { HistoryNotesFetchOutcome } from "@beep/repo-cli/commands/History"
+ *
+ * console.log(HistoryNotesFetchOutcome.Enum.unpublished) // "unpublished"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HistoryNotesFetchOutcome = LiteralKit(["fetched", "unpublished", "skipped"]).pipe(
+  $I.annoteSchema("HistoryNotesFetchOutcome", {
+    description: "Whether sync fetched the overlay ref, found it unpublished, or did not fetch.",
+  })
+);
+
+/**
+ * Decoded type of {@link HistoryNotesFetchOutcome}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HistoryNotesFetchOutcome = typeof HistoryNotesFetchOutcome.Type;
+
+/**
+ * The outcome of one `beep history notes sync` run.
+ *
+ * **Example** (Represent a first configure-only sync)
+ *
+ * ```ts
+ * import { HistoryNotesSyncReport } from "@beep/repo-cli/commands/History"
+ *
+ * const report = HistoryNotesSyncReport.make({
+ *   origin: true,
+ *   fetchRefspec: "added",
+ *   displayRef: "added",
+ *   fetch: "skipped",
+ * })
+ * console.log(report.fetch) // "skipped"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HistoryNotesSyncReport extends S.Opaque<HistoryNotesSyncReport, { readonly brand: unique symbol }>()(
+  S.Struct({
+    origin: S.Boolean.pipe(
+      $I.annoteKey("HistoryNotesSyncReport.origin", { description: "Whether the clone has an origin remote." })
+    ),
+    fetchRefspec: HistoryConfigChange.pipe(
+      $I.annoteKey("HistoryNotesSyncReport.fetchRefspec", {
+        description: "What happened to the overlay refspec in remote.origin.fetch.",
+      })
+    ),
+    displayRef: HistoryConfigChange.pipe(
+      $I.annoteKey("HistoryNotesSyncReport.displayRef", {
+        description: "What happened to refs/notes/history in notes.displayRef.",
+      })
+    ),
+    fetch: HistoryNotesFetchOutcome.pipe(
+      $I.annoteKey("HistoryNotesSyncReport.fetch", { description: "What happened when fetching the overlay ref." })
+    ),
+  }).pipe($I.annoteSchema("HistoryNotesSyncReport", { description: "The outcome of one history notes sync." }))
 ) {}
