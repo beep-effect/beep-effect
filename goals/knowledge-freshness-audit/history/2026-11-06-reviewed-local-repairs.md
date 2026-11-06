@@ -49,6 +49,19 @@ These are local decision identifiers, not a unique audited-claim denominator.
 The first-wave detailed public record remains
 [available separately](./2026-11-05-local-review-wave-1.md).
 
+## Markdown type compatibility
+
+The AST schemas now carry explicit nominal brands. Callers that supplied raw
+objects as decoded AST values must use the exported schema constructors or decode
+at the boundary; encoded wire shapes omit the type-only brand. Rendered output
+and the serialized node fields are intended to remain unchanged. Consumer checks
+and package tests must verify that distinction on the delivery head.
+
+`@beep/md` is currently `private: true`. The current release policy rejects
+changeset notes naming private workspaces, so this delivery records the migration
+here instead of adding an invalid private-package changeset. Future activation of
+publication must audit the compatibility/versioning policy before exposing it.
+
 ## Rejected and qualified inferences
 
 Retained distinctions include historical versus current assertions, norms versus
