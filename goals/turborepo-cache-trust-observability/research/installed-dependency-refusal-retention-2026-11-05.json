@@ -30,7 +30,7 @@
     "dependencyDigestDrift": "unresolved; no package comparison possible from the104-byte refusal"
   },
   "repair": {
-    "sourceRetention": "always() only when source inspection succeeded and produced its report path",
+    "sourceRetention": "always() after successful source inspection, selected by a metadata-only combined-byte gate independent of diagnostic success",
     "refusalCodes": [
       "memory-limit",
       "subprocess-deadline",
@@ -42,13 +42,24 @@
     "exceptionMessagesOrPathsRetained": false,
     "regressionsAuthored": [
       "workflow source retention condition",
-      "nine exception cases with secret/path redaction and private bounded refusal output"
+      "nine exception cases with secret/path redaction and private bounded refusal output",
+      "workflow publication ordering, fixed flags and artifact selector guards",
+      "exact-cap and overflow pairs, individually oversized reports, missing paths, symlink and FIFO refusal",
+      "read-only publication CLI with exact fixed flags and missing-diagnostic exit 1"
     ],
     "preparedSourceSha256": {
-      ".github/workflows/heavy.yml": "fe8ca819c119f93654c1fe641ac40d3e566cb90b2b09464fd2b90c2c7dc7df84",
-      "packages/tooling/tool/cli/test/ci-runner-security.test.ts": "c489fa783ff96adead43d9a130d10a936f22f503286570857820c50395aadcf5",
-      "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py": "87573a07dc6de3adb216d7e77da1b1069525ad6ce6d3d641b504852e0f1351a8",
-      "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py": "ab1437ba3a40eb7d770001fce8f15fd463b74649c8aa762f3a4b2331fab8c198"
+      ".github/workflows/heavy.yml": "36f7075347a2b4cd0d71874809ff587ee0369f81e4b71e6597033e6e8215ca3b",
+      "packages/tooling/tool/cli/test/ci-runner-security.test.ts": "ab60a7b890ee4fe4f553d00bac12dba4e47445bd917a5b6f6cae40a3817630b3",
+      "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py": "c7f0fff307527fbf922c5b917c5d826b774aab41e757e7211253461aef3bd093",
+      "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py": "70541701ddd9471f2772674eca80bde21d82a331d07fd6e353e7986a7bd9dea3"
+    },
+    "publicationBound": {
+      "aggregateReportBytes": 4194304,
+      "selection": "both regular nonempty reports when their sum fits; otherwise retain only the individually safe report selected by diagnostic-first policy",
+      "partialPairStatus": "refused with exit 1; fixed boolean selectors permit only safe partial evidence retention",
+      "payloadReadOrMutation": false,
+      "symlinksAndSpecialFiles": "refused with no payload read and nonblocking open",
+      "counterexample": "Source inspection can produce a report near four MiB; an added 104-byte diagnostic refusal must count toward the same aggregate cap."
     }
   },
   "boundsUnchanged": {

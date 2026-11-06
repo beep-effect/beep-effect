@@ -1405,3 +1405,16 @@ qualify permission-sensitive computations. All whole-goal criteria remain open.
 Reverse through a reviewed revert after suspending affected tuples and restoring
 the prior reviewed profile; retain the new and historical observations. Do not
 purge shared artifacts, lower proof floors or enable unsigned fallback.
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-cache-trust-observability`; add a `kind: decision` file there, never edit this block._
+
+### Bound retained reports even when dependency diagnostics refuse, 2026-11-06
+
+Source inspection already permits a report up to four MiB. A later refusal adds bytes, so unconditional retention can exceed the existing aggregate cap at the boundary. Run one metadata-only publication selector after diagnostics, including failure, using the same ARTIFACT_LIMIT. Retain both reports only when they fit together; otherwise retain only the individually safe report selected by policy and fail the complete-pair gate. Reject missing, symlink and special-file candidates without reading payloads, mutating reports, or repeating archive passes. Author exact-boundary, overflow, missing/special-file and fixed-output CLI controls for hosted CI. No local quality suite or source-generator entrypoint is run. No profile, signing, credential, capacity or whole-goal acceptance change.
+
+Lane `codex/cache-diagnostic-refusal`
+
+Reverse: Remove the publication selector only after another gate enforces the same combined four-MiB cap; preserve all earlier failure evidence.
+
+<!-- beep:decisions:end -->
