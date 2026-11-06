@@ -49,7 +49,7 @@ Before marking the packet closed:
   Provisioned: distro `t3-agent` (Ubuntu 26.04.1, user `agent`, automount and
   interop verified off, systemd `running`, hostname `tom-pc-1-wsl`), Tailscale
   1.104.5 installed with operator `agent`, linger on, pull script, units, mirror
-  config, installer and `~/t3-finish.sh` staged, `T3AgentWSL` keep-alive task
+  config, installer and `$HOME/t3-finish.sh` staged, `T3AgentWSL` keep-alive task
   registered and running (the distro stopped within seconds of the last session
   before it). Same day, after the operator approved the node: T3 installed
   pinned to the published version, service active, Serve on the distro's node,
