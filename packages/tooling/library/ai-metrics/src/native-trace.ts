@@ -56,6 +56,19 @@ const UsageConvention = S.Literals(["claude-code", "openinference", "unknown"]);
 const FixtureSurface = LiteralKit(["cli", "desktop"]).pipe(
   $I.annoteSchema("FixtureSurface", { description: "Declared synthetic fixture surface, never real harness coverage." })
 );
+const NativeUsageEvidence = S.Struct({
+  convention: UsageConvention,
+  input: S.OptionFromOptionalKey(TokenCount),
+  output: S.OptionFromOptionalKey(TokenCount),
+  cacheRead: S.OptionFromOptionalKey(TokenCount),
+  cacheWrite: S.OptionFromOptionalKey(TokenCount),
+}).pipe(
+  $I.annoteSchema("NativeUsageEvidence", {
+    description: "Existing native usage convention and optional measured counters.",
+  })
+);
+const hasUnknownUsage = (usage: typeof NativeUsageEvidence.Type) =>
+  usage.convention === "unknown" && A.every([usage.input, usage.output, usage.cacheRead, usage.cacheWrite], O.isNone);
 const optionalHash = S.OptionFromOptionalKey(Sha256Hex);
 const Rejection = S.Struct({ ordinal: S.Natural, reason: S.tag("invalid-span") });
 
@@ -140,13 +153,7 @@ export class NativeTraceMetadata extends S.Opaque<NativeTraceMetadata, { readonl
     nativeLifecycle: S.OptionFromOptionalKey(NativeLifecycleMetadata).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
-    usage: S.Struct({
-      convention: UsageConvention,
-      input: S.OptionFromOptionalKey(TokenCount),
-      output: S.OptionFromOptionalKey(TokenCount),
-      cacheRead: S.OptionFromOptionalKey(TokenCount),
-      cacheWrite: S.OptionFromOptionalKey(TokenCount),
-    }),
+    usage: NativeUsageEvidence,
   })
     .check(
       S.makeFilter(
@@ -163,8 +170,7 @@ export class NativeTraceMetadata extends S.Opaque<NativeTraceMetadata, { readonl
               O.contains(value.sessionHash, controller.sourceSessionId),
               O.contains(value.startTimeUnixNano, controller.startTimeUnixNano),
               O.contains(value.endTimeUnixNano, controller.endTimeUnixNano),
-              value.usage.convention === "unknown",
-              A.every([value.usage.input, value.usage.output, value.usage.cacheRead, value.usage.cacheWrite], O.isNone),
+              hasUnknownUsage(value.usage),
             ],
             (valid) => valid
           );
@@ -179,20 +185,25 @@ export class NativeTraceMetadata extends S.Opaque<NativeTraceMetadata, { readonl
     )
     .check(
       S.makeFilter(
-        (value) =>
-          O.isNone(value.nativeLifecycle) ||
-          (value.kind === "CHAIN" &&
-            value.status === "unset" &&
-            !value.durationKnown &&
-            O.isNone(value.managedController) &&
-            O.isNone(value.fixtureSurface) &&
-            O.isNone(value.startTimeUnixNano) &&
-            O.isNone(value.endTimeUnixNano) &&
-            O.isNone(value.modelHash) &&
-            O.isNone(value.modelName) &&
-            O.contains(value.sessionHash, value.nativeLifecycle.value.sessionHash) &&
-            value.usage.convention === "unknown" &&
-            A.every([value.usage.input, value.usage.output, value.usage.cacheRead, value.usage.cacheWrite], O.isNone)),
+        (value) => {
+          if (O.isNone(value.nativeLifecycle)) return true;
+          return A.every(
+            [
+              value.kind === "CHAIN",
+              value.status === "unset",
+              !value.durationKnown,
+              O.isNone(value.managedController),
+              O.isNone(value.fixtureSurface),
+              O.isNone(value.startTimeUnixNano),
+              O.isNone(value.endTimeUnixNano),
+              O.isNone(value.modelHash),
+              O.isNone(value.modelName),
+              O.contains(value.sessionHash, value.nativeLifecycle.value.sessionHash),
+              hasUnknownUsage(value.usage),
+            ],
+            (valid) => valid
+          );
+        },
         {
           identifier: "NativeLifecycleEvidence",
           message: "Lifecycle observations cannot assert source time, model activity or usage",

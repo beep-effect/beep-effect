@@ -104,3 +104,23 @@ hooks, weaken the controlled canary, open a public receiver, reuse worker-claim
 semantics or require successful inference before observing a bounded callback.
 Only later positively observed/accepted/visible event counts may be reported;
 original launches, missed hooks, usage and all-seven populations stay Unknown.
+
+## Portable source proof and export route
+
+Offline tests enroll two synthetic public source files through the source-only
+`test/cursor-lifecycle` port and still exercise the real Unix peer, ancestry,
+file-hash checks and durable journal. They require no installed Cursor release.
+The production entrypoint always supplies the fixed reviewed native source
+contract; a negative test proves that it refuses synthetic source pins before
+opening a listener. Journal/control are server-owned Effect services, separate
+from the schema-modeled enrollment policy.
+
+The export remains `native-export/v1`, stream `native-lifecycle`, with names
+`cursor.sessionStart` and `cursor.sessionEnd`, CHAIN kind and unset status.
+`duration_known=false` and `time_basis=intake_observation` describe a point at the
+first durable intake time. Native reported duration and sourceTimestamp Unknown
+remain separate lifecycle attributes; there are no token or model-call claims.
+The future-disabled collector metadata route's older `native`/`agent.*` allowlist
+does not admit this contract. Its narrow source integration and later runtime
+admission must be qualified separately; this source slice does not enable that
+route or establish backend visibility.

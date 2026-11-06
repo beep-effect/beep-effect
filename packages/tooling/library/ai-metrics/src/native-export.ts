@@ -148,18 +148,27 @@ const usageAttributes = (span: NativeTraceMetadata) => {
     ...O.toArray(O.map(u.cacheWrite, (value) => integer("llm.token_count.prompt_details.cache_write", value))),
   ];
 };
+const streamName = (span: NativeTraceMetadata) => {
+  if (O.isSome(span.managedController)) return "managed-controller";
+  if (O.isSome(span.nativeLifecycle)) return "native-lifecycle";
+  return "native";
+};
+const timeBasis = (span: NativeTraceMetadata) => {
+  if (O.isSome(span.managedController)) return "controller-canary-interval";
+  if (O.isSome(span.startTimeUnixNano) || O.isSome(span.endTimeUnixNano)) return "source_event";
+  return "intake_observation";
+};
+const spanName = (span: NativeTraceMetadata) => {
+  if (O.isSome(span.fixtureSurface)) return `fixture.${span.fixtureSurface.value}.${Str.toLowerCase(span.kind)}`;
+  if (O.isSome(span.managedController)) return "managed.controller.canary";
+  if (O.isSome(span.nativeLifecycle)) return `cursor.${span.nativeLifecycle.value.kind}`;
+  return `agent.${Str.toLowerCase(span.kind)}`;
+};
 const metadataAttributes = (span: NativeTraceMetadata, evidenceEpoch: number) => [
   text("openinference.span.kind", span.kind),
   text("ai_metrics.event_id", span.eventId),
   text("ai_metrics.route_id", span.routeId),
-  text(
-    "ai_metrics.stream",
-    O.isSome(span.managedController)
-      ? "managed-controller"
-      : O.isSome(span.nativeLifecycle)
-        ? "native-lifecycle"
-        : "native"
-  ),
+  text("ai_metrics.stream", streamName(span)),
   ...A.flatMap(O.toArray(span.managedController), (controller) => [
     text("ai_metrics.producer_origin", "managed-controller"),
     text("ai_metrics.launch_id", controller.launchId),
@@ -197,14 +206,7 @@ const metadataAttributes = (span: NativeTraceMetadata, evidenceEpoch: number) =>
       ]
     : []),
   flag("ai_metrics.duration_known", span.durationKnown),
-  text(
-    "ai_metrics.time_basis",
-    O.isSome(span.managedController)
-      ? "controller-canary-interval"
-      : O.isSome(span.startTimeUnixNano) || O.isSome(span.endTimeUnixNano)
-        ? "source_event"
-        : "intake_observation"
-  ),
+  text("ai_metrics.time_basis", timeBasis(span)),
   ...O.toArray(O.map(span.startTimeUnixNano, (value) => text("ai_metrics.source_start_time_unix_nano", value))),
   ...O.toArray(O.map(span.endTimeUnixNano, (value) => text("ai_metrics.source_end_time_unix_nano", value))),
   ...O.toArray(O.map(span.nameHash, (value) => text("ai_metrics.source_name_hash", value))),
@@ -249,13 +251,7 @@ export const encodeNativeTraceBatch = Effect.fn("AiMetrics.encodeNativeTraceBatc
         parentSpanId: O.isSome(span.parentSpanId)
           ? yield* Effect.fromResult(Hex.decode(span.parentSpanId.value))
           : undefined,
-        name: O.isSome(span.fixtureSurface)
-          ? `fixture.${span.fixtureSurface.value}.${Str.toLowerCase(span.kind)}`
-          : O.isSome(span.managedController)
-            ? "managed.controller.canary"
-            : O.isSome(span.nativeLifecycle)
-              ? `cursor.${span.nativeLifecycle.value.kind}`
-              : `agent.${Str.toLowerCase(span.kind)}`,
+        name: spanName(span),
         kind: 1,
         startTimeUnixNano: point,
         endTimeUnixNano: span.durationKnown ? O.getOrElse(span.endTimeUnixNano, () => point) : point,
