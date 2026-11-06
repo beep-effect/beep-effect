@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "auto-ontology-comparison",
+    "title": "Auto Ontology and Beep knowledge-stack comparison",
+    "status": "parked",
+    "stage": "research",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-11-03",
+    "updated": "2026-11-06"
+  }
+}

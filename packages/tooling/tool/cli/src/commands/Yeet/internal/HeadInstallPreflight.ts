@@ -14,6 +14,7 @@ import { GitCommand } from "@beep/git/GitCommand";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { constant } from "effect/Function";
@@ -27,7 +28,13 @@ import {
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { captureGitKitExit, currentCommitSha } from "./GitExec.ts";
-import { clearHeadInstallReceipt, recordHeadInstallReceipt } from "./HeadInstallReceipt.ts";
+import {
+  clearHeadInstallReceipt,
+  collectHeadInstallInputs,
+  headInstallReceiptRefusals,
+  loadHeadInstallReceipt,
+  recordHeadInstallReceipt,
+} from "./HeadInstallReceipt.ts";
 import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -113,6 +120,26 @@ export const executeHeadInstallPreflight = Effect.fn("Yeet.executeHeadInstallPre
   // installed. An unresolvable HEAD still runs against `HEAD` and lets the
   // worktree add report the failure, as before.
   const commitSha = yield* currentCommitSha(context).pipe(Effect.option);
+  if (O.isSome(commitSha)) {
+    const receipt = yield* loadHeadInstallReceipt(context, commitSha.value);
+    if (O.isSome(receipt)) {
+      const inputs = yield* collectHeadInstallInputs(context.repoRoot, commitSha.value);
+      const now = yield* DateTime.now;
+      if (A.isReadonlyArrayEmpty(headInstallReceiptRefusals(receipt, inputs, now))) {
+        const output = `[head-install-preflight] reused clean install for ${commitSha.value}; verified ${receipt.value.installedAt}, expires ${receipt.value.expiresAt}`;
+        yield* persistOutput(rawOutputPath, output);
+        yield* Console.log(output);
+        return RepoStepRunResult.make({
+          stepId: step.id,
+          commandText: commandTextForStep(step),
+          exitCode: 0,
+          output,
+          truncated: false,
+          ...O.getSomesStruct({ rawOutputRef: rawOutputPath }),
+        });
+      }
+    }
+  }
   const result = yield* installCleanHead(context, step, rawOutputPath, O.getOrElse(commitSha, unresolvedHead));
   // A failed install leaves no receipt behind, so a later verified-proof reuse
   // cannot skip this preflight on the strength of an older success.

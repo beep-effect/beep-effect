@@ -1047,7 +1047,7 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       yield* Console.log(
         O.match(watching, {
           onNone: () =>
-            `[yeet] no readiness monitor is watching #${prNumber}; submit one with: ${YEET_MONITOR_SUBMIT_COMMAND}\n[yeet] then wait with: bun run beep yeet job wait <jobId>`,
+            `[yeet] no detached readiness monitor is registered for #${prNumber}; keep any attached --until-ready monitor running. Otherwise submit: ${YEET_MONITOR_SUBMIT_COMMAND}\n[yeet] for a submitted job, wait with: bun run beep yeet job wait <jobId>`,
           onSome: (record) =>
             `[yeet] readiness monitor job ${record.jobId} is still watching #${prNumber}\n[yeet] wait with: bun run beep yeet job wait ${record.jobId}`,
         })

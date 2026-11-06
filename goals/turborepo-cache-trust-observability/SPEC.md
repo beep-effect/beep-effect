@@ -1409,6 +1409,25 @@ purge shared artifacts, lower proof floors or enable unsigned fallback.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-cache-trust-observability`; add a `kind: decision` file there, never edit this block._
 
+### Bound file-level evidence for the observed node-gyp mismatch, 2026-11-06
+
+Both source-only runs passed under the original process and artifact limits,
+but the retained cross-run comparison failed because only node-gyp content
+changed. Counts, sizes, modes, links and headers agree. File-level hash/kind
+evidence is required before treating generated Python bytecode as the cause
+or changing installation preparation.
+
+Retain opaque filename hashes and content hashes for at most 512 regular files
+in that observed package, bounded to 128 KiB of encoded rows inside the existing
+4 MiB combined report cap and existing two passes. Never retain path strings or
+payloads. The canonical stream digest still hashes every original byte. Add
+hosted redaction, same-size mutation and refusal-bound regressions, and declare
+both consumed Python files as inputs to the CLI test, test:property and coverage
+tasks while preserving inherited inputs and disabled coverage caching. This changes neither production
+trust nor qualification/signing authority.
+
+Reverse: Remove the bounded fileDetails addition and its fixtures; retain the repaired Python test inputs and both immutable paired-run observation receipts.
+
 ### Bound retained reports even when dependency diagnostics refuse, 2026-11-06
 
 Source inspection already permits a report up to four MiB. A later refusal adds bytes, so unconditional retention can exceed the existing aggregate cap at the boundary. Run one metadata-only publication selector after diagnostics, including failure, using the same ARTIFACT_LIMIT. Retain both reports only when they fit together; otherwise retain only the individually safe report selected by policy and fail the complete-pair gate. Reject missing, symlink and special-file candidates without reading payloads, mutating reports, or repeating archive passes. Author exact-boundary, overflow, missing/special-file and fixed-output CLI controls for hosted CI. No local quality suite or source-generator entrypoint is run. No profile, signing, credential, capacity or whole-goal acceptance change.
@@ -1424,5 +1443,17 @@ Accepted-source inspection42142818104 failed before diagnostics. Three new decla
 Lane `codex/cache-source-budget`
 
 Reverse: Revert the focused preflight while preserving failed evidence and complete-input binding; keep producer approval closed until a bounded replacement handles the actual declared fixtures.
+
+### Suppress Python import bytecode in the source-only inspection cohort, 2026-11-06
+
+The two actual observations at accepted source e68e1d1e06 each pass internal consistency, but their raw canonical digests differ. All ten differing file content hashes are classified Python bytecode in node-gyp; source files, names, sizes and package metadata match. Retain the failed pair and all actual report hashes in research/file-level-dependency-drift-2026-11-06.json. The exact generation mechanism is not yet proven.
+
+Set PYTHONDONTWRITEBYTECODE=1 only for the credential-free source-inspection job, before its existing dependency install. Leave ordinary verification, candidate builds and signed execution unchanged. This is a controlled prevention experiment: every original archive byte remains hashed, with no bytecode filter, normalization or post-install cleanup.
+
+Add hosted controls for identical import output and preserved source bytes with the guard, ordinary import cache creation and raw digest invalidation without it, and workflow scope isolation. Keep the existing resource caps. After primary acceptance and hosted proof, require two fresh serial real observations before claiming repeatability. No producer approval, production trust, signing activation, task qualification or observation-window completion follows from this preparation.
+
+Lane `codex/cache-import-bytecode-20261106`
+
+Reverse: Remove the source-only job environment guard and its regression assertions; retain immutable observations, failed comparisons and the canonical digest policy.
 
 <!-- beep:decisions:end -->

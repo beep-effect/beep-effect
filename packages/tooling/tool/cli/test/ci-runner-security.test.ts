@@ -200,9 +200,15 @@ const changeProfile = (
   eventName: string,
   outputPath = ""
 ): Readonly<Record<string, string>> => {
-  const result = Bun.spawnSync([scriptPath, "origin/main"], {
+  const result = Bun.spawnSync([scriptPath, "origin/main", "HEAD"], {
     cwd,
-    env: { ...process.env, GITHUB_EVENT_NAME: eventName, GITHUB_OUTPUT: outputPath },
+    env: {
+      ...process.env,
+      GITHUB_EVENT_NAME: eventName,
+      GITHUB_OUTPUT: outputPath,
+      BEEP_CI_PR_BASE_SHA: "",
+      BEEP_CI_PR_HEAD_SHA: "",
+    },
     stderr: "pipe",
     stdout: "pipe",
   });
@@ -774,6 +780,113 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
   );
 
   it.effect(
+    "classifies pinned PR changes independently of newer main code in the merge checkout",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const tempRoot = yield* fs.makeTempDirectoryScoped();
+      const scriptPath = path.join(repoRoot, "scripts/ci-change-profile.sh");
+      const git = gitIn(tempRoot);
+      const commit = (message: string) => {
+        git(["add", "."]);
+        git(["commit", "-m", message]);
+        return git(["rev-parse", "HEAD"]);
+      };
+      const profile = (base: string, head: string, eventName = "pull_request") => {
+        const result = Bun.spawnSync([scriptPath], {
+          cwd: tempRoot,
+          env: {
+            ...process.env,
+            GITHUB_EVENT_NAME: eventName,
+            GITHUB_OUTPUT: "",
+            BEEP_CI_PR_BASE_SHA: base,
+            BEEP_CI_PR_HEAD_SHA: head,
+          },
+          stderr: "pipe",
+          stdout: "pipe",
+        });
+        assert.strictEqual(result.exitCode, 0, result.stderr.toString());
+        return parseProfileOutput(result.stdout.toString());
+      };
+      const fullProfile = { goals_only: "false", docs_only: "false", desktop_rust_relevant: "true" };
+      git(["init"]);
+      git(["config", "user.email", "ci-profile@example.test"]);
+      git(["config", "user.name", "CI Profile Test"]);
+      git(["config", "commit.gpgsign", "false"]);
+      git(["checkout", "-b", "fixture-main"]);
+      yield* fs.makeDirectory(path.join(tempRoot, "packages/example"), { recursive: true });
+      yield* fs.writeFileString(path.join(tempRoot, "packages/example/index.ts"), "export {};\n");
+      const base = commit("baseline");
+      git(["checkout", "-b", "fixture-docs"]);
+      yield* fs.makeDirectory(path.join(tempRoot, "docs"));
+      yield* fs.writeFileString(path.join(tempRoot, "docs/notes.md"), "# documentation\n");
+      const docsHead = commit("docs branch");
+      git(["checkout", "fixture-main"]);
+      yield* fs.writeFileString(path.join(tempRoot, "packages/example/main.ts"), "export {};\n");
+      commit("main advances with code");
+      git(["merge", "--no-ff", "fixture-docs", "-m", "synthetic merge"]);
+      const mergeHead = git(["rev-parse", "HEAD"]);
+      assert.include(git(["diff", "--name-only", `${base}...HEAD`]), "packages/example/main.ts");
+      assert.strictEqual(profile(base, docsHead).docs_only, "true");
+      assert.strictEqual(profile(base, docsHead).desktop_rust_relevant, "false");
+      assert.strictEqual(git(["rev-parse", "HEAD"]), mergeHead);
+      assert.deepStrictEqual(profile(base, docsHead, "push"), fullProfile);
+      const unknownRefs: ReadonlyArray<readonly [string, string]> = [
+        ["", docsHead],
+        [base, ""],
+        ["missing-base", docsHead],
+        [base, "missing-head"],
+      ];
+      for (const [unknownBase, unknownHead] of unknownRefs) {
+        assert.deepStrictEqual(profile(unknownBase, unknownHead), fullProfile);
+      }
+      // Deletions and code renamed into docs keep verification active.
+      git(["checkout", "-b", "fixture-code", base]);
+      yield* fs.writeFileString(path.join(tempRoot, "packages/example/pr.ts"), "export {};\n");
+      const codeHead = commit("PR changes code");
+      git(["checkout", "--detach", mergeHead]);
+      assert.strictEqual(profile(base, codeHead).docs_only, "false");
+      git(["checkout", "-b", "fixture-deletion", base]);
+      git(["rm", "packages/example/index.ts"]);
+      const deletionHead = commit("PR deletes code");
+      assert.strictEqual(profile(base, deletionHead).docs_only, "false");
+      git(["checkout", "-b", "fixture-rename", base]);
+      yield* fs.makeDirectory(path.join(tempRoot, "docs"), { recursive: true });
+      git(["mv", "packages/example/index.ts", "docs/moved.md"]);
+      const renameHead = commit("PR moves code into docs");
+      assert.strictEqual(profile(base, renameHead).docs_only, "false");
+      const typedRename = Bun.spawnSync(
+        ["bun", path.join(repoRoot, "packages/tooling/tool/cli/src/bin.ts"), "--", "ci", "change-profile", base],
+        {
+          cwd: tempRoot,
+          env: { ...process.env, GITHUB_EVENT_NAME: "pull_request", GITHUB_OUTPUT: "" },
+          stdout: "pipe",
+          stderr: "pipe",
+        }
+      );
+      assert.strictEqual(typedRename.exitCode, 0, typedRename.stderr.toString());
+      assert.deepStrictEqual(parseProfileOutput(typedRename.stdout.toString()), profile(base, renameHead));
+
+      // Reusable Heavy retains the calling event's GitHub context.
+      for (const name of ["check", "heavy", "storybook"]) {
+        const source = yield* fs.readFileString(path.join(repoRoot, `.github/workflows/${name}.yml`));
+        const workflow = parseWorkflowYaml(source);
+        assert.strictEqual(
+          yamlAt(workflow, ["env", "BEEP_CI_PR_BASE_SHA"]),
+          "${{ github.event.pull_request.base.sha }}"
+        );
+        assert.strictEqual(
+          yamlAt(workflow, ["env", "BEEP_CI_PR_HEAD_SHA"]),
+          "${{ github.event.pull_request.head.sha }}"
+        );
+        assert.notInclude(source, 'ci-change-profile.sh "origin/');
+        assert.notInclude(source, 'ci-change-profile.sh "$BEEP_COVERAGE_BASE_SHA"');
+      }
+    })
+  );
+
+  it.effect(
     "classifies goals-only and docs-only pull requests without suppressing mixed or push runs",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -940,10 +1053,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       git(["config", "user.name", "CI Profile Test"]);
       git(["config", "commit.gpgsign", "false"]);
       yield* writeAndCommit("README.md", "# baseline\n", "baseline");
+      const cratePath = "apps/professional-desktop/src-tauri/src/lib.rs";
+      yield* writeAndCommit(cratePath, "pub fn baseline() {}\n", "baseline crate");
       git(["update-ref", "refs/remotes/origin/main", git(["rev-parse", "HEAD"])]);
       const baseline = git(["rev-parse", "HEAD"]);
 
       yield* writeAndCommit("docs/notes.md", "# docs only\n", "docs only");
+      const docsHead = git(["rev-parse", "HEAD"]);
       assert.strictEqual(profile("pull_request").desktop_rust_relevant, "false");
       assert.strictEqual(profile("push").desktop_rust_relevant, "true");
 
@@ -961,6 +1077,52 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
 
       const workflowJobs8 = yield* workflowJobs(workflow);
       const steps = jobSteps(workflowJobs8, "professional-desktop-ipc-stdio");
+      const gateScript = Str.replaceAll(
+        "scripts/ci-change-profile.sh",
+        '"$BEEP_CI_PROFILE_SCRIPT"'
+      )(stepRun(steps, "Determine lane execution"));
+      const gate = Effect.fnUntraced(function* (head: string, event = "pull_request") {
+        const outputPath = path.join(tempRoot, ".git/desktop-gate-output");
+        yield* fs.writeFileString(outputPath, "");
+        const result = Bun.spawnSync(["bash", "-c", gateScript], {
+          cwd: tempRoot,
+          env: {
+            ...process.env,
+            GITHUB_EVENT_NAME: event,
+            GITHUB_BASE_REF: "main",
+            GITHUB_OUTPUT: outputPath,
+            BEEP_CI_PR_BASE_SHA: baseline,
+            BEEP_CI_PR_HEAD_SHA: head,
+            BEEP_CI_PROFILE_SCRIPT: scriptPath,
+          },
+          stderr: "pipe",
+          stdout: "pipe",
+        });
+        assert.strictEqual(result.exitCode, 0, result.stderr.toString());
+        const output = yield* fs.readFileString(outputPath);
+        return parseProfileOutput(output);
+      });
+      git(["reset", "--hard", baseline]);
+      yield* fs.makeDirectory(path.join(tempRoot, "docs"), { recursive: true });
+      git(["mv", cratePath, "docs/moved.md"]);
+      git(["commit", "-m", "move crate source into docs"]);
+      const renameHead = git(["rev-parse", "HEAD"]);
+      git(["checkout", "--detach", baseline]);
+      yield* writeAndCommit("packages/foundation/example/src/index.ts", "export {};\n", "main advances");
+      const advancedMain = git(["rev-parse", "HEAD"]);
+      git(["update-ref", "refs/remotes/origin/main", advancedMain]);
+      git(["merge", "--no-ff", docsHead, "-m", "synthetic docs merge"]);
+      const docsGate = yield* gate(docsHead);
+      assert.strictEqual(docsGate.should_run, "false");
+      assert.strictEqual(docsGate.rust_should_run, "false");
+      git(["checkout", "--detach", advancedMain]);
+      git(["merge", "--no-ff", renameHead, "-m", "synthetic renamed crate merge"]);
+      const renameGate = yield* gate(renameHead);
+      assert.strictEqual(renameGate.should_run, "true");
+      assert.strictEqual(renameGate.rust_should_run, "true");
+      const pushGate = yield* gate(renameHead, "push");
+      assert.strictEqual(pushGate.should_run, "true");
+      assert.strictEqual(pushGate.rust_should_run, "true");
       const laneGate = "steps.lane-gate.outputs.should_run == 'true'";
       const rustGate = `${laneGate} && steps.lane-gate.outputs.rust_should_run == 'true'`;
       for (const name of ["Install Tauri Linux system dependencies", "Check Rust crate", "Lint Rust crate"]) {
@@ -1780,6 +1942,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "runs-on"])).toBe("beep-ec2-heavy");
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "environment"])).toBe("turbo-cache-write");
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "timeout-minutes"])).toBe(10);
+      expect(yamlAt(heavy, ["jobs", "producer-inspect", "env"])).toEqual({
+        PYTHONDONTWRITEBYTECODE: "1",
+      });
+      expect(yamlAt(heavy, ["env", "PYTHONDONTWRITEBYTECODE"])).toBeUndefined();
+      expect(yamlAt(heavy, ["jobs", "verify", "env", "PYTHONDONTWRITEBYTECODE"])).toBeUndefined();
+      expect(yamlAt(heavy, ["jobs", "producer-prepare", "env", "PYTHONDONTWRITEBYTECODE"])).toBeUndefined();
+      expect(yamlAt(heavy, ["jobs", "producer-execute", "env", "PYTHONDONTWRITEBYTECODE"])).toBeUndefined();
       const workflowJobs24 = yield* workflowJobs(heavy);
       const steps = jobSteps(workflowJobs24, "producer-inspect");
       const setup = stepByName(steps, "Setup pinned toolchain without cache capabilities");

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Change profile for the hosted lane gates. Every profile is computed once
-# here from the base...HEAD diff of a pull request and emitted as
+# here from the pinned base...head diff of a pull request and emitted as
 # `name=value` lines (stdout for `eval`, plus $GITHUB_OUTPUT when set). Push
 # and local runs have no diff to scope: they keep every profile relevant and
 # never suppress the matrices.
@@ -19,7 +19,10 @@ set -euo pipefail
 # workspace dependencies), and storybook.yml gates only on docs_only.
 
 event_name="${GITHUB_EVENT_NAME:-local}"
-base_ref="${1:-origin/${GITHUB_BASE_REF:-main}}"
+# Hosted callers pin these independently of the merge checkout and coverage
+# identity. Explicit arguments keep the local fixture/diagnostic seam.
+base_ref="${BEEP_CI_PR_BASE_SHA:-${1:-}}"
+head_ref="${BEEP_CI_PR_HEAD_SHA:-${2:-}}"
 goals_only=false
 docs_only=false
 desktop_rust_relevant=true
@@ -76,8 +79,8 @@ goals_document_pattern="$(read_pattern goals)"
 docs_pattern="$(read_pattern docs)"
 code_roots_pattern="$(read_pattern codeRoots)"
 
-if [[ "$event_name" == "pull_request" ]]; then
-  changed_files="$(git diff --name-only "${base_ref}...HEAD")"
+if [[ "$event_name" == "pull_request" && -n "$base_ref" && -n "$head_ref" ]] \
+  && changed_files="$(git diff --name-only --no-renames "${base_ref}...${head_ref}")"; then
   # Only convention-owned packet prose can suppress the repository matrices.
   # Executables, fixtures, and arbitrary data under goals/ remain code-bearing
   # inputs and therefore keep the full verification profile.
@@ -93,6 +96,8 @@ if [[ "$event_name" == "pull_request" ]]; then
   if [[ -z "$changed_files" ]] || ! grep -Eq "$desktop_rust_pattern" <<< "$changed_files"; then
     desktop_rust_relevant=false
   fi
+elif [[ "$event_name" == "pull_request" ]]; then
+  echo "ci-change-profile: pinned PR diff unavailable; keeping every verification profile active" >&2
 fi
 
 emit() {

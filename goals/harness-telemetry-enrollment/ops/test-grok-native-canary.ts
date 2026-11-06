@@ -21,17 +21,21 @@ import { Sha256Hex } from "@beep/schema";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
+import { assertFalse, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Toml from "effect/encoding/Toml";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { vi } from "vitest";
 import {
   GrokNativeCanaryDiagnostic,
+  GrokNativeCanaryError,
   GrokNativeCanaryEvidence,
   GrokNativeCanaryRequest,
   GrokNativeSessionContext,
@@ -43,7 +47,13 @@ import {
 
 vi.mock("node:fs/promises", async (importOriginal) => {
   const original = await importOriginal<typeof import("node:fs/promises")>();
-  return { ...original, lstat: vi.fn(original.lstat), realpath: vi.fn(original.realpath) };
+  return {
+    ...original,
+    lstat: vi.fn(original.lstat),
+    realpath: vi.fn(original.realpath),
+    readFile: vi.fn(original.readFile),
+    open: vi.fn(original.open),
+  };
 });
 
 import { NativeAttemptDiagnostic } from "./native-attempt-diagnostic.ts";
@@ -51,12 +61,19 @@ import { NativeAttemptDiagnostic } from "./native-attempt-diagnostic.ts";
 const id = (c: string) => Sha256Hex.make(Str.repeat(64)(c));
 const digest = (text: string | Uint8Array) => createHash("sha256").update(text).digest("hex");
 const compile = promisify(execFile);
+const decodeCanaryError = S.decodeUnknownEffect(GrokNativeCanaryError);
 const nativeFixture = String.raw`
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
+static void refresh_auth(const char *mode) {const char *auth=getenv("GROK_AUTH_PATH");char next[8192],parent[8192];snprintf(next,sizeof(next),"%s.fresh",auth);FILE *f=fopen(next,"w");if(!f)_exit(92);fputs("SYNTHETIC_ROTATED_NOT_AUTH",f);fclose(f);chmod(next,0600);
+ if(!strcmp(mode,"refresh-parent")){snprintf(parent,sizeof(parent),"%s",auth);*strrchr(parent,'/')=0;char moved[8192];snprintf(moved,sizeof(moved),"%s.old",parent);rename(parent,moved);mkdir(parent,0700);snprintf(next,sizeof(next),"%s/auth.json",parent);f=fopen(next,"w");fputs("SYNTHETIC_REPLACEMENT",f);fclose(f);chmod(next,0600);return;}
+ if(!strcmp(mode,"refresh-symlink")){unlink(auth);symlink(next,auth);return;}
+ if(!strcmp(mode,"refresh-directory")){unlink(auth);mkdir(auth,0700);return;}
+ rename(next,auth);if(!strcmp(mode,"refresh-mode"))chmod(auth,0644);if(!strcmp(mode,"refresh-oversize"))truncate(auth,1048577);
+}
 static void record(const char *home,const char *name) {char p[8192];snprintf(p,sizeof(p),"%s/%s",home,name);FILE *f=fopen(p,"a");if(f){fputs("1\n",f);fclose(f);}}
 int main(int argc,char **argv) {
  const char *home=getenv("GROK_HOME");char cwd[4096],p[8192],mode[64]="ok";getcwd(cwd,sizeof(cwd));if(!home)return 83;
@@ -68,9 +85,11 @@ int main(int argc,char **argv) {
  snprintf(p,sizeof(p),"%s/fixture-mode",home);FILE *f=fopen(p,"r");if(f){fgets(mode,sizeof(mode),f);fclose(f);}
  if(argc>1&&!strcmp(argv[1],"inspect")) {
   record(home,"inspect-count");
+  if(!strncmp(mode,"refresh-",8)&&strcmp(mode,"refresh-main"))refresh_auth(mode);
   printf("{\"grokVersion\":\"%s\",\"cwd\":\"%s\",\"projectRoot\":\"%s/\",\"projectTrusted\":false,\"projectInstructions\":[],\"hooks\":[],\"skills\":[],\"plugins\":[],\"marketplaces\":[],\"mcpServers\":%s,\"lspServers\":[],\"configSources\":{\"layers\":[{\"role\":\"user\",\"path\":\"%s/config.toml\"}]},\"externalCompat\":{\"remoteSettingsLoaded\":false,\"cells\":[{\"enabled\":false}]}}\n",!strcmp(mode,"wrong-version")?"1.0.73":"1.0.77",cwd,cwd,!strcmp(mode,"bad-inspect")?"[{}]":"[]",home);return 0;
  }
  record(home,"source-count");
+ if(!strcmp(mode,"refresh-main")||!strcmp(mode,"refresh-all"))refresh_auth(mode);
  struct stat exe;stat("/proc/self/exe",&exe);char line[8192],tickcopy[128]="";FILE *self=fopen("/proc/self/stat","r");
  if(self){fgets(line,sizeof(line),self);fclose(self);char *save,*token=strtok_r(strrchr(line,')')+2," ",&save);for(int i=0;token&&i<19;i++)token=strtok_r(NULL," ",&save);if(token)snprintf(tickcopy,sizeof(tickcopy),"%s",token);}
  snprintf(p,sizeof(p),"%s/fixture-identity",home);FILE *identity=fopen(p,"w");if(identity){fprintf(identity,"%ld:%s:%llu:%llu",(long)getpid(),tickcopy,(unsigned long long)exe.st_dev,(unsigned long long)exe.st_ino);fclose(identity);}
@@ -104,6 +123,7 @@ const fixture = async (
     readonly terminalAck?: "lost" | "refused";
     readonly mode?: string;
     readonly driftAuthAtPrepared?: boolean;
+    readonly authReaderFault?: "parent-swap" | "descriptor-drift" | "wrong-owner";
     readonly projectMcp?: string;
     readonly sessionMetadata?: "wrong-owner" | "bus-file" | "symlink" | "drift";
   } = {}
@@ -300,6 +320,38 @@ const fixture = async (
     const value = await nativeRealpath(mapped(filename), settings);
     return filename === runtime || filename === bus ? filename : value;
   });
+  const nativeOpen = vi.mocked(Fs.open).getMockImplementation();
+  if (nativeOpen === undefined) throw new Error("fixture-open-mock");
+  let swappedParent = false;
+  const openMock = vi.mocked(Fs.open).mockImplementation(async (filename, flags, mode) => {
+    const authEntry = typeof filename === "string" && filename.endsWith("/auth.json");
+    const parent = Path.dirname(auth);
+    if (authEntry && options.authReaderFault === "parent-swap" && !swappedParent) {
+      swappedParent = true;
+      await Fs.rename(parent, `${parent}.saved`);
+      await Fs.mkdir(parent, { mode: 0o700 });
+      await Fs.writeFile(auth, "SYNTHETIC_OTHER_INODE", { mode: 0o600 });
+      try {
+        return await nativeOpen(filename, flags, mode);
+      } finally {
+        await Fs.rm(parent, { recursive: true });
+        await Fs.rename(`${parent}.saved`, parent);
+      }
+    }
+    const handle = await nativeOpen(filename, flags, mode);
+    if (authEntry && (options.authReaderFault === "descriptor-drift" || options.authReaderFault === "wrong-owner")) {
+      const nativeStat = handle.stat.bind(handle);
+      let observations = 0;
+      vi.spyOn(handle, "stat").mockImplementation(async (settings) => {
+        const value = await nativeStat(settings);
+        if (!("mtimeNs" in value)) throw new Error("fixture-stat-kind");
+        if (options.authReaderFault === "descriptor-drift" && ++observations > 1) value.mtimeNs += 1n;
+        if (options.authReaderFault === "wrong-owner") value.uid += 1n;
+        return value;
+      });
+    }
+    return handle;
+  });
   const run = runGrokNativeCanary(request).pipe(
     Effect.provide(NodeCrypto.layer.pipe(Layer.provideMerge(NodeServices.layer)))
   );
@@ -327,6 +379,7 @@ const fixture = async (
     close: async () => {
       statMock.mockImplementation(nativeLstat);
       realpathMock.mockImplementation(nativeRealpath);
+      openMock.mockImplementation(nativeOpen);
       await new Promise<void>((resolve) => server.close(() => resolve()));
       await Fs.rm(directory, { recursive: true, force: true });
     },
@@ -337,6 +390,46 @@ const fixture = async (
 // globally concurrent tests. No real session bus or login shell is used.
 const nativeCase = (name: string, body: () => Effect.Effect<void, unknown>) =>
   it.live(name, body, { concurrent: false });
+
+it.effect("pins the approved Responses and medium contract without endpoint or credential overrides", () =>
+  Effect.gen(function* () {
+    const profile = yield* Effect.fromResult(Toml.parse(grokCanaryProfile));
+    const expected = yield* Effect.fromResult(
+      Toml.parse(
+        '[model."grok-4.7"]\nmodel="grok-4.7"\napi_backend="responses"\nreasoning_efforts=[{id="medium",value="medium",label="Medium",description="",default=false}]\n'
+      )
+    );
+    const models = R.get(profile, "model");
+    const expectedModels = R.get(expected, "model");
+    const expectedModel = O.getOrThrow(expectedModels);
+    assertSome(models, expectedModel);
+    const hasEndpoints = R.has(profile, "endpoints");
+    const hasProviders = R.has(profile, "model_providers");
+    const hasAuth = R.has(profile, "auth");
+    assertFalse(hasEndpoints);
+    assertFalse(hasProviders);
+    assertFalse(hasAuth);
+  })
+);
+
+nativeCase("a legacy profile without the model declaration refuses before native inventory and cannot replay", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture();
+    try {
+      const legacy = Str.replace(/\n\[model\."grok-4\.7"\][\s\S]*$/u, "")(grokCanaryProfile);
+      await Fs.writeFile(Path.join(f.request.nativeHome, "config.toml"), legacy, { mode: 0o600 });
+      const refused = await f.run.pipe(Effect.flip, Effect.flatMap(decodeCanaryError), Effect.runPromise);
+      expect(refused.phase).toBe("source");
+      await Fs.writeFile(Path.join(f.request.nativeHome, "config.toml"), grokCanaryProfile, { mode: 0o600 });
+      const replay = await f.run.pipe(Effect.flip, Effect.flatMap(decodeCanaryError), Effect.runPromise);
+      expect(replay.phase).toBe("attempted-unknown");
+      expect(await f.count("inspect-count")).toBe(0);
+      expect(await f.count("source-count")).toBe(0);
+    } finally {
+      await f.close();
+    }
+  })
+);
 
 nativeCase("serialized admission round-trips a redacted salt and spawns nothing", () =>
   Effect.tryPromise(async () => {
@@ -547,6 +640,86 @@ nativeCase("nonempty native inventory refuses before the main source and retains
       expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
       expect(await f.count("source-count")).toBe(0);
       expect(await f.count("inspect-count")).toBe(1);
+    } finally {
+      await f.close();
+    }
+  })
+);
+
+for (const mode of ["refresh-inspect", "refresh-main", "refresh-all"]) {
+  nativeCase(`safe credential replacement during ${mode} retains source success with unknown auth health`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ mode });
+      try {
+        const result = await Effect.runPromise(f.run);
+        const transitions = O.getOrThrow(result.source.qualification.authTransitions);
+        expect(transitions).toHaveLength(mode === "refresh-main" ? 1 : mode === "refresh-all" ? 3 : 2);
+        expect(
+          transitions.every(
+            (row) => row.authHealth === "Unknown" && row.cause === "Unknown" && row.before !== row.after
+          )
+        ).toBe(true);
+        expect(result.source.qualification.authIdentitySha256).toBe(f.request.nativeAuthIdentitySha256);
+        expect(await f.count("source-count")).toBe(1);
+        await Effect.runPromise(f.run);
+        expect(await f.count("source-count")).toBe(1);
+        expect(await f.count("inspect-count")).toBe(2);
+        expect(vi.mocked(Fs.readFile).mock.calls.some(([path]) => path === f.request.nativeAuthFile)).toBe(false);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+for (const mode of ["refresh-symlink", "refresh-directory", "refresh-mode", "refresh-oversize", "refresh-parent"]) {
+  nativeCase(`unsafe credential metadata transition ${mode} refuses without main or replay`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ mode });
+      try {
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(await f.count("source-count")).toBe(0);
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(await f.count("inspect-count")).toBe(1);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+nativeCase("credential observation remains anchored when the pathname parent is swapped and restored", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture({ authReaderFault: "parent-swap" });
+    try {
+      await Effect.runPromise(f.run);
+      expect(await f.count("source-count")).toBe(1);
+      expect(await f.count("inspect-count")).toBe(2);
+    } finally {
+      await f.close();
+    }
+  })
+);
+for (const authReaderFault of ["descriptor-drift", "wrong-owner"] as const) {
+  nativeCase(`unsafe descriptor metadata ${authReaderFault} refuses before native launch`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ authReaderFault });
+      try {
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(await f.count("inspect-count")).toBe(0);
+        expect(await f.count("source-count")).toBe(0);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+nativeCase("credential replacement before the first native consumer refuses all native launches", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture();
+    try {
+      await Fs.utimes(f.request.nativeAuthFile, 1, 1);
+      expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+      expect(await f.count("inspect-count")).toBe(0);
+      expect(await f.count("source-count")).toBe(0);
     } finally {
       await f.close();
     }

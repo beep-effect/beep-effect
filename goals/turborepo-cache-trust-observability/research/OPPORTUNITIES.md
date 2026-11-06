@@ -2450,6 +2450,27 @@ The 256 MiB process cap, archive digest and every other numeric bound remain
 unchanged. This attempt is a refusal and grants no producer approval.
 
 
+### 2026-11-06 — A bounded report reread still reserves the entire report cap
+
+Accepted-source observation 42220475249 passed source inspection but refused
+at the full-report read in the observer, on Python 3.9.25. Its retained 170-byte
+refusal identifies observer line 62; the phase is not explicitly recorded.
+Preserve source type, size and growth checks while comparing retained source
+bytes in bounded chunks instead of allocating another full report at final
+verification. Keep the 256 MiB limit and prove the repair with hosted pressure
+regressions and two real comparable observations. Narrow component/line
+metadata prevented further speculative tar-parser repairs.
+
+
+### 2026-11-06 — Publication stopped before push by GitHub connectivity
+
+The bounded-source comparison repair is committed, but canonical publication
+stopped while fetching main: both SSH and temporary HTTPS transport attempts
+returned exit 128. An independent bounded HTTPS probe resolved api.github.com
+but established no TCP connection. Preserve the local commit, failed transport
+receipts and observation artifacts; retry publication only after connectivity
+returns. A short connection deadline and explicit network attribution would
+avoid treating these waits as local proof or repeated code failures.
 ### 2026-11-06 — Inherited coverage failures consume unrelated cache qualification runs
 
 The diagnostic PR #2757 passed every unit shard, but hosted Coverage Regression
@@ -2462,3 +2483,70 @@ into both Turbo lanes. The obsolete owned #2760 Check run was cancelled to
 release runners.
 Expose known main coverage dependencies before admitting downstream coverage
 work, and preserve introduced, inherited and intentional cancellation causes.
+
+
+### 2026-11-06 — Preserve scalar bounds when releasing diagnostic buffers
+
+Hosted CLI shard job 127916075431 failed the Python diagnostic integration.
+Source review found that the memory-lifetime repair released source_bytes but
+still referenced its length at the final aggregate-size guard. Retain the byte
+count before release and keep the same aggregate cap. The TypeScript wrapper
+reported only the child exit code, hiding the Python assertion; include its
+bounded, credential-free fixture output in failure diagnostics. Existing
+positive digest and artifact-overflow tests remain the acceptance checks.
+### Shared HTML corpus watchdog blocked dependency-reader acceptance, 2026-11-06
+
+While accepting the bounded dependency-reader repair (#2764), unit-d failed
+`CitationHtmlKernel.test.ts` at its 29,750 ms watchdog. The unchanged main file
+subsequently passed all eight tests in 27,350 ms (run42226885395,
+job127927919435). Coverage refused because `UNIT_RESULT` was failure before
+coverage evaluation; no coverage drop was established. A single shared repair
+(#2768) divides the pinned 1,097 corpus rows into eleven independently timed
+batches, preserving every row, digest and exact expected outcome. Smaller test
+units with explicit corpus coverage would have prevented one aggregate deadline
+from obscuring the failing case range. Hosted repair proof remains pending;
+no local quality suite or production parser/resource limit was changed.
+
+### Package-only diagnostics could not attribute cross-install byte drift, 2026-11-06
+
+Runs 42236224771 and 42238818447 succeeded individually, but their installed-tree
+digests differ only in node-gyp content. Counts, sizes, modes, links and headers
+match. The original package-level digest reports cannot identify the differing
+files, so they do not justify a bytecode cleanup or normalization policy. A
+bounded file-hash/kind summary, with opaque filename hashes and no payloads,
+would have resolved that uncertainty in the same two passes. Both reports are
+privately retained; their sanitized identities and hashes are in the paired
+observation report. While adding this evidence, source review found the two consumed Python files absent from the CLI test, test:property and coverage
+inputs. Adding them preserves inherited inputs and prevents Python-only edits
+from being missed; coverage caching remains disabled.
+
+### 2026-11-06 — refresh decision projections after body edits
+
+Hosted Lint Policy job 128014054310 failed with one new goals-doctor finding:
+`decision-log-drift` in this packet. The decision body had been edited after its
+generated SPEC projection was written. This was introduced in the current PR.
+Refresh through `bun run beep goals decisions write --slug
+turborepo-cache-trust-observability`; the writer reports zero remaining drift.
+Push that generated correction and let hosted CI provide the next proof, without
+running a local quality suite or weakening the baseline. Prevent recurrence by
+refreshing the decision projection after the final decision-body edit. The failed
+job log remains privately retained; this repair changes no runtime behavior.
+
+### 2026-11-06 — generated bytecode destabilizes the observed dependency tree
+
+Two independent real observations at accepted source e68e1d1e06 each passed
+source preservation, both archive reads and declared-digest checks. Their raw
+canonical digests still differed. The file-detail comparison isolates all ten
+changed file hashes to files classified Python bytecode in node-gyp; all source
+files, file names, sizes and package metadata agree. The report retains this
+failed comparison and both actual artifact identities. The precise bytecode
+generation mechanism remains unproven.
+
+Prepare a bounded counterfactual: suppress Python import-cache writes only in
+the credential-free source-inspection job, including its dependency install.
+Keep hashing every canonical archive byte; do not filter or normalize bytecode
+or clean files after observation. Hosted behavioral controls must show that the
+setting preserves import output and source bytes while preventing cache writes,
+and that ordinary imports still change the raw tree digest. After acceptance,
+two fresh actual observations must establish whether the installed tree repeats.
+This is candidate preparation, not production trust or a qualification grant.

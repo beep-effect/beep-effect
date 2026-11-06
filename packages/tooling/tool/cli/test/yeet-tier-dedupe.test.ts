@@ -17,6 +17,8 @@ import {
   collectProofEnvironment,
   decideParityLaneReuse,
   executeStepWithArtifacts,
+  FinalCheckPlannedStep,
+  FinalCheckSkip,
   HEAD_INSTALL_RECEIPT_TTL,
   HeadInstallInputs,
   HeadInstallReceipt,
@@ -33,10 +35,13 @@ import {
   recordHeadInstallReceipt,
   renderParityLaneDecision,
   reuseVerifiedHeadInstallForTesting,
+  runFinalCheckGatesForTesting,
+  runFinalCheckStep,
   writeVerifiedState,
 } from "@beep/repo-cli/test/Yeet";
+import { QualityTaskStep } from "@beep/repo-cli-kit/process/index";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
@@ -45,6 +50,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -441,6 +447,16 @@ describe("clean-HEAD install receipt reuse (A4)", () => {
           O.map(loadedHeadInstallReceipt10, (receipt) => receipt.inputs.lockfileDigest),
           "absent"
         );
+        const repeated = yield* Effect.forEach(preflight, (step) => executeStepWithArtifacts(context, step));
+        expect(
+          A.every(
+            repeated,
+            (result) =>
+              result.exitCode === 0 && O.exists(O.fromUndefinedOr(result.output), Str.includes("reused clean install"))
+          )
+        ).toBe(true);
+        const retained = yield* loadHeadInstallReceipt(context, installed);
+        expect(retained).toEqual(loadedHeadInstallReceipt10);
         // An unparseable lockfile fails the frozen install and drops the receipt.
         const broken = yield* commit("bun.lock", "not a lockfile\n");
         const failed = yield* Effect.forEach(preflight, (step) => executeStepWithArtifacts(context, step));
@@ -450,6 +466,211 @@ describe("clean-HEAD install receipt reuse (A4)", () => {
         const loadedHeadInstallReceipt12 = yield* loadHeadInstallReceipt(context, installed);
         assertNone(loadedHeadInstallReceipt12);
       }).pipe(withTestConsole)
+    );
+  });
+});
+
+// Count real virtual-tree subprocesses while forwarding every command to the platform.
+const withVirtualTreeCount = Effect.fn("TierDedupeTest.withVirtualTreeCount")(function* <A, E, R>(
+  program: Effect.Effect<A, E, R>
+) {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const count = yield* Ref.make(0);
+  const observed = ChildProcessSpawner.make(
+    Effect.fnUntraced(function* (command) {
+      if (command._tag === "StandardCommand" && command.command === "git" && A.contains(command.args, "write-tree")) {
+        yield* Ref.update(count, (value) => value + 1);
+      }
+      return yield* spawner.spawn(command);
+    })
+  );
+  const result = yield* program.pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, observed));
+  return { result, hashes: yield* Ref.get(count) };
+});
+
+const finalCheckCommand = (
+  root: string,
+  gate: FinalCheckPlannedStep["gate"],
+  label: string,
+  script = "mkdir -p .beep; printf x >> .beep/executions"
+) =>
+  FinalCheckPlannedStep.make({
+    gate,
+    hostedContext: label,
+    step: QualityTaskStep.make({ label: `final-check:${label}`, command: "sh", args: ["-c", script], cwd: root }),
+  });
+
+describe("resumable final-check steps", () => {
+  it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("over a real checkout", (it) => {
+    it.effect("shares each refreshed boundary and reuses command-free steps without rehashing", () =>
+      Effect.gen(function* () {
+        const { root, base } = yield* fixture();
+        const planned = [
+          finalCheckCommand(root, "lint-policy", "first"),
+          finalCheckCommand(root, "check", "second"),
+          finalCheckCommand(root, "docgen", "third"),
+        ];
+        const run = { repoRoot: root, mergeBase: base, planned, skips: [], resume: false };
+        const fresh = yield* withVirtualTreeCount(
+          runFinalCheckGatesForTesting(run, ["lint-policy", "check", "docgen"], false)
+        );
+        expect(fresh.hashes).toBe(4); // One initial hash plus one fence per executed command; previously six.
+        expect(A.map(fresh.result.steps, (step) => step.status)).toEqual(["passed", "passed", "passed"]);
+        const resumed = yield* withVirtualTreeCount(
+          runFinalCheckGatesForTesting(
+            { ...run, resume: true, skips: [FinalCheckSkip.make({ gate: "repo-sanity", reason: "controlled skip" })] },
+            ["lint-policy", "repo-sanity", "check", "docgen"],
+            false
+          )
+        );
+        expect(resumed.hashes).toBe(1); // Reused steps and the recorded skip execute no command.
+        expect(A.map(resumed.result.steps, (step) => step.status)).toEqual(["passed", "skipped", "passed", "passed"]);
+        assertTrue(
+          A.every(
+            A.filter(resumed.result.steps, (step) => step.status === "passed"),
+            (step) => O.isSome(O.fromUndefinedOr(step.reason))
+          )
+        );
+        const fs = yield* FileSystem.FileSystem;
+        const executions = yield* fs.readFileString(`${root}/.beep/executions`);
+        expect(executions).toBe("xxx");
+      })
+    );
+
+    it.effect("refreshes after live gates and refuses to record a command that moved its input", () =>
+      Effect.gen(function* () {
+        const { root, base } = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        const last = finalCheckCommand(root, "docgen", "last");
+        yield* runFinalCheckStep(last, false);
+        const moving = finalCheckCommand(root, "check", "moving", "printf changed > package.json");
+        const run = {
+          repoRoot: root,
+          mergeBase: base,
+          planned: [
+            finalCheckCommand(root, "lint-policy", "first"),
+            moving,
+            finalCheckCommand(root, "repo-sanity", "live", "printf live >> package.json"),
+            last,
+          ],
+          skips: [],
+          resume: true,
+        };
+        const checked = yield* withVirtualTreeCount(
+          runFinalCheckGatesForTesting(run, ["lint-policy", "check", "repo-sanity", "docgen"], false)
+        );
+        expect(checked.hashes).toBe(5); // Three reusable commands in two runs; previously six hashes.
+        expect(A.map(checked.result.steps, (step) => step.reason)).toEqual([
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+        ]);
+        const executions = yield* fs.readFileString(`${root}/.beep/executions`);
+        expect(executions).toBe("xxx");
+        // Restoring the command's original bytes must not find a proof for its mutating run.
+        yield* fs.writeFileString(`${root}/package.json`, '{ "name": "fixture" }\n');
+        const retried = yield* runFinalCheckStep(moving, true);
+        expect(retried.reason).toBeUndefined();
+      })
+    );
+
+    it.effect("discards failed-command boundaries and preserves fail-fast ordering", () =>
+      Effect.gen(function* () {
+        const { root, base } = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        const last = finalCheckCommand(root, "docgen", "after-failure");
+        yield* runFinalCheckStep(last, false);
+        const failed = finalCheckCommand(root, "check", "failure", "printf changed > package.json; exit 1");
+        const run = { repoRoot: root, mergeBase: base, planned: [failed, last], skips: [], resume: true };
+        const checked = yield* withVirtualTreeCount(runFinalCheckGatesForTesting(run, ["check", "docgen"], false));
+        expect(checked.hashes).toBe(3); // Initial failure snapshot, then a new start and fence for docgen.
+        expect(A.map(checked.result.steps, (step) => step.status)).toEqual(["failed", "passed"]);
+        expect(checked.result.steps[1]?.reason).toBeUndefined();
+        const executions = yield* fs.readFileString(`${root}/.beep/executions`);
+        expect(executions).toBe("xx");
+        const stopped = yield* withVirtualTreeCount(runFinalCheckGatesForTesting(run, ["check", "docgen"], true));
+        expect(stopped.hashes).toBe(1);
+        expect(A.map(stopped.result.steps, (step) => step.status)).toEqual(["failed"]);
+      })
+    );
+
+    it.effect("saves a completed step before the full receipt and invalidates changed inputs", () =>
+      Effect.gen(function* () {
+        const { root, commit, git } = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        const step = FinalCheckPlannedStep.make({
+          gate: "check",
+          hostedContext: "Heavy / Check",
+          step: QualityTaskStep.make({
+            label: "final-check:check",
+            command: "sh",
+            args: ["-c", "mkdir -p .beep; printf x >> .beep/executions"],
+            cwd: root,
+            env: { PROOF_TEST: "one" },
+          }),
+        });
+        const first = yield* runFinalCheckStep(step, false);
+        expect(first.status).toBe("passed");
+        const resumed = yield* runFinalCheckStep(step, true);
+        expect(resumed.reason).toContain("reused completed step");
+        const observation1 = yield* fs.readFileString(`${root}/.beep/executions`);
+        expect(observation1).toBe("x");
+        const observation2 = yield* fs.exists(`${root}/.beep/yeet/final-check`);
+        expect(observation2).toBe(false);
+        // A failed later gate does not erase the earlier success or create a success of its own.
+        const failing = FinalCheckPlannedStep.make({
+          ...step,
+          step: QualityTaskStep.make({ ...step.step, label: "final-check:failing", args: ["-c", "exit 1"] }),
+        });
+        const observation3 = yield* runFinalCheckStep(failing, true);
+        expect(observation3.status).toBe("failed");
+        const observation4 = yield* runFinalCheckStep(failing, true);
+        expect(observation4.status).toBe("failed");
+        const observation5 = yield* runFinalCheckStep(step, true);
+        expect(observation5.reason).toContain("reused completed step");
+        const changedEnvironment = FinalCheckPlannedStep.make({
+          ...step,
+          step: QualityTaskStep.make({ ...step.step, env: { PROOF_TEST: "two" } }),
+        });
+        const observation6 = yield* runFinalCheckStep(changedEnvironment, true);
+        expect(observation6.reason).toBeUndefined();
+        yield* fs.writeFileString(`${root}/untracked.txt`, "changed input");
+        const observation7 = yield* runFinalCheckStep(changedEnvironment, true);
+        expect(observation7.reason).toBeUndefined();
+        const next = yield* commit("README.md", "# changed head\n");
+        const observation8 = yield* runFinalCheckStep(changedEnvironment, true);
+        expect(observation8.reason).toBeUndefined();
+        yield* git("update-ref", "refs/remotes/origin/main", next);
+        const observation9 = yield* runFinalCheckStep(changedEnvironment, true);
+        expect(observation9.reason).toBeUndefined();
+        const observation10 = yield* fs.readFileString(`${root}/.beep/executions`);
+        expect(observation10).toBe("xxxxx");
+      })
+    );
+
+    it.effect("always executes live sanity checks and allows an explicit fresh replay", () =>
+      Effect.gen(function* () {
+        const { root } = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        const step = FinalCheckPlannedStep.make({
+          gate: "repo-sanity",
+          hostedContext: "Repo Sanity",
+          step: QualityTaskStep.make({
+            label: "final-check:repo-sanity",
+            command: "sh",
+            args: ["-c", "mkdir -p .beep; printf x >> .beep/executions"],
+            cwd: root,
+          }),
+        });
+        yield* runFinalCheckStep(step, true);
+        yield* runFinalCheckStep(step, true);
+        const checked = FinalCheckPlannedStep.make({ ...step, gate: "check" });
+        yield* runFinalCheckStep(checked, false);
+        yield* runFinalCheckStep(checked, false);
+        const observation11 = yield* fs.readFileString(`${root}/.beep/executions`);
+        expect(observation11).toBe("xxxx");
+      })
     );
   });
 });

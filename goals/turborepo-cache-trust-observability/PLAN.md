@@ -1514,6 +1514,12 @@ producer execution, rollout windows and all nine whole-goal criteria stay open.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-cache-trust-observability`; add a `kind: checkpoint` file there, never edit this block._
 
+### Bound the source report comparison without raising observer limits, 2026-11-06
+
+Accepted-source run 42220475249 passed source inspection and returned a memory-limit refusal at observer line 62 on Python 3.9.25. The reported shared read_source allocation requests the full 4 MiB artifact cap; its initial/final phase is not explicitly recorded. See research/dependency-source-reread-refusal-2026-11-06.json. Read the initial declared size plus one growth-detection byte, then compare final source contents in 64 KiB chunks against retained bytes. Preserve exact equality, no-follow regular-file/size checks, truncation/growth refusal, immutable output and all existing 256 MiB/two-pass/time/artifact bounds. Add hosted memory-pressure and byte/length mutation regressions through the existing production-digest suite. No local tests ran; actual full-tree success and both comparable observations remain unproven. No cache qualification, producer approval, signing or production rollout is granted.
+
+Reverse: Restore the previous full-report reread; leave all existing memory and archive bounds unchanged.
+
 ### Locate the dependency observer memory refusal, 2026-11-06
 
 The released-source inspection passed on run 42209083425, but dependency diagnosis refused with memory-limit. Add only a fixed module family, line number and Python version to that refusal. Preserve private exception/frame data and the original minimal refusal if metadata allocation also fails. Keep the 256 MiB process cap and all archive/digest/publication bounds unchanged. Hosted CI must prove the new privacy regressions; two successful real diagnostics and every whole-goal acceptance criterion remain pending.
@@ -1522,4 +1528,33 @@ Lane `codex/cache-dependency-memory-site-20261106`
 
 Reverse: Revert the optional refusal-location fields and their tests; retain the actual failed observation and its artifact identities.
 
+### Paired real-file evidence isolates ten bytecode differences, 2026-11-06
+
+PR #2777 merged as e68e1d1e06 and its lane is retired. Its final coverage comparison passed. Two new real source-only observations, runs 42259397428 and 42260607808, both pass source preservation, matching reads and each declared digest at that accepted source. The bounded diagnostics take 44.928 and 57.017 seconds; each retains 340 node-gyp file hashes inside the unchanged four-MiB aggregate report cap.
+
+The cross-run comparison still fails: only ten bytecode-classified file contents differ. All source fields other than installedDependencies.sha256, every package metadata hash, and all thirteen controls and resource bounds agree. Preserve both real digests and the failed pair; bytecode-generation details remain unproven. Prepare the source-only import-cache prevention experiment and hosted controls, then observe fresh accepted candidate source before claiming repeatability.
+
+Both complete Turbo goals remain active. No producer approval, production trust, task qualification, signing activation, representative window or whole-goal acceptance is granted by these observations.
+
+Lane `codex/cache-import-bytecode-20261106`
+
+Reverse: Remove this checkpoint projection while retaining the immutable paired observation reports and failed comparison.
+
 <!-- beep:decisions:end -->
+
+### Two successful source observations expose a remaining content mismatch, 2026-11-06
+
+After #2764, actual runs 42236224771 and 42238818447 both passed source inspection
+and dependency diagnostics under the unchanged 256 MiB process ceiling. Each
+verified both snapshots against its declared digest and retained source bytes.
+The cross-run pair still fails: only node-gyp content differs; all group counts,
+bytes, modes, links and headers agree. The changed package has 340 regular files.
+The source revisions differ only by reviewed audit documentation and skills-lock.
+`research/paired-dependency-source-observations-2026-11-06.json` preserves both
+real identities, report hashes and non-comparability. Bounded opaque per-file
+hashes for this diagnostic target must identify the differing bytes before any
+installation or digest-policy change. Python bytecode remains a hypothesis.
+No task qualification, producer grant, signing activation or whole-goal/window
+acceptance follows. The CLI test, test:property and coverage tasks explicitly declare both consumed
+Python files as inputs; a native metadata-only dry-run includes them without executing
+a task body. Hosted regression proof and primary acceptance remain required.

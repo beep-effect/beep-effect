@@ -1,10 +1,11 @@
 # Research reference library
 
 `beep research library` preserves research inputs, citation occurrences, acquired
-source evidence, and generated navigation outside the repository. Its default
-root is `$HOME/YeeBois/research/beep-effect/`; it does not change the knowledge-vault
-root used by the other research commands. Use `--library <absolute-path>` on any
-operation to select another collection.
+source evidence, and generated navigation outside the repository. Root resolution
+uses `--library`, then `BEEP_RESEARCH_LIBRARY`, then
+`XDG_DATA_HOME/beep/research-library`, then `HOME/.local/share/beep/research-library`.
+The library root is independent of the knowledge-vault root used by other research
+commands. Pass `--library <library-root>` to select a collection explicitly.
 
 ## Intake and acquisition
 
@@ -130,7 +131,7 @@ provenance cannot establish reading.
 
 Use a caption API fallback only for completed native failures or missing readable
 captions; do not duplicate running jobs. An isolated free installation of
-`youtube-transcript-api` can live under `~/.cache/beep/youtube-transcript-api`.
+`youtube-transcript-api` can live under `XDG_CACHE_HOME/beep/youtube-transcript-api`.
 Record the actual Python, package, and request-runtime versions. Installation is
 not qualification: a successful source-bound probe must preserve watch/player
 metadata, caption-track identity and origin, raw timedtext XML, parsed API return,
@@ -239,6 +240,82 @@ catalog and verified artifacts.
 Copy or move the whole library root together. A moved library must retain its
 catalog, objects, intake snapshots, source evidence, and repository clones. Input
 locations remain historical provenance; navigation uses preserved local evidence.
+
+## Ontology render
+
+```sh
+bun run beep research library ontology render --library <library-root>
+```
+
+This command folds the maintained schema annotations into the T-Box and generates
+SHACL constraints from the same models. It writes
+`ontology/research-library.ttl` and `ontology/research-library.shacl.ttl`, then
+parses both files to check their syntax. Regenerate them after model or annotation
+changes. Catalog JSON and immutable evidence remain the source of truth.
+
+## SHACL verify
+
+```sh
+bun run beep research library verify --library <library-root>
+```
+
+Verification retains the byte-integrity, source provenance, citation census,
+repository and qualification gates. It also rebuilds the RDF catalog projection
+and validates it against generated SHACL shapes, including cardinality, datatypes,
+references and controlled vocabularies. It always prints
+`shacl: conforms=<bool> violations=<n>` after the integrity assessment, including
+when that assessment has found data gaps. Either failing gate produces a nonzero
+exit. Stored ontology files are unnecessary for verification.
+
+## SPARQL views
+
+`render` and `status` build one disposable RDF dataset per invocation. Filesystem
+evidence determines effective source/version categories once; SPARQL selects and
+counts those assessments. Named SELECT views cover report, source and qualification
+indexes, report occurrences, direct and indirect source backlinks, capture history,
+readable capture ordering, artifacts, status counts and the private partition.
+Catalog order controls the indexes and retained history.
+
+```sh
+bun run beep research library render --library <library-root>
+bun run beep research library status --library <library-root>
+bun run beep research library status --include-private --library <library-root>
+```
+
+Reports, sources and artifacts marked `private` are omitted by default. An
+occurrence is private when either its report or source is private; a finding
+inherits its source's privacy. Private source evidence is excluded from public
+pages. `status` always prints a separate
+`private partition: documents=<n> sources=<n> artifacts=<n> occurrences=<n>` line.
+`--include-private` on either command includes the private partition in its views.
+Choose the intended audience before rendering a collection for sharing.
+
+## Catalog v2 migration
+
+Start with the read-only preflight:
+
+```sh
+bun run beep research library migrate --dry-run --library <library-root>
+bun run beep research library migrate --library <library-root>
+```
+
+Migration decodes v1, supplies the new collection defaults and projects v2 in
+memory. It requires zero SHACL violations and an exact SHA-256 match between the
+SPARQL Markdown index and the existing `index.md`. A mismatch reports both hashes
+and writes nothing. Regenerate an outdated index only after investigating why it
+differs; the migration gate deliberately preserves the existing navigation bytes.
+
+After a passing gate, migration preserves the exact catalog bytes at
+`catalog/history/<sha>.json`, saves v2 atomically at `catalog/library.json`, and
+writes `ops/migrations/<timestamp>-catalog-v2.json`. The schema-encoded receipt
+records the validator contract, old and new schema versions, both catalog hashes,
+the index hash, sorted unique intake dates, zero violations and its timestamp.
+The index and all immutable evidence remain unchanged. Repeating migration on v2
+succeeds as a no-op and writes nothing.
+
+To reverse, copy the receipt's `catalog/history/<beforeCatalogSha256>.json` over
+`catalog/library.json`. The reader continues to accept v1. Preserve the receipt
+and backup for audit and do not edit historical artifacts.
 
 ## Exploration boundary
 

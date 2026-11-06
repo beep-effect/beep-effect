@@ -15,7 +15,7 @@
         ".claude/skills/atom-reactivity-specialist",
         ".agents/skills/atom-reactivity-specialist"
       ],
-      "installedTreeHash": "3fe4a4eafa65bc9fd0250184df001d7fc2c0eaeaba58241b062522ce0cf7fc81"
+      "installedTreeHash": "a0806982722747b4c6f3dcd66f270c3d247e27d3b4e322e6ed17688bfaa7aa11"
     },
     "browser-qa-loop": {
       "_tag": "local",
@@ -320,7 +320,7 @@
         ".claude/skills/orchestrate",
         ".agents/skills/orchestrate"
       ],
-      "installedTreeHash": "7857545f42660dfa6d3f791a9318b2fcbdb30ec1d06a6f0af9a4a48421729387"
+      "installedTreeHash": "54bb86e58d712b3eeb20c773004fc7b6b300e9bf434b4064b78a9ba60bd39ddc"
     },
     "plasma-sensitive-entry": {
       "_tag": "local",
@@ -745,7 +745,7 @@
         ".claude/skills/yeet",
         ".agents/skills/yeet"
       ],
-      "installedTreeHash": "061523d0b819e88901a9311fd3eb45f05038a445efbbeeb34e8763db190f42e9"
+      "installedTreeHash": "3456383d6d03efe5ed9d98594c5cc1f3ad3ea465888df5757b60f2cd47452ef0"
     }
   }
 }

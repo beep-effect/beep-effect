@@ -1199,9 +1199,10 @@ const readMergeBaseRuns = Effect.fnUntraced(function* (
  * @category workflows
  * @since 0.0.0
  */
-export const readMergeGate = Effect.fn("Yeet.readMergeGate")(function* (
+const readMergeGateUsing = Effect.fn("Yeet.readMergeGate")(function* (
   context: RepoRunContext,
-  prNumber: number
+  prNumber: number,
+  authenticatedRules: boolean
 ): Effect.fn.Return<
   MergeGateRead,
   YeetCommandError,
@@ -1218,9 +1219,16 @@ export const readMergeGate = Effect.fn("Yeet.readMergeGate")(function* (
   );
   const body = O.liftPredicate(pull.body, Str.isNonEmpty);
   // The PR's own base decides the required contexts, not the caller's --base.
-  const ruleset = yield* readYeetRulesetRequiredContexts(
-    RepoRunContext.make({ ...context, base: `origin/${pull.baseRef}` })
-  );
+  const legacyRules = authenticatedRules
+    ? O.none()
+    : yield* readYeetRulesetRequiredContexts(RepoRunContext.make({ ...context, base: `origin/${pull.baseRef}` }));
+  const nativeRules = authenticatedRules
+    ? yield* rest
+        .requiredStatusContexts(pull.baseRef)
+        .pipe(Effect.mapError(yeetGithubFailure("read authenticated branch rules")))
+    : undefined;
+  const requiredContexts =
+    nativeRules === undefined ? O.map(legacyRules, (rules) => rules.contexts) : O.some(nativeRules);
   const squashCommitlint = yield* readSquashCommitlint(
     context,
     SquashPullRequestFacts.make({ number: pull.number, title: pull.title, body })
@@ -1239,7 +1247,7 @@ export const readMergeGate = Effect.fn("Yeet.readMergeGate")(function* (
       O.map((record) => record.checks),
       O.getOrElse(() => A.empty<string>())
     ),
-    requiredContexts: O.map(ruleset, (rules) => rules.contexts),
+    requiredContexts,
     checkRuns: A.map(checkRuns, toMergeGateCheckRun),
     baseRuns,
     window: yield* readYeetReviewWindow({ prNumber: pull.number, headSha: pull.headSha }),
@@ -1247,6 +1255,42 @@ export const readMergeGate = Effect.fn("Yeet.readMergeGate")(function* (
     squashCommitlint,
     readAt: yield* DateTime.now,
   });
+});
+
+/**
+ * Read the ordinary Yeet gate using its retained ruleset reader.
+ * **Example** (Inspect the reader)
+ * ```ts
+ * import { readMergeGate } from "@beep/repo-cli/test/Yeet"
+ * console.log(typeof readMergeGate) // function
+ * ```
+ * @category services
+ * @since 0.0.0
+ */
+export const readMergeGate = Effect.fn("Yeet.readMergeGateLegacy")(function* (
+  context: RepoRunContext,
+  prNumber: number
+) {
+  return yield* readMergeGateUsing(context, prNumber, false);
+});
+
+/**
+ * Fixed authenticated-client gate for the dormant authority adapter.
+ * **Details** Every ruleset page comes from the same retained GitHub service;
+ * this path cannot invoke the legacy command reader or accept caller rule facts.
+ * **Example** (Inspect the authenticated reader)
+ * ```ts
+ * import { readAuthenticatedMergeGate } from "@beep/repo-cli/test/Yeet"
+ * console.log(typeof readAuthenticatedMergeGate) // function
+ * ```
+ * @category services
+ * @since 0.0.0
+ */
+export const readAuthenticatedMergeGate = Effect.fn("Yeet.readAuthenticatedMergeGate")(function* (
+  context: RepoRunContext,
+  prNumber: number
+) {
+  return yield* readMergeGateUsing(context, prNumber, true);
 });
 
 /**
