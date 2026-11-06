@@ -1,0 +1,6 @@
+feat(cli): add version-sync command and tooling-plan specs
+
+Add the version-sync CLI command with bun/docker/node resolvers and
+package-json/plain-text/yaml updaters, and scaffold the
+repo-cli-version-sync and shared-ui-package specs plus a codex tooling
+research packet.

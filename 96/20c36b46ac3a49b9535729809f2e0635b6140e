@@ -1,0 +1,4 @@
+feat(schema): expand SQL DSL type system and record refactor docs
+
+Adds a .claude/agents/effect-predicate-master.md agent and extensive
+.specs/improve-column-def-types module-report and prompt documentation.

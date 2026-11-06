@@ -1,0 +1,5 @@
+feat(logic): add CombinatorValue/OperatorValue literal kits and schemas
+
+Add packages/common/logic/src/constants.ts and schemas.ts.
+Adjust TaggedStruct and stringLiteralKit generics in @beep/schema.
+Reorder and bump better-auth package.json dependencies.

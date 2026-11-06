@@ -1,0 +1,6 @@
+docs(specs): scaffold agent-context-optimization and knowledge-* packets
+
+Add the agent-context-optimization spec and the
+knowledge-architecture-foundation/entity-resolution-v2/graphrag-plus/
+rdf-foundation/reasoning-engine/sparql-integration/workflow-durability
+spec packets.

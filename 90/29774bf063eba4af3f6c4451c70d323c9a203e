@@ -1,0 +1,6 @@
+docs: flatten specs out of .specs, add security and AI docs
+
+Move specs/.specs/ai-friendliness-audit up into specs/ and drop the rest of the
+.specs tree. Add SECURITY_REMEDIATION.md, .github/workflows/security.yml,
+.gitleaksignore, and scripts/install-gitleaks.sh. Add .claude/skills/* pattern
+guides, documentation/*, and AGENTS.md across many packages.

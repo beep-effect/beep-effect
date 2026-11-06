@@ -1,0 +1,3 @@
+refactor(tooling): enhance TaggedErrorClass and repo-utils FS helpers
+
+Also scaffolds clawhole config/security modules (Base, Tts, ScanPaths).

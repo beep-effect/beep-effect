@@ -1,0 +1,4 @@
+chore: update deps and expand better-auth organization plugin
+
+Update pnpm-lock.yaml/package.json; expand better-auth internal organization plugin.
+Minor schema (EntityId, String.schema) and Auth.service.ts touch-ups.

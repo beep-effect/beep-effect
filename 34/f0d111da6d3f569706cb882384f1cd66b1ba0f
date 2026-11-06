@@ -1,0 +1,5 @@
+fix(knowledge): derive jsonb column types from schema, not parseJson
+
+Drop redundant S.parseJson wrappers on jsonb-backed Entity/Relation fields
+and type entity/relation drizzle columns from the Model's Encoded shape
+instead of hand-written inline types.

@@ -1,0 +1,5 @@
+fix(iam): remove formValuesAnnotation from non-form client payloads
+
+Replace formValuesAnnotation with plain $I.annotations on iam-client
+Payload schemas that aren't backing an actual form, and touch a handful
+of knowledge-domain RDF/reasoning value objects.

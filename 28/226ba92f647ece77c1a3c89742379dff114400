@@ -1,0 +1,5 @@
+refactor(ontology): migrate Ontology.models schemas to S.Class pattern
+
+Convert FOLIO ontology struct+annoteSchema definitions to S.Class extends
+with $I.annote, dropping separate typeof-Type exports; minor Id.ts and
+identity test/dtslint follow-ups.

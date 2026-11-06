@@ -1,0 +1,6 @@
+docs: expand claude rules with worked examples
+
+Append worked examples to the existing behavioral, code-standards, general, and
+meta-thinking rules files, mark the ai-friendliness-10-of-10 spec README complete,
+and log its P5 reflection entry. Also drop patch-package plus its typescript patch
+and bump several @effect/* dependencies.

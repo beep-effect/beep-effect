@@ -1,0 +1,6 @@
+chore(env): reorganize .env.example into commented topical sections
+
+Replace ASCII-banner headers with commented topical sections (app runtime,
+public values, data stores, desktop sidecar, auth/OAuth, AI providers, CMS/CRM,
+cloud/CI, observability, crypto, legacy names) and comment out all keys by
+default so empty values don't override Effect Config.

@@ -1,0 +1,8 @@
+refactor(tooling): drop repo-checks task overrides from root turbo.json
+
+Remove the @beep/repo-checks and @beep/docgen package-scoped task overrides from
+root turbo.json, leaving the generic root tasks in place. Add a package-level
+tooling/repo-checks/turbo.json that extends "//" with cache-free build, check,
+lint, lint:fix, and type-test tasks, aggregate the named checks into repo-checks
+package.json scripts, and collapse Quality/Tasks.ts and its test onto those
+aggregate lanes.

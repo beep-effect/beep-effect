@@ -1,0 +1,5 @@
+feat: add self-healing hooks and onboarding docs
+
+Add the .claude/hooks/self-healing safe-fixes and suggestions modules and
+the .claude/onboarding doc set, and record ai-friendliness-10-of-10 P3-P5
+handoffs plus generated error-catalog YAML outputs.

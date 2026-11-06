@@ -1,0 +1,4 @@
+refactor(shared): remove DomainModel factory
+
+Delete packages/shared/domain/src/factories/DomainModel.ts (52 lines) and its export;
+adjust Organization.model.ts for the removal.

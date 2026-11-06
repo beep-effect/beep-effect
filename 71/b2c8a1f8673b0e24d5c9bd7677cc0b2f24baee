@@ -1,0 +1,4 @@
+feat(todox): add MUI theme system and navbar components
+
+Scaffolds theme/colors, typography, shadows, and per-component overrides;
+adds command-search, user-dropdown, and notification-dropdown navbar bits.

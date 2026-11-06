@@ -1,0 +1,5 @@
+refactor(tooling): wire create-package handler to plan/template services
+
+Replace direct Handlebars calls and single-target config updates with the
+TemplateService, FileGenerationPlanService, and multi-target config-updater
+introduced in the prior commit; add handler test coverage.

@@ -1,0 +1,4 @@
+chore(logos): add rules-engine barrel and bump deps
+
+Add packages/common/logos/src/rules-engine/index.ts export barrel.
+Bump dotenvx, next, and effect/platform versions.

@@ -1,0 +1,6 @@
+refactor(iam): move atoms into per-client sdk modules
+
+Move sign-in/sign-up/sign-out/verify atoms into their respective
+iam/sdk client folders, rename IamError to ContractError and ContractSet
+to ContractKit, regenerate better-auth-api-spec.json, and drop the
+checked-in better-auth.json.

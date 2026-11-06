@@ -1,0 +1,3 @@
+docs: add jsdoc category/since annotations across schema modules
+
+Completes the schema-annotations spec pass with per-package annotation reports.

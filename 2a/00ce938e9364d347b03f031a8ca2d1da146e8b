@@ -1,0 +1,5 @@
+refactor(apps): simplify sidecar/portless scripts, shrink allowlist
+
+Simplify build-sidecar.ts and dev-with-portless.ts scripts in apps/desktop and
+apps/editor-app.
+Remove resolved entries from effect-laws.allowlist.jsonc and regenerate the snapshot.

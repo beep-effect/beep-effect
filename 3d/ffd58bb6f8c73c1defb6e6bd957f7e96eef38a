@@ -1,0 +1,4 @@
+chore: remove beep-sync AGENTS/CLAUDE/ai-context scaffolds package-wide
+
+Delete generated AGENTS.md/CLAUDE.md/ai-context.md and .beep-sync.bak
+files across common, shared, ui, and tooling packages.

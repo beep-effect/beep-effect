@@ -1,0 +1,7 @@
+chore(tsconfig): drop todox documents-server refs and resync formatting
+
+Remove the @beep/documents-server path aliases and project reference from
+apps/todox/tsconfig.json and reformat that file into expanded multi-line JSON.
+The apps/server, packages/runtime/server, and remaining todox tsconfigs only
+reorder documents references that stay present. Also drop the documents
+workspace deps from the packages/runtime/server entries in bun.lock.

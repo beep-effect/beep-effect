@@ -1,0 +1,7 @@
+refactor(shared): rework entity identity kernel
+
+Substantially rework packages/shared/domain/src/entity/primitives.ts, EntityMixin.ts,
+EntityRef.ts, and identity/Shared.ts; update Organization entity/values/display and
+EntityKernel/Organization tests.
+Rework semantic-web jsonld adapters (jsonld-document.ts, canonicalization, stream parse/serialize).
+Update effect-error-handling, effect-first-development, and schema-first-development skill docs.

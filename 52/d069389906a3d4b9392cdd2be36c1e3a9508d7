@@ -1,0 +1,5 @@
+refactor(mcp-kit): tidy uspto-mcp imports, regen dual-arity inventory
+
+Collapse effect imports to namespace form in UsptoHandlers and SanitizedSpan;
+update dual-arity.inventory.jsonc and fallow.boundaries.generated.jsonc for
+the uspto-mcp package.

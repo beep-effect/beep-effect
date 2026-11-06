@@ -1,0 +1,5 @@
+feat(ai-sdk): scaffold ai/sdk core package
+
+Add the initial packages/ai/sdk core source and test tree: agent
+runtime, hooks, logging, MCP, schema, sandbox, storage, sync, and
+tools modules.

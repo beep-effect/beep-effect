@@ -1,0 +1,1 @@
+build(web): remove turbopack svg loader config from next config

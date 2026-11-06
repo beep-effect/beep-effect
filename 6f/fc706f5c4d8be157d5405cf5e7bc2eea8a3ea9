@@ -1,0 +1,5 @@
+docs(goals): flesh out gov-legal-data-driver-codegen plan and scope
+
+Replace placeholder phase names across PLAN.md/README.md/SPEC.md with the
+govinfo/keyless-driver/authed-drivers/promote sequence and gate P2 authed
+drivers on the data-terms matrix.

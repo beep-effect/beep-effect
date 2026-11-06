@@ -1,0 +1,6 @@
+chore: remove committed playwright-cli debug artifacts
+
+Delete accidentally-committed .playwright-cli/* console logs and page snapshots
+(roughly 8,000 lines).
+Rework EntityId.ts, EntitySchema.ts, BaseEntity.ts, and EntityRef.ts for the drizzle
+projection effort; shrink jsdoc-documentation.inventory after the entity schema changes.

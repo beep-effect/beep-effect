@@ -1,0 +1,5 @@
+chore: reformat iam-sdk, utils, and settings modules; bump deps
+
+Reformat struct.utils.ts, passkey client files, and SettingsState.ts (import
+order, spacing).
+Bump better-auth, biome, and mui x-* versions.

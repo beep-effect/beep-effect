@@ -1,0 +1,6 @@
+chore: normalize tsconfig refs, regen db-admin drizzle snapshot
+
+Update tsconfig extends/references across roughly 15 packages (server, web, db-admin,
+runtime, tasks, files).
+Regenerate drizzle meta/0000_snapshot.json; adjust Todo entity contract/model/table
+and relations for the updated schema.

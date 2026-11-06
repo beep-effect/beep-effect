@@ -1,0 +1,4 @@
+refactor(oip-web): rename Email schema import to EmailString
+
+Rename the Email schema import to EmailString in ContactForm and its test;
+reformat BackToTop.tsx import spacing and scrollToTopAtom body.

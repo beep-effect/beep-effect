@@ -1,0 +1,4 @@
+fix(todox): mark decorative svg icons aria-hidden for a11y
+
+Add aria-hidden/focusable=false to layout, ai-chat, and social-icon svgs;
+reformat touched files to standard spacing.

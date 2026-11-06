@@ -1,0 +1,4 @@
+feat(todox): add orb component, refresh sidebar nav, and document app
+
+Adds AGENTS.md/README.md for todox; adds logo asset and orb.tsx; refactors
+nav-main/nav-projects/nav-user/team-switcher sidebar components.

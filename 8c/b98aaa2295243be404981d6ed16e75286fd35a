@@ -1,0 +1,5 @@
+feat(knowledge): add SPARQL query engine and RDFS reasoner
+
+Add the Sparql FilterEvaluator/QueryExecutor/SparqlService and the
+Reasoning ForwardChainer/RdfsRules/ReasonerService, plus matching
+reasoning value objects and errors.

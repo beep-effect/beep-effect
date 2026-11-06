@@ -1,0 +1,6 @@
+test(tooling): stabilize CLI test suite
+
+Fix create-package, docgen, tsconfig-sync, lint-command, native-runtime, and
+sync-data-to-ts tests; add a new foundation-topology test.
+Regenerate jsdoc-documentation and schema-first inventories; update dual-arity and
+effect-fn/effect-laws inventories to match.

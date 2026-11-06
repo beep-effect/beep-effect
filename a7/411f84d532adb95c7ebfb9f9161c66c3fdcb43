@@ -1,0 +1,5 @@
+chore(specs): purge completed and paused spec packets
+
+Delete specs/completed/* (agent-reliability-effect-v4, best-repo-tooling-possible,
+changesets-turborepo, and others) and specs/paused/*.
+Remove stale scratchpad test files and a .beep/managed-files.json entry.

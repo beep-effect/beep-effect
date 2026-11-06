@@ -1,0 +1,5 @@
+feat(schema): add common/data package and rename to LiteralKit
+
+Add the packages/common/data package (Calendar, CurrencyCodes, MimeTypes,
+Timezones) with generated internal data tables, and rename
+StringLiteralKit.schema.ts to LiteralKit.schema.ts.

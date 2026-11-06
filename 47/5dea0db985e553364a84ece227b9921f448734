@@ -1,0 +1,4 @@
+style(notes): suppress noExplicitAny lint on plate test-utils examples
+
+Add biome-ignore comments for the untyped any fragments platejs test-utils
+returns across the notes registry example values.

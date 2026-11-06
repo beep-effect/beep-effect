@@ -1,0 +1,5 @@
+refactor(tooling): prefer flow(...) over pipe(...) passthroughs
+
+Convert several pipe(...)-wrapped passthrough callbacks to flow(...) across
+CreatePackage/Handler.ts, Graphiti/ProxyServices.ts, Lint/SchemaFirst.ts,
+Shared/DocgenConfig.ts, SyncDataToTs/index.ts, and TsconfigSync.ts.

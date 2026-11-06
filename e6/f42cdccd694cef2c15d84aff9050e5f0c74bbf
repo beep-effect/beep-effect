@@ -1,0 +1,3 @@
+refactor(better-auth): rework plugin wiring and expand adapter options
+
+Touches every plugin module (apiKey, organization, etc.) and rewrites server.ts/options.ts.

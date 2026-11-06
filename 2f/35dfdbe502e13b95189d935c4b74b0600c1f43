@@ -1,0 +1,4 @@
+feat(better-auth): generate drizzle schema; move auth options internal
+
+Add generated.schema.ts (drizzle tables mirroring better-auth's schema).
+Move auth option wiring from server.ts into internal/options.ts and internal/auth.ts.

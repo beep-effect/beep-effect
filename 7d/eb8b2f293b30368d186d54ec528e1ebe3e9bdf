@@ -1,0 +1,3 @@
+refactor(repo-memory): convert telemetry outcomes to LiteralKit schemas
+
+Also refreshes the local repo-memory sqlite snapshot.

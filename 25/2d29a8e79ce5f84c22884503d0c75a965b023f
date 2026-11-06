@@ -1,0 +1,4 @@
+chore(codedank-web): refresh app scaffolding and common utils
+
+Adds app manifest/page/mdx-components and drops next.config.ts.
+Reworks Cuid, Slug, XSSProtection, DateTime, Random, and Str helpers.

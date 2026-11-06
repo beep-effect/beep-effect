@@ -1,0 +1,6 @@
+fix(drivers): skip live integration tests on unresolved op:// secrets
+
+Treat absent, blank, or unresolved 1Password op:// reference env values as not
+configured across box/firecrawl/m365/runpod/venice-ai live suites so they skip
+instead of authenticating with a literal reference string; fix semantic-web
+@category tags; bump next canary.

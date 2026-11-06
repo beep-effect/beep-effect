@@ -1,0 +1,6 @@
+chore: update deps, add AGENTS.md docs, and remove stray scratch prompts
+
+Update bun.lock/package.json; add AGENTS.md to apps/notes, shared/sdk, build-utils, cli,
+and scraper packages.
+Remove large ad-hoc scratch prompt files (EXIF_REFACTOR_PROMPT and review, FILE_INSTANCE_
+TRANSFORM_PROMPT and review) from repo root.

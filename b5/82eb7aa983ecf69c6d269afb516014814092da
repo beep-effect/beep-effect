@@ -1,0 +1,5 @@
+feat(form): scaffold ui-system form package
+
+Add core (Field, Path, Validation, FormBuilder, FormAtoms) and React bindings (FormReact.tsx),
+plus dirty-tracking internals and core/react test suites.
+Extend @beep/utils with Equal, GlobalValue, and Utils helpers; regenerate catalog.

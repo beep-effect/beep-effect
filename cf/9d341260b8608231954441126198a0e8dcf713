@@ -1,0 +1,4 @@
+refactor(utils): rename structGet to dotGet and use effect helpers
+
+Replace native string/typeof checks with Predicate and String helpers, and
+export from Struct.ts instead of structGet.ts.

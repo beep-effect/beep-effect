@@ -1,0 +1,5 @@
+feat(knowledge): add BloomFilter and MergeHistory entity resolution
+
+Add BloomFilter and MergeHistoryLive to EntityResolution, an
+incremental-clusterer domain service, and the matching drizzle
+migration/snapshot for db-admin.

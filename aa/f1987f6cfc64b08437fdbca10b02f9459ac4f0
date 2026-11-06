@@ -1,0 +1,5 @@
+docs: add jsdoc examples across schema, utils, observability packages
+
+Also scaffolds the infra package (docgen.json, dtslint, package.json,
+index.ts) and removes semantic-web AGENTS.md/CLAUDE.md/ai-context.md and
+stray dtslint tsconfig stubs.

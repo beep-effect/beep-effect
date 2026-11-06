@@ -1,0 +1,3 @@
+feat(todox): vendor lexical rich-text editor demo scaffold
+
+Also add knowledge-server extraction/workflow tweaks and an initial db-admin drizzle migration.

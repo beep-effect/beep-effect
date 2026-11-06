@@ -1,0 +1,4 @@
+chore: add audit:fresh script and route audit:full through it
+
+Add audit:fresh (beep-cli audit packages --force) and use it in audit:full instead
+of the cached audit script.

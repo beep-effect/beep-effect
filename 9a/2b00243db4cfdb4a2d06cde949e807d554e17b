@@ -1,0 +1,4 @@
+refactor(knowledge): reimplement wikidata client as entity catalog
+
+Replace the ad-hoc WikidataClient service with WikidataCatalog, implementing
+the new ExternalEntityCatalog interface for search-based entity resolution.

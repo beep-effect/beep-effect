@@ -1,0 +1,6 @@
+feat(repo-utils): add schemas barrel and fix BiomeJson relative imports
+
+Add packages/tooling/library/repo-utils/src/schemas/index.ts re-exporting
+DocgenConfig/JSDocCategories/PackageJson/PackageJsonTools/TSConfig/
+TypeScriptSourceExclusions/WorkspaceDeps; fix BiomeJson.ts imports to use the
+errors barrel and .ts extension; scratchpad BeepYeet service exploration.

@@ -1,0 +1,8 @@
+feat(web): migrate account UI to effect/Array, add toast/zip services
+
+Swap native map/filter/find for A.map, A.filter, and A.findFirst across the
+account billing, address, payment, and notification components.
+Add @beep/ui toast and toaster components with Toaster and Zip services, export
+./services/*, and provide Toaster in the client runtime layer.
+Rename AccountChangePassword to AccountSecurity, move the account path entry
+from change-password to security, and add array-buffer helpers to @beep/utils.

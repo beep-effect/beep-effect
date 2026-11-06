@@ -1,0 +1,5 @@
+feat(shared-infra): add native pg SqlClient with typed errors
+
+Add PgClient.ts, pg-error-enum.ts, and DatabaseError under shared/infra/db/pg.
+Wire the Database service and iam-infra execute() to the new client.
+Bump bun.lock and package.json dependency versions.

@@ -1,0 +1,5 @@
+test: tighten schema and repo-utils assertions
+
+Tighten Cuid/CurrencyCode/Sha256/Timezone schema test assertions, adjust
+SharedNextConfig, and add coverage in docgen Checker/Configuration/Parser
+tests.

@@ -1,0 +1,5 @@
+refactor(schema): rework Graph rebuild/shared modules, add DeepPartial
+
+Refactor Graph.rebuild.ts and Graph.shared.ts, add a DeepPartial type
+helper to modeling/utils Struct.ts, and touch nlp ToolExport, Quality and
+Yeet closeout CLI commands.

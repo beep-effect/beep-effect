@@ -1,0 +1,4 @@
+chore(goals): fill in gov-legal-data-driver-codegen manifest
+
+Replace <slug> placeholder fields in ops/manifest.json with the graduated
+initiative id, phases, and stop conditions.

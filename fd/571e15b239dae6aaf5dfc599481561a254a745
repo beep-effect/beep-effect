@@ -1,0 +1,4 @@
+feat(shared-domain): add authorization, audit, and membership modules
+
+Replaces wealth-management entity-ids with generic per-slice entity-ids
+(calendar, comms, customization, documents, iam, knowledge, shared).

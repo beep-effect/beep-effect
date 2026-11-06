@@ -1,0 +1,5 @@
+chore(deps): bump knip and testcontainers; use thunkNull helper
+
+Bump knip/testcontainers/@testcontainers patch versions; replace
+F.constNull with @beep/utils' thunkNull in get-session.atom.tsx; drop stray
+blank lines in sign-in/email.ts and two-factor/send-otp.ts handlers.

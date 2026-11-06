@@ -1,0 +1,5 @@
+fix(logos): strengthen fingerprint and invalidate runner on writes
+
+Serialize the full rule payload (value, ignoreCase, regex) in fingerprint()
+instead of just structure/tag; add invalidatePrepared() called from crud mutations.
+Add IMPLEMENTATION_PROMPT_runner-cache-fingerprint.md design notes and update tests.

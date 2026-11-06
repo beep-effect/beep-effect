@@ -1,0 +1,4 @@
+chore: merge docgen branch and refresh dependencies
+
+Bump workspace dependencies including @effect/tsgo 0.2.1, tstyche 7, and storybook 10.3.4.
+Remove the placeholder packages/common/schema/docs/index.md and widen the .repos ignore rule.

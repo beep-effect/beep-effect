@@ -1,0 +1,4 @@
+feat(semantic-web): add equals/Equivalence to rdf model classes
+
+Add a schema-derived Equivalence and an equals() method to BlankNode,
+DefaultGraph, Literal, NamedNode, Quad, and Variable, with test coverage.

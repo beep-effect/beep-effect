@@ -1,0 +1,5 @@
+refactor(semantic-web): rework idna/uri modules
+
+Rework the idna and uri (mailto, urn, ws, regex) modules and their
+tests, and scaffold the semantic-web-idna-schema-refactor and
+semantic-web-uri-schema-refactor spec packets.

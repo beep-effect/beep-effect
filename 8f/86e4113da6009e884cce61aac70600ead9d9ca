@@ -1,0 +1,3 @@
+feat(v2t): scaffold orchestration packet and effect-v4 codex agents
+
+Also rewrites nlp Tools/Wink internals and Id.ts, and adds V2T Tauri sidecar scaffolding.

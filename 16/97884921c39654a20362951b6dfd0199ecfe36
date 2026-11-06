@@ -1,0 +1,5 @@
+feat(todox): add lexical editor demo route and fix icon a11y attrs
+
+Add a client-only /lexical page wrapping the Lexical playground editor,
+pin the root packageManager field, and continue the aria-hidden/focusable
+svg accessibility sweep across editor and ui icon components.

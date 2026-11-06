@@ -1,0 +1,4 @@
+chore(deps): sync bun.lock for typescript-eslint and next canary
+
+Bumps typescript-eslint 8.61.0, next 16.3.0-canary.45, @effect/tsgo 0.14.1, ai 6.0.198,
+shadcn 4.11.0, @tailwindcss/typography 0.5.20, and @typescript/native-preview.

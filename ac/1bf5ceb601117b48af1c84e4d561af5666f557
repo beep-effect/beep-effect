@@ -1,0 +1,4 @@
+refactor(lexical): reorganize node utils and consolidate theme files
+
+Advances lexical-playground-port P11: splits per-node utils, unifies the
+editor theme, and moves embed nodes into their own directory.

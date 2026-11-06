@@ -1,0 +1,5 @@
+chore(deps): bump ai-sdk, mui, and turbo; add mvp plan brainstorming doc
+
+Bump a broad set of catalog/root deps (ai-sdk, mui, turbo, react-grab,
+types); pin the previously catalog-tracked turbo version; add the
+synthesize-refined-mvp-plan brainstorming doc for apps/todox.

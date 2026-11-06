@@ -1,0 +1,6 @@
+build(web): switch to hoisted node-linker; rework next/tsconfig export
+
+Set node-linker=hoisted and link-workspace-packages=true in .npmrc.
+Guard next.config.ts remotePatterns behind a staticHost check and add outputFileTracingRoot.
+Rewrite apps/web/tsconfig.json and touch root package.json, postcss.config.mjs,
+pnpm-workspace.yaml, and turbo.json.

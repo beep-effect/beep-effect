@@ -1,0 +1,6 @@
+docs: refresh package READMEs/AGENTS.md and remove stray scratch prompts
+
+Update README.md/AGENTS.md across ~55 packages and apps; add AUDIT_REPORT.md docs for
+utils, shared/client, and repo-scripts.
+Remove large ad-hoc scratch prompt files from repo root (BETTER_AUTH_SCRATCH_PROMPT,
+FILE_SCHEMA_OPTIMIZATION_REPORT, HMAC-UPLOAD-SIGNING-DESIGN, IAM_API_RESTRUCTURE_RESEARCH).

@@ -1,0 +1,4 @@
+feat(md): expand markdown block parsing and add Md.model module
+
+Substantially expand Md.block.ts (roughly 240 lines) and Md.utils.ts; add a new
+Md.model.ts module (116 lines).

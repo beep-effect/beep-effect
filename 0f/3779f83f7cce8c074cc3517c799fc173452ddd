@@ -1,0 +1,5 @@
+feat(schema): add FilePath, Int, and Sha256 schemas
+
+Add FilePath, Int, and Sha256 schema modules with dtslint/test coverage,
+and expand repo-utils TSMorph model/service and TypeScript TSSyntaxKind
+coverage.

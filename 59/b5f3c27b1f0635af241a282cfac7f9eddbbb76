@@ -1,0 +1,7 @@
+docs(skills): expand effect-check, form-field, visual-testing docs
+
+Append Related Skills cross-reference tables and workflow-position notes to the
+existing effect-check, form-field, and visual-testing skill docs.
+
+Add a Playwright initial-setup section (deps, config, scripts) to
+visual-testing.md and data-testid naming conventions to form-field.md.

@@ -1,0 +1,4 @@
+feat(knowledge): add drizzle migration snapshot and graph scaffolding
+
+Also expands the knowledge-graph-integration spec packet (master
+orchestration, handoffs, spec-alignment docs).

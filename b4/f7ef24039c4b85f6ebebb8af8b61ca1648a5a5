@@ -1,0 +1,5 @@
+refactor(modeling): split md/lexical behavior modules
+
+Rename Md.utils.ts to Md.escape.ts, extract Md.behavior.ts and
+Lexical.behavior.ts/normalize.ts, and add SchemaUtils withCodecStatics
+and withConstructorDefaults helpers.

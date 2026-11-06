@@ -1,0 +1,5 @@
+chore(iam-sdk): reformat passkey-v2 client and bump deps
+
+Reformat passkey.atoms.ts, passkey.contracts.ts, passkey.implementations.ts,
+and passkey.service.ts (import order, spacing).
+Bump biome, turbo, tanstack-router, and testcontainers versions.

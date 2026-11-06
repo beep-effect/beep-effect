@@ -1,0 +1,5 @@
+build(web): enable static export and drop custom webpack config
+
+Set output: "export" in apps/web/next.config.ts and remove the webpack override that
+registered the svgr loader and enabled layers, asyncWebAssembly, and topLevelAwait.
+Also add tsconfig.base.json to turbo.json global dependencies.

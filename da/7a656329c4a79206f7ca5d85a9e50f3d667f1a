@@ -1,0 +1,4 @@
+chore: remove security remediation doc and relax noExplicitAny to warn
+
+Drop the completed SECURITY_REMEDIATION.md tracking doc; downgrade
+noExplicitAny from error to warn repo-wide.

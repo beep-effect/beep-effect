@@ -1,0 +1,4 @@
+feat(schema): add CauseTaggedErrorClass
+
+Add packages/common/schema/src/CauseTaggedErrorClass.ts (370 lines) with dtslint and
+unit test coverage; export from index.ts. Bump dependencies.

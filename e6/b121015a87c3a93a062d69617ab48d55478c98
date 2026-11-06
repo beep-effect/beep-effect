@@ -1,0 +1,6 @@
+refactor(cli): migrate standalone scripts into the tooling CLI
+
+Port scripts/*.mjs (agents-check, docs, circular, effect-laws-fix-imports,
+graphiti-mcp-queue-proxy, migrate-native-string-to-effect, ...) into new
+Agents/Claude/Docs/DocsAggregate/Graphiti/Laws/Lint commands under
+tooling/cli, and remove the superseded scripts and eslint .mjs configs.

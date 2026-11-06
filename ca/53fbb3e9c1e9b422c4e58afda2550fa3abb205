@@ -1,0 +1,6 @@
+refactor(ai-sdk): restore Schema entry points and reformat tests
+
+Add re-export shims for packages/ai/sdk/src/Schema/{Annotations,Common,Mcp,Permission,Runtime,
+Sandbox,Service,ToolInput} over src/core/Schema, widen the McpServer schema to S.Unknown, retype
+closeSdkMcpServer from sdkCreateSdkMcpServer, reformat the ai/sdk tests, and remove the stray
+.tmp-effect-env-test.ts and .tmp-service-variance-test.ts scratch files.

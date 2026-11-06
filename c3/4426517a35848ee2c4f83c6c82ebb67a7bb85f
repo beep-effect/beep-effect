@@ -1,0 +1,5 @@
+refactor(md): rework Md render/escape helpers and codec statics
+
+Restructure Md.behavior/escape/render helpers and the lexical codec, tune
+SchemaUtils withCodecStatics, and add custom spelling words for the
+historical fever dream doc.

@@ -1,0 +1,4 @@
+chore(schema): remove docs stub index, add stray wallet address line
+
+Delete packages/common/schema/docs/index.md and append a stray t; statement to
+the end of CryptoWalletAddress.ts.

@@ -1,0 +1,4 @@
+fix(knowledge): use structural check for sparql literal terms
+
+Replace instanceof Literal with a structural typeof/property check since
+instanceof can fail across monorepo module boundaries.

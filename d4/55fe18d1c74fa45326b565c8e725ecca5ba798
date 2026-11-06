@@ -1,0 +1,4 @@
+docs(specs): reformat osdk-api-effect-schema-parity handoffs, add P7
+
+Reformat the osdk-api-effect-schema-parity spec's P0-P6 handoffs and
+orchestrator prompts and add a P7 verification phase.

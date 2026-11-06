@@ -1,0 +1,5 @@
+refactor(tooling): migrate Docgen/Files to Effect.fn handler form
+
+Convert Effect.gen(...).pipe(Effect.catchTag(...)) command handlers to the Effect.fn
+multi-arg form across Docgen/index.ts, Docgen/internal/Operations.ts, Quality.ts, and
+Files.service.ts/Files.progress.ts.

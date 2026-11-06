@@ -1,0 +1,4 @@
+feat(todox): add voice/audio UI component suite
+
+Adds audio-player, bar-visualizer, conversation-bar, live-waveform,
+mic-selector, scrub-bar, speech-input, transcript-viewer, and waveform.

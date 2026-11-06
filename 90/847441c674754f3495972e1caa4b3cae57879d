@@ -1,0 +1,6 @@
+feat(codebase-search): add file scanner and symbol assembler extractors
+
+Add FileScanner (content-hash change detection) and SymbolAssembler
+(merges extraction results into IndexedSymbol records) with full test
+coverage; add a jsdoc lint pre-commit hook, ignore local mcp/codex config,
+and tighten doctrine.d.ts optional types.

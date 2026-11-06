@@ -1,0 +1,4 @@
+docs(specs): scaffold osdk-api-effect-schema-parity orchestration packet
+
+Add the osdk-api-effect-schema-parity spec (README, RUBRICS, P0-P6
+handoffs and orchestrator prompts, outputs manifest).

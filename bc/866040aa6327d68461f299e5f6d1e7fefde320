@@ -1,0 +1,3 @@
+feat(knowledge): add batch workflow orchestration and llm control
+
+Also migrate ad-hoc scripts into tooling/cli analyze-agents/readmes commands.

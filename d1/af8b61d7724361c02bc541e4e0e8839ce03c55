@@ -1,0 +1,4 @@
+feat(oip-web): filter social links by an active flag
+
+Add active: true to each OipContent.data.ts social entry; filter SocialLinks
+rendering to only show active socials.

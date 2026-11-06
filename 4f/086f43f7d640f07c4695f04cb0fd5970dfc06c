@@ -1,0 +1,7 @@
+feat(web): scaffold Next.js app and knowledge-graph-app spec packets
+
+Scaffold a new apps/web Next.js app, add
+scripts/zep-ingest-effect-v4.mjs, and add the
+claude-effect-v4-knowledge-graph-app and
+codex-effect-v4-knowledge-graph-app spec packets plus
+unified-ai-sync research.

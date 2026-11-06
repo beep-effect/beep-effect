@@ -1,0 +1,8 @@
+chore: bump deps, retarget tsconfig $schema, regenerate exports catalog
+
+Bump root package.json/bun.lock (effect packages 4.0.0-beta.69 -> beta.70, ai 6.0.187) and
+add schema/chalk subpath exports; retarget the tsconfig $schema URL from http to https in
+103 tsconfig files; refresh 91 test files across foundation/modeling/schema (20), drivers
+(17), tooling/cli (16), architecture-lab (11) and foundation/capability (11), 58 of them
+moving it.effect callbacks from Effect.gen to Effect.fnUntraced; adjust the matching driver
+and cli sources; and regenerate standards/repo-exports.catalog.{jsonc,md}.

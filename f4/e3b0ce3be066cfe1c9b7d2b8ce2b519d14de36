@@ -1,0 +1,4 @@
+fix(tooling): resolve package version drift, extend docgen
+
+Bumps package.json versions across ~25 packages to close drift.
+Adds Docgen argument handling and reworks Quality Tasks orchestration.

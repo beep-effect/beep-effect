@@ -1,0 +1,4 @@
+feat(workspace): add Message/Thread/Turn domain entities and tables
+
+Also closes out rich-text-foundation and workspace-thread-domain goal history,
+and refreshes the graphify code-graph snapshot.

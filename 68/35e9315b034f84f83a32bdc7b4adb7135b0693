@@ -1,0 +1,3 @@
+refactor(runtime): consolidate google workspace integration into server
+
+Remove packages/shared/integrations Gmail/Calendar package; add server adapter tests.

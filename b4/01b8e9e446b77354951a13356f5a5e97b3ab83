@@ -1,0 +1,7 @@
+feat(schema): reject bidi formatting code points in IRI parser
+
+Exclude the RFC 3987 section 4.1 bidi formatting code points (LRM, RLM, LRE,
+RLE, PDF, LRO, RLO) from the iunreserved predicate. Those code points fall inside
+the ucschar range 0x00a0-0xd7ff, so IRI, AbsoluteIRI, IRIReference, and
+RelativeIRIReference now reject inputs they previously accepted. Also updates the
+RFC coverage notes and adds JSDoc to the exported IRI type aliases.

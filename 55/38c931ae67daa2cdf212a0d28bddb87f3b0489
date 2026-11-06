@@ -1,0 +1,5 @@
+feat(tooling): scaffold agent-eval benchmark/policy package
+
+Add the tooling/agent-eval package (benchmark runner/catalog/compare/
+report, policies, schemas, effect-v4 detector, graphiti mcp client) with
+test coverage, plus new .agents/policies and effect-v4-* skill docs.

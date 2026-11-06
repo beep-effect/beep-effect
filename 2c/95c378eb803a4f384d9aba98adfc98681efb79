@@ -1,0 +1,5 @@
+docs(explore): capture identity-as-iri exploration packet
+
+Create the identity-as-iri exploration packet (BRIEF, CAPTURE, DECISIONS,
+MAP, RESEARCH) with an initial ontology prototype and identity scratchpad
+test.

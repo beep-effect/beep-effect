@@ -1,0 +1,4 @@
+fix(form): use atom registry getter, deterministic fake-timer debounce
+
+Fix submitAtom read via get.registry.get in FormAtoms.ts; rewrite the
+debounce-validation test with vi.useFakeTimers for determinism; bump deps.

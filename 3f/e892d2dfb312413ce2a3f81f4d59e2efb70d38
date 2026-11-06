@@ -1,0 +1,3 @@
+chore(deps): bump tiptap, react-email, and lucide-react versions
+
+Trim an unused encode() argument in RegexFromString.

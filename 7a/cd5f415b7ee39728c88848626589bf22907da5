@@ -1,0 +1,9 @@
+refactor(nlp): rename nlp package and extract rdf-canonize driver
+
+Renames packages/foundation/capability/nlp to packages/foundation/capability/nlp-processing
+and adds the new packages/foundation/modeling/nlp modeling package.
+
+Extracts RDF canonicalization from packages/foundation/capability/semantic-web into the new
+packages/drivers/rdf-canonize, moves the evidence, prov, and web-annotation models into
+packages/foundation/modeling/rdf behind compatibility re-exports, and renames the
+packages/foundation/modeling/onotology directory to ontology.

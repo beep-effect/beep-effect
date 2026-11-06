@@ -1,0 +1,4 @@
+feat(v2t): build out Tauri sidecar app and VT2 server protocol
+
+Adds the native.ts bridge, workspace-shell UI, and Tauri Cargo/schema artifacts.
+Builds the VT2 client/server/domain/protocol and covers it with contract tests.

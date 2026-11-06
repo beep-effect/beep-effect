@@ -1,0 +1,6 @@
+refactor(acp): convert AcpProtocolLogEvent to tagged union
+
+Replace the flat AcpProtocolLogEvent class with a LiteralKit.mapMembers plus
+S.toTaggedUnion discriminated union (incoming/outgoing); touch up AcpAgent,
+AcpClient, and ai-provider-cli services.
+Commit generated opip-web PWA service-worker/workbox build output.

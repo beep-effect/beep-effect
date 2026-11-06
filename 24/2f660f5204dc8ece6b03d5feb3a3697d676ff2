@@ -1,0 +1,5 @@
+refactor(core): move Repo abstraction from shared/domain to core/db
+
+Move Repo.ts from packages/shared/domain/src/abstractions to packages/core/db/src;
+update roughly 20 iam/infra repo adapters to import from the new location.
+Remove layer-proposal.md; update dependencies and pnpm-lock.yaml.

@@ -1,0 +1,6 @@
+chore(schema): propagate AtURI path mappings across docgen manifests
+
+Add the @beep/schema/AtURI path mapping to every package docgen.json and the
+root tsconfig paths, add a cspell allowlist comment in AtURI.ts, annotate the
+semantic-web re-export modules, and refresh the gov-legal-data-driver-codegen
+goal spec, plan, and research notes.

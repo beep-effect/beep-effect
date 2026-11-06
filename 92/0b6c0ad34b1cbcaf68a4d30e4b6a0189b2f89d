@@ -1,0 +1,5 @@
+docs(specs): scaffold todox-wealth-mgmt-knowledge-mvp packet
+
+Add the todox-wealth-mgmt-knowledge-mvp spec (P0-P4 handoffs, research
+reports, IaC gates, runbooks) and the P10/P11 handoffs for
+knowledge-ontology-comparison.

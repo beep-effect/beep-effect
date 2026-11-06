@@ -1,0 +1,4 @@
+fix(documents): rework Comment/Discussion/Document handlers
+
+Rework the Comment/Discussion/Document RPC handlers and the shared
+db-repo factory they build on.

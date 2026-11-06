@@ -1,0 +1,3 @@
+refactor(iam): rename oauth2 client module to connections
+
+Also rename calendar domain value objects to PascalCase file naming.

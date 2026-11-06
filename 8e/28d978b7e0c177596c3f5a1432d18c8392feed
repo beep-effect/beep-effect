@@ -1,0 +1,5 @@
+feat(claude): add .claude hooks, pattern library, arch scripts
+
+Add .claude/hooks (agent-init, pattern-detector, skill-suggester,
+subagent-init), the code-smell/dangerous-command pattern library,
+architecture analysis scripts, and the claude-setup-v4-port spec.

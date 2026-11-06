@@ -1,0 +1,5 @@
+feat(semantic-web): add IDNA and URI schema modules
+
+Add the semantic-web package's idna module and uri module with http/
+https/mailto/urn/ws/wss scheme parsers, and scaffold the
+semantic-web-idna-schema-refactor spec.

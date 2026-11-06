@@ -1,0 +1,5 @@
+refactor(oip-web): trim homepage matters section, add contact phone
+
+Comment out the Matters carousel and ExternalAnchor helper pending content;
+add officePhone to ContactContent, drop the posture field, and declare a DOM
+HTMLFormElement schema instead of S.instanceOf. Allow a tailnet dev origin.

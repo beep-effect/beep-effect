@@ -1,0 +1,4 @@
+refactor(schema): extract extended-schemas, drop legacy utils.ts
+
+Trims custom schema helpers (email/hex/ip/json/phone/slug/url) and renames
+db.factory.ts to drizzle-client.factory.ts.

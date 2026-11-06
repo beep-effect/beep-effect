@@ -1,0 +1,5 @@
+chore: remove unused packages/common/event package
+
+Delete the event-sourcing package (Event, EventGroup, EventJournal, EventLog,
+EventLogEncryption, EventLogRemote, EventLogServer) and its tsconfig references.
+Update bun.lock/package.json and identity/BeepId.ts/types.ts.

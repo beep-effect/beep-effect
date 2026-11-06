@@ -1,0 +1,8 @@
+chore: remove desktop/editor-app tauri apps; prune initiatives
+
+Delete apps/desktop and apps/editor-app tauri scaffolding (binaries, icons,
+Cargo.lock, RepoMemoryDesktop.tsx).
+Rework packages/shared, packages/repo-memory, and packages/editor; touch
+tooling/cli.
+Prune repo-architecture-convergence, expert-memory-big-picture, trustgraph-doc-
+ontology, and repo-expert-memory-local-first-v0 initiative folders.

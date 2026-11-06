@@ -1,0 +1,4 @@
+chore(deps): bump root deps and use type-only error imports
+
+Import CircuitOpenError/RateLimitError as type-only in EntityClusterer and
+GroundingService alongside a broad root dependency bump.

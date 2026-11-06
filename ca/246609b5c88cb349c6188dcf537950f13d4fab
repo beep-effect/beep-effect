@@ -1,0 +1,7 @@
+fix(iam): decode better-auth session/user dates from strings
+
+Switch session/user date fields to BS.DateFromAllAcceptable since Better
+Auth returns ISO-like strings from the API; add transformResponse support to
+wrapIamMethod and use it in get-session. Simplify GuestGuard to drop the
+suspense-bound search-params callback flow, add a db-admin drizzle
+migration, and update iam client tsconfigs.

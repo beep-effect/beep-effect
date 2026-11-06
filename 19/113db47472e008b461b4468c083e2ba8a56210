@@ -1,0 +1,4 @@
+docs(skills): expand mui-component-override skill doc
+
+Append Testing Theme Overrides and Related Skills sections covering visual-testing
+guidance and when to use atomic-component versus global theme overrides.

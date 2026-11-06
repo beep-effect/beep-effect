@@ -1,0 +1,4 @@
+feat(form): rework field bindings and typed paths for upload fields
+
+Expand Path typing, form options, and field bindings; overhaul upload,
+country-select, and date-time-picker components in @beep/ui.

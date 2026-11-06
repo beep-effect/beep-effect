@@ -1,0 +1,4 @@
+refactor(semantic-web): restructure idna module into internal helpers
+
+Split idna.ts into internal domain/punycode/ucs2 helper modules and
+scaffold the semantic-web-idna-schema-refactor spec's P1 checkpoint.

@@ -1,0 +1,4 @@
+refactor(tooling): simplify RelativePlanPathChecks filter predicate
+
+Replace P.not(...) with a plain negation in FileGenerationPlanService.ts filter;
+minor JSDoc comment edit.

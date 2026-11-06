@@ -1,0 +1,4 @@
+refactor(iam): reorganize client internals from _common to _internal
+
+Also reworks the common/wrap RPC wrapper, adds a tagged-config-kit schema
+helper, and lands numerous iam/flexlayout/docking spec packets.

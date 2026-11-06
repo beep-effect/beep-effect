@@ -1,0 +1,5 @@
+chore(scratchpad): scaffold explore domain model prototypes
+
+Add placeholder model files for the scratchpad/explore prototype (AiModel,
+Command, Environment, Project, Thread, ...) plus a shared Logging
+errors/models module.

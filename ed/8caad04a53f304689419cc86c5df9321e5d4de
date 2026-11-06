@@ -1,0 +1,5 @@
+feat(ai-sdk): add SessionManager/SessionPool and rework sync services
+
+Add SessionConfig, SessionManager, and SessionPool to packages/ai/sdk,
+rework EventJournalKeyValueStore and SyncService, and record
+p7-verification scenario logs and reports.

@@ -1,0 +1,6 @@
+feat(shared-domain): build Organization entity kernel and lint rule
+
+Add the Organization entity (behavior/model/values/table/display) as the first
+EntityKernel/BaseEntity consumer, with EntityKernel and OrganizationTable tests.
+Scaffold packages/providers/{drizzle,pglite}.
+Add Lint/PackageTestImports.ts, rewrite SqlTest.ts, and consolidate dtslint tsconfigs.

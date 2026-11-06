@@ -1,0 +1,3 @@
+chore(deps): bump package versions across workspace
+
+Also tweaks better-auth internal plugin wiring (makePlugins, options, jwt).

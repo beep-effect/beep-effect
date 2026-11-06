@@ -1,0 +1,5 @@
+refactor(form): replace ternary chains with Match.value in core module
+
+Convert astPropertyName/propertyKeyToPathSegment/shouldShowError/normalizeFilterOutput
+ternaries to Match.value/Match.when in Field, FormAtoms, FormBuilder, and Path.
+Gitignore .claude/scheduled_tasks.lock and remove the committed lock file.

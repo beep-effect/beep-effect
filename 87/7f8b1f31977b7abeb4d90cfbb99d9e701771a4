@@ -1,0 +1,5 @@
+refactor(todox): finalize EmptyArray schema and Point equivalence
+
+Make EmptyArray a concrete schema class instead of declare class, derive
+Point's equals from a schema Equivalence, restructure the liveblocks-ai-
+editor models, and bump root deps.

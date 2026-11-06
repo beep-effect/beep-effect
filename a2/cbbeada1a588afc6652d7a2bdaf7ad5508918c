@@ -1,0 +1,5 @@
+chore: update deps and add entity-schema handoff doc
+
+Add ENTITY_SCHEMA_MODEL_VARIANT_HANDOFF.md; extend EntitySchema.ts with model-variant support.
+Update bun.lock/package.json and biome.jsonc; adjust capability/sandbox modules (Prompt,
+error-handler, observability, providers, SyncOut, Worktree) for the updated dependencies.

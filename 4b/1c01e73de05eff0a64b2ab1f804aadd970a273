@@ -1,0 +1,4 @@
+docs: point graphiti-memory MCP at the queue proxy endpoint
+
+Change .mcp.json graphiti-memory URL from :8000 to :8123 (the repo-owned queue proxy);
+document the proxy vs backing-service distinction and narrow-query guidance in AGENTS.md.

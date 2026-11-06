@@ -1,0 +1,9 @@
+feat(iam): rework account settings and extend AuthEmail service
+
+Remove the Address and Birthday account-settings panels and their
+GeneralTabPanel sections. Rewire the Email panel onto the shared
+useChangeEmailForm from the iam sdk and drop the secondary-email field.
+Extend AuthEmail.service.ts with sendChangeEmailVerification and expand
+user.atoms.ts/user.forms.ts. Switch the remaining general panels to alias
+imports and remove stale apps/web/src/features/docs/* planning docs
+(roughly 1,080 lines).

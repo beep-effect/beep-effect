@@ -1,0 +1,4 @@
+refactor(tooling): extract shared helpers from generator scripts
+
+Move common logic from generate-jsdoc-documentation-inventory.ts and
+generate-repo-exports-catalog.ts into a new support/_shared.ts module.

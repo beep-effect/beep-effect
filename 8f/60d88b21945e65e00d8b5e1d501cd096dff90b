@@ -1,0 +1,4 @@
+chore: gitignore and remove committed .playwright-cli debug artifacts
+
+Add .playwright-cli/ to .gitignore; remove committed console logs and
+page snapshots (roughly 815 lines).

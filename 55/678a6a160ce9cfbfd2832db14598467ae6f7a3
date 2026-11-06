@@ -1,0 +1,4 @@
+feat(schema): add VariantSchema, SQL Model, and DSL design spec docs
+
+Adds core/VariantSchema.ts and integrations/sql/Model.ts; captures the
+dsl-model design/exploration spec packet (~10k lines of research/prompts).

@@ -1,0 +1,4 @@
+fix(tooling): pin yeet turbo concurrency to 3
+
+Add --concurrency=3 to shared feedback turbo args in Planner.ts to avoid the
+slower c=16 default; update yeet.test.ts expectations.

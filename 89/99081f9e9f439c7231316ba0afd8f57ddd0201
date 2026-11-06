@@ -1,0 +1,4 @@
+style: reformat marketing and todox app-layout with biome
+
+Collapse multi-line JSX/JSON onto biome's preferred single-line form across
+marketing app and todox app-layout; add a placeholder marketing test file.

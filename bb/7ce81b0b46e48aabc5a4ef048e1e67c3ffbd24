@@ -1,0 +1,4 @@
+style: reformat callback hugging across drivers and tooling
+
+Collapse multi-line .then/Effect.mapError callback wrapping to hugged single-line form.
+No behavior change.

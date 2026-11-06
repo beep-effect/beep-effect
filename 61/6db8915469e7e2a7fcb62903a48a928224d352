@@ -1,0 +1,4 @@
+chore(infra): wire identity/schema/types/utils deps and bump pulumi
+
+packages/common/chalk jsdoc examples also switch styled-string assignments
+to console.log calls.

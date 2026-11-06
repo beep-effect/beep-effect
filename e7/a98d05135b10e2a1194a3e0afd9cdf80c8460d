@@ -1,0 +1,4 @@
+feat(web): build out form-system DSL, scaffold ai/core and ai/navi
+
+Adds form-system builder/model/renderer/runtime/validation plus a schema form module.
+Scaffolds the ai/core and ai/navi packages.

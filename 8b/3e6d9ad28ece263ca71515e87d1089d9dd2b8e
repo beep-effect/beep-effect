@@ -1,0 +1,5 @@
+feat(architecture-lab): replace Specimen fixture with WorkItem aggregate
+
+Generate the WorkItem aggregate (client/config/domain/server/tables/ui/use-cases)
+via beep architecture codegen, replacing the deleted fixture-lab/specimen packages.
+Add a db-admin ArchitectureLab migration and regenerate the jsdoc inventory.

@@ -1,0 +1,5 @@
+refactor(schema): default SecureHeaderOptions via schema-owned wrapper
+
+Move the omitted-options fallback for createHeadersObject/createSecureHeaders
+into SecureHeaderOptionsArgument with S.withConstructorDefault; add a
+regression test and record the P4 pilot in schema-first-v4-capabilities.

@@ -1,0 +1,4 @@
+feat(ui): import minimal-ui component library, scaffold apps/web
+
+Adds animate/atoms/assets components (icon-sets, file-thumbnail, image, motion variants)
+and common/types plus common/utils helpers (stringLiteralKit, transformations).

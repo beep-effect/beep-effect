@@ -1,0 +1,6 @@
+refactor(todox): rewrite audio device enumeration with effect errors
+
+Convert mic-selector's device enumeration/permission flow to Effect with
+tagged MediaDeviceEnumerationError/MediaDevicePermissionError; touch up
+ImageNode, audio-player, bar-visualizer, conversation-bar, live-waveform,
+speech-input, and waveform components; add ambient globals types.

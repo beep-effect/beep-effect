@@ -1,0 +1,5 @@
+feat(tooling): collect tsgo diagnostics regardless of exit code
+
+Add collectEffectTsgoDiagnosticLines and an effect-diagnostic regex pattern to
+Quality.command.ts; add test coverage across image-command, quality-tasks, and
+reuse-command test suites.

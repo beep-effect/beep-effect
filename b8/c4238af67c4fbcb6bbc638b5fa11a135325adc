@@ -1,0 +1,7 @@
+feat(codedank-web): scaffold Effect config service in next.config.ts
+
+Add an Effect-based ConfigService and NextConfigError scaffold to the
+existing apps/codedank-web/next.config.ts, alongside the current exported
+config, and add the @beep/repo-utils dependency. Re-export fileURLToPath
+from the existing @beep/utils NodeUrl module, reorder the biome.jsonc vcs
+block, and refresh next-env.d.ts type paths plus the lockfile.

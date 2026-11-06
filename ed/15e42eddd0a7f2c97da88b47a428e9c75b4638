@@ -1,0 +1,5 @@
+feat(web): add chat panel and graph explorer UI with graphiti search
+
+Add ChatPanel/MessageBubble/ToolCallTrace and ForceGraph/GraphPanel/
+NodeDetail components, chat/graph atoms, and a graphiti-backed
+/api/graph/search route; rename common/identity Identity.ts to Id.ts.

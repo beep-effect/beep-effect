@@ -1,0 +1,5 @@
+refactor(cli): rework Graphiti, Laws, and VersionSync commands
+
+Restructure the Graphiti, Laws/EffectImports, Lint, and VersionSync CLI
+commands and their resolvers/updaters, and tune the subagent-init and
+skill-suggester hooks.

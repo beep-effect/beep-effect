@@ -1,0 +1,6 @@
+chore: add LICENSE/README/AGENTS scaffolding across all packages
+
+Add LICENSE, README.md, and AGENTS.md to most packages, add
+PERFORMANCE.md/PERF_PLAN.md, add jsdoc/ts-fence codemods under
+tooling/repo-scripts, trim tsconfig.base.jsonc, and regenerate the
+db-admin drizzle migration snapshot.

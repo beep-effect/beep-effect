@@ -1,0 +1,3 @@
+feat(tooling): extend Quality/Tasks.ts with new test coverage
+
+Adjust Quality/Tasks.ts and add roughly 70 lines of new quality-tasks.test.ts coverage.

@@ -1,0 +1,5 @@
+fix(knowledge): harden WorkflowPersistence and Gmail adapter parsing
+
+Fix WorkflowPersistence indexing and GmailExtractionAdapter parsing, add
+an effect-patterns reference doc, and update the
+knowledge-slice-conventions-review spec's verification report.

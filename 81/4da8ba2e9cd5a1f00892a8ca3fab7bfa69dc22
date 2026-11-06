@@ -1,0 +1,5 @@
+refactor(oip-web): inline OipRedirects into next.config.ts
+
+Delete OipRedirects.ts and embed the redirect table directly in
+next.config.ts; drop a stray blank @category line in ai-sync generated
+source-metadata output and its generator template.

@@ -1,0 +1,5 @@
+chore(cli): drop stray tsconfig-sync fixtures and cli test suite
+
+Delete nine generated `_test-tsconfig-sync-*` directories left at the repo
+root by tsconfig-sync runs (135 files) and remove the tooling/cli/test suite
+(9 files).

@@ -1,0 +1,4 @@
+refactor(chalk): extract public surface, continue nlp wink rewrite
+
+Shrinks Chalk.browser.ts/AnsiStyles behind a new PublicSurface module.
+Adds codex-prompt.md/lint-inventory.md notes; continues the nlp Wink internals rewrite.

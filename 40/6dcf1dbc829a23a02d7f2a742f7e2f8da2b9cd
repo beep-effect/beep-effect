@@ -1,0 +1,4 @@
+feat(notes): add POC note-taking app, merge files into documents
+
+Scaffolds apps/notes (Next.js + Prisma + Plate editor, non-effect POC);
+merges knowledge-management and files slices into the documents slice.

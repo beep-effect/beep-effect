@@ -1,0 +1,5 @@
+docs(explorations): resolve mcp-auth and uspto-patent research findings
+
+Confirm isError semantics for MCP typed failures in mcp-auth-gated-registration
+RESEARCH.md; clarify USPTO applications/search POST-body support status in
+uspto-patent-driver-depth RESEARCH.md.

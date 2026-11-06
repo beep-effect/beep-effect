@@ -1,0 +1,4 @@
+chore(iam): restore better-auth client adapter with method helpers
+
+Reintroduce the deleted better-auth client.ts with additional identity,
+Effect, and Struct imports for an upcoming isClientMethod helper.

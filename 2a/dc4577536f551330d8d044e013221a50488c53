@@ -1,0 +1,7 @@
+chore: scaffold TSMorph stub files and document graphiti group_ids
+
+Add a stub TSMorph Symbol schema under tooling/repo-utils plus empty service, parser, and
+index files; only the model file has content.
+
+Document the graphiti MCP group_ids gotcha in AGENTS.md and the memory skill: pass a JSON
+array literal string when the tool wrapper types group_ids as a string.

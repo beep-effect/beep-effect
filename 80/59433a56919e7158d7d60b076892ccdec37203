@@ -1,0 +1,4 @@
+feat(cli): harden create-slice generator, scaffold comms slice
+
+Fixes generator bugs found in the create-slice review packet and adds an
+ai-friendliness-audit spec.

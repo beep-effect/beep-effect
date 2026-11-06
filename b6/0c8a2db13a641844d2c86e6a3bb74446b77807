@@ -1,0 +1,4 @@
+chore(repo): remove graphify tool and generated graphify-out dumps
+
+Deletes the .claude/.codex graphify skills and the graphify-out/ knowledge-graph dumps
+(multi-million-line graph.json/graphml/cypher exports across 2026-06-12..14 snapshots).

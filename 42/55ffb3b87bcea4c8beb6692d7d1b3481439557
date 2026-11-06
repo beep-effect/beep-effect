@@ -1,0 +1,6 @@
+refactor(ontology): rework OSDK aggregate, formatting, metadata types
+
+Rework AggregatableKeys, OntologyMetadata, PrimaryKeyTypes,
+WirePropertyTypes, and the numeric/date value-formatting rules in
+packages/common/ontology, and clear stale ast-kg graphiti/publish
+ledger and snapshot cache entries.

@@ -1,0 +1,4 @@
+fix(tooling): skip missing workspace package.json in dependency index
+
+Also broaden vitest coverage excludes for dtslint and test fixtures and add
+coverage threshold gates (branches 80%, functions 60%, lines/statements 30%).

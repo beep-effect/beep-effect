@@ -1,0 +1,4 @@
+feat(box): scaffold Box.config and Box.errors for box-node-sdk
+
+Add box-node-sdk dependency; new Box.config.ts and Box.errors.ts; extend
+Box.models.ts.

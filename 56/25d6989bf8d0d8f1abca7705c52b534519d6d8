@@ -1,0 +1,4 @@
+chore(deps): bump deps, consolidate Number import in FFmpeg
+
+Fold the separate effect/Number import into the main effect import as Number as N
+in FFmpeg.service.ts; bump bun.lock/package.json.

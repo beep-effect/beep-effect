@@ -1,0 +1,5 @@
+feat(knowledge): add RDF store service and entity/relation/graphrag RPCs
+
+Add RdfStoreService and Serializer, entity/relation/graphrag/extraction/
+ontology RPC modules, and RDF value objects (Quad, QuadPattern,
+RdfFormat, SparqlBindings).

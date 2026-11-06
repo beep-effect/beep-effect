@@ -1,0 +1,5 @@
+refactor(identity): normalize jsdoc fences and tighten schema typing
+
+Change @example fences from ```typescript to ```ts across identity/packages.ts
+and Id.ts; type CountryCode as a TerritoryCode alias; use NonNegativeInt and
+Sha256Hex constructors in Corpus.service.ts.

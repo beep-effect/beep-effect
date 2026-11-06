@@ -1,0 +1,4 @@
+refactor(cli): tighten VersionSync and DocsAggregate command internals
+
+Adjust TsconfigSync, DocsAggregate, VersionSync resolvers/services, and
+the Jsonc/Yaml schema codecs used by the create-package command.

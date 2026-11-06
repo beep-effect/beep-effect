@@ -1,0 +1,4 @@
+feat: add ontology skill suite and effect-drizzle server factory
+
+Also renames packages/VT2 to packages/v2t-sidecar, adds packages/shared/tables
+and EffectSchema/PromiseSchema modules, and expands the V2T workspace-shell UI.

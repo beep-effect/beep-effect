@@ -1,0 +1,4 @@
+feat: refine vendored flexlayout-react, add bootstrap-spec CLI
+
+Reworks the vendored flexlayout-react model/view modules (IJsonModel -> JsonModel) and adds the
+bootstrap-spec CLI command, .claude agent skills, and new specs/ packets.

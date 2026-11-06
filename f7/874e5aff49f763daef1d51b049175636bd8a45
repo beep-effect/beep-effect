@@ -1,0 +1,5 @@
+test: rework container testing setup and rewrite README
+
+Replace the ad hoc db-admin pg-container test helper with a shared
+tooling/testkit/src/container.ts module, reorganize db-admin tests, and
+rewrite README.md; trim unused repo/schema exports in tooling/utils.

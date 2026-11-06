@@ -1,0 +1,6 @@
+chore: sync configs and dep versions across common and shared
+
+Touch package.json and source file headers across nearly every packages/common/*
+module (version/identifier sync).
+Update packages/shared, packages/editor, tooling/cli, and specs/pending; also
+touch V2T/desktop/editor-app tauri app package.json files.

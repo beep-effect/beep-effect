@@ -1,0 +1,5 @@
+feat(schema): make EffectSchema generic over success/failure/deps
+
+Parameterize EffectSchema over Success, Failure, and Dependencies type
+arguments instead of a fixed unknown/unknown/unknown shape, and update the
+law-practice IrToLaw ports and PACER scratchpad prototype accordingly.

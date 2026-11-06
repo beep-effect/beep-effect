@@ -1,0 +1,5 @@
+feat(todox): add elevenlabs scribe/transcript hooks and ReactNode schema
+
+Add use-scribe and use-transcript-viewer hooks with @elevenlabs/react
+integration, add a ReactNodeSchema to @beep/shared-ui with test coverage,
+and add supporting radix/motion/use-stick-to-bottom deps and prompt docs.

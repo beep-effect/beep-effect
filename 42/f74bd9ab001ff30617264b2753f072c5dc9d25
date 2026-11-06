@@ -1,0 +1,5 @@
+chore(web): commit .next build output alongside iam auth work
+
+apps/web/.next build artifacts dominate this commit (1077 of 1118 files);
+real changes are in packages/iam auth client methods and atoms, dependency
+manifests, web and tsconfig configuration, and CONTRIBUTING.md.

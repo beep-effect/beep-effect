@@ -1,0 +1,7 @@
+feat(web): scaffold public marketing pages and rework iam/ui auth forms
+
+Add public pages (about, contact-us, faqs, landing, portfolio, pricing, privacy, terms)
+and auth pages (request-password-reset, reset-password, verify-email, verify-phone).
+Restructure iam/ui auth views into per-feature form/view/index modules; rework
+iam-client.ts (280 lines) and add a CSP constants module.
+Add docker/grafana otelcol-config.yaml.

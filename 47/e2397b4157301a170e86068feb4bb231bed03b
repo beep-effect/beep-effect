@@ -1,0 +1,5 @@
+chore: close out integration-architecture-migration spec
+
+Add server-package AGENTS.md docs for calendar/comms/knowledge/runtime,
+record P3/P5 verification outputs for integration-architecture-migration,
+and drop the obsolete typescript@5.9.3 patch.

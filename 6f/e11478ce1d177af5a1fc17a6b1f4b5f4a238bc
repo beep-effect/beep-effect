@@ -1,0 +1,6 @@
+feat(repo-utils): add PackageJson schema validation
+
+Add schema validation helpers to tooling/repo-utils/src/schemas/PackageJson.ts with
+new dtslint and unit test coverage.
+Minor touch-ups across @beep/schema (LiteralKit, MappedLiteralKit, Model, StatusCauseError,
+Thunk) and shared/domain BaseEntity/EntityRef/Organization.

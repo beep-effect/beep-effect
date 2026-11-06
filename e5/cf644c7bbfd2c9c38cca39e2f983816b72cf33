@@ -1,0 +1,4 @@
+docs(shared): add JSDoc examples to entity barrel exports
+
+Add @example blocks to BaseEntity/EntityId/EntityMixin/EntityRef re-exports in
+shared/domain/src/entity/index.ts; minor jsonld-document.ts and EntityKernel.test.ts tweaks.

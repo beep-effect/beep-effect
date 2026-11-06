@@ -1,0 +1,5 @@
+feat(ui): add chat message components
+
+Add attachment, bubble, marker, message, and message-scroller components
+to the shared ui package, with a changeset documenting the EffectSchema
+generics change.

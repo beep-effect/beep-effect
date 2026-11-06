@@ -1,0 +1,5 @@
+feat(drivers): harden typed errors for drizzle, duckdb, face-detection
+
+Expand normalization helpers and typed error models for the drizzle,
+duckdb, and face-detection driver boundaries, and adjust the CLI Files
+service to match.

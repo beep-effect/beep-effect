@@ -1,0 +1,4 @@
+feat(schema): implement SQL dialect and column-type literal schemas
+
+packages/common/utils also gains Array and Str helper additions with
+tests.

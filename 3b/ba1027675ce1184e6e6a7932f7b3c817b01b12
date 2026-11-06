@@ -1,0 +1,4 @@
+chore(specs): add naming-conventions and orgtable-rls packets
+
+Also removes the wealth-management/domain package (entities + ontology),
+adds a jetbrains-mcp Claude skill, and expands the jetbrains-mcp-skill spec.

@@ -1,0 +1,3 @@
+refactor(rules): rework operator category implementations
+
+Adds RuleEffect/Scope UI schema helpers and reworks the makeFormOptions test suite.

@@ -1,0 +1,4 @@
+chore(specs): flatten turborepo-audit outputs directory
+
+Moves specs/pending/turborepo-audit/outputs/* up to specs/pending/outputs/.
+Also extends common/schema Transformations and adds an Event utils helper.

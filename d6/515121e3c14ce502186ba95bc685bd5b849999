@@ -1,0 +1,5 @@
+refactor(iam): rename toast onLoading to onWaiting and use toastEffect
+
+Rename the toast helper option onLoading to onWaiting and switch sign-in atoms
+from withToast to toastEffect, extracting failures via Cause.failureOption.
+Sign-up atoms adopt the renamed option.

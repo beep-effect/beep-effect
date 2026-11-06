@@ -1,0 +1,5 @@
+feat(iam): rework account-management provider and view
+
+Rework apps/web account-management provider and view; export packages/iam/ui
+account-management barrel.
+Regenerate db-admin drizzle meta/0000_snapshot.json; bump dependencies.

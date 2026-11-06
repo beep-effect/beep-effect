@@ -1,0 +1,4 @@
+refactor(ai-sdk): move source into src/core with re-export shims
+
+Content shrinks package-wide while files move under src/core/; also touches
+packages/common/ontology minor cleanup.

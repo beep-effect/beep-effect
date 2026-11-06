@@ -1,0 +1,6 @@
+docs(explore): capture gold-intake research corpus
+
+Add the _gold-intake research corpus (per-repo notes, routing shards, gold
+catalog) and the domain-layer-hardening and gov-legal-data-driver-codegen
+exploration packets; scaffold the domain-kernel-hardening goal and a new
+onotology package.

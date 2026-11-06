@@ -1,0 +1,5 @@
+chore: remove stale scratchpad prototypes and polish rdf/schema modules
+
+Delete ~21.7k lines of superseded scratchpad experiments (agents SDK
+mirror, sheets kit, pacer/identity prototypes) and apply small JSDoc and
+schema tweaks across the rdf and identity modeling packages.

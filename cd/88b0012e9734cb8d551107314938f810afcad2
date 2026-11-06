@@ -1,0 +1,6 @@
+refactor(repo-memory): migrate to StatusCauseTaggedErrorClass
+
+Replace TaggedErrorClass plus StatusCauseFields plus makeStatusCauseError with the new
+StatusCauseTaggedErrorClass base and its .new() constructor across TypeScriptIndexer,
+RepoMemoryRuntime, RepoRunEventLog, RepoRunLifecycleController, RepoRunProjectionBootstrap,
+RepoRunServiceShared, and GroundedRetrieval.

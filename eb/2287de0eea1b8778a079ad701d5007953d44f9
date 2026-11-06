@@ -1,0 +1,5 @@
+chore: reorganize specs directory and scaffold identity/schema packages
+
+Rename roughly 545 files between specs/pending and specs/completed,
+and scaffold the packages/common/identity and packages/common/schema
+package skeletons (LICENSE, README, AGENTS.md, docgen.json).

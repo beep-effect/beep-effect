@@ -1,0 +1,9 @@
+refactor(logos): plan compiled runner, drop mutative and lodash.get
+
+Add PERFORMANCE.md, an optimization playbook that plans a future compiled, cacheable
+runner; the compiled runner itself (prepare.ts) is not implemented here. Stop using
+mutative in crud.ts and normalize.ts in favor of in-place rule-array mutation, swap
+lodash.get for effect Record.get in run.ts, mark LogicalOp and RootUnion mutable, and add
+three *OrUndefined type aliases to types.ts.
+
+Reformat turbo.json, add a coverage task, and route the root coverage script through turbo.

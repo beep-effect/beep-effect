@@ -1,0 +1,5 @@
+chore(tsconfig): update editor package references from core to domain
+
+Fix editor/{lexical,protocol,runtime} tsconfig.json references pointing at the renamed
+editor/domain package (was editor/core); reorder shared/config and shared/domain dtslint
+entries in tstyche.json.

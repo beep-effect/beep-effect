@@ -1,0 +1,5 @@
+chore: initial commit
+
+Scaffold the repo root config (biome, docker-compose, flake.nix,
+package.json, CI workflow) and empty package skeletons for the iam and
+tasks bounded contexts.

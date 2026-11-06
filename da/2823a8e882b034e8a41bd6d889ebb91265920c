@@ -1,0 +1,4 @@
+refactor(knowledge): rework EntityClusterer, SameAsLinker, extraction
+
+Rework EntityClusterer, SameAsLinker, and ExtractionPipeline internals
+and drop the obsolete typescript@5.9.3 patch.

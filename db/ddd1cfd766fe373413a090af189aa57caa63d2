@@ -1,0 +1,3 @@
+chore(deps): bump aws-sdk, effect, and better-auth versions
+
+Add marketing app dependencies to the workspace lockfile.

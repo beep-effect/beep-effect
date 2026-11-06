@@ -1,0 +1,4 @@
+chore(todox): rename auth-tmp routes to auth and drop duplicate pages
+
+Rename the auth-tmp route group to auth and remove the now-redundant
+account/[path] and organization/[path] route wrappers.

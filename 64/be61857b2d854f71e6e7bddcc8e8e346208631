@@ -1,0 +1,3 @@
+chore(schema): migrate Schema rebuild-out accessor to Rebuild
+
+packages/common/utils/src/Event.ts also drops unused Sse re-export helpers.

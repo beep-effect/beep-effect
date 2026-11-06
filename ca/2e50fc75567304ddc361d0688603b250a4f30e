@@ -1,0 +1,5 @@
+chore(better-auth): move auth packages to dependencies
+
+Move better-auth, @better-auth/stripe, @dub/better-auth, @simplewebauthn/server,
+and dub into dependencies for the better-auth adapter package.
+Reformat several logos internal files (EOF newlines, semicolons, brace style).

@@ -1,0 +1,6 @@
+chore: remove leaked tsconfig-sync test fixtures and update specs
+
+Remove several leaked _test-tsconfig-sync-<timestamp>-<hash>/ scratch directories
+accidentally committed by TsconfigSync test runs.
+Update specs/pending and specs/paused packets, packages/common, and
+tooling/repo-utils/cli.

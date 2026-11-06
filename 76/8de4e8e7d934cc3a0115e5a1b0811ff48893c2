@@ -1,0 +1,6 @@
+feat(schema): add generated CLDR/IANA/ISO4217 reference data
+
+Generate CLDR territories, IANA media types/timezones, and ISO 4217
+currency data via new SyncDataToTs targets, add matching @beep/schema
+modules (ContinentCode, CountryCode, TerritoryCode, Timezone, ...), and
+land the official-data-sync-foundation goal packet.

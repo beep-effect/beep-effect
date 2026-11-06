@@ -1,0 +1,6 @@
+feat(shared): expand barrel exports for Organization entity
+
+Add/expand index.ts barrels in shared/domain and shared/ui for the Organization entity,
+identity, and values; update EntityKernel, Organization, and OrganizationDisplay tests.
+Apply minor style/import tweaks across packages/common/* modules; update effect-first,
+schema-first, and domain-modeling skill docs.

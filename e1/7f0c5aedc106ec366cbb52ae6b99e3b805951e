@@ -1,0 +1,5 @@
+style: apply lint formatting across enron pipeline and todox app-layout
+
+Reformat the enron CLI command family and its tests, the todox
+app-layout page, and marketing app files; scaffold the
+enron-knowledge-demo-integration spec packet.

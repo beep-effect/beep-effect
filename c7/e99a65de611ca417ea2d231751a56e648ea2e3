@@ -1,0 +1,5 @@
+chore: add thunk utility, bump deps, and prune upload alignment report
+
+Add packages/common/utils/src/thunk.ts.
+Adjust pwa build-utils default cache and with-pwa config.
+Delete the stale UPLOAD_ALIGNMENT_REPORT.md and bump bun.lock/package.json.

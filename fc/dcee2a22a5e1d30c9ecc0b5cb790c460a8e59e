@@ -1,0 +1,5 @@
+chore(deps): bump deps, raise todox build heap, add jetbrains spec
+
+Set NODE_OPTIONS max-old-space-size=8192 for the todox production build to
+fix an OOM build failure; fix formatting in list-sessions contract.ts; add
+the jetbrains-mcp-skill spec scaffold (README, reflection log, P0 handoff).

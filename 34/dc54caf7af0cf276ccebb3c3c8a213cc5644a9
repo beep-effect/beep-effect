@@ -1,0 +1,5 @@
+refactor(ai-sdk): rework AgentSdk, Tools/Toolkit, schema conversion
+
+Rework packages/ai/sdk's AgentSdk, Tools/Toolkit, Schema/Message, and
+Mcp modules and their tests; touch common/identity Id.ts and
+common/schema MimeType.ts.

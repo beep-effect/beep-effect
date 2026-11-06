@@ -1,0 +1,5 @@
+style: reformat EffectSchema, IrToLaw ports, pacer scratchpad to biome
+
+Fix EffectSchema() call-site examples after the value-to-function API change;
+normalize import brace spacing and indentation across EffectSchema.ts,
+IrToLaw.ports.ts, and scratchpad/pacer.

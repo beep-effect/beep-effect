@@ -1,0 +1,4 @@
+chore(docs): regenerate full docgen aggregate across all packages
+
+Adds/refreshes ~1,246 generated *.ts.md reference pages under docs/ for foundation,
+tooling, drivers, architecture-lab, and every other package family.

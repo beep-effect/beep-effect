@@ -1,0 +1,5 @@
+feat(groking): add multi-package selection and import filtering
+
+Support selecting multiple packages, skipping modules whose import path
+doesn't resolve, and cleaning stale generated package directories before a
+run.

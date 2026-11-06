@@ -1,0 +1,5 @@
+refactor(tooling): tagged enums and effect helpers in create-package
+
+Convert GenerationAction to a Data.TaggedEnum and replace ad-hoc array/path
+helpers with Effect Array/String/Order combinators; minor effect-first
+cleanup in codebase-search hooks and indexer pipeline.

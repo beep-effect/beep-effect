@@ -1,0 +1,4 @@
+chore: add teach skill and bump dependencies
+
+Add the .claude/skills/teach skill documentation, bump bun.lock/package.json
+dependencies, and fix small ACP/chalk/schema/corpus follow-on issues.

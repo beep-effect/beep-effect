@@ -1,0 +1,5 @@
+ci: extract setup-monorepo-ci action and close governance packets
+
+Moves specs/pending/effect-governance-legacy-retirement and
+effect-governance-replacement to specs/completed/, and adds
+scripts/run-all-checks.sh, run-check.sh, and run-dtslint-tsgo-checks.mjs.

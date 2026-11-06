@@ -1,0 +1,8 @@
+chore(box): regenerate Box SDK models and tag domain barrels
+
+Regenerate packages/drivers/box/src/_generated/Box.models.gen.ts from the
+upstream Box OpenAPI spec (new AI extract taxonomy schemas and fields) and add
+@category JSDoc tags to the existing box experimental and law-practice
+entity/value index barrels. Also normalizes govinfo contract categories, adds
+the editor chat atoms barrel comment, and enables the effect catchToIgnore
+lint rule in tsconfig.base.json.

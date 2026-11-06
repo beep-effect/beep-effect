@@ -1,0 +1,5 @@
+docs(face-detection): make jsdoc examples compilable and executable
+
+Replace console.log(Schema) placeholders with decodeUnknownSync/make calls in
+FaceDetection.models and FaceDetection.errors; add TsMorphSourceFileError.at
+constructor helper in repo-utils.

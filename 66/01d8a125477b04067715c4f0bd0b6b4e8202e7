@@ -1,0 +1,5 @@
+chore(schema): clear execute.ts scratch code; enable noExplicitAny warn
+
+Strip dead Event/Almanac/Fact scratch code from packages/common/schema/src/execute.ts.
+Flip the biome noExplicitAny rule from off to warn.
+Bump effect-language-service and mui versions.

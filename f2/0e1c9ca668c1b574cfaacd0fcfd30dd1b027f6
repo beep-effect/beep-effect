@@ -1,0 +1,5 @@
+refactor: replace catch-ignore with Effect.ignore, tighten test types
+
+Simplify AcpProtocol/DuckDb notification and rollback error swallowing to
+Effect.ignore; convert identity Curie tests to it.effect; fix OtelTracer
+import path and misc type narrowing across identity/observability tests.

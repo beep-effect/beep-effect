@@ -1,0 +1,4 @@
+chore(deps): bump effect beta.91 to beta.92 and toolchain packages
+
+Update effect, @effect/* packages, tsgo, next canary, typescript-eslint, ai,
+and testcontainers across package.json and bun.lock.

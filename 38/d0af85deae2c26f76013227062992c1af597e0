@@ -1,0 +1,4 @@
+refactor(runpod): use RunpodOperationDescriptor.make() in codegen script
+
+Switch packages/drivers/runpod/scripts/generate.ts from `new RunpodOperationDescriptor(...)`
+to the .make() factory; regenerate repo-exports catalog.

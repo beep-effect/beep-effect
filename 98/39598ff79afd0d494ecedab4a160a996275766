@@ -1,0 +1,4 @@
+chore(schema): dedupe IP_REGEX; remove stale better-auth drizzle spec
+
+Delete the stale better-auth-schema-drizzle.md research spec.
+Remove the inline IP_REGEX duplicate from IP.schema.ts in favor of the shared regexes module.

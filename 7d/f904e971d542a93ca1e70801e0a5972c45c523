@@ -1,0 +1,4 @@
+feat(todox): add AI chat streaming and text-improvement service
+
+Also removes agent-skill symlink duplication across editor configs and
+replaces canonical-naming-conventions with new architecture-migration specs.

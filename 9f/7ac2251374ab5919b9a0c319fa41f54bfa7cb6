@@ -1,0 +1,4 @@
+style(tooling): reformat version-sync sources and downgrade coverage-v8
+
+Apply consistent line-wrap formatting and type-only import annotations
+across the version-sync command; revert @vitest/coverage-v8 to ^3.2.4.

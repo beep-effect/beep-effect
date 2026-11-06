@@ -1,0 +1,4 @@
+chore(specs): move two knowledge spec packets to completed
+
+Move the knowledge-batch-machine-refactor and knowledge-ontology-comparison
+spec packets from pending to completed, and touch EmbeddingRateLimiter.

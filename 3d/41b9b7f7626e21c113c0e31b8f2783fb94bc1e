@@ -1,0 +1,4 @@
+chore(deps): bump deps, remove stale professional-desktop docs
+
+Update bun.lock/package.json (large bump). Remove stale
+apps/professional-desktop/docs/* TypeDoc output superseded by the docgen pipeline.

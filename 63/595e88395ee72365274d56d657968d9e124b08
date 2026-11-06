@@ -1,0 +1,4 @@
+feat(knowledge): scaffold CRUD entity contracts across domain entities
+
+Adds entity/errors/http/repo/rpc/tool plus Get/Delete contracts per entity.
+Also touches shared client/domain/server/ui and iam server repositories.

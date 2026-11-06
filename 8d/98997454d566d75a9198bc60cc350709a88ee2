@@ -1,0 +1,4 @@
+refactor: rename documents slice package family to workspaces
+
+Also regenerates db-admin drizzle migrations and updates packages/knowledge
+and apps/todox tsconfig wiring.

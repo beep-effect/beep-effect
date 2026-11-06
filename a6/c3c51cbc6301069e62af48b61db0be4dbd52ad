@@ -1,0 +1,4 @@
+refactor(common): sweep cleanup across schema, nlp, and observability
+
+Touches nlp core/tools, observability telemetry, schema helpers, semantic-web rdf,
+repo-utils JSDoc tooling, and misc chalk/identity/messages internals.

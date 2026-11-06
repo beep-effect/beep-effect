@@ -1,0 +1,4 @@
+refactor: consolidate skill symlinks, continue lexical playground port
+
+Removes duplicate skill symlinks across editor config directories, adds a
+canonical shadcn-ui skill, and continues the apps/todox lexical playground port.

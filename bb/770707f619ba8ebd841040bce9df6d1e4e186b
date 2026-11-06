@@ -1,0 +1,6 @@
+docs(iam): add better-auth client method audit and plugin checklists
+
+Add BETTER_AUTH_CLIENT_AND_METHODS_LIST.md, CONTRACTS_AND_HANDLERS_PROMPT.md, and
+PLUGIN_EXECUTION_CHECKLIST_PROMPT.txt planning docs.
+Add packages/ui/src/set/schema.ts scaffolding.
+Tweak Auth.service.ts and sign-in.client.ts.

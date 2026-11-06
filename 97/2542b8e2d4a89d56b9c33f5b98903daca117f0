@@ -1,0 +1,5 @@
+chore: remove apps/web, iam scaffolding, and benchmark/output bloat
+
+Deletes apps/web, packages/iam, .serena config, and large
+outputs/agent-reliability, tooling/agent-eval, and benchmarks/agent-reliability
+trees; also relocates packages/ui/ui lostpixel baselines to packages/common/ui.

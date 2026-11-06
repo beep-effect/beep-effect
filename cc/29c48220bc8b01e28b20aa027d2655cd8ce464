@@ -1,0 +1,5 @@
+refactor(tooling): extract CLI errors into *.errors.ts modules
+
+Create AIMetrics, Ci, Codex, Graphiti, Laws, Lint, Quality, Reuse, SyncDataToTs, and
+TsconfigSync error modules; update command/index imports accordingly.
+Trim RepoExportsCatalog.model.ts and regenerate repo-exports catalog.

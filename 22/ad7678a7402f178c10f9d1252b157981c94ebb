@@ -1,0 +1,5 @@
+chore: remove whitepaper spec packets and bump dependencies
+
+Delete the specs/completed/repo-whitepaper-docset-canonical and
+specs/pending/repo-whitepaper-final packets (outputs, handoffs, tools), and
+bump bun.lock and package.json dependencies.

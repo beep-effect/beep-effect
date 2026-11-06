@@ -1,0 +1,4 @@
+feat(todox): add auth guard routing and prune flexlayout-react
+
+Adds AuthGuard/GuestGuard/proxy routing plus reset-password and sign-in/up
+pages; strips unused code from the vendored flexlayout-react model.

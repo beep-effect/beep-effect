@@ -1,0 +1,4 @@
+chore(tooling): sweep dual-arity, version-sync, and observability
+
+Reworks VersionSync updaters/resolvers and the dual-arity inventory/remediation docs,
+plus schema, semantic-web, and observability internals across ~90 files.

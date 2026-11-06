@@ -1,0 +1,5 @@
+feat(cli): expand kg command and record graphiti verify/publish evidence
+
+Grow tooling/cli/src/commands/kg.ts and record p7-kg-excellence
+falkor-batching and strict-parity evidence plus fresh ast-kg publish
+ledger/snapshot cache entries.

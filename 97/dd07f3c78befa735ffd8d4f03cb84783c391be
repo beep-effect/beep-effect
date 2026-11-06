@@ -1,0 +1,6 @@
+feat(lint): add effect-laws eslint rule family and standards doc
+
+Add effect-import-style, effect-laws-allowlist, and no-native-runtime
+eslint rules with a standards/effect-laws-v1.md doc and allowlist schema;
+touch apps/web graphiti/chat effect wiring and regenerate the
+tooling/_test-agents-1771987653183 create-package fixture.

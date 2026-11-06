@@ -1,0 +1,5 @@
+style: sort imports across knowledge/workspaces packages
+
+Fix import ordering across knowledge and workspaces domain/server/tables
+modules, regenerate the db-admin drizzle snapshot, and simplify
+tsconfig references.

@@ -1,0 +1,4 @@
+chore: scaffold initial beep-effect monorepo
+
+Establishes packages/ui, iam, common, files, shared, core, runtime and
+apps/web with the initial tooling/docs/patterns baseline (1926 files).

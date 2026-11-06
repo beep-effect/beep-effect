@@ -1,0 +1,5 @@
+docs(architecture): add ARCHITECTURE.md and standards package docs
+
+Also adds the common/nlp Wink-based toolkit package, common/chalk internal
+renderer modules, common/colors and common/data (iso4217) packages, and
+expands V2T/editor-app native.ts and the infra bootstrap.

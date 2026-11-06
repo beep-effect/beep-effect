@@ -1,0 +1,5 @@
+chore(tooling): add portless skill doc and codebase-search lint script
+
+Add .agents/skills/portless/SKILL.md with a symlinked .claude/skills entry,
+wire a lint script into tooling/codebase-search, and bump biome, mcp sdk, and
+glob patch versions.

@@ -1,0 +1,4 @@
+feat(clawhole): add secrets config module with tests
+
+Also captures agent-governance-control-plane and openclaw-port spec
+packets.

@@ -1,0 +1,4 @@
+docs(specs): scaffold editor-keyboard-shortcuts-qa spec
+
+Add spec README, reflection log, and a 65+ shortcut inventory for QAing the
+Lexical editor's keyboard shortcuts in apps/todox.

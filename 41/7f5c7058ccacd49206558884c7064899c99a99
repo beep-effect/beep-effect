@@ -1,0 +1,4 @@
+feat(schema): add blockchain txn types, prune scratchpad data dumps
+
+Removes large committed koinly/RP-minipool JSON and CSV dumps from scratchpad.
+Adds TestFixtures.ts and a scratchpad vitest.config.ts.

@@ -1,0 +1,6 @@
+refactor(tooling): reformat Image/index.ts and inline command handlers
+
+Convert the file to tab indentation and hugged call formatting, and replace the
+Effect.fn("imageExtractFramesCommand")/Effect.fn("imageExtractFramesDirCommand")
+generator handlers with a piped Effect.tap form and a direct
+runExtractFramesDir reference.

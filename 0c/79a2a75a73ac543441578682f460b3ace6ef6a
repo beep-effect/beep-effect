@@ -1,0 +1,4 @@
+feat(todox): add dynamic-tiling flexlayout demo page
+
+Add the dynamic-tiling-demo page and its flexlayout/MUI/aggrid/chart demo
+components, and touch the knowledge-demo actions and entity detail drawer.

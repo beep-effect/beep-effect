@@ -1,0 +1,4 @@
+refactor(semantic-web): namespace-import ucs2 helpers in idna module
+
+Import ucs2decode/ucs2encode as a namespace instead of named bindings; add
+test coverage for the ucs2 helpers.

@@ -1,0 +1,5 @@
+feat(drivers): scaffold openai, venice-ai, and xai packages
+
+Add venice-ai with a working VeniceAI.service.ts, demo script, and vendored swagger.yaml spec.
+Scaffold openai and xai driver packages (config/index/tests) as stubs for follow-up work.
+Register the new packages in @beep/identity/packages and update root tsconfig references.

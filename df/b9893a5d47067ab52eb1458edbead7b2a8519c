@@ -1,0 +1,6 @@
+chore(ci): add quality workflow and effect-first version-sync cleanup
+
+Add GitHub Actions quality/secret-scanning workflow, wire gitleaks into
+pre-commit, and consolidate pre-push into a single quality command.
+Refactor docker/node version-sync resolvers to use Effect Array/String/Order
+helpers instead of native array mutation.

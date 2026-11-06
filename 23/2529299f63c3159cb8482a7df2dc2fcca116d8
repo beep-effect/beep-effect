@@ -1,0 +1,1 @@
+refactor(tooling): simplify SchemaFirst lint helpers, drop as const

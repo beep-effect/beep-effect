@@ -1,0 +1,4 @@
+docs(docgen): document the turbo-first docgen and docs:aggregate flow
+
+Update tooling/docgen/README.md entry points for the new turbo-first bun run docgen
+flow; bump dependencies.

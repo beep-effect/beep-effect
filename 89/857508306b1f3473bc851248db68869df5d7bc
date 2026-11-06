@@ -1,0 +1,5 @@
+feat(ontology): expand annotations/references; add identity namespaces
+
+Extend ontology annotations.ts/references.ts/model.ts; add IdentityNamespaces
+to shared/domain with dtslint and unit test coverage; regenerate the
+repo-exports catalog.

@@ -1,0 +1,5 @@
+docs(standards): expand Match/LiteralKit/TaggedUnion templates
+
+Replace the switch-avoidance Match template with LiteralKit.$match,
+S.toTaggedUnion, and S.TaggedUnion examples; wire @beep/observability into
+the wink driver dependencies.

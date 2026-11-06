@@ -1,0 +1,7 @@
+refactor(iam): rename authkit to contractkit, rework sign-in-v2
+
+Rename packages/iam/sdk/src/authkit to contractkit (HandlerSet.ts to ContractSet.ts,
+Handler.ts to Contract.ts, IamError.ts, index.ts); add failure-continuation.ts.
+Rework sign-in-v2 client: replace sign-in.contract.ts/handlers.ts with
+sign-in.contracts.ts/implementations.ts.
+Add CONTRACTKIT_FAILURE_CONTINUATION planning docs.

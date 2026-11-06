@@ -1,0 +1,4 @@
+fix(nlp-mcp): provide NodeStdio layer for MCP server transport
+
+Wire NodeStdio.layer into the nlp-mcp server launch; fix a non-type import in an
+Operations/index.ts JSDoc example.

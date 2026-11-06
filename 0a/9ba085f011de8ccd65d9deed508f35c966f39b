@@ -1,0 +1,6 @@
+feat: expand ai/sdk core and OSDK-parity common/ontology model
+
+Grow packages/ai/sdk's AgentRuntime/QuerySupervisor/Session/Storage/Sync
+modules and flesh out common/ontology's OSDK object model (aggregate
+filters, groupby, mapping, ontology defs, formatting rules, queries);
+record osdk-api-effect-schema-parity spec P0-P5 outputs.

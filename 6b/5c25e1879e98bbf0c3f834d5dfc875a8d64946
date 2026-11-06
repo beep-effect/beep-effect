@@ -1,0 +1,6 @@
+chore: bump deps, expand biome ignores, sort imports and classes
+
+Bump @biomejs/biome, next canary, react-i18next, type-fest, and xstate in
+package.json and bun.lock, widen the biome.jsonc ignore globs, set the JSON
+formatter line width, and reformat the resulting import order and Tailwind class
+order across iam, ui, start-client, web, and other packages.

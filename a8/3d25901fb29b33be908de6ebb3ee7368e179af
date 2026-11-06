@@ -1,0 +1,6 @@
+refactor(iam): move sign-in/sign-up routes into iam domain/infra
+
+Remove ad-hoc auth routes from apps/server/src/auth/*; add packages/iam/domain/src/api/v1/
+sign-in and sign-up (email) with matching packages/iam/infra/src/api-routes/v1 handlers.
+Add apps/notes resizable-panel layout and layout-schema; add shared/sdk client.ts entrypoint.
+Regenerate READMEs/AGENTS.md across most packages.

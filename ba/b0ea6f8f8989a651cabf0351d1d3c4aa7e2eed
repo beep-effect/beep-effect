@@ -1,0 +1,6 @@
+refactor(iam): simplify better-auth schema extension, captcha middleware
+
+Collapse F.pipe(S.Struct, S.extend(...)) into the two-arg S.Struct form for
+rate-limit/session schemas, reuse ReCaptcha.ReCaptchaErrorSchema instead of a
+local union, drop a redundant CaptchaFailedError, and fix stray 'tmp/'
+identity namespace prefixes.

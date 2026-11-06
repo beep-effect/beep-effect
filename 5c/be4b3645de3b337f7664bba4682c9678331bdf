@@ -1,0 +1,5 @@
+feat(graphiti): add fast-lane bypass for cheap proxy methods
+
+Replace S.Unknown with S.DefectWithStack in driver error causes across acp, hubspot,
+phoenix, runpod, sanity, and xai.
+Add graphiti-proxy-security test coverage; drop stale image-command test.

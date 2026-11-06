@@ -1,0 +1,6 @@
+chore(deps): bump tsgo, elevenlabs, native-preview, fast-xml-parser
+
+Bump @effect/tsgo 0.14.4 to 0.14.5, @elevenlabs/client 1.11.1 to 1.11.2,
+@typescript/native-preview to dev.20260617.2, and fast-xml-parser 5.9.0 to
+5.9.2. Also records the @tauri-apps/api catalog dependency for
+apps/professional-desktop in bun.lock.

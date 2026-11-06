@@ -1,0 +1,1 @@
+refactor(repo-utils): migrate PackageJson optional fields to optionalKey

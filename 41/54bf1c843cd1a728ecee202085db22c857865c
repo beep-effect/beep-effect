@@ -1,0 +1,1 @@
+refactor(knowledge): rewrite GraphRAGService, drop test container

@@ -1,0 +1,4 @@
+refactor(repo): continue effect-first governance remediation
+
+Touches chalk/colors internals, nlp core, knowledge-graph, and architecture docs
+as part of the schema-first and governance cleanup pass.

@@ -1,0 +1,4 @@
+docs(goals): scaffold unified-ai-toolchain packet
+
+Add PLAN/README/SPEC, P0 current-state output, and P0-P5 handoff notes.
+Add research on source-of-truth pinning, codegen/drift architecture, and Claude web source maps.

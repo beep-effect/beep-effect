@@ -1,0 +1,5 @@
+refactor(tooling): expand TSMorph service/model and PackageJson schema
+
+Grow the repo-utils TSMorph model/service surface and the PackageJson
+schema with more coverage, and update FilePath and the mock-monorepo
+test fixture to match.

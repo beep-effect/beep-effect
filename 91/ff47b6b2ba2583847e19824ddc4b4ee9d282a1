@@ -1,0 +1,6 @@
+refactor(iam): route SDK auth clients through shared _internal helpers
+
+Add client-method-helpers.ts and route admin, api-key, device-authorization,
+multi-session, oauth, oidc, organization, passkey, recover, session, sign-in,
+sign-out, sign-up, two-factor, and verify clients through it, removing roughly
+525 net lines of duplicated boilerplate. Update BETTER_AUTH_* planning docs; bump deps.

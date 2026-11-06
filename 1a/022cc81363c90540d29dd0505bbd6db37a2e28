@@ -1,0 +1,5 @@
+chore: add project README and drop SST config
+
+Add root README.md describing the beep-effect mission and architecture north star.
+Remove sst.config.ts and sst-platform-config.d.ts (SST platform config no longer used).
+Reformat OperationPlan.ts; add osv-scanner.toml and a CreatePackage test-tsconfig template.

@@ -1,0 +1,5 @@
+chore(tooling): add exit-code jsdoc and prefer flow over pipe
+
+Document Runtime.errorExitCode overrides in Codex and Quality/Tasks; use flow(...) for passthrough
+pipe callbacks in Docgen/internal/Local.ts.
+Drop redundant process.env mirroring in quality-tasks.test.ts; extend cspell wordlists.

@@ -1,0 +1,4 @@
+chore: merge main with ponytail skills and modeling refactors
+
+Brings in ponytail skill set, foundation lexical/md behavior split, and schema codec utils.
+Also picks up scratchpad ontology tooling, docgen manifests, and tsconfig updates from main.

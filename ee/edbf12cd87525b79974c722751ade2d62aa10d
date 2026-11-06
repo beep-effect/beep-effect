@@ -1,0 +1,7 @@
+feat(schema): add ProvO provenance schema with PROV-O test fixtures
+
+Add the ProvO/Prov0 schema module with W3C PROV-O JSON fixtures and Prov0 tests, an empty
+IRI placeholder, and PROV-O assessment plus RFC 3987 IRI research notes.
+
+Bump effect and @effect/* to beta.29 (with next canary and lefthook), add a `cast` helper to
+common/utils Function, and migrate the `coerceUnsafe` call sites in Str, Struct, Glob and Id.

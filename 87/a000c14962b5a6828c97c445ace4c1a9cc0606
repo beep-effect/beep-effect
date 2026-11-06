@@ -1,0 +1,3 @@
+feat(schema): prototype scratch condition/operator node system
+
+Also expands UUID schema, DiscriminatedStruct, and stringLiteralKit.

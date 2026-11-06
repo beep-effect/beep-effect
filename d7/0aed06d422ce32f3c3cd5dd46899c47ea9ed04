@@ -1,0 +1,4 @@
+chore(tooling): sync workspace deps and refactor CLI/glob helpers
+
+Bumps package.json versions across workspaces; refactors ConfigUpdater,
+Docgen Operations, and Glob to dual/thunk effect helper style.

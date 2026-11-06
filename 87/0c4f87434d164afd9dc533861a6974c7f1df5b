@@ -1,0 +1,4 @@
+feat(ui): scaffold json-form module, expand rule operator domains
+
+Replaces form/ui-schema with a new json-form/ui-schema (UISchemaElement, Label, Scope).
+Adds the any-domain rule operator and Fn/Json/String custom schemas; tweaks CI workflow.

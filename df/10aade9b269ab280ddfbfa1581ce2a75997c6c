@@ -1,0 +1,5 @@
+feat(web): add TanStack Form integration and devtools provider
+
+Add tanstack-form.ts, tanstack-form-effect.tsx, and DevToolsProvider under
+apps/web/src/libs/tanstack-form; rework GlobalProviders.tsx to wire them in.
+Trim identity/Identifier.ts and schema.ts; bump dependencies.

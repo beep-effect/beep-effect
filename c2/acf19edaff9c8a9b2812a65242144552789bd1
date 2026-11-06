@@ -1,0 +1,5 @@
+chore: repair yeet verify hygiene for N3 scratchpad branch
+
+Add docgen metadata to DrainableWorker.ts, sort scratchpad package.json
+dependencies, and document vendored subtree secret-scan false positives in
+.gitleaksignore.

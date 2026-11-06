@@ -1,0 +1,3 @@
+docs(specs): add repo-cleanup-bloat-staleness packet
+
+Also adds the grill-me skill under .agents/.aiassistant/.claude.

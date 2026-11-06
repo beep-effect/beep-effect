@@ -1,0 +1,5 @@
+chore(docgen): map new @beep/schema subpaths in docgen configs
+
+Add @beep/schema color, csv/parse, dom, internal/markdown, and internal/yaml path
+mappings to the 54 existing docgen.json configs and the root tsconfig.json.
+Remove stale generated apps/professional-desktop/docs/* output.

@@ -1,0 +1,4 @@
+fix(tooling): migrate next.js browser debug logging config
+
+Replace the removed browserDebugInfoInTerminal option with the new
+logging.browserToTerminal shape; bump root deps.

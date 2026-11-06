@@ -1,0 +1,4 @@
+feat(shared): add Rule value model and expand PACER scratchpad
+
+Add a Rule value object to the shared domain package and extend the PACER
+scratchpad prototype (tokens, PCL client, arbitraries, mock transport).

@@ -1,0 +1,4 @@
+refactor(schema): rewrite entity-id module as e-id and add repo2 pattern
+
+Also expands shared/tables Table/Columns helpers and shared/domain
+common.ts.

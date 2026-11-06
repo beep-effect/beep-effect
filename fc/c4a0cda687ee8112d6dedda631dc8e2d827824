@@ -1,0 +1,5 @@
+feat(schema): add IRI module and scaffold semantic-web package
+
+Add packages/common/schema/src/internal/IRI/IRI.ts and scaffold the new
+packages/common/semantic-web package (docgen, tsconfig, package.json,
+index barrel).

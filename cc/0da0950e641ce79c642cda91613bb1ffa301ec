@@ -1,0 +1,4 @@
+chore: point biome schema at hosted URL and remove scratch note
+
+Update biome.jsonc $schema to the hosted biomejs.dev schema.
+Delete the unused message-for-jon.md draft.

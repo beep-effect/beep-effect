@@ -1,0 +1,5 @@
+chore: remove stale .beep scaffold, test fixture, zep-ingest script
+
+Delete the .beep config/skills/templates scaffold, the
+tooling/_test-agents-1771987653183 fixture package, and
+scripts/zep-ingest-effect-v4.mjs; touch apps/web graphiti/chat wiring.

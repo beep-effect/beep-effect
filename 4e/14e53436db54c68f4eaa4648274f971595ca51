@@ -1,0 +1,5 @@
+chore: disable shadcn/mui-mcp servers and serena plugin, bump biome
+
+Remove shadcn and mui-mcp entries from .mcp.json; clear enabledMcpjsonServers and
+disable the serena plugin in .claude/settings.json.
+Bump biome.jsonc schema to 2.4.15; update bun.lock/package.json.

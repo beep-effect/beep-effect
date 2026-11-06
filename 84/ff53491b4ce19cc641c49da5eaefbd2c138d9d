@@ -1,0 +1,4 @@
+refactor(types): apply readonly/immutable patterns to type utilities
+
+Also removes unused brian-garden-utils-effect and model-builder/column-def
+dead code; adds syncpack.config.ts and trims bun.lock.

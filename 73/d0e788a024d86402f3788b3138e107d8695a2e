@@ -1,0 +1,4 @@
+feat: scaffold common/ontology package
+
+Add the packages/common/ontology package skeleton (docgen, tsconfig,
+package.json, index barrel, README/AGENTS/LICENSE).

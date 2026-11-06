@@ -1,0 +1,5 @@
+feat(schema): add DomainModel and rework VariantSchema
+
+Add packages/common/schema/src/DomainModel.ts; substantially rework VariantSchema.ts
+and Model.ts.
+Add scratchpad/Domain and SchemaClassRebuild.ts exploration files.

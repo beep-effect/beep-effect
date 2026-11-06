@@ -1,0 +1,6 @@
+docs: fix typos and references across AGENTS/README/ai-context files
+
+Correct small wording and reference issues across dozens of package
+AGENTS.md/README.md/ai-context.md files, add a 2d-force-graph
+knowledgeGraph fixture, and drop the stale apps/web workspace entry
+from knip.config.ts.

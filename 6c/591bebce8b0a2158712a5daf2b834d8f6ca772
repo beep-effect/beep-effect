@@ -1,0 +1,4 @@
+feat(drivers): scaffold gov-legal-data driver packages
+
+Adds courtlistener, dol, ecfr, federal-register, and govinfo driver scaffolds.
+Also adds a PACER client spike in scratchpad and expands the Int schema.

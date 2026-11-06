@@ -1,0 +1,4 @@
+feat(tooling): add SyncDataToTs codegen and regenerate data sets
+
+Also adds .codex agent hook handlers and a GitHub Actions data-sync
+workflow.

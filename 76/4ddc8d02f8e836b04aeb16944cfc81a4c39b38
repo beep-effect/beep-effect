@@ -1,0 +1,6 @@
+feat(opip-web): scaffold opip.law marketing site
+
+Add layout, home page, SEO/manifest/robots/sitemap routes, ContactForm and
+ContactSubmission service, and infra/src/OpipWeb.ts Pulumi stack with staging/production configs.
+Add hubspot and sanity driver packages (config/errors/service) and scaffold the
+opip-web-production-hardening initiative packet.

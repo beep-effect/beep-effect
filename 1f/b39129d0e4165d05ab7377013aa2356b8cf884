@@ -1,0 +1,6 @@
+chore: bulk regenerate groking-effect-v4/src experiment output
+
+Regenerate the groking-effect-v4 src export playgrounds and MANIFEST, update
+the generator templates and runtime, and add the dry-run-iterations iteration-1
+through iteration-3 batches, the implementation-pilot-core-effect-1 experiment,
+and the agents prompts, templates, and configs trees.

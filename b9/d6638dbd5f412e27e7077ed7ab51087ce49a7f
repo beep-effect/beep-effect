@@ -1,0 +1,6 @@
+chore: remove rete/logos/rules/runtime-shared dead code and bump deps
+
+Delete the unused packages/common/rete, packages/common/logos (v1+v2
+rule engines), packages/common/rules, and packages/runtime/shared
+(including the generated zero-schema.gen.ts) packages, and prune dead ui
+atoms/gravitar/styled modules.

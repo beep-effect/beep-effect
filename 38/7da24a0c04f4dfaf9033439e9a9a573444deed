@@ -1,0 +1,4 @@
+docs(goals): close out dedup-clone-engine as V1 complete
+
+Update PLAN/README/SPEC to reflect Phase 3 Type-3 fuzzy matching shipped (PR #187)
+and mark the goal V1 complete; document the deferred --include-intra toggle.

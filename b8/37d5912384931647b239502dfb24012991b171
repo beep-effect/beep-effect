@@ -1,0 +1,4 @@
+refactor(schema): simplify IRI bidi-codepoint scan, expand test coverage
+
+Adds a $SemanticWebId identity composer and reshapes the semantic-web
+package layout (DataModel, TermType, tsconfig).

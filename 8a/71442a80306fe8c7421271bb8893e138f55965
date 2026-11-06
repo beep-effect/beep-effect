@@ -1,0 +1,3 @@
+fix(iam): resolve circular imports and restructure client v1 modules
+
+Also updates bun.lock and adjusts flexlayout-react model type constants.

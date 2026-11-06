@@ -1,0 +1,4 @@
+feat(knowledge): add ExternalEntityCatalog service contract
+
+Introduce the ExternalEntityCatalog interface, candidate schema, and search
+options used by external entity-resolution catalog implementations.

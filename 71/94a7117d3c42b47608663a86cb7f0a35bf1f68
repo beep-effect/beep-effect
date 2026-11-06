@@ -1,0 +1,4 @@
+feat(schema): add MimeType/Territory schemas and fix identifiers
+
+Also captures gold-intake research across several goal packets and adds
+citation-grounding and uspto-patent-driver exploration packets.

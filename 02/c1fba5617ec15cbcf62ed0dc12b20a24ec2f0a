@@ -1,0 +1,5 @@
+chore(deps): bump dependencies and remove stale scratch docs
+
+Remove stale ENTITY_SCHEMA_MODEL_VARIANT_HANDOFF.md and IMAGE_COMMANDS.md scratch docs.
+Convert parseTestLaneSelection to Match.value(arg); annotate findPackageDir's Effect.fn
+return type. Update bun.lock/package.json and docker-compose.yml.

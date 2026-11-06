@@ -1,0 +1,6 @@
+chore: regenerate jsdoc-documentation and schema-first inventories
+
+Regenerate standards/jsdoc-documentation.inventory.jsonc/md and schema-first.inventory.jsonc
+after identity/packages.ts registration growth.
+Add turbo.json task entries; fix minor codec test assertions (Csv/Jsonc/Jsonl/Toml/Xml/Yaml,
+TextVariants) for the updated inventories.

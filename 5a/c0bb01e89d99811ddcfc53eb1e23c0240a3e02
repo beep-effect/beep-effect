@@ -1,0 +1,4 @@
+refactor: adopt identity composer pattern across entity models
+
+Captures the identity-composer-migration spec packet (prompts, TODO,
+per-slice reports) and removes the superseded contract-v2.md doc.

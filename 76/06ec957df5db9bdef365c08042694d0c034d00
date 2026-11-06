@@ -1,0 +1,5 @@
+refactor(iam-infra): run better-auth callbacks via captured runtime
+
+Auth.service.ts and organization.plugin.ts now yield* Effect.runtime() once and
+reuse Runtime.runPromise so callbacks resolve dependencies from the built layer.
+Tweak ui theme update-core.ts and bump dependency versions.

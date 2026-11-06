@@ -1,0 +1,4 @@
+chore(deps): bump dependencies and adjust call sites
+
+Update bun.lock and package.json; adjust Cuid, DateTime, Random, AIMetrics,
+QualityWorkerEval, Laws, and Root command modules for the new dependency versions.

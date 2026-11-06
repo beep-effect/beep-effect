@@ -1,0 +1,5 @@
+feat(tooling): add ffmpeg driver and Files/Image CLI commands
+
+Add packages/drivers/ffmpeg with FFmpeg.service.ts, error types, and models for media processing.
+Scaffold Files and Image CLI commands (Files.command/errors/schemas/service/utils,
+Image/index.ts) with dtslint and unit test coverage; add a CLI README.

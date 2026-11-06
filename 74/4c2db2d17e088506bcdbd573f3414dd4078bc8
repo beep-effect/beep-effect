@@ -1,0 +1,5 @@
+fix(groking): resolve module import paths via compat helper
+
+Route generated import paths through resolveModuleImportPath instead of a
+raw string template across generate.ts and the hbs templates; fix
+codebase-search test layers (Bm25WriterMock, NodeFileSystem/NodePath).

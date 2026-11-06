@@ -1,0 +1,8 @@
+refactor(scratchpad): schema-ify ontology codegen helpers
+
+Swap TaggedErrorClass for CauseTaggedError, route Option through @beep/utils, and add
+termType sentinels plus an exported NamedNode schema in parseTtl. Apply
+SchemaUtils.withKeyDefaults and constructor defaults across the JSON Schema models, add
+the JsonSchemaKeyFromIri normalization pipeline, canonicalize SKOS string lists through
+SortedUniqueStrings, introduce Fn-based IriKeep/IriKey and the IriBucket schema, and fill
+scratchpad/ontology/index.ts with a package-documentation anchor that does not re-export yet.

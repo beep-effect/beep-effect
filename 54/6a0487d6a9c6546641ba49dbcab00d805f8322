@@ -1,0 +1,4 @@
+docs(specs): scaffold enron-data-pipeline orchestration packet
+
+Add the enron-data-pipeline spec's P0 README, rubrics, and orchestrator
+handoff, plus the exploration prompt that seeded it.

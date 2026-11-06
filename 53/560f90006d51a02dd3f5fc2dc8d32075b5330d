@@ -1,0 +1,5 @@
+chore(tooling): regenerate docgen/tsconfig manifests for nlp, ontology
+
+Refresh docgen.json and tsconfig.json for nlp-mcp, rdf-canonize, wink,
+langextract, nlp-processing, and the new ontology package; trim the
+repo-root tsconfig path map.

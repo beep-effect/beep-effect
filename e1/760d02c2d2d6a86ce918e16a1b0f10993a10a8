@@ -1,0 +1,9 @@
+fix(form): encode default values and wire toggle group blur
+
+Add getEncodedDefaultFormValues and use it in formOptionsWithDefaults so
+constructor defaults are encoded to the field/wire shape TanStack stores,
+which unblocks transform schemas. Render a hidden input and forward onBlur in
+ToggleGroupField, extract shared storybook helpers for combobox, select, and
+upload stories, inline the docgen extension predicate behind shared test
+helpers, and harden the release-desktop workflow with dispatch-tag checkout,
+a signing-secret guard, and a sidecar build step.

@@ -1,0 +1,4 @@
+feat(web): add xcel page and extend form-system runtime
+
+Also expands schema execute.ts/Json.schema and stringLiteralKit; large pnpm-lock churn
+from a lockfile format update.

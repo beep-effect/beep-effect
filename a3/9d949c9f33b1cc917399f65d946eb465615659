@@ -1,0 +1,6 @@
+chore: remove V2T tauri app; rework common, editor, and cli tooling
+
+Delete apps/V2T tauri scaffolding (Cargo.lock, workspace-shell.tsx, native.ts,
+icons/binaries) and related infra/scripts qwen-audio bits.
+Touch packages/common, packages/editor, packages/shared, and tooling/cli/repo-utils.
+Prune the turborepo-audit initiative and update .codex/agents configs.

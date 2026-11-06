@@ -1,0 +1,6 @@
+refactor(agents): adopt utils thunks, schema-ify IndexedBlock/ScanState
+
+Replace inline () => null/false/"" callbacks with thunkNull/thunkFalse/
+thunkEmptyStr and origin.startsWith with Str.startsWith across agents client/
+server; convert IndexedBlock and ScanState from interfaces to S.Class; add
+the $AgentsServerId identity composer.

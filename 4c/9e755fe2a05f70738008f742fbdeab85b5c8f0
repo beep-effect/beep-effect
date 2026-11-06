@@ -1,0 +1,5 @@
+chore(deps): bump dependencies and temporarily disable JWT plugin
+
+Update bun.lock/package.json (major dependency bump) after a better-auth update broke
+the JWT plugin; rework jwt.plugin.ts, Auth.service.ts, and better-auth types.
+Minor touch-ups to ui-core utils (activeLink, color, store).

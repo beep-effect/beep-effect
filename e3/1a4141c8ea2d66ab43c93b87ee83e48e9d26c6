@@ -1,0 +1,5 @@
+feat(todox): add app-layout page with taskade-style theme
+
+Add the todox app-layout page and its global theme/colors overhaul, wire
+up the marketing app's liveblocks config and tsconfig, and scaffold the
+taskade-ui-reference-capture spec.

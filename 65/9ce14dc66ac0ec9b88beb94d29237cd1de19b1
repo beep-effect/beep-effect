@@ -1,0 +1,7 @@
+refactor(schema): rework EntityId and EntitySchema
+
+Substantially rework packages/shared/domain/src/entity/EntityId.ts and
+packages/foundation/modeling/schema/src/EntitySchema.ts; add a new Record.ts
+helper module to the same schema package.
+Update BaseEntity, EntityRef, EntityTable, and entity models (Activity, CandidateClaim,
+UsageRecord, ApprovalGate, CandidateDraft/Project/Task, ContextPacket, EmailArtifact).

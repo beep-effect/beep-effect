@@ -1,0 +1,5 @@
+chore(deps): bump root deps and fix flaky error-reporting tests
+
+Relax accumulateEffectsAndReport test assertions to check for the error tag
+instead of an exact console format, and use a real SliceExistsError instead
+of a generic Error in create-slice error integration tests.

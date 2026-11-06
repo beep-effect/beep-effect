@@ -1,0 +1,4 @@
+feat(tooling): add crispen skill with crispening reference guide
+
+New .claude/skills/crispen with SKILL.md and crispening.md reference; wire
+docgen.json/tsconfig.json/Skills.command.ts and cspell word lists.

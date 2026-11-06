@@ -1,0 +1,4 @@
+feat(v2t): scaffold V2T Tauri app and VT2 sidecar package
+
+Adds the specs/pending/V2T planning packet and consolidates utils
+internal/Thunk.ts into thunk.ts.

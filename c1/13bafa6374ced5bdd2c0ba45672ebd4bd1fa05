@@ -1,0 +1,7 @@
+chore(architecture-lab): scaffold WorkItem family; prune old initiatives
+
+Scaffold architecture-lab/{client,config,domain,server,tables,ui,use-cases}
+and apps/architecture-lab-proof via beep architecture.
+Delete completed initiatives (canonical-slice-factory extras, discriminated-
+union-modeling, foundation-package-migration, jsdoc-quality-enforcement,
+law-kg-prd, repo-architecture-automation, tooling-package-migration, turborepo-audit).

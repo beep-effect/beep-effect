@@ -1,0 +1,7 @@
+refactor(shared-domain): consolidate entity values into EntitySchema
+
+Add EntitySchema.ts and EntityTable.ts; delete per-entity *.values.ts files and
+fold them into *.model.ts across shared, tenancy, agent-capability, epistemic,
+law-practice, wealth-management, and workspace domains.
+Remove the old EntityMixin.ts/BaseEntity.ts scaffolding and shared/tables Table.ts.
+Add a new agent sandbox provider/orchestrator capability and the grill-with-docs skill.

@@ -1,0 +1,6 @@
+docs(architecture): add standards/architecture chapters 03-13
+
+Add new architecture chapters: driver-boundaries, rich-domain-model, layer-composition,
+testing, errors-across-boundaries, cross-slice-coordination, evolution-and-deprecation,
+observability, and onboarding-the-minimum-viable-slice.
+Expand DECISIONS.md and GLOSSARY.md; add architecture/README.md.

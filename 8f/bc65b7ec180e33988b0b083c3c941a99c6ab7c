@@ -1,0 +1,4 @@
+refactor(knowledge): rework Batch state machine and orchestrator
+
+Rework BatchStateMachine, BatchAggregator, BatchEventEmitter, and
+BatchOrchestrator with new test coverage.

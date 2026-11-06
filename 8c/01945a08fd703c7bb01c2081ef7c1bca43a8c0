@@ -1,0 +1,3 @@
+refactor(schema): rename Address to CryptoWalletAddress, extend index
+
+Drops stray playwright test-output screenshots/logs and expands scratchpad/index.ts.

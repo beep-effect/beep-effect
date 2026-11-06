@@ -1,0 +1,4 @@
+refactor(tooling): reformat TrustGraphRuntime, add sync-state transport
+
+CuratedSyncState gains a version bump and transport field; imports and
+class bodies are reformatted to multi-line.

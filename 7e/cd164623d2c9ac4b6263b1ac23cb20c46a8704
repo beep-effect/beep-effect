@@ -1,0 +1,5 @@
+refactor(md): expand Md render/model and pandoc mapping support
+
+Grow Md.model/render/ts with additional node handling, update the lexical
+codec and chat orchestrator, and extend pandoc mapping coverage and
+tests.

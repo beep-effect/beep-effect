@@ -1,0 +1,6 @@
+feat(drivers): expand anthropic, discord, and ai-provider-cli surfaces
+
+Add repair/error handling to the anthropic driver, extend discord models
+and ai-provider-cli service surface, expand architecture-lab WorkItem
+client/view-model, and grow repo-utils schema coverage (BiomeJson,
+DocgenConfig, PackageJson, TSConfig).

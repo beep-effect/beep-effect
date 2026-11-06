@@ -1,0 +1,4 @@
+feat(nlp): add Token module
+
+Also expands .patterns/jsdoc-documentation.md guidance and syncs
+deps/docgen configs.

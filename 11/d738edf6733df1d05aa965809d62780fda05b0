@@ -1,0 +1,6 @@
+feat(schema): add DurationFromMinutes; remove dead effect-drizzle mapper
+
+Add packages/common/schema/src/custom/Duration.schema.ts (DurationFromMinutes)
+and export it from the custom schema barrel.
+Delete the unused shared/tables/src/effect-drizzle.ts mapper.
+Note a production checklist follow-up for disabling devtools.

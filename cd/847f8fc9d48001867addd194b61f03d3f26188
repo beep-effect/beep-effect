@@ -1,0 +1,5 @@
+feat(iam-sdk): add optimistic passkey delete action and refactor atoms
+
+Add passkey.actions.ts with a writable Del action atom for optimistic list updates.
+Refactor passkey.atoms.ts to expose listPasskeyAtom and toast-wrapped add/update/remove atoms.
+Export passkey.forms from the client index.

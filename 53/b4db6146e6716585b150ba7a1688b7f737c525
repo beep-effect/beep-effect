@@ -1,0 +1,6 @@
+feat(schema): expand primitives/builders and errors modules
+
+Grow common/schema's primitives, builders, core, and derived modules and
+common/errors' client/server/shared surfaces, add prompt-template docs
+under documentation/, and drop the redundant docgen script line from
+most package.json files.

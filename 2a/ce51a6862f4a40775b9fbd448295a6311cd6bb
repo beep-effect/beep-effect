@@ -1,0 +1,5 @@
+chore(goals): capture chat-surface-parity prompt, drop draft docs
+
+Remove draft docs/MISSION.md and docs/STORY.md headings-only stubs; add the
+initial chat-input research prompt and reference screenshots to
+goals/chat-surface-parity/research/additional_items.

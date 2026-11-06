@@ -1,0 +1,4 @@
+feat(oip-web): polish homepage UI and rework form package internals
+
+Also prunes unused package.json dependencies and removes dead schema/utils
+internals (FilePath, IP, HttpHeaders cleanup) across foundation packages.

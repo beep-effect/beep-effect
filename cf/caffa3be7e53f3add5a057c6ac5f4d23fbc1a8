@@ -1,0 +1,4 @@
+feat(schema): add EthAmount/EvmAddress schemas and wallet scratch data
+
+Also adds an Options.ts helper and imports large koinly/RP-minipool JSON/CSV data
+dumps into scratchpad for local wallet analysis.

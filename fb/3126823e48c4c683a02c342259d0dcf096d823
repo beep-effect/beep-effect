@@ -1,0 +1,4 @@
+chore(deps): bump effect ecosystem versions and enforce strict peer deps
+
+Set strict-peer-dependencies=true in .npmrc.
+Add an identifier annotation to Account.model.ts.

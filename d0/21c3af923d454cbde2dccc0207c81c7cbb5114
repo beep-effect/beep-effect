@@ -1,0 +1,11 @@
+feat(drivers): harden drizzle and postgres error extraction
+
+Wrap Reflect/instanceof probes in Result.try across Drizzle.errors.ts,
+Postgres.errors.ts and Postgres.format.ts, walk Cause reasons to recover
+nested driver errors, and stop clobbering an existing commit method when
+installing Drizzle Effect yieldables. Add error-extraction test suites for
+both drivers and a shared/domain RootBarrel dtslint case. Also add the root
+"Todox Data Model.md" design doc plus a shared-kernel driver review
+inventory, refresh JSDoc examples in shared/domain identity and
+shared/tables Table.ts, and add AGENTS.md/README.md stubs across
+shared/{client,config,server,use-cases}.

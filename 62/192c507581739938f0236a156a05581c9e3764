@@ -1,0 +1,6 @@
+feat(knowledge): persist extracted entities/relations in orchestrator
+
+Write extracted entities/relations directly via Drizzle after extraction,
+name the entity/relation drizzle relations explicitly, loosen Relation's
+ontologyId to a plain string, and trim demo copy referencing 'curated'
+scenarios.

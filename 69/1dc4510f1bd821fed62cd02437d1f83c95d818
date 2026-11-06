@@ -1,0 +1,1 @@
+chore(ui): drop shadcn @source directives and run vitest non-watch in CI

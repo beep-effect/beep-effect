@@ -1,0 +1,4 @@
+refactor(iam): rework client contracts and shared integrations
+
+Also adds the turborepo skill bundle, DatabaseError test coverage, and
+lands several knowledge-* spec packets.

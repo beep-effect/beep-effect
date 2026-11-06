@@ -1,0 +1,7 @@
+refactor(tooling): split Image command into service/render modules
+
+Extract Image.service.ts, Image.render.ts, and Image.progress.ts from the monolithic index.ts;
+fill in Image.schemas.ts and drop Image.config.ts plus the empty layer/utils placeholders.
+Document the repo CLI command topology in standards/ARCHITECTURE.md and
+standards/architecture/07-non-slice-families.md; expand the CLI README and regenerate the
+export catalog and schema-first inventory.

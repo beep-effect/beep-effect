@@ -1,0 +1,4 @@
+feat(rich-text): add lexical model/codec and editor composer package
+
+Also refreshes the graphify code-graph snapshot and closes out the
+rich-text-foundation goal packet.

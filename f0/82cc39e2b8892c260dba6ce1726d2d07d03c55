@@ -1,0 +1,4 @@
+chore: remove tech-interview scratch feature from apps/web
+
+Delete apps/web/src/app/tech-interview/* (domain, errors, invariant, run, util-types,
+utils) and its compiled .js/.d.ts artifacts — roughly 710 lines removed.

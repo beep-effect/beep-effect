@@ -1,0 +1,4 @@
+feat(tooling): add extract-frames-dir subcommand to Image CLI
+
+Add imageExtractFramesDirCommand (extract-frames-dir) with matching test coverage.
+Move Nix dev-shell bun install cache to XDG_CACHE_HOME instead of /tmp; regenerate catalog.

@@ -1,0 +1,7 @@
+feat(schema): add schema-system introspection module for dynamic forms
+
+Add packages/common/schema/src/schema-system (introspection, auto-detection,
+defaultValues, filtering) and move relationship-utils.ts into it.
+Add beep-form field-component-mapping.ts and field-config-generator.ts to drive
+dynamic forms from schema introspection.
+Remove the unused packages/common/rules/src/internal/Equals.ts (714 lines) and common.ts.

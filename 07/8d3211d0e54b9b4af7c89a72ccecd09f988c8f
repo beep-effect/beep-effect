@@ -1,0 +1,4 @@
+feat(iam): add client contract framework (Contract/ContractKit)
+
+Also updates sign-in/sign-up email flows and records a full method
+inventory doc under the active spec packet.

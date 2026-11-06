@@ -1,0 +1,1 @@
+refactor(docgen): simplify compiler-options resolution, drop casts

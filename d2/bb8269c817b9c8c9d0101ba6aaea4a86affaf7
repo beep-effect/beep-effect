@@ -1,0 +1,4 @@
+feat(ui): port flexlayout docking system and expand UI package
+
+Touches ui (497 files), common (137), todox (79), shared (59); adds new
+.claude/agents definitions and specs for flex-layout-port/docking-system.

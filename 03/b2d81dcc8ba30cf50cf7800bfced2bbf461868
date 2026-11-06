@@ -1,0 +1,5 @@
+feat(tooling): add create-package file generation and template services
+
+Introduce file-generation-plan, template, and ts-morph integration services
+for the create-package command; extend config-updater for batch multi-target
+tsconfig updates.

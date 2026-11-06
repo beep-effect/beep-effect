@@ -1,0 +1,5 @@
+feat(tooling): add sync-ts-references script and bump effect-rpc version
+
+Add tooling/repo-scripts/src/sync-ts-references.ts (210 lines) to keep tsconfig
+project references in sync.
+Bump effect/rpc and other dependency versions.

@@ -1,0 +1,6 @@
+feat(tooling): add JSDoc tag catalog and docgen v2 module scaffolding
+
+Introduces tooling/repo-utils/src/JSDoc (tag catalog, models) and
+tooling/docgen/src (Checker, Configuration, Core, Domain, Parser, Printer).
+Also touches identity/annotation code across observability, schema,
+semantic-web, editor, repo-memory, runtime, and shared packages.

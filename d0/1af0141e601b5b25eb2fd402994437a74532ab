@@ -1,0 +1,6 @@
+feat(core): add Postgres client error types and expand infra config
+
+Add packages/core/db/src/dialect/postgres (PgClient.errors.ts, PgClient.types.ts,
+PgError.ts — roughly 790 lines) and instance/Db/DbConnection/DbFactory scaffolding.
+Add iam/infra/src/config.ts and files/infra/src/config.ts; tweak better-auth plugins
+(captcha, dub-analytics, one-tap, passkey, siwe, stripe).

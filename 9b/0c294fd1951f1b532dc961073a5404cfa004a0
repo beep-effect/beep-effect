@@ -1,0 +1,4 @@
+chore(repo): apply repo-wide codemod across foundation and drivers
+
+Touches 522 files with small (1-5 line) per-file fixes across foundation, tooling, drivers,
+and app packages; regenerates the repo-exports catalog.

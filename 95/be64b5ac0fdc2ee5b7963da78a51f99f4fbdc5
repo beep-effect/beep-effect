@@ -1,0 +1,4 @@
+chore(deps): add auth, db, and email catalog dependencies
+
+Add @neondatabase/serverless, better-auth, drizzle-kit, drizzle-orm, and
+resend to the workspace catalog.

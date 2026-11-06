@@ -1,0 +1,4 @@
+chore(ast-kg): commit graphiti ledger snapshots and drill evidence
+
+Record fullrepo publish/verify evidence, replay and outage-drill JSON
+logs, and the graphiti/publish ledger and snapshot cache for tooling/ast-kg.

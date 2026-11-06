@@ -1,0 +1,6 @@
+feat(cli): extend kg command and add graphiti-recover dry-run
+
+Add group overrides, strict parity thresholds, and a sink publish ledger to the
+kg command; add a --dry-run mode to scripts/graphiti-recover.sh with a
+kg:graphiti-recover:dry-run package script; record p7-kg-excellence evidence and
+ast-kg ledger/snapshot cache entries.

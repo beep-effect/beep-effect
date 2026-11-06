@@ -1,0 +1,4 @@
+chore(deps): bulk dependency refresh (effect beta.80 and storybook)
+
+Bump effect and @effect/* to 4.0.0-beta.80, storybook to 10.4.4, fallow to
+2.93.0, three to 0.184.0, and assorted toolchain and runtime dependencies.

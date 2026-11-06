@@ -1,0 +1,5 @@
+feat(iam): add internal request handler for sdk clients
+
+Add packages/iam/sdk/src/clients/_internal/handler.ts (192 lines) and rework
+sign-in.implementations.ts and contract-kit/Contract.ts to use it.
+Scaffold apps/start-client tsconfig/package.json.

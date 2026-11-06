@@ -1,0 +1,5 @@
+fix(tooling): switch CLI support typecheck to tsc, enable noImplicitAny
+
+Continue extracting shared generator-script logic; remove the unused
+test-utils VERSION export and stray blank jsdoc lines; beep:check:support now
+runs tsc instead of tsgo with noImplicitAny enabled.

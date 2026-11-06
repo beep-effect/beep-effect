@@ -1,0 +1,4 @@
+docs(specs): capture DSL and effect-predicate research documentation
+
+Also continues the schema SQL DSL implementation (Field/Model/combinators/
+derive-column-type/validate) and updates bun.lock/package.json deps.

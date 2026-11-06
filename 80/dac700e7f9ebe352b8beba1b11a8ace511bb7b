@@ -1,0 +1,6 @@
+refactor(drivers): apply SchemaUtils.withKeyDefaults to driver configs
+
+Replace S.optionalKey config fields with SchemaUtils.withKeyDefaults across
+discord, firecrawl, hubspot, m365, phoenix, runpod, sanity, uspto,
+venice-ai, wink, and xai; regenerate the Box driver's codegen script and
+tighten the oip-web contact form and hero video components.

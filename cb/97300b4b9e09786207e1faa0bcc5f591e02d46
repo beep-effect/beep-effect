@@ -1,0 +1,4 @@
+feat(ai-sync): scaffold ai-sync tooling package
+
+Add packages/tooling/library/ai-sync with generator, drift, source-map, and transform pipeline.
+Record unified-ai-toolchain P0-P5 phase outputs and regenerate repo-exports catalog.

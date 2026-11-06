@@ -1,0 +1,4 @@
+docs: refresh README and AGENTS.md across packages
+
+Also includes minor fixes to EncryptionService, env config, and
+referrer-policy header handling.

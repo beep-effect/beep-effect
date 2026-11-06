@@ -1,0 +1,6 @@
+chore: remove storage package, consolidate shared/tables layout
+
+Delete the unused packages/storage package (StorageService.Contract, execute.ts,
+configs — roughly 610 lines) and packages/adapters/better-auth/src/execute.ts.
+Move shared/tables file/organization/team tables into a tables/ subfolder; move
+SignedUrlService into packages/files/application. Remove Result.schema.ts.

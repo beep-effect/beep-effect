@@ -1,0 +1,5 @@
+chore: remove groking-effect-v4 experiment workspace
+
+Delete the groking-effect-v4 experiment (src generated output plus
+agents/dry-run-iteration prompts and reports) and its manifest/config
+files.

@@ -1,0 +1,6 @@
+feat(schema): add AtURI schema module
+
+Add the AtURI schema module (331 lines) with dtslint and test coverage,
+graduate the gov-legal-data-driver-codegen exploration into a goals
+packet, and drop unused docgen.json entries for ontology/nlp-mcp/
+rdf-canonize.

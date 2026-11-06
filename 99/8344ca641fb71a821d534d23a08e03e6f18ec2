@@ -1,0 +1,3 @@
+chore(repo): sync deps, rework Glob utils, and update V2T specs
+
+Adds the effect-v4-persistence-runtime-architect codex agent and reworks Reuse.service.

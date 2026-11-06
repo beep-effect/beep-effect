@@ -1,0 +1,6 @@
+docs(specs): scaffold agentic-codebase-ast-kg-enriched-with-jsdoc packet
+
+Add the agentic-codebase-ast-kg-enriched-with-jsdoc spec packet, a new
+tooling/cli docs command, an agent-eval benchmark runner, and
+pathless-config-check/claude-hook-stop scripts; update AGENTS.md/CLAUDE.md
+instructions.

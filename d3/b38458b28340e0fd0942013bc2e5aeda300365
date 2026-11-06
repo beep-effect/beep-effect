@@ -1,0 +1,5 @@
+refactor(ontology): option-ify OWL fields, use RDF identifier keys
+
+Convert optionalKey(NullOr(...)) fields in Ontology.models/Specification.models
+to OptionFromOptionalNullOr/OptionFromOptionalKey with SchemaUtils.withNoneDefault;
+replace RDF description strings with identifier IRIs.

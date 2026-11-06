@@ -1,0 +1,8 @@
+feat(tooling): scaffold repo-utils and expand groking-effect-v4
+
+Add the initial tooling/repo-utils package (Dependencies, FsUtils,
+Graph, TsConfig, Workspaces, PackageJson schemas) and the tooling/cli
+commands, grow the groking-effect-v4 experiment's agents/experiments
+and src/effect trees, and add root vitest.config.ts/vitest.shared.ts
+plus tsconfig.base.json/tsconfig.packages.json, dropping
+tsconfig.base.jsonc, tsconfig.build.json, and the tsconfig.slices files.

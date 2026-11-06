@@ -1,0 +1,4 @@
+chore(repo): bulk pattern sweep across foundation, drivers, agents
+
+Touches 567 files across packages/foundation, drivers, tooling, law-practice, agents,
+architecture-lab, epistemic, shared, and workspace; no single-file diff is representative.

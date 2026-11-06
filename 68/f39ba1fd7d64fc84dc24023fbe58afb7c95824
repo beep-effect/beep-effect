@@ -1,0 +1,5 @@
+feat(documents): implement Comment/Discussion/Document handlers
+
+Add RPC handlers for Comment, Discussion, and Document (documents/infra/src/handlers/*).
+Expand Discussion, Document, DocumentFile, and DocumentVersion repos with new query/mutation
+methods; wire handlers into server-runtime.

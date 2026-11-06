@@ -1,0 +1,5 @@
+feat(tooling): guard yeet publish against out-of-scope path changes
+
+Add collectPublishIntent/validatePublishIntentStillSafe to detect staged,
+unstaged, or untracked paths outside the intended publish scope and fail with
+a formatted path list; regenerate the repo-exports catalog.

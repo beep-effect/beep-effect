@@ -1,0 +1,4 @@
+refactor(common): rework schema errors and utils helpers
+
+Reworks Sql/Error, SecureHeaderError, CsvError, and Array/Glob/Struct/StructPath in utils,
+and extends the VT2 server plus V2T spec docs.

@@ -1,0 +1,7 @@
+chore(effect-native-migration): scaffold goal packet and usage inventory
+
+Add PLAN/README/SPEC and ops/ (inventory, manifest, progress, prompts, waivers)
+for the effect-native-migration goal, with a per-package native-helper usage
+inventory under ops/inventory.
+Move BiomeJson/DocgenConfig/JSDocCategories/TsconfigAliasTargets schemas into
+repo-utils/src/schemas and rewrite Architecture/OperationPlan.ts.

@@ -1,0 +1,4 @@
+docs(initiatives): scaffold jsdoc-quality-enforcement initiative
+
+Add PLAN/README/SPEC, ops/manifest.json, and a research README for the
+jsdoc-quality-enforcement initiative.

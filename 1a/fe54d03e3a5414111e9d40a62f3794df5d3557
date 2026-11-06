@@ -1,0 +1,4 @@
+feat(tooling): add app archetype templates to create-package generator
+
+Also standardizes app package layout (drop dtslint/docgen.json), reworks
+oip-web contact API, and adds the repo-codegraph-jsdoc goal whitepaper.

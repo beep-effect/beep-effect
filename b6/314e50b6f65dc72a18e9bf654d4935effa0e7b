@@ -1,0 +1,4 @@
+feat(query): scaffold common/query package, re-enable form test
+
+Add packages/common/query package scaffold (README, package.json, tsconfigs, index.ts).
+Re-enable ui/test/form/makeFormOptions.test.ts (previously .test_disabled.ts).

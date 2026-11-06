@@ -1,0 +1,6 @@
+chore: close out codex-security-findings packet; add Image CLI command
+
+Delete the completed goals/codex-security-findings packet (PLAN/README/SPEC,
+findings, triage.json, and update-triage.mjs).
+Scaffold a new tool cli Image command (Image.command/config/errors/schemas/service).
+Rewrite Docgen/index.ts and touch many driver/foundation/tooling files.

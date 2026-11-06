@@ -1,0 +1,7 @@
+refactor(tooling): simplify JSDoc tag models and docgen internals
+
+Trim JSDoc/models/tag-values and JSDoc.ts, and rework docgen Checker/Configuration/
+Core/Parser/Printer.
+Add minimal @since/@category annotations across schema, editor, and
+repo-memory modules touched by the docgen pass.
+Adjust eslint configs and Quality/Tasks.ts.

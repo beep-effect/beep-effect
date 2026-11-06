@@ -1,0 +1,4 @@
+feat(schema): add money and temporal primitive value objects
+
+Adds Currency, CurrencyCode, MonetaryAmount, percentage, and LocalDate
+primitives; mirrors LocalDate into shared/domain value-objects.

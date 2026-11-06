@@ -1,0 +1,4 @@
+fix(tooling): surface tsconfig-sync errors as CLI exit failures
+
+Catch drift/filter/cycle errors from tsconfig-sync and set a nonzero exit
+code with a readable message; fix stale spec cross-references in design docs.

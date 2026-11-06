@@ -1,0 +1,5 @@
+feat(iam-domain): add IamError and UnknownError base error types
+
+Add UnknownError to @beep/errors and new IamError/IamUnknownError in iam-domain.
+Remove the stale files _SPEC/design_research.md planning doc.
+Bump dependency versions.

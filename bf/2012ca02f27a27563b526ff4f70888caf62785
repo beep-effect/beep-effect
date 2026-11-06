@@ -1,0 +1,4 @@
+chore: remove unused agent skills and CSS integration data
+
+Drops vendored .agents/skills/* (claude-reflect, skill-creator, turborepo, etc.)
+and the css literal-kit integration; adjusts sanitize-html imports.

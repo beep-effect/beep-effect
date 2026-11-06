@@ -1,0 +1,5 @@
+refactor(drivers): use thunkEmptyStr helper and drop Redacted type param
+
+Replace inline () => "" callbacks with the shared thunkEmptyStr helper in XAi.service.ts.
+Drop the now-unnecessary string type param from Redacted.Redacted in VeniceAI.service.ts;
+tweak IMAGE_COMMANDS.md.

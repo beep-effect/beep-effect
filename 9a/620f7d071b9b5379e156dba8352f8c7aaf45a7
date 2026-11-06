@@ -1,0 +1,5 @@
+docs: repair malformed jsdoc blocks and add @effects annotations
+
+Fix corrupted @category/@since comment blocks in DocgenConfig.ts; add @effects
+tags across PackageJson/PackageJsonTools/TSConfig codecs; make dol/ecfr/
+federal-register and architecture-lab package examples compilable.

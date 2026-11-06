@@ -1,0 +1,10 @@
+fix: correct block-scanner string state and attachment error tag
+
+Set inString = true when scanChunk opens a quoted string so the incremental block scanner
+tracks string state, and fix the AttachmentInvalidMimeType tag that was copy-pasted as
+"AttachmentTooLarge". Switch attachment size and ThreadStore HashMap key fields from
+S.Number to S.Finite, and summarizePatch from make to S.decodeSync. The bulk of the diff
+reorders @effects/@param/@returns ahead of @example blocks and adds @category/@since tags
+across ai-metrics, ai-sync, repo-utils, docgen, law-practice entity barrels, and the
+editor chat/index barrels. Also refactor the Box generator to flow and drop the now-unused
+Box and ScanState entries from the effect-laws allowlist and schema-first inventory.

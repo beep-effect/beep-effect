@@ -1,0 +1,4 @@
+chore: prune ai-sdk agent docs and empty spec directories
+
+Remove packages/ai/sdk AGENTS/CLAUDE/ai-context scaffold docs and empty
+specs/ideas and claude-effect-v4-knowledge-graph-app placeholder files.

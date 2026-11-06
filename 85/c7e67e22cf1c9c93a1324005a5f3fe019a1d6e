@@ -1,0 +1,5 @@
+refactor(repo): simplify packages/ui after biome.json to jsonc migration
+
+Nearly every packages/ui/src file (202 of 205) gets a net-negative line count, consistent with
+biome auto-fix after the config rename; packages/common gets a real logos v1/v2 rework and a
+new 968-line JsonSchema.ts.

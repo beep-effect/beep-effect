@@ -1,0 +1,5 @@
+feat(box): scaffold experimental domain entities and values
+
+Generate model/index pairs for every Box experimental domain entity
+(AiTaxonomy, File, Folder, Task, Webhook, ...) and value object
+(Classification, Metadata, Resource, ...), plus a ClientError error type.

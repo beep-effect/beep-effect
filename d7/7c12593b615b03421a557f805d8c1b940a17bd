@@ -1,0 +1,3 @@
+refactor(rules): flatten internal/internal directory, rework entity
+
+Moves FieldType/ValueType/OperatorType up one level and adds entity tests.

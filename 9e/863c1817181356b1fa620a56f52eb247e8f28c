@@ -1,0 +1,5 @@
+chore(iam): enable additional better-auth client plugins
+
+Turn on admin, apiKey, deviceAuthorization, genericOAuth, jwt, multiSession,
+and oidc better-auth client plugins; use Duration.toMillis for the one-tap
+prompt delay; drop the unused isClientMethod helper; bump root deps.

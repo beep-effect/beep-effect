@@ -1,0 +1,5 @@
+chore(skills): add ponytail skill family and ontology scratchpad scripts
+
+Add the ponytail/ponytail-audit/debt/gain/help/review skills, wire codex
+config for them, and add TTL-to-JSON-Schema ontology scratchpad tooling
+(parseTtl, parseConceptSchemes, buildJsonSchema, emitIrisModule).

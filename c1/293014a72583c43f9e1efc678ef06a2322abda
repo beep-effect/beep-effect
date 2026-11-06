@@ -1,0 +1,5 @@
+docs: add ambient billing copilot PRD and enable turbo caching for audit
+
+Add PRD-ambient-billing-copilot.md product requirements doc.
+Make the turbo audit task cacheable: add .env* inputs, an env-var allowlist
+(AUTH_*, DATABASE_URL, OPENAI_*, etc.), and build outputs.

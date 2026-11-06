@@ -1,0 +1,4 @@
+feat(web): wire drizzle migrations into build and ci
+
+Add initial auth schema migration, migrate script, and a CI step that
+checks for migration drift.

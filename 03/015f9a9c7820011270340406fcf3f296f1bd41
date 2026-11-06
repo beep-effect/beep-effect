@@ -1,0 +1,6 @@
+refactor(runtime): consolidate server-runtime, update lockfile
+
+Fold dev-tools-live, log-level-live, logger-live, slice-databases-live,
+slice-repositories-live, and telemetry-live into server-runtime.ts.
+Update runtime/client live-layer.ts; reformat docs/patterns/effect-Option.md.
+Update pnpm-lock.yaml and docker-compose.yml.

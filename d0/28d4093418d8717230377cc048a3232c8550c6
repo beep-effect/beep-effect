@@ -1,0 +1,4 @@
+chore(docgen): add professional-desktop docs output
+
+Add generated apps/professional-desktop/docs/* just-the-docs docgen output;
+raise the reuse-command test timeout from 180s to 360s.

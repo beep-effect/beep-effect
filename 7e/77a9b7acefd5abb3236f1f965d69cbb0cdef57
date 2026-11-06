@@ -1,0 +1,5 @@
+feat(tooling): add Architecture CLI command and expand OperationPlan
+
+Add Architecture/Command.ts (287 lines) and Architecture/index.ts entrypoint;
+substantially expand OperationPlan.ts (roughly 960 lines) with test coverage
+and README updates.

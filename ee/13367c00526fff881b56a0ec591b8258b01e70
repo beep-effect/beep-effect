@@ -1,0 +1,4 @@
+feat(agent-capability): add Agent.toTagged tagged-union helper
+
+Add a static toTagged() method to the Agent entity model that projects Agent.fields.mode
+into a deterministic_fixture tagged union member via S.toTaggedUnion.

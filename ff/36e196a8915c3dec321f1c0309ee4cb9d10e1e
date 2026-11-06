@@ -1,0 +1,5 @@
+feat(ui): add PlateJS toolbar components and update dependencies
+
+Add fixed-toolbar, mark-toolbar-button, and toolbar (311 lines) PlateJS editor components;
+tweak dropdown-menu, separator, and tooltip.
+Add packages/common/utils/src/struct/exact.ts helper; bump bun.lock/package.json.

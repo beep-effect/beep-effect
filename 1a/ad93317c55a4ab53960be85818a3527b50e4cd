@@ -1,0 +1,4 @@
+feat(semantic-web): add RDF model/values module
+
+Add the semantic-web RDF model and NamedNode/values modules, and touch
+the knowledge-demo GraphRAG query panel and result display.

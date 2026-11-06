@@ -1,0 +1,5 @@
+docs: add serena MCP server and prompt-cache discipline guidance
+
+Register the serena stdio MCP server (JetBrains backend) in .mcp.json.
+Add a CLAUDE.md section on preserving prompt-cache hit rates (stable tool
+surface, batched always-loaded-file edits, subagent continuation).

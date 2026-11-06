@@ -1,0 +1,4 @@
+chore(ast-kg): record graphiti verify/publish/continue ledger evidence
+
+Append continue-parity-strict/proxy-metrics/publish/verify evidence and
+matching publish-ledger and snapshot cache entries for tooling/ast-kg.

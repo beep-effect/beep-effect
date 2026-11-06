@@ -1,0 +1,3 @@
+chore: remove beep-sync and codebase-search tooling experiments
+
+Refresh .claude hooks and .patterns docs; trim unused effect helpers in apps/web.

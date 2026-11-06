@@ -1,0 +1,4 @@
+chore: exclude .repos vendored subtree from biome and knip
+
+Add P1 handoff and orchestrator prompt docs for the
+agent-infrastructure-rationalization spec; trim stale claude hook state.

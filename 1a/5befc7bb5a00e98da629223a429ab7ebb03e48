@@ -1,0 +1,5 @@
+feat(tooling): add progress reporting to Files CLI command
+
+Add Files.progress.ts (193 lines) and substantially rework Files.service.ts
+(roughly 1,700 lines) to support progress tracking; wire into Files/index.ts
+with test coverage.

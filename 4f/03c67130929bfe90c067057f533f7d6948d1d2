@@ -1,0 +1,4 @@
+docs(skills): sync effect-v4-services guidance across skill mirrors
+
+Also finishes status-cause error adoption in apps/V2T, apps/editor-app native shims,
+and the v2t-sidecar server.

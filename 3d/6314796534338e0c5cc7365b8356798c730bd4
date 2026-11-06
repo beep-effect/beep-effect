@@ -1,0 +1,4 @@
+docs(v2t): correct package naming and harden spec validator
+
+tooling/cli Reuse command also drops manual scope-cached layer build for
+Layer.build, and Glob.test.ts adds a typed BunGlobMutationError.

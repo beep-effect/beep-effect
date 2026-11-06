@@ -1,0 +1,6 @@
+refactor(ai-sdk): rework core runtime, tools, and storage internals
+
+Rework AgentRuntime, Diagnose, Mcp, MessageFilters, QuickConfig, Tools,
+and Storage layers in packages/ai/sdk, and record new agent-reliability
+and jsdoc-kg spec run outputs plus an effect-first-development standards
+rewrite.

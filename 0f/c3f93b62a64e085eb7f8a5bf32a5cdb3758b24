@@ -1,0 +1,5 @@
+feat(cli): add skills command and refresh shadcn/turborepo skill docs
+
+Add the `beep skills` CLI command (Skills.command.ts, errors, tests) and
+refresh shadcn and turborepo skill documentation; add chat UI components
+(attachment, bubble, marker, message, message-scroller).

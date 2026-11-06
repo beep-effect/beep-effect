@@ -1,0 +1,4 @@
+feat(knowledge): harden ReconciliationService and Wikidata catalog
+
+Rework ReconciliationService and WikidataCatalog, register knowledge
+server service bundles, and adjust batch cancel/status RPCs.

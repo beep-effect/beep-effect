@@ -1,0 +1,4 @@
+feat: add Google Calendar, Gmail, and Gmail-extraction adapters
+
+Add GoogleCalendarAdapter, GmailAdapter, and GmailExtractionAdapter
+packages, and rework GoogleAuthClientLive to support them.

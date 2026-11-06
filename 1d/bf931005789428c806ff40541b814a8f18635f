@@ -1,0 +1,4 @@
+feat(domain): add pglite sql test harness and refine entity mixins
+
+Expands SqlTest utilities and adds a pglite Docker harness for it.
+Also reworks EntityMixin/EntityId encoding in shared/domain.

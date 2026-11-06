@@ -1,0 +1,5 @@
+chore(repos): remove vendored .repos/effect-tsgo subtree copy
+
+Delete the vendored .repos/effect-tsgo subtree (3,408 files, all under
+.repos/); a single-parent bulk deletion with no source changes outside the
+subtree, despite the old subject.

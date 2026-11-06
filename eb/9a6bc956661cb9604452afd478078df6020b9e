@@ -1,0 +1,5 @@
+feat(iam): add passkey-v2 client (atoms, contracts, forms, service)
+
+Add packages/iam/sdk/src/clients/passkey-v2 with atoms, contracts, forms,
+implementations, and service modules.
+Add iam/sdk/src/execute.ts; bump dependencies.

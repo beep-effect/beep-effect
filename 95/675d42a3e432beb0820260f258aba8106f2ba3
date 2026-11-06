@@ -1,0 +1,11 @@
+feat(form): scaffold form substrate, schema-first core, and P1 fields
+
+P1 in progress for the goals/form packet. Scaffolds @beep/form
+(packages/foundation/ui-system/form) and builds the schema-first core
+(toFormSchema, getDefaultFormValues, toFieldErrors, formOptions builders,
+Path, contexts, FieldOption), the useAppForm factory, Form/SubmitButton, and
+field bindings to @beep/ui primitives. Includes unit tests + a demo story.
+Wires the root catalog (@tanstack/react-form), tsconfig references, and
+Storybook. Packet status (README/PLAN/manifest) updated to P1.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>

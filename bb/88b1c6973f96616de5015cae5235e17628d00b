@@ -1,0 +1,6 @@
+chore: add tech-interview build output and bump deps
+
+Commit compiled invariant/util-types/utils build artifacts (.js/.d.ts) for the
+apps/web tech-interview feature.
+Repoint the runtime/server tech-interview domain import to ./utils, drop its
+empty index.ts, and bump better-auth, tiptap, and drizzle-kit.

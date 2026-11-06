@@ -1,0 +1,11 @@
+feat(ui): add knowledge-demo route and audio/waveform components
+
+Add the todox knowledge-demo page with server actions, sample email data, and
+entity/relation result components, plus new packages/ui/ui components (waveform,
+live waveform, audio player, transcript viewer, mic selector, orb, chart,
+combobox, carousel, menubar, scrub bar, speech input) and the scribe and
+transcript hooks. Refine the lexical toolbar, images, mentions, and table
+plugins, extend the spreadsheet interpreter and utils, and update tsconfig and
+package wiring. Also add the zero-email-port, knowledge-graph POC demo, and
+knowledge-ontology-comparison specs, add the liveblocks-lexical-ai-integration
+spec, and drop the storybook-implementation spec.

@@ -1,0 +1,4 @@
+chore(specs): capture trustgraph-doc-ontology dataset and script
+
+Adds the seed dataset, grafana log exports, and playwright capture
+artifacts alongside a build-artifacts.ts script.

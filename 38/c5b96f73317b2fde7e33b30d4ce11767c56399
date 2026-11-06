@@ -1,0 +1,5 @@
+chore: prune and re-sync groking-effect-v4/src experiment output
+
+Bulk-modify and prune generated files under groking-effect-v4/src and add
+the dry-run-iterations iteration-4, iteration-5, and iteration-6 agent
+prompt/report batches plus FINAL-SYNTHESIS.md.

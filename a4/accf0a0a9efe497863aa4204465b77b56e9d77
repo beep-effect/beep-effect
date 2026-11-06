@@ -1,0 +1,5 @@
+feat(utils): add Record re-export module to @beep/utils
+
+Re-export effect/Record as @beep/utils/Record (R namespace); migrate
+scratchpad/ontology builders to import P/O/A/Str from @beep/utils instead of
+raw effect/* modules; bump deps.

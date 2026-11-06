@@ -1,0 +1,5 @@
+chore(ui-core): tighten optional prop types and effect-ify color utils
+
+Add readonly/| undefined to cookie, localStorage, and store util signatures.
+Use effect/Predicate, String, and Function in color.ts.
+Adjust tsconfig.base.jsonc (ESNext lib, isolatedModules) and constants isolatedDeclarations.

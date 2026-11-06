@@ -1,0 +1,4 @@
+feat: scaffold firecrawl driver, rdf package, and goal template
+
+Also reworks nlp-mcp streaming tools and adds ontology-modeling-foundation
+goal research.

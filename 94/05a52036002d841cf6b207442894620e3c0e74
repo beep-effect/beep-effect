@@ -1,0 +1,6 @@
+chore(shared-kernel): rename providers to drivers; advance automation
+
+Rename packages/providers/{drizzle,pglite} to packages/drivers/{drizzle,pglite}.
+Refresh shared/* AGENTS.md/README.md and BaseEntity/EntityId/EntityRef/Table.
+Rewrite tooling/repo-utils TSMorph.model.ts and Quality/Tasks.ts.
+Add shared-kernel-slice architecture review inventories and schema test coverage.

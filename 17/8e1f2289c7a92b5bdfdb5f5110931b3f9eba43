@@ -1,0 +1,6 @@
+feat(scratchpad): scaffold ContextGraph domain value objects
+
+Add 17 ContextGraph value-object models (Chunk, Term, Topics, PipelineMetadata, QoS, etc.)
+under scratchpad/ContextGraph as an exploratory schema spike.
+Add Membership and User drizzle tables.
+Expand grill-with-docs ADR-FORMAT/CONTEXT-FORMAT/SKILL docs.

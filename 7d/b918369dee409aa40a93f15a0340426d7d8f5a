@@ -1,0 +1,3 @@
+chore(deps): bump types/node and lint-staged versions
+
+Fix EffectExample.tsx imports for ScheduleTimeline and RefDisplay.

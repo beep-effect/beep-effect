@@ -1,0 +1,5 @@
+refactor(tooling): add Err.mapError helper for CLI command errors
+
+Add Err.mapError dual helper (@beep/utils/Errors) for effect error-channel conversion.
+Apply it across CLI command error modules: Ci, Codex, Graphiti, Image, Laws, Lint, Quality,
+Reuse, SyncDataToTs, TsconfigSync, VersionSync. Regenerate repo-exports catalog.

@@ -1,0 +1,6 @@
+refactor(web): re-root lib/effect composers on $WebId
+
+Rename local $MappersId/$ToolsId composers to $I rooted on the pre-existing $WebId export.
+Promote SearchGraph/GetNode tool parameter structs to S.Class.
+Replace Match.orElse Effect.gen thunks with Effect.fnUntraced in chat-handler.
+Add the ./packages export to @beep/identity package.json.

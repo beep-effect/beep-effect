@@ -1,0 +1,5 @@
+chore: update dependencies and remove unused filter-type literal schemas
+
+Update package.json/pnpm-lock.yaml (major bump); rework apps/mcp/src/server.ts.
+Remove unused shared/domain filters internal schemas (condition/filter/operator-type
+literals) and adjust Policy.ts.

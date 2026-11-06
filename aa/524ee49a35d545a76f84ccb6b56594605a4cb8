@@ -1,0 +1,5 @@
+feat(knowledge): scaffold CRUD entities and add machine actor library
+
+Continues CRUD contract scaffolding for knowledge domain entities, adds the
+common/machine actor/state-machine package, reworks the create-package CLI
+generator, and lands several knowledge-* spec packets.

@@ -1,0 +1,4 @@
+chore(deps): register new driver package workspaces in bun.lock
+
+Add courtlistener, dol, ecfr, federal-register, and govinfo driver package
+workspace entries to bun.lock.

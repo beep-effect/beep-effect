@@ -1,0 +1,6 @@
+chore(tsconfig): move tsbuildinfo under dist and add test path aliases
+
+Add tsBuildInfoFile default to tsconfig.base.json, add @beep/*/test path
+aliases for repo-cli, repo-utils, and codebase-search; drop stale
+`satisfies S.Decoder<T>` annotations in McpServer schemas and expand its
+test coverage.

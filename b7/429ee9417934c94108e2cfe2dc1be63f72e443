@@ -1,0 +1,4 @@
+feat(chat): add turn block-repair and mermaid/youtube editor embeds
+
+Advances the chat-surface-parity goal: AssistantContent value model, Anthropic
+stream repair, Grafana chat dashboards, and professional-desktop chat UI wiring.

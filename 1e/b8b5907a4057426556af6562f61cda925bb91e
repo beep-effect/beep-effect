@@ -1,0 +1,6 @@
+chore(opip-web): close out production-hardening initiative
+
+Remove apps/opip-web/src/proxy.ts in favor of next.config.ts settings; update layout, page,
+and SEO content.
+Add completion-audit output and update PLAN/README/SPEC/manifest for the
+opip-web-production-hardening initiative; add a changeset and regenerate catalog.

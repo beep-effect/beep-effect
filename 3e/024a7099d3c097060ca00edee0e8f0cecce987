@@ -1,0 +1,4 @@
+chore(tooling): add effect-v4 supermemory ingest scripts
+
+Enable claude-supermemory plugin and disable claude-md-management.
+Refresh .env.example banner formatting.

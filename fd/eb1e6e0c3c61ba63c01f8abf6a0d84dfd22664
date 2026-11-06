@@ -1,0 +1,4 @@
+chore: wire schema/utils deps into claude hooks and bump next canary
+
+agent-init hook also swaps manual predicates for Str.startsWith and
+Str.isNonEmpty.

@@ -1,0 +1,4 @@
+chore(repo): prune stale initiative docs, refine schema variants
+
+Removes the agent-memory and editor-app initiative folders (incl. a 5.7k-line openapi.json).
+Adds ARCHITECTURE_MIGRATION_REVIEW.md and reworks VariantSchema/Model typing.

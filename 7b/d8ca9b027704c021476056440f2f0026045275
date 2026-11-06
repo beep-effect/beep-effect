@@ -1,0 +1,5 @@
+docs(specs): scaffold agent-infrastructure-rationalization packet
+
+Add the agent-infrastructure-rationalization spec's P0 baseline, agent
+catalog, and skill-duplication outputs, plus agent-context-optimization
+prompts and a context-file template.

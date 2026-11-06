@@ -1,0 +1,4 @@
+chore(docgen): flatten tooling/docgen package layout and sync configs
+
+Moves tooling/docgen/docgen/* to tooling/docgen/*, bumps docgen.json across
+all packages, and adds Shared/BiomeJson.ts plus a TsconfigSync rewrite.

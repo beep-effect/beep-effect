@@ -1,0 +1,4 @@
+refactor(schema): consolidate SQL DSL into schema package, retire bsl
+
+Guts the bsl package (Field/Model/adapters/schemas/types) and folds the
+logic into schema/src/integrations/sql/dsl; rewrites DSL test coverage.

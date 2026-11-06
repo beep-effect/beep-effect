@@ -1,0 +1,4 @@
+refactor(tooling): replace ANSI-stripping regex with a state machine
+
+Rewrite Reuse.command.ts terminal-control-sequence stripping (OSC/CSI) as an explicit
+character-code state machine instead of one regex; touch up Image.service.ts.

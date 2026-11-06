@@ -1,0 +1,4 @@
+chore(deps): prune and reorganize apps/web package.json dependencies
+
+Remove several unused deps (pdf-lib, react-dnd, lowlight) and reshuffle the
+remaining dependency block ordering in apps/web.

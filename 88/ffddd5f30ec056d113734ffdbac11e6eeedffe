@@ -1,0 +1,5 @@
+chore: remove stray beep-sync backup files and rewrite AGENTS.md
+
+Delete .beep-sync.bak backup files (AGENTS.md, CLAUDE.md, and
+package-level copies) and stray apps/marketing and apps/todox
+next-env.d.ts files, rewrite AGENTS.md, and touch .mcp.json/turbo.json.

@@ -1,0 +1,5 @@
+fix(shared-domain): use declare namespace for entity-id type exports
+
+Convert `namespace X {}` to `declare namespace X {}` across entity-id modules
+(iam.ts, shared.ts, wms.ts, any-entity-id.ts, entity-kind.ts).
+Reformat ApiKey.model.ts and bump biome, next, and typescript-native-preview versions.

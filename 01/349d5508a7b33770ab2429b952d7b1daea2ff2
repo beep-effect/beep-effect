@@ -1,0 +1,4 @@
+test(knowledge): use Effect.matchEffect over Either in rate limiter test
+
+Replace Effect.either + Either.match with a direct Effect.matchEffect in the
+EmbeddingRateLimiter acquire test.
