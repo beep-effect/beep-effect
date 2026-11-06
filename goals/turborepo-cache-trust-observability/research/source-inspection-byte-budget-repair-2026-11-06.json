@@ -85,5 +85,19 @@
   },
   "rollback": "Revert the focused source-reader preflight and bounds while preserving the failed run and complete-input requirement. The prior eight-MiB cap fails closed on the new fixtures; any replacement needs its own bounded complete-byte evidence.",
   "initialPreparedBase": "a3eb1c10054efff96cba9b48ed61e264e88840f4",
-  "acceptedIntegration": "Preserve accepted W7b pinned-Git boundary comments and NodeTestLayer while retaining the focused byte-budget repair."
+  "acceptedIntegration": "Preserve accepted W7b pinned-Git boundary comments and NodeTestLayer while retaining the focused byte-budget repair.",
+  "hostedFollowup": {
+    "recordedAt": "2026-11-06T02:08:46.502921+00:00",
+    "pr": 2726,
+    "testedHead": "03bdb3f408be011f49da42936652bb7f19d7c6ae",
+    "jobId": 127660626632,
+    "jobLogSha256": "a63ab1e0c79aab50255815e81ad36b64829fdfa84e8291c5e3a5999004bade97",
+    "attribution": "Introduced: the size-drift flatMap callback combined two distinct error channels as a union of Effect values, causing TS2322.",
+    "repair": "Use the existing Effect.filterOrFail guard, then Effect.flatMap(digest), preserving exact-size refusal and complete hashing.",
+    "sourceSha256": "6d11ef5065110bd491965ed92792037125edd3900cb7db268b3359a044be31a9",
+    "testSourceChanged": false,
+    "manualLocalQualitySuites": 0,
+    "proof": "Hosted typecheck and cache-workflow regressions pending on the follow-up head; merged metadata is not test evidence.",
+    "nextInspection": "Hold until actual hosted regression success on matching accepted source. No repeat of the failed intent."
+  }
 }
