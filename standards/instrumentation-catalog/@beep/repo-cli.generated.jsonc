@@ -3575,6 +3575,7 @@
     {"name":"Yeet.requireFinalCheck","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.requireJob","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.resolveDefaultBranchViaRest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Yeet.resolveFullLintPolicySweeps","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.resolveProofLedgerLocation","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.resolvePullRequestTitle","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.resolveReviewLaneLedgerLocation","owner":"@beep/repo-cli","family":"tooling","conforms":true},
