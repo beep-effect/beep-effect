@@ -37,6 +37,7 @@ The subsequent helper-configurations.data production projection also matches
 generic-api-key for its exact public reference-token.json source SHA-256.
 The complete digest appears verbatim in the corresponding policy rule.
 The helper exporter independently authenticates that source before projection.
-This amendment includes its own exact digest/path/detector exception. The same
+This amendment includes its own exact digest/path/detector exception for the asset and its
+maintainer exporter. The exporter stores the same public source seal. The same
 baseline/candidate, changed-value and other-path controls pass. No runtime asset
 is included in this policy PR. Both source digests remain available verbatim.
