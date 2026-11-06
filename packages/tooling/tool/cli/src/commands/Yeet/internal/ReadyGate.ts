@@ -35,6 +35,7 @@ import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { GitObjectId } from "@beep/schema/Conformance";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
@@ -635,7 +636,8 @@ interface YeetReadyGateDependencies {
   readonly requestReview?: (
     context: RepoRunContext,
     prNumber: number,
-    confirmedHead: string
+    confirmedHead: string,
+    allowPush?: boolean
   ) => Effect.Effect<
     string,
     YeetCommandError,
@@ -656,9 +658,8 @@ interface YeetReadyGateDependencies {
  *
  * **Details**
  *
- * beep-reviewer reviews only heads pushed while the pull request is ready, so
- * the head current at the flip, pushed while the pull request was a draft, would
- * otherwise never be reviewed.
+ * This fallback remains for authors/repositories without the configured
+ * pr-comment routine. Covered requests use an exact-head comment instead.
  *
  * **Example** (Read the re-request subject)
  *
@@ -754,6 +755,237 @@ const pushReviewerRequest = Effect.fn("Yeet.pushReviewerRequest")(function* (
       )
     )
   );
+});
+
+/**
+ * Exercise the legacy empty-commit fallback independently of GitHub routing.
+ *
+ * **Example** (Reference the fallback)
+ *
+ * ```ts
+ * import { pushReviewerRequestForTesting } from "@beep/repo-cli/test/Yeet"
+ * console.log(typeof pushReviewerRequestForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const pushReviewerRequestForTesting = pushReviewerRequest;
+
+// The deployed pr-comment routine currently permits this account in this repo.
+// Expand only after the corresponding routine allowlist has been configured.
+const REVIEWER_COMMENT_AUTHOR = "kriegcloud";
+const REVIEWER_COMMENT_REPOSITORY = "beep-effect/beep-effect";
+
+const ReviewerRequestHead = GitObjectId.check(
+  S.isMaxLength(40, {
+    identifier: "ReviewerRequestSha1Width",
+    title: "Reviewer request SHA-1 width",
+    description: "The deployed comment listener accepts exactly forty hexadecimal characters.",
+  })
+).pipe(
+  $I.annoteSchema("ReviewerRequestHead", {
+    description: "Full SHA-1 head accepted by the deployed reviewer comment routine.",
+  })
+);
+
+const ReviewerRequestPull = S.Struct({
+  state: S.String,
+  draft: S.Boolean,
+  head: S.Struct({ sha: ReviewerRequestHead }),
+  user: S.Struct({ login: S.NonEmptyString }),
+  base: S.Struct({ repo: S.Struct({ full_name: S.NonEmptyString }) }),
+}).pipe(
+  $I.annoteSchema("ReviewerRequestPull", { description: "Live REST pull request identity for a reviewer request." })
+);
+const ReviewerRequestComment = S.Struct({
+  body: S.String,
+  created_at: S.DateTimeUtcFromString,
+  user: S.Struct({ login: S.NonEmptyString }),
+}).pipe(
+  $I.annoteSchema("ReviewerRequestComment", {
+    description: "Comment body and authenticated author used to deduplicate a review request.",
+  })
+);
+
+const ReviewerRequestReadyEvent = S.Struct({
+  event: S.String,
+  created_at: S.OptionFromOptionalKey(S.DateTimeUtcFromString),
+}).pipe(
+  $I.annoteSchema("ReviewerRequestReadyEvent", {
+    description: "Timeline event used to distinguish requests made before the latest ready transition.",
+  })
+);
+
+const reviewerCommentMarker = (head: string) => `<!-- beep-reviewer:request sha=${head} -->`;
+const reviewerCommentBody = (head: string) =>
+  `Requesting beep-reviewer review of this ready PR head.\n\n${reviewerCommentMarker(head)}`;
+const reviewerCommentManual = (prNumber: number, head: string) =>
+  S.is(ReviewerRequestHead)(head)
+    ? `retry \`bun run beep yeet ready\` or, as ${REVIEWER_COMMENT_AUTHOR}, post this canonical request body: ${reviewerCommentBody(head)} on #${prNumber} after confirming it is open, ready, and still at ${head}`
+    : "retry `bun run beep yeet ready` after the current full head can be read";
+
+const decodeReviewerResponse = Effect.fnUntraced(function* <T, I>(schema: S.Codec<T, I>, value: string) {
+  return yield* S.decodeEffect(S.fromJsonString(schema))(value).pipe(
+    Effect.mapError(() =>
+      YeetCommandError.make({ message: "could not decode the reviewer request GitHub response", exitCode: 1 })
+    )
+  );
+});
+
+const requestReviewerReview = Effect.fn("Yeet.requestReviewerReview")(function* (
+  context: RepoRunContext,
+  prNumber: number,
+  confirmedHead: string,
+  allowPush: boolean
+) {
+  if (!S.is(ReviewerRequestHead)(confirmedHead)) {
+    return yield* YeetCommandError.make({
+      message: "reviewer request requires a full 40-hex proven head; no request attempted",
+      exitCode: 1,
+    });
+  }
+  const read = (args: ReadonlyArray<string>) =>
+    ghOutput({
+      args,
+      cwd: context.repoRoot,
+      label: "gh reviewer request",
+      onFailure: (failure) =>
+        YeetCommandError.make({ message: `${failure.label} failed (${failure._tag})`, exitCode: 1 }),
+    });
+  const pullArgs = ["api", `repos/{owner}/{repo}/pulls/${prNumber}`];
+  const pull = yield* read(pullArgs).pipe(
+    Effect.flatMap((value) => decodeReviewerResponse(ReviewerRequestPull, value))
+  );
+  if (pull.state !== "open" || pull.draft || pull.head.sha !== confirmedHead) {
+    return yield* YeetCommandError.make({
+      message: "reviewer request refused: pull request is no longer open and ready at the proven head",
+      exitCode: 1,
+    });
+  }
+  if (pull.user.login !== REVIEWER_COMMENT_AUTHOR || pull.base.repo.full_name !== REVIEWER_COMMENT_REPOSITORY) {
+    return allowPush
+      ? yield* pushReviewerRequest(context, prNumber, confirmedHead)
+      : `[yeet] no comment routine configured for this pull request author/repository; no repeated review-trigger push`;
+  }
+  const login = yield* read(["api", "user", "--jq", ".login"]).pipe(Effect.map(Str.trim));
+  if (login !== REVIEWER_COMMENT_AUTHOR) {
+    return yield* YeetCommandError.make({
+      message: `reviewer comment requires authenticated ${REVIEWER_COMMENT_AUTHOR}; no comment or fallback push attempted`,
+      exitCode: 1,
+    });
+  }
+  // Match ReviewWindow's latest ready_for_review event. A missing transition
+  // is unknown: an eventually consistent timeline must not validate a draft-era request.
+  const events = yield* read([
+    "api",
+    `repos/{owner}/{repo}/issues/${prNumber}/timeline?per_page=100`,
+    "--paginate",
+    "--slurp",
+  ]).pipe(Effect.flatMap((value) => decodeReviewerResponse(ReviewerRequestReadyEvent.pipe(S.Array, S.Array), value)));
+  const readyEvents = A.filter(A.flatten(events), (event) => event.event === "ready_for_review");
+  if (A.isReadonlyArrayEmpty(readyEvents) || A.some(readyEvents, (event) => O.isNone(event.created_at))) {
+    return yield* YeetCommandError.make({
+      message: "reviewer request refused: latest ready event is missing or has no timestamp",
+      exitCode: 1,
+    });
+  }
+  const readyAt = yield* pipe(
+    readyEvents,
+    A.map((event) => event.created_at),
+    A.getSomes,
+    A.sort(DateTime.Order),
+    A.last,
+    Effect.fromOption,
+    Effect.mapError(() => YeetCommandError.make({ message: "reviewer ready timestamp is unavailable", exitCode: 1 }))
+  );
+  const drafted = A.filter(A.flatten(events), (event) => event.event === "convert_to_draft");
+  if (
+    A.some(
+      drafted,
+      (event) => O.isNone(event.created_at) || O.exists(event.created_at, (at) => !DateTime.isLessThan(at, readyAt))
+    )
+  ) {
+    return yield* YeetCommandError.make({
+      message:
+        "reviewer request refused: timeline has a draft transition without a later ready event; retry after GitHub catches up",
+      exitCode: 1,
+    });
+  }
+  const body = reviewerCommentBody(confirmedHead);
+  const pages = yield* read([
+    "api",
+    `repos/{owner}/{repo}/issues/${prNumber}/comments?per_page=100`,
+    "--paginate",
+    "--slurp",
+  ]).pipe(Effect.flatMap((value) => decodeReviewerResponse(ReviewerRequestComment.pipe(S.Array, S.Array), value)));
+  if (
+    A.some(
+      A.flatten(pages),
+      (comment) =>
+        comment.user.login === login && comment.body === body && DateTime.isGreaterThan(comment.created_at, readyAt)
+    )
+  ) {
+    return `[yeet] trusted beep-reviewer request already exists for #${prNumber} at ${confirmedHead}; nothing posted`;
+  }
+  const latest = yield* read(pullArgs).pipe(
+    Effect.flatMap((value) => decodeReviewerResponse(ReviewerRequestPull, value))
+  );
+  if (
+    latest.state !== "open" ||
+    latest.draft ||
+    latest.head.sha !== confirmedHead ||
+    latest.user.login !== pull.user.login ||
+    latest.base.repo.full_name !== pull.base.repo.full_name
+  ) {
+    return yield* YeetCommandError.make({
+      message:
+        "reviewer request refused: pull request changed before the comment; no comment or fallback push attempted",
+      exitCode: 1,
+    });
+  }
+  yield* read([
+    "api",
+    `repos/{owner}/{repo}/issues/${prNumber}/comments`,
+    "--method",
+    "POST",
+    "--field",
+    `body=${body}`,
+  ]);
+  return `[yeet] posted beep-reviewer request for #${prNumber} at ${confirmedHead}; checkout and head unchanged`;
+});
+
+/**
+ * Exercise the live reviewer-request routing with scripted GitHub commands.
+ *
+ * **Example** (Reference the request workflow)
+ *
+ * ```ts
+ * import { requestReviewerReviewForTesting } from "@beep/repo-cli/test/Yeet"
+ * console.log(typeof requestReviewerReviewForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const requestReviewerReviewForTesting = requestReviewerReview;
+
+const ensureReviewerRequest = Effect.fn("Yeet.ensureReviewerRequest")(function* (
+  context: RepoRunContext,
+  dependencies: YeetReadyGateDependencies,
+  prNumber: number,
+  head: string,
+  allowPush: boolean
+) {
+  const request = dependencies.requestReview ?? requestReviewerReview;
+  const message = yield* request(context, prNumber, head, allowPush).pipe(
+    Effect.catchTag("YeetCommandError", (cause) =>
+      Effect.succeed(
+        `[yeet] warning: could not create the beep-reviewer re-request: ${cause.message}; ${reviewerCommentManual(prNumber, head)}`
+      )
+    )
+  );
+  yield* Console.log(message);
 });
 
 // Advisory only: the merge gate holds on the same verdict, so the flip never
@@ -904,7 +1136,7 @@ const recordAndConfirmInherited = Effect.fn("Yeet.recordAndConfirmInherited")(fu
  * the same head, a passing gate, and the same applied attributions before flipping.
  * Already-ready pull requests also verify the current-head receipt, including
  * the existing ancestor refresh rule after a base-only merge; no flip or
- * review-trigger push is repeated.
+ * review-trigger push is repeated; a covered comment request can be repaired.
  * Before a flip, and for an already-ready pull request, the squash commit
  * message GitHub will write is predicted and linted as an advisory
  * (`SquashCommitlint.ts`): a failing verdict prints the rule and the offending
@@ -973,6 +1205,13 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
         `[yeet] pull request #${prNumber} is already ready for review; current-head final-check proof verified, nothing to flip`
       );
       yield* adviseSquashCommitlint(context, dependencies, prNumber);
+      yield* ensureReviewerRequest(
+        context,
+        dependencies,
+        prNumber,
+        O.getOrElse(read.remote.headSha, () => "unknown"),
+        false
+      );
     }),
     flip: Effect.fnUntraced(function* ({ prNumber, headSha }) {
       yield* requireFinalCheck(
@@ -1025,16 +1264,9 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
           author,
         }),
       ]);
-      // The head was pushed while the pull request was a draft, which
-      // beep-reviewer ignores; a failed re-request only warns, the flip stands.
-      const pipe3 = yield* (dependencies.requestReview ?? pushReviewerRequest)(context, prNumber, sameHead).pipe(
-        Effect.catchTag("YeetCommandError", (cause) =>
-          Effect.succeed(
-            `[yeet] warning: could not create the beep-reviewer re-request: ${cause.message}; ${reviewerRequestManual(sameHead, context.branch)}`
-          )
-        )
-      );
-      yield* Console.log(pipe3);
+      // Draft pushes are ignored by the reviewer. Request the proven head by
+      // comment where configured, otherwise retain S32; a failure warns.
+      yield* ensureReviewerRequest(context, dependencies, prNumber, sameHead, true);
       if (A.isReadonlyArrayNonEmpty(applied)) {
         yield* Console.log(`[yeet] recorded ${A.length(applied)} inherited red(s) in the PR body`);
       }
