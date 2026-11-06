@@ -51,6 +51,7 @@ import { GOAL_DECISIONS_DIR } from "./Decisions.schemas.ts";
 import { GoalsGitError } from "./Goals.errors.ts";
 import {
   decodeGoalManifest,
+  GoalCloseoutVerification,
   GoalOpsScriptPath,
   GoalPhaseStatus,
   GoalStatus,
@@ -138,6 +139,7 @@ export const GoalDoctorFindingKind = LiteralKit([
   "schema-version-upgrade",
   "completion-gate-unsatisfied",
   "completion-gate-unknown",
+  "closeout-adoption-pending",
   "superseded-without-pointer",
   "exploration-backlink-missing",
   "packet-stream-fork",
@@ -1428,7 +1430,24 @@ const completionEvidenceAdvisory = Effect.fn("Goals.completionEvidenceAdvisory")
     A.getSomes([O.map(view, renderGoalCloseoutView), committed]),
     (line) => `${packet.record.slug}: ${line}`
   );
-  return O.some({ slug: packet.record.slug, findings, notes });
+  // A verified proposal is proof, not closeout: the packet is done only once
+  // `set-status` adopts it as a committed record that merges to main.
+  const adoption = O.match(
+    O.filter(view, (value) => GoalCloseoutVerification.is.verified(value.verification)),
+    {
+      onNone: A.empty<GoalDoctorFinding>,
+      onSome: (value) =>
+        A.of(
+          finding(
+            packet.record.slug,
+            "closeout-adoption-pending",
+            "advisory",
+            `Proposed closeout via #${value.proposedCloseout.finalPullRequest} verified but is not adopted; run \`bun run beep goals set-status ${packet.record.slug} ${value.proposedCloseout.status}\` and merge that packet-state PR.`
+          )
+        ),
+    }
+  );
+  return O.some({ slug: packet.record.slug, findings: A.appendAll(findings, adoption), notes });
 });
 
 type StructuredCompletionAdvisory = {
