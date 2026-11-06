@@ -1357,6 +1357,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the native entry and shared child-permit extraction together while retaining source corpora and all remaining acceptance requirements.
 
+### Connect canonical source evidence to annotation, 2026-11-06
+
+One admitted source annotation operation now verifies canonical plain/markup sources, snapshots replacements before resolver work and runs existing native annotation children under the same Scope, cumulative budget and deadline. Eleven tests pass in 6.48s, including actual Bun/Node mapping and a controlled combined resolver/callback deadline. Native entry regression retains all 214 unchecked cases twice. Public service/Layer, full host protocols and all exhaustive proof/accounting remain open. See history/evidence/2026-11-06-verified-source-annotation.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert source annotation and restore the private entry helper boundary together, retaining original corpora and all unfinished proof obligations.
+
 ### Commit installed engine configuration with explicit build trust, 2026-11-06
 
 The versioned engine commitment combines trusted installer build/runtime/selected-port metadata with actual authenticated default assets, captured calendar and encoded policy. Existing Schema snapshot and SHA-256 primitives are reused. Build metadata is snapshotted before asset loading; runtime kind matches the installed diff backend. This commits installer claims rather than attesting arbitrary code. Connected extraction uses the producer with explicit fake deployment metadata; actual deployment/Layer port binding and all broader acceptance remain open. See history/evidence/2026-11-06-engine-artifact.md.

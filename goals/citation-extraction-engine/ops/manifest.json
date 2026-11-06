@@ -241,7 +241,12 @@
     "packages/law-practice/server/test/CitationSourceEvidence.test.ts",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-admitted-annotation-entry.md",
     "packages/law-practice/server/src/internal/Citation/AnnotationEntry.ts",
-    "packages/law-practice/server/test/CitationAnnotationEntry.test.ts"
+    "packages/law-practice/server/test/CitationAnnotationEntry.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-verified-source-annotation.md",
+    "packages/law-practice/server/src/internal/Citation/SourceAnnotation.ts",
+    "packages/law-practice/server/test/CitationSourceAnnotation.test.ts",
+    "packages/law-practice/server/test/CitationSourceAnnotationTiming.test.ts",
+    "packages/law-practice/server/test/CitationAnnotationEntry.fixtures.ts"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

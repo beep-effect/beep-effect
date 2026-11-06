@@ -122,7 +122,10 @@ export class CitationAnnotationEntryResult extends S.Opaque<
 const invalid = () => CitationAnnotationEntryFailure.make({ reason: "invalid-input" });
 const configurationFailure = () => CitationAnnotationEntryFailure.make({ reason: "invalid-configuration" });
 const nativeEqual = S.toEquivalence(S.toType(CitationPythonUnicodeStorage));
-const own = Effect.fn("Citation.ownAnnotationEntry")(function* (
+/** Capture entry dependencies for composition inside an admitted parent.
+ * @internal @category operations @since 0.0.0
+ */
+export const ownCitationAnnotationEntry = Effect.fn("Citation.ownAnnotationEntry")(function* (
   limits: CitationEngineLimits,
   configuration: CitationAnnotationEntryConfiguration
 ) {
@@ -137,6 +140,41 @@ const own = Effect.fn("Citation.ownAnnotationEntry")(function* (
     updater,
     xmlRuntime: CitationNativeProcessRuntime.make({ ...configuration.xmlRuntime }),
   };
+});
+const own = ownCitationAnnotationEntry;
+/** Snapshot native replacement words before an asynchronous source boundary.
+ * Every allocated word is charged to the enclosing operation budget.
+ * @internal @category operations @since 0.0.0
+ */
+export const ownCitationAnnotationReplacements = Effect.fn("Citation.ownAnnotationReplacements")(function* (
+  limits: CitationEngineLimits,
+  raw: unknown
+) {
+  const unicode = yield* makeCitationPythonUnicode(limits, "annotate").pipe(Effect.mapError(configurationFailure));
+  const reserve = yield* captureCitationAnnotationReservation;
+  const input = yield* S.decodeUnknownEffect(RowsProbe)(raw).pipe(Effect.mapError(invalid));
+  if (input.replacements.length > limits.annotationReplacements)
+    return yield* CitationSafetyLimitExceeded.make({ operation: "annotate", limit: "annotationReplacements" });
+  return yield* Effect.forEach(
+    input.replacements,
+    Effect.fn("Citation.ownAnnotationReplacement")(function* (row) {
+      const before = yield* unicode
+        .fromStorageReserved(row.before, reserve)
+        .pipe(
+          Effect.catchTag("CitationPythonUnicodeFailure", (error) =>
+            failCitationAnnotationUnicode(limits, invalid, error)
+          )
+        );
+      const after = yield* unicode
+        .fromStorageReserved(row.after, reserve)
+        .pipe(
+          Effect.catchTag("CitationPythonUnicodeFailure", (error) =>
+            failCitationAnnotationUnicode(limits, invalid, error)
+          )
+        );
+      return CitationAnnotationReplacement.make({ ...row, before: before.storage, after: after.storage });
+    })
+  );
 });
 const prepare = Effect.fn("Citation.prepareAnnotationEntry")(function* (
   limits: CitationEngineLimits,
@@ -178,29 +216,7 @@ const prepare = Effect.fn("Citation.prepareAnnotationEntry")(function* (
     return { source: mapped.source, updater: O.some(mapped.updater) };
   });
   const selected = yield* select;
-  const input = yield* S.decodeUnknownEffect(RowsProbe)(raw).pipe(Effect.mapError(invalid));
-  if (input.replacements.length > limits.annotationReplacements)
-    return yield* CitationSafetyLimitExceeded.make({ operation: "annotate", limit: "annotationReplacements" });
-  const replacements = yield* Effect.forEach(
-    input.replacements,
-    Effect.fn("Citation.ownAnnotationReplacement")(function* (row) {
-      const before = yield* unicode
-        .fromStorageReserved(row.before, reserve)
-        .pipe(
-          Effect.catchTag("CitationPythonUnicodeFailure", (error) =>
-            failCitationAnnotationUnicode(limits, invalid, error)
-          )
-        );
-      const after = yield* unicode
-        .fromStorageReserved(row.after, reserve)
-        .pipe(
-          Effect.catchTag("CitationPythonUnicodeFailure", (error) =>
-            failCitationAnnotationUnicode(limits, invalid, error)
-          )
-        );
-      return CitationAnnotationReplacement.make({ ...row, before: before.storage, after: after.storage });
-    })
-  );
+  const replacements = yield* ownCitationAnnotationReplacements(limits, raw);
   const ordered = yield* prepareCitationAnnotations(limits, replacements, selected.updater);
   const render = Effect.gen(function* () {
     if (mode.mode === "unchecked") {
@@ -218,7 +234,10 @@ const prepare = Effect.fn("Citation.prepareAnnotationEntry")(function* (
   });
   return yield* render;
 });
-const prepareOwned = Effect.fn("Citation.annotateOwnedEntry")(
+/** Run only inside the existing parent's admission, Scope and text budget.
+ * @internal @category operations @since 0.0.0
+ */
+export const prepareCitationAnnotationEntry = Effect.fn("Citation.annotateOwnedEntry")(
   (
     limits: CitationEngineLimits,
     runtime: CitationNativeProcessRuntime,
@@ -239,7 +258,7 @@ const install = makeCitationMetadataStage({
   schema: S.toType(CitationAnnotationEntryConfiguration),
   invalid: configurationFailure,
   own,
-  prepare: prepareOwned,
+  prepare: prepareCitationAnnotationEntry,
   project: (text: CitationPythonUnicodeStorage, reservedUnits: number) =>
     CitationAnnotationEntryResult.make({ text, reservedUnits }),
 });

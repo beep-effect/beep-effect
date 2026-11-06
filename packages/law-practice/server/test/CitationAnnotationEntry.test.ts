@@ -5,27 +5,20 @@ import {
   CitationAnnotationCallbackResult,
 } from "@beep/law-practice-server/internal/Citation/AnnotationCallback";
 import {
-  CitationAnnotationEntryConfiguration,
   CitationAnnotationOffsetUpdater,
   makeCitationAnnotationEntry,
 } from "@beep/law-practice-server/internal/Citation/AnnotationEntry";
-import { CitationHtmlDiscoveryConfiguration } from "@beep/law-practice-server/internal/Citation/HtmlDiscovery";
-import { CitationHtmlGeometryPreparationConfiguration } from "@beep/law-practice-server/internal/Citation/HtmlGeometryPreparation";
 import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
+import { installCitationAnnotationEntryFixture } from "./CitationAnnotationEntry.fixtures.ts";
 import { CitationAnnotationReplayReplacement } from "./CitationAnnotationReplay.fixtures.ts";
-import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
-import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixtures.ts";
-import { readCitationOracleFixture, setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
+import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
-import { makeCitationXmlTestRuntime } from "./CitationXmlWorker.fixtures.ts";
-import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationAnnotationEntry");
 const Corpus = S.fromJsonString(
@@ -44,29 +37,13 @@ const Corpus = S.fromJsonString(
   })
 );
 const word = (text: string) => CitationPythonUnicodeStorage.make({ width: 1, bytes: new TextEncoder().encode(text) });
-const install = Effect.fn("AnnotationEntryTest.install")(function* (kind: CitationNativeRuntimeKind = "bun") {
-  const setup = yield* setupCitationMetadataRuntime(kind, undefined, false);
-  const discovery = yield* readCitationHtmlDiscoveryCorpus();
-  const fs = yield* FileSystem.FileSystem;
-  const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-entry-diff-" });
-  const diffRuntime = yield* makeCitationDiffTestRuntime(kind, cwd);
-  const xmlRuntime = yield* makeCitationXmlTestRuntime(kind);
-  const configuration = CitationAnnotationEntryConfiguration.make({
-    geometry: CitationHtmlGeometryPreparationConfiguration.make({
-      discovery: CitationHtmlDiscoveryConfiguration.make(discovery.configuration),
-      diffRuntime,
-    }),
-    xmlRuntime,
-  });
-  return { ...setup, configuration };
-});
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("admitted annotation entry", (it) => {
   for (const kind of ["bun", "node"] as const) {
     it.effect(
       `composes original markup modes and retires real workers on ${kind}`,
       () =>
         Effect.gen(function* () {
-          const setup = yield* install(kind);
+          const setup = yield* installCitationAnnotationEntryFixture(kind);
           const entry = yield* makeCitationAnnotationEntry(setup.limits, setup.runtime, setup.configuration).pipe(
             Effect.provideContext(setup.provided)
           );
@@ -105,7 +82,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("admitted an
   }
   it.effect("replays all 214 original unchecked outcomes with fresh per-call work ownership", () =>
     Effect.gen(function* () {
-      const setup = yield* install();
+      const setup = yield* installCitationAnnotationEntryFixture();
       const entry = yield* makeCitationAnnotationEntry(setup.limits, setup.runtime, setup.configuration).pipe(
         Effect.provideContext(setup.provided)
       );
@@ -135,7 +112,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("admitted an
   );
   it.effect("validates mode before ignored fields and preserves the installed callback and invocation budget", () =>
     Effect.gen(function* () {
-      const setup = yield* install();
+      const setup = yield* installCitationAnnotationEntryFixture();
       let calls = 0;
       const callback = CitationAnnotationAnnotator.of({
         annotate: Effect.fn("AnnotationEntryTest.callback")(function* (_before, _span, _after, work) {
@@ -173,7 +150,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("admitted an
   );
   it.effect("selects empty supplied source without reading plain text or creating map workers", () =>
     Effect.gen(function* () {
-      const setup = yield* install();
+      const setup = yield* installCitationAnnotationEntryFixture();
       const updater = CitationAnnotationOffsetUpdater.of({
         update: Effect.fn("AnnotationEntryTest.update")(() => Effect.succeed(0)),
       });

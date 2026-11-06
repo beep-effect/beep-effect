@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "4bd76589fe3db288c816afd0652123a0d1aa165fc9fe8b62874c69777335bb30",
+  "planSha256": "0004e995bc1ae8bb148fe1f454486c42a5f351ac9afb47321afd1e2e8a679caa",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1480,11 +1480,31 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/AnnotationEntry.ts",
-          "sha256": "83760556005e238ff194d4bcb3fd656e86170d304f81a118b201a956291502c1"
+          "sha256": "5abf1194a0ead36ab851084e0cd2b846f50883490a8809f78e21c8e15404d74d"
         },
         {
           "path": "packages/law-practice/server/test/CitationAnnotationEntry.test.ts",
-          "sha256": "fe4137546411e5cafee2dd6d23ac6c9ff97c02b0fbfc2a314e41c8c3fd5f614c"
+          "sha256": "2ce8ace524ee0054fd9ad8a2a379a2427f97351255912b89b6d1615fdb9aa312"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-verified-source-annotation.md",
+          "sha256": "681ddb3ddc4ab7dbe97e3e5c3e5fbe1028870211d528c8a0a5ade77b5747610d"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/SourceAnnotation.ts",
+          "sha256": "67d1d4b94e8f26dca13b807ec39f77cc794412dbebf70ea2703e71945f6e65f0"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationSourceAnnotation.test.ts",
+          "sha256": "6e45c68a3f2239be75ca305cc0431e2ba2b934a766250f0cce7f54a8b66eaf0b"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationSourceAnnotationTiming.test.ts",
+          "sha256": "8c1344881f9bd6d0f6347af9dc6ae5b51eb683914fc24f6147d6f8e7b18538f5"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationAnnotationEntry.fixtures.ts",
+          "sha256": "43736573cab801fb34201ec78570191e92139933a2aacf56270458e08bbcc7eb"
         }
       ],
       "workflowState": "audit",
