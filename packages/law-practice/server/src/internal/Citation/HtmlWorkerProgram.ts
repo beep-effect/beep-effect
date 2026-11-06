@@ -5,14 +5,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
-import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
@@ -29,7 +26,7 @@ import {
   preflightCitationHtmlControlFrames,
   readCitationHtmlFrames,
 } from "./HtmlWorkerProtocol.ts";
-import { CitationHtmlRpcs } from "./HtmlWorkerRpc.ts";
+import { CitationHtmlRpcs, CitationHtmlWorkerStartup } from "./HtmlWorkerRpc.ts";
 import { citationNativeRpcRequest, makeCitationNativeRpcServer } from "./NativeRpc.ts";
 import { loadCitationNativeWasmAsset } from "./NativeWasm.ts";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
@@ -37,18 +34,6 @@ import type * as RpcGroup from "effect/rpc/RpcGroup";
 import type * as RpcMessage from "effect/rpc/RpcMessage";
 import type { CitationHtmlWorkerJob, CitationHtmlWorkerReply } from "./HtmlWorkerProtocol.ts";
 
-const $I = $LawPracticeServerId.create("internal/Citation/HtmlWorkerProgram");
-const Args = S.Tuple([
-  S.FiniteFromString.pipe(
-    S.decodeTo(
-      S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima.processMessageBytes))
-    )
-  ),
-]).pipe(
-  $I.annoteSchema("Args", {
-    description: "Single explicit effective message ceiling; no ambient configuration is read.",
-  })
-);
 const badRuntime = () => CitationHtmlWorkerFailure.make({ reason: "invalid-runtime" });
 const badFrame = () => CitationHtmlWorkerFailure.make({ reason: "invalid-frame" });
 /**
@@ -62,13 +47,15 @@ const badFrame = () => CitationHtmlWorkerFailure.make({ reason: "invalid-frame" 
 export const citationHtmlWorkerProgram = Effect.gen(function* () {
   const stdio = yield* Stdio.Stdio;
   const citationResult1 = yield* stdio.args;
-  const [maximum] = yield* S.decodeUnknownEffect(Args)(citationResult1).pipe(Effect.mapError(badRuntime));
+  const [argument] = yield* S.decodeUnknownEffect(S.Tuple([S.String.check(S.isMaxLength(32768))]))(
+    citationResult1
+  ).pipe(Effect.mapError(badRuntime));
+  const startup = yield* S.decodeEffect(S.fromJsonString(CitationHtmlWorkerStartup), { onExcessProperty: "error" })(
+    argument
+  ).pipe(Effect.mapError(badRuntime));
+  const maximum = startup.maximum;
   yield* preflightCitationHtmlControlFrames(maximum);
-  const citationResult2 = yield* Path.Path;
-  const assetPath = yield* citationResult2
-    .fromFileUrl(new URL("../../../assets/citation-html/kernel.wasm", import.meta.url))
-    .pipe(Effect.mapError(badRuntime));
-  const asset = yield* loadCitationNativeWasmAsset(assetPath, citationHtmlKernelAsset, badRuntime);
+  const asset = yield* loadCitationNativeWasmAsset(startup.assetPath, citationHtmlKernelAsset, badRuntime);
   const kernel = yield* makeCitationHtmlKernel(asset);
   const send = Effect.fn("Citation.sendHtmlWorkerReply")((reply: CitationHtmlWorkerReply) =>
     encodeCitationHtmlReply(reply, maximum).pipe(

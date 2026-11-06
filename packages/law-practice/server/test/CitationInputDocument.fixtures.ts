@@ -1,6 +1,7 @@
 /** Source constructor replay through real owned cleaning and geometry.
  * @internal @packageDocumentation @since 0.0.0
  */
+import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationCleanerProduced,
@@ -22,10 +23,15 @@ import * as Str from "effect/String";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
 import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
 import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixtures.ts";
+import { citationHtmlWorkerTestRuntime, makeCitationNodeTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { readCitationOracleFixture, setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
-import type { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import type { CitationInputDocument } from "@beep/law-practice-server/internal/Citation/InputDocument";
+import type {
+  CitationNativeProcessRuntime,
+  CitationNativeRuntimeKind,
+} from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationInputDocument");
 const Value = S.Union([
@@ -87,11 +93,16 @@ const makeCase = Effect.fn("InputDocumentTest.case")(function* (
   row: Row,
   setup: Effect.Success<ReturnType<typeof setupCitationMetadataRuntime>>,
   diffRuntime: CitationNativeProcessRuntime,
+  htmlRuntime: CitationNativeProcessRuntime,
   discovery: Effect.Success<ReturnType<typeof readCitationHtmlDiscoveryCorpus>>["configuration"]
 ) {
-  const h = yield* makeCitationCleanerRegistryHarness(undefined, undefined, setup.observed.spawner).pipe(
-    Effect.provideContext(setup.provided)
-  );
+  const h = yield* makeCitationCleanerRegistryHarness(
+    undefined,
+    undefined,
+    setup.observed.spawner,
+    undefined,
+    htmlRuntime
+  ).pipe(Effect.provideContext(setup.provided));
   const makeValue = (value: typeof Value.Type) =>
     value.kind === "unicode" ? h.values.sourceUnicode(value.native) : h.values.retainHost(null);
   const plain = yield* makeValue(row.plainInput);
@@ -205,11 +216,28 @@ const checkValue = Effect.fn("InputDocumentTest.checkValue")(function* (
   }
   expect(O.getOrThrow(unicode).storage).toEqual(expected.native);
 });
+const checkSuccess = Effect.fn("InputDocumentTest.checkSuccess")(function* (
+  row: Row,
+  fixture: Effect.Success<ReturnType<typeof makeCase>>,
+  result: CitationInputDocument
+) {
+  const { h, plain, markup, steps } = fixture;
+  yield* checkValue(h.values, result.plain, row.plain);
+  yield* checkValue(h.values, result.source, row.source);
+  expect(result.source === plain).toBe(row.sourceIsPlainInput);
+  expect(result.source === markup).toBe(row.sourceIsMarkupInput);
+  expect(result.plain === plain).toBe(row.plainIsPlainInput);
+  expect(result.steps).toBe(steps);
+  expect(O.isSome(result.geometry)).toBe(row.hasForward && row.hasBackward);
+  if (O.isNone(result.geometry)) expect(result.reservedUnits).toBe(result.cleanerTextUtf16);
+  else expect(result.reservedUnits).toBeGreaterThanOrEqual(result.cleanerTextUtf16);
+  if (O.isSome(result.geometry)) expect(result.geometry.value.tags).toEqual(row.emphasis);
+});
 const checkCase = Effect.fn("InputDocumentTest.check")(function* (
   row: Row,
   fixture: Effect.Success<ReturnType<typeof makeCase>>
 ) {
-  const { h, plain, markup, steps, stage } = fixture;
+  const { plain, markup, steps, stage } = fixture;
   const invocation = stage.initialize({ plain, markup, steps });
   const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
   if (row.error !== null) {
@@ -217,16 +245,7 @@ const checkCase = Effect.fn("InputDocumentTest.check")(function* (
     expect(error, `${row.id}:error`).toMatchObject({ sourceError: row.error });
   } else {
     const result = yield* closed;
-    yield* checkValue(h.values, result.plain, row.plain);
-    yield* checkValue(h.values, result.source, row.source);
-    expect(result.source === plain).toBe(row.sourceIsPlainInput);
-    expect(result.source === markup).toBe(row.sourceIsMarkupInput);
-    expect(result.plain === plain).toBe(row.plainIsPlainInput);
-    expect(result.steps).toBe(steps);
-    expect(O.isSome(result.geometry)).toBe(row.hasForward && row.hasBackward);
-    if (O.isNone(result.geometry)) expect(result.reservedUnits).toBe(result.cleanerTextUtf16);
-    else expect(result.reservedUnits).toBeGreaterThanOrEqual(result.cleanerTextUtf16);
-    if (O.isSome(result.geometry)) expect(result.geometry.value.tags).toEqual(row.emphasis);
+    yield* checkSuccess(row, fixture, result);
   }
   expect(fixture.events(), `${row.id}:events`).toEqual(
     A.filter(row.events, (event) => !A.contains(["placeholder", "diff:0", "diff:1", "emphasis"], event))
@@ -236,13 +255,24 @@ const checkCase = Effect.fn("InputDocumentTest.check")(function* (
     expect(fixture.state().tokens).toEqual(row.stepsAfter.items);
 });
 /** Full source replay is hosted; smoke retains ordinary failures, None output and actual geometry. */
-export const replayCitationInputDocument = Effect.fn("InputDocumentTest.replay")(function* (full: boolean) {
+export const replayCitationInputDocument = Effect.fn("InputDocumentTest.replay")(function* (
+  full: boolean,
+  kind: CitationNativeRuntimeKind = "bun"
+) {
   const corpus = yield* load;
   const discovery = yield* readCitationHtmlDiscoveryCorpus();
-  const setup = yield* setupCitationMetadataRuntime("bun");
+  const setup = yield* setupCitationMetadataRuntime(kind);
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-document-diff-" });
-  const diffRuntime = yield* makeCitationDiffTestRuntime("bun", directory);
+  const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
+  const htmlDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-document-html-" });
+  const htmlRuntime =
+    kind === "node"
+      ? yield* makeCitationNodeTestRuntime(
+          NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.node.entry.ts", import.meta.url)),
+          htmlDirectory
+        )
+      : citationHtmlWorkerTestRuntime();
   const rows = A.filter(
     corpus.cases,
     (row) =>
@@ -256,7 +286,7 @@ export const replayCitationInputDocument = Effect.fn("InputDocumentTest.replay")
       )
   );
   for (const row of rows) {
-    const fixture = yield* makeCase(row, setup, diffRuntime, discovery.configuration);
+    const fixture = yield* makeCase(row, setup, diffRuntime, htmlRuntime, discovery.configuration);
     yield* checkCase(row, fixture);
   }
   expect(rows).toHaveLength(full ? 112 : 30);

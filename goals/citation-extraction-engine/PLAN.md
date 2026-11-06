@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Node constructor checkpoint (2026-11-05): the shared replay now selects actual
+Bun or Node for HTML cleaning, regex discovery and diff geometry. The Node HTML
+entry reuses the same worker program and upstream platform services; explicit
+authenticated asset startup survives bundling. Both 30-case smoke replays pass
+with twenty independently confirmed exits per runtime. Hosted full 112-case
+replay is registered for both runtimes. Full parity and the default protocol
+adapter remain open. See [constructor evidence](history/evidence/2026-11-05-input-document-constructor.md).
+
 Hosted feedback checkpoint (2026-11-05): the parent-budget head reported one
 introduced Fallow cognitive finding in constructor test assertions. Extracted
 native/None checking into its own Effect helper without dropping assertions;

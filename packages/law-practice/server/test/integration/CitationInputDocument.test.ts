@@ -8,4 +8,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("complete or
     () => replayCitationInputDocument(true),
     { timeout: 600000 }
   );
+  it.effect(
+    "replays all original constructor traces through Node cleaning and geometry",
+    () => replayCitationInputDocument(true, "node"),
+    { timeout: 600000 }
+  );
 });

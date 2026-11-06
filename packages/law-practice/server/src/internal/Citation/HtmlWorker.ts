@@ -17,6 +17,7 @@ import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
@@ -30,7 +31,7 @@ import {
   preflightCitationHtmlControlFrames,
   preflightCitationHtmlJob,
 } from "./HtmlWorkerProtocol.ts";
-import { prepareCitationHtmlRpc } from "./HtmlWorkerRpc.ts";
+import { CitationHtmlWorkerStartup, prepareCitationHtmlRpc } from "./HtmlWorkerRpc.ts";
 import { CitationNativeProcessAdmission, makeCitationNativeProcessAdmission } from "./NativeAdmission.ts";
 import {
   CitationNativeProcessRuntime,
@@ -44,7 +45,6 @@ import type { CitationOwnedNativeProcess } from "./NativeProcess.ts";
 
 const CitationEngineLimitsType = S.toType(CitationEngineLimits);
 const NativeStorage = S.toType(CitationPythonUnicodeStorage);
-const NaturalJson = S.fromJsonString(S.Natural);
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlWorker");
 /** @internal @category models @since 0.0.0 */
@@ -115,6 +115,13 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
     Effect.mapError(() => failure("invalid-runtime"))
   );
   const clock = yield* Clock.Clock;
+  const path = yield* Path.Path;
+  const assetPath = yield* path
+    .fromFileUrl(new URL("../../../assets/citation-html/kernel.wasm", import.meta.url))
+    .pipe(Effect.mapError(() => failure("invalid-runtime")));
+  const argument = yield* S.encodeEffect(S.fromJsonString(CitationHtmlWorkerStartup))(
+    CitationHtmlWorkerStartup.make({ maximum: limits.processMessageBytes, assetPath })
+  ).pipe(Effect.mapError(() => failure("invalid-runtime")));
   // Standalone private workers own a local pool. Engine composition supplies one
   // shared service before constructing any of its builtin/native adapters.
   const suppliedAdmission = yield* Effect.serviceOption(CitationNativeProcessAdmission);
@@ -212,9 +219,6 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
                 outputUtf16,
               }),
               limits.processMessageBytes
-            );
-            const argument = yield* S.encodeEffect(NaturalJson)(limits.processMessageBytes).pipe(
-              Effect.mapError(() => failure("invalid-runtime"))
             );
             yield* nativeAdmission.acquire("clean").pipe(
               Effect.mapError((error) =>

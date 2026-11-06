@@ -21,7 +21,9 @@ import { makeCitationPythonHash } from "@beep/law-practice-server/internal/Citat
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
@@ -30,6 +32,7 @@ import type {
   CitationCleanerProduced,
   CitationCleanerWork,
 } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import type { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 
 type BuiltinObservation = (
@@ -47,7 +50,8 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"] = ChildProcessSpawner.make(() =>
     Effect.die("Registry unit tests must not start native workers")
   ),
-  observe: BuiltinObservation = (_name, _value, body) => body
+  observe: BuiltinObservation = (_name, _value, body) => body,
+  htmlRuntime: CitationNativeProcessRuntime = citationHtmlWorkerTestRuntime()
 ) {
   const base = (yield* defaultCitationEnginePolicy).limits;
   const limits = {
@@ -56,7 +60,9 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
     resolutionIterations: O.getOrElse(O.fromUndefinedOr(iterations), () => base.resolutionIterations),
   };
   const values = yield* makeCitationCleanerValues(limits);
-  const builtin = yield* makeCitationBuiltinCleaners(limits, citationHtmlWorkerTestRuntime()).pipe(
+  const paths = yield* Layer.build(Path.layer);
+  const builtin = yield* makeCitationBuiltinCleaners(limits, htmlRuntime).pipe(
+    Effect.provideContext(paths),
     Effect.provideService(CitationCleanerValues, values),
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
   );
