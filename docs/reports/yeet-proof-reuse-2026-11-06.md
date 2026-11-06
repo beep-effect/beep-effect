@@ -9,7 +9,9 @@ reuse it only when source tree, head, base, command and environment still match.
 Without `--resume`, commands execute again and refresh successful step proofs.
 
 This uses `LaneProofReuse` and its atomic write and before/after identity checks.
-It does not create another cache protocol. The final-check command still refuses
+It does not create another cache protocol. Codex's per-tool-call tracing ID is
+excluded from inherited input hashing; otherwise an unchanged command misses
+on every new shell invocation. Actual execution settings remain hashed. The final-check command still refuses
 a dirty or moved checkout, reruns expectation rewrites, and requires the complete
 head-pinned final receipt before ready. Cheap composite gates and Repo Sanity
 always execute because they can contain checks of changing external state. Failed
@@ -33,6 +35,11 @@ never shared as proof.
 The regression performs a real clean install, replays the preflight and checks the
 unchanged receipt and reuse result, then commits a broken lockfile and verifies a
 real failure with the receipt removed. Existing input and expiry controls remain.
+
+On the real repository checkout, a fresh preflight took 23,044ms; repeating the
+same committed head with its valid receipt took 93ms and performed no install.
+This is one local observation of retry overhead, not a cold-install speedup or
+a hosted CI saving. The receipt retained its original expiry.
 
 ## One remote monitor per PR
 

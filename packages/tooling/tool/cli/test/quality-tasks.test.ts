@@ -3728,6 +3728,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const argument7 = expect(hashAtConcurrency28).not;
             const hashAtConcurrency7 = yield* hashAtConcurrency("3");
             argument7.toBe(hashAtConcurrency7);
+            const firstToolCall = yield* withEnvVarEffect("CODEX_TOOL_CALL_ID", "first", hashAtConcurrency("2"));
+            const nextToolCall = yield* withEnvVarEffect("CODEX_TOOL_CALL_ID", "next", hashAtConcurrency("2"));
+            expect(firstToolCall).toBe(nextToolCall);
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
