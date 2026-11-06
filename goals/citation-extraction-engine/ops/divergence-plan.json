@@ -96,7 +96,13 @@
         "packages/law-practice/server/test/CitationCaseNameProcess.test.ts",
         "packages/law-practice/server/test/integration/CitationCaseNameProcess.test.ts",
         "packages/law-practice/use-cases/test/fixtures/eyecite/case-name-process-patterns.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-processing-target.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-processing-target.md",
+        "goals/citation-extraction-engine/ops/probe-span-offsets.py",
+        "packages/law-practice/server/src/internal/Citation/SpanOffsets.ts",
+        "packages/law-practice/server/src/internal/Citation/HtmlTagGeometry.ts",
+        "packages/law-practice/server/test/CitationSpanOffsets.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/span-offsets.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-html-tag-geometry.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -441,7 +447,13 @@
         "packages/law-practice/server/test/CitationCaseNameProcess.test.ts",
         "packages/law-practice/server/test/integration/CitationCaseNameProcess.test.ts",
         "packages/law-practice/use-cases/test/fixtures/eyecite/case-name-process-patterns.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-processing-target.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-processing-target.md",
+        "goals/citation-extraction-engine/ops/probe-span-offsets.py",
+        "packages/law-practice/server/src/internal/Citation/SpanOffsets.ts",
+        "packages/law-practice/server/src/internal/Citation/HtmlTagGeometry.ts",
+        "packages/law-practice/server/test/CitationSpanOffsets.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/span-offsets.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-html-tag-geometry.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
