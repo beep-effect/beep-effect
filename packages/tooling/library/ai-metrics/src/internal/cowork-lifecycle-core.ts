@@ -6,12 +6,13 @@ import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 import { ClaudeCoworkLifecycleMetadata } from "../native-lifecycle.ts";
-import { NativeTraceBatch, NativeTraceMetadata } from "../native-trace.ts";
+import { NativeTraceBatch } from "../native-trace.ts";
 import { hashPrivateIdentifier } from "../privacy.ts";
 import { CoworkLifecycleCodecs } from "./cowork-lifecycle-schemas.ts";
 import { coworkPeerSource } from "./cowork-peer-source.ts";
 import { CursorLifecyclePolicy, failure } from "./cursor-lifecycle-schemas.ts";
 import { makeLifecycleBridge } from "./lifecycle-bridge.ts";
+import { makeLifecyclePoint } from "./lifecycle-point.ts";
 import type { CoworkLifecyclePolicy } from "./cowork-lifecycle-schemas.ts";
 import type { CursorLifecycleRuntime } from "./cursor-lifecycle-core.ts";
 import type { CursorLifecycleSourceContract } from "./cursor-lifecycle-schemas.ts";
@@ -68,24 +69,14 @@ const project = Effect.fnUntraced(function* (policy: CoworkLifecyclePolicy, mess
     namespaceId,
     routeId: policy.routeId,
     spans: [
-      NativeTraceMetadata.make({
+      makeLifecyclePoint({
         eventId,
         namespaceId,
         routeId: policy.routeId,
         traceId: Str.slice(0, 32)(traceId),
         spanId: Str.slice(0, 16)(eventId),
-        parentSpanId: O.none(),
-        nameHash: O.none(),
-        kind: "CHAIN",
-        startTimeUnixNano: O.none(),
-        endTimeUnixNano: O.none(),
-        durationKnown: false,
-        status: "unset",
         sessionHash: O.some(session),
-        modelHash: O.none(),
-        modelName: O.none(),
         nativeLifecycle: O.some(lifecycle),
-        usage: { convention: "unknown", input: O.none(), output: O.none(), cacheRead: O.none(), cacheWrite: O.none() },
       }),
     ],
     rejections: [],

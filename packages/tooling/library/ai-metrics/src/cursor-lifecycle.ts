@@ -5,7 +5,6 @@
 
 import { Sha256Hex } from "@beep/schema";
 import * as Effect from "effect/Effect";
-import * as Str from "effect/String";
 import { CursorLifecycleRuntime, makeCursorLifecycleCore } from "./internal/cursor-lifecycle-core.ts";
 import {
   CursorLifecycleCodecs,
@@ -14,7 +13,7 @@ import {
   CursorLifecycleSourceContract,
   failure,
 } from "./internal/cursor-lifecycle-schemas.ts";
-import { exchangeLifecycle } from "./internal/lifecycle-exchange.ts";
+import { exchangeLifecycle, validateLifecycleCallbackInput } from "./internal/lifecycle-exchange.ts";
 
 const { decodeCallback, encodeCallback } = CursorLifecycleCodecs;
 
@@ -67,12 +66,7 @@ export const forwardCursorLifecycleHook = Effect.fn("AiMetrics.cursorLifecycle.f
   socketPath: string,
   body: string
 ) {
-  if (
-    new TextEncoder().encode(body).byteLength > 8192 ||
-    !Str.startsWith("/")(socketPath) ||
-    new TextEncoder().encode(socketPath).byteLength > 107
-  )
-    return yield* failure("callback");
+  yield* validateLifecycleCallbackInput(socketPath, body);
   const native = yield* decodeCallback(body).pipe(Effect.mapError(() => failure("callback")));
   const projected = yield* encodeCallback(native).pipe(Effect.mapError(() => failure("callback")));
   return yield* exchangeLifecycle(socketPath, projected, 5000);

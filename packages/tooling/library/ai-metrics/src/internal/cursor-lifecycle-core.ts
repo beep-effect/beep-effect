@@ -7,7 +7,7 @@ import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 import { NativeLifecycleMetadata } from "../native-lifecycle.ts";
-import { NativeTraceBatch, NativeTraceMetadata } from "../native-trace.ts";
+import { NativeTraceBatch } from "../native-trace.ts";
 import { hashPrivateIdentifier } from "../privacy.ts";
 import {
   CursorLifecycleCodecs,
@@ -17,6 +17,7 @@ import {
 } from "./cursor-lifecycle-schemas.ts";
 import { cursorPeerSource } from "./cursor-peer-source.ts";
 import { makeLifecycleBridge } from "./lifecycle-bridge.ts";
+import { makeLifecyclePoint } from "./lifecycle-point.ts";
 import type { makeNativeIntakeJournal } from "../native-intake.ts";
 import type { ObservationControl } from "../observation-control.ts";
 import type {
@@ -69,30 +70,14 @@ const projectOccurrence = Effect.fnUntraced(function* (
   });
   const namespaceId = yield* hash("ai-metrics-hash-salt-namespace/v1");
   const trace = yield* hash(`cursor-trace/v1:${session}`);
-  const span = NativeTraceMetadata.make({
+  const span = makeLifecyclePoint({
     eventId,
     namespaceId,
     routeId: policy.routeId,
     traceId: Str.slice(0, 32)(trace),
     spanId: Str.slice(0, 16)(eventId),
-    parentSpanId: O.none(),
-    nameHash: O.none(),
-    kind: "CHAIN",
-    startTimeUnixNano: O.none(),
-    endTimeUnixNano: O.none(),
-    durationKnown: false,
-    status: "unset",
     sessionHash: O.some(session),
-    modelHash: O.none(),
-    modelName: O.none(),
     nativeLifecycle: O.some(lifecycle),
-    usage: {
-      convention: "unknown",
-      input: O.none(),
-      output: O.none(),
-      cacheRead: O.none(),
-      cacheWrite: O.none(),
-    },
   });
   const batch = NativeTraceBatch.make({
     requestId: yield* hash(`cursor-request/v1:${eventId}`),

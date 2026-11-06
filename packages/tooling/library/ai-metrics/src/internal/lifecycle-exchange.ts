@@ -1,10 +1,20 @@
 /** Private bounded exchange shared by native lifecycle forwarders. */
 import * as NodeNet from "node:net";
 import * as Effect from "effect/Effect";
+import * as Str from "effect/String";
 import { CursorLifecycleCodecs, failure } from "./cursor-lifecycle-schemas.ts";
 import type { CursorLifecycleError } from "./cursor-lifecycle-schemas.ts";
 
 const { decodeAcknowledgement } = CursorLifecycleCodecs;
+/** Validate common fixed byte ceilings before either source-specific decoder runs. */
+export const validateLifecycleCallbackInput = Effect.fnUntraced(function* (socketPath: string, body: string) {
+  if (
+    new TextEncoder().encode(body).byteLength > 8192 ||
+    !Str.startsWith("/")(socketPath) ||
+    new TextEncoder().encode(socketPath).byteLength > 107
+  )
+    return yield* failure("callback");
+});
 export const exchangeLifecycle = Effect.fn("AiMetrics.lifecycle.exchange")(function* (
   socketPath: string,
   projected: string,
