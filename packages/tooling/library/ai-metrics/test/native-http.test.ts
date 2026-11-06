@@ -575,3 +575,108 @@ for (const reason of LaunchFacts.ObservationLaunchFactsError.fields.reason.liter
     )
   );
 }
+
+for (const domain of ["managed-controller-trace/v1:", "managed-controller-canary/v1:"]) {
+  it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+    it.effect("returns retryable503 without partial acceptance when controller identity hashing fails", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture(16, 2000, true);
+        const id = (c: string) => Sha256Hex.make(Str.repeat(64)(c));
+        const observed = ManagedControllerObservation.make({
+          launchId: id("1"),
+          launchRouteId: id("c"),
+          processInstanceId: id("2"),
+          sourceSessionId: id("3"),
+          evidenceId: id("4"),
+          startTimeUnixNano: "1793000000000000000",
+          endTimeUnixNano: "1793000000100000000",
+          elapsedNanos: "100000000",
+        });
+        const other = ManagedControllerObservation.make({ ...observed, launchId: id("6") });
+        const launches = yield* makeObservationLaunchFacts(f.config);
+        const unknown = ObservationLaunchIdentity.fields.repository.cases.Unknown.make({});
+        yield* Effect.forEach(
+          [observed, other],
+          Effect.fnUntraced(function* (source) {
+            const identity = ObservationLaunchIdentity.make({
+              routeId: source.launchRouteId,
+              harness: "grok",
+              surface: "cli",
+              root: unknown,
+              repository: unknown,
+              clone: unknown,
+              worktree: unknown,
+              task: unknown,
+              attempt: unknown,
+              evidenceId: id("5"),
+            });
+            yield* launches.record(
+              ObservationLaunchFact.cases.Prepared.make({ launchId: source.launchId, identity }),
+              0
+            );
+            yield* launches.record(
+              ObservationLaunchFact.cases.Started.make({
+                launchId: source.launchId,
+                processInstanceId: source.processInstanceId,
+              }),
+              0
+            );
+            yield* launches.record(
+              ObservationLaunchFact.cases.SessionBound.make({
+                launchId: source.launchId,
+                sourceSessionId: source.sourceSessionId,
+              }),
+              0
+            );
+            yield* launches.record(
+              ObservationLaunchFact.cases.Finished.make({ launchId: source.launchId, outcome: "succeeded" }),
+              0
+            );
+          })
+        );
+        const first = yield* encodeManagedControllerObservation(observed);
+        const second = yield* encodeManagedControllerObservation(other);
+        const mixed = new Uint8Array([...first, ...second]);
+        const initialStats = yield* f.journal.stats;
+        const digest = globalThis.crypto.subtle.digest.bind(globalThis.crypto.subtle);
+        let failedCalls = 0;
+        const mock = yield* Effect.acquireRelease(
+          Effect.sync(() =>
+            vi.spyOn(globalThis.crypto.subtle, "digest").mockImplementation((algorithm, data) => {
+              if (new TextDecoder().decode(data) === `${domain}${other.launchId}`) {
+                failedCalls += 1;
+                return Promise.reject(new Error("PRIVATE_CRYPTO_FAILURE"));
+              }
+              return digest(algorithm, data);
+            })
+          ),
+          (mock) => Effect.sync(() => mock.mockRestore())
+        );
+        const refused = yield* f.post(mixed, "application/x-protobuf");
+        expect(failedCalls).toBe(1);
+        expect(refused.status).toBe(503);
+        expect(refused.headers.get("x-observation-receipt")).toBeNull();
+        const status = responseType.lookupType("Status");
+        expect(status.toObject(status.decode(refused.bytes))).toEqual({
+          code: 14,
+          message: "Local intake refused the request",
+        });
+        expect(refused.text).not.toContain("PRIVATE_CRYPTO_FAILURE");
+        expect(refused.text).not.toContain("AiMetricsPrivacyError");
+        const refusedStats = yield* f.journal.stats;
+        const health = yield* f.health;
+        expect(refusedStats).toEqual(initialStats);
+        expect(refusedStats.pages).toBe(0);
+        expect(refusedStats.frames).toBe(0);
+        expect(health.counts).toMatchObject({ accepted: 0, partial: 0, unavailable: 1 });
+        yield* Effect.sync(() => mock.mockRestore());
+        const retried = yield* f.post(mixed, "application/x-protobuf");
+        expect(retried.status).toBe(200);
+        expect(retried.bytes).toHaveLength(0);
+        expect(retried.headers.get("x-observation-receipt")).not.toBeNull();
+        const retryStats = yield* f.journal.stats;
+        expect(retryStats.frames).toBe(2);
+      })
+    )
+  );
+}
