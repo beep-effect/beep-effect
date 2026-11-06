@@ -42,10 +42,10 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { Sha256Hex } from "@beep/schema";
-import { NodeCrypto } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import { describe, expect, it, vi } from "@effect/vitest";
+import { assertFailure, assertNone, assertSuccess, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
@@ -54,6 +54,7 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -62,7 +63,6 @@ import * as Struct from "effect/Struct";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as SqlError from "effect/sql/SqlError";
 import * as TestClock from "effect/testing/TestClock";
-import { vi } from "vitest";
 import pullFixture from "./fixtures/yeet-merge-gate/pull.json" with { type: "json" };
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { recordedGithub } from "./support/YeetGithub.ts";
@@ -1377,44 +1377,60 @@ describe("inert owner native adapter", () => {
       let pulls = 0;
       let afterStatuses = false;
       const github = recordedGithub((call) => {
-        if (call.path === "{repo}/pulls/42") {
-          pulls++;
-          if (fault === "closed-before-read") return { body: livePull(true) };
-          if (fault === "draft-after-read" && pulls > 4) return { body: { ...livePull(), draft: true } };
-          if (fault === "head-after-statuses" && afterStatuses)
-            return { body: { ...livePull(), head: { ...livePull().head, sha: merge } } };
-        }
-        if (call.path === `{repo}/commits/${head}/check-runs`) {
-          checks++;
-          if (checks > 1 && fault === "overflow") {
-            const runs = A.map(A.range(1, 2001), (id) => ({ ...lintRun, id }));
-            return { body: { total_count: runs.length, check_runs: runs } };
-          }
-          if (checks > 1 && fault === "duplicate-check")
-            return { body: { total_count: 3, check_runs: [lintRun, lintRun, nativeOwn()] } };
-        }
-        if (Str.endsWith("/rules/branches/main")(call.path)) {
-          rules++;
-          if (rules > 1 && fault === "missing-rule-parameters") return { body: [{ type: "required_status_checks" }] };
-          if (rules > 1 && fault === "changed-rule-census")
-            return {
-              body: [{ type: "required_status_checks", parameters: { required_status_checks: [{ context: "Lint" }] } }],
+        const override = Match.value(call.path).pipe(
+          Match.when("{repo}/pulls/42", () => {
+            pulls++;
+            return Match.value(fault).pipe(
+              Match.when("closed-before-read", () => ({ body: livePull(true) })),
+              Match.when("draft-after-read", () => (pulls > 4 ? { body: { ...livePull(), draft: true } } : undefined)),
+              Match.when("head-after-statuses", () =>
+                afterStatuses ? { body: { ...livePull(), head: { ...livePull().head, sha: merge } } } : undefined
+              ),
+              Match.orElse(() => undefined)
+            );
+          }),
+          Match.when(`{repo}/commits/${head}/check-runs`, () => {
+            if (++checks <= 1) return undefined;
+            return Match.value(fault).pipe(
+              Match.when("overflow", () => {
+                const runs = A.map(A.range(1, 2001), (id) => ({ ...lintRun, id }));
+                return { body: { total_count: runs.length, check_runs: runs } };
+              }),
+              Match.when("duplicate-check", () => ({
+                body: { total_count: 3, check_runs: [lintRun, lintRun, nativeOwn()] },
+              })),
+              Match.orElse(() => undefined)
+            );
+          }),
+          Match.when(Str.endsWith("/rules/branches/main"), () => {
+            if (++rules <= 1) return undefined;
+            return Match.value(fault).pipe(
+              Match.when("missing-rule-parameters", () => ({ body: [{ type: "required_status_checks" }] })),
+              Match.when("changed-rule-census", () => ({
+                body: [
+                  { type: "required_status_checks", parameters: { required_status_checks: [{ context: "Lint" }] } },
+                ],
+              })),
+              Match.orElse(() => undefined)
+            );
+          }),
+          Match.when(Str.endsWith("/statuses"), () => {
+            afterStatuses = true;
+            if (fault !== "duplicate-status") return undefined;
+            const row = {
+              id: 12,
+              context: "vendor",
+              state: "success",
+              creator: { login: "vendor" },
+              description: null,
+              target_url: null,
+              updated_at: DateTime.formatIso(at(-1)),
             };
-        }
-        if (Str.endsWith("/statuses")(call.path)) afterStatuses = true;
-        if (Str.endsWith("/statuses")(call.path) && fault === "duplicate-status") {
-          const row = {
-            id: 12,
-            context: "vendor",
-            state: "success",
-            creator: { login: "vendor" },
-            description: null,
-            target_url: null,
-            updated_at: DateTime.formatIso(at(-1)),
-          };
-          return { body: [row, row] };
-        }
-        return upstreamRoute(call);
+            return { body: [row, row] };
+          }),
+          Match.orElse(() => undefined)
+        );
+        return O.getOrElse(O.fromUndefinedOr(override), () => upstreamRoute(call));
       });
       return Effect.gen(function* () {
         yield* TestClock.setTime(ms);
@@ -1691,18 +1707,19 @@ const reconciledPublicationFixture = (
   created: boolean,
   own: ReturnType<typeof nativeOwn>
 ): GithubAnswer =>
-  fault === "reconcile-failed"
-    ? { unreachable: "PRIVATE_RECONCILE" }
-    : fault === "reconcile-overflow"
-      ? { body: { total_count: 2001, check_runs: A.map(A.range(1, 2001), (id) => ({ ...own, id })) } }
-      : fault === "reconcile-malformed"
-        ? { body: { total_count: 1, check_runs: [{ ...own, external_id: 123 }] } }
-        : {
-            body: {
-              total_count: fault === "duplicates" ? 2 : fault === "zero" ? 0 : 1,
-              check_runs: !created || fault === "zero" ? [] : fault === "duplicates" ? [own, { ...own, id: 3 }] : [own],
-            },
-          };
+  Match.value(fault).pipe(
+    Match.when("reconcile-failed", () => ({ unreachable: "PRIVATE_RECONCILE" })),
+    Match.when("reconcile-overflow", () => ({
+      body: { total_count: 2001, check_runs: A.map(A.range(1, 2001), (id) => ({ ...own, id })) },
+    })),
+    Match.when("reconcile-malformed", () => ({ body: { total_count: 1, check_runs: [{ ...own, external_id: 123 }] } })),
+    Match.orElse(() => ({
+      body: {
+        total_count: fault === "duplicates" ? 2 : fault === "zero" ? 0 : 1,
+        check_runs: !created || fault === "zero" ? [] : fault === "duplicates" ? [own, { ...own, id: 3 }] : [own],
+      },
+    }))
+  );
 const createPublicationFixture = (fault: string, own: ReturnType<typeof nativeOwn>): GithubAnswer =>
   fault === "lost-response" || fault === "zero" || fault === "duplicates" || Str.startsWith("reconcile-")(fault)
     ? { unreachable: "PRIVATE_LOST_RESPONSE" }
@@ -1746,18 +1763,31 @@ const releaseCompensationFixture = (fault: string) => {
     if (movedBase) return { body: { object: { type: "commit", sha: head } } };
     return upstreamRoute(call, own);
   };
-  const github = recordedGithub((call) => {
-    if (call.method === "POST" && call.path === "{repo}/check-runs") {
-      own = nativeOwn(Result.getOrThrow(decodeExternalCheckBody(call.body)).external_id);
-      return { body: own };
-    }
-    if (call.method === "PATCH") return patch(call);
-    if (call.path === "{repo}/check-runs/2") return readOwn();
-    if (released && call.path === "{repo}/git/ref/heads/main") return readBase(call);
-    if (released && movedBase && Str.startsWith("{repo}/compare/")(call.path))
-      return { body: { merge_base_commit: { sha: merge }, base_commit: { sha: head } } };
-    return upstreamRoute(call, own);
-  });
+  const github = recordedGithub((call) =>
+    Match.value(call).pipe(
+      Match.when(
+        (call) => call.method === "POST" && call.path === "{repo}/check-runs",
+        (call) => {
+          own = nativeOwn(Result.getOrThrow(decodeExternalCheckBody(call.body)).external_id);
+          return { body: own };
+        }
+      ),
+      Match.when(
+        (call) => call.method === "PATCH",
+        () => patch(call)
+      ),
+      Match.when((call) => call.path === "{repo}/check-runs/2", readOwn),
+      Match.when(
+        (call) => released && call.path === "{repo}/git/ref/heads/main",
+        () => readBase(call)
+      ),
+      Match.when(
+        (call) => released && movedBase && Str.startsWith("{repo}/compare/")(call.path),
+        () => ({ body: { merge_base_commit: { sha: merge }, base_commit: { sha: head } } })
+      ),
+      Match.orElse(() => upstreamRoute(call, own))
+    )
+  );
   return {
     github,
     native: () => own,
@@ -1805,10 +1835,10 @@ describe("inert owner publication fence", () => {
           .publish(binding, 0)
           .pipe(Effect.result, Effect.ensuring(Effect.sync(() => spy.mockRestore())));
         if (phase === "fence") {
-          expect(outcome).toEqual(Result.fail(OwnerCheckpointError.make({ reason: "storage" })));
+          assertFailure(outcome, OwnerCheckpointError.make({ reason: "storage" }));
           expect(github.calls).toHaveLength(0);
         } else {
-          expect(outcome).toEqual(Result.succeed({ _tag: "Unknown" }));
+          assertSuccess(outcome, { _tag: "Unknown" });
           const anchors = yield* sql`SELECT payload FROM yeet_owner_checkpoint_anchor`;
           expect(anchors).toHaveLength(0);
         }
@@ -1884,18 +1914,29 @@ describe("inert owner publication fence", () => {
         yield* TestClock.setTime(ms);
         const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
         if (fault !== "unregistered") yield* publisher.owner.register(binding);
-        if (fault === "corrupt-fence") {
-          yield* publisher.publish(binding, 0);
-          const sql = yield* SqlClient.SqlClient;
-          yield* sql`UPDATE yeet_owner_checkpoint_publication SET payload=json_set(payload, '$.externalId', 'foreign-correlation')`;
-        }
-        if (fault === "claimed-state" || fault === "missing-anchor")
-          yield* publisher.owner.apply(release(), policy, now);
-        if (fault === "claimed-state") {
-          yield* publisher.owner.acknowledgePublication(binding, 1, 2);
-          yield* publisher.owner.apply(claim(), policy, now);
-        }
-        const revision = fault === "claimed-state" ? 2 : fault === "missing-anchor" ? 1 : 0;
+        yield* Match.value(fault).pipe(
+          Match.when("corrupt-fence", () =>
+            Effect.gen(function* () {
+              yield* publisher.publish(binding, 0);
+              const sql = yield* SqlClient.SqlClient;
+              yield* sql`UPDATE yeet_owner_checkpoint_publication SET payload=json_set(payload, '$.externalId', 'foreign-correlation')`;
+            })
+          ),
+          Match.when("claimed-state", () =>
+            Effect.gen(function* () {
+              yield* publisher.owner.apply(release(), policy, now);
+              yield* publisher.owner.acknowledgePublication(binding, 1, 2);
+              yield* publisher.owner.apply(claim(), policy, now);
+            })
+          ),
+          Match.when("missing-anchor", () => publisher.owner.apply(release(), policy, now).pipe(Effect.asVoid)),
+          Match.orElse(() => Effect.void)
+        );
+        const revision = Match.value(fault).pipe(
+          Match.when("claimed-state", () => 2),
+          Match.when("missing-anchor", () => 1),
+          Match.orElse(() => 0)
+        );
         const selected =
           fault === "foreign-repository"
             ? OwnerCheckpointBinding.make({ ...binding, repository: "other/repository" })
@@ -1906,13 +1947,12 @@ describe("inert owner publication fence", () => {
         } else {
           const error = yield* publisher.publish(selected, revision).pipe(Effect.flip);
           expect(error.reason).toBe(
-            fault === "unregistered"
-              ? "missing"
-              : fault === "foreign-repository"
-                ? "binding"
-                : fault === "claimed-state"
-                  ? "state"
-                  : "conflict"
+            Match.value(fault).pipe(
+              Match.when("unregistered", () => "missing"),
+              Match.when("foreign-repository", () => "binding"),
+              Match.when("claimed-state", () => "state"),
+              Match.orElse(() => "conflict")
+            )
           );
         }
         expect(
@@ -1936,34 +1976,57 @@ describe("inert owner publication fence", () => {
       let updating = false;
       let patched = false;
       const moved = fault === "base-before-write";
-      const github = recordedGithub((call) => {
-        if (call.method === "POST" && call.path === "{repo}/check-runs") {
-          own = nativeOwn(Result.getOrThrow(decodeExternalCheckBody(call.body)).external_id);
-          return { body: own };
-        }
-        if (call.method === "PATCH") {
-          patched = true;
-          const body = Result.getOrThrow(decodeCompletedCheckBody(call.body));
-          own = { ...own, external_id: body.external_id, status: "completed", conclusion: body.conclusion };
-          return fault === "recovery-wrong-id" || fault === "uncertain-revoke"
-            ? { unreachable: "PRIVATE_AMBIGUOUS_PATCH" }
-            : { body: own };
-        }
-        if (call.path === "{repo}/check-runs/2") {
-          if (updating && fault === "read-failed") return { unreachable: "PRIVATE_ANCHOR_READ" };
-          if (updating && fault === "null-native-correlation") return { body: { ...own, external_id: null } };
-          return { body: own };
-        }
-        if (updating && patched && call.path === `{repo}/commits/${head}/check-runs` && fault === "recovery-wrong-id")
-          return { body: { total_count: 2, check_runs: [lintRun, { ...own, id: 3 }] } };
-        if (updating && call.path === `{repo}/commits/${head}/check-runs` && fault === "uncertain-revoke")
-          return { unreachable: "PRIVATE_RECONCILE" };
-        if (updating && moved && call.path === "{repo}/git/ref/heads/main")
-          return { body: { object: { type: "commit", sha: head } } };
-        if (updating && moved && Str.startsWith("{repo}/compare/")(call.path))
-          return { body: { merge_base_commit: { sha: merge }, base_commit: { sha: head } } };
-        return upstreamRoute(call, own);
-      });
+      const github = recordedGithub((call) =>
+        Match.value(call).pipe(
+          Match.when(
+            (call) => call.method === "POST" && call.path === "{repo}/check-runs",
+            (call) => {
+              own = nativeOwn(Result.getOrThrow(decodeExternalCheckBody(call.body)).external_id);
+              return { body: own };
+            }
+          ),
+          Match.when(
+            (call) => call.method === "PATCH",
+            (call) => {
+              patched = true;
+              const body = Result.getOrThrow(decodeCompletedCheckBody(call.body));
+              own = { ...own, external_id: body.external_id, status: "completed", conclusion: body.conclusion };
+              return A.contains(["recovery-wrong-id", "uncertain-revoke"], fault)
+                ? { unreachable: "PRIVATE_AMBIGUOUS_PATCH" }
+                : { body: own };
+            }
+          ),
+          Match.when(
+            (call) => call.path === "{repo}/check-runs/2",
+            () => {
+              if (!updating) return { body: own };
+              return Match.value(fault).pipe(
+                Match.when("read-failed", () => ({ unreachable: "PRIVATE_ANCHOR_READ" })),
+                Match.when("null-native-correlation", () => ({ body: { ...own, external_id: null } })),
+                Match.orElse(() => ({ body: own }))
+              );
+            }
+          ),
+          Match.when(
+            (call) =>
+              updating && patched && call.path === `{repo}/commits/${head}/check-runs` && fault === "recovery-wrong-id",
+            () => ({ body: { total_count: 2, check_runs: [lintRun, { ...own, id: 3 }] } })
+          ),
+          Match.when(
+            (call) => updating && call.path === `{repo}/commits/${head}/check-runs` && fault === "uncertain-revoke",
+            () => ({ unreachable: "PRIVATE_RECONCILE" })
+          ),
+          Match.when(
+            (call) => updating && moved && call.path === "{repo}/git/ref/heads/main",
+            () => ({ body: { object: { type: "commit", sha: head } } })
+          ),
+          Match.when(
+            (call) => updating && moved && Str.startsWith("{repo}/compare/")(call.path),
+            () => ({ body: { merge_base_commit: { sha: merge }, base_commit: { sha: head } } })
+          ),
+          Match.orElse((call) => upstreamRoute(call, own))
+        )
+      );
       return Effect.gen(function* () {
         yield* TestClock.setTime(ms);
         const native = yield* CheckRun;
@@ -2087,7 +2150,7 @@ describe("inert owner publication fence", () => {
       yield* Effect.promise(() => fixture.started);
       yield* TestClock.adjust("4 seconds");
       const outcome = yield* Fiber.join(fiber).pipe(Effect.result);
-      expect(outcome).toEqual(Result.succeed({ _tag: "Held", reason: "native-identity" }));
+      assertSuccess(outcome, { _tag: "Held", reason: "native-identity" });
       expect(fixture.native().conclusion).toBe("success");
       const outbox = yield* publisher.owner.outbox(binding, 1);
       expect(O.getOrThrow(outbox).delivery._tag).toBe("Pending");
@@ -2154,19 +2217,31 @@ describe("inert owner publication fence", () => {
         const fiber = yield* publisher.publish(binding, 1).pipe(Effect.result, Effect.forkChild);
         yield* Effect.promise(() => fixture.started);
         const sql = yield* SqlClient.SqlClient;
-        if (corruption === "deleted") yield* sql`DELETE FROM yeet_owner_checkpoint_anchor`;
-        else if (corruption === "native-id" || corruption === "remember-native-id")
-          yield* sql`UPDATE yeet_owner_checkpoint_anchor SET payload=json_set(payload, '$.nativeId', 3)`;
-        else if (corruption === "pending-external")
-          yield* sql`UPDATE yeet_owner_checkpoint_publication SET payload=json_set(payload, '$.externalId', 'foreign-correlation') WHERE revision=1`;
-        else if (corruption === "authority-revision")
-          yield* sql`UPDATE yeet_owner_checkpoint SET payload=json_set(payload, '$.revision', 0)`;
-        else yield* sql`UPDATE yeet_owner_checkpoint_anchor SET payload=json_set(payload, '$.binding.generation', 1)`;
+        yield* Match.value(corruption).pipe(
+          Match.when("deleted", () => sql`DELETE FROM yeet_owner_checkpoint_anchor`),
+          Match.whenOr(
+            "native-id",
+            "remember-native-id",
+            () => sql`UPDATE yeet_owner_checkpoint_anchor SET payload=json_set(payload, '$.nativeId', 3)`
+          ),
+          Match.when(
+            "pending-external",
+            () =>
+              sql`UPDATE yeet_owner_checkpoint_publication SET payload=json_set(payload, '$.externalId', 'foreign-correlation') WHERE revision=1`
+          ),
+          Match.when(
+            "authority-revision",
+            () => sql`UPDATE yeet_owner_checkpoint SET payload=json_set(payload, '$.revision', 0)`
+          ),
+          Match.orElse(
+            () => sql`UPDATE yeet_owner_checkpoint_anchor SET payload=json_set(payload, '$.binding.generation', 1)`
+          )
+        );
         fixture.resume({
           body: { object: { type: "commit", sha: corruption === "remember-native-id" ? merge : head } },
         });
         const outcome = yield* Fiber.join(fiber);
-        if (corruption === "remember-native-id") expect(outcome).toEqual(Result.succeed({ _tag: "Unknown" }));
+        if (corruption === "remember-native-id") assertSuccess(outcome, { _tag: "Unknown" });
         else outcome.pipe(Result.isFailure, assertTrue);
         expect(fixture.native().conclusion).toBe("success");
         const outbox = yield* publisher.owner.outbox(binding, 1);
@@ -2310,47 +2385,56 @@ describe("authority receipt root", () => {
           finalCheck: final,
         });
         yield* mutateReceiptFixtureFile(root, observer, fault);
-        const selectedRoot =
-          fault === "noncanonical-root" ? `${root}/.` : fault === "file-root" ? `${root}/${manifest.name}` : root;
-        const selectedManifest =
-          fault === "reference-name"
-            ? OwnerCheckpointReceiptRef.make({ ...manifest, name: `${releaseId}.json` })
-            : manifest;
+        const selectedRoot = Match.value(fault).pipe(
+          Match.when("noncanonical-root", () => `${root}/.`),
+          Match.when("file-root", () => `${root}/${manifest.name}`),
+          Match.orElse(() => root)
+        );
+        const selectedManifest = Match.value(fault).pipe(
+          Match.when("reference-name", () =>
+            OwnerCheckpointReceiptRef.make({ ...manifest, name: `${releaseId}.json` })
+          ),
+          Match.orElse(() => manifest)
+        );
         const operation = readOwnerCheckpointEvidenceReceipts(selectedRoot, binding, selectedManifest, policy, digest);
-        const guarded =
-          fault === "missing-uid"
-            ? Effect.acquireUseRelease(
-                Effect.sync(() => vi.stubGlobal("process", { ...process, getuid: undefined })),
-                () => operation,
-                () => Effect.sync(vi.unstubAllGlobals)
-              )
-            : fault === "changed-during-read"
-              ? Effect.acquireUseRelease(
-                  Effect.sync(() => {
-                    const native = process.getBuiltinModule("node:fs");
-                    const read = native.readSync;
-                    return vi.spyOn(native, "readSync").mockImplementationOnce((...args) => {
-                      const count = read(...args);
-                      native.utimesSync(`${root}/${manifest.name}`, 0, 1);
-                      return count;
-                    });
-                  }),
-                  () => operation,
-                  (spy) => Effect.sync(() => spy.mockRestore())
-                )
-              : fault === "crypto-timeout"
-                ? Effect.gen(function* () {
-                    const fiber = yield* operation.pipe(
-                      Effect.provideService(Digest.Digest, {
-                        digest: () => Effect.never,
-                        digestHex: () => Effect.never,
-                      }),
-                      Effect.forkChild
-                    );
-                    yield* TestClock.adjust("5 seconds");
-                    return yield* Fiber.join(fiber);
-                  })
-                : operation;
+        const guarded = Match.value(fault).pipe(
+          Match.when("missing-uid", () =>
+            Effect.acquireUseRelease(
+              Effect.sync(() => vi.stubGlobal("process", { ...process, getuid: undefined })),
+              () => operation,
+              () => Effect.sync(vi.unstubAllGlobals)
+            )
+          ),
+          Match.when("changed-during-read", () =>
+            Effect.acquireUseRelease(
+              Effect.sync(() => {
+                const native = process.getBuiltinModule("node:fs");
+                const read = native.readSync;
+                return vi.spyOn(native, "readSync").mockImplementationOnce((...args) => {
+                  const count = read(...args);
+                  native.utimesSync(`${root}/${manifest.name}`, 0, 1);
+                  return count;
+                });
+              }),
+              () => operation,
+              (spy) => Effect.sync(() => spy.mockRestore())
+            )
+          ),
+          Match.when("crypto-timeout", () =>
+            Effect.gen(function* () {
+              const fiber = yield* operation.pipe(
+                Effect.provideService(Digest.Digest, {
+                  digest: () => Effect.never,
+                  digestHex: () => Effect.never,
+                }),
+                Effect.forkChild
+              );
+              yield* TestClock.adjust("5 seconds");
+              return yield* Fiber.join(fiber);
+            })
+          ),
+          Match.orElse(() => operation)
+        );
         const result = yield* guarded.pipe(Effect.result);
         deepStrictEqual(Result.isSuccess(result), fault === "none");
         if (Result.isFailure(result))
