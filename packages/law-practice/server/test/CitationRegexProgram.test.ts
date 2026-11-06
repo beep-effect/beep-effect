@@ -1,6 +1,11 @@
 import { makeCitationRegexAlphabet } from "@beep/law-practice-server/internal/Citation/RegexAlphabet";
 import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import {
+  CitationRegexPointRange,
+  citationRegexHexDigit,
+  complementCitationRegexRanges,
+} from "@beep/law-practice-server/internal/Citation/RegexPointSets";
+import {
   CitationRegexProgram,
   makeCitationRegexProgram,
 } from "@beep/law-practice-server/internal/Citation/RegexProgram";
@@ -287,5 +292,32 @@ it.effect("captures the compiler Clock and equal-deadline operation priority", (
       .compile(source, 0)
       .pipe(Effect.provideService(Clock.Clock, disabled), Effect.flip);
     expect(citationResult19).toMatchObject({ operation: "extract", limit: "operationDeadline" });
+  })
+);
+
+it.effect("rejects incomplete escapes, possessive repetition and unmatched closing grammar", () =>
+  Effect.gen(function* () {
+    const { compile } = yield* setup();
+    for (const pattern of ["\\", "a++", "a{1,2}+", ")"]) {
+      const failure = yield* compile(pattern).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "unsupported-syntax" });
+    }
+    const flags = yield* compile(`(?${Str.repeat(256)("i")}:a)`);
+    const ordinary = yield* compile("(?i:a)");
+    expect(flags.sets).toEqual(ordinary.sets);
+    expect(flags.minimumWidthFloor).toBe(ordinary.minimumWidthFloor);
+    const program = yield* compile("(?P<value>x)");
+    const malformed = {
+      ...program,
+      groups: 2,
+      names: { value: 2 },
+      tokens: A.map(program.tokens, (token) => (token.kind === "open" ? { ...token, value: 2 } : token)),
+    };
+    const rejected = yield* S.decodeEffect(CitationRegexProgram)(malformed).pipe(Effect.flip);
+    expect(rejected).toBeDefined();
+    expect(complementCitationRegexRanges([])).toEqual([CitationRegexPointRange.make({ start: 0, end: 0x10ffff })]);
+    expect(complementCitationRegexRanges([CitationRegexPointRange.make({ start: 0, end: 0x10ffff })])).toEqual([]);
+    expect(citationRegexHexDigit(-1)).toBe(-1);
+    expect(citationRegexHexDigit(128)).toBe(-1);
   })
 );

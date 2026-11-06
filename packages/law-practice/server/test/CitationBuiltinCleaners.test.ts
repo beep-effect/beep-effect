@@ -6,16 +6,20 @@ import {
   CitationCleanerRuntime,
   makeCitationCleanerPipeline,
 } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { CitationCleanerTextDescriptor } from "@beep/law-practice-server/internal/Citation/CleanerTextIdentity";
 import {
   CitationCleanerValues,
   makeCitationCleanerValues,
 } from "@beep/law-practice-server/internal/Citation/CleanerValues";
+import { CitationLiteralCleaner } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -27,6 +31,8 @@ import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
+import { makeCitationUnicodePipelineHarness } from "./CitationUnicodePipeline.fixtures.ts";
 import type { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 
 const Row = S.Struct({
@@ -60,6 +66,30 @@ const fail = () => CitationCleanerFailure.make({ reason: "callback-failed" });
 const TestRuntime = Layer.merge(BunServices.layer, BunCrypto.layer);
 
 it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner invocation", (it) => {
+  it.effect.prop(
+    "charges every repeated idempotent builtin invocation on schema-derived text",
+    {
+      cleaner: Arbitrary.schema(CitationLiteralCleaner).pipe(Arbitrary.filter((name) => name !== "xml")),
+      text: Arbitrary.schema(CitationCleanerTextDescriptor.fields.text.check(S.isMaxLength(128))),
+    },
+    ({ cleaner, text }) =>
+      Effect.gen(function* () {
+        const owned = yield* makeCitationUnicodePipelineHarness(false);
+        owned.selectText([cleaner]);
+        const first = yield* owned.pipeline.run({ text, plan: "generated-idempotent-builtin" });
+        const firstText = yield* owned.values.getText(first.value).pipe(Effect.flatMap(Effect.fromOption));
+        owned.selectText([cleaner, cleaner]);
+        const repeated = yield* owned.pipeline.run({ text, plan: "generated-repeated-builtin" });
+        const repeatedText = yield* owned.values.getText(repeated.value).pipe(Effect.flatMap(Effect.fromOption));
+        expect(repeatedText.text).toBe(firstText.text);
+        expect(first.producedTextUtf16).toBe(Str.length(firstText.text));
+        expect(repeated.producedTextUtf16).toBe(2 * Str.length(firstText.text));
+        const native = yield* owned.nativeCounts;
+        expect(native).toEqual({ spawned: 0, confirmed: 0 });
+      }),
+    { arbitrary: fcRuns(20) }
+  );
+
   it.effect(
     "replays all pinned input kinds without coercion and retires every native child",
     () =>
@@ -83,11 +113,10 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         let spawned = 0;
         let retired = 0;
         const citationResult2 = yield* fs.makeTempDirectoryScoped({ prefix: "citation-builtins-" });
+        const workerRuntime = yield* citationHtmlWorkerTestRuntime();
         const builtins = yield* makeCitationBuiltinCleaners(policy, {
-          kind: "bun",
-          executable: process.execPath,
+          ...workerRuntime,
           cwd: citationResult2,
-          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         }).pipe(
           Effect.provideService(CitationCleanerValues, values),
           Effect.provideService(ChildProcessSpawner, {

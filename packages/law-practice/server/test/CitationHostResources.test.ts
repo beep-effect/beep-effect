@@ -335,6 +335,184 @@ const load = Effect.fn("HostTest.load")(function* () {
   return yield* S.decodeEffect(Corpus)(raw);
 });
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resources", (it) => {
+  it.effect("rejects malformed captured handles and canonical reads of non-full semantic models", () =>
+    Effect.gen(function* () {
+      const corpus = yield* load();
+      const row = A.getUnsafe(corpus.callbacks, 0);
+      const prepared = yield* prepare("host-output-boundary");
+      const host = harness([row.host], { [row.host.hashRaw]: row.host.hashRaw });
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(bundle);
+      const invalidHandle = CitationHostResource.make({ slot: 0 });
+      const mutable: { slot: number } = invalidHandle;
+      mutable.slot = -1;
+      let malformedCapture = true;
+      const adapterFactory = CitationHostResourceAdapterFactory.of({
+        build: Effect.fn("HostOutputTest.build")(function* (canonical) {
+          const adapter = yield* host.factory.build(canonical);
+          return {
+            ...adapter,
+            capture: Effect.fn("HostOutputTest.capture")((input: unknown) =>
+              malformedCapture ? Effect.succeed(invalidHandle) : adapter.capture(input)
+            ),
+          };
+        }),
+      });
+      const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+        Effect.provideService(CitationFrozenEditions, frozen),
+        Effect.provideService(CitationHostResourceAdapterFactory, adapterFactory)
+      );
+      const index = yield* factory.build({
+        limits: prepared.limits,
+        step: Effect.void,
+        read: Effect.fn("HostOutputTest.read")(() => Effect.succeed(A.getUnsafe(prepared.mentions, 0).citation)),
+      });
+      const refused = yield* index.createHost(A.getUnsafe(host.states, 0)).pipe(Effect.flip);
+      expect(refused).toMatchObject({ _tag: "CitationCallbackFailure", reason: "identity-failed" });
+      const unissued = yield* index.origins;
+      expect(unissued).toEqual([]);
+      malformedCapture = false;
+      const recovered = yield* index.createHost(A.getUnsafe(host.states, 0));
+      expect(recovered._tag).toBe("Registered");
+      const origins = yield* index.origins;
+      expect(A.map(origins, (origin) => origin._tag)).toEqual(["Host"]);
+      yield* index.close;
+
+      const secondHost = harness([row.host], { [row.host.hashRaw]: row.host.hashRaw });
+      const nonFullAdapter = CitationHostResourceAdapterFactory.of({
+        build: Effect.fn("HostNonFullTest.build")(function* (canonical) {
+          const adapter = yield* secondHost.factory.build(canonical);
+          return {
+            ...adapter,
+            capture: Effect.fn("HostNonFullTest.capture")(function* (input: unknown) {
+              yield* canonical.citation(0);
+              return yield* adapter.capture(input);
+            }),
+          };
+        }),
+      });
+      const nonFullFactory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+        Effect.provideService(CitationFrozenEditions, frozen),
+        Effect.provideService(CitationHostResourceAdapterFactory, nonFullAdapter)
+      );
+      const nonFull = A.getUnsafe(prepared.mentions, 1);
+      const nonFullIndex = yield* nonFullFactory.build({
+        limits: prepared.limits,
+        step: Effect.void,
+        read: Effect.fn("HostNonFullTest.read")(() => Effect.succeed(nonFull.citation)),
+      });
+      yield* nonFullIndex.create(CitationGroupMember.cases.Mention.make({ mentionId: nonFull.id }));
+      const notFull = yield* nonFullIndex.createHost(A.getUnsafe(secondHost.states, 0)).pipe(Effect.flip);
+      expect(notFull.reason).toBe("identity-failed");
+      yield* nonFullIndex.close;
+    })
+  );
+
+  it.effect("limits projected historical authorities even when native groups were cleared", () =>
+    Effect.gen(function* () {
+      const corpus = yield* load();
+      const row = A.getUnsafe(corpus.callbacks, 0);
+      const base = yield* prepare("historical-authority-limit", ["case", "case"]);
+      const prepared = { ...base, limits: { ...base.limits, authorities: 1 } };
+      const host = harness(
+        [
+          { ...row.host, token: "historical-first" },
+          { ...row.host, token: "historical-second" },
+        ],
+        { [row.host.hashRaw]: row.host.hashRaw }
+      );
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(bundle);
+      const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+        Effect.provideService(CitationFrozenEditions, frozen),
+        Effect.provideService(CitationHostResourceAdapterFactory, host.factory)
+      );
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackRuntimeIndexFactory, factory)
+      );
+      const defaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackDictionary, owner)
+      );
+      let calls = 0;
+      const callbacks = CitationResolutionCallbacks.of({
+        ...defaults,
+        full: Effect.fn("HistoricalAuthorityTest.full")(function* () {
+          if (calls > 0) yield* owner.clear;
+          return yield* owner.hostResource(A.getUnsafe(host.states, calls++));
+        }),
+      });
+      const state = yield* runPreparedCitationCallbackSession(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackDictionary, owner),
+        Effect.provideService(CitationResolutionCallbacks, callbacks)
+      );
+      expect(state.decisions).toHaveLength(2);
+      expect(state.groups).toHaveLength(1);
+      const secondKey = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode("historical-second"));
+      const descriptors = CitationSessionResourceDescriptors.of({
+        describe: Effect.fn("HistoricalAuthorityTest.describe")((resource: CitationCallbackResource) =>
+          Effect.succeed(
+            CitationResourceIdentity.cases.External.make({
+              scope: prepared.engineArtifact,
+              key: resource._tag === "Registered" && resource.slot === 0 ? prepared.engineArtifact : secondKey,
+            })
+          )
+        ),
+      });
+      const projector = yield* makeCitationSessionDocumentProjector().pipe(
+        Effect.provideService(CitationSessionResourceDescriptors, descriptors)
+      );
+      const failure = yield* projector.project(state).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationCallbackFailure", reason: "limit-exceeded" });
+    })
+  );
+
+  it.effect("refuses host adapters that apply canonical operations to a host slot", () =>
+    Effect.gen(function* () {
+      const corpus = yield* load();
+      const row = A.getUnsafe(corpus.callbacks, 0);
+      const prepared = yield* prepare("host-canonical-slot-boundary");
+      const host = harness([row.host], { [row.host.hashRaw]: row.host.hashRaw });
+      const adapterFactory = CitationHostResourceAdapterFactory.of({
+        build: Effect.fn("HostTest.wrongCanonicalSlot")(function* (canonical) {
+          const adapter = yield* host.factory.build(canonical);
+          return {
+            ...adapter,
+            hash: (handle: CitationHostResource) => canonical.hash(handle.slot),
+            truthy: (handle: CitationHostResource) => canonical.citation(handle.slot).pipe(Effect.as(true)),
+          };
+        }),
+      });
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(bundle);
+      const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+        Effect.provideService(CitationFrozenEditions, frozen),
+        Effect.provideService(CitationHostResourceAdapterFactory, adapterFactory)
+      );
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackRuntimeIndexFactory, factory)
+      );
+      yield* owner.start;
+      const resource = yield* owner.hostResource(A.getUnsafe(host.states, 0));
+      for (const attempt of [
+        owner.get(resource).pipe(Effect.asVoid),
+        owner.isTruthy(resource).pipe(Effect.asVoid),
+        owner.resourceKey(resource).pipe(Effect.asVoid),
+      ]) {
+        const failure = yield* attempt.pipe(Effect.flip);
+        expect(failure.reason).toBe("identity-failed");
+      }
+      const groups = yield* owner.read;
+      expect(groups).toEqual([]);
+      yield* owner.close;
+    })
+  );
+
   it.effect("classifies deceptive default-looking presentation by owned host origin and requires a host port", () =>
     Effect.gen(function* () {
       const citationResult6 = yield* load();

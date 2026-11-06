@@ -148,6 +148,13 @@ export const assertCitationCaseNameScanBudget = Effect.fn("CaseNameScanTest.budg
   const accepted = yield* exact.stage.apply(row.request);
   expect(accepted.state).toEqual(row.state);
   expect(accepted.reservedUnits).toBe(22);
+  const bounded = yield* makeCitationCaseNameScan(
+    { ...exact.limits, tokens: 1 },
+    exact.runtime,
+    exact.configuration
+  ).pipe(Effect.provideContext(exact.provided));
+  const tokens = yield* bounded.scan(row.request).pipe(Effect.flip);
+  expect(tokens).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "tokens" });
   exact.configuration.patterns.year.bytes.fill(0);
   exact.configuration.patterns.trailingDigits.bytes.fill(0);
   const repeated = yield* exact.stage.apply(row.request);

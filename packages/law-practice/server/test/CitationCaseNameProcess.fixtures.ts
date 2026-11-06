@@ -176,6 +176,13 @@ export const assertCitationCaseNameProcessBudget = Effect.fn("CaseNameProcessTes
   const row = A.getUnsafe(setup.corpus.cases, 13);
   const accepted = yield* setup.stage.apply(request(row));
   expect(accepted.reservedUnits).toBe(54);
+  const bounded = yield* makeCitationCaseNameProcess(
+    { ...setup.limits, tokens: 1 },
+    setup.runtime,
+    setup.configuration
+  ).pipe(Effect.provideContext(setup.provided));
+  const tokens = yield* bounded.apply(request(row)).pipe(Effect.flip);
+  expect(tokens).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "tokens" });
   setup.configuration.patterns.splitV.bytes.fill(0);
   setup.configuration.cleaner.patterns.stopWords.bytes.fill(0);
   const repeated = yield* setup.stage.apply(request(row));

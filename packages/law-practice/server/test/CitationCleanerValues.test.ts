@@ -253,6 +253,10 @@ it.effect("captures owner lifetime and clears all arena-held values and caches o
       values.text("A").pipe(Effect.asVoid),
       values.subclass("A", {}).pipe(Effect.asVoid),
       values.retainHost({}).pipe(Effect.asVoid),
+      values.builtinName("html").pipe(Effect.asVoid),
+      values.sourceText("A").pipe(Effect.asVoid),
+      values.sourceUnicode({ width: 1, bytes: new Uint8Array([65]) }).pipe(Effect.asVoid),
+      values.bytes(new Uint8Array([65])).pipe(Effect.asVoid),
     ]) {
       const citationResult28 = yield* Effect.flip(read);
       expect(citationResult28).toMatchObject({ reason: "closed-owner" });
@@ -327,6 +331,21 @@ it.effect("applies the captured operation deadline to native materialization wit
       })
     );
     expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", operation: "clean", limit: "cleanDeadline" });
+    const after = yield* values.snapshot;
+    expect(after).toEqual(before);
+  })
+);
+
+it.effect("rejects native output whose declared text differs from the supplied storage", () =>
+  Effect.gen(function* () {
+    const policy = yield* defaultCitationEnginePolicy;
+    const values = yield* makeCitationCleanerValues(policy.limits);
+    const ref = yield* values.text("A");
+    const before = yield* values.snapshot;
+    const failure = yield* values
+      .materializeUnicode(ref, { text: "B", allocation: "fresh" }, { width: 1, bytes: new Uint8Array([65]) })
+      .pipe(Effect.flip);
+    expect(failure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "invalid-text-allocation" });
     const after = yield* values.snapshot;
     expect(after).toEqual(before);
   })

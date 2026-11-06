@@ -208,4 +208,35 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source diff
       expect(tight).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
     })
   );
+  it.effect("bounds installed and supplied tag counts and rejects inconsistent source layouts", () =>
+    Effect.gen(function* () {
+      const { corpus, limits, plans } = yield* load();
+      const document = A.getUnsafe(corpus.documents, 0);
+      const tag = A.getUnsafe(document.tags, 0);
+      const raw = {
+        plain: document.plain,
+        tags: [tag],
+        forward: A.getUnsafe(plans, document.forwardMap),
+        backward: A.getUnsafe(plans, document.backwardMap),
+      };
+      const policy = { ...limits, tokens: 1 };
+      const budget = yield* makeCitationTextBudget(policy);
+      const excessive = yield* makeCitationHtmlTagGeometry(policy, { ...raw, tags: [tag, tag] }).pipe(
+        Effect.provideService(CitationTextBudget, budget),
+        Effect.flip
+      );
+      expect(excessive).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "tokens" });
+      expect(raw.forward.before).not.toEqual(raw.backward.before);
+      const mismatched = yield* makeCitationHtmlTagGeometry(limits, {
+        ...raw,
+        forward: { ...raw.forward, before: raw.backward.before },
+      }).pipe(Effect.provideService(CitationTextBudget, budget), Effect.flip);
+      expect(mismatched).toMatchObject({ reason: "invalid-input" });
+      const geometry = yield* makeCitationHtmlTagGeometry(policy, raw).pipe(
+        Effect.provideService(CitationTextBudget, budget)
+      );
+      const converted = yield* geometry.convert([tag, tag]).pipe(Effect.flip);
+      expect(converted).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "tokens" });
+    })
+  );
 });

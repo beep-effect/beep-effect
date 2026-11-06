@@ -4,12 +4,17 @@ import {
   assertCitationFullLawMetadataInput,
   assertCitationLawMetadataBudget,
   assertCitationLawMetadataConfiguration,
+  assertCitationLawMetadataDigest,
   assertCitationLawMetadataLifetime,
   replayCitationLawMetadata,
 } from "./CitationLawMetadata.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source law metadata composition", (it) => {
+  it.effect(
+    "sanitizes fixed-pattern digest defects before native work and permits clean reinstallation",
+    assertCitationLawMetadataDigest
+  );
   it.effect(
     "validates full-law input after edition preflight without partial publication",
     assertCitationFullLawMetadataInput

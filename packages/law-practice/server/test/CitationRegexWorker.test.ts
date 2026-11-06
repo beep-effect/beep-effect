@@ -18,6 +18,7 @@ import {
 import {
   CitationRegexWorkerStartup,
   decodeCitationRegexReply,
+  decodeCitationRegexStartup,
   encodeCitationRegexStartup,
 } from "@beep/law-practice-server/internal/Citation/RegexWorkerRpc";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
@@ -519,4 +520,19 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       })
     );
   }
+
+  it.effect("rejects missing startup arguments and capture metadata beyond the installation budget", () =>
+    Effect.gen(function* () {
+      const malformed = yield* decodeCitationRegexStartup([]).pipe(Effect.flip);
+      expect(malformed).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
+      const policy = yield* defaultCitationEnginePolicy;
+      const startup = yield* decodeStartup({
+        limits: { ...policy.limits, patternUtf16: 1 },
+        descriptor,
+        engine: "python-re",
+      });
+      const oversized = yield* encodeCitationRegexStartup(startup).pipe(Effect.flip);
+      expect(oversized).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
+    })
+  );
 });

@@ -25,6 +25,7 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -322,6 +323,7 @@ const NativeAnchors = S.Struct({
 });
 const Issued = S.Struct({ json: S.String, anchors: S.Array(NativeAnchors) });
 const issuedSessions = new WeakMap<object, typeof Issued.Type>();
+const identityFailed = () => CitationCallbackFailure.make({ reason: "identity-failed" });
 /**
  * Read the immutable issued snapshot, not mutable fields on its outward view.
  * Copies and receipts cannot issue this operation-local capability. Native
@@ -331,12 +333,10 @@ const issuedSessions = new WeakMap<object, typeof Issued.Type>();
  * @since 0.0.0
  */
 export const readCapturedCitationSession = Effect.fn("Citation.readCapturedSession")(function* (input: unknown) {
-  if (!P.isObjectOrArray(input)) return yield* CitationCallbackFailure.make({ reason: "identity-failed" });
+  if (!P.isObjectOrArray(input)) return yield* identityFailed();
   const sealed = issuedSessions.get(input);
-  if (sealed === undefined) return yield* CitationCallbackFailure.make({ reason: "identity-failed" });
-  const data = yield* S.decodeEffect(CapturedJson)(sealed.json).pipe(
-    Effect.mapError(() => CitationCallbackFailure.make({ reason: "identity-failed" }))
-  );
+  if (sealed === undefined) return yield* identityFailed();
+  const data = yield* S.decodeEffect(CapturedJson)(sealed.json).pipe(Effect.mapError(identityFailed));
   const mentions = yield* Effect.forEach(
     data.mentions,
     Effect.fnUntraced(function* (mention, index) {
@@ -356,10 +356,8 @@ export const readCapturedCitationSession = Effect.fn("Citation.readCapturedSessi
         footnote,
       });
     })
-  ).pipe(Effect.mapError(() => CitationCallbackFailure.make({ reason: "identity-failed" })));
-  return yield* S.decodeEffect(SessionStateType)({ ...data, mentions }).pipe(
-    Effect.mapError(() => CitationCallbackFailure.make({ reason: "identity-failed" }))
-  );
+  ).pipe(Effect.mapError(identityFailed));
+  return yield* S.decodeEffect(SessionStateType)({ ...data, mentions }).pipe(Effect.mapError(identityFailed));
 });
 const ResourceJson = S.fromJsonString(CitationCallbackResource);
 const CallbackResultJson = S.fromJsonString(CitationCallbackResult);
@@ -580,7 +578,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
         ? "none"
         : yield* makeCitationResourceAuthorityId(resource.identity).pipe(
             Effect.provideService(Digest.Digest, crypto),
-            Effect.mapError(() => CitationCallbackFailure.make({ reason: "identity-failed" }))
+            Effect.mapError(identityFailed)
           );
     return { key, resource };
   });
@@ -784,8 +782,8 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     ]).pipe(Effect.mapError(invalid));
     const digest = yield* S.decodeEffect(Sha256HexFromBytes)(encoder.encode(preimage)).pipe(
       Effect.provideService(Digest.Digest, crypto),
-      Effect.mapError(() => CitationCallbackFailure.make({ reason: "identity-failed" })),
-      Effect.catchDefect(() => Effect.fail(CitationCallbackFailure.make({ reason: "identity-failed" })))
+      Effect.mapError(identityFailed),
+      Effect.catchDefect(flow(identityFailed, Effect.fail))
     );
     const id = CitationDetachedId.make(`cd1:${digest}`);
     detachedSlot += 1;
@@ -893,8 +891,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
       const edition = O.flatMap(selected, (ref) =>
         A.findFirst(prepared.editions, (edition) => edition.edition === ref)
       );
-      if (O.isSome(selected) && O.isNone(edition))
-        return yield* CitationCallbackFailure.make({ reason: "identity-failed" });
+      if (O.isSome(selected) && O.isNone(edition)) return yield* identityFailed();
       return CitationCallbackResource.cases.Hashable.make({
         identity: CitationResourceIdentity.cases.Canonical.make({
           authority: CitationAuthorityIdentityInput.make({

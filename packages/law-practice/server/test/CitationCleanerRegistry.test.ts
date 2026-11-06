@@ -1,5 +1,6 @@
 import { CitationBuiltinCleaners } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
 import {
+  CitationCleanerFailure,
   CitationCleanerObject,
   CitationCleanerProduced,
 } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
@@ -13,7 +14,7 @@ import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/serve
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -350,5 +351,28 @@ it.effect("closes malformed native snapshots and oversized owned-byte hashing wi
     Reflect.set(h.values, "getUnicode", original);
     const after = yield* h.registry.read;
     expect(after).toEqual(before);
+  })
+);
+
+it.effect("distinguishes issued builtin functions from owned text while the pipeline work is live", () =>
+  Effect.gen(function* () {
+    const h = yield* setup();
+    const bindings = yield* h.registry.read;
+    const builtin = A.getUnsafe(bindings, 0)[1];
+    let checked = false;
+    h.hooks({
+      open: Effect.fn("CleanerRegistryTest.checkLiveCallability")(function* (_plan, value, work) {
+        const callable = yield* h.registry.runtime.callable(builtin, work);
+        expect(callable).toBe(true);
+        const failure = yield* h.registry.runtime.invoke(value, value, work).pipe(Effect.result);
+        assertFailure(failure, CitationCleanerFailure.make({ reason: "not-callable" }));
+        checked = true;
+        return { next: Effect.succeedNone };
+      }),
+    });
+    const completed = yield* h.pipeline.run({ text: "owned plain text", plan: "callability" });
+    expect(checked).toBe(true);
+    const text = yield* h.values.getText(completed.value);
+    expect(O.getOrThrow(text).text).toBe("owned plain text");
   })
 );

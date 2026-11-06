@@ -20,6 +20,7 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -27,6 +28,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import {
   assertCitationWorkerCapturedDeadline,
@@ -242,4 +244,29 @@ export const assertCitationFullLawMetadataInput = Effect.fn("LawMetadataTest.ful
   const patch = yield* Effect.fromOption(valid.patch);
   expect(patch).toEqual(A.getUnsafe(corpus.cases, 11).patch);
   expect(valid.editionGuess).toBeNull();
+});
+
+/** A digest service defect remains a closed configuration refusal before any native process. */
+export const assertCitationLawMetadataDigest = Effect.fn("LawMetadataTest.digestBoundary")(function* () {
+  const corpus = yield* loadCitationLawMetadataFixtures();
+  const setup = yield* setupCitationMetadataRuntime("bun");
+  const failed = yield* makeCitationLawMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
+    Effect.provideContext(setup.provided),
+    Effect.provideService(
+      Digest.Digest,
+      makeTestCitationDigest(() => Effect.die("private-metadata-digest-defect"))
+    ),
+    Effect.flip
+  );
+  expect(failed).toMatchObject({ _tag: "CitationLawMetadataFailure", reason: "invalid-configuration" });
+  expect("cause" in failed).toBe(false);
+  const before = yield* setup.observed.snapshot;
+  expect(before).toEqual({ spawned: 0, confirmed: 0 });
+  const metadata = yield* makeCitationLawMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
+    Effect.provideContext(setup.provided)
+  );
+  const row = A.getUnsafe(corpus.cases, 11);
+  const recovered = yield* metadata.apply(row.request);
+  const patch = yield* Effect.fromOption(recovered.patch);
+  expect(patch).toEqual(row.patch);
 });

@@ -132,3 +132,16 @@ it.effect("rejects unsupported syntax and flags without silently changing meanin
     expect(citationResult21).toMatchObject({ reason: "invalid-policy" });
   })
 );
+
+it.effect("retains ordinary and assertion groups, leading repeat digits and escaped LF", () =>
+  Effect.gen(function* () {
+    const policy = yield* defaultCitationEnginePolicy;
+    const translator = yield* makeCitationRegexTranslator(policy.limits);
+    const translated = yield* translator.translate({ pattern: "(?:x{12,34})(?=y)(?!z)(a)\\n", flags: 0 });
+    expect(translated).toEqual({ pattern: "(?:x{12,34})(?=y)(?!z)(a)\\x0a", flags: "dgu" });
+    for (const pattern of ["(?P<1bad>x)", "(?P<a-b>x)"]) {
+      const failure = yield* translator.translate({ pattern, flags: 0 }).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "unsupported-syntax" });
+    }
+  })
+);

@@ -93,6 +93,59 @@ const invalid = () => CitationCallbackFailure.make({ reason: "invalid-input" });
 const Presentation = S.Struct({ mentionId: CitationMentionId });
 
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback runtime dictionary", (it) => {
+  it.effect("bounds issued slots, exposes canonical equality keys and rejects absent host ownership", () =>
+    Effect.gen(function* () {
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(bundle);
+      const input = yield* prepareCallbackObservation(
+        CitationCallbackObservation.make({
+          name: "bounded-runtime-slots",
+          kinds: ["case"],
+          pages: {},
+          bindings: {},
+          events: [],
+          outcome: { status: "value", groups: [] },
+        })
+      );
+      const mention = A.getUnsafe(input.mentions, 0);
+      const wire = yield* S.encodeEffect(Citation)(mention.citation);
+      const citation = yield* S.decodeEffect(Citation)({
+        ...wire,
+        components: { ...wire.components, page: "1", reporter: "U.S." },
+      });
+      const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+        Effect.provideService(CitationFrozenEditions, frozen)
+      );
+      const index = yield* factory.build({
+        limits: { ...input.limits, resolutionIterations: 1 },
+        step: Effect.void,
+        read: Effect.fn("RuntimeSlotTest.read")(() => Effect.succeed(citation)),
+      });
+      const absent = yield* index.createHost({ token: "host-without-adapter" }).pipe(Effect.flip);
+      expect(absent.reason).toBe("identity-failed");
+      const reference = CitationGroupMember.cases.Mention.make({ mentionId: mention.id });
+      const resource = yield* index.create(reference);
+      const key = yield* index.equalityKey(resource);
+      const repeated = yield* index.equalityKey(resource);
+      expect(repeated).toBe(key);
+      const hash = yield* S.decodeEffect(S.BigIntFromString)(key);
+      expect(hash).toBeGreaterThanOrEqual(BigInt(0));
+      const falsy = yield* normalizeCallbackFixtureResource(false);
+      const isFalsy = yield* index.isTruthy(falsy);
+      expect(isFalsy).toBe(false);
+      const unhashable = CitationCallbackResource.cases.Unhashable.make({ truthy: true, value: [] });
+      const isTruthy = yield* index.isTruthy(unhashable);
+      expect(isTruthy).toBe(true);
+      const exhausted = yield* index.create(reference).pipe(Effect.flip);
+      expect(exhausted.reason).toBe("limit-exceeded");
+      const entries = yield* index.read;
+      expect(entries).toEqual([]);
+      yield* index.close;
+      const closed = yield* index.create(reference).pipe(Effect.flip);
+      expect(closed.reason).toBe("identity-failed");
+    })
+  );
+
   it.effect("refuses failed live models and missing-page identity providers without publishing entries", () =>
     Effect.gen(function* () {
       const { bundle } = yield* loadCitationFrozenEditionFixtures();

@@ -4,6 +4,7 @@ import {
   CitationPublicationResourceHashInput,
   makeCitationPublicationResourceHash,
 } from "@beep/law-practice-server/internal/Citation/PublicationResourceHash";
+import { makeCitationRuntimeStringOrder } from "@beep/law-practice-server/internal/Citation/RuntimeHashEncoding";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -125,4 +126,13 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("exact publication r
       }
     })
   );
+});
+
+it("orders equal-prefix source strings by remaining Unicode code points", () => {
+  const order = makeCitationRuntimeStringOrder();
+  for (const prefix of ["", "a", "😀", "\ud800"]) {
+    expect(order(prefix, `${prefix}a`)).toBe(-1);
+    expect(order(`${prefix}a`, prefix)).toBe(1);
+    expect(order(prefix, prefix)).toBe(0);
+  }
 });

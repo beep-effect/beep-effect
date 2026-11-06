@@ -15,6 +15,35 @@ import {
 import { loadCitationTokenObjectsControls } from "./CitationTokenObjects.fixtures.ts";
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned tokenizer composition", (it) => {
+  it.effect("rejects extractor count ceilings and contradictory profiles before native work", () =>
+    Effect.gen(function* () {
+      const controls = yield* loadCitationTokenizerControls();
+      const runtime = yield* setupCitationMetadataRuntime("bun");
+      const overPatterns = yield* makeCitationTokenizer(
+        { ...runtime.limits, patterns: 1 },
+        runtime.runtime,
+        controls.configuration
+      ).pipe(Effect.provideContext(runtime.provided), Effect.flip);
+      expect(overPatterns).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patterns" });
+      const first = A.getUnsafe(controls.configuration.extractors, 0);
+      const contradictory = {
+        ...first,
+        ordering: { ...first.ordering, id: 100 },
+        recipe: { ...first.recipe, id: 100 },
+        descriptor: {
+          ...first.descriptor,
+          profile: { ...first.descriptor.profile, minimumWidthFloor: first.descriptor.profile.minimumWidthFloor + 1 },
+        },
+      };
+      const profileConflict = yield* makeCitationTokenizer(runtime.limits, runtime.runtime, {
+        ...controls.configuration,
+        extractors: [first, contradictory],
+      }).pipe(Effect.provideContext(runtime.provided), Effect.flip);
+      expect(profileConflict).toMatchObject({ _tag: "CitationTokenizerFailure", reason: "invalid-configuration" });
+      const observed = yield* runtime.observed.snapshot;
+      expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+    })
+  );
   it.effect("rejects malformed policy, bindings and source without native work", () =>
     Effect.gen(function* () {
       const controls = yield* loadCitationTokenizerControls();

@@ -10,6 +10,7 @@ import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as Predicate from "effect/Predicate";
@@ -98,6 +99,23 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program b
         Effect.flip
       );
       expect(error).toMatchObject({ _tag: "CitationHtmlWorkerFailure", reason: "channel-failed" });
+    })
+  );
+
+  it.effect("rejects a truncated filesystem asset read before announcing worker readiness", () =>
+    Effect.gen(function* () {
+      const stdio = yield* Stdio.Stdio;
+      const fs = yield* FileSystem.FileSystem;
+      const failure = yield* citationHtmlWorkerProgram.pipe(
+        Effect.provideService(FileSystem.FileSystem, { ...fs, stream: () => Stream.make(new Uint8Array(0)) }),
+        Effect.provideService(Stdio.Stdio, {
+          ...stdio,
+          args: Effect.succeed(["4096"]),
+          stdout: () => Sink.die("truncated asset reached worker readiness"),
+        }),
+        Effect.flip
+      );
+      expect(failure).toMatchObject({ _tag: "CitationHtmlWorkerFailure", reason: "invalid-runtime" });
     })
   );
 });

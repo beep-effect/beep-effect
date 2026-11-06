@@ -1,5 +1,6 @@
 import * as NodeURL from "node:url";
 import { Citation, CitationGroupMember, CitationMention } from "@beep/law-practice-domain/values";
+import { CitationCallbackResult } from "@beep/law-practice-server/internal/Citation/CallbackResource";
 import {
   CitationCallbackRuntimeIndexFactory,
   CitationMissingPageIdentities,
@@ -186,6 +187,22 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("default registered 
       const citationResult7 = yield* projector.project(state);
       expect(citationResult7.document.groups).toHaveLength(2);
       expect(reads).toBe(4);
+      const identity = yield* descriptors.describe(A.getUnsafe(state.groups, 0).resource);
+      const hashable = CitationCallbackResource.cases.Hashable.make({ identity, truthy: true, value: null });
+      const described = yield* descriptors.describe(hashable);
+      expect(described).toBe(hashable.identity);
+      const noneFailure = yield* descriptors.describe(CitationCallbackResource.cases.None.make({})).pipe(Effect.flip);
+      expect(noneFailure).toMatchObject({ _tag: "CitationCallbackFailure", reason: "identity-failed" });
+      const mismatchedWork = yield* makeCitationResolutionWork({
+        ...prepared.limits,
+        resolutionIterations: prepared.limits.resolutionIterations - 1,
+      });
+      const mismatched = yield* makeCitationRegisteredSessionDescriptors(state).pipe(
+        Effect.provideService(CitationFrozenEditions, frozen),
+        Effect.provideService(CitationResolutionWork, mismatchedWork),
+        Effect.flip
+      );
+      expect(mismatched).toMatchObject({ _tag: "CitationCallbackFailure", reason: "invalid-input" });
     })
   );
   it.effect("uses source-observed current hashes for real frozen case, law and journal models", () =>
@@ -334,6 +351,74 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("default registered 
         }),
         { concurrency: 1, discard: true }
       );
+    })
+  );
+  it.effect("rejects a detached canonical resource whose final semantic type is no longer full", () =>
+    Effect.gen(function* () {
+      const input = yield* prepareCallbackObservation(
+        CitationCallbackObservation.make({
+          name: "detached-semantic-transition",
+          kinds: ["case", "id"],
+          pages: {},
+          bindings: {},
+          events: [],
+          outcome: { status: "value", groups: [] },
+        })
+      );
+      const prepared = yield* prepareCitationResolution(input);
+      const shortInput = yield* prepareCallbackObservation(
+        CitationCallbackObservation.make({
+          name: "detached-short-value",
+          kinds: ["short"],
+          pages: {},
+          bindings: {},
+          events: [],
+          outcome: { status: "value", groups: [] },
+        })
+      );
+      const shortCitation = A.getUnsafe(shortInput.mentions, 0).citation;
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(bundle);
+      const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+        Effect.provideService(CitationFrozenEditions, frozen)
+      );
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackRuntimeIndexFactory, factory)
+      );
+      const defaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackDictionary, owner)
+      );
+      let detached = O.none<CitationGroupMember>();
+      const callbacks = CitationResolutionCallbacks.of({
+        ...defaults,
+        full: Effect.fn("DetachedTransitionTest.full")(function* (mention: CitationMention) {
+          const reference = yield* owner.registerDetached(mention.citation);
+          detached = O.some(reference);
+          return yield* owner.canonicalResource(reference);
+        }),
+        id: Effect.fn("DetachedTransitionTest.id")(function* () {
+          const reference = yield* Effect.fromOption(detached, () =>
+            CitationCallbackFailure.make({ reason: "invalid-input" })
+          );
+          yield* owner.writeCitation(reference, shortCitation);
+          return CitationCallbackResult.make({ resource: CitationCallbackResource.cases.None.make({}) });
+        }),
+      });
+      const state = yield* runPreparedCitationCallbackSession(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackDictionary, owner),
+        Effect.provideService(CitationResolutionCallbacks, callbacks)
+      );
+      expect(A.getUnsafe(state.detachedCitations, 0).citation.type).toBe("shortFormCase");
+      const descriptors = yield* makeCitationRegisteredSessionDescriptors(state).pipe(
+        Effect.provideService(CitationFrozenEditions, frozen)
+      );
+      const failure = yield* descriptors.describe(A.getUnsafe(state.groups, 0).resource).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationCallbackFailure", reason: "identity-failed" });
+      expect("cause" in failure).toBe(false);
     })
   );
 });

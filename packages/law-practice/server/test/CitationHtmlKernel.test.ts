@@ -4,6 +4,7 @@ import {
   makeCitationClosedHtmlWasi,
   makeCitationHtmlKernel,
 } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
+import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -364,6 +365,23 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
         expect(releases).toBe(row.released);
         expect(frees).toBe(row.released);
       }
+    })
+  );
+  it.effect("rejects an oversized byte carrier before entering the authenticated native parser", () =>
+    Effect.gen(function* () {
+      const asset = yield* loadAsset();
+      const kernel = yield* makeCitationHtmlKernel(asset);
+      const failure = yield* kernel
+        .run({
+          input: {
+            encoding: "UTF-8",
+            fullHtml: false,
+            bytes: new Uint8Array(4 * CitationEngineAbsoluteMaxima.producedTextUtf16 + 1),
+          },
+          outputUtf16: 0,
+        })
+        .pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationHtmlKernelFailure", reason: "invalid-input" });
     })
   );
 });

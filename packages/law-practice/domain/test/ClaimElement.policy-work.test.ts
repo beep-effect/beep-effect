@@ -1,7 +1,14 @@
-import { antecedentPolicy, ClaimElementTree, decomposeClaim } from "@beep/law-practice-domain/values/ClaimElement";
+import {
+  antecedentPolicy,
+  ClaimElementTree,
+  ClaimTermHead,
+  decomposeClaim,
+} from "@beep/law-practice-domain/values/ClaimElement";
 import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { assert, describe } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -53,6 +60,24 @@ const deepClaims = (referenceCount: number, depth = 64): PatentClaims =>
   );
 
 describe("bounded antecedent policy preparation", () => {
+  it.effect.prop(
+    "preserves schema-derived term findings after another invocation exhausts its work budget",
+    { head: Arbitrary.schema(ClaimTermHead.check(S.isMaxLength(48))) },
+    Effect.fnUntraced(function* ({ head }) {
+      const claims: PatentClaims = [independent(1, `a ${head}; the ${head}.`)];
+      const trees = yield* treesOf(claims);
+      const before = antecedentPolicy(trees, claims);
+      assert.isFalse(A.some(before, ({ rule }) => rule === "chain-work-limit"));
+      const exhaustedClaims = deepClaims(100);
+      const exhaustedTrees = yield* treesOf(exhaustedClaims);
+      const exhausted = antecedentPolicy(exhaustedTrees, exhaustedClaims);
+      assert.isTrue(A.isReadonlyArrayNonEmpty(exhausted));
+      assert.isTrue(A.every(exhausted, ({ rule }) => rule === "chain-work-limit"));
+      assert.deepStrictEqual(antecedentPolicy(trees, claims), before);
+    }),
+    { arbitrary: fcRuns(20) }
+  );
+
   it.effect("abstains when sparse chains exhaust preparation lookup and copy reservations", () =>
     Effect.gen(function* () {
       const claims: PatentClaims = A.prepend(

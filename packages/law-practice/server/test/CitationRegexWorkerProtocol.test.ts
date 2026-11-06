@@ -8,6 +8,7 @@ import {
   encodeCitationRegexJob,
   makeCitationRegexJobPreparation,
   preflightCitationRegexJob,
+  preflightCitationRegexJson,
   readCitationRegexFrames,
 } from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
 import {
@@ -23,6 +24,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as PlatformError from "effect/PlatformError";
+import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -408,5 +410,32 @@ it.effect("rejects out-of-order RPC controls and does not retry failed writes", 
     expect(failed).toMatchObject({ reason: "channel-failed" });
     expect("cause" in failed).toBe(false);
     expect(sends).toBe(1);
+  })
+);
+
+it.effect("checks the absolute pattern ceiling even when handed a valid source-role layout", () =>
+  Effect.gen(function* () {
+    const { input, pattern } = yield* setup();
+    const policy = yield* defaultCitationEnginePolicy;
+    const wide = yield* input.prepareText(Str.repeat(8193)("a"), nothing);
+    const failure = yield* preflightCitationRegexJob(
+      wide.layout,
+      pattern.layout,
+      0,
+      1,
+      policy.limits.processMessageBytes
+    ).pipe(Effect.flip);
+    expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patternUtf16" });
+  })
+);
+
+it.effect("keeps escaped delimiters inside JSON strings and rejects an unmatched closing object", () =>
+  Effect.gen(function* () {
+    const text = yield* S.encodeEffect(S.fromJsonString(S.Struct({ message: S.String })))({
+      message: 'quote " slash \\ } : {',
+    });
+    yield* preflightCitationRegexJson(utf8.encode(text), 1);
+    const failure = yield* preflightCitationRegexJson(utf8.encode("}"), 1).pipe(Effect.flip);
+    expect(failure).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-frame" });
   })
 );
