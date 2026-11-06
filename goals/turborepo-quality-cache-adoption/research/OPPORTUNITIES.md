@@ -1282,3 +1282,13 @@ run finish and preserves every observed stable lint input path. The original
 refusal is retained separately. A real-root baseline with canonical provisioned
 reference links before profile approval would have caught the mismatch earlier.
 No quality task body ran and no feature/qualification/production setting changed.
+
+
+## 2026-11-06 — Main advanced during the producer freshness preflight
+
+After #2793 and #2796 merged, the current-source inspection preflight at recorded
+revision `68d37217c6` refused `Main moved; review current source` before dispatch.
+No inspection or protected trial was submitted. Independent adoption metadata
+work continued in an isolated source-bound checkout. Retaining immutable hosted
+source bindings and coordinating a short exact-source approval interval would
+avoid repeated static reads while preserving the final live-ref check.
