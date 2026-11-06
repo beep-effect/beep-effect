@@ -43,7 +43,7 @@ Census at capture (main `a512dac1fb`):
   completed-retained packets (459 into active ones).
 - `goals catalog`: completed-retained packets are capability providers that
   active packets require (`observability/attribute-registry` feeds four,
-  `box/driver` two, `goals/packet-core` one).
+  `box/driver` two, the `packet-core` capability one).
 - `goals/README.md` already says removal is an archive operation, not a
   status, and names physical archive moves as a follow-up packet.
 - 90 unchecked PLAN.md checkboxes remain across completed goals.
@@ -54,3 +54,8 @@ Census at capture (main `a512dac1fb`):
 Operator addendum, same day: friction receipts (the OPPORTUNITIES.md ledger
 entries written at the moment of friction) must be harvested; confirm they
 are covered.
+
+Operator, later the same day: `main` moved and two more goal packets were
+flipped to `completed-retained`; make sure they are included. Note: the census
+above is a snapshot at `a512dac1fb`; the sweep selects packets by status at
+sweep time, so every later completion is in scope automatically.

@@ -63,7 +63,7 @@ Goal B: three separate panel sessions (Opus 5.5 high, Grok 4.7 xhigh, Sol
 medium; operator ruling in DECISIONS.md) each emit verdict JSONL keyed by
 ledger row id (`status`, `cluster`, `leverage`, `evidence`); a deterministic
 merge resolves agreement, flags disagreements, and seeds
-`explorations/harvested-alpha-2026-11` at stage `shape`.
+a new exploration packet `harvested-alpha-2026-11` at stage `shape`.
 
 Steady state: `beep goals archive <slug>` becomes the closeout step after the
 adoption PR; retention in full needs `retentionReason`.
@@ -87,6 +87,10 @@ adoption PR; retention in full needs `retentionReason`.
   (`infra/r2-cache/research/OPPORTUNITIES.md`). The harvester globs every
   tracked `OPPORTUNITIES.md` in the repo; about 2,156 receipt sections at
   capture.
+
+Scope is computed from manifest status at sweep time (`completed-retained`,
+`superseded`, `graduated`, `killed`), never from the capture census, so packets
+completed after 2026-11-06 are swept automatically.
 
 ## No-Gos
 

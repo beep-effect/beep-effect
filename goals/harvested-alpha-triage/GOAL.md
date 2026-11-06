@@ -4,9 +4,9 @@ Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
-Outcome: Judge the harvest ledger with three separate provider sessions (Opus 5.5 high, Grok 4.7 xhigh, GPT-6.1 Sol medium) into row-keyed verdict JSONL, merge deterministically, and seed `explorations/harvested-alpha-2026-11` at stage `shape` so its MAP graduates the still-open alpha into concrete goals.
+Outcome: Judge the harvest ledger with three separate provider sessions (Opus 5.5 high, Grok 4.7 xhigh, GPT-6.1 Sol medium) into row-keyed verdict JSONL, merge deterministically, and seed a new exploration packet `harvested-alpha-2026-11` at stage `shape` so its MAP graduates the still-open alpha into concrete goals.
 
-Decisions already made (do not reopen): `explorations/packet-archive-and-alpha-harvest/DECISIONS.md`. Prerequisite: the ledger at `explorations/packet-archive-and-alpha-harvest/research/harvest/ledger.jsonl` exists on `main`.
+Decisions already made (do not reopen): `explorations/packet-archive-and-alpha-harvest/DECISIONS.md`. Prerequisite: the ledger at the exploration's `research/harvest/ledger.jsonl` exists on `main`.
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:
@@ -22,7 +22,7 @@ prose when they conflict.
 
 Scope:
 
-- In: verdict schema and merge step, `research/harvest/` verdict and merge files, the new `explorations/harvested-alpha-2026-11` packet.
+- In: verdict schema and merge step, `research/harvest/` verdict and merge files, the new a new exploration packet `harvested-alpha-2026-11` packet.
 - Out: archive mechanics, freeform packet reads, opening goals directly from clusters.
 
 Workflow:

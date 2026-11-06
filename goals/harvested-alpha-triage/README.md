@@ -8,7 +8,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
 
-Judge the harvest ledger with three separate provider sessions (Opus 5.5 high, Grok 4.7 xhigh, GPT-6.1 Sol medium) into row-keyed verdict JSONL, merge deterministically, and seed `explorations/harvested-alpha-2026-11` at stage `shape` so its MAP graduates the still-open alpha into concrete goals.
+Judge the harvest ledger with three separate provider sessions (Opus 5.5 high, Grok 4.7 xhigh, GPT-6.1 Sol medium) into row-keyed verdict JSONL, merge deterministically, and seed a new exploration packet `harvested-alpha-2026-11` at stage `shape` so its MAP graduates the still-open alpha into concrete goals.
 
 Graduated from [`explorations/packet-archive-and-alpha-harvest`](../../explorations/packet-archive-and-alpha-harvest/README.md). Starts when `packet-archive-mechanics` P0 has committed the ledger; does not wait for the sweep.
 

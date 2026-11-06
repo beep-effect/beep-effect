@@ -31,7 +31,7 @@ Higher sources outrank lower sources when they conflict.
 - `scripts/references.json` (`.repos/goals-archive` member).
 - `goals/README.md`, `explorations/README.md` (archive operation, `retentionReason`, closeout step); `.claude/skills/closeout/**` (archive step).
 - Every tombstoned packet under `goals/` and `explorations/`, and every file holding an inbound link to a moved file.
-- `explorations/packet-archive-and-alpha-harvest/research/harvest/ledger.jsonl`.
+- the exploration's `research/harvest/ledger.jsonl`.
 - The new public repo `beep-effect/beep-effect-goals-archive`.
 
 ## Constraints

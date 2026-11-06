@@ -14,7 +14,7 @@ link. Note license/maintenance/fit concerns inline.>
 ## In-Repo Capability Inventory
 
 <What we already have that this exploration would build on. Source from
-`standards/repo-exports.catalog.md`, targeted code search, and local docs; cite
+the generated exports catalog, targeted code search, and local docs; cite
 package + path. Mark gaps explicitly as NOT FOUND.>
 
 ## Constraints Discovered

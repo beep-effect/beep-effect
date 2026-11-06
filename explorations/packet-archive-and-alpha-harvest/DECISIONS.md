@@ -22,7 +22,7 @@ removing commit.
 addressability (476 inbound links, capability-graph providers). A separate
 repo is browsable on GitHub, amendable by PR, and invisible to default agent
 sessions. Rejected: archive branch plus tag only (not browsable in-tree, links
-pin to one commit, rots against main tooling); `goals/_archive/` on `main`
+pin to one commit, rots against main tooling); a physical `_archive/` directory under `goals/` on `main`
 (file count and clone size do not drop); workstation and remote-box copies
 (strictly worse than git, which already holds the bytes publicly and in the
 private duplicate).
@@ -40,7 +40,7 @@ and `research/OPPORTUNITIES.md`. Everything else moves.
 and ledgers are the alpha and total 3.4 MB across all completed goals. Per
 packet about 60 files becomes about 5. Rejected: manifest and stub only (the
 alpha becomes reachable only through the ledger and archive); a single
-`goals/_archive/index.json` with no per-packet dirs (breaks the capability
+a single archive index JSON under `goals/` with no per-packet dirs (breaks the capability
 graph unless the index becomes a second provider source).
 
 ## 2026-11-06 — harvest order
@@ -212,7 +212,7 @@ harvest after the sweep (loses the safety-net ordering).
 **Question:** Where do the merged panel clusters land to become goals?
 
 **Answer:** Goal B scaffolds a new exploration,
-`explorations/harvested-alpha-2026-11`, at stage `shape`, with the merged
+a new exploration packet `harvested-alpha-2026-11`, at stage `shape`, with the merged
 verdict as capture and research. Its MAP graduates into concrete goals. This
 packet's MAP covers only goals A and B.
 
