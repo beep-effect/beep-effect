@@ -43,6 +43,8 @@
     "research/evaluate-gates.py",
     "research/freeze-runtime-closure.py",
     "research/implementation-accepted-main-metadata-001.json",
+    "research/implementation-accepted-main-metadata-002.json",
+    "research/implementation-accepted-main-metadata-003.json",
     "research/implementation-baseline.json",
     "research/implementation-collective-reference-001.json",
     "research/implementation-collective-reference-002.json",
@@ -77,6 +79,7 @@
     "research/implementation-runtime-coverage-001.json",
     "research/implementation-runtime-integrated-policy-001.json",
     "research/implementation-runtime-nominal-001.json",
+    "research/implementation-runtime-owner-integrated-003.json",
     "research/implementation-runtime-parent-001.json",
     "research/implementation-runtime-policy-work-002.json",
     "research/implementation-runtime-predicates-001.json",
@@ -90,12 +93,17 @@
     "research/legacy-protocol/claim-element-antecedent-manifest.json.txt",
     "research/legacy-protocol/iprally-smoke.main.ts.txt",
     "research/legacy-protocol/positive.main.ts.txt",
+    "research/legacy-protocol/preservation-verification-source-001.json",
+    "research/legacy-protocol/retired-runtime-files-001.json",
+    "research/owner-integrated-replay-003.json",
     "research/policy-work-measurement-002.json",
     "research/predicate-frames-measurement-001.json",
     "research/preservation-freeze.json",
     "research/preservation-generated-metadata-addendum.json",
     "research/preservation-location-addendum.json",
+    "research/preservation-verification-admission-001.json",
     "research/rejected-lexical-dependency-001.patch.txt",
+    "research/retired-runtime-admission-001.json",
     "research/runtime-nominal-replay-001.json",
     "research/runtime-parent-replay-001.json",
     "research/test_evaluation_coverage.py",
@@ -158,5 +166,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Active: composed nominal/predicate/policy candidate 41/538 strict, 537 parsed, 453 abstained; all original 37 and prior 41 retained. Work-limit selected claims 47->30, no lost substantive findings; new findings remain unvalidated. Accepted main includes #2685 and coverage repair #2706. Source-only handbook and full 24-family / 567-claim frame frozen; all 572 raw context nodes retained. No new reference/truth admission or confirmed semantic subgroups. Broader clause-role and ownership repairs continue; all frozen usefulness/delivery gates remain required."
+  "statusNote": "Active: latest unchanged538 replay 43 strict,537 parsed,453 abstained; all original37 and prior41 retained,43 now protected. Two owner-context gains in one family. All1213 original artifacts preserved via1209original paths+3runnerarchives+1generatedmetadataarchive. Accepted-main dependency/retired-source/verifier baselines separately reviewed and archived; priorresults and failedcaptures intact. Fixed24family/567claim/572context source-only independent assessments underway; no new structural/truth admission. Broadclause candidate unmeasured; all usefulness/delivery gates required."
 }

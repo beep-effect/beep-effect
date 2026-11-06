@@ -120,3 +120,21 @@ historical live byte identity. Comparing Git-recorded decoder versions can show
 that those revisions agree; it cannot prove the absence of unrecorded working
 tree changes during past runs. Preserve those receipts and bind fresh
 measurements to a new closure rather than rewriting their provenance.
+
+Accepted main also retires 88 citation modules included by the previous static
+closure. The first new capture failed before prediction on their missing paths.
+`implementation-accepted-main-metadata-002.json` retains baseline001 and maps
+exactly those retired non-reference sources into a byte-preserving archive.
+Each archived base64 payload reconstructs its old source hash; deletion
+provenance is bound to accepted main. All remaining inherited pins and immutable
+checks stay unchanged. The new build must discover every current replacement
+module independently; historical archived sources are not executed or presented
+as current dependencies. Failed capture001 remains retained.
+
+Baseline003 additionally binds the independently reviewed preservation verifier
+and its adversarial tests, archiving their exact prior bytes. Capture002
+correctly refused their old immutable pins before prediction. The generated
+metadata addendum and both historical/active manifest versions are explicit new
+pins. Capture immutable checks remain unchanged; no stale historical source
+hash is silently replaced in an old manifest. All three prospective baseline
+versions and both pre-prediction failures are retained.
