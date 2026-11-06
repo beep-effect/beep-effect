@@ -19,6 +19,7 @@ from different workloads together.
 | Enable JSDoc inventory's existing remote cache in Check | No hosted improvement claimed yet; enables identical-input reuse | Full inventory retained; protected writer environment, PR read-only policy and adapter cleanup tested |
 | Select Storybook before browser provisioning | Avoids browser version resolution, cache restore and Chromium/OS setup for unaffected PRs; hosted seconds not yet measured | Reuses the existing dependency-aware Turbo probe and preserves failures; affected/unaffected selection fixtures pass |
 | Accept multiple package names in `quality package-verify` | Avoids one CLI startup per additional package; no whole-repo timing claim | Sequential execution, duplicate names run once, later packages still run after diagnostic failure, final failure retained |
+| Attribute generated governance metadata to its coverage consumers | The observed two-file metadata change selected all 190 packages before; the live planner now selects only `@beep/repo-cli` and `@beep/repo-cli-kit` | 304 planning tests pass; unknown inputs, unavailable consumers and coverage machinery changes retain full fallback; no elapsed-time claim |
 | Repair Phoenix inventory query with the current GraphQL field alias | Live doctor can read inventory again | Focused tests and live metadata query pass; no collector restart or instrumentation removal |
 | Reduce repeated always-loaded agent guidance | Approximately 5.8 KB removed from `AGENTS.md` | Model projection retained; launch recipes and retirement details remain linked from mandatory runbooks |
 
@@ -109,6 +110,7 @@ unsafe cache/history shortcuts, and identified the early Storybook browser gate.
 | Repeated always-loaded instructions | Condensed; retain portable pins, laws, model projection and runbook pointers |
 | Duplicate reviewer receipt | Fixed in the launcher: save the final response once; use closed stdin and bounded explicit-path searches |
 | Repeated package-verification launches | Implemented batching with preserved per-package evidence and failure behavior |
+| Generated metadata causing full coverage fallback | Implemented explicit consumer mappings for the Effect Vitest inventory and schema catalog; full fallback remains for unclassified paths |
 | Parallel final-check and audit/docgen | Not enabled: memory admission and concurrent output writes need an equivalent-work experiment first |
 | Duplicate cheap-gate/law tasks and many Turbo starts | Structural hypothesis; task-level receipt parity must precede skipping or batching gates |
 | Cache coverage results | Rejected as a shortcut: current coverage evidence is bound to the run and head |
