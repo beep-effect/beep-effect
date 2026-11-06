@@ -123,6 +123,19 @@ T3 product facts:
 | 2026-11-01 | tom-pc-1 uses a new WSL distro, superseding the 2026-10-26 Hyper-V design | No Hyper-V enablement or reboot | Enable Hyper-V per the prior design |
 | 2026-11-01 | Hub-and-spoke links from DankStation | Fewest links, one place to revoke | Add peer links |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug t3code-fleet-rollout`; add a `kind: decision` file there, never edit this block._
+
+### dankserver T3 reaches the tailnet through a Serve route, not a wider bind, 2026-11-06
+
+dankserver's T3 service stays bound to 127.0.0.1:3773 under its worker-boundary drop-in. The administrator adds one tailnet-only Tailscale Serve route (HTTPS 8448, proxy to the loopback listener), because port 443 already fronts other services there and the worker account has no Tailscale operator rights. The hub links over the https .ts.net name on that port. No Funnel, no LAN bind, no worker privilege change.
+
+Lane `t3code-fleet-p1b`
+
+Reverse: Run tailscale serve --https=8448 --set-path=/ off on dankserver as the administrator; the worker service keeps its loopback bind either way
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
