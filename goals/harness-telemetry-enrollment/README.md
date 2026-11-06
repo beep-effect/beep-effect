@@ -33,3 +33,5 @@ P0 in progress. Refresh source/live evidence and reproduce the assigned defects 
 ## Latest Evidence
 
 The October27 audit is design provenance, not this goal's completion proof. Post-cutover source-bound synthetic root/backend admission and actual-root identity are verified; see [admission](research/CURRENT-SOURCE-ADMISSION.md). Actual per-route collection remains unverified in the [coverage table](research/COVERAGE.md). Installed versions and capability alone do not establish collection.
+
+The [fixed native source preparation](research/NATIVE-ONE-SHOT.md) adds local producer/config verification only. Fresh admission of this retained-core extension and its actual cwd/runtime remains pending; historical admission receipts do not transfer. All seven real harness populations remain Unknown.
