@@ -6,7 +6,7 @@
     "title": "Alchemy Vault-Sync Slice",
     "status": "active",
     "created": "2026-11-05",
-    "updated": "2026-11-05",
+    "updated": "2026-11-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/alchemy-vault-sync-slice",
@@ -34,7 +34,14 @@
     "goals/alchemy-vault-sync-slice/GOAL.md",
     "goals/alchemy-vault-sync-slice/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/01-p0-spikes.md",
+    "research/02-postgres-platform-design.md",
+    "research/03-current-vault-sync-flows.md",
+    "research/SOURCES.md",
+    "research/cache-baseline-request.json",
+    "research/cache-baseline-review.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,12 +57,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

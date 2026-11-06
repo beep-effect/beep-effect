@@ -103,6 +103,67 @@ them and record each in the Decision Log.
 | 2026-11-05 | Inherit D0–D17 from `explorations/alchemy-domain-adoption/DECISIONS.md` as binding | Grilled and locked with the operator over rounds 1–4 | Reopen the exploration at `align` and amend the entry there |
 | 2026-11-05 | Driver and doctrine ship inside this goal, not a separate goal | Operator shape check 2026-11-05: one vertical slice | Split the driver into a separate alchemy-postgres-platform goal at P0 if the conformance suite outgrows the slice |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug alchemy-vault-sync-slice`; add a `kind: decision` file there, never edit this block._
+
+### Conformance suite runs on InMemory and PGlite; real Postgres as integration project, 2026-11-06
+
+`@beep/pglite` ships `PgliteTestLayer` (Postgres dialect in-process), so the driver's conformance scenarios run three ways: `Domain.InMemory`, PGlite, and a real Postgres `test/integration` project reusing the same scenario module. The workflow engine is `effect/cluster/ClusterWorkflowEngine.layer` over `effect/cluster/SingleRunner.layer()` (SqlMessageStorage + SqlRunnerStorage) on the same SqlClient (D6).
+
+Lane `goals/alchemy-vault-sync-slice`
+
+Reverse: Drop the PGlite project and run the suite against a docker Postgres only
+
+### Driver package is @beep/alchemy-postgres under packages/drivers, 2026-11-06
+
+The Postgres Platform implementation and its conformance suite live in `packages/drivers/alchemy-postgres` as `@beep/alchemy-postgres`, created with `bun run beep create-package --family drivers`. `standards/ARCHITECTURE.md` lists Postgres, message storage and workflow engines as driver concerns; a repo-owned event-store platform is an external boundary wrapper, not shared-kernel substrate.
+
+Lane `goals/alchemy-vault-sync-slice`
+
+Reverse: Move the package with bun run beep create-package into the foundation family and update the import sites; no data involved
+
+### Entity-kit freeze is a beep law with a shrinking baseline, 2026-11-06
+
+`bun run beep laws entity-kit-freeze --check` fails any git-tracked `.ts`/`.tsx` file under `packages/` or `apps/` that imports the frozen specifiers (`@beep/shared-domain/entity` barrel, `entity/EntityKit`, `BaseEntity`, `AuditEntity`, `OrgEntity`, `ProductEntity`, `primitives`, or those names from the `@beep/shared-domain` barrel) unless it is in `standards/entity-kit-freeze.baseline.jsonc`; a baseline entry that stopped importing is a stale finding fixed by `--write`, so the baseline only shrinks. `Principal`, `SourceKind`, `PublicEntityId`, `EntityId`, `EntityRef` are not frozen (D3). Registered as cheap-gate lane `lint:entity-kit-freeze`.
+
+Lane `goals/alchemy-vault-sync-slice`
+
+Reverse: Delete the law, its baseline and the lint lane when the kit's last consumer migrates and the kit is removed
+
+### Event schema version is a static on the event class; the driver stamps and upcasts, 2026-11-06
+
+beta.85 has no version slot on the wire event or the envelope. Each event class declares `static readonly schemaVersion` (default 1); the driver reads it from the hosted aggregate's declared events, writes a `schema_version` column, and applies the class's upcaster chain to stored JSON at read before the kernel decodes. Genesis-import rows are version 1 (D12). Evidence: `packages/drivers/alchemy-postgres/test/spikes/event-annotations.test.ts`.
+
+Lane `goals/alchemy-vault-sync-slice`
+
+Reverse: Move the version into the stored row only and drop the static once alchemy ships a kernel version slot
+
+### Patch alchemy beta.85 types for exactOptionalPropertyTypes, 2026-11-06
+
+Under the repo's `exactOptionalPropertyTypes: true`, `Domain.Model` rejects every aggregate without a `read` contract because beta.85 types `Aggregate.Resolved.read` as `R` (possibly undefined) while `AnyDefinition.read?` is optional. A one-line bun patch (`patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch`, precedent `patches/effect@4.1.2.patch`) makes the field optional in `lib/Aggregate.d.ts` and `src/Aggregate.ts`. Alternatives rejected: relaxing the compiler option for alchemy consumers; a `read` contract on every test aggregate.
+
+Lane `goals/alchemy-vault-sync-slice`
+
+Reverse: Delete patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch and its patchedDependencies entry at the next lockstep bump, where upstream HEAD already restructured Aggregate.Resolved
+
+### Provenance is persisted by the driver from SendMeta.context, 2026-11-06
+
+The kernel envelope is exactly id, stream, seq, at, commandId, correlationId, trace. Every `AggregateStore.send` receives `meta.context`, the encoded RequestContext the Session middleware provided. The Postgres driver persists it beside the command receipt and copies principal and source kind onto each event row; audit reads come from those rows (D10). Evidence: `packages/drivers/alchemy-postgres/test/spikes/platform-send-meta.test.ts`.
+
+Lane `goals/alchemy-vault-sync-slice`
+
+Reverse: Add principal and source kind as explicit payload fields on every event and drop the driver columns
+
+### Validate alchemy APIs against the installed beta.85, not the reference HEAD, 2026-11-06
+
+The reference checkout HEAD is 56 commits past `v2.0.0-beta.85` and differs in 29 kernel files (Event annotations, Query, Aggregate.Resolved). All API reads use the installed package source (it ships `src/` and agent docs) or `git show v2.0.0-beta.85:<path>`. Evidence: `goals/alchemy-vault-sync-slice/research/01-p0-spikes.md` section 0.
+
+Lane `goals/alchemy-vault-sync-slice`
+
+Reverse: Re-point the spikes and driver at the reference checkout once the trio is bumped to a release that matches it (a named goal task per D11)
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

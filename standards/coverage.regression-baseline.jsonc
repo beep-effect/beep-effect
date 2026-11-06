@@ -9,7 +9,7 @@
   "schema_version": 2,
   "generated_at": "2026-11-06T17:35:48.798Z",
   "git_sha": "dacbd1a55ad3d0fcf99363d0e55fe6c6dbe71074",
-  "command": "bun run coverage -- --filter=@beep/repo-cli --write-baseline --add-missing-files-only",
+  "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -1500,6 +1500,45 @@
             "statements": 13,
             "branches": 7,
             "functions": 6
+          }
+        }
+      }
+    },
+    "@beep/alchemy-postgres": {
+      "path": "packages/drivers/alchemy-postgres",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "packages/drivers/alchemy-postgres/src/AlchemyPostgres.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/alchemy-postgres/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         }
       }
@@ -36672,6 +36711,18 @@
             "statements": 46,
             "branches": 65,
             "functions": 13
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Laws/EntityKitFreeze.ts": {
+          "lines": 96.9,
+          "statements": 97.16,
+          "branches": 87.5,
+          "functions": 93.33,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 4,
+            "functions": 3
           }
         },
         "packages/tooling/tool/cli/src/commands/Laws/FrozenGrantSet.ts": {
