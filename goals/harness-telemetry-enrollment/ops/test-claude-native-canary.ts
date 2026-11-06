@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import * as FsSync from "node:fs";
 import * as Fs from "node:fs/promises";
 import * as Http from "node:http";
 import * as Os from "node:os";
@@ -21,7 +22,18 @@ import { checkClaudeManagedPolicy, qualifyClaudeManagedPolicy } from "./claude-n
 
 const id = (text: string) => Sha256Hex.make(Str.repeat(64)(text));
 const fixture = async (
-  options: { rejectTraceOnce?: boolean; badInventory?: boolean; staleEpoch?: boolean; policyDrift?: boolean } = {}
+  options: {
+    rejectTraceOnce?: boolean;
+    badInventory?: boolean;
+    staleEpoch?: boolean;
+    policyDrift?: boolean;
+    nativeExit?: number;
+    unknownEvent?: boolean;
+    rateLimitStatus?: "allowed" | "allowed_warning" | "rejected";
+    outputOverflow?: boolean;
+    postPolicyDrift?: boolean;
+    rejectFinished?: boolean;
+  } = {}
 ) => {
   const directory = await Fs.mkdtemp(Path.join(Os.tmpdir(), "claude-canary-"));
   await Fs.chmod(directory, 0o700);
@@ -63,7 +75,10 @@ const fixture = async (
     nativePolicySha256: nativePolicy.digest,
     socketPath: Path.join(directory, "o.sock"),
   });
+  const context = { evidenceEpoch: options.staleEpoch ? 3 : 2, accepting: true };
   const facts: Array<string> = [];
+  const finishedOutcomes: Array<string> = [];
+  const dispatchIntents: Array<boolean> = [];
   const traces: Array<Buffer> = [];
   const server = Http.createServer(async (incoming, response) => {
     let body = "";
@@ -75,8 +90,8 @@ const fixture = async (
             ObservationLaunchContext.make({
               hostId: request.hostId,
               namespaceId: request.namespaceId,
-              evidenceEpoch: options.staleEpoch ? 3 : 2,
-              accepting: true,
+              evidenceEpoch: context.evidenceEpoch,
+              accepting: context.accepting,
               routes: [{ routeId: request.identity.routeId, harness: "claude-code", surface: "cli" }],
             })
           )
@@ -85,6 +100,14 @@ const fixture = async (
     } else if (incoming.url === "/v1/launch-facts") {
       const submitted = await Effect.runPromise(S.decodeEffect(S.fromJsonString(ObservationLaunchSubmission))(body));
       facts.push(submitted.fact._tag);
+      if (submitted.fact._tag === "Finished") {
+        finishedOutcomes.push(submitted.fact.outcome);
+        if (options.rejectFinished) {
+          response.statusCode = 503;
+          response.end("PRIVATE_FINISH_REFUSAL");
+          return;
+        }
+      }
       if (options.policyDrift && submitted.fact._tag === "Prepared")
         await Fs.writeFile(
           Path.join(request.sharedClaudeConfigDirectory, "remote-settings.json"),
@@ -162,9 +185,30 @@ const fixture = async (
   ]
     .map((value) => JSON.stringify(value))
     .join("\n");
-  const spawner = ScriptedSpawner.make((_command, args) =>
-    args[0] === "--version" ? { stdout: "2.1.318 (Claude Code)\n" } : { stdout: output, stderr: "PRIVATE_STDERR" }
-  );
+  const spawner = ScriptedSpawner.make((_command, args) => {
+    const purpose = args[0] === "--version" ? "version" : "source";
+    dispatchIntents.push(
+      FsSync.existsSync(Path.join(request.attemptDirectory, `diagnostic-${purpose}-dispatch-intent.json`))
+    );
+    if (purpose === "version") return { stdout: "2.1.318 (Claude Code)\n" };
+    if (options.postPolicyDrift)
+      FsSync.writeFileSync(
+        Path.join(request.sharedClaudeConfigDirectory, "remote-settings.json"),
+        '{"permissions":{}}',
+        { mode: 0o600 }
+      );
+    const firstNewline = output.indexOf("\n");
+    const reported = options.unknownEvent
+      ? `${output.slice(0, firstNewline)}\n{"type":"rate_limit_event","privateBody":"PRIVATE_NATIVE_METADATA"}\n${output.slice(firstNewline + 1)}`
+      : options.rateLimitStatus
+        ? `${output.slice(0, firstNewline)}\n${JSON.stringify({ type: "rate_limit_event", session_id: "PRIVATE_SESSION", rate_limit_info: { status: options.rateLimitStatus }, message: "PRIVATE_WARNING" })}\n${output.slice(firstNewline + 1)}`
+        : output;
+    return {
+      stdout: options.outputOverflow ? "x".repeat(262145) : reported,
+      stderr: "PRIVATE_STDERR",
+      exit: options.nativeExit ?? 0,
+    };
+  });
   const home = AiProviderCliHome.of({
     ensureCodexShadowHome: Effect.fn("TestHome.unused")(() => Effect.die("unused")),
     makeCodexEnv: () => {
@@ -176,16 +220,27 @@ const fixture = async (
     makeClaudeEnv: ({ baseEnv }) => baseEnv,
     resolveClaudeHome: () => request.nativeHome,
   });
-  const run = runClaudeNativeCanary(request).pipe(
-    Effect.provide(Layer.mergeAll(spawner.layer, NodeCrypto.layer, NodePath.layer)),
-    Effect.provideService(AiProviderCliHome, home)
-  );
+  const runFor = (admission: ClaudeNativeCanaryRequest) =>
+    runClaudeNativeCanary(admission).pipe(
+      Effect.provide(Layer.mergeAll(spawner.layer, NodeCrypto.layer, NodePath.layer)),
+      Effect.provideService(AiProviderCliHome, home)
+    );
+  const run = runFor(request);
   return {
     request,
     run,
+    runFor,
+    context,
     spawner,
     traces,
     facts,
+    finishedOutcomes,
+    dispatchIntents,
+    restartFixtureSocket: async () => {
+      await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+      await new Promise<void>((resolve) => server.listen(request.socketPath, resolve));
+      await Fs.chmod(request.socketPath, 0o600);
+    },
     close: async () => {
       await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
       await Fs.rm(directory, { recursive: true, force: true });
@@ -195,7 +250,7 @@ const fixture = async (
 
 it.live("runs one fixed native consumer then replays immutable metadata without source/probe rerun", () =>
   Effect.tryPromise(async () => {
-    const f = await fixture({ rejectTraceOnce: true });
+    const f = await fixture({ rejectTraceOnce: true, rateLimitStatus: "allowed_warning" });
     try {
       expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
       const accepted = await Effect.runPromise(f.run);
@@ -206,6 +261,11 @@ it.live("runs one fixed native consumer then replays immutable metadata without 
       const source = await Fs.readFile(Path.join(f.request.attemptDirectory, "source.json"), "utf8");
       expect(source).not.toContain("PRIVATE_");
       expect(source).not.toContain("ENROLLMENT_CANARY_OK");
+      expect(JSON.parse(source).source.observedRateLimitNotifications).toEqual({
+        allowed: 0,
+        allowedWarning: 1,
+        rejected: 0,
+      });
       expect(f.traces[0]?.toString()).not.toContain("input_tokens");
       const actual = f.spawner.spawns[1];
       expect(actual?.extendEnv).toBe(false);
@@ -328,6 +388,192 @@ it.live("policy drift after preparation fences the attempt before the model proc
       expect(f.traces).toHaveLength(0);
       expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
       expect(f.spawner.spawns).toHaveLength(1);
+    } finally {
+      await f.close();
+    }
+  })
+);
+
+for (const scenario of [
+  { name: "known nonzero native exit", options: { nativeExit: 2 }, phase: "source-exit", exit: 2, outcome: "failed" },
+  {
+    name: "rejected rate notification with native nonzero",
+    options: { nativeExit: 2, rateLimitStatus: "rejected" as const },
+    phase: "source-exit",
+    exit: 2,
+    outcome: "failed",
+  },
+  {
+    name: "unsupported native metadata",
+    options: { unknownEvent: true },
+    phase: "source-protocol",
+    exit: 0,
+    outcome: "unknown",
+  },
+  {
+    name: "post-run native policy drift",
+    options: { postPolicyDrift: true },
+    phase: "source-policy",
+    exit: 0,
+    outcome: "unknown",
+  },
+  {
+    name: "bounded output overflow",
+    options: { outputOverflow: true },
+    phase: "source-output",
+    exit: undefined,
+    outcome: "unknown",
+  },
+])
+  it.live(`persists finite diagnostics and separate failed lifecycle for ${scenario.name}`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture(scenario.options);
+      try {
+        const result = await Effect.runPromise(f.run.pipe(Effect.result));
+        expect(result).toMatchObject({ _tag: "Failure", failure: { phase: scenario.phase } });
+        expect(f.dispatchIntents).toEqual([true, true]);
+        expect(f.finishedOutcomes).toEqual([scenario.outcome]);
+        expect(f.traces).toHaveLength(0);
+        const raw = await Fs.readFile(Path.join(f.request.attemptDirectory, "diagnostic-source-failed.json"), "utf8");
+        const meta = JSON.parse(raw);
+        expect(meta.nativeSpawned).toBe(true);
+        expect(meta.nativeExitStatus).toBe(scenario.exit);
+        expect(meta.failurePhase).toBe(scenario.phase);
+        expect(meta.actualApiRequestCount).toBe("unknown");
+        if (scenario.options.unknownEvent) expect(meta.protocol.rateLimit).toBe(1);
+        expect(raw).not.toContain("PRIVATE_");
+        expect(raw).not.toContain("ENROLLMENT_CANARY_OK");
+        expect(await Fs.readdir(f.request.attemptDirectory)).not.toContain("source.json");
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(f.spawner.spawns).toHaveLength(2);
+        expect(f.finishedOutcomes).toHaveLength(1);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+it.live("failed Finished delivery preserves original source refusal and a durable pending intent", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture({ nativeExit: 2, rejectFinished: true });
+    try {
+      const result = await Effect.runPromise(f.run.pipe(Effect.result));
+      expect(result).toMatchObject({ _tag: "Failure", failure: { phase: "source-exit" } });
+      const raw = await Fs.readFile(Path.join(f.request.attemptDirectory, "diagnostic-lifecycle-pending.json"), "utf8");
+      expect(JSON.parse(raw)).toMatchObject({
+        lifecycleOutcome: "failed",
+        lifecycleDelivery: "pending",
+        failurePhase: "source-exit",
+        nativeExitStatus: 2,
+      });
+      expect(raw).not.toContain("PRIVATE_");
+      expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+      expect(f.spawner.spawns).toHaveLength(2);
+      expect(f.finishedOutcomes).toEqual(["failed"]);
+    } finally {
+      await f.close();
+    }
+  })
+);
+
+it.live("pause blocks retained source replay and same-epoch resume reuses immutable metadata only", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture({ rejectTraceOnce: true });
+    try {
+      expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+      const path = Path.join(f.request.attemptDirectory, "source.json");
+      const original = await Fs.readFile(path, "utf8");
+      const facts = f.facts.length;
+      f.context.accepting = false;
+      expect(await Effect.runPromise(f.run.pipe(Effect.result))).toMatchObject({
+        _tag: "Failure",
+        failure: { phase: "admission" },
+      });
+      expect(f.spawner.spawns).toHaveLength(2);
+      expect(f.traces).toHaveLength(1);
+      expect(f.facts).toHaveLength(facts);
+      f.context.accepting = true;
+      await Effect.runPromise(f.run);
+      expect(f.spawner.spawns).toHaveLength(2);
+      expect(f.traces).toHaveLength(2);
+      expect(f.traces[0]).toEqual(f.traces[1]);
+      expect(await Fs.readFile(path, "utf8")).toBe(original);
+    } finally {
+      await f.close();
+    }
+  })
+);
+it.live("new worker epoch refuses both stale admission and rewritten request without native replay", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture({ rejectTraceOnce: true });
+    try {
+      await Effect.runPromise(f.run.pipe(Effect.result));
+      const path = Path.join(f.request.attemptDirectory, "source.json");
+      const original = await Fs.readFile(path, "utf8");
+      const facts = f.facts.length;
+      f.context.evidenceEpoch = 3;
+      expect(await Effect.runPromise(f.run.pipe(Effect.result))).toMatchObject({
+        _tag: "Failure",
+        failure: { phase: "admission" },
+      });
+      const rebound = ClaudeNativeCanaryRequest.make({ ...f.request, evidenceEpoch: 3 });
+      expect(await Effect.runPromise(f.runFor(rebound).pipe(Effect.result))).toMatchObject({
+        _tag: "Failure",
+        failure: { phase: "attempted-unknown" },
+      });
+      expect(f.spawner.spawns).toHaveLength(2);
+      expect(f.traces).toHaveLength(1);
+      expect(f.facts).toHaveLength(facts);
+      expect(await Fs.readFile(path, "utf8")).toBe(original);
+    } finally {
+      await f.close();
+    }
+  })
+);
+for (const changed of ["ingress", "socket"] as const) {
+  it.live(`changed ${changed} refuses retained source without rebinding or native rerun`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ rejectTraceOnce: true });
+      try {
+        await Effect.runPromise(f.run.pipe(Effect.result));
+        const path = Path.join(f.request.attemptDirectory, "source.json");
+        const original = await Fs.readFile(path, "utf8");
+        const facts = f.facts.length;
+        const alternate = Path.join(Path.dirname(f.request.socketPath), "alternate.sock");
+        // An alternate name for the same owned fixture socket isolates request binding
+        // from reachability. This is not a real worker restart/launch-window proof.
+        if (changed === "socket") await Fs.link(f.request.socketPath, alternate);
+        const rebound = ClaudeNativeCanaryRequest.make({
+          ...f.request,
+          ...(changed === "socket" ? { socketPath: alternate } : { ingressRouteId: id("9") }),
+        });
+        expect(await Effect.runPromise(f.runFor(rebound).pipe(Effect.result))).toMatchObject({
+          _tag: "Failure",
+          failure: { phase: "attempted-unknown" },
+        });
+        expect(f.spawner.spawns).toHaveLength(2);
+        expect(f.traces).toHaveLength(1);
+        expect(f.facts).toHaveLength(facts);
+        expect(await Fs.readFile(path, "utf8")).toBe(original);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+
+it.live("new invocation re-pins a replaced same-path fixture socket but does not rerun source", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture({ rejectTraceOnce: true });
+    try {
+      await Effect.runPromise(f.run.pipe(Effect.result));
+      const path = Path.join(f.request.attemptDirectory, "source.json");
+      const original = await Fs.readFile(path, "utf8");
+      await f.restartFixtureSocket();
+      await Effect.runPromise(f.run);
+      expect(f.spawner.spawns).toHaveLength(2);
+      expect(f.traces).toHaveLength(2);
+      expect(f.traces[0]).toEqual(f.traces[1]);
+      expect(await Fs.readFile(path, "utf8")).toBe(original);
     } finally {
       await f.close();
     }
