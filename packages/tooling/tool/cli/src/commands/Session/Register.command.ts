@@ -16,9 +16,11 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
+  convertRegisterRow,
   currentRegisterRow,
   currentRegisterRows,
   mergeRegisterNote,
+  RegisterConvertInput,
   RegisterMergeInput,
   RegisterNotePatch,
   RegisterReport,
@@ -218,6 +220,7 @@ export const sessionRegisterListCommand = Command.make(
                   onNone: A.empty<string>,
                   onSome: (waiting) => [`  waiting on orchestrator: ${waiting}`],
                 }),
+                `  last contact: ${O.match(row.lastContact, { onNone: () => "never", onSome: DateTime.formatIso })}`,
                 `  orphan plan: ${row.orphanPlan}`,
               ],
               "\n"
@@ -233,8 +236,95 @@ export const sessionRegisterListCommand = Command.make(
   Command.provide(layerOrchestratorRegisterLive)
 );
 
+const toKindFlag = Flag.String("to-kind").pipe(
+  Flag.withDescription(
+    `What the unit becomes: ${A.join(
+      A.filter(RegisterUnitKind.literals, (kind) => kind !== "in-process-agent"),
+      ", "
+    )}`
+  )
+);
+const toAddressFlag = Flag.String("to-address").pipe(
+  Flag.withDescription("How the successor reaches it now: T3 thread link, job id, unit name, scheduled task id")
+);
+const briefFlag = Flag.String("brief").pipe(
+  Flag.optional,
+  Flag.withDescription("Path of the brief written for the unit (task, state, what it owes, how to resume)")
+);
+
+const convertRefusalText = {
+  "not-registered": "is not registered; add it first",
+  "already-retired": "is already retired",
+  "target-in-process": "cannot become an in-process-agent: that still dies with this session",
+  "same-unit": "is already that unit",
+  "target-registered": "cannot take a target that already has a live row",
+} as const;
+
 /**
- * The `session register` group: `add` and `list`.
+ * Convert a registered unit to a new kind and address: retire the old row and
+ * register the new one with the same owns, waiting ask and orphan plan.
+ *
+ * **Example** (Read the command name)
+ *
+ * ```ts
+ * import { sessionRegisterConvertCommand } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(sessionRegisterConvertCommand.name) // "convert"
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const sessionRegisterConvertCommand = Command.make(
+  "convert",
+  { kind: kindFlag, address: addressFlag, toKind: toKindFlag, toAddress: toAddressFlag, brief: briefFlag },
+  Effect.fn(function* ({ kind, address, toKind, toAddress, brief }) {
+    const program = Effect.gen(function* () {
+      const from = decodeUnitKind(kind);
+      const to = decodeUnitKind(toKind);
+      if (from._tag === "Failure" || to._tag === "Failure") {
+        return yield* sessionUsageError(
+          `--kind and --to-kind must be one of ${A.join(RegisterUnitKind.literals, ", ")}; got "${kind}" and "${toKind}".`
+        );
+      }
+      const source = { kind: from.success, address: Str.trim(address) };
+      const targetAddress = Str.trim(toAddress);
+      if (Str.isEmpty(source.address) || Str.isEmpty(targetAddress)) {
+        return yield* sessionUsageError("--address and --to-address must say how the unit is reached.");
+      }
+      const facts = yield* sessionCheckoutFacts(process.cwd());
+      const register = yield* OrchestratorRegister;
+      const rows = yield* register.list(facts.repository);
+      const conversion = convertRegisterRow(
+        RegisterConvertInput.make({
+          source: currentRegisterRow(rows, source),
+          target: currentRegisterRow(rows, { kind: to.success, address: targetAddress }),
+          toKind: to.success,
+          toAddress: targetAddress,
+          brief: O.filter(O.map(brief, Str.trim), Str.isNonEmpty),
+          now: yield* DateTime.now,
+        })
+      );
+      if (Result.isFailure(conversion)) {
+        return yield* sessionUsageError(`${source.kind} ${source.address} ${convertRefusalText[conversion.failure]}.`);
+      }
+      yield* noteRegister(process.cwd(), conversion.success.retire);
+      const row = yield* noteRegister(process.cwd(), conversion.success.successor);
+      yield* Console.log(
+        `[session] converted ${source.kind} ${source.address} -> ${row.kind} ${row.address} (${row.state})`
+      );
+    });
+    yield* reportSessionFailure(program);
+  })
+).pipe(
+  Command.withDescription(
+    "Move a unit that dies with this session (an in-process agent, a poller) to the thread, job, unit or scheduled task that replaced it, keeping its owns, ask and orphan plan"
+  ),
+  Command.provide(layerOrchestratorRegisterLive)
+);
+
+/**
+ * The `session register` group: `add`, `list` and `convert`.
  *
  * **Example** (Read the group name)
  *
@@ -255,11 +345,12 @@ export const sessionRegisterCommand = Command.make("register", {}, () =>
         '- bun run beep session register add --kind <kind> --address <addr> [--name <label>] [--owns "PR #n, lane x"] [--orphan-plan "<what a successor does>"] [--state active|blocked|unreachable|retired] [--waiting "<ask>"] [--last-contact <iso>|now] [--note "<text>"]',
         "  omitted flags keep the unit's current values; empty text clears a field; --orphan-plan is required the first time",
         "- bun run beep session register list [--json|--markdown]",
+        "- bun run beep session register convert --kind <kind> --address <addr> --to-kind <kind> --to-address <addr> [--brief <path>]",
       ],
       "\n"
     )
   )
 ).pipe(
   Command.withDescription("The orchestrator register: every coordinated unit and its orphan plan"),
-  Command.withSubcommands([sessionRegisterAddCommand, sessionRegisterListCommand])
+  Command.withSubcommands([sessionRegisterAddCommand, sessionRegisterListCommand, sessionRegisterConvertCommand])
 );
