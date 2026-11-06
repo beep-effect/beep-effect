@@ -93,7 +93,7 @@
   "candidateChange": {
     "task": "//#lint:opaque-roundtrips",
     "cache": false,
-    "candidateTurboSha256": "5e24847cd2aba98fc582322bb9c6fc3df1669c50ab7ce775fa9c31bd90e75072"
+    "candidateTurboSha256": "c8fb0cb0c9b78b70b38cf773c9ef305d9ea9b6ad483b8c37e45905965d7ba72a"
   },
   "remaining": "Implement and qualify a portable tracked-file discovery binding or equivalent reviewed scanner semantics before restoring reuse. This temporary fresh boundary remains unfinished adoption work.",
   "completeRepositoryTaskExecuted": false,
@@ -123,9 +123,9 @@
       "timeout diagnostic path redaction"
     ]
   },
-  "preparedSourceCommit": "7b6355014c312ae7311d77c186e2a88b2bf5a19d",
+  "preparedSourceCommit": "8fc5d0f62bb5b5c9da1fdcdccb15117183f971d1",
   "preparedSourceBindings": {
-    "turbo.json": "5e24847cd2aba98fc582322bb9c6fc3df1669c50ab7ce775fa9c31bd90e75072",
+    "turbo.json": "c8fb0cb0c9b78b70b38cf773c9ef305d9ea9b6ad483b8c37e45905965d7ba72a",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "76cc2c9677b74b58b2b71b049a20606f2640f0fe7dbe8b016254ae244a605e39",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts": "c5ff2a3e5add483fe2279f02df0895ec26c1ea61adf8425ac43ede068263f437",
     "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "4725146f9243e01a7ba8f461544e8988909bbd8eac3681513a96e923593fd874",
