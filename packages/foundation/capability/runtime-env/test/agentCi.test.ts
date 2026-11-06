@@ -1,9 +1,14 @@
 import { agentCiKeys, detectAgent, detectCi } from "@beep/runtime-env/internal/agentCi";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { envReadsOf, sourceOf } from "./support/sources.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 // std-env 4.3.0 agent table (dist/index.mjs), in its declared order. AI_AGENT wins over all.
 const AGENTS: ReadonlyArray<readonly [string, Record<string, string>]> = [
@@ -27,7 +32,8 @@ const AGENTS: ReadonlyArray<readonly [string, Record<string, string>]> = [
 
 describe("detectAgent", () => {
   for (const [name, env] of AGENTS) {
-    it(`${JSON.stringify(env)} → ${name}`, () => assert.deepStrictEqual(detectAgent(env), O.some(name)));
+    it(`${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(env), identity)} → ${name}`, () =>
+      assert.deepStrictEqual(detectAgent(env), O.some(name)));
   }
   it("AI_AGENT wins and is lower-cased", () =>
     assert.deepStrictEqual(detectAgent({ AI_AGENT: "Aider", CLAUDECODE: "1" }), O.some("aider")));
@@ -101,7 +107,8 @@ describe("detectCi", () => {
   // variable and counts as CI, as in std-env. Whitespace is not trimmed (Config.Boolean does not trim either),
   // so a padded falsy spelling is an unknown value.
   for (const v of ["banana", "nope", " no", "no ", "falsey"]) {
-    it(`unknown CI=${JSON.stringify(v)} → generic`, () => assert.deepStrictEqual(ci({ CI: v }), O.some("generic")));
+    it(`unknown CI=${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(v), identity)} → generic`, () =>
+      assert.deepStrictEqual(ci({ CI: v }), O.some("generic")));
   }
 });
 

@@ -207,16 +207,12 @@ export const dailyImpl = Effect.fn("Research.dailyImpl")(function* (
     }
   });
 
-  yield* step(
-    "history-sift",
-    historySiftImpl(
-      yield* decodeResearchHistorySiftOptions({
-        browser: options.browser,
-        sinceDays: options.sinceDays,
-        vaultRoot: options.vaultRoot,
-      }).pipe(ResearchCommandError.mapError("Invalid daily history-sift options."))
-    )
-  );
+  const pipe1 = yield* decodeResearchHistorySiftOptions({
+    browser: options.browser,
+    sinceDays: options.sinceDays,
+    vaultRoot: options.vaultRoot,
+  }).pipe(ResearchCommandError.mapError("Invalid daily history-sift options."));
+  yield* step("history-sift", historySiftImpl(pipe1));
 
   if (options.notionPage === undefined) {
     skipped.push("notion-pull (no --page)");

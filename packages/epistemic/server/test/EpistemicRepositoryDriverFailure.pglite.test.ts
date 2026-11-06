@@ -92,7 +92,8 @@ describe("In-memory claim disposition repository", () => {
       const repository = yield* makeInMemoryClaimDispositionRepository();
       const claimId = yield* decodeCandidateClaimId(1);
 
-      pipe(A.isReadonlyArrayEmpty(yield* repository.listByClaim(claimId)), assertTrue);
+      const listByClaim1 = yield* repository.listByClaim(claimId);
+      pipe(A.isReadonlyArrayEmpty(listByClaim1), assertTrue);
     })
   );
 });

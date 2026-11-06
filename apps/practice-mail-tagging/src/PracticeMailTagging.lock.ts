@@ -408,10 +408,8 @@ export const makeStateLock = Effect.fn("StateLock.make")(function* (stateDirecto
 
   const contend = Effect.fn("StateLock.contend")(function* (command: string, mayTakeOver: boolean) {
     const holder = yield* readHolder;
-    const reason = O.filter(
-      yield* O.match(holder, { onNone: () => Effect.succeedNone, onSome: observe }),
-      () => mayTakeOver
-    );
+    const match1 = yield* O.match(holder, { onNone: () => Effect.succeedNone, onSome: observe });
+    const reason = O.filter(match1, () => mayTakeOver);
     return yield* O.match(O.all([holder, reason]), {
       onNone: () =>
         Effect.fail(

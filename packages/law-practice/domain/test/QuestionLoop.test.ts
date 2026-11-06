@@ -62,7 +62,8 @@ const rejects =
 
 const roundTrips = Effect.fn("roundTrips")(function* <A, I>(schema: S.Codec<A, I>, input: unknown) {
   const decoded = yield* S.decodeUnknownEffect(schema)(input);
-  expect(yield* S.encodeEffect(schema)(decoded)).toStrictEqual(input);
+  const value1 = yield* S.encodeEffect(schema)(decoded);
+  expect(value1).toStrictEqual(input);
   return decoded;
 });
 
@@ -178,7 +179,9 @@ describe("@beep/law-practice-domain question schema round-trips", () => {
     { row: Arbitrary.schema(AnswerRow) },
     ({ row }) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(AnswerRow)(yield* S.encodeEffect(AnswerRow)(row));
+        const argument = S.decodeEffect(AnswerRow);
+        const value2 = yield* S.encodeEffect(AnswerRow)(row);
+        const decoded = yield* argument(value2);
         expect(S.toEquivalence(AnswerRow)(decoded, row)).toBe(true);
       }),
     { arbitrary: fcRuns(25) }
@@ -189,7 +192,9 @@ describe("@beep/law-practice-domain question schema round-trips", () => {
     { options: Arbitrary.schema(QuestionOptions) },
     ({ options }) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(QuestionOptions)(yield* S.encodeEffect(QuestionOptions)(options));
+        const argument1 = S.decodeEffect(QuestionOptions);
+        const value3 = yield* S.encodeEffect(QuestionOptions)(options);
+        const decoded = yield* argument1(value3);
         expect(S.toEquivalence(QuestionOptions)(decoded, options)).toBe(true);
       }),
     { arbitrary: fcRuns(25) }

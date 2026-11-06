@@ -276,7 +276,8 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })("cache command", (it) => {
           )
         );
         expect(error.message).toBe("injected warm failure");
-        expect(yield* fs.exists(receiptPath)).toBe(false);
+        const exists1 = yield* fs.exists(receiptPath);
+        expect(exists1).toBe(false);
       }),
     15000
   );
@@ -301,7 +302,8 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })("cache command", (it) => {
           )
         );
         expect(error.message).toContain("checkout changed during execution");
-        expect(yield* fs.exists(receiptPath)).toBe(false);
+        const exists2 = yield* fs.exists(receiptPath);
+        expect(exists2).toBe(false);
       }),
     15000
   );

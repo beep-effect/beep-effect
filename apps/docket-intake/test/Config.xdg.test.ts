@@ -58,14 +58,16 @@ describe("@beep/docket-intake state directory env matrix", () => {
   for (const [name, env, expected] of rows) {
     it.effect(name, () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* stateDirectoryIn(env), expected);
+        const stateDirectoryIn1 = yield* stateDirectoryIn(env);
+        assert.strictEqual(stateDirectoryIn1, expected);
       })
     );
   }
   for (const [name, env, , after] of divergent) {
     it.effect(`${name} (diverges on purpose: XDG absolute-only)`, () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* stateDirectoryIn(env), after);
+        const stateDirectoryIn2 = yield* stateDirectoryIn(env);
+        assert.strictEqual(stateDirectoryIn2, after);
       })
     );
   }

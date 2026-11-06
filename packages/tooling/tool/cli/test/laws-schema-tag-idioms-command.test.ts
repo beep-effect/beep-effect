@@ -53,7 +53,8 @@ const runGit = Effect.fn("SchemaTagIdiomsCommandTest.runGit")(function* (root: s
     stdout: "ignore",
     stderr: "ignore",
   });
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode1 = yield* handle.exitCode;
+  expect(exitCode1).toBe(0);
 });
 
 const spawnFailure = ScriptedSpawner.make(() =>
@@ -98,7 +99,8 @@ it.layer(PlatformLayer, { timeout: "60 seconds" })((it) => {
     it.effect(
       "reports a checkout as text, and fails its strict text and JSON checks",
       Effect.fnUntraced(function* () {
-        yield* enterDirectory(yield* makeFixtureCheckout());
+        const madeFixtureCheckout = yield* makeFixtureCheckout();
+        yield* enterDirectory(madeFixtureCheckout);
 
         const report = yield* runInProcess(["schema-tag-idioms"]).pipe(withEmptyConfig, Effect.exit);
         const check = yield* runInProcess(["schema-tag-idioms", "--check"]).pipe(withEmptyConfig, Effect.exit);

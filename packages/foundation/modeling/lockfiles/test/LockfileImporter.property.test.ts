@@ -37,7 +37,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(LockfileImporter)(value);
       const decoded = yield* S.decodeEffect(LockfileImporter)(encoded);
       assertTrue(S.toEquivalence(LockfileImporter)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(LockfileImporter)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(LockfileImporter)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );

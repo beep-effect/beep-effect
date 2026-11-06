@@ -73,7 +73,8 @@ describe("practice KG shape-only stderr", () => {
       const lines = yield* TestConsole.errorLines;
       expect(lines).toEqual([shapeOnlyLogLine("Error", O.some("kg_find")), shapeOnlyLogLine("Warn", O.none())]);
       expect(A.some(A.filter(lines, P.isString), Str.includes(message))).toBe(false);
-      expect(yield* TestConsole.logLines).toEqual([]);
+      const logLines1 = yield* TestConsole.logLines;
+      expect(logLines1).toEqual([]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), (self) =>
       Layer.build(layerShapeOnlyStderr).pipe(Effect.flatMap((context) => Effect.provideContext(self, context)))
     )

@@ -13,11 +13,13 @@ import * as BunPath from "@effect/platform-bun/BunPath";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -103,7 +105,7 @@ const renderMigrationsGenModule = Effect.fn("ProfessionalDesktop.syncMigrationBu
       "export const migrationBundle: ReadonlyArray<MigrationBundleEntry> = [",
       ...A.flatMap(sortedMigrations, (migration) => [
         "  MigrationBundleEntry.make({",
-        `    name: ${JSON.stringify(migration.name)},`,
+        `    name: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(migration.name), identity)},`,
         `    sql: ${quoteTemplateLiteral(migration.sql)},`,
         "  }),",
       ]),

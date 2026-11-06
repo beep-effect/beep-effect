@@ -527,14 +527,19 @@ const makeCorpus = Effect.fnUntraced(function* () {
     yield* fs.makeDirectory(dir, { recursive: true });
     yield* fs.writeFile(path.join(dir, "sheets.pdf"), bytes);
     const hash = yield* sha256(bytes);
-    yield* fs.writeFileString(path.join(dir, "manifest.json"), yield* manifestJson(hash, spec));
+    const argument = path.join(dir, "manifest.json");
+    const manifestJson1 = yield* manifestJson(hash, spec);
+    yield* fs.writeFileString(argument, manifestJson1);
     return { manifest: path.join(dir, "manifest.json"), hash: Sha256Hex.make(hash), dir };
   });
-  const sent = yield* writeSet("sent", yield* sheetSetPdf());
+  const sheetSetPdf1 = yield* sheetSetPdf();
+  const sent = yield* writeSet("sent", sheetSetPdf1);
   // the same spec rendered again (a shaded twin): one more blank page, so another hash
-  const other = yield* writeSet("other", yield* sheetSetPdf(1));
+  const sheetSetPdf2 = yield* sheetSetPdf(1);
+  const other = yield* writeSet("other", sheetSetPdf2);
   // a set rendered from another spec of the matter
-  const foreign = yield* writeSet("foreign", yield* sheetSetPdf(2), Str.repeat(64)("1"));
+  const sheetSetPdf3 = yield* sheetSetPdf(2);
+  const foreign = yield* writeSet("foreign", sheetSetPdf3, Str.repeat(64)("1"));
   const inputs = path.join(matter, "inputs");
   yield* fs.makeDirectory(inputs, { recursive: true });
   const location = ReviewRoundLocation.make({ corpusRoot: root, matter: "matter", round: 1 });
@@ -567,7 +572,8 @@ const writeReviewerFiles = Effect.fnUntraced(function* (inputs: string) {
   return yield* Effect.forEach(files, ([name, draw, notes]) =>
     Effect.gen(function* () {
       const file = path.join(inputs, name);
-      yield* fs.writeFile(file, yield* reviewerPdf(draw ?? stroke, notes));
+      const reviewerPdf4 = yield* reviewerPdf(draw ?? stroke, notes);
+      yield* fs.writeFile(file, reviewerPdf4);
       return file;
     })
   );
@@ -576,9 +582,12 @@ const writeReviewerFiles = Effect.fnUntraced(function* (inputs: string) {
 // Writes `value` as JSON and returns the hash of the bytes written.
 const writeJsonFile = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>, file: string, value: A) {
   const fs = yield* FileSystem.FileSystem;
-  const bytes = new TextEncoder().encode(yield* S.encodeEffect(S.fromJsonString(schema))(value));
+  const argument1 = new TextEncoder();
+  const value2 = yield* S.encodeEffect(S.fromJsonString(schema))(value);
+  const bytes = argument1.encode(value2);
   yield* fs.writeFile(file, bytes);
-  return Sha256Hex.make(yield* sha256(bytes));
+  const sha2565 = yield* sha256(bytes);
+  return Sha256Hex.make(sha2565);
 });
 
 const inventoryOf = (round: ReviewRound, findings: ReadonlyArray<ReviewFinding>) =>
@@ -671,10 +680,12 @@ describe("beep drawings review", () => {
           .pipe(Effect.flip, Effect.ensuring(Effect.sync(() => sync.mockRestore())));
         expect(error.message).toContain("Could not safely write review file");
         const roundDir = path.join(corpus.matter, "review", "round-1");
-        expect(yield* fs.readDirectory(roundDir)).toEqual([]);
+        const readDirectory6 = yield* fs.readDirectory(roundDir);
+        expect(readDirectory6).toEqual([]);
         const opened = yield* review.open(request);
         expect(opened.round.status).toBe("open");
-        expect(yield* fs.readDirectory(roundDir)).toEqual(["round.json"]);
+        const readDirectory7 = yield* fs.readDirectory(roundDir);
+        expect(readDirectory7).toEqual(["round.json"]);
       })
     );
 
@@ -697,7 +708,8 @@ describe("beep drawings review", () => {
           )
         );
         assertInstanceOf(failure, DrawingsCommandError);
-        expect(yield* fs.exists(path.join(outside, "round-1"))).toBe(false);
+        const exists8 = yield* fs.exists(path.join(outside, "round-1"));
+        expect(exists8).toBe(false);
       })
     );
     it.effect("replaces a linked inventory entry without writing to its outside target", () =>
@@ -735,8 +747,10 @@ describe("beep drawings review", () => {
           ReviewPlanRequest.make({ location: corpus.location, dispositionsPath: dispositionsFile })
         );
         expect(planned.round.status).toBe("planned");
-        expect(yield* fs.readFile(outsideInventory)).toStrictEqual(original);
-        expect(yield* fs.realPath(inventory)).toBe(inventory);
+        const readFile9 = yield* fs.readFile(outsideInventory);
+        expect(readFile9).toStrictEqual(original);
+        const realPath10 = yield* fs.realPath(inventory);
+        expect(realPath10).toBe(inventory);
       })
     );
     it.effect("ingests flattened markup: notes with rects, an all-sheets merge, and unique-winner matches", (context) =>
@@ -794,7 +808,8 @@ describe("beep drawings review", () => {
         expect(first?.rect.yMax).toBeGreaterThan(84);
         expect(first?.rect.yMax).toBeLessThan(100);
         expect(first?.origin).toBe("text-layer");
-        expect(yield* fs.exists(`${status.roundDir}/intake.json`)).toBe(true);
+        const exists11 = yield* fs.exists(`${status.roundDir}/intake.json`);
+        expect(exists11).toBe(true);
 
         // the foreign page contains FIG. 3's stroke but is refused, then accepted by --figure
         const refused = yield* Effect.flip(
@@ -961,7 +976,8 @@ describe("beep drawings review", () => {
         );
         expect(missing.message).toContain("every finding needs one disposition");
         expect(missing.message).toContain("A1-02 has no disposition");
-        expect(yield* fs.exists(path.join(opened.roundDir, "dispositions.json"))).toBe(false);
+        const exists12 = yield* fs.exists(path.join(opened.roundDir, "dispositions.json"));
+        expect(exists12).toBe(false);
 
         yield* write(2, [entry("A1-01", specChange)]);
         const wrongRound = yield* Effect.flip(
@@ -975,7 +991,8 @@ describe("beep drawings review", () => {
         );
         expect(planned.round.status).toBe("planned");
         assertTrue(planned.round.dispositionsSha256.pipe(O.isSome));
-        expect(yield* fs.exists(path.join(opened.roundDir, "dispositions.json"))).toBe(true);
+        const exists13 = yield* fs.exists(path.join(opened.roundDir, "dispositions.json"));
+        expect(exists13).toBe(true);
         assertSome(
           O.map(planned.inventory, (inventory) => A.map(inventory.findings, (f) => f.status)),
           ["planned", "declined", "planned"]
@@ -1051,7 +1068,8 @@ describe("beep drawings review", () => {
         expect(twin.message).toContain(`on sheet set ${sent}, rendered from this set's spec: A1-01@${sent}`);
         const foreign = yield* Effect.flip(runDrawings(["statement", "--manifest", corpus.foreign.manifest]));
         expect(foreign.message).toContain(`on sheet set ${sent}, another set of this matter: A1-01@${sent}`);
-        expect(yield* logged).not.toContain("I approve design-figure sheet set");
+        const logged14 = yield* logged;
+        expect(logged14).not.toContain("I approve design-figure sheet set");
 
         // sign is guarded as well: an approval line printed earlier, or derived by hand, is not recorded
         const signed = yield* Effect.flip(
@@ -1076,7 +1094,8 @@ describe("beep drawings review", () => {
         );
         assertInstanceOf(signed, DrawingsCommandError);
         expect(signed.message).toContain("No approval while a review round of this matter is not cleared");
-        expect(yield* fs.exists(path.join(corpus.other.dir, "approval.json"))).toBe(false);
+        const exists15 = yield* fs.exists(path.join(corpus.other.dir, "approval.json"));
+        expect(exists15).toBe(false);
 
         // declining every required finding clears the round for every set of the matter
         const dispositionsFile = path.join(corpus.matter, "dispositions-draft.json");
@@ -1091,7 +1110,8 @@ describe("beep drawings review", () => {
         );
         yield* review.plan(ReviewPlanRequest.make({ location: corpus.location, dispositionsPath: dispositionsFile }));
         yield* runDrawings(["statement", "--manifest", corpus.other.manifest]);
-        expect(yield* logged).toContain(`I approve design-figure sheet set ${corpus.other.hash} for filing.`);
+        const logged16 = yield* logged;
+        expect(logged16).toContain(`I approve design-figure sheet set ${corpus.other.hash} for filing.`);
 
         // an explicit review directory with no rounds guards nothing
         const none = yield* review.guard(corpus.sent.manifest, O.some(corpus.inputs));
@@ -1193,14 +1213,12 @@ describe("beep drawings review", () => {
         const linkedDir = path.join(corpus.root, "linked-sent");
         yield* fs.symlink(corpus.sent.dir, linkedDir);
         const draftFile = path.join(corpus.matter, "linked-draft.json");
-        yield* fs.writeFileString(
-          draftFile,
-          yield* toJson({
-            draftId: "AAMk-linked",
-            webLink: "https://example.test/draft",
-            attachments: [{ name: "sheets.pdf", size: 1234, sha256: corpus.sent.hash }],
-          })
-        );
+        const toJson17 = yield* toJson({
+          draftId: "AAMk-linked",
+          webLink: "https://example.test/draft",
+          attachments: [{ name: "sheets.pdf", size: 1234, sha256: corpus.sent.hash }],
+        });
+        yield* fs.writeFileString(draftFile, toJson17);
         const written = yield* review.deliver(
           DeliverRequest.make({
             manifestPath: path.join(linkedDir, "manifest.json"),
@@ -1211,7 +1229,8 @@ describe("beep drawings review", () => {
           })
         );
         expect(written.path).toBe(path.join(corpus.sent.dir, "delivery.json"));
-        expect(yield* fs.exists(written.path)).toBe(true);
+        const exists18 = yield* fs.exists(written.path);
+        expect(exists18).toBe(true);
       })
     );
 
@@ -1229,13 +1248,15 @@ describe("beep drawings review", () => {
             webLink: "https://example.test/draft",
             attachments: [{ name: "sheets.pdf", size: 1234, sha256 }],
           });
-        yield* fs.writeFileString(draftFile, yield* draft(corpus.other.hash));
+        const draft19 = yield* draft(corpus.other.hash);
+        yield* fs.writeFileString(draftFile, draft19);
         const wrong = yield* Effect.flip(
           runDrawings(["deliver", "record", "--manifest", corpus.sent.manifest, "--draft", draftFile])
         );
         expect(wrong.message).toContain("No attachment of the draft is the sheet-set PDF");
 
-        yield* fs.writeFileString(draftFile, yield* draft(corpus.sent.hash));
+        const draft20 = yield* draft(corpus.sent.hash);
+        yield* fs.writeFileString(draftFile, draft20);
         const deliveryFile = path.join(corpus.sent.dir, "delivery.json");
         const escapedDelivery = path.join(corpus.root, "escaped-delivery.json");
         yield* fs.symlink(escapedDelivery, deliveryFile);
@@ -1249,8 +1270,10 @@ describe("beep drawings review", () => {
           "--sent-message-id",
           "AAMk-sent",
         ]);
-        expect(yield* logged).toContain(`delivery of sheet set ${corpus.sent.hash} recorded`);
-        expect(yield* fs.exists(escapedDelivery)).toBe(false);
+        const logged21 = yield* logged;
+        expect(logged21).toContain(`delivery of sheet set ${corpus.sent.hash} recorded`);
+        const exists22 = yield* fs.exists(escapedDelivery);
+        expect(exists22).toBe(false);
         const twice = yield* Effect.flip(
           review.deliver(
             DeliverRequest.make({
@@ -1291,7 +1314,8 @@ describe("beep drawings review", () => {
         ]);
         const status = yield* review.status(corpus.location);
         assertSome(status.round.sentMessageId, "AAMk-sent");
-        expect(yield* logged).toContain("not ingested yet");
+        const logged23 = yield* logged;
+        expect(logged23).toContain("not ingested yet");
       })
     );
 

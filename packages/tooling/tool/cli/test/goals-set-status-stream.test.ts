@@ -109,11 +109,14 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           });
           yield* fs.writeFileString(manifestPath, manifest);
           for (const flags of [[], ["--preview"]]) {
-            expectReportedFailure(
-              yield* Effect.exit(runGoalsCommand(["set-status", "proposal", "completed-retained", ...flags]))
+            const exit1 = yield* Effect.exit(
+              runGoalsCommand(["set-status", "proposal", "completed-retained", ...flags])
             );
-            expect(yield* fs.readFileString(manifestPath)).toBe(manifest);
-            expect(yield* listEventFiles("proposal")).toEqual([]);
+            expectReportedFailure(exit1);
+            const readFileString2 = yield* fs.readFileString(manifestPath);
+            expect(readFileString2).toBe(manifest);
+            const listEventFiles3 = yield* listEventFiles("proposal");
+            expect(listEventFiles3).toEqual([]);
           }
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -138,17 +141,21 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           yield* writeProjectFile(manifestPath, manifest);
           yield* writeProjectFile(readmePath, "# closed\n\n## Status\n\nLifecycle: `completed-retained`\n");
 
-          expectReportedFailure(yield* Effect.exit(runGoalsCommand(["set-status", "closed", "superseded"])));
-          expect(yield* fs.readFileString(manifestPath)).toBe(manifest);
+          const exit4 = yield* Effect.exit(runGoalsCommand(["set-status", "closed", "superseded"]));
+          expectReportedFailure(exit4);
+          const readFileString5 = yield* fs.readFileString(manifestPath);
+          expect(readFileString5).toBe(manifest);
 
           const reopened = yield* Effect.exit(runGoalsCommand(["set-status", "closed", "active"]));
           reopened.pipe(Exit.isSuccess, assertTrue);
-          const after = yield* decodeManifestJson(yield* fs.readFileString(manifestPath));
+          const readFileString6 = yield* fs.readFileString(manifestPath);
+          const after = yield* decodeManifestJson(readFileString6);
           expect(after.initiative.status).toBe("active");
           expect(after.lifecycle).toBe("active");
           expect(after.closeout).toBeUndefined();
           expect(after.proposedCloseout).toEqual({ status: "completed-retained", finalPullRequest: 1429 });
-          expect(yield* fs.readFileString(readmePath)).toContain("Lifecycle: `active`");
+          const readFileString7 = yield* fs.readFileString(readmePath);
+          expect(readFileString7).toContain("Lifecycle: `active`");
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -202,7 +209,8 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const exit = yield* Effect.exit(runGoalsCommand(["set-status", "preview-demo", "paused", "--preview"]));
             exit.pipe(Exit.isSuccess, assertTrue);
 
-            expect(A.length(yield* listEventFiles("preview-demo"))).toBe(0);
+            const listEventFiles8 = yield* listEventFiles("preview-demo");
+            expect(A.length(listEventFiles8)).toBe(0);
             const traceExists = yield* fs.exists("goals/preview-demo/ops/trace.json");
             expect(traceExists).toBe(false);
             const manifest = yield* fs.readFileString("goals/preview-demo/ops/manifest.json");
@@ -251,10 +259,12 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               siblingContent
             );
 
-            const beforeCount = A.length(yield* listEventFiles("forked-demo"));
+            const listEventFiles9 = yield* listEventFiles("forked-demo");
+            const beforeCount = A.length(listEventFiles9);
             const refused = yield* Effect.exit(runGoalsCommand(["set-status", "forked-demo", "active"]));
             expectReportedFailure(refused);
-            expect(A.length(yield* listEventFiles("forked-demo"))).toBe(beforeCount);
+            const listEventFiles10 = yield* listEventFiles("forked-demo");
+            expect(A.length(listEventFiles10)).toBe(beforeCount);
             const manifest = yield* fs.readFileString("goals/forked-demo/ops/manifest.json");
             expect(manifest).toContain('"status": "paused"');
           })
@@ -329,8 +339,10 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect(outcome.disposition).toBe("skipped");
             expect(outcome.appended).toBe(0);
             expect(outcome.traceWritten).toBe(false);
-            expect(yield* listEventFiles("idempotent-demo")).toStrictEqual(beforeFiles);
-            expect(yield* fs.readFileString("goals/idempotent-demo/ops/trace.json")).toBe(beforeTrace);
+            const listEventFiles11 = yield* listEventFiles("idempotent-demo");
+            expect(listEventFiles11).toStrictEqual(beforeFiles);
+            const readFileString12 = yield* fs.readFileString("goals/idempotent-demo/ops/trace.json");
+            expect(readFileString12).toBe(beforeTrace);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive),
       30_000
@@ -373,8 +385,10 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect(outcome.disposition).toBe("skipped");
             expect(outcome.appended).toBe(0);
             expect(outcome.traceWritten).toBe(true);
-            expect(yield* fs.readFileString(tracePath)).toBe(freshTrace);
-            expect(yield* listEventFiles("skip-stale-trace-demo")).toStrictEqual(beforeFiles);
+            const readFileString13 = yield* fs.readFileString(tracePath);
+            expect(readFileString13).toBe(freshTrace);
+            const listEventFiles14 = yield* listEventFiles("skip-stale-trace-demo");
+            expect(listEventFiles14).toStrictEqual(beforeFiles);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive),
       30_000
@@ -448,8 +462,10 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               runGoalsCommand(["set-status", "skip-preview-demo", "paused", "--preview"])
             );
             previewed.pipe(Exit.isSuccess, assertTrue);
-            expect(yield* listEventFiles("skip-preview-demo")).toStrictEqual(beforeFiles);
-            expect(yield* fs.readFileString("goals/skip-preview-demo/ops/trace.json")).toBe(beforeTrace);
+            const listEventFiles15 = yield* listEventFiles("skip-preview-demo");
+            expect(listEventFiles15).toStrictEqual(beforeFiles);
+            const readFileString16 = yield* fs.readFileString("goals/skip-preview-demo/ops/trace.json");
+            expect(readFileString16).toBe(beforeTrace);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive),
       30_000
@@ -470,7 +486,8 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const repeated = yield* Effect.exit(runGoalsCommand(["set-status", "skip-write-demo", "paused"]));
             repeated.pipe(Exit.isSuccess, assertTrue);
 
-            expect(yield* listEventFiles("skip-write-demo")).toStrictEqual(beforeFiles);
+            const listEventFiles17 = yield* listEventFiles("skip-write-demo");
+            expect(listEventFiles17).toStrictEqual(beforeFiles);
             const manifest = yield* fs.readFileString("goals/skip-write-demo/ops/manifest.json");
             expect(manifest).toContain("paused");
           })

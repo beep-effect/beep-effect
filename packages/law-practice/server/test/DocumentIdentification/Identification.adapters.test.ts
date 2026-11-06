@@ -210,17 +210,16 @@ describe("recorded public responses", () => {
       const name = yield* source.registrant("acme.example");
       assertSome(name, "Acme Widgets LLC");
       expect(urls).toEqual(["https://rdap.org/domain/acme.example"]);
-      assertNone(yield* registrantFromRdap({ ...rdap, redacted: [{}] }));
-      assertNone(
-        yield* registrantFromRdap({
-          entities: [{ roles: ["registrant"], vcardArray: ["vcard", [["fn", {}, "text", "Alex Example"]]] }],
-        })
-      );
-      assertNone(
-        yield* registrantFromRdap({
-          entities: [{ roles: ["registrant"], vcardArray: ["vcard", [["org", {}, "text", "REDACTED FOR PRIVACY"]]] }],
-        })
-      );
+      const registrantFromRdap1 = yield* registrantFromRdap({ ...rdap, redacted: [{}] });
+      assertNone(registrantFromRdap1);
+      const registrantFromRdap2 = yield* registrantFromRdap({
+        entities: [{ roles: ["registrant"], vcardArray: ["vcard", [["fn", {}, "text", "Alex Example"]]] }],
+      });
+      assertNone(registrantFromRdap2);
+      const registrantFromRdap3 = yield* registrantFromRdap({
+        entities: [{ roles: ["registrant"], vcardArray: ["vcard", [["org", {}, "text", "REDACTED FOR PRIVACY"]]] }],
+      });
+      assertNone(registrantFromRdap3);
     })
   );
   it.effect("walks nested entities, reads corporate names, ignores non-text values and ambiguous registrants", () =>
@@ -245,16 +244,17 @@ describe("recorded public responses", () => {
           },
         ],
       };
-      assertSome(yield* registrantFromRdap(nested), "Nested Org");
-      assertNone(
-        yield* registrantFromRdap({
-          entities: [
-            { roles: ["registrant"], vcardArray: ["vcard", [["org", {}, "text", "One Org"]]] },
-            { roles: ["registrant"], vcardArray: ["vcard", [["org", {}, "text", "Other Org"]]] },
-          ],
-        })
-      );
-      assertNone(yield* registrantFromRdap({}));
+      const registrantFromRdap4 = yield* registrantFromRdap(nested);
+      assertSome(registrantFromRdap4, "Nested Org");
+      const registrantFromRdap5 = yield* registrantFromRdap({
+        entities: [
+          { roles: ["registrant"], vcardArray: ["vcard", [["org", {}, "text", "One Org"]]] },
+          { roles: ["registrant"], vcardArray: ["vcard", [["org", {}, "text", "Other Org"]]] },
+        ],
+      });
+      assertNone(registrantFromRdap5);
+      const registrantFromRdap6 = yield* registrantFromRdap({});
+      assertNone(registrantFromRdap6);
       const bad = yield* Effect.flip(registrantFromRdap({ entities: [{ roles: "registrant" }] }));
       expect(bad.reason).toBe("invalid-input");
     })
@@ -271,7 +271,8 @@ describe("recorded public responses", () => {
       const untouched: Array<string> = [];
       expect((yield* Effect.flip(probe(200, "not a domain", untouched))).reason).toBe("invalid-input");
       expect(untouched).toHaveLength(0);
-      assertNone(yield* probe(404, "missing.example", []));
+      const probe7 = yield* probe(404, "missing.example", []);
+      assertNone(probe7);
       expect((yield* Effect.flip(probe(503, "down.example", []))).reason).toBe("unavailable");
     })
   );
@@ -302,7 +303,8 @@ describe("extraction batch pairing", () => {
   it.effect("returns only paired ids and None for missing critics", () =>
     Effect.gen(function* () {
       const lines = `${yield* encodeJson({ id: "doc-1", extraction })}\n${yield* encodeJson({ id: "doc-2", extraction })}`;
-      const layer = batches(lines, yield* encodeJson({ id: "doc-1", verdict }));
+      const encodedJson = yield* encodeJson({ id: "doc-1", verdict });
+      const layer = batches(lines, encodedJson);
       const s = yield* withService(DocumentExtractionSource, layer);
       const first = yield* s.extraction("doc-1");
       const second = yield* s.extraction("doc-2");

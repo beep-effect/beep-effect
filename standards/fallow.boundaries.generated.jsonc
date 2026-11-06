@@ -1636,6 +1636,7 @@
           "@beep/box",
           "@beep/box-provisioning",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
@@ -1644,6 +1645,7 @@
           "@beep/box",
           "@beep/box-provisioning",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
@@ -2712,6 +2714,7 @@
       {
         "from": "@beep/html",
         "allow": [
+          "@beep/codegen-kit",
           "@beep/html",
           "@beep/identity",
           "@beep/schema",
@@ -2720,6 +2723,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/codegen-kit",
           "@beep/html",
           "@beep/identity",
           "@beep/schema",
@@ -5212,6 +5216,7 @@
       {
         "from": "@beep/technical-drawing",
         "allow": [
+          "@beep/codegen-kit",
           "@beep/identity",
           "@beep/schema",
           "@beep/technical-drawing",
@@ -5219,6 +5224,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/codegen-kit",
           "@beep/identity",
           "@beep/schema",
           "@beep/technical-drawing",

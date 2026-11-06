@@ -62,28 +62,29 @@ describe("WorkItem aggregate", () => {
         title: "Document topology",
       });
 
-      expect(yield* encodeCreateWorkItemInput(input)).toEqual({
+      const encodedCreateWorkItemInput = yield* encodeCreateWorkItemInput(input);
+      expect(encodedCreateWorkItemInput).toEqual({
         id: "work-item-1",
         title: "Document topology",
       });
 
-      expect(yield* encodeWorkItem(WorkItem.create(input))).toEqual({
+      const encodedWorkItem = yield* encodeWorkItem(WorkItem.create(input));
+      expect(encodedWorkItem).toEqual({
         id: "work-item-1",
         priority: "normal",
         status: "open",
         title: "Document topology",
       });
 
-      expect(
-        yield* encodeWorkItem(
-          WorkItem.WorkItem.make({
-            id,
-            priority: O.some(WorkPriority.WorkPriority.Enum.high),
-            status: "assigned",
-            title: "Document topology",
-          })
-        )
-      ).toEqual({
+      const encodedWorkItem1 = yield* encodeWorkItem(
+        WorkItem.WorkItem.make({
+          id,
+          priority: O.some(WorkPriority.WorkPriority.Enum.high),
+          status: "assigned",
+          title: "Document topology",
+        })
+      );
+      expect(encodedWorkItem1).toEqual({
         id: "work-item-1",
         priority: "high",
         status: "assigned",

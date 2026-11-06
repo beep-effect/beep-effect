@@ -100,8 +100,10 @@ describe("reference planning and refresh", () => {
             `link ${f.path.join(f.owner, ".repos", "effect-tsgo")} -> ${f.path.join(missing, "effect-tsgo")}`,
             `link ${f.path.join(f.owner, ".repos/effect-workspace")} -> ${missing}`,
           ]);
-          expect(yield* f.fs.exists(missing)).toBe(false);
-          expect(yield* f.fs.exists(f.path.join(f.owner, ".repos"))).toBe(false);
+          const exists1 = yield* f.fs.exists(missing);
+          expect(exists1).toBe(false);
+          const exists2 = yield* f.fs.exists(f.path.join(f.owner, ".repos"));
+          expect(exists2).toBe(false);
         })
       );
     }
@@ -126,15 +128,18 @@ describe("reference planning and refresh", () => {
           expect(A.map(status.members, (report) => report.outcome)).toEqual(["skipped-dirty", "skipped-off-branch"]);
           const log = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
           expect(log).not.toContain("pull");
-          const saved = yield* RefsRefreshStatus.decodeJson(
-            yield* f.fs.readFileString(f.path.join(f.home, ".local/state/beep/refs/last-refresh.json"))
+          const readFileString3 = yield* f.fs.readFileString(
+            f.path.join(f.home, ".local/state/beep/refs/last-refresh.json")
           );
+          const saved = yield* RefsRefreshStatus.decodeJson(readFileString3);
           expect(saved.schemaVersion).toBe("beep-refs-refresh/v2");
           expect(saved.members).toEqual(status.members);
           // Skips are policy, not failure: no critical notification fires for them.
-          expect(yield* f.fs.exists(f.path.join(f.home, "notifications.log"))).toBe(false);
+          const exists4 = yield* f.fs.exists(f.path.join(f.home, "notifications.log"));
+          expect(exists4).toBe(false);
           // Refresh never writes exclude entries into a member's Git metadata.
-          expect(yield* f.fs.exists(f.path.join(f.root, "effect", ".git", "info"))).toBe(false);
+          const exists5 = yield* f.fs.exists(f.path.join(f.root, "effect", ".git", "info"));
+          expect(exists5).toBe(false);
         })
       );
     }
@@ -148,18 +153,22 @@ describe("reference planning and refresh", () => {
         Effect.fnUntraced(function* () {
           const f = yield* prepare();
           const manifestFile = f.path.join(f.owner, "scripts/references.json");
-          const manifest = yield* ReferenceWorkspaceManifest.decodeJson(yield* f.fs.readFileString(manifestFile));
+          const readFileString6 = yield* f.fs.readFileString(manifestFile);
+          const manifest = yield* ReferenceWorkspaceManifest.decodeJson(readFileString6);
           const pinned = ReferenceWorkspaceManifest.make({
             ...manifest,
             members: A.map(manifest.members, (member) => ({ ...member, branch: "v2" })),
           });
-          yield* f.fs.writeFileString(manifestFile, yield* ReferenceWorkspaceManifest.encodeJson(pinned));
-          const absentPlan = A.join(yield* workspace.use((service) => service.plan(f.home, f.root)), "\n");
+          const encodedJson = yield* ReferenceWorkspaceManifest.encodeJson(pinned);
+          yield* f.fs.writeFileString(manifestFile, encodedJson);
+          const use7 = yield* workspace.use((service) => service.plan(f.home, f.root));
+          const absentPlan = A.join(use7, "\n");
           expect(absentPlan).toContain("--branch v2");
           for (const member of pinned.members)
             yield* f.fs.makeDirectory(f.path.join(f.root, member.name, ".git"), { recursive: true });
           yield* f.fs.writeFileString(f.path.join(f.root, "effect", "current-branch"), "v2\n");
-          const plan = A.join(yield* workspace.use((service) => service.plan(f.home, f.root)), "\n");
+          const use8 = yield* workspace.use((service) => service.plan(f.home, f.root));
+          const plan = A.join(use8, "\n");
           expect(plan).toContain("pull --ff-only origin v2 only if clean and on v2");
           const status = yield* workspace.use((service) => service.refresh(f.home, f.root));
           expect(A.map(status.members, (report) => report.outcome)).toEqual(["unchanged", "skipped-off-branch"]);
@@ -209,7 +218,8 @@ describe("reference planning and refresh", () => {
           const saved = yield* RefsRefreshStatus.decodeJson(receipt);
           expect(refreshStatusEquivalent(saved, status)).toBe(true);
           expect(saved.root).toBe(f.root);
-          expect(yield* f.fs.exists(f.path.join(f.home, "notifications.log"))).toBe(false);
+          const exists9 = yield* f.fs.exists(f.path.join(f.home, "notifications.log"));
+          expect(exists9).toBe(false);
         })
       );
     }
@@ -226,8 +236,10 @@ describe("reference planning and refresh", () => {
           const status = yield* workspace.use((service) => service.refresh(f.home, f.root));
           expect(A.map(status.members, (report) => report.outcome)).toEqual(["pull-failed", "pull-failed"]);
           expect(O.getOrElse(status.members[0]?.detail ?? O.none(), () => "")).toContain("No Git metadata at");
-          expect(yield* f.fs.exists(f.path.join(f.home, "commands.log"))).toBe(false);
-          expect(yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"))).toContain("--urgency=critical");
+          const exists10 = yield* f.fs.exists(f.path.join(f.home, "commands.log"));
+          expect(exists10).toBe(false);
+          const readFileString11 = yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"));
+          expect(readFileString11).toContain("--urgency=critical");
         })
       );
     }
@@ -247,9 +259,8 @@ describe("reference planning and refresh", () => {
           expect(A.map(status.members, (report) => report.outcome)).toEqual(["pull-failed", "unchanged"]);
           assertSome(status.members[0]?.detail ?? O.none(), "git pull --ff-only origin main exited 7");
           const statusPath = f.path.join(f.home, ".local/state/beep/refs/last-refresh.json");
-          expect(yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"))).toBe(
-            `--urgency=critical beep refs refresh failed See ${statusPath}\n`
-          );
+          const readFileString12 = yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"));
+          expect(readFileString12).toBe(`--urgency=critical beep refs refresh failed See ${statusPath}\n`);
         })
       );
     }
@@ -268,7 +279,8 @@ describe("reference planning and refresh", () => {
           const status = yield* workspace.use((service) => service.refresh(f.home, f.root));
           expect(A.map(status.members, (report) => report.outcome)).toEqual(["pull-failed", "unchanged"]);
           assertSome(status.members[0]?.detail ?? O.none(), "git rev-parse HEAD exited 128: fatal: bad object HEAD");
-          expect(yield* f.fs.readFileString(f.path.join(f.home, "commands.log"))).not.toContain("git effect pull");
+          const readFileString13 = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
+          expect(readFileString13).not.toContain("git effect pull");
         })
       );
     }
@@ -295,8 +307,10 @@ describe("reference planning and refresh", () => {
             );
           expect(A.map(status.members, (report) => report.outcome)).toEqual(["pull-failed", "pull-failed"]);
           assertSome(status.members[0]?.detail ?? O.none(), "git failed to run.");
-          expect(yield* f.fs.exists(f.path.join(f.home, ".local/state/beep/refs/last-refresh.json"))).toBe(true);
-          expect(yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"))).toContain("--urgency=critical");
+          const exists14 = yield* f.fs.exists(f.path.join(f.home, ".local/state/beep/refs/last-refresh.json"));
+          expect(exists14).toBe(true);
+          const readFileString15 = yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"));
+          expect(readFileString15).toContain("--urgency=critical");
         })
       );
     }
@@ -310,8 +324,10 @@ describe("reference planning and refresh", () => {
         Effect.fnUntraced(function* () {
           const f = yield* ReferenceFixture;
           const flag = f.path.join(f.temp, "flag-root");
-          expect(yield* workspace.use((service) => service.resolveRoot(f.home, O.some(flag)))).toBe(flag);
-          expect(yield* workspace.use((service) => service.resolveRoot(f.home, O.none()))).toBe(f.root);
+          const use16 = yield* workspace.use((service) => service.resolveRoot(f.home, O.some(flag)));
+          expect(use16).toBe(flag);
+          const use17 = yield* workspace.use((service) => service.resolveRoot(f.home, O.none()));
+          expect(use17).toBe(f.root);
           const fallback = yield* workspace
             .use((service) => service.resolveRoot(f.home, O.none()))
             .pipe(
@@ -344,8 +360,10 @@ describe("reference planning and refresh", () => {
             "warning: .repos/effect-tsgo exists and is not a symlink; preserved",
             `.repos/effect-workspace -> ${f.root}`,
           ]);
-          expect(yield* f.fs.readLink(f.path.join(repos, "effect"))).toBe(f.path.join(f.root, "effect"));
-          expect(yield* f.fs.readFileString(f.path.join(repos, "effect-tsgo"))).toBe("operator file");
+          const readLink18 = yield* f.fs.readLink(f.path.join(repos, "effect"));
+          expect(readLink18).toBe(f.path.join(f.root, "effect"));
+          const readFileString19 = yield* f.fs.readFileString(f.path.join(repos, "effect-tsgo"));
+          expect(readFileString19).toBe("operator file");
           const second = yield* workspace.use((service) => service.linkInto(checkout, f.root));
           expect(second).toEqual(first);
         })
@@ -369,7 +387,8 @@ describe("reference planning and refresh", () => {
           yield* f.fs.symlink(f.path.join(f.temp, "elsewhere"), f.path.join(checkout, ".repos"));
           const redirected = yield* workspace.use((service) => service.linkInto(checkout, f.root)).pipe(Effect.flip);
           expect(redirected.message).toBe("Refusing a symlinked .repos directory.");
-          expect(yield* f.fs.readDirectory(f.path.join(f.temp, "elsewhere"))).toEqual([]);
+          const readDirectory20 = yield* f.fs.readDirectory(f.path.join(f.temp, "elsewhere"));
+          expect(readDirectory20).toEqual([]);
         })
       );
     }
@@ -393,9 +412,12 @@ describe("reference planning and refresh", () => {
             .pipe(Effect.flip);
           expect(error.message).toBe("Refusing a symlinked .repos directory.");
           expect(error.path).toBe(checkout);
-          expect(yield* f.fs.exists(missingRoot)).toBe(false);
-          expect(yield* f.fs.exists(f.path.join(f.home, "commands.log"))).toBe(false);
-          expect(yield* f.fs.readDirectory(redirected)).toEqual([]);
+          const exists21 = yield* f.fs.exists(missingRoot);
+          expect(exists21).toBe(false);
+          const exists22 = yield* f.fs.exists(f.path.join(f.home, "commands.log"));
+          expect(exists22).toBe(false);
+          const readDirectory23 = yield* f.fs.readDirectory(redirected);
+          expect(readDirectory23).toEqual([]);
         })
       );
     }
@@ -417,8 +439,10 @@ describe("reference planning and refresh", () => {
           expect(error.message).toBe("Cannot complete reference refresh.");
           expect(error.path).toBe(f.path.join(f.owner, "scripts", "references.json"));
           expect(error.cause).toBeDefined();
-          expect(yield* f.fs.readFileString(state)).toBe("operator state file");
-          expect(yield* f.fs.exists(f.path.join(f.home, "notifications.log"))).toBe(false);
+          const readFileString24 = yield* f.fs.readFileString(state);
+          expect(readFileString24).toBe("operator state file");
+          const exists25 = yield* f.fs.exists(f.path.join(f.home, "notifications.log"));
+          expect(exists25).toBe(false);
           const commands = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
           expect(commands).toContain("git effect pull --ff-only origin main");
           expect(commands).toContain("git effect-tsgo pull --ff-only origin main");
@@ -444,15 +468,12 @@ describe("reference planning and refresh", () => {
           expect(error.message).toBe("systemctl exited 5: activation refused");
           expect(error.path).toBe(f.home);
           const directory = f.path.join(f.home, ".config", "systemd", "user");
-          expect(yield* f.fs.readFileString(f.path.join(directory, "beep-refs-refresh.service"))).toContain(
-            `--root "${f.root}"`
-          );
-          expect(yield* f.fs.readFileString(f.path.join(directory, "beep-refs-refresh.timer"))).toContain(
-            "OnCalendar=*-*-* 03:30:00"
-          );
-          expect(yield* f.fs.readFileString(f.path.join(f.home, "systemctl.log"))).toBe(
-            "--user daemon-reload\n--user enable --now beep-refs-refresh.timer\n"
-          );
+          const readFileString26 = yield* f.fs.readFileString(f.path.join(directory, "beep-refs-refresh.service"));
+          expect(readFileString26).toContain(`--root "${f.root}"`);
+          const readFileString27 = yield* f.fs.readFileString(f.path.join(directory, "beep-refs-refresh.timer"));
+          expect(readFileString27).toContain("OnCalendar=*-*-* 03:30:00");
+          const readFileString28 = yield* f.fs.readFileString(f.path.join(f.home, "systemctl.log"));
+          expect(readFileString28).toBe("--user daemon-reload\n--user enable --now beep-refs-refresh.timer\n");
         })
       );
     }
@@ -469,9 +490,12 @@ describe("reference planning and refresh", () => {
             f.path.join(f.bin, "systemctl"),
             '#!/bin/sh\nprintf "unexpected\\n" >> "$HOME/systemctl.log"\nexit 7\n'
           );
-          expect(yield* workspace.use((service) => service.uninstallTimer(f.home))).toEqual([]);
-          expect(yield* f.fs.exists(f.path.join(f.home, "systemctl.log"))).toBe(false);
-          expect(yield* f.fs.exists(f.path.join(f.home, ".config"))).toBe(false);
+          const use29 = yield* workspace.use((service) => service.uninstallTimer(f.home));
+          expect(use29).toEqual([]);
+          const exists30 = yield* f.fs.exists(f.path.join(f.home, "systemctl.log"));
+          expect(exists30).toBe(false);
+          const exists31 = yield* f.fs.exists(f.path.join(f.home, ".config"));
+          expect(exists31).toBe(false);
         })
       );
     }

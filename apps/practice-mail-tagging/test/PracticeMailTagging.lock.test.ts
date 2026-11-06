@@ -69,7 +69,8 @@ describe("state lock, held by another writer", () => {
         expect(watch.lockPath).toBe(lockPath);
         expect(undo.lockPath).toBe(lockPath);
         expect((yield* outlookNow).serviceBuilds).toBe(0);
-        assertSome(yield* lockNow, lockOf({ pid: otherWriterPid }));
+        const lockNow1 = yield* lockNow;
+        assertSome(lockNow1, lockOf({ pid: otherWriterPid }));
       })
     );
   });
@@ -96,7 +97,8 @@ describe("state lock, held by another writer", () => {
         yield* run(["undo", "--run", "tag-0001", "--dry-run"]);
         yield* run(["report"]);
 
-        assertSome(yield* lockNow, lockOf({ pid: otherWriterPid }));
+        const lockNow2 = yield* lockNow;
+        assertSome(lockNow2, lockOf({ pid: otherWriterPid }));
         expect((yield* outlookNow).categoryWrites).toBe(0);
       })
     );
@@ -112,7 +114,8 @@ describe("state lock, taken and released", () => {
         yield* run(["apply", "--yes"]);
 
         expect((yield* outlookNow).categoryWrites).toBe(1);
-        assertNone(yield* lockNow);
+        const lockNow3 = yield* lockNow;
+        assertNone(lockNow3);
       })
     );
   });
@@ -124,7 +127,8 @@ describe("state lock, taken and released", () => {
 
         yield* run(["apply", "--yes"]);
 
-        assertNone(yield* lockNow);
+        const lockNow4 = yield* lockNow;
+        assertNone(lockNow4);
       })
     );
   });
@@ -136,7 +140,8 @@ describe("state lock, taken and released", () => {
 
         yield* run(["apply", "--yes"]);
 
-        assertNone(yield* lockNow);
+        const lockNow5 = yield* lockNow;
+        assertNone(lockNow5);
       })
     );
   });
@@ -148,7 +153,8 @@ describe("state lock, taken and released", () => {
 
         yield* run(["apply", "--yes"]);
 
-        assertNone(yield* lockNow);
+        const lockNow6 = yield* lockNow;
+        assertNone(lockNow6);
       })
     );
   });
@@ -160,7 +166,8 @@ describe("state lock, taken and released", () => {
 
         yield* run(["apply", "--yes"]);
 
-        assertNone(yield* lockNow);
+        const lockNow7 = yield* lockNow;
+        assertNone(lockNow7);
       })
     );
   });
@@ -173,7 +180,8 @@ describe("state lock, taken and released", () => {
         const error = yield* Effect.flip(run(["apply", "--yes"]));
 
         assertInstanceOf(error, PracticeMailTaggingError);
-        assertNone(yield* lockNow);
+        const lockNow8 = yield* lockNow;
+        assertNone(lockNow8);
       })
     );
   });
@@ -195,7 +203,8 @@ describe("state lock, taken and released", () => {
           `{"pid":${ownPid},"command":"watch","acquiredAt":"1970-01-01T00:00:00.000Z","bootId":"${currentBootId}","startTime":"100"}`
         );
         expect((yield* outlookNow).serviceBuilds).toBe(2);
-        assertNone(yield* lockNow);
+        const lockNow9 = yield* lockNow;
+        assertNone(lockNow9);
       })
     );
   });
@@ -249,9 +258,12 @@ describe("StateLockLive and the live process probe", () => {
         const probe = yield* ProcessProbe;
 
         expect(probe.pid).toBe(process.pid);
-        expect(O.getOrElse(yield* probe.bootId, () => "")).toMatch(/^[0-9a-f-]{36}$/u);
-        expect(O.getOrElse(yield* probe.startTime(process.pid), () => "")).toMatch(/^\d+$/u);
-        assertNone(yield* probe.startTime(2_147_483_646));
+        const bootId10 = yield* probe.bootId;
+        expect(O.getOrElse(bootId10, () => "")).toMatch(/^[0-9a-f-]{36}$/u);
+        const startTime11 = yield* probe.startTime(process.pid);
+        expect(O.getOrElse(startTime11, () => "")).toMatch(/^\d+$/u);
+        const startTime12 = yield* probe.startTime(2_147_483_646);
+        assertNone(startTime12);
       })
     );
   });
@@ -261,8 +273,10 @@ describe("StateLockLive and the live process probe", () => {
       Effect.gen(function* () {
         const probe = yield* ProcessProbe;
 
-        assertNone(yield* probe.bootId);
-        assertNone(yield* probe.startTime(process.pid));
+        const bootId13 = yield* probe.bootId;
+        assertNone(bootId13);
+        const startTime14 = yield* probe.startTime(process.pid);
+        assertNone(startTime14);
       })
     );
   });

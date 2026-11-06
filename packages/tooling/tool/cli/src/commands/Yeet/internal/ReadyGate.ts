@@ -46,6 +46,7 @@ import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -55,7 +56,12 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { finalCheckRefusal, readFinalCheckReceipt } from "./FinalCheck.ts";
 import { FinalCheckRefreshVerdict } from "./FinalCheckRefresh.schemas.ts";
 import { checkFinalCheckRefresh } from "./FinalCheckRefresh.ts";
-import { flipPullRequestReady, recordInheritedRedsInPullRequestBody, withYeetGh } from "./GhOps.ts";
+import {
+  flipPullRequestReady,
+  recordInheritedRedsInPullRequestBody,
+  recordMonitoredPrSessionAsGhLogin,
+  withYeetGh,
+} from "./GhOps.ts";
 import { currentCommitSha, yeetGitKitError } from "./GitExec.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { decodeAttributedCheckFlags, parseAttributedCheck } from "./MergeGate.ts";
@@ -578,6 +584,7 @@ const readPullRequestAuthor = Effect.fn("Yeet.ReadyGate.readPullRequestAuthor")(
   context: RepoRunContext,
   prNumber: number
 ): Effect.fn.Return<O.Option<string>, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+  // KEEP (D-13): gh's GraphQL `author.login` comes without the `[bot]` suffix REST adds.
   return yield* ghOutput({
     args: ["pr", "view", `${prNumber}`, "--json", "author", "--jq", ".author.login"],
     cwd: context.repoRoot,
@@ -601,7 +608,12 @@ interface YeetReadyGateDependencies {
   ) => Effect.Effect<
     YeetReadyPullRequestRead,
     YeetCommandError,
-    SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    | SecureRandom.SecureRandom
+    | FileSystem.FileSystem
+    | Path.Path
+    | ChildProcessSpawner.ChildProcessSpawner
+    | Digest.Digest
+    | Git
   >;
   readonly readAuthor?: (
     context: RepoRunContext,
@@ -860,7 +872,8 @@ const recordAndConfirmInherited = Effect.fn("Yeet.recordAndConfirmInherited")(fu
       );
   // Recording takes time; confirm the whole gate against the recorded head and
   // attributions before allowing the caller to flip.
-  const afterRecord = decideYeetReadyGate(yield* (dependencies.read ?? readPullRequestForReady)(context), inherited);
+  const value1 = yield* (dependencies.read ?? readPullRequestForReady)(context);
+  const afterRecord = decideYeetReadyGate(value1, inherited);
   if (
     afterRecord._tag !== "flip" ||
     !O.contains(afterRecord.headSha, headSha) ||
@@ -962,10 +975,8 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       // or a new thread can land in between, even on the same head, so take
       // the whole gate read again immediately before the flip and require the
       // same verdict on the same head.
-      const confirmation = decideYeetReadyGate(
-        yield* (dependencies.read ?? readPullRequestForReady)(context),
-        inherited
-      );
+      const value2 = yield* (dependencies.read ?? readPullRequestForReady)(context);
+      const confirmation = decideYeetReadyGate(value2, inherited);
       const sameHead = O.getOrElse(headSha, () => "unknown");
       if (confirmation._tag !== "flip" || !O.contains(confirmation.headSha, sameHead)) {
         const reason = YeetReadyGateDecision.match(confirmation, {
@@ -1005,15 +1016,14 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       ]);
       // The head was pushed while the pull request was a draft, which
       // beep-reviewer ignores; a failed re-request only warns, the flip stands.
-      yield* Console.log(
-        yield* (dependencies.requestReview ?? pushReviewerRequest)(context, prNumber, sameHead).pipe(
-          Effect.catchTag("YeetCommandError", (cause) =>
-            Effect.succeed(
-              `[yeet] warning: could not create the beep-reviewer re-request: ${cause.message}; ${reviewerRequestManual(sameHead, context.branch)}`
-            )
+      const pipe3 = yield* (dependencies.requestReview ?? pushReviewerRequest)(context, prNumber, sameHead).pipe(
+        Effect.catchTag("YeetCommandError", (cause) =>
+          Effect.succeed(
+            `[yeet] warning: could not create the beep-reviewer re-request: ${cause.message}; ${reviewerRequestManual(sameHead, context.branch)}`
           )
         )
       );
+      yield* Console.log(pipe3);
       if (A.isReadonlyArrayNonEmpty(applied)) {
         yield* Console.log(`[yeet] recorded ${A.length(applied)} inherited red(s) in the PR body`);
       }
@@ -1059,5 +1069,58 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
 export const runYeetReady = Effect.fn("Yeet.runYeetReady")(function* (options: YeetReadyOptions) {
   const inherited = yield* decodeAttributedCheckFlags("inherited", options.inherited, parseYeetReadyInheritedRed);
   const context = yield* hydrateYeetReadOnlyContext(options);
-  yield* runYeetReadyGate(context, {}, inherited);
+  const stamped = yield* Ref.make(false);
+  yield* runYeetReadyGate(
+    context,
+    {
+      read: readPullRequestForReadyStampingFooter({
+        read: readPullRequestForReady,
+        stamp: recordMonitoredPrSessionAsGhLogin,
+        stamped,
+      }),
+    },
+    inherited
+  );
 });
+
+// Every owner runs `yeet ready` at content-final, whether the flip goes
+// through or is refused, so its first pull-request read records this session
+// and re-asserts the provenance footer a body rewrite may have dropped. The
+// gate reads twice; the Ref keeps the stamp to one. A failed stamp only warns.
+const readPullRequestForReadyStampingFooter =
+  <E, R, R2>({
+    read,
+    stamp,
+    stamped,
+  }: {
+    readonly read: (context: RepoRunContext) => Effect.Effect<YeetReadyPullRequestRead, E, R>;
+    readonly stamp: (context: RepoRunContext, prNumber: number) => Effect.Effect<unknown, never, R2>;
+    readonly stamped: Ref.Ref<boolean>;
+  }) =>
+  (context: RepoRunContext) =>
+    read(context).pipe(
+      Effect.tap((value) =>
+        Effect.flatMap(Ref.getAndSet(stamped, true), (alreadyStamped) =>
+          alreadyStamped || value.remote.number === undefined
+            ? Effect.void
+            : Effect.asVoid(stamp(context, value.remote.number))
+        )
+      )
+    );
+
+/**
+ * The `yeet ready` pull-request read that records the session and re-asserts
+ * the provenance footer once, with the read and the stamp injected.
+ *
+ * **Example** (Reference the wrapper)
+ *
+ * ```ts
+ * import { readPullRequestForReadyStampingFooterForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof readPullRequestForReadyStampingFooterForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const readPullRequestForReadyStampingFooterForTesting = readPullRequestForReadyStampingFooter;

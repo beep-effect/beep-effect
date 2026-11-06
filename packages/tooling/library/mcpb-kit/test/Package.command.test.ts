@@ -76,10 +76,9 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
     const fs = yield* FileSystem.FileSystem;
     yield* fs.remove("/repo", { recursive: true, force: true });
     yield* fs.makeDirectory(nativeDir, { recursive: true });
-    yield* fs.writeFileString(
-      `${nativeDir}/package.json`,
-      yield* encodeBindings({ version: options.version ?? "2.0.0-r.1" })
-    );
+    const argument = `${nativeDir}/package.json`;
+    const encodedBindings = yield* encodeBindings({ version: options.version ?? "2.0.0-r.1" });
+    yield* fs.writeFileString(argument, encodedBindings);
     yield* fs.writeFileString(`${nativeDir}/duckdb.node`, "synthetic native sidecar");
     yield* fs.makeDirectory(output, { recursive: true });
     // `Bun.spawn` is a plain function, so it hands each synthetic archive write to
@@ -132,9 +131,10 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
       expect(A.map(fixture.calls, (args) => args[0])).toEqual(["bun", "zip", "unzip"]);
       expect(fixture.calls[0]).toContain("--target=bun-linux-x64");
       expect(fixture.calls[0]).toContain("@duckdb/node-bindings-win32-x64/duckdb.node");
-      expect(
-        yield* fixture.fs.readFileString(`${output}/linux-x64/node_modules/@duckdb/node-bindings-linux-x64/duckdb.node`)
-      ).toBe("synthetic native sidecar");
+      const readFileString1 = yield* fixture.fs.readFileString(
+        `${output}/linux-x64/node_modules/@duckdb/node-bindings-linux-x64/duckdb.node`
+      );
+      expect(readFileString1).toBe("synthetic native sidecar");
       const manifest = yield* fixture.fs
         .readFileString(`${output}/linux-x64/manifest.json`)
         .pipe(Effect.flatMap(decodeJson));
@@ -158,11 +158,10 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
       );
       expect(A.map(fixture.calls, (args) => args[0])).toEqual(["bun", "zip", "unzip"]);
       expect(fixture.calls[0]).toContain("--target=bun-windows-x64");
-      expect(
-        yield* fixture.fs.readFileString(
-          `${output}/windows-x64/node_modules/@duckdb/node-bindings-win32-x64/duckdb.node`
-        )
-      ).toBe("cached Windows sidecar");
+      const readFileString2 = yield* fixture.fs.readFileString(
+        `${output}/windows-x64/node_modules/@duckdb/node-bindings-win32-x64/duckdb.node`
+      );
+      expect(readFileString2).toBe("cached Windows sidecar");
     })
   );
 
@@ -192,7 +191,8 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
           Effect.result
         );
         expect(result).toMatchObject({ _tag: "Failure", failure: { message: expect.stringContaining(expected) } });
-        expect(yield* fixture.fs.exists(archive)).toBe(false);
+        const exists3 = yield* fixture.fs.exists(archive);
+        expect(exists3).toBe(false);
       })
     );
   }
@@ -213,7 +213,8 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
       expect(fixture.calls[0]).toContain(
         "https://registry.npmjs.org/@duckdb/node-bindings-win32-x64/-/node-bindings-win32-x64-2.0.0-r.1.tgz"
       );
-      expect(yield* fixture.fs.exists(tarball)).toBe(false);
+      const exists4 = yield* fixture.fs.exists(tarball);
+      expect(exists4).toBe(false);
     })
   );
 

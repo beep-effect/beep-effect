@@ -35,7 +35,8 @@ it.layer(Repo.layer(RepoRef.make({ owner: "acme", repo: "widget" })), { timeout:
     (it) => {
       it.effect("layer uses its supplied override", () =>
         Effect.gen(function* () {
-          assert.deepStrictEqual(yield* (yield* ArtifactMetadata).createStorageRecord(input), [17]);
+          const createdStorageRecord = yield* (yield* ArtifactMetadata).createStorageRecord(input);
+          assert.deepStrictEqual(createdStorageRecord, [17]);
         })
       );
     }
@@ -49,15 +50,15 @@ it.layer(ArtifactMetadata.layer.pipe(Layer.provideMerge(base)), { timeout: "30 s
   it.effect("missing records produce an empty list; only numeric IDs survive", () =>
     Effect.gen(function* () {
       const service = yield* ArtifactMetadata;
-      assert.deepStrictEqual(yield* service.createStorageRecord(input), []);
-      assert.deepStrictEqual(
-        yield* service.createStorageRecord(
-          StorageRecordInput.make({ ...input, artifactUrl: "https://artifact.example", path: "dist/file" })
-        ),
-        [17, 0]
+      const createdStorageRecord1 = yield* service.createStorageRecord(input);
+      assert.deepStrictEqual(createdStorageRecord1, []);
+      const createdStorageRecord2 = yield* service.createStorageRecord(
+        StorageRecordInput.make({ ...input, artifactUrl: "https://artifact.example", path: "dist/file" })
       );
+      assert.deepStrictEqual(createdStorageRecord2, [17, 0]);
       assert.strictEqual(script.calls[0]?.path, "/orgs/acme/artifacts/metadata/storage-record");
-      assert.deepStrictEqual(yield* S.decodeEffect(JsonBody)(script.calls[1]?.body ?? "{}"), {
+      const value = yield* S.decodeEffect(JsonBody)(script.calls[1]?.body ?? "{}");
+      assert.deepStrictEqual(value, {
         name: input.name,
         digest: input.digest,
         registry_url: input.registryUrl,

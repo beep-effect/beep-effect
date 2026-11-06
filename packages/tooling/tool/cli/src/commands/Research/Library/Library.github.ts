@@ -106,7 +106,6 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
   if (!(yield* fs.exists(clone))) {
     yield* fs.makeDirectory(path.dirname(clone), { recursive: true });
     // --no-checkout prevents remote working-tree filters; no recursive submodule or LFS checkout.
-    // KEEP (D-19): hardened untrusted-clone boundary (isolated config, hooks off, caps, timeout).
     yield* runLibraryCommand(
       root,
       "git",
@@ -114,16 +113,19 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
       20_000
     );
   }
-  const observedRemote = Str.trim(
-    // KEEP (D-19): hardened untrusted-clone boundary (isolated config, hooks off, caps, timeout).
-    yield* runLibraryCommand(root, "git", ["-C", clone, "remote", "get-url", "origin"], 10_000)
+  // KEEP (D-19): hardened untrusted-clone boundary (isolated config, hooks off, caps, timeout).
+  const resultLibraryCommand = yield* runLibraryCommand(
+    root,
+    "git",
+    ["-C", clone, "remote", "get-url", "origin"],
+    10_000
   );
+  const observedRemote = Str.trim(resultLibraryCommand);
   if (observedRemote !== remote)
     return yield* LibraryError.make({
       message: "Existing repository remote differs from requested source.",
       cause: "identity",
     });
-  // KEEP (D-19): every git call below rides this helper and its hardened untrusted-clone boundary.
   const git = (args: ReadonlyArray<string>, cap = 8_000_000) =>
     runLibraryCommand(root, "git", ["-c", "core.hooksPath=/dev/null", "-C", clone, ...args], cap);
   const resolvePinnedRevision = Effect.fn("Library.github.resolvePinnedRevision")(function* () {
@@ -162,46 +164,41 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
     20_000
   );
   const files = yield* git(["ls-tree", "-r", "--name-only", revision]);
+  const encodedLibraryJson = yield* encodeLibraryJson({
+    remote,
+    revision,
+    requestedRevision: source.revision,
+    clone: cloneRelative,
+    materialization: "detached-checkout-and-git-object-database",
+    submodules: false,
+    lfs: false,
+  });
   const pin = yield* saveLibraryText(
     root,
     `${prefix}/repository.json`,
-    yield* encodeLibraryJson({
-      remote,
-      revision,
-      requestedRevision: source.revision,
-      clone: cloneRelative,
-      materialization: "detached-checkout-and-git-object-database",
-      submodules: false,
-      lfs: false,
-    }),
+    encodedLibraryJson,
     "application/json",
     "repository-pin"
   );
   const tree = yield* saveLibraryText(root, `${prefix}/tree.txt`, files, "text/plain", "repository-tree");
-  const artifacts = [pin, tree];
+  let artifacts = [pin, tree];
   return yield* Effect.gen(function* () {
     const readme = A.findFirst(Str.split(files, "\n"), (file) => /^readme(?:\.[^/]+)?$/i.test(file));
-    if (O.isSome(readme))
-      artifacts.push(
-        yield* saveLibraryText(
-          root,
-          `${prefix}/README.txt`,
-          yield* git(["show", `${revision}:${readme.value}`]),
-          "text/plain",
-          "extracted-full-text"
-        )
+    if (O.isSome(readme)) {
+      const git23 = yield* git(["show", `${revision}:${readme.value}`]);
+      artifacts = yield* saveLibraryText(root, `${prefix}/README.txt`, git23, "text/plain", "extracted-full-text").pipe(
+        Effect.map(A.of),
+        Effect.map(A.prependAll(artifacts))
       );
+    }
     const license = A.findFirst(Str.split(files, "\n"), (file) => /^(?:licen[cs]e|copying)(?:\.[^/]+)?$/i.test(file));
-    if (O.isSome(license))
-      artifacts.push(
-        yield* saveLibraryText(
-          root,
-          `${prefix}/LICENSE.txt`,
-          yield* git(["show", `${revision}:${license.value}`]),
-          "text/plain",
-          "repository-license"
-        )
+    if (O.isSome(license)) {
+      const git24 = yield* git(["show", `${revision}:${license.value}`]);
+      artifacts = yield* saveLibraryText(root, `${prefix}/LICENSE.txt`, git24, "text/plain", "repository-license").pipe(
+        Effect.map(A.of),
+        Effect.map(A.prependAll(artifacts))
       );
+    }
     const captureGitPatch = Effect.fn("Library.github.captureGitPatch")(function* (
       label: string,
       args: ReadonlyArray<string>
@@ -256,7 +253,6 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
         [1, observedSlug],
       ] as const) {
         const endpoint = renamedRepositoryEndpoint(index, first, identitySlug);
-        // KEEP (D-19): the raw gh response text is the stored evidence, behind the hardened library boundary.
         const raw = yield* runLibraryCommand(root, "gh", ["api", endpoint]);
         const artifact = yield* saveLibraryText(
           root,
@@ -267,24 +263,24 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
         );
         artifacts.push(artifact);
         const identity = yield* decodeLibraryJson(RepositoryIdentity)(raw);
+        const now1 = yield* DateTime.now;
         receipts.push({
           requestedEndpoint: endpoint,
-          observedAt: DateTime.formatIso(yield* DateTime.now),
+          observedAt: DateTime.formatIso(now1),
           exitCode: 0,
           ...identity,
           artifact: artifact.path,
           sha256: artifact.sha256,
           bytes: artifact.bytes,
         });
-        artifacts.push(
-          yield* saveLibraryText(
-            root,
-            `${prefix}/repository-identity-receipt-${index}.json`,
-            yield* encodeLibraryJson(receipts),
-            "application/json",
-            "repository-identity-provenance"
-          )
-        );
+        const encodedLibraryJson15 = yield* encodeLibraryJson(receipts);
+        artifacts = yield* saveLibraryText(
+          root,
+          `${prefix}/repository-identity-receipt-${index}.json`,
+          encodedLibraryJson15,
+          "application/json",
+          "repository-identity-provenance"
+        ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
         yield* validateRenameIdentity(identity, first, observedSlug);
         first = identity;
       }
@@ -303,19 +299,16 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
       const pages: Array<unknown> = [];
       const paginated = Str.includes("per_page=100")(endpoint);
       for (const page of A.range(1, 100)) {
-        // KEEP (D-19): the raw gh response text is the stored evidence, behind the hardened library boundary.
         const raw = yield* runLibraryCommand(root, "gh", ["api", paginated ? `${endpoint}&page=${page}` : endpoint]);
         const decoded = yield* decodeLibraryJson(S.Unknown)(raw);
         pages.push(decoded);
-        artifacts.push(
-          yield* saveLibraryText(
-            root,
-            `${prefix}/${label}-page-${page}.json`,
-            raw,
-            "application/json",
-            "raw-discussion"
-          )
-        );
+        artifacts = yield* saveLibraryText(
+          root,
+          `${prefix}/${label}-page-${page}.json`,
+          raw,
+          "application/json",
+          "raw-discussion"
+        ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
         yield* observeResourceIdentities(decoded);
         const items = paginated
           ? yield* S.decodeUnknownEffect(ProviderItems)(decoded).pipe(
@@ -326,30 +319,43 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
           : [];
         if (!paginated || items.length < 100) {
           const aggregate = yield* encodeLibraryJson(pages);
-          artifacts.push(
-            yield* saveLibraryText(root, `${prefix}/${label}.json`, aggregate, "application/json", "raw-discussion")
-          );
-          artifacts.push(
-            yield* saveLibraryText(
-              root,
-              `${prefix}/${label}-pagination.json`,
-              yield* encodeLibraryJson({ endpoint, pages: pages.length, exhausted: true, pageSize: 100 }),
-              "application/json",
-              "pagination-metadata"
-            )
-          );
+          artifacts = yield* saveLibraryText(
+            root,
+            `${prefix}/${label}.json`,
+            aggregate,
+            "application/json",
+            "raw-discussion"
+          ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
+          const encodedLibraryJson16 = yield* encodeLibraryJson({
+            endpoint,
+            pages: pages.length,
+            exhausted: true,
+            pageSize: 100,
+          });
+          artifacts = yield* saveLibraryText(
+            root,
+            `${prefix}/${label}-pagination.json`,
+            encodedLibraryJson16,
+            "application/json",
+            "pagination-metadata"
+          ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
           return aggregate;
         }
       }
-      artifacts.push(
-        yield* saveLibraryText(
-          root,
-          `${prefix}/${label}-pagination.json`,
-          yield* encodeLibraryJson({ endpoint, pages: pages.length, exhausted: false, pageSize: 100, limit: 100 }),
-          "application/json",
-          "pagination-metadata"
-        )
-      );
+      const encodedLibraryJson17 = yield* encodeLibraryJson({
+        endpoint,
+        pages: pages.length,
+        exhausted: false,
+        pageSize: 100,
+        limit: 100,
+      });
+      artifacts = yield* saveLibraryText(
+        root,
+        `${prefix}/${label}-pagination.json`,
+        encodedLibraryJson17,
+        "application/json",
+        "pagination-metadata"
+      ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
       return yield* LibraryError.make({
         cause: "pagination",
         message:
@@ -357,11 +363,12 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
       });
     });
     const capturePull = Effect.fn("Library.github.capturePull")(function* (n: string) {
-      const pull = yield* decodeLibraryJson(PullPins)(yield* captureApi("pull", `repos/${slug}/pulls/${n}`));
+      const pull = yield* captureApi("pull", `repos/${slug}/pulls/${n}`).pipe(
+        Effect.flatMap(decodeLibraryJson(PullPins))
+      );
       yield* captureApi("reviews", `repos/${slug}/pulls/${n}/reviews?per_page=100`);
       yield* captureApi("review-comments", `repos/${slug}/pulls/${n}/comments?per_page=100`);
       yield* captureApi("files", `repos/${slug}/pulls/${n}/files?per_page=100`);
-      // KEEP (D-19): the raw gh response text is the stored evidence, behind the hardened library boundary.
       const remoteDiff = yield* runLibraryCommand(root, "gh", [
         "api",
         "-H",
@@ -369,28 +376,30 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
         `repos/${slug}/pulls/${n}`,
       ]).pipe(Effect.option);
       const retainRemotePullDiff = Effect.fn("Library.github.retainRemotePullDiff")(function* (body: string) {
-        artifacts.push(yield* saveLibraryText(root, `${prefix}/pull.diff`, body, "text/x-diff", "raw-diff"));
+        artifacts = yield* saveLibraryText(root, `${prefix}/pull.diff`, body, "text/x-diff", "raw-diff").pipe(
+          Effect.map(A.of),
+          Effect.map(A.prependAll(artifacts))
+        );
         const pins = A.head(pull);
         if (O.isNone(pins))
           return yield* LibraryError.make({
             cause: "identity",
             message: "PR diff metadata omitted commit identities.",
           });
-        artifacts.push(
-          yield* saveLibraryText(
-            root,
-            `${prefix}/diff-provenance.json`,
-            yield* encodeLibraryJson({
-              method: "gh-api-diff",
-              endpoint: `repos/${slug}/pulls/${n}`,
-              accept: "application/vnd.github.diff",
-              base: pins.value.base.sha,
-              head: pins.value.head.sha,
-            }),
-            "application/json",
-            "diff-provenance"
-          )
-        );
+        const encodedLibraryJson19 = yield* encodeLibraryJson({
+          method: "gh-api-diff",
+          endpoint: `repos/${slug}/pulls/${n}`,
+          accept: "application/vnd.github.diff",
+          base: pins.value.base.sha,
+          head: pins.value.head.sha,
+        });
+        artifacts = yield* saveLibraryText(
+          root,
+          `${prefix}/diff-provenance.json`,
+          encodedLibraryJson19,
+          "application/json",
+          "diff-provenance"
+        ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
       });
       const retainLocalPullDiff = Effect.fn("Library.github.retainLocalPullDiff")(function* () {
         const pins = A.head(pull);
@@ -409,23 +418,25 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
           "--no-textconv",
           `${pins.value.base.sha}...${pins.value.head.sha}`,
         ]);
-        artifacts.push(
-          yield* saveLibraryText(
-            root,
-            `${prefix}/diff-provenance.json`,
-            yield* encodeLibraryJson({
-              method: "git-diff",
-              base: pins.value.base.sha,
-              head: pins.value.head.sha,
-              reason: "GitHub diff endpoint unavailable; exact API-reported commit objects fetched without execution.",
-            }),
-            "application/json",
-            "diff-provenance"
-          )
-        );
+        const encodedLibraryJson20 = yield* encodeLibraryJson({
+          method: "git-diff",
+          base: pins.value.base.sha,
+          head: pins.value.head.sha,
+          reason: "GitHub diff endpoint unavailable; exact API-reported commit objects fetched without execution.",
+        });
+        artifacts = yield* saveLibraryText(
+          root,
+          `${prefix}/diff-provenance.json`,
+          encodedLibraryJson20,
+          "application/json",
+          "diff-provenance"
+        ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
       });
-      if (O.isSome(remoteDiff)) yield* retainRemotePullDiff(remoteDiff.value);
-      else yield* retainLocalPullDiff();
+      if (O.isSome(remoteDiff)) {
+        yield* retainRemotePullDiff(remoteDiff.value);
+      } else {
+        yield* retainLocalPullDiff();
+      }
     });
     const captureDiscussion = Effect.fn("Library.github.captureDiscussion")(function* () {
       const discussionNumber = Str.match(/\/discussions\/(\d+)/)(source.canonicalUrl);
@@ -443,7 +454,6 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
         let more = comment.replies.pageInfo.hasNextPage;
         for (const replyPage of A.range(1, 99)) {
           if (!more) break;
-          // KEEP (D-19): the raw gh response text is the stored evidence, behind the hardened library boundary.
           const replyRaw = yield* runLibraryCommand(root, "gh", [
             "api",
             "graphql",
@@ -455,15 +465,13 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
             `cursor=${replyCursor}`,
           ]);
           const reply = yield* decodeLibraryJson(ReplyPage)(replyRaw);
-          artifacts.push(
-            yield* saveLibraryText(
-              root,
-              `${prefix}/replies-${page}-${comment.id}-${replyPage}.json`,
-              replyRaw,
-              "application/json",
-              "raw-discussion"
-            )
-          );
+          artifacts = yield* saveLibraryText(
+            root,
+            `${prefix}/replies-${page}-${comment.id}-${replyPage}.json`,
+            replyRaw,
+            "application/json",
+            "raw-discussion"
+          ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
           more = reply.data.node.replies.pageInfo.hasNextPage;
           replyCursor = O.getOrElse(O.fromNullishOr(reply.data.node.replies.pageInfo.endCursor), () => "");
         }
@@ -476,7 +484,6 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
       let cursor = "";
       let exhausted = false;
       const captureDiscussionPage = Effect.fn("Library.github.captureDiscussionPage")(function* (page: number) {
-        // KEEP (D-19): the raw gh response text is the stored evidence, behind the hardened library boundary.
         const raw = yield* runLibraryCommand(root, "gh", [
           "api",
           "graphql",
@@ -490,9 +497,13 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
           `number=${discussionNumber.value[1]}`,
           ...(Str.isEmpty(cursor) ? [] : ["-f", `cursor=${cursor}`]),
         ]);
-        artifacts.push(
-          yield* saveLibraryText(root, `${prefix}/discussion-${page}.json`, raw, "application/json", "raw-discussion")
-        );
+        artifacts = yield* saveLibraryText(
+          root,
+          `${prefix}/discussion-${page}.json`,
+          raw,
+          "application/json",
+          "raw-discussion"
+        ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
         const discussionIdentity = yield* decodeLibraryJson(DiscussionIdentity)(raw);
         yield* captureRenameIdentity(discussionIdentity.data.repository.discussion.url);
         const decoded = yield* decodeLibraryJson(DiscussionPage)(raw);
@@ -551,15 +562,19 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
       const directory = Str.match(/\/tree\/[^/]+(?:\/(.+?))?(?:[?#]|$)/)(source.canonicalUrl);
       if (O.isSome(directory)) {
         const treePath = directory.value[1] ?? "";
-        artifacts.push(
-          yield* saveLibraryText(
-            root,
-            `${prefix}/cited-tree.txt`,
-            yield* git(["ls-tree", "-r", "--name-only", Str.isEmpty(treePath) ? revision : `${revision}:${treePath}`]),
-            "text/plain",
-            "cited-repository-tree"
-          )
-        );
+        const git21 = yield* git([
+          "ls-tree",
+          "-r",
+          "--name-only",
+          Str.isEmpty(treePath) ? revision : `${revision}:${treePath}`,
+        ]);
+        artifacts = yield* saveLibraryText(
+          root,
+          `${prefix}/cited-tree.txt`,
+          git21,
+          "text/plain",
+          "cited-repository-tree"
+        ).pipe(Effect.map(A.of), Effect.map(A.prependAll(artifacts)));
         return LibraryAdapterResult.make({
           artifacts,
           revision,
@@ -577,14 +592,10 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
           complete: false,
           reason: "Repository pinned; cited code locator requires explicit file evidence.",
         });
-      artifacts.push(
-        yield* saveLibraryText(
-          root,
-          `${prefix}/cited-code.txt`,
-          yield* git(["show", `${revision}:${code.value[1]}`]),
-          "text/plain",
-          "raw-full-text"
-        )
+      const git22 = yield* git(["show", `${revision}:${code.value[1]}`]);
+      artifacts = yield* saveLibraryText(root, `${prefix}/cited-code.txt`, git22, "text/plain", "raw-full-text").pipe(
+        Effect.map(A.of),
+        Effect.map(A.prependAll(artifacts))
       );
       return undefined;
     });

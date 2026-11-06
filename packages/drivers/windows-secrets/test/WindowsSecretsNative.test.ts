@@ -128,7 +128,8 @@ describe("Windows native adapter through synthetic FFI", { concurrent: false }, 
         return 1;
       });
       const store = yield* acquireNativeSecretStore;
-      assertSome(O.map(yield* store.get(target), Redacted.value), value);
+      const got = yield* store.get(target);
+      assertSome(O.map(got, Redacted.value), value);
       expect(symbols.CredFree).toHaveBeenCalledExactlyOnceWith(address);
       expect(blob).toEqual(utf16LeBytes(value));
     })
@@ -141,7 +142,8 @@ describe("Windows native adapter through synthetic FFI", { concurrent: false }, 
       symbols.GetLastError.mockReturnValue(code);
       const store = yield* acquireNativeSecretStore;
       if (code === 1168) {
-        assertNone(yield* store.get(target));
+        const got1 = yield* store.get(target);
+        assertNone(got1);
       } else {
         const error = yield* Effect.flip(store.get(target));
         expect(error).toEqual(
@@ -174,7 +176,8 @@ describe("Windows native adapter through synthetic FFI", { concurrent: false }, 
       if (result === 1) {
         yield* write;
       } else {
-        expect(yield* Effect.flip(write)).toEqual(
+        const flip2 = yield* Effect.flip(write);
+        expect(flip2).toEqual(
           SecretStoreFailure.make({
             operation: "write",
             code: 5,
@@ -191,9 +194,8 @@ describe("Windows native adapter through synthetic FFI", { concurrent: false }, 
     Effect.gen(function* () {
       const { symbols } = makeRuntime();
       const store = yield* acquireNativeSecretStore;
-      expect(yield* Effect.flip(store.set(target, Redacted.make(Str.repeat(1281)("x"))))).toBeInstanceOf(
-        SecretTooLarge
-      );
+      const flip3 = yield* Effect.flip(store.set(target, Redacted.make(Str.repeat(1281)("x"))));
+      expect(flip3).toBeInstanceOf(SecretTooLarge);
       expect(symbols.CredWriteW).not.toHaveBeenCalled();
       expect(ffi.ptr).not.toHaveBeenCalled();
     })
@@ -206,7 +208,8 @@ describe("Windows native adapter through synthetic FFI", { concurrent: false }, 
       symbols.GetLastError.mockReturnValue(code);
       const store = yield* acquireNativeSecretStore;
       if (code === 5) {
-        expect(yield* Effect.flip(store.remove(target))).toEqual(
+        const flip4 = yield* Effect.flip(store.remove(target));
+        expect(flip4).toEqual(
           SecretStoreFailure.make({
             operation: "delete",
             code,

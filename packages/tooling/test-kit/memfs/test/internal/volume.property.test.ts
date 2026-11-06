@@ -20,11 +20,15 @@ describe("volume path and byte fidelity", () => {
         yield* fs.makeDirectory("/tree/navigation-dir", { recursive: true });
         yield* fs.writeFile(`/tree/${name}`, bytes);
         const parsed = yield* fs.realPath(`/tree/navigation-dir/.././${name}`);
-        assert.strictEqual(yield* fs.realPath(parsed), parsed);
-        assert.strictEqual(yield* fs.realPath(`/${parsed}`), parsed);
-        assert.deepStrictEqual(yield* fs.readFile(parsed), bytes);
+        const realPath1 = yield* fs.realPath(parsed);
+        assert.strictEqual(realPath1, parsed);
+        const realPath2 = yield* fs.realPath(`/${parsed}`);
+        assert.strictEqual(realPath2, parsed);
+        const readFile3 = yield* fs.readFile(parsed);
+        assert.deepStrictEqual(readFile3, bytes);
         yield* fs.symlink(`/tree/navigation-dir`, "/link");
-        assert.strictEqual(yield* fs.realPath(`/link/../${name}`), parsed);
+        const realPath4 = yield* fs.realPath(`/link/../${name}`);
+        assert.strictEqual(realPath4, parsed);
         assert.strictEqual(engine.lookup(`/link/${name}`), undefined);
       }),
     runs
@@ -42,17 +46,23 @@ describe("volume path and byte fidelity", () => {
         yield* fs.writeFileString(`/${stored}`, text);
         const parsed = yield* fs.glob(filename);
         assert.deepStrictEqual(parsed, [stored]);
-        assert.deepStrictEqual(yield* fs.glob(`{${filename},${filename}}`), parsed);
+        const glob5 = yield* fs.glob(`{${filename},${filename}}`);
+        assert.deepStrictEqual(glob5, parsed);
         for (const path of parsed) {
-          assert.deepStrictEqual(yield* fs.glob(path), parsed);
-          assert.strictEqual(yield* fs.readFileString(path), text);
+          const glob6 = yield* fs.glob(path);
+          assert.deepStrictEqual(glob6, parsed);
+          const readFileString7 = yield* fs.readFileString(path);
+          assert.strictEqual(readFileString7, text);
           const copy = `/copy-${filename}`;
           yield* fs.copyFile(path, copy);
-          assert.strictEqual(yield* fs.readFileString(copy), text);
+          const readFileString8 = yield* fs.readFileString(copy);
+          assert.strictEqual(readFileString8, text);
           yield* fs.link(path, `/alias-${filename}`);
           yield* fs.writeFileString(`/alias-${filename}`, "changed");
-          assert.strictEqual(yield* fs.readFileString(path), "changed");
-          assert.strictEqual(yield* fs.readFileString(copy), text);
+          const readFileString9 = yield* fs.readFileString(path);
+          assert.strictEqual(readFileString9, "changed");
+          const readFileString10 = yield* fs.readFileString(copy);
+          assert.strictEqual(readFileString10, text);
         }
       }),
     runs

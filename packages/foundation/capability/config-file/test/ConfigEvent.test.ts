@@ -183,7 +183,8 @@ describe("ConfigEvent per-operation granularity", () => {
         const cfg = yield* AppConfig;
         yield* cfg.write(AppShape.make({ port: 3 }), "/explicit/.apprc");
 
-        assert.include(tagsOf(yield* drain(sub)), "Written");
+        const drain1 = yield* drain(sub);
+        assert.include(tagsOf(drain1), "Written");
       })
     );
   });
@@ -196,7 +197,8 @@ describe("ConfigEvent per-operation granularity", () => {
         const cfg = yield* AppConfig;
         yield* cfg.save(AppShape.make({ port: 3 }));
 
-        assert.include(tagsOf(yield* drain(sub)), "Saved");
+        const drain2 = yield* drain(sub);
+        assert.include(tagsOf(drain2), "Saved");
       })
     );
   });
@@ -212,7 +214,8 @@ describe("ConfigEvent per-operation granularity", () => {
         const cfg = yield* AppConfig;
         yield* cfg.update((current) => AppShape.make({ port: current.port + 1 }));
 
-        const tags = tagsOf(yield* drain(sub));
+        const drain3 = yield* drain(sub);
+        const tags = tagsOf(drain3);
         assert.lengthOf(
           A.filter(tags, (t) => t === "Updated"),
           1
@@ -231,7 +234,8 @@ describe("ConfigEvent per-operation granularity", () => {
         const cfg = yield* AppConfig;
         yield* cfg.update((current) => AppShape.make({ port: current.port + 1 }));
 
-        const updatedEvent = findEvent(yield* drain(sub), "Updated");
+        const drain4 = yield* drain(sub);
+        const updatedEvent = findEvent(drain4, "Updated");
         if (O.isNone(updatedEvent)) {
           return assert.fail("expected an Updated event");
         }
@@ -306,7 +310,8 @@ describe("ConfigEvents opt-in", () => {
       Effect.gen(function* () {
         // If `emit` required the service rather than short-circuiting, this
         // would fail to build: nothing provides ConfigEvents here.
-        assertNone(yield* Effect.serviceOption(ConfigEvents));
+        const serviceOption5 = yield* Effect.serviceOption(ConfigEvents);
+        assertNone(serviceOption5);
 
         const cfg = yield* AppConfig;
         const value = yield* cfg.load;
@@ -325,7 +330,8 @@ describe("ConfigEvents opt-in", () => {
 
         // `emit` is gated on `options.events`, not on service availability: it
         // never even looks the service up. Zero-cost, not a no-op subscriber.
-        assert.deepStrictEqual(tagsOf(yield* drain(sub)), []);
+        const drain6 = yield* drain(sub);
+        assert.deepStrictEqual(tagsOf(drain6), []);
       })
     );
   });

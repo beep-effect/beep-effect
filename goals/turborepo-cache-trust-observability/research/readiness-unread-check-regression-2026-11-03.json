@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "yeet-unread-check-readiness-regression/v1",
+  "recordedAt": "2026-11-03T13:36:59.013318+00:00",
+  "sourceBaseRevision": "31e2ac20f34a1c699a35be55f67881dbf0d8ffd0",
+  "observedPr": 2680,
+  "observedHead": "225f0de40be4c376051dcf6c4c41abf91598ce3e",
+  "observations": {
+    "closeoutFinishedAt": "2026-11-03T13:32:38.395841+00:00",
+    "reportedMergeReady": true,
+    "reportedRequiredChecks": 15,
+    "reportedFailingRequiredChecks": 0,
+    "reportedOptionalChecks": 0,
+    "closeoutStdoutSha256": "e425e7ff6620b0d3762dcb904e326ea5feab5adc4fc7d6bc063c1f2a58711f97",
+    "independentReadFinishedAt": "2026-11-03T13:33:06.400877+00:00",
+    "actualTotalChecks": 44,
+    "actualFailedCiChecks": [
+      "Heavy / Lint Policy",
+      "Heavy / Coverage Regression"
+    ],
+    "actualRateLimitedVercelStatuses": 2,
+    "actualRollupSha256": "73d958ebe640f25789c1cd30e09de1c55d827e0119f6076a9c52bb4479a645fd"
+  },
+  "cause": "The remote collector retains a typed readFailure for an incomplete census, but the shared merge-readiness policy did not consume it and treated absent optional/all-check counts as zero.",
+  "repair": "Require readFailure=None in the shared check-readiness criterion. Preserve counts, attribution, required-context policy and exact-head review/window gates. Render the incomplete read explicitly instead of displaying unknown counts as zero.",
+  "regressionsAuthored": [
+    "Required-only pass plus unavailable complete census holds.",
+    "Zero counts do not override a retained read failure.",
+    "A later complete successful read recovers.",
+    "Incomplete check capture is labeled in the rendered summary, not displayed as zero optional checks.",
+    "Historical completion recovery retains a recorded read failure and refuses derived readiness despite recorded ready=true."
+  ],
+  "localTestsExecuted": false,
+  "hostedProof": "pending",
+  "currentObservedPrReady": false,
+  "qualificationGranted": false,
+  "wholeGoalAcceptanceChanged": false,
+  "privateRetention": "Raw observations remain under ~/.local/state/beep/r2-pilot/completion-2026-10-29/continuation-20261102 through whole-goal closeout; no offsite backup claim.",
+  "introducedHostedFailure": {
+    "run": 41646477107,
+    "job": 125953436783,
+    "check": "Repo Sanity",
+    "classification": "introduced",
+    "logSha256": "2c1614f931db6c2e74fe821811df6744b37fef4829297eb797b5399e2f37fd11",
+    "cause": "The narrowed historical recovery schema omitted the readFailure field now required by the shared readiness policy.",
+    "repair": "Decode and preserve the existing typed optional readFailure; legacy absence remains None.",
+    "freshHostedProof": "pending"
+  }
+}

@@ -140,7 +140,8 @@ it.layer(gitPlatform, { timeout: "30 seconds" })("check census", (it) => {
       expect(row?.buildOverlapFiles).toBeGreaterThanOrEqual(1);
       expect(row?.overlay.files).toBeGreaterThan(row?.overlay.upstreamSrc ?? 0);
       expect(row?.overlay.wallMs).toBeGreaterThanOrEqual(0);
-      expect(yield* fs.exists(path.join(consumerDir, CHECK_CENSUS_OVERLAY_FILE_NAME))).toBe(false);
+      const exists1 = yield* fs.exists(path.join(consumerDir, CHECK_CENSUS_OVERLAY_FILE_NAME));
+      expect(exists1).toBe(false);
 
       const lines = renderCheckCensusLines(report);
       expect(lines).toHaveLength(3);
@@ -182,8 +183,10 @@ it.layer(gitPlatform, { timeout: "30 seconds" })("check census", (it) => {
       );
       expect(error.message).toContain("Run `bun run build`");
       // Nothing was measured: no temporary overlay was ever written.
-      expect(yield* fs.exists(path.join(consumerDir, CHECK_CENSUS_OVERLAY_FILE_NAME))).toBe(false);
-      expect(yield* fs.exists(path.join(root, "packages", "upstream", "dist"))).toBe(false);
+      const exists2 = yield* fs.exists(path.join(consumerDir, CHECK_CENSUS_OVERLAY_FILE_NAME));
+      expect(exists2).toBe(false);
+      const exists3 = yield* fs.exists(path.join(root, "packages", "upstream", "dist"));
+      expect(exists3).toBe(false);
     })
   );
 
@@ -297,7 +300,8 @@ it.layer(gitPlatform, { timeout: "30 seconds" })("check census", (it) => {
       expect(error.message).toContain(
         `Failed to resolve compilerOptions.outDir of referenced project ${upstreamTsconfig}.`
       );
-      expect(yield* fs.exists(path.join(consumerDir, CHECK_CENSUS_OVERLAY_FILE_NAME))).toBe(false);
+      const exists4 = yield* fs.exists(path.join(consumerDir, CHECK_CENSUS_OVERLAY_FILE_NAME));
+      expect(exists4).toBe(false);
     })
   );
 
@@ -332,7 +336,8 @@ it.layer(gitPlatform, { timeout: "30 seconds" })("check census", (it) => {
 
       expect(error._tag).toBe("QualityScriptCommandError");
       expect(error.message).toContain(`Failed to read references from ${consumerTsconfig}.`);
-      expect(yield* fs.exists(path.join(consumerDir, CHECK_CENSUS_OVERLAY_FILE_NAME))).toBe(false);
+      const exists5 = yield* fs.exists(path.join(consumerDir, CHECK_CENSUS_OVERLAY_FILE_NAME));
+      expect(exists5).toBe(false);
     })
   );
 });

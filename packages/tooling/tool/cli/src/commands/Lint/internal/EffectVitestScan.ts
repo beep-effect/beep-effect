@@ -579,8 +579,9 @@ export const runEffectVitestLint = Effect.fn("EffectVitestScan.run")(function* (
         lines: countEffectVitestSourceLines(text),
       })
     );
+    const detectEffectVitestFindings1 = yield* detectEffectVitestFindings(sourceFile, file, owner);
     const detected = retainBrowserSafeFindings(
-      yield* detectEffectVitestFindings(sourceFile, file, owner),
+      detectEffectVitestFindings1,
       HashSet.has(browserModePaths, toPosixPath(absolute))
     );
     findings.push(...(kind === "test" ? detected : A.filter(detected, (finding) => finding.ruleId === "EV003")));

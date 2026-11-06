@@ -24,7 +24,7 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow } from "effect/Function";
+import { flow, identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -52,60 +52,72 @@ const contextFor = (root: string) =>
 
 // One pull request both collectors read: the union of the fields `yeet status`
 // and `yeet monitor --watch` ask gh pr view for.
-const pullRequestJson = JSON.stringify({
-  headRefOid: "abc123def456",
-  id: "PR_fidelity",
-  isDraft: false,
-  labels: [],
-  mergeable: "MERGEABLE",
-  mergeStateStatus: "BLOCKED",
-  number: 754,
-  reviewDecision: null,
-  state: "OPEN",
-  url: "https://github.com/beep/beep/pull/754",
-});
+const pullRequestJson = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    headRefOid: "abc123def456",
+    id: "PR_fidelity",
+    isDraft: false,
+    labels: [],
+    mergeable: "MERGEABLE",
+    mergeStateStatus: "BLOCKED",
+    number: 754,
+    reviewDecision: null,
+    state: "OPEN",
+    url: "https://github.com/beep/beep/pull/754",
+  }),
+  identity
+);
 
 // The full seven-field gh record. The external status carries gh's zero time
 // and an empty workflow, as Vercel and CodeRabbit do on a live PR.
-const checksJson = JSON.stringify([
-  {
-    bucket: "fail",
-    completedAt: "2026-09-25T11:53:05Z",
-    link,
-    name: "Check / Coverage",
-    startedAt: "2026-09-25T11:27:04Z",
-    state: "FAILURE",
-    workflow: "Check",
-  },
-  {
-    bucket: "fail",
-    completedAt: "0001-01-01T00:00:00Z",
-    link: "",
-    name: "Vercel",
-    startedAt: "0001-01-01T00:00:00Z",
-    state: "FAILURE",
-    workflow: "",
-  },
-]);
-const requiredChecksJson = JSON.stringify([
-  {
-    bucket: "fail",
-    completedAt: "2026-09-25T11:53:05Z",
-    link,
-    name: "Check / Coverage",
-    startedAt: "2026-09-25T11:27:04Z",
-    state: "FAILURE",
-    workflow: "Check",
-  },
-]);
-const threadsJson = JSON.stringify({
-  data: {
-    node: {
-      author: { login: "author" },
-      reviewThreads: { nodes: [], pageInfo: { endCursor: null, hasNextPage: false } },
+const checksJson = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
+    {
+      bucket: "fail",
+      completedAt: "2026-09-25T11:53:05Z",
+      link,
+      name: "Check / Coverage",
+      startedAt: "2026-09-25T11:27:04Z",
+      state: "FAILURE",
+      workflow: "Check",
     },
-  },
-});
+    {
+      bucket: "fail",
+      completedAt: "0001-01-01T00:00:00Z",
+      link: "",
+      name: "Vercel",
+      startedAt: "0001-01-01T00:00:00Z",
+      state: "FAILURE",
+      workflow: "",
+    },
+  ]),
+  identity
+);
+const requiredChecksJson = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
+    {
+      bucket: "fail",
+      completedAt: "2026-09-25T11:53:05Z",
+      link,
+      name: "Check / Coverage",
+      startedAt: "2026-09-25T11:27:04Z",
+      state: "FAILURE",
+      workflow: "Check",
+    },
+  ]),
+  identity
+);
+const threadsJson = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    data: {
+      node: {
+        author: { login: "author" },
+        reviewThreads: { nodes: [], pageInfo: { endCursor: null, hasNextPage: false } },
+      },
+    },
+  }),
+  identity
+);
 
 const isPrChecks = (args: ReadonlyArray<string>) => args[0] === "pr" && args[1] === "checks";
 
@@ -163,28 +175,27 @@ describe("check record normalization", () => {
 
   it.effect("decodes census rows with the four new fields absent, null, or present", () =>
     Effect.gen(function* () {
-      const rows = yield* decodeGhStatusChecks(
-        yield* encodeJson([
-          { bucket: "pass", name: "Lint", state: "SUCCESS" },
-          {
-            bucket: "pass",
-            completedAt: null,
-            link: null,
-            name: "Status",
-            startedAt: null,
-            state: "SUCCESS",
-            workflow: null,
-          },
-          {
-            bucket: "fail",
-            completedAt: "2026-09-25T11:53:05Z",
-            link,
-            name: "Check",
-            state: "FAILURE",
-            workflow: "Check",
-          },
-        ])
-      );
+      const encodedJson = yield* encodeJson([
+        { bucket: "pass", name: "Lint", state: "SUCCESS" },
+        {
+          bucket: "pass",
+          completedAt: null,
+          link: null,
+          name: "Status",
+          startedAt: null,
+          state: "SUCCESS",
+          workflow: null,
+        },
+        {
+          bucket: "fail",
+          completedAt: "2026-09-25T11:53:05Z",
+          link,
+          name: "Check",
+          state: "FAILURE",
+          workflow: "Check",
+        },
+      ]);
+      const rows = yield* decodeGhStatusChecks(encodedJson);
       expect(A.map(rows, (row) => row.name)).toEqual(["Lint", "Status", "Check"]);
       expect(rows[0]?.completedAt).toBeUndefined();
       expect(rows[1]?.completedAt).toBeNull();

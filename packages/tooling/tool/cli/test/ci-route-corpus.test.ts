@@ -169,7 +169,8 @@ const captureOptions = (
 
 const sha256Hex = Effect.fn("RouteCorpusTest.sha256Hex")(function* (bytes: Uint8Array) {
   const digest = yield* Digest.Digest;
-  return Hex.encode(yield* digest.digest(Digest.sha256, bytes));
+  const digest2 = yield* digest.digest(Digest.sha256, bytes);
+  return Hex.encode(digest2);
 });
 
 const gunzip = (bytes: Uint8Array): string => new TextDecoder().decode(NodeZlib.gunzipSync(bytes));
@@ -180,7 +181,8 @@ const ndjsonRuns = (bytes: Uint8Array) =>
 const pinnedCorpusPath = Effect.fn("RouteCorpusTest.pinnedCorpusPath")(function* (outDir: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const receipt = yield* decodeReceipt(yield* fs.readFileString(path.join(outDir, ROUTE_CORPUS_RECEIPT_FILE)));
+  const readFileString3 = yield* fs.readFileString(path.join(outDir, ROUTE_CORPUS_RECEIPT_FILE));
+  const receipt = yield* decodeReceipt(readFileString3);
   return path.join(outDir, path.basename(receipt.path));
 });
 
@@ -194,11 +196,14 @@ const repin = Effect.fn("RouteCorpusTest.repin")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const bytes = NodeZlib.gzipSync(new TextEncoder().encode(text));
-  yield* fs.writeFile(yield* pinnedCorpusPath(outDir), bytes);
+  const pinnedCorpusPath4 = yield* pinnedCorpusPath(outDir);
+  yield* fs.writeFile(pinnedCorpusPath4, bytes);
   const receiptPath = path.join(outDir, ROUTE_CORPUS_RECEIPT_FILE);
-  const receipt = yield* decodeReceipt(yield* fs.readFileString(receiptPath));
+  const readFileString5 = yield* fs.readFileString(receiptPath);
+  const receipt = yield* decodeReceipt(readFileString5);
   const repinned = RouteCorpusReceipt.make({ ...receipt, runs: runs(receipt), sha256: yield* sha256Hex(bytes) });
-  yield* fs.writeFileString(receiptPath, yield* encodeReceipt(repinned));
+  const encodedReceipt = yield* encodeReceipt(repinned);
+  yield* fs.writeFileString(receiptPath, encodedReceipt);
 });
 
 const restRunner = (fetch: typeof globalThis.fetch) =>
@@ -236,13 +241,15 @@ it.effect.prop(
     const line = yield* S.encodeEffect(runCodec)(run);
     const decodedRun = yield* S.decodeEffect(runCodec)(line);
     assertTrue(sameRun(decodedRun, run));
-    expect(yield* S.encodeEffect(runCodec)(decodedRun)).toBe(line);
+    const value6 = yield* S.encodeEffect(runCodec)(decodedRun);
+    expect(value6).toBe(line);
 
     const receiptCodec = S.fromJsonString(RouteCorpusReceipt);
     const text = yield* S.encodeEffect(receiptCodec)(receipt);
     const decodedReceipt = yield* S.decodeEffect(receiptCodec)(text);
     assertTrue(sameReceipt(decodedReceipt, receipt));
-    expect(yield* S.encodeEffect(receiptCodec)(decodedReceipt)).toBe(text);
+    const value7 = yield* S.encodeEffect(receiptCodec)(decodedReceipt);
+    expect(value7).toBe(text);
   }),
   { arbitrary: fcRuns(50) }
 );
@@ -254,11 +261,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
-        const corpus = yield* makeRouteCorpus(
-          yield* fixtureRunner(yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]))
-        );
+        const made56 = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const fixtureRunner8 = yield* fixtureRunner(made56);
+        const corpus = yield* makeRouteCorpus(fixtureRunner8);
         const receipt = yield* corpus.capture(captureOptions(root));
         const outDir = path.join(root, "corpus");
         const pinned = yield* pinnedCorpusPath(outDir);
@@ -267,13 +275,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         yield* fs.remove(pinned);
         const legacy = RouteCorpusReceipt.make({ ...receipt, path: `corpus/${ROUTE_CORPUS_FILE}` });
         const receiptPath = path.join(outDir, ROUTE_CORPUS_RECEIPT_FILE);
-        yield* fs.writeFileString(receiptPath, yield* encodeReceipt(legacy));
+        const encodedReceipt9 = yield* encodeReceipt(legacy);
+        yield* fs.writeFileString(receiptPath, encodedReceipt9);
         expect((yield* corpus.load(receiptPath)).runs).toHaveLength(4);
 
         const resumed = yield* corpus.capture(captureOptions(root));
         expect(resumed.path).toBe(`corpus/hosted-runs.${resumed.sha256}.ndjson.gz`);
         expect((yield* corpus.load(receiptPath)).runs).toHaveLength(4);
-        expect(yield* fs.exists(legacyPath)).toBe(true);
+        const exists10 = yield* fs.exists(legacyPath);
+        expect(exists10).toBe(true);
       })
     );
 
@@ -281,7 +291,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped11 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped11);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const runner = yield* fixtureRunner(calls);
@@ -299,7 +310,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const options = captureOptions(root, { since: "2026-10-28", until: O.some("2026-10-29") });
         const failure = yield* Effect.flip(interrupted.capture(options));
         expect(failure.reason).toBe("corpus-pin");
-        expect(yield* fs.readFileString(receiptPath)).toBe(receiptText);
+        const readFileString12 = yield* fs.readFileString(receiptPath);
+        expect(readFileString12).toBe(receiptText);
         const prior = yield* corpus.load(receiptPath);
         expect(prior.receipt).toEqual(original);
         expect(A.map(prior.runs, (run) => run.runId)).toEqual([RERUN]);
@@ -316,11 +328,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped13 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped13);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
-        const corpus = yield* makeRouteCorpus(
-          yield* fixtureRunner(yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]))
-        );
+        const made57 = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const fixtureRunner14 = yield* fixtureRunner(made57);
+        const corpus = yield* makeRouteCorpus(fixtureRunner14);
         yield* corpus.capture(captureOptions(root));
         const receipt = yield* corpus.capture(
           RouteCorpusCaptureOptions.make({
@@ -338,7 +351,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
     it.effect("keeps today and future days open and collects runs created later today", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped15 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped15);
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const runner = yield* fixtureRunner(calls);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-29T12:00:00Z").pipe(DateTime.toEpochMillis));
@@ -359,10 +373,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped16 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped16);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
-        const corpus = yield* makeRouteCorpus(yield* fixtureRunner(calls));
+        const fixtureRunner17 = yield* fixtureRunner(calls);
+        const corpus = yield* makeRouteCorpus(fixtureRunner17);
         yield* corpus.capture(captureOptions(root));
         const receiptPath = path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE);
         const corpusPath = yield* pinnedCorpusPath(path.join(root, "corpus"));
@@ -374,15 +390,19 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const changed = yield* Effect.flip(corpus.capture(captureOptions(root)));
         assertInclude(changed.message, "but its receipt pins");
         expect(changed.reason).toBe("corpus-pin");
-        expect(yield* fs.readFileString(receiptPath)).toBe(receipt);
-        expect(yield* Ref.get(calls)).toEqual([]);
+        const readFileString18 = yield* fs.readFileString(receiptPath);
+        expect(readFileString18).toBe(receipt);
+        const got = yield* Ref.get(calls);
+        expect(got).toEqual([]);
 
         yield* fs.remove(corpusPath);
         const missing = yield* Effect.flip(corpus.capture(captureOptions(root)));
         expect(missing.reason).toBe("corpus-pin");
         assertInclude(missing.message, "Failed to read the corpus");
-        expect(yield* fs.readFileString(receiptPath)).toBe(receipt);
-        expect(yield* Ref.get(calls)).toEqual([]);
+        const readFileString19 = yield* fs.readFileString(receiptPath);
+        expect(readFileString19).toBe(receipt);
+        const got20 = yield* Ref.get(calls);
+        expect(got20).toEqual([]);
       })
     );
 
@@ -390,11 +410,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped21 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped21);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
-        const corpus = yield* makeRouteCorpus(
-          yield* fixtureRunner(yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]))
-        );
+        const made58 = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const fixtureRunner22 = yield* fixtureRunner(made58);
+        const corpus = yield* makeRouteCorpus(fixtureRunner22);
         yield* corpus.capture(captureOptions(root));
         const filtered = yield* corpus.capture(
           RouteCorpusCaptureOptions.make({
@@ -413,14 +434,17 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped23 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped23);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
-        const corpus = yield* makeRouteCorpus(yield* fixtureRunner(calls));
+        const fixtureRunner24 = yield* fixtureRunner(calls);
+        const corpus = yield* makeRouteCorpus(fixtureRunner24);
 
         const receipt = yield* corpus.capture(captureOptions(root));
 
-        const bytes = yield* fs.readFile(yield* pinnedCorpusPath(path.join(root, "corpus")));
+        const pinnedCorpusPath25 = yield* pinnedCorpusPath(path.join(root, "corpus"));
+        const bytes = yield* fs.readFile(pinnedCorpusPath25);
         expect(receipt).toEqual(
           RouteCorpusReceipt.make({
             schemaVersion: "route-corpus/v1",
@@ -435,9 +459,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             sha256: yield* sha256Hex(bytes),
           })
         );
-        expect(
-          yield* decodeReceipt(yield* fs.readFileString(path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE)))
-        ).toEqual(receipt);
+        const readFileString59 = yield* fs.readFileString(path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE));
+        const decodedReceipt26 = yield* decodeReceipt(readFileString59);
+        expect(decodedReceipt26).toEqual(receipt);
 
         // createdAt order; the Check and Heavy runs of one push share a second and sort by run id.
         const runs = yield* ndjsonRuns(bytes);
@@ -516,7 +540,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
     it.effect("resumes by run id and re-fetches only a run whose attempt moved", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped27 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped27);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const runGh = yield* fixtureRunner(calls);
@@ -526,8 +551,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         yield* Ref.set(calls, []);
         const second = yield* corpus.capture(captureOptions(root));
 
-        expect(viewedRunIds(yield* Ref.get(calls))).toEqual([]);
-        expect(listCalls(yield* Ref.get(calls))).toBe(4);
+        const got28 = yield* Ref.get(calls);
+        expect(viewedRunIds(got28)).toEqual([]);
+        const got29 = yield* Ref.get(calls);
+        expect(listCalls(got29)).toBe(4);
         expect(second).toEqual(first);
 
         // A re-run keeps its run id and bumps the attempt; that run alone is fetched again.
@@ -539,7 +566,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             : runGh(args, cwd);
         yield* Ref.set(calls, []);
         const third = yield* (yield* makeRouteCorpus(rerun)).capture(captureOptions(root));
-        expect(viewedRunIds(yield* Ref.get(calls))).toEqual([`${PR_RUN}`]);
+        const got30 = yield* Ref.get(calls);
+        expect(viewedRunIds(got30)).toEqual([`${PR_RUN}`]);
         expect(third.runs).toBe(4);
       })
     );
@@ -547,7 +575,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
     it.effect("does not pin a run whose view shows a newer, unfinished attempt", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped31 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped31);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const runGh = yield* fixtureRunner(calls);
@@ -566,7 +595,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         // The day stayed open, so the next capture fetches that run again.
         yield* Ref.set(calls, []);
         const resumed = yield* (yield* makeRouteCorpus(runGh)).capture(captureOptions(root));
-        expect(viewedRunIds(yield* Ref.get(calls))).toContain(`${PR_RUN}`);
+        const got32 = yield* Ref.get(calls);
+        expect(viewedRunIds(got32)).toContain(`${PR_RUN}`);
         expect(resumed.runs).toBe(4);
       })
     );
@@ -575,7 +605,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped33 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped33);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const runGh = yield* fixtureRunner(calls);
@@ -597,8 +628,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           error.message,
           `--workflow Heavy --created 2026-10-27 reached the ${ROUTE_CORPUS_LIST_CAP}-run API cap`
         );
-        expect(viewedRunIds(yield* Ref.get(calls))).toEqual([]);
-        expect(yield* fs.exists(path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE))).toBe(false);
+        const got34 = yield* Ref.get(calls);
+        expect(viewedRunIds(got34)).toEqual([]);
+        const exists35 = yield* fs.exists(path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE));
+        expect(exists35).toBe(false);
       })
     );
 
@@ -606,11 +639,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped36 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped36);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
-        const corpus = yield* makeRouteCorpus(
-          yield* fixtureRunner(yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]))
-        );
+        const made60 = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const fixtureRunner37 = yield* fixtureRunner(made60);
+        const corpus = yield* makeRouteCorpus(fixtureRunner37);
         const receipt = yield* corpus.capture(captureOptions(root));
         const receiptPath = path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE);
 
@@ -634,15 +668,18 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped38 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped38);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
-        const corpus = yield* makeRouteCorpus(
-          yield* fixtureRunner(yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]))
-        );
+        const made61 = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const fixtureRunner39 = yield* fixtureRunner(made61);
+        const corpus = yield* makeRouteCorpus(fixtureRunner39);
         yield* corpus.capture(captureOptions(root));
         const outDir = path.join(root, "corpus");
         const receiptPath = path.join(outDir, ROUTE_CORPUS_RECEIPT_FILE);
-        const text = gunzip(yield* fs.readFile(yield* pinnedCorpusPath(outDir)));
+        const pinnedCorpusPath62 = yield* pinnedCorpusPath(outDir);
+        const readFile40 = yield* fs.readFile(pinnedCorpusPath62);
+        const text = gunzip(readFile40);
 
         yield* repin(outDir, `${text}{"runId":"not-a-number"}\n`, (receipt) => receipt.runs + 1);
         const malformed = yield* Effect.flip(corpus.load(receiptPath));
@@ -669,10 +706,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped41 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped41);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
-        const corpus = yield* makeRouteCorpus(yield* fixtureRunner(calls));
+        const fixtureRunner42 = yield* fixtureRunner(calls);
+        const corpus = yield* makeRouteCorpus(fixtureRunner42);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-29T12:00:00Z").pipe(DateTime.toEpochMillis));
 
         // No runs on 2026-10-29: the corpus is empty but still pinned and loadable.
@@ -690,13 +729,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         yield* Ref.set(calls, []);
         const continued = yield* corpus.capture(captureOptions(root, { since: "2026-10-28", until: O.none() }));
         expect([continued.since, continued.until, continued.runs]).toEqual(["2026-10-28", "2026-10-28", 1]);
-        expect(listedDays(yield* Ref.get(calls))).toEqual(["2026-10-29"]);
+        const got43 = yield* Ref.get(calls);
+        expect(listedDays(got43)).toEqual(["2026-10-29"]);
 
         // The still-open current day is listed again without refetching pinned runs.
         yield* Ref.set(calls, []);
         const unchanged = yield* corpus.capture(captureOptions(root, { since: "2026-10-28", until: O.none() }));
         expect([unchanged.until, unchanged.sha256]).toEqual([continued.until, continued.sha256]);
-        expect(listedDays(yield* Ref.get(calls))).toEqual(["2026-10-29"]);
+        const got44 = yield* Ref.get(calls);
+        expect(listedDays(got44)).toEqual(["2026-10-29"]);
 
         const gap = yield* Effect.flip(
           corpus.capture(captureOptions(root, { since: "2026-10-31", until: O.some("2026-11-01") }))
@@ -736,7 +777,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped45 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped45);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const runGh = yield* fixtureRunner(calls);
@@ -762,8 +804,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         yield* Ref.set(calls, []);
         const resumed = yield* corpus.capture(options);
         expect([resumed.until, resumed.runs]).toEqual(["2026-10-29", 3]);
-        expect(listedDays(yield* Ref.get(calls))).toEqual(["2026-10-30"]);
-        expect(listCalls(yield* Ref.get(calls))).toBe(2);
+        const got46 = yield* Ref.get(calls);
+        expect(listedDays(got46)).toEqual(["2026-10-30"]);
+        const got47 = yield* Ref.get(calls);
+        expect(listCalls(got47)).toBe(2);
         expect(A.map((yield* corpus.load(receiptPath)).runs, (run) => run.runId)).toEqual([RERUN, DAY2_RUN, DAY3_RUN]);
       })
     );
@@ -772,7 +816,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped48 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped48);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const runGh = yield* fixtureRunner(calls);
@@ -791,7 +836,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
 
         const unknown = yield* Effect.flip((yield* makeRouteCorpus(refusing("not json"))).capture(options));
         assertInclude(unknown.message, "hit the GitHub API rate limit; gh did not report when it resets.");
-        expect(yield* fs.exists(path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE))).toBe(false);
+        const exists49 = yield* fs.exists(path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE));
+        expect(exists49).toBe(false);
 
         yield* Ref.set(calls, []);
         const waiting = yield* makeRouteCorpus(refusing(rateLimitPayload("2026-10-28T23:00:30Z")));
@@ -802,17 +848,21 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           `gh run view ${RERUN} hit the GitHub API rate limit again after waiting for the reset; it resets at 2026-10-28T23:00:30.000Z.`
         );
         // One view, one reset lookup, one retry after the wait.
-        expect(viewedRunIds(yield* Ref.get(calls))).toEqual([`${RERUN}`, `${RERUN}`]);
-        expect(A.length(A.filter(yield* Ref.get(calls), (call) => call[1] === "api"))).toBe(1);
+        const got50 = yield* Ref.get(calls);
+        expect(viewedRunIds(got50)).toEqual([`${RERUN}`, `${RERUN}`]);
+        const got51 = yield* Ref.get(calls);
+        expect(A.length(A.filter(got51, (call) => call[1] === "api"))).toBe(1);
       })
     );
 
     it.effect("refuses a view payload for a different run", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+        const madeTempDirectoryScoped52 = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped52);
         yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
-        const runGh = yield* fixtureRunner(yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]));
+        const made = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const runGh = yield* fixtureRunner(made);
         const crossed: RouteGhRunner = (args, cwd) =>
           args[2] === `${PR_RUN}` ? runGh(["run", "view", `${MAIN_RUN}`], cwd) : runGh(args, cwd);
 
@@ -944,8 +994,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             : { workflow_runs: [], total_count: 0 },
         }));
         const run = yield* restRunner(transport.fetch);
-        for (const workflow of ["42", "check.yml"])
-          expect(yield* run(["run", "list", "--workflow", workflow, "--created", "2026-10-28"], ".")).toBe("[]");
+        for (const workflow of ["42", "check.yml"]) {
+          const listed = yield* run(["run", "list", "--workflow", workflow, "--created", "2026-10-28"], ".");
+          expect(listed).toBe("[]");
+        }
         const missing = yield* untilDone(
           run(["run", "list", "--workflow", "Missing", "--created", "2026-10-28"], ".").pipe(Effect.flip)
         );
@@ -1010,7 +1062,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const error = yield* run(["run", "view", "7"], ".").pipe(Effect.flip);
         expect(error._tag).toBe("RouteGhRateLimited");
         expect(limited.calls.length).toBe(1);
-        expect(yield* run(["api", "rate_limit"], ".")).toContain('"reset":123');
+        const rateLimit = yield* run(["api", "rate_limit"], ".");
+        expect(rateLimit).toContain('"reset":123');
         for (const response of [{ status: 403, body: { message: "Forbidden" } }, { body: { malformed: true } }]) {
           const transport = completionFetch(() => response);
           const refused = yield* restRunner(transport.fetch);

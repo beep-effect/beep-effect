@@ -163,7 +163,8 @@ export const makeNativeIntakeJournal = Effect.fn("AiMetrics.makeNativeIntakeJour
                 )) !== receiptId
               )
                 return yield* failure("storage");
-              return O.some(yield* decodeBatch(rows[0].payload));
+              const decodedBatch = yield* decodeBatch(rows[0].payload);
+              return O.some(decodedBatch);
             })
           )
         );
@@ -197,7 +198,9 @@ export const makeNativeIntakeJournal = Effect.fn("AiMetrics.makeNativeIntakeJour
               (yield* encodeTranscriptAcceptanceJson(replay.page))
             )
               return yield* failure("storage");
-          } else if (O.isNone(yield* readNewEvents(receiptId))) return yield* failure("storage");
+          } else if (yield* Effect.map(readNewEvents(receiptId), O.isNone)) {
+            return yield* failure("storage");
+          }
           for (const [span, index] of A.map(batch.spans, (span, index) => Tuple.make(span, index)))
             yield* checkReplayReference(span, index, replay);
           return replay;

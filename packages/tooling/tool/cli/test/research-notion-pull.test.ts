@@ -48,7 +48,8 @@ const makeFixture = Effect.fn("ResearchNotionPullTest.makeFixture")(function* (l
   const path = yield* Path.Path;
   const vaultRoot = yield* fs.makeTempDirectoryScoped({ prefix: "research-notion-" });
   const linksFile = path.join(vaultRoot, "links.json");
-  yield* fs.writeFileString(linksFile, yield* encodeLinksFile(links));
+  const encodedLinksFile = yield* encodeLinksFile(links);
+  yield* fs.writeFileString(linksFile, encodedLinksFile);
   return { linksFile, vaultRoot };
 });
 

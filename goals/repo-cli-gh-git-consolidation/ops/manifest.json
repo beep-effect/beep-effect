@@ -33,17 +33,35 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
-    "research/p0-site-inventory-2026-11-02.md",
-    "research/is-ancestor-prune-differential-w0.json",
-    "research/git-readers-differential-w1a.json",
-    "research/yeet-git-differential-w1b.json",
+    "research/cache-baseline-request-w0.json",
+    "research/cache-baseline-request-w1b.json",
+    "research/cache-baseline-request-w2b.json",
+    "research/cache-baseline-request-w3-kit.json",
+    "research/cache-baseline-request-w3-sites.json",
+    "research/cache-baseline-request-w6.json",
+    "research/cache-baseline-request-w7-kit.json",
+    "research/cache-baseline-request-w7b.json",
+    "research/cache-baseline-review-w0.md",
+    "research/cache-baseline-review-w1b.md",
+    "research/cache-baseline-review-w2b.md",
+    "research/cache-baseline-review-w3-kit.md",
+    "research/cache-baseline-review-w3-sites.md",
+    "research/cache-baseline-review-w6.md",
+    "research/cache-baseline-review-w7-kit.md",
+    "research/cache-baseline-review-w7b.md",
     "research/dirty-axis-differential-w2.json",
-    "research/yeet-remainder-differential-w2b.json",
-    "research/reviewer-ci-github-differential-w3.json",
+    "research/git-readers-differential-w1a.json",
+    "research/groups-differential-w7.json",
+    "research/is-ancestor-prune-differential-w0.json",
+    "research/p0-site-inventory-2026-11-02.md",
     "research/review-thread-differential-w4.json",
-    "research/yeet-gh-seams-differential-w6.json",
+    "research/reviewer-ci-github-differential-w3.json",
+    "research/site-list.md",
     "research/w7-site-census-2026-11-03.md",
-    "research/groups-differential-w7.json"
+    "research/yeet-differential-w7.json",
+    "research/yeet-gh-seams-differential-w6.json",
+    "research/yeet-git-differential-w1b.json",
+    "research/yeet-remainder-differential-w2b.json"
   ],
   "agentLaunchers": [
     {
@@ -227,38 +245,6 @@
     {
       "path": "ops/frozen-w6/Merge.old.ts",
       "purpose": "Frozen pre-W6 merge phase of mergePr (the gh pr merge --squash --match-head-commit call and its bounded MERGED confirmation, lane base 641180ade6), lifted below the reviewer gate and replayed by ops/yeet-gh-seams-differential-w6.ts."
-    },
-    {
-      "path": "ops/groups-differential-w7.ts",
-      "purpose": "W7b differential: the frozen pre-W7 command-group git bodies (ops/frozen-w7b/Groups.old.ts over the inlined generic runners: the RouteClassify reads, the RouteCensus merge base, the HeavyAdmission diff, Doctest discovery, the Knowledge ref census and path-removal log, the visible-path listings, the Fallow audit diff input, the lane-proof virtual tree, the goals doctor history reads, the Laws and Lint tracked listings, the research vault commit, QA commit provenance) compared with the shipped @beep/git reads over real scratch repositories (renames, a deletion, a non-ASCII path, untracked and ignored files, a shallow clone, an unborn repository, a directory outside any repository), plus the gh rows of ops/groups-differential-w7.github.ts."
-    },
-    {
-      "path": "ops/groups-differential-w7.github.ts",
-      "purpose": "W7b differential, gh half: the frozen RouteCorpus, Completion, CompletionEvidence and RepoCards gh bodies over a scripted gh against GithubRest, GitHubClient and GitHubContent over a paginating fetch, one fixture world per scenario; imported by ops/groups-differential-w7.ts."
-    },
-    {
-      "path": "ops/frozen-w7b/GitRunners.old.ts",
-      "purpose": "Frozen pre-W7 generic git runners (runGitOutput, runGitPathList, runGitLines, runGitRawOutput and their private helpers, inlined verbatim because the runner retirement deletes them) (lane base 8602b24203), replayed by ops/groups-differential-w7.ts."
-    },
-    {
-      "path": "ops/frozen-w7b/Groups.old.ts",
-      "purpose": "Frozen pre-W7 W7b git site bodies (lane base 8602b24203), replayed by ops/groups-differential-w7.ts."
-    },
-    {
-      "path": "ops/frozen-w7b/RouteCorpus.old.ts",
-      "purpose": "Frozen pre-W7 RouteCorpus gh runner (rate limit, run list, run view) (lane base 8602b24203), replayed by ops/groups-differential-w7.ts."
-    },
-    {
-      "path": "ops/frozen-w7b/Completion.old.ts",
-      "purpose": "Frozen pre-W7 goal completion manifest and origin reads (lane base 8602b24203), replayed by ops/groups-differential-w7.ts."
-    },
-    {
-      "path": "ops/frozen-w7b/CompletionEvidence.old.ts",
-      "purpose": "Frozen pre-W7 goal completion evidence gh and git readers (lane base 8602b24203), replayed by ops/groups-differential-w7.ts."
-    },
-    {
-      "path": "ops/frozen-w7b/RepoCards.old.ts",
-      "purpose": "Frozen pre-W7 research repo-card clone and star reads (lane base 8602b24203), replayed by ops/groups-differential-w7.ts."
     }
   ]
 }

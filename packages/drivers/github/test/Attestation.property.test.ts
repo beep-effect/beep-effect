@@ -15,7 +15,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(AttestationRecord)(value);
       const decoded = yield* S.decodeEffect(AttestationRecord)(encoded);
       assert.isTrue(S.toEquivalence(AttestationRecord)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(AttestationRecord)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(AttestationRecord)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );
@@ -28,7 +29,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(AttestationListEntry)(value);
       const decoded = yield* S.decodeEffect(AttestationListEntry)(encoded);
       assert.isTrue(S.toEquivalence(AttestationListEntry)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(AttestationListEntry)(decoded), encoded);
+      const value2 = yield* S.encodeEffect(AttestationListEntry)(decoded);
+      assert.deepStrictEqual(value2, encoded);
     }),
   runs
 );

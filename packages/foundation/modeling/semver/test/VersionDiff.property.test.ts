@@ -15,7 +15,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(value, decoded));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -29,7 +30,9 @@ describe("VersionDiff property floor", () => {
     ([diff]) =>
       Effect.gen(function* () {
         const text = diff.toString();
-        const decoded = yield* S.decodeEffect(VersionDiff)(yield* S.encodeEffect(VersionDiff)(diff));
+        const argument = S.decodeEffect(VersionDiff);
+        const value2 = yield* S.encodeEffect(VersionDiff)(diff);
+        const decoded = yield* argument(value2);
         assert.strictEqual(decoded.toString(), text);
         assert.strictEqual(text, `${diff.type} (${diff.from.toString()} → ${diff.to.toString()})`);
       }),

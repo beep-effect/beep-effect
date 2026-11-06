@@ -153,7 +153,8 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
               reflectionRequired: false,
             })
           );
-          expectReportedFailure(yield* Effect.exit(runLintCommand(["reflection-artifacts"])));
+          const exit1 = yield* Effect.exit(runLintCommand(["reflection-artifacts"]));
+          expectReportedFailure(exit1);
           yield* writeReflection("example", "2026-06-09-claude.md", VALID_REFLECTION);
           const exit = yield* Effect.exit(runLintCommand(["reflection-artifacts"]));
           expect(exit._tag).toBe("Success");
@@ -171,7 +172,8 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             "goals/example/ops/manifest.json",
             `${encodeJson({ initiative: { id: "example", status: "completed-retained" } })} trailing\n`
           );
-          expectReportedFailure(yield* Effect.exit(runLintCommand(["reflection-artifacts"])));
+          const exit2 = yield* Effect.exit(runLintCommand(["reflection-artifacts"]));
+          expectReportedFailure(exit2);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -348,20 +350,28 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
 describe("reflectionFrontmatterIsValid", () => {
   it.effect("decodes the closed YAML block through the @beep/markdown YAML codec, LF or CRLF", () =>
     Effect.gen(function* () {
-      assertTrue(yield* reflectionFrontmatterIsValid(VALID_REFLECTION));
-      assertTrue(yield* reflectionFrontmatterIsValid(VALID_REFLECTION_CRLF));
+      const reflectionFrontmatterIsValid3 = yield* reflectionFrontmatterIsValid(VALID_REFLECTION);
+      assertTrue(reflectionFrontmatterIsValid3);
+      const reflectionFrontmatterIsValid4 = yield* reflectionFrontmatterIsValid(VALID_REFLECTION_CRLF);
+      assertTrue(reflectionFrontmatterIsValid4);
     })
   );
 
   it.effect("rejects a missing, unclosed, non-YAML, duplicate-key or schema-invalid block", () =>
     Effect.gen(function* () {
       const body = "goal: example\nagent: claude\ndate: 2026-06-09\ntrigger: closeout\nconfidence: high\n";
-      assertTrue(yield* reflectionFrontmatterIsValid(`---\n${body}---\n`));
-      assertFalse(yield* reflectionFrontmatterIsValid("# Reflection\n"));
-      assertFalse(yield* reflectionFrontmatterIsValid(`---\n${body}# Reflection\n`));
-      assertFalse(yield* reflectionFrontmatterIsValid('---json\n{"goal":"example"}\n---\n'));
-      assertFalse(yield* reflectionFrontmatterIsValid(`---\n${body}goal: other\n---\n`));
-      assertFalse(yield* reflectionFrontmatterIsValid("---\ngoal: example\n---\n"));
+      const reflectionFrontmatterIsValid5 = yield* reflectionFrontmatterIsValid(`---\n${body}---\n`);
+      assertTrue(reflectionFrontmatterIsValid5);
+      const reflectionFrontmatterIsValid6 = yield* reflectionFrontmatterIsValid("# Reflection\n");
+      assertFalse(reflectionFrontmatterIsValid6);
+      const reflectionFrontmatterIsValid7 = yield* reflectionFrontmatterIsValid(`---\n${body}# Reflection\n`);
+      assertFalse(reflectionFrontmatterIsValid7);
+      const reflectionFrontmatterIsValid8 = yield* reflectionFrontmatterIsValid('---json\n{"goal":"example"}\n---\n');
+      assertFalse(reflectionFrontmatterIsValid8);
+      const reflectionFrontmatterIsValid9 = yield* reflectionFrontmatterIsValid(`---\n${body}goal: other\n---\n`);
+      assertFalse(reflectionFrontmatterIsValid9);
+      const reflectionFrontmatterIsValid10 = yield* reflectionFrontmatterIsValid("---\ngoal: example\n---\n");
+      assertFalse(reflectionFrontmatterIsValid10);
     })
   );
 });

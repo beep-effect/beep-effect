@@ -33,8 +33,14 @@ const TREE: Tree = {
     ],
     "\n"
   ),
-  "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0", private: true }),
-  "/repo/packages/a/package.json": JSON.stringify({ name: "@x/a", version: "1.2.3" }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0", private: true }),
+    identity
+  ),
+  "/repo/packages/a/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/a", version: "1.2.3" }),
+    identity
+  ),
 };
 
 describe("Workspaces.resolveManifest", () => {
@@ -114,11 +120,15 @@ describe("Workspaces.resolverLayer", () => {
       Effect.gen(function* () {
         const catalogs = yield* CatalogResolver;
         const workspaces = yield* WorkspaceResolver;
-        assertSome(yield* catalogs.rangeOf("effect", O.none()), "^4.0.0");
-        assertSome(yield* catalogs.rangeOf("react", O.some("react18")), "^18.2.0");
-        assertSome(yield* workspaces.versionOf("@x/a"), "1.2.3");
+        const rangeOf1 = yield* catalogs.rangeOf("effect", O.none());
+        assertSome(rangeOf1, "^4.0.0");
+        const rangeOf2 = yield* catalogs.rangeOf("react", O.some("react18"));
+        assertSome(rangeOf2, "^18.2.0");
+        const versionOf3 = yield* workspaces.versionOf("@x/a");
+        assertSome(versionOf3, "1.2.3");
         // An unmatched name is none, not an error — the contract's convention.
-        assertNone(yield* catalogs.rangeOf("nothing", O.none()));
+        const rangeOf4 = yield* catalogs.rangeOf("nothing", O.none());
+        assertNone(rangeOf4);
       })
     );
   });
@@ -179,7 +189,8 @@ describe("Workspaces.layer — the publishability seam", () => {
   })((it) => {
     it.effect("a caller's detector is observed when merged AFTER the composite", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* observedRegistry, CUSTOM_REGISTRY);
+        const observedRegistry5 = yield* observedRegistry;
+        assert.strictEqual(observedRegistry5, CUSTOM_REGISTRY);
       })
     );
   });
@@ -193,7 +204,8 @@ describe("Workspaces.layer — the publishability seam", () => {
       // with no diagnostic. It passes now because the composite supplies no
       // detector at all, so there is nothing to shadow the caller's.
       Effect.gen(function* () {
-        assert.strictEqual(yield* observedRegistry, CUSTOM_REGISTRY);
+        const observedRegistry6 = yield* observedRegistry;
+        assert.strictEqual(observedRegistry6, CUSTOM_REGISTRY);
       })
     );
   });
@@ -204,7 +216,8 @@ describe("Workspaces.layer — the publishability seam", () => {
   )((it) => {
     it.effect("layerNpm is opt-in and still yields npm semantics", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* observedRegistry, "https://registry.npmjs.org/");
+        const observedRegistry7 = yield* observedRegistry;
+        assert.strictEqual(observedRegistry7, "https://registry.npmjs.org/");
       })
     );
   });
@@ -215,7 +228,8 @@ describe("Workspaces.layer — the publishability seam", () => {
   )((it) => {
     it.effect("layerNone publishes nothing", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* observedRegistry, undefined);
+        const observedRegistry8 = yield* observedRegistry;
+        assert.strictEqual(observedRegistry8, undefined);
       })
     );
   });
@@ -243,6 +257,7 @@ import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { WorkspacesGitOptions, WorkspacesOptions } from "@beep/repo-workspaces/Workspaces";
 import * as Arbitrary from "effect/Arbitrary";
 import { identity } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 
@@ -256,7 +271,8 @@ describe("composite workspace option schemas", () => {
           const encoded = yield* S.encodeEffect(schema)(value);
           const decoded = yield* S.decodeEffect(schema)(encoded);
           assert.isTrue(S.toEquivalence(schema)(decoded, value));
-          assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+          const value9 = yield* S.encodeEffect(schema)(decoded);
+          assert.deepStrictEqual(value9, encoded);
         }),
       { arbitrary: fcRuns(100) }
     );
@@ -279,23 +295,26 @@ describe("composite workspace option schemas", () => {
   );
   it.effect("omitted options stay omitted and an explicit undefined stopAt is rejected", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* S.decodeEffect(WorkspacesOptions)({}), {});
-      assert.deepStrictEqual(yield* S.decodeEffect(WorkspacesGitOptions)({}), {});
+      const value10 = yield* S.decodeEffect(WorkspacesOptions)({});
+      assert.deepStrictEqual(value10, {});
+      const value11 = yield* S.decodeEffect(WorkspacesGitOptions)({});
+      assert.deepStrictEqual(value11, {});
       assertFalse(S.is(WorkspacesGitOptions)({ stopAt: undefined }));
       for (const maxDepth of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
         const options = { maxDepth };
-        assert.deepStrictEqual(
-          yield* S.decodeEffect(WorkspacesOptions)(yield* S.encodeEffect(WorkspacesOptions)(options)),
-          options
-        );
-        assert.deepStrictEqual(
-          yield* S.decodeEffect(WorkspacesGitOptions)(yield* S.encodeEffect(WorkspacesGitOptions)(options)),
-          options
-        );
+        const argument = S.decodeEffect(WorkspacesOptions);
+        const value1 = yield* S.encodeEffect(WorkspacesOptions)(options);
+        const value12 = yield* argument(value1);
+        assert.deepStrictEqual(value12, options);
+        const argument1 = S.decodeEffect(WorkspacesGitOptions);
+        const value2 = yield* S.encodeEffect(WorkspacesGitOptions)(options);
+        const value13 = yield* argument1(value2);
+        assert.deepStrictEqual(value13, options);
       }
       const seedCatalogs = CatalogSet.fromBunBlocks({ catalog: { effect: "^4.0.0" } });
       const value = { cwd: "/repo", stopAt: "/repo", maxDepth: 8, seedCatalogs };
-      assert.deepStrictEqual(yield* S.decodeEffect(WorkspacesGitOptions)(value), value);
+      const value14 = yield* S.decodeEffect(WorkspacesGitOptions)(value);
+      assert.deepStrictEqual(value14, value);
     })
   );
 });

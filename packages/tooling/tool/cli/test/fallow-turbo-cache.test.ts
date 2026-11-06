@@ -130,8 +130,10 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("Fallow Turbo cache restore",
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
-      const configuration = yield* decodeConfiguration(yield* fs.readFileString(path.join(repoRoot, "turbo.json")));
-      const manifest = yield* decodeManifest(yield* fs.readFileString(path.join(repoRoot, "package.json")));
+      const readFileString1 = yield* fs.readFileString(path.join(repoRoot, "turbo.json"));
+      const configuration = yield* decodeConfiguration(readFileString1);
+      const readFileString2 = yield* fs.readFileString(path.join(repoRoot, "package.json"));
+      const manifest = yield* decodeManifest(readFileString2);
       const fallowEntries = A.filter(R.toEntries(configuration.tasks), ([id]) => Str.startsWith("//#fallow:")(id));
       const cached = yield* cachedEntries(fallowEntries);
       // Audit diffs against BEEP_PROOF_BASE, a ref name whose commit can move under an
@@ -228,7 +230,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("Fallow Turbo cache restore",
 
       const first = yield* runAll();
       expect(first.exitCode, first.output).toBe(0);
-      expect(yield* runCounts()).toEqual(counts(1));
+      const resultCounts = yield* runCounts();
+      expect(resultCounts).toEqual(counts(1));
       const produced = yield* evidence();
 
       // Second run with the verdicts deleted: every row restores instead of running, and
@@ -236,29 +239,36 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("Fallow Turbo cache restore",
       yield* fs.remove(path.join(root, ".beep"), { recursive: true });
       const restored = yield* runAll();
       expect(restored.exitCode, restored.output).toBe(0);
-      expect(yield* runCounts()).toEqual(counts(1));
-      expect(yield* evidence()).toEqual(produced);
+      const resultCounts3 = yield* runCounts();
+      expect(resultCounts3).toEqual(counts(1));
+      const evidence4 = yield* evidence();
+      expect(evidence4).toEqual(produced);
       for (const row of rows) {
         if (O.isSome(row.reportPath)) {
-          const envelope = yield* decodeEnvelope(yield* fs.readFileString(path.join(root, row.reportPath.value)));
+          const readFileString5 = yield* fs.readFileString(path.join(root, row.reportPath.value));
+          const envelope = yield* decodeEnvelope(readFileString5);
           assertSome(row.rawPath, envelope.rawOutputRef);
-          expect(yield* fs.exists(path.join(root, envelope.rawOutputRef)), row.id).toBe(true);
+          const exists6 = yield* fs.exists(path.join(root, envelope.rawOutputRef));
+          expect(exists6, row.id).toBe(true);
         }
       }
 
       // Prose outside the Fallow inputs keeps every row cached.
       yield* writeFile(root, "goals/fixture/notes.md", "# notes\n");
       expect((yield* runAll()).exitCode).toBe(0);
-      expect(yield* runCounts()).toEqual(counts(1));
+      const resultCounts7 = yield* runCounts();
+      expect(resultCounts7).toEqual(counts(1));
 
       // A failing run is never cached: with the marker in place the row runs every time.
       const failing = O.getOrThrow(A.findFirst(rows, (row) => row.script === "fallow:health:check"));
       yield* writeFile(root, `.stub/fail-${runKey(failing.script)}`, "");
       yield* writeFile(root, "packages/fixture/src/index.ts", "export const fixture = 2;\n");
       expect((yield* runAll()).exitCode).not.toBe(0);
-      expect(yield* runCounts()).toEqual(counts(2));
+      const resultCounts8 = yield* runCounts();
+      expect(resultCounts8).toEqual(counts(2));
       expect((yield* runAll()).exitCode).not.toBe(0);
-      expect(yield* runCounts()).toEqual(A.map(rows, (row) => (row.script === failing.script ? 3 : 2)));
+      const resultCounts9 = yield* runCounts();
+      expect(resultCounts9).toEqual(A.map(rows, (row) => (row.script === failing.script ? 3 : 2)));
     }),
     { timeout: 180_000 }
   );
@@ -269,11 +279,12 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("Fallow Turbo cache restore",
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
-      const configuration = yield* decodeConfiguration(yield* fs.readFileString(path.join(repoRoot, "turbo.json")));
-      const cached = A.map(
-        yield* cachedEntries(A.filter(R.toEntries(configuration.tasks), ([id]) => Str.startsWith("//#fallow:")(id))),
-        ([id]) => id
+      const readFileString10 = yield* fs.readFileString(path.join(repoRoot, "turbo.json"));
+      const configuration = yield* decodeConfiguration(readFileString10);
+      const cachedEntries11 = yield* cachedEntries(
+        A.filter(R.toEntries(configuration.tasks), ([id]) => Str.startsWith("//#fallow:")(id))
       );
+      const cached = A.map(cachedEntries11, ([id]) => id);
       const listed = yield* StepExec.runCaptured({
         command: path.join(repoRoot, "node_modules/.bin/fallow"),
         args: ["list", "--files", "--config", ".fallowrc.jsonc", "--format", "json", "--no-cache"],

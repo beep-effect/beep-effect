@@ -53,7 +53,8 @@ const scenario = Effect.fn("TranscriptIntakeCrashTest.scenario")(function* () {
     if (mode === "before-commit" || mode === "after-commit") {
       // A bounded live-clock wait proves the child reached the intended boundary.
       while (!(yield* fs.exists(marker))) {
-        expect(yield* child.isRunning).toBe(true);
+        const isRunning1 = yield* child.isRunning;
+        expect(isRunning1).toBe(true);
         yield* Effect.sleep("10 millis");
       }
       const evidence = yield* fs.readFileString(marker).pipe(Effect.flatMap(decodeJsonValue));
@@ -62,14 +63,19 @@ const scenario = Effect.fn("TranscriptIntakeCrashTest.scenario")(function* () {
           ? { boundary: mode, pages: [{ count: 1 }], cursors: [{ count: 0 }] }
           : { boundary: mode, stats: { pages: 1, frames: 1, payloadBytes: expect.any(Number) } }
       );
-      expect(yield* fs.exists(output)).toBe(false);
+      const exists2 = yield* fs.exists(output);
+      expect(exists2).toBe(false);
       yield* child.kill({ killSignal: "SIGKILL" });
-      expect(Exit.isFailure(yield* Effect.exit(child.exitCode))).toBe(true);
-      expect(yield* child.isRunning).toBe(false);
-      expect(yield* fs.exists(output)).toBe(false);
+      const exit3 = yield* Effect.exit(child.exitCode);
+      expect(Exit.isFailure(exit3)).toBe(true);
+      const isRunning4 = yield* child.isRunning;
+      expect(isRunning4).toBe(false);
+      const exists5 = yield* fs.exists(output);
+      expect(exists5).toBe(false);
       return;
     }
-    expect(yield* child.exitCode).toBe(0);
+    const exitCode6 = yield* child.exitCode;
+    expect(exitCode6).toBe(0);
     return yield* fs.readFileString(output).pipe(Effect.flatMap(decodeResultJson));
   });
   return { run };
@@ -80,14 +86,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
     Effect.gen(function* () {
       const { run } = yield* scenario();
       yield* run("before-commit");
-      expect(yield* run("inspect")).toMatchObject({
+      const result7 = yield* run("inspect");
+      expect(result7).toMatchObject({
         stats: { pages: 0, payloadBytes: 0, frames: 0 },
         hasCursor: false,
         receipts: [],
       });
       const accepted = yield* run("accept");
       expect(accepted).toMatchObject({ stats: { pages: 1, frames: 1 }, hasCursor: true, receipts: [{ sequence: 1 }] });
-      expect(yield* run("accept")).toEqual(accepted);
+      const result8 = yield* run("accept");
+      expect(result8).toEqual(accepted);
     }).pipe(Effect.timeout("20 seconds"))
   )
 );
@@ -99,8 +107,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
       yield* run("after-commit");
       const recovered = yield* run("inspect");
       expect(recovered).toMatchObject({ stats: { pages: 1, frames: 1 }, hasCursor: true, receipts: [{ sequence: 1 }] });
-      expect(yield* run("accept")).toEqual(recovered);
-      expect(yield* run("inspect")).toEqual(recovered);
+      const result9 = yield* run("accept");
+      expect(result9).toEqual(recovered);
+      const result10 = yield* run("inspect");
+      expect(result10).toEqual(recovered);
     }).pipe(Effect.timeout("20 seconds"))
   )
 );

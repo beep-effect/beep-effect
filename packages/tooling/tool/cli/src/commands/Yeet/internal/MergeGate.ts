@@ -68,17 +68,24 @@ import { GithubRest } from "../../../internal/github/index.ts";
 import { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import { enforceReviewerGate, withReviewerOperatorClient } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { parseYeetInheritedRedsRecord, provideYeetGhLogin, yeetGithubFailure } from "./GhOps.ts";
+import {
+  parseYeetInheritedRedsRecord,
+  provideYeetGhLogin,
+  reassertProvenanceFooterAsGhLogin,
+  yeetGithubFailure,
+} from "./GhOps.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { MergeGateCheckRun } from "./MergeGate.schemas.ts";
 import { readYeetReviewWindow, renderYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
 import { readYeetRulesetRequiredContexts } from "./Settle.ts";
+import { broadcastPacketSiblings } from "./Siblings.ts";
 import {
   readSquashCommitlint,
   renderSquashCommitlintVerdict,
   SquashCommitlintReport,
   SquashPullRequestFacts,
 } from "./SquashCommitlint.ts";
+import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -1414,9 +1421,11 @@ const cancelMergedHeadRuns = Effect.fn("Yeet.cancelMergedHeadRuns")(function* (h
  * relaxed merge prints its at-merge lists instead). The
  * window override is printed whenever it was used. After a relaxed (S11)
  * merge it posts one PR comment recording the checks that were not green and
- * cancels the merged head's active workflow runs across all pages; both are
- * best effort, so a failure prints a warning and the command still succeeds.
- * A dry run does neither.
+ * cancels the merged head's active workflow runs across all pages. After any
+ * merge of a PR that touched `goals/<slug>/**` it comments on every other open
+ * PR on that packet with the merged sibling and its predicted conflicting
+ * files (B2, 2026-11-05). All three are best effort, so a failure prints a
+ * warning and the command still succeeds. A dry run does none of them.
  *
  * **Example** (Build the gate effect)
  *
@@ -1435,7 +1444,7 @@ export const runMergeGate = Effect.fn("Yeet.runMergeGate")(function* (
 ): Effect.fn.Return<
   MergeGateDecision,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | FileSystem.FileSystem
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | FileSystem.FileSystem | Git
 > {
   return yield* runMergeGateAsGhLogin(context, options).pipe(provideYeetGhLogin(context.repoRoot));
 });
@@ -1477,6 +1486,10 @@ const runMergeGateAsGhLogin = Effect.fnUntraced(function* (context: RepoRunConte
     );
     yield* cancelMergedHeadRuns(decision.headSha);
   }
+  // B2 (2026-11-05): every open PR on a goal packet this merge touched is told to merge main now.
+  yield* broadcastPacketSiblings(context, merged.prNumber, merged.mergeSha).pipe(
+    Effect.catch(warnAfterMerge("the packet sibling broadcast"))
+  );
   return decision;
 });
 
@@ -1523,6 +1536,34 @@ export class MergeGateCommandOptions extends S.Opaque<MergeGateCommandOptions, {
   )
 ) {}
 
+// The last Yeet touch before the merge puts back a provenance footer that a
+// body rewrite dropped. It records no session row (this checkout may not own the
+// pull request), and a dry run writes nothing.
+const provenanceFooterBeforeMerge = <E, R>({
+  dryRun,
+  reassert,
+}: {
+  readonly dryRun: boolean;
+  readonly reassert: Effect.Effect<unknown, E, R>;
+}): Effect.Effect<void, E, R> => (dryRun ? Effect.void : Effect.asVoid(reassert));
+
+/**
+ * Run the merge gate's provenance re-assert unless the run is a dry run.
+ *
+ * **Example** (Skip the re-assert on a dry run)
+ *
+ * ```ts
+ * import { provenanceFooterBeforeMergeForTesting } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * Effect.runSync(provenanceFooterBeforeMergeForTesting({ dryRun: true, reassert: Effect.die("not run") }))
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const provenanceFooterBeforeMergeForTesting = provenanceFooterBeforeMerge;
+
 /**
  * Run `yeet merge-gate`: decode the tolerances, resolve the repo root, gate, and merge.
  *
@@ -1531,7 +1572,9 @@ export class MergeGateCommandOptions extends S.Opaque<MergeGateCommandOptions, {
  * Unlike `yeet merge`, which merges the current branch's pull request and
  * sweeps the clone, this takes any pull request number and never sweeps: the
  * owning session retires its own lane after the orchestrator reports the
- * merge. A malformed `--tolerate` is refused before anything is read.
+ * merge. A malformed `--tolerate` is refused before anything is read. Outside
+ * `--dry-run` it first re-asserts the pull request's provenance footer from the
+ * local registry rows, which only warns when it cannot.
  *
  * **Example** (Build the command effect)
  *
@@ -1549,6 +1592,10 @@ export class MergeGateCommandOptions extends S.Opaque<MergeGateCommandOptions, {
 export const runYeetMergeGate = Effect.fn("Yeet.runMergeGateCommand")(function* (options: MergeGateCommandOptions) {
   const tolerate = yield* decodeAttributedCheckFlags("tolerate", options.tolerate, parseMergeGateTolerance);
   const context = yield* hydrateYeetReadOnlyContext(options);
+  yield* provenanceFooterBeforeMerge({
+    dryRun: options.dryRun,
+    reassert: reassertProvenanceFooterAsGhLogin(context, options.pr),
+  });
   yield* runMergeGate(
     context,
     MergeGateRunOptions.make({

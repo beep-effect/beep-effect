@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { resolveOperatorPath, resolveUnitBunPath } from "@beep/repo-cli-kit/systemd/index";
 import { findRepoRoot } from "@beep/repo-utils";
-import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -35,7 +35,7 @@ const planCommand = Command.make(
     const home = yield* homeConfig;
     const workspace = yield* ReferenceWorkspace;
     const resolved = yield* workspace.resolveRoot(home, root);
-    yield* Console.log(A.join(yield* workspace.plan(home, resolved), "\n"));
+    yield* workspace.plan(home, resolved).pipe(Effect.flatMap(printLines));
   })
 ).pipe(
   Command.withDescription("Print the clone and link plan without writing"),
@@ -55,7 +55,7 @@ const provisionCommand = Command.make(
       onNone: () => owner,
       onSome: (value) => resolveOperatorPath(value, home, path.resolve),
     });
-    yield* Console.log(A.join(yield* workspace.provision(home, target, resolved), "\n"));
+    yield* workspace.provision(home, target, resolved).pipe(Effect.flatMap(printLines));
   })
 ).pipe(
   Command.withDescription("Clone missing members, preserve existing checkouts, and link references"),
@@ -78,7 +78,7 @@ const refreshCommand = Command.make(
     const workspace = yield* ReferenceWorkspace;
     const resolved = yield* workspace.resolveRoot(home, root);
     const status = yield* workspace.refresh(home, resolved);
-    yield* Console.log(yield* RefsRefreshStatus.encodeJson(status));
+    yield* RefsRefreshStatus.encodeJson(status).pipe(Effect.flatMap(Console.log));
   })
 ).pipe(
   Command.withDescription("Fast-forward clean members on their configured branches (operator only)"),
@@ -99,14 +99,14 @@ const timerCommand = Command.make(
     const workspace = yield* ReferenceWorkspace;
     if (options.refresh && options.uninstall)
       return yield* ReferenceWorkspaceError.make({ path: home, message: "Choose --refresh or --uninstall, not both." });
-    if (options.uninstall) return yield* Console.log(A.join(yield* workspace.uninstallTimer(home), "\n"));
+    if (options.uninstall) return yield* workspace.uninstallTimer(home).pipe(Effect.flatMap(printLines));
     if (options.refresh) {
       if (O.isSome(options.owner) || O.isSome(options.onCalendar))
         return yield* ReferenceWorkspaceError.make({
           path: home,
           message: "--refresh reuses the installed owner and calendar; omit --owner and --on-calendar.",
         });
-      return yield* Console.log(A.join(yield* workspace.refreshTimer(home, options.bunPath), "\n"));
+      return yield* workspace.refreshTimer(home, options.bunPath).pipe(Effect.flatMap(printLines));
     }
     if (O.isNone(options.owner))
       return yield* ReferenceWorkspaceError.make({
@@ -127,14 +127,10 @@ const timerCommand = Command.make(
         );
       })
     );
-    yield* Console.log(
-      A.join(
-        yield* Layer.build(referenceWorkspaceLayer(owner)).pipe(
-          Effect.flatMap((context) => install.pipe(Effect.provide(context))),
-          Effect.scoped
-        ),
-        "\n"
-      )
+    yield* Layer.build(referenceWorkspaceLayer(owner)).pipe(
+      Effect.flatMap((context) => install.pipe(Effect.provide(context))),
+      Effect.scoped,
+      Effect.flatMap(printLines)
     );
   })
 ).pipe(

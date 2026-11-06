@@ -71,7 +71,8 @@ const roundTrip = <T, E>(schema: S.Codec<T, E>) => {
     const encoded = yield* encode(value);
     const decoded = yield* decode(encoded);
     assertTrue(equivalent(decoded, value), "decode(encode(x)) is equivalent to x");
-    assert.deepStrictEqual(yield* encode(decoded), encoded, "encode(decode(encode(x))) reproduces encode(x)");
+    const encoded1 = yield* encode(decoded);
+    assert.deepStrictEqual(encoded1, encoded, "encode(decode(encode(x))) reproduces encode(x)");
     return decoded;
   });
 };
@@ -408,12 +409,15 @@ describe("Line parser fidelity", () => {
         assert.deepStrictEqual(Line.split(text), [line], "a JSON value without a newline is one unterminated line");
         const first = yield* Effect.fromResult(Line.parseResult(line));
         assertTrue(sameLine(first.line, line), "the parsed line keeps its source slice");
-        assertTrue(sameJson(yield* decodeJsonValue(first.value), value), "parse recovers the written value");
+        const decodedJsonValue = yield* decodeJsonValue(first.value);
+        assertTrue(sameJson(decodedJsonValue, value), "parse recovers the written value");
         const canonical = yield* stringifyJson(first.value);
         const second = yield* Effect.fromResult(Line.parseResult(unterminatedLine(canonical)));
         assert.deepStrictEqual(second.value, first.value, "parse(stringify(parse(x))) equals parse(x)");
-        assert.strictEqual(yield* stringifyJson(second.value), canonical, "stringify(parse(.)) is idempotent");
-        assert.deepStrictEqual(yield* parseJson(canonical), first.value);
+        const stringifyJson2 = yield* stringifyJson(second.value);
+        assert.strictEqual(stringifyJson2, canonical, "stringify(parse(.)) is idempotent");
+        const parsedJson = yield* parseJson(canonical);
+        assert.deepStrictEqual(parsedJson, first.value);
       }),
     runs
   );
@@ -446,7 +450,8 @@ describe("Envelope codec fidelity over a registry", () => {
         assert.deepStrictEqual(Line.split(text), [line], "one record is exactly one line");
         const decoded = yield* Envelope.decode(line, registry);
         assertTrue(sameEnvelope(decoded, { ...input, line }), "decode(encode(x)) is x on its source line");
-        assertTrue(sameEnvelope(yield* pipe(line, Envelope.decode(registry)), decoded), "both dual forms agree");
+        const pipe3 = yield* pipe(line, Envelope.decode(registry));
+        assertTrue(sameEnvelope(pipe3, decoded), "both dual forms agree");
       }),
     runs
   );
@@ -471,7 +476,8 @@ describe("Envelope codec fidelity over a registry", () => {
     [RegisteredInput],
     ([input]) =>
       Effect.gen(function* () {
-        const wire = yield* decodeWire(yield* Envelope.encode(input, registry));
+        const encoded4 = yield* Envelope.encode(input, registry);
+        const wire = yield* decodeWire(encoded4);
         const encoded = yield* encodeInput(input);
         // Compared as JSON, where -0 and 0 are one number: the expectation is the
         // input codec's output with a void payload written as null.
@@ -488,7 +494,8 @@ describe("Envelope codec fidelity over a registry", () => {
     [RegisteredInput, S.Array(RegisteredTag)],
     ([input, chosen]) =>
       Effect.gen(function* () {
-        const line = terminatedLine(yield* Envelope.encode(input, registry));
+        const encoded5 = yield* Envelope.encode(input, registry);
+        const line = terminatedLine(encoded5);
         const selected = Envelope.decodeSelectedResult(line, registry, (frame) => A.contains(chosen, frame.event));
         if (A.contains(chosen, input.event)) {
           assertSome(selected, Envelope.decodeResult(line, registry));
@@ -539,12 +546,14 @@ describe("JsonlEvent definitions", () => {
         );
         const events = Tuple.make(event);
         const input = { ...sample, event: tag };
-        const line = terminatedLine(yield* Envelope.encode(input, events));
+        const encoded6 = yield* Envelope.encode(input, events);
+        const line = terminatedLine(encoded6);
         const decoded = yield* Envelope.decode(line, events);
         assertTrue(S.toEquivalence(event.envelope)(decoded, { ...input, line }), "the derived envelope round-trips");
         const foreign = `${tag}~`;
         const stranger = Tuple.make(JsonlEvent.make(foreign, { data: Noted.data }));
-        const foreignLine = terminatedLine(yield* Envelope.encode({ ...sample, event: foreign }, stranger));
+        const encoded7 = yield* Envelope.encode({ ...sample, event: foreign }, stranger);
+        const foreignLine = terminatedLine(encoded7);
         const rejected = yield* Effect.flip(Envelope.decode(foreignLine, events));
         assertTrue(
           sameError(rejected, UnknownEvent.make({ line: foreignLine, event: foreign, known: [tag] })),

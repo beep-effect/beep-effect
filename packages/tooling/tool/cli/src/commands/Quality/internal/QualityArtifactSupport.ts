@@ -344,7 +344,8 @@ const readWorkspacePackage = Effect.fn("QualityArtifactSupport.readWorkspacePack
   path: Path.Path
 ): Effect.fn.Return<WorkspacePackageInfo, QualityArtifactGeneratorError, FileSystem.FileSystem> {
   const filePath = path.join(absolutePath, "package.json");
-  return yield* readWorkspacePackageText(yield* readText(filePath), filePath, absolutePath, relativePath);
+  const readText1 = yield* readText(filePath);
+  return yield* readWorkspacePackageText(readText1, filePath, absolutePath, relativePath);
 });
 
 /**
@@ -445,7 +446,13 @@ const containedMember = Effect.fn("QualityArtifactSupport.containedMember")(func
   const packageJson = yield* decodePackageJson(member.manifestRecord).pipe(
     QualityArtifactGeneratorError.mapError(`Failed to decode package manifest ${filePath}.`, { filePath })
   );
-  return O.some(yield* workspacePackageInfoOf(packageJson, filePath, absolutePath, member.relativePath));
+  const workspacePackageInfoOf2 = yield* workspacePackageInfoOf(
+    packageJson,
+    filePath,
+    absolutePath,
+    member.relativePath
+  );
+  return O.some(workspacePackageInfoOf2);
 });
 
 /**
@@ -687,7 +694,8 @@ export const listSourceFiles = Effect.fn("QualityArtifactSupport.listSourceFiles
           continue;
         }
         MutableHashSet.add(visited, absolutePath);
-        files = A.appendAll(files, yield* visit(absolutePath));
+        const visit3 = yield* visit(absolutePath);
+        files = A.appendAll(files, visit3);
         continue;
       }
 
@@ -710,7 +718,8 @@ export const listSourceFiles = Effect.fn("QualityArtifactSupport.listSourceFiles
     return files;
   });
 
-  return A.sort(yield* visit(canonicalRoot.value), Order.String);
+  const visit4 = yield* visit(canonicalRoot.value);
+  return A.sort(visit4, Order.String);
 });
 
 /**
@@ -938,7 +947,8 @@ const collectFilesImpl = Effect.fn("QualityScriptCommands.collectFiles")(functio
     );
   });
 
-  return pipe(yield* visit(searchRoot), A.sort(Order.String));
+  const visit5 = yield* visit(searchRoot);
+  return pipe(visit5, A.sort(Order.String));
 });
 
 /**

@@ -36,6 +36,7 @@ import { FileSystem } from "effect/FileSystem";
 import { effect as effectLayer, provide, provideMerge, unwrap, withSpan as withLayerSpan } from "effect/Layer";
 import { getOrElse, getOrThrow, getOrUndefined, none, some } from "effect/Option";
 import { hasProperty, isFunction } from "effect/Predicate";
+import * as S from "effect/Schema";
 import {
   Array as ArraySchema,
   Date as DateSchema,
@@ -59,6 +60,15 @@ import {
   sqliteNativeUserRepository,
   sqliteUserRepository,
 } from "../sqlite-fixtures.ts";
+
+class SqliteLiveTestOperationError extends S.TaggedError<
+  SqliteLiveTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "SqliteLiveTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in sqlite-live.test.ts." }
+) {}
 
 const RelationId = StructSchema({ id: Finite.annotate({ identifier: "SqliteRelationId" }) });
 const UserRelationRows = ArraySchema(
@@ -171,9 +181,12 @@ const runPush = (databasePath: string) =>
         catch: (cause) => SqliteHarnessError.make({ message: "drizzle-kit SQLite push failed", cause }),
       }),
     ({ process, output }) =>
-      tryPromise(() => {
-        if (process.exitCode === null) process.kill("SIGKILL");
-        return Promise.allSettled(output);
+      tryPromise({
+        try: () => {
+          if (process.exitCode === null) process.kill("SIGKILL");
+          return Promise.allSettled(output);
+        },
+        catch: (cause) => SqliteLiveTestOperationError.make({ cause }),
       }).pipe(orDie)
   );
 
@@ -250,7 +263,10 @@ it.layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQL
   it.effect(
     "keeps the SQLite RC preload only while the upstream export is absent",
     fnUntraced(function* () {
-      const sqliteCore = yield* tryPromise(() => import("drizzle-orm/sqlite-core"));
+      const sqliteCore = yield* tryPromise({
+        try: () => import("drizzle-orm/sqlite-core"),
+        catch: (cause) => SqliteLiveTestOperationError.make({ cause }),
+      });
       expect(hasProperty(sqliteCore, "SQLiteSyncDialect")).toBe(false);
       expect(hasProperty(sqliteCore, "SQLiteDialect")).toBe(true);
     })
@@ -477,14 +493,13 @@ it.layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQL
         throw new Error("SQLite stale update did not return VersionConflictError");
       }
 
-      const concurrentSeed = yield* repository.insert(
-        yield* makeEffect(SqliteUser.insert)({
-          organizationId: organization.id,
-          name: "SQLite Concurrent Snapshot",
-          nickname: none(),
-          status: "active",
-        })
-      );
+      const value1 = yield* makeEffect(SqliteUser.insert)({
+        organizationId: organization.id,
+        name: "SQLite Concurrent Snapshot",
+        nickname: none(),
+        status: "active",
+      });
+      const concurrentSeed = yield* repository.insert(value1);
       const concurrentRequests = yield* forEach(["Concurrent A", "Concurrent B"], (name) =>
         makeEffect(SqliteUser.update)({
           id: concurrentSeed.id,
@@ -523,14 +538,13 @@ it.layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQL
     fnUntraced(function* () {
       const organization = yield* createOrganization("SQLite Enum");
       const repository = yield* sqliteUserRepository;
-      const valid = yield* repository.insert(
-        yield* makeEffect(SqliteUser.insert)({
-          organizationId: organization.id,
-          name: "SQLite Enum User",
-          nickname: none(),
-          status: "draft",
-        })
-      );
+      const value2 = yield* makeEffect(SqliteUser.insert)({
+        organizationId: organization.id,
+        name: "SQLite Enum User",
+        nickname: none(),
+        status: "draft",
+      });
+      const valid = yield* repository.insert(value2);
       const sql = yield* SqlClient;
       const invalid = yield* flip(
         sql`
@@ -549,22 +563,20 @@ it.layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQL
     fnUntraced(function* () {
       const users = yield* sqliteUserRepository;
       const organization = yield* createOrganization("SQLite Relations");
-      const direct = yield* users.insert(
-        yield* makeEffect(SqliteUser.insert)({
-          organizationId: organization.id,
-          name: "SQLite Direct",
-          nickname: none(),
-          status: "active",
-        })
-      );
-      const member = yield* users.insert(
-        yield* makeEffect(SqliteUser.insert)({
-          organizationId: organization.id,
-          name: "SQLite Member",
-          nickname: none(),
-          status: "draft",
-        })
-      );
+      const value3 = yield* makeEffect(SqliteUser.insert)({
+        organizationId: organization.id,
+        name: "SQLite Direct",
+        nickname: none(),
+        status: "active",
+      });
+      const direct = yield* users.insert(value3);
+      const value4 = yield* makeEffect(SqliteUser.insert)({
+        organizationId: organization.id,
+        name: "SQLite Member",
+        nickname: none(),
+        status: "draft",
+      });
+      const member = yield* users.insert(value4);
       const sql = yield* SqlClient;
       yield* sql`
           insert into shared_membership (organization_id, user_id, role)
@@ -573,22 +585,26 @@ it.layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQL
 
       const { drizzleClient } = yield* SqliteHarness;
       const db = drizzle({ client: drizzleClient, relations: sqliteAssembly.relations });
-      const usersUnknown = yield* tryPromise(() =>
-        invokeFindMany(db.query.shared_user, {
-          with: {
-            organization: true,
-            sharedOrganizationsThroughSharedMembership: true,
-          },
-        })
-      );
-      const organizationsUnknown = yield* tryPromise(() =>
-        invokeFindMany(db.query.shared_organization, {
-          with: {
-            sharedUsers: true,
-            sharedUsersThroughSharedMembership: true,
-          },
-        })
-      );
+      const usersUnknown = yield* tryPromise({
+        try: () =>
+          invokeFindMany(db.query.shared_user, {
+            with: {
+              organization: true,
+              sharedOrganizationsThroughSharedMembership: true,
+            },
+          }),
+        catch: (cause) => SqliteLiveTestOperationError.make({ cause }),
+      });
+      const organizationsUnknown = yield* tryPromise({
+        try: () =>
+          invokeFindMany(db.query.shared_organization, {
+            with: {
+              sharedUsers: true,
+              sharedUsersThroughSharedMembership: true,
+            },
+          }),
+        catch: (cause) => SqliteLiveTestOperationError.make({ cause }),
+      });
       const userRows = yield* decodeUnknownEffect(UserRelationRows)(usersUnknown);
       const organizationRows = yield* decodeUnknownEffect(OrganizationRelationRows)(organizationsUnknown);
       const directRow = getOrThrow(findFirst(userRows, (row) => row.id === direct.id));

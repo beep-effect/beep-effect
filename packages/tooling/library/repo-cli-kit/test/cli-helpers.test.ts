@@ -107,12 +107,14 @@ describe("cli/CommandErrorFields", () => {
 
   it.effect("decodes the shared command error fields with optional keys", () =>
     Effect.gen(function* () {
-      expect(yield* decodeCommandErrorFields({ message: "m", command: "git", exitCode: 2 })).toEqual({
+      const resolved1 = yield* decodeCommandErrorFields({ message: "m", command: "git", exitCode: 2 });
+      expect(resolved1).toEqual({
         message: "m",
         command: "git",
         exitCode: 2,
       });
-      expect(yield* decodeCommandErrorFields({ message: "m" })).toEqual({ message: "m" });
+      const resolved2 = yield* decodeCommandErrorFields({ message: "m" });
+      expect(resolved2).toEqual({ message: "m" });
     })
   );
 
@@ -122,7 +124,8 @@ describe("cli/CommandErrorFields", () => {
       expect(failure).toBeInstanceOf(CliReportedExit);
       expect(failure.message).toBe("beep-cli yeet: lane is dirty");
       expect(failure.exitCode).toBe(1);
-      expect(yield* TestConsole.errorLines).toEqual(["beep-cli yeet: lane is dirty"]);
+      const resolved3 = yield* TestConsole.errorLines;
+      expect(resolved3).toEqual(["beep-cli yeet: lane is dirty"]);
     })
   );
 });
@@ -157,14 +160,16 @@ describe("cli/PolicyFindingLogger", () => {
 
   it.effect("renders one compact JSON line after the issue prefix", () =>
     Effect.gen(function* () {
-      expect(yield* logger.render({ file: "a.ts", line: 3 })).toBe('::policy::{"file":"a.ts","line":3}');
+      const resolved4 = yield* logger.render({ file: "a.ts", line: 3 });
+      expect(resolved4).toBe('::policy::{"file":"a.ts","line":3}');
     })
   );
 
   it.effect("logs the summary then the machine line to stderr", () =>
     Effect.gen(function* () {
       yield* logger.log({ file: "b.ts", line: 9 });
-      expect(yield* TestConsole.errorLines).toEqual(["b.ts:9 violates the law", '::policy::{"file":"b.ts","line":9}']);
+      const resolved5 = yield* TestConsole.errorLines;
+      expect(resolved5).toEqual(["b.ts:9 violates the law", '::policy::{"file":"b.ts","line":9}']);
     })
   );
 
@@ -175,7 +180,8 @@ describe("cli/PolicyFindingLogger", () => {
         encode: (_: string) => Effect.fail("encode refused" as const),
         renderSummary: (finding) => finding,
       });
-      expect(yield* Effect.flip(failing.render("x"))).toBe("encode refused");
+      const resolved6 = yield* Effect.flip(failing.render("x"));
+      expect(resolved6).toBe("encode refused");
     })
   );
 });
@@ -184,7 +190,8 @@ describe("cli/Printer", () => {
   it.effect("prints each line once without the forEach index", () =>
     Effect.gen(function* () {
       yield* printLines(["first", "second"]);
-      expect(yield* TestConsole.logLines).toEqual(["first", "second"]);
+      const resolved7 = yield* TestConsole.logLines;
+      expect(resolved7).toEqual(["first", "second"]);
     })
   );
 
@@ -192,11 +199,13 @@ describe("cli/Printer", () => {
     Effect.gen(function* () {
       const textChunks = yield* captureJsonOutput(printJsonOrLines(false, { ok: true }, ["ok"]));
       expect(textChunks).toEqual([]);
-      expect(yield* TestConsole.logLines).toEqual(["ok"]);
+      const resolved8 = yield* TestConsole.logLines;
+      expect(resolved8).toEqual(["ok"]);
 
       const jsonChunks = yield* captureJsonOutput(printJsonOrLines(true, { ok: true }, ["ignored"]));
       expect(jsonChunks).toEqual(['{"ok":true}\n']);
-      expect(yield* TestConsole.logLines).toEqual(["ok"]);
+      const resolved9 = yield* TestConsole.logLines;
+      expect(resolved9).toEqual(["ok"]);
     })
   );
 });
@@ -343,7 +352,8 @@ describe("artifacts/ArtifactIo", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         yield* writeArtifact({ path: "/out/nested/plain.json", body: "{}\n", onError: String });
-        expect(yield* fs.readFileString("/out/nested/plain.json")).toBe("{}\n");
+        const resolved10 = yield* fs.readFileString("/out/nested/plain.json");
+        expect(resolved10).toBe("{}\n");
 
         yield* fs.writeFileString("/blocker", "file");
         const failure = yield* Effect.flip(

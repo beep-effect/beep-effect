@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 /**
  * Generator for `src/internal/LabelGlyphs.ts`, the vendored sheet-label glyph
  * outlines of one sans and one serif face.
@@ -12,18 +13,26 @@
  * `fontFile` label route calls, and writes the module with a provenance header
  * (sha256). `bun run generate` writes and
  * formats the file; `bun run generate:check` fails when the committed file
- * differs. Recipe: goals/design-figure-review-loop/research/label-glyphs.md.
+ * differs without rewriting it. Recipe: goals/design-figure-review-loop/research/label-glyphs.md.
  *
  * @since 0.0.0
  */
 
+import { CodegenKit, GeneratedModule } from "@beep/codegen-kit";
 import { A, R } from "@beep/utils";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { outlineFontFile } from "../src/internal/LabelOutline.ts";
 import type { LabelFace } from "../src/internal/LabelOutline.ts";
@@ -54,26 +63,65 @@ const serialize = (face: LabelFace): string => {
     A.map(([char, glyph]) => {
       const commands = pipe(
         glyph.commands,
-        A.map((command) => JSON.stringify(command)),
+        A.map((command) =>
+          Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(command), identity)
+        ),
         A.join(", ")
       );
-      return `    ${JSON.stringify(char)}: {\n      advance: ${glyph.advance},\n      ink: ${JSON.stringify(glyph.ink)},\n      commands: [${commands}],\n    },`;
+      return `    ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(char), identity)}: {\n      advance: ${glyph.advance},\n      ink: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(glyph.ink), identity)},\n      commands: [${commands}],\n    },`;
     }),
     A.join("\n")
   );
   return `{\n  unitsPerEm: ${face.unitsPerEm},\n  capHeight: ${face.capHeight},\n  glyphs: {\n${glyphs}\n  },\n}`;
 };
 
-const program = Effect.gen(function* () {
+/**
+ * Writes the rendered glyph module, or in check mode compares it against the
+ * committed file without writing anything.
+ *
+ * **Details**
+ *
+ * Check mode delegates to `CodegenKit.checkModules`, which formats the rendered
+ * content, prints the unified drift and fails with `CodegenDriftError` while
+ * leaving the target untouched. Write mode replaces the target; `bun run
+ * generate` then formats it.
+ *
+ * @since 0.0.0
+ */
+export const emitLabelGlyphs = Effect.fn("LabelGlyphGenerator.emit")(function* ({
+  check,
+  content,
+  target,
+}: {
+  readonly check: boolean;
+  readonly target: string;
+  readonly content: string;
+}) {
+  if (check) {
+    const kit = yield* CodegenKit;
+    yield* kit.checkModules([GeneratedModule.make({ path: target, content })]);
+    return yield* Effect.logInfo("Label glyph module is current; no files written.");
+  }
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const [sansPath = DEFAULT_SANS, serifPath = DEFAULT_SERIF] = process.argv.slice(2);
-  const sans = yield* load(sansPath);
-  const serif = yield* load(serifPath);
-  const target = path.join(import.meta.dirname, "..", "src", "internal", "LabelGlyphs.ts");
-  yield* fs.writeFileString(
-    target,
-    `/**
+  yield* fs.writeFileString(target, content);
+  yield* Effect.logInfo(`wrote ${target}`);
+});
+
+const program = Command.make(
+  "generate-label-glyphs",
+  {
+    check: Flag.Boolean("check").pipe(Flag.withDefault(false)),
+    sans: Argument.String("sans").pipe(Argument.optional),
+    serif: Argument.String("serif").pipe(Argument.optional),
+  },
+  Effect.fn("LabelGlyphGenerator.generate")(function* ({ check, sans: sansArgument, serif: serifArgument }) {
+    const path = yield* Path.Path;
+    const sansPath = O.getOrElse(sansArgument, () => DEFAULT_SANS);
+    const serifPath = O.getOrElse(serifArgument, () => DEFAULT_SERIF);
+    const sans = yield* load(sansPath);
+    const serif = yield* load(serifPath);
+    const target = path.join(import.meta.dirname, "..", "src", "internal", "LabelGlyphs.ts");
+    const content = `/**
  * Generated label glyph outlines: the sheet-label alphabet (\`0\`-\`9\`, \`F\`,
  * \`I\`, \`G\`, \`.\`, \`/\`, space) of one sans and one serif face, in font units.
  *
@@ -112,14 +160,16 @@ export const SANS_FACE = LabelFace.make(${serialize(sans.face)});
  * @since 0.0.0
  */
 export const SERIF_FACE = LabelFace.make(${serialize(serif.face)});
-`
-  );
-  yield* Effect.logInfo(`wrote ${target}`);
-});
+`;
+    yield* emitLabelGlyphs({ check, target, content });
+  })
+);
 
-const main = NodeServices.layer.pipe(
+const platform = Layer.merge(NodeServices.layer, FetchHttpClient.layer);
+const runtime = Layer.merge(platform, CodegenKit.layer().pipe(Layer.provide(platform)));
+const main = runtime.pipe(
   Layer.build,
-  Effect.flatMap((context) => Effect.provide(program, context)),
+  Effect.flatMap((context) => Command.run(program, { version: "0.0.0" }).pipe(Effect.provide(context))),
   Effect.scoped
 );
 

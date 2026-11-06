@@ -378,7 +378,8 @@ describe("the message you just sent", { concurrent: false }, () => {
       );
       const screen = within(container);
 
-      expect(yield* Effect.promise(() => screen.findAllByTestId("turn-assistant"))).toHaveLength(6);
+      const promise1 = yield* Effect.promise(() => screen.findAllByTestId("turn-assistant"));
+      expect(promise1).toHaveLength(6);
       expect(screen.queryAllByTestId("turn-versions")).toHaveLength(0);
     })
   );
@@ -403,10 +404,12 @@ describe("the message you just sent", { concurrent: false }, () => {
       );
       const screen = within(container);
       screen.getByTestId("retain").click();
-      expect(yield* Effect.promise(() => screen.findByTestId("turn-unreconciled"))).toBeInTheDocument();
+      const promise2 = yield* Effect.promise(() => screen.findByTestId("turn-unreconciled"));
+      expect(promise2).toBeInTheDocument();
 
       screen.getByTestId("retry-timeline").click();
-      expect(yield* Effect.promise(() => screen.findByText("superseded durable tail"))).toBeInTheDocument();
+      const promise3 = yield* Effect.promise(() => screen.findByText("superseded durable tail"));
+      expect(promise3).toBeInTheDocument();
       expect(screen.queryByTestId("turn-unreconciled")).not.toBeInTheDocument();
     })
   );
@@ -451,12 +454,15 @@ describe("the message you just sent", { concurrent: false }, () => {
       const screen = within(container);
 
       screen.getByTestId("retain-receipt").click();
-      expect(yield* Effect.promise(() => screen.findByTestId("turn-unreconciled"))).toBeInTheDocument();
+      const promise4 = yield* Effect.promise(() => screen.findByTestId("turn-unreconciled"));
+      expect(promise4).toBeInTheDocument();
 
       expect(screen.queryByText("refresh receipt applied")).not.toBeInTheDocument();
       screen.getByTestId("retry-timeline").click();
-      expect(yield* Effect.promise(() => screen.findByText("refresh receipt applied"))).toBeInTheDocument();
-      expect(yield* Effect.promise(() => screen.findByText("superseded durable tail"))).toBeInTheDocument();
+      const promise5 = yield* Effect.promise(() => screen.findByText("refresh receipt applied"));
+      expect(promise5).toBeInTheDocument();
+      const promise6 = yield* Effect.promise(() => screen.findByText("superseded durable tail"));
+      expect(promise6).toBeInTheDocument();
       expect(screen.getByTestId("turn-unreconciled")).toBeInTheDocument();
       expect(screen.getByTestId("turn-unreconciled-user")).toHaveTextContent("what did I just ask?");
     })
@@ -477,7 +483,8 @@ describe("the message you just sent", { concurrent: false }, () => {
 
       screen.getByTestId("retain").click();
 
-      expect(yield* Effect.promise(() => screen.findByText("the reply is still visible"))).toBeInTheDocument();
+      const promise7 = yield* Effect.promise(() => screen.findByText("the reply is still visible"));
+      expect(promise7).toBeInTheDocument();
       expect(screen.queryByTestId("turn-stop")).not.toBeInTheDocument();
       expect(screen.getByTestId("thread-error")).toBeInTheDocument();
     })
@@ -506,7 +513,8 @@ describe("the message you just sent", { concurrent: false }, () => {
       expect(screen.getByText("earlier superseded interval")).toBeInTheDocument();
 
       screen.getByTestId("retain-edit").click();
-      expect(yield* Effect.promise(() => screen.findAllByText("the reply is still visible"))).toHaveLength(2);
+      const promise8 = yield* Effect.promise(() => screen.findAllByText("the reply is still visible"));
+      expect(promise8).toHaveLength(2);
       expect(screen.queryByText("superseded durable tail")).not.toBeInTheDocument();
       expect(screen.queryByText("earlier superseded interval")).not.toBeInTheDocument();
     })

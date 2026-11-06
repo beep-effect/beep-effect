@@ -542,7 +542,7 @@ const decodeCorpus = Effect.fnUntraced(function* (
   bytes: Uint8Array,
   file: string
 ): Effect.fn.Return<ReadonlyArray<HostedRun>, RouteError> {
-  const lines = yield* corpusLines(yield* gunzipText(bytes, file), file);
+  const lines = yield* gunzipText(bytes, file).pipe(Effect.flatMap((text) => corpusLines(text, file)));
   return yield* Effect.forEach(lines, (line, index) =>
     decodeHostedRunLine(line).pipe(
       Effect.mapError(RouteError.mapError("corpus-pin", `${file} line ${index + 1} is not a HostedRun.`))
@@ -675,7 +675,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
     const runs = yield* decodeCorpus(bytes, corpusPath);
     return {
       runs: HashMap.fromIterable(A.map(runs, (run): readonly [number, HostedRun] => [run.runId, run])),
-      pinned: O.some(yield* digest(bytes, corpusPath)),
+      pinned: yield* Effect.asSome(digest(bytes, corpusPath)),
       covered: "",
       open: true,
     };
@@ -837,7 +837,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
         `since ${options.since} is after until ${DateTime.formatIsoDateUtc(until)}.`
       );
     }
-    const loaded = (yield* exists(receiptPath)) ? O.some(yield* load(receiptPath)) : O.none();
+    const loaded = (yield* exists(receiptPath)) ? yield* Effect.asSome(load(receiptPath)) : O.none();
     const previous = O.map(loaded, (value) => value.receipt);
     const plan = yield* capturePlan(
       previous,
@@ -916,11 +916,10 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
       state: CaptureState,
       day: string
     ): Effect.fn.Return<CaptureState, RouteError> {
-      const listed = A.flatten(
-        yield* Effect.forEach(plan.workflows, (workflow) => listDay(options.repoRoot, workflow, day), {
-          concurrency: ROUTE_CORPUS_FETCH_CONCURRENCY,
-        })
-      );
+      const forEach2 = yield* Effect.forEach(plan.workflows, (workflow) => listDay(options.repoRoot, workflow, day), {
+        concurrency: ROUTE_CORPUS_FETCH_CONCURRENCY,
+      });
+      const listed = A.flatten(forEach2);
       const eligible = A.filter(listed, isEligibleRun);
       const pending = pipe(
         eligible,

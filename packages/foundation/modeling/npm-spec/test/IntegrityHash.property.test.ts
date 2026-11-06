@@ -24,7 +24,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>, generation: S.Sch
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(equivalent(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -54,8 +55,12 @@ it.effect.prop(
   [Arbitrary.schema(GeneratableIntegrity)],
   ([text]) =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* IntegrityHash.decode(text), text);
-      assert.strictEqual(yield* S.encodeEffect(IntegrityHash)(yield* IntegrityHash.decode(text)), text);
+      const decoded2 = yield* IntegrityHash.decode(text);
+      assert.strictEqual(decoded2, text);
+      const argument = S.encodeEffect(IntegrityHash);
+      const decoded1 = yield* IntegrityHash.decode(text);
+      const value3 = yield* argument(decoded1);
+      assert.strictEqual(value3, text);
     }),
   runs
 );
@@ -66,18 +71,19 @@ it.effect.prop(
   ([hash]) =>
     Effect.gen(function* () {
       const sri = yield* S.encodeEffect(CorepackIntegrityHash.FromSri)(hash);
-      assert.strictEqual(yield* CorepackIntegrityHash.fromSri(sri), hash);
+      const fromSri4 = yield* CorepackIntegrityHash.fromSri(sri);
+      assert.strictEqual(fromSri4, hash);
       const decoded = yield* S.decodeEffect(CorepackIntegrityHash.FromSri)(sri);
       const canonical = yield* S.encodeEffect(CorepackIntegrityHash.FromSri)(decoded);
       assert.strictEqual(canonical, sri);
-      assert.strictEqual(yield* S.decodeEffect(CorepackIntegrityHash.FromSri)(canonical), hash);
-      assert.strictEqual(
-        yield* S.encodeEffect(CorepackIntegrityHash.FromSri)(
-          yield* S.decodeEffect(CorepackIntegrityHash.FromSri)(canonical)
-        ),
-        canonical
-      );
-      assert.strictEqual(yield* CorepackIntegrityHash.fromSri(`"${sri}"`), hash);
+      const value5 = yield* S.decodeEffect(CorepackIntegrityHash.FromSri)(canonical);
+      assert.strictEqual(value5, hash);
+      const argument1 = S.encodeEffect(CorepackIntegrityHash.FromSri);
+      const value2 = yield* S.decodeEffect(CorepackIntegrityHash.FromSri)(canonical);
+      const value6 = yield* argument1(value2);
+      assert.strictEqual(value6, canonical);
+      const fromSri7 = yield* CorepackIntegrityHash.fromSri(`"${sri}"`);
+      assert.strictEqual(fromSri7, hash);
     }),
   runs
 );

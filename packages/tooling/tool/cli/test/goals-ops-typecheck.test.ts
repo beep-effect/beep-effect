@@ -113,7 +113,8 @@ describe("goals ops typecheck project", () => {
   it.effect(
     "reports a script outside the include globs as unchecked",
     Effect.fnUntraced(function* () {
-      const checked = isCheckedBy(yield* loadOpsTsconfig);
+      const loadedOpsTsconfig = yield* loadOpsTsconfig;
+      const checked = isCheckedBy(loadedOpsTsconfig);
 
       deepStrictEqual(
         A.map(

@@ -25,6 +25,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -57,7 +58,9 @@ const userFolder = Effect.gen(function* () {
   yield* fs.writeFileString(path.join(box, "Clients", "Smith", "notes.md"), "# Smith\nFiling due Friday.");
   yield* fs.writeFileString(path.join(box, "readme.txt"), "Box root file");
   yield* fs.writeFileString(path.join(box, "long.txt"), Str.repeat(BOX_READ_MAX_CHARACTERS + 10)("x"));
-  yield* fs.writeFile(path.join(box, "Clients", "Smith", "letter.pdf"), yield* makePdf("Dear Ms Smith"));
+  const argument = path.join(box, "Clients", "Smith", "letter.pdf");
+  const madePdf = yield* makePdf("Dear Ms Smith");
+  yield* fs.writeFile(argument, madePdf);
   yield* fs.writeFile(path.join(box, "photo.png"), new Uint8Array([137, 80, 78, 71]));
   yield* fs.symlink(path.join(home, "Private"), path.join(box, "escape"));
   return home;
@@ -67,6 +70,27 @@ const ToolsOnDisk = Layer.unwrap(
   userFolder.pipe(
     Effect.map((home) => BoxDriveToolkitHandlers.pipe(Layer.provide(fakeHost({ folders: [["USERPROFILE", home]] }))))
   )
+).pipe(Layer.provide(Platform));
+
+const UnreadableToolsOnDisk = Layer.unwrap(
+  Effect.gen(function* () {
+    const home = yield* userFolder;
+    const fs = yield* FileSystem.FileSystem;
+    const denied = PlatformError.systemError({
+      _tag: "PermissionDenied",
+      module: "FileSystem",
+      method: "readFile",
+    });
+    return BoxDriveToolkitHandlers.pipe(
+      Layer.provide(fakeHost({ folders: [["USERPROFILE", home]] })),
+      Layer.provide(
+        Layer.succeed(FileSystem.FileSystem, {
+          ...fs,
+          readFile: Effect.fn("BoxDriveTest.readFile")(() => Effect.fail(denied)),
+        })
+      )
+    );
+  })
 ).pipe(Layer.provide(Platform));
 
 const call = Effect.fnUntraced(function* (name: "box_list" | "box_read", params: { readonly path?: string }) {
@@ -152,6 +176,16 @@ describe("Box Drive tools", () => {
     );
   });
 
+  it.layer(UnreadableToolsOnDisk, { timeout: layerTimeout })("unreadable files", (it) => {
+    it.effect("returns a typed read failure when the file exists but cannot be opened", () =>
+      Effect.gen(function* () {
+        const error = yield* refusal("box_read", "Clients/Smith/notes.md");
+        expect(error.reason).toBe("read-failed");
+        expect(error.message).toContain("could not be read");
+      })
+    );
+  });
+
   it.layer(
     BoxDriveToolkitHandlers.pipe(
       Layer.provide(Layer.merge(fakeHost({ folders: [["USERPROFILE", "/nowhere"]] }), Platform))
@@ -184,14 +218,17 @@ const mountedFor = Effect.fn("mountedFor")(function* (profile: O.Option<Practice
 describe("Box Drive provider", () => {
   it.effect("mounts the tools only when the profile selects Box Drive", () =>
     Effect.gen(function* () {
-      expect(yield* mountedFor(O.some(gapProfile))).toEqual(["box_list", "box_read"]);
-      expect(yield* mountedFor(O.none())).toEqual([]);
+      const mountedFor1 = yield* mountedFor(O.some(gapProfile));
+      expect(mountedFor1).toEqual(["box_list", "box_read"]);
+      const mountedFor2 = yield* mountedFor(O.none());
+      expect(mountedFor2).toEqual([]);
       const kgOnly = PracticeProfile.make({
         choices: [CapabilitySupported.make({ capability: "knowledge-graph", provider: "practice-kg" })],
         itLimits,
         recordedAt: DateTime.makeUnsafe(0),
       });
-      expect(yield* mountedFor(O.some(kgOnly))).toEqual([]);
+      const mountedFor3 = yield* mountedFor(O.some(kgOnly));
+      expect(mountedFor3).toEqual([]);
     })
   );
 });
@@ -206,18 +243,16 @@ describe("Box tool results", () => {
         const DocumentJson = S.fromJsonString(BoxDocument);
         // Schema equivalence, not deepStrictEqual: Opaque struct arbitraries build
         // null-prototype objects while decoding builds plain ones.
-        assertTrue(
-          S.toEquivalence(BoxListing)(
-            yield* S.decodeEffect(ListingJson)(yield* S.encodeEffect(ListingJson)(listing)),
-            listing
-          )
-        );
-        assertTrue(
-          S.toEquivalence(BoxDocument)(
-            yield* S.decodeEffect(DocumentJson)(yield* S.encodeEffect(DocumentJson)(document)),
-            document
-          )
-        );
+        const argument1 = S.toEquivalence(BoxListing);
+        const argument2 = S.decodeEffect(ListingJson);
+        const value = yield* S.encodeEffect(ListingJson)(listing);
+        const argument21 = yield* argument2(value);
+        assertTrue(argument1(argument21, listing));
+        const argument3 = S.toEquivalence(BoxDocument);
+        const argument4 = S.decodeEffect(DocumentJson);
+        const value3 = yield* S.encodeEffect(DocumentJson)(document);
+        const argument42 = yield* argument4(value3);
+        assertTrue(argument3(argument42, document));
       }),
     { arbitrary: fcRuns(50) }
   );

@@ -13,11 +13,15 @@ describe("VersionCache coverage boundaries", () => {
         const v = SemVer.of(1, 0, 0);
         const missing = SemVer.of(0, 0, 0);
         yield* cache.load([v]);
-        assertFailure(yield* Effect.result(cache.next(missing)), VersionNotFoundError.make({ version: missing }));
-        assertFailure(yield* Effect.result(cache.prev(missing)), VersionNotFoundError.make({ version: missing }));
-        assertFailure(yield* Effect.result(cache.diff(missing, v)), VersionNotFoundError.make({ version: missing }));
+        const result1 = yield* Effect.result(cache.next(missing));
+        assertFailure(result1, VersionNotFoundError.make({ version: missing }));
+        const result2 = yield* Effect.result(cache.prev(missing));
+        assertFailure(result2, VersionNotFoundError.make({ version: missing }));
+        const result3 = yield* Effect.result(cache.diff(missing, v));
+        assertFailure(result3, VersionNotFoundError.make({ version: missing }));
         yield* cache.remove(missing);
-        assert.deepStrictEqual(yield* cache.versions, [v]);
+        const versions4 = yield* cache.versions;
+        assert.deepStrictEqual(versions4, [v]);
         const range = yield* Range.parse(">2.0.0");
         assert.strictEqual(
           UnsatisfiedRangeError.make({ range, available: [] }).message,

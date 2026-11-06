@@ -192,7 +192,8 @@ describe("PostgreSQL Wave E value and structure invariants", () => {
         const encoded = yield* encodeEffect(ArrayRecord.insert)(value);
         const decoded = yield* decodeEffect(ArrayRecord.insert)(encoded);
         expect(decoded).toEqual(value);
-        expect(yield* encodeEffect(ArrayRecord.insert)(decoded)).toEqual(encoded);
+        const value1 = yield* encodeEffect(ArrayRecord.insert)(decoded);
+        expect(value1).toEqual(encoded);
         expect(is(ArrayRecord.insert)(decoded)).toBe(true);
         // The database supplies pg.default; the insert codec preserves omission.
         const omitted = yield* makeEffect(ArrayRecord.insert)({ labels: value.labels });
@@ -833,7 +834,8 @@ describe("varchar authoring modes", () => {
       if (!isSchema(injected.schema)) {
         return expect.fail("varchar injection unexpectedly produced a variant field");
       }
-      expect(yield* decodeEffect(injected.schema)("42")).toBe(42);
+      const value2 = yield* decodeEffect(injected.schema)("42");
+      expect(value2).toBe(42);
       const overBound = yield* exit(decodeEffect(injected.schema)("123"));
       overBound.pipe(isFailure, assertTrue);
     })

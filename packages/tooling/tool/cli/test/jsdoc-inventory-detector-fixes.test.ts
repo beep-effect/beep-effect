@@ -167,7 +167,8 @@ const buildInventory = Effect.fnUntraced(function* (repoRoot: string) {
     })
   );
 
-  return parseJsoncText(yield* fs.readFileString(outputJsonPath)) as InventoryJson;
+  const readFileString1 = yield* fs.readFileString(outputJsonPath);
+  return parseJsoncText(readFileString1) as InventoryJson;
 });
 
 it.layer(PlatformLayer, { concurrent: false, timeout: "20 seconds" })((it) => {

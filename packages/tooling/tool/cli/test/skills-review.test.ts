@@ -194,12 +194,15 @@ const lockPathOf = Effect.fn("SkillsReviewTest.lockPathOf")(function* (repoRoot:
 
 const readLock = Effect.fn("SkillsReviewTest.readLock")(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* decodeSkillsLockDocumentJson(yield* fs.readFileString(yield* lockPathOf(repoRoot)));
+  const lockPathOf33 = yield* lockPathOf(repoRoot);
+  const readFileString1 = yield* fs.readFileString(lockPathOf33);
+  return yield* decodeSkillsLockDocumentJson(readFileString1);
 });
 
 const writeLock = Effect.fn("SkillsReviewTest.writeLock")(function* (repoRoot: string, lock: SkillsLockDocument) {
   const fs = yield* FileSystem.FileSystem;
-  yield* fs.writeFileString(yield* lockPathOf(repoRoot), `${yield* encodeSkillsLockDocumentJson(lock)}\n`);
+  const lockPathOf2 = yield* lockPathOf(repoRoot);
+  yield* fs.writeFileString(lockPathOf2, `${yield* encodeSkillsLockDocumentJson(lock)}\n`);
 });
 
 const vendoredEntry = Effect.fn("SkillsReviewTest.vendoredEntry")(function* (repoRoot: string) {
@@ -242,7 +245,8 @@ const makeRepo = Effect.fn("SkillsReviewTest.makeRepo")(function* () {
   yield* writeTree(path.join(repoRoot, ".claude/skills/local-one"), localFiles);
 
   const patchBytes = [{ path: PATCH_PATH, bytes: textEncoder.encode(patchText) }];
-  const base = (yield* decodeSkillsLockDocumentJson(yield* fs.readFileString(oracleLockFixture))).skills.oracle;
+  const readFileString3 = yield* fs.readFileString(oracleLockFixture);
+  const base = (yield* decodeSkillsLockDocumentJson(readFileString3)).skills.oracle;
   assert(base !== undefined && base._tag === "vendored");
   const vendored = VendoredSkillLockEntry.make({
     ...base,
@@ -371,7 +375,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills review", (it) => {
         [SKILL, "queued", 2],
       ]);
       expect(renderSkillReviewSessionSummary(session)).toContain("Queued hunks:");
-      expect(yield* fs.exists(path.join(repoRoot, HUNK_LEDGER_PATH))).toBe(false);
+      const exists4 = yield* fs.exists(path.join(repoRoot, HUNK_LEDGER_PATH));
+      expect(exists4).toBe(false);
     })
   );
 
@@ -407,7 +412,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills review", (it) => {
         0,
         ["clear"],
       ]);
-      expect(A.length(yield* readHunkLedger(repoRoot))).toBe(2);
+      const readHunkLedger5 = yield* readHunkLedger(repoRoot);
+      expect(A.length(readHunkLedger5)).toBe(2);
     })
   );
 
@@ -429,7 +435,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills review", (it) => {
         answer(itemAt(listed, 1), "keep", O.some("policy")),
       ]).pipe(Effect.flip);
       expect(refusalReason(twice)).toBe("ambiguous-hunk");
-      expect(yield* readHunkLedger(repoRoot)).toEqual([]);
+      const readHunkLedger6 = yield* readHunkLedger(repoRoot);
+      expect(readHunkLedger6).toEqual([]);
     })
   );
 
@@ -461,7 +468,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills review", (it) => {
         1,
         [2],
       ]);
-      expect(A.length(yield* readHunkLedger(repoRoot))).toBe(1);
+      const readHunkLedger7 = yield* readHunkLedger(repoRoot);
+      expect(A.length(readHunkLedger7)).toBe(1);
     })
   );
 
@@ -493,10 +501,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills review", (it) => {
       expect(A.length(ghosted.recorded)).toBe(0);
 
       // The PR report carries the same flag.
-      const train = Context.get(
-        yield* Layer.build(SkillUpdateTrainLayer.pipe(Layer.provide(sourceLayer(conflictedPristine)))),
-        SkillUpdateTrain
-      );
+      const build8 = yield* Layer.build(SkillUpdateTrainLayer.pipe(Layer.provide(sourceLayer(conflictedPristine))));
+      const train = Context.get(build8, SkillUpdateTrain);
       const batch = yield* train.replay(repoRoot, O.none());
       expect(A.flatMap(batch.reports, (report) => report.promoteCandidates)).toEqual([second.hunkHash]);
       expect(renderSkillReplayMarkdown(batch)).toContain("conflicted (two strikes: promote-candidate)");
@@ -563,7 +569,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills review", (it) => {
 
       expect((yield* readHunkLedger(repoRoot).pipe(Effect.result))._tag).toBe("Failure");
       expect((yield* appendHunkLedgerRows(repoRoot, [row]).pipe(Effect.result))._tag).toBe("Failure");
-      expect(yield* fs.exists(target)).toBe(false);
+      const exists9 = yield* fs.exists(target);
+      expect(exists9).toBe(false);
     })
   );
 
@@ -580,11 +587,14 @@ layer(TestLayer, { timeout: "60 seconds" })("skills review", (it) => {
 
       for (const ancestor of [".agents", ".agents/skill-patches"]) {
         const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "skills-ledger-link-" });
-        if (ancestor === ".agents/skill-patches") yield* fs.makeDirectory(path.join(repoRoot, ".agents"));
+        if (ancestor === ".agents/skill-patches") {
+          yield* fs.makeDirectory(path.join(repoRoot, ".agents"));
+        }
         yield* fs.symlink(outside, path.join(repoRoot, ancestor));
         expect((yield* readHunkLedger(repoRoot).pipe(Effect.result))._tag, ancestor).toBe("Failure");
         expect((yield* appendHunkLedgerRows(repoRoot, [row]).pipe(Effect.result))._tag, ancestor).toBe("Failure");
-        expect(yield* fs.exists(path.join(outside, "ledger.jsonl")), ancestor).toBe(false);
+        const exists10 = yield* fs.exists(path.join(outside, "ledger.jsonl"));
+        expect(exists10, ancestor).toBe(false);
       }
     })
   );
@@ -610,7 +620,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills review", (it) => {
       } finally {
         statSpy.mockRestore();
       }
-      expect(A.length(yield* readHunkLedger(repoRoot))).toBe(1);
+      const readHunkLedger11 = yield* readHunkLedger(repoRoot);
+      expect(A.length(readHunkLedger11)).toBe(1);
     })
   );
 });
@@ -621,7 +632,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills patch", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* makeRepo();
-      const lockBefore = yield* fs.readFileString(yield* lockPathOf(repoRoot));
+      const lockPathOf12 = yield* lockPathOf(repoRoot);
+      const lockBefore = yield* fs.readFileString(lockPathOf12);
       yield* fs.writeFileString(path.join(repoRoot, TARGETS[0] ?? "", "rules/keep.md"), "keep\nlocal note\n");
       const recorder = yield* recorderWith(pristineFiles);
 
@@ -631,15 +643,19 @@ layer(TestLayer, { timeout: "60 seconds" })("skills patch", (it) => {
         "planned",
         [[added, "temporary-drift", "@kriegcloud"]],
       ]);
-      expect(yield* fs.exists(path.join(repoRoot, added))).toBe(false);
-      expect(yield* fs.readFileString(yield* lockPathOf(repoRoot))).toBe(lockBefore);
+      const exists13 = yield* fs.exists(path.join(repoRoot, added));
+      expect(exists13).toBe(false);
+      const lockPathOf34 = yield* lockPathOf(repoRoot);
+      const readFileString14 = yield* fs.readFileString(lockPathOf34);
+      expect(readFileString14).toBe(lockBefore);
 
       const stale = yield* recorder.add(repoRoot, SKILL, O.some(Str.repeat(64)("0"))).pipe(Effect.flip);
       expect(refusalReason(stale)).toBe("digest-mismatch");
 
       const written = yield* recorder.add(repoRoot, SKILL, O.some(planned.planDigest));
       expect(written.outcome).toBe("written");
-      expect(yield* fs.readFileString(path.join(repoRoot, added))).toContain("+local note");
+      const readFileString15 = yield* fs.readFileString(path.join(repoRoot, added));
+      expect(readFileString15).toContain("+local note");
       const entry = yield* vendoredEntry(repoRoot);
       expect(A.map(entry.patches.series, (patch) => patch.path)).toEqual([PATCH_PATH, added]);
       expect(entry.effective).toEqual(planned.effective);
@@ -657,7 +673,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills patch", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* makeRepo();
-      const lockBefore = yield* fs.readFileString(yield* lockPathOf(repoRoot));
+      const lockPathOf16 = yield* lockPathOf(repoRoot);
+      const lockBefore = yield* fs.readFileString(lockPathOf16);
       yield* fs.writeFileString(path.join(repoRoot, TARGETS[0] ?? "", "rules/keep.md"), "keep\nlocal note\n");
       const recorder = yield* recorderWith(pristineFiles);
       const planned = yield* recorder.add(repoRoot, SKILL, O.none());
@@ -672,21 +689,22 @@ layer(TestLayer, { timeout: "60 seconds" })("skills patch", (it) => {
             ? Effect.andThen(fs.writeFileString(added, "not ours\n"), fs.writeFile(target, data, options))
             : fs.writeFile(target, data, options),
       };
-      const racingRecorder = Context.get(
-        yield* Layer.build(
-          SkillPatchRecorderLayer.pipe(
-            Layer.provide(
-              Layer.mergeAll(sourceLayer(pristineFiles), ownerLayer, Layer.succeed(FileSystem.FileSystem, racing))
-            )
+      const build17 = yield* Layer.build(
+        SkillPatchRecorderLayer.pipe(
+          Layer.provide(
+            Layer.mergeAll(sourceLayer(pristineFiles), ownerLayer, Layer.succeed(FileSystem.FileSystem, racing))
           )
-        ),
-        SkillPatchRecorder
+        )
       );
+      const racingRecorder = Context.get(build17, SkillPatchRecorder);
       const error = yield* racingRecorder.add(repoRoot, SKILL, O.some(planned.planDigest)).pipe(Effect.flip);
       expect(error._tag).toBe("SkillsCommandError");
       expect(error.message).toContain("Failed to write");
-      expect(yield* fs.readFileString(added)).toBe("not ours\n");
-      expect(yield* fs.readFileString(yield* lockPathOf(repoRoot))).toBe(lockBefore);
+      const readFileString18 = yield* fs.readFileString(added);
+      expect(readFileString18).toBe("not ours\n");
+      const lockPathOf35 = yield* lockPathOf(repoRoot);
+      const readFileString19 = yield* fs.readFileString(lockPathOf35);
+      expect(readFileString19).toBe(lockBefore);
     })
   );
 
@@ -696,13 +714,15 @@ layer(TestLayer, { timeout: "60 seconds" })("skills patch", (it) => {
       const path = yield* Path.Path;
       const repoRoot = yield* makeRepo();
       const recorder = yield* recorderWith(pristineFiles);
-      expect(refusalReason(yield* recorder.add(repoRoot, SKILL, O.none()).pipe(Effect.flip))).toBe("no-hand-edit");
-      expect(refusalReason(yield* recorder.add(repoRoot, "local-one", O.none()).pipe(Effect.flip))).toBe(
-        "not-vendored"
-      );
-      expect(refusalReason(yield* recorder.add(repoRoot, "missing", O.none()).pipe(Effect.flip))).toBe("unknown-skill");
+      const pipe20 = yield* recorder.add(repoRoot, SKILL, O.none()).pipe(Effect.flip);
+      expect(refusalReason(pipe20)).toBe("no-hand-edit");
+      const pipe21 = yield* recorder.add(repoRoot, "local-one", O.none()).pipe(Effect.flip);
+      expect(refusalReason(pipe21)).toBe("not-vendored");
+      const pipe22 = yield* recorder.add(repoRoot, "missing", O.none()).pipe(Effect.flip);
+      expect(refusalReason(pipe22)).toBe("unknown-skill");
       yield* fs.remove(path.join(repoRoot, TARGETS[0] ?? ""), { recursive: true });
-      expect(refusalReason(yield* recorder.add(repoRoot, SKILL, O.none()).pipe(Effect.flip))).toBe("missing-target");
+      const pipe23 = yield* recorder.add(repoRoot, SKILL, O.none()).pipe(Effect.flip);
+      expect(refusalReason(pipe23)).toBe("missing-target");
     })
   );
 
@@ -812,19 +832,19 @@ layer(TestLayer, { timeout: "60 seconds" })("skills patch", (it) => {
 // terminal whether a person can be asked, and a run that cannot prompt fails before reading a key.
 layer(TestLayer, { timeout: "60 seconds" })("skills review prompt gate", (it) => {
   const terminalOf = Effect.fn("SkillsReviewTest.terminalOf")(function* (handle: TestTerminalHandle) {
-    return Context.get(yield* Layer.build(handle.layer), Terminal.Terminal);
+    const build24 = yield* Layer.build(handle.layer);
+    return Context.get(build24, Terminal.Terminal);
   });
   const stdioOf = Effect.fn("SkillsReviewTest.stdioOf")(function* (isTerminal: boolean) {
     const tty = Effect.succeed(isTerminal);
-    return Context.get(
-      yield* Layer.build(Stdio.layerTest({ stdinIsTerminal: tty, stdoutIsTerminal: tty })),
-      Stdio.Stdio
-    );
+    const build25 = yield* Layer.build(Stdio.layerTest({ stdinIsTerminal: tty, stdoutIsTerminal: tty }));
+    return Context.get(build25, Stdio.Stdio);
   });
   const firstItem = Effect.fn("SkillsReviewTest.firstItem")(function* () {
     const repoRoot = yield* makeRepo();
     const review = yield* reviewWith(pristineFiles);
-    return itemAt(yield* list(review, repoRoot), 1);
+    const list26 = yield* list(review, repoRoot);
+    return itemAt(list26, 1);
   });
 
   it.effect("fails with a decisions-file hint without reading a key when the run cannot prompt", () =>
@@ -832,16 +852,19 @@ layer(TestLayer, { timeout: "60 seconds" })("skills review prompt gate", (it) =>
       const item = yield* firstItem();
       const terminal = yield* TestTerminal.make({ columns: 90, rows: 40 });
       yield* terminal.input([{ name: "enter" }]);
-      const decider = yield* makeSkillReviewDeciderPrompt.pipe(
-        Effect.provideService(Terminal.Terminal, yield* terminalOf(terminal)),
-        Effect.provideService(Stdio.Stdio, yield* stdioOf(false))
-      );
+      const terminalOf27 = yield* terminalOf(terminal);
+      const argument = Effect.provideService(Terminal.Terminal, terminalOf27);
+      const stdioOf1 = yield* stdioOf(false);
+      const decider = yield* makeSkillReviewDeciderPrompt.pipe(argument, Effect.provideService(Stdio.Stdio, stdioOf1));
       const error = yield* decider.answer(item).pipe(Effect.flip);
       expect(error._tag).toBe("SkillsCommandError");
       expect(error.message).toContain("--decisions <file>");
-      expect(yield* terminal.reads).toEqual({ keys: 0, lines: 0, subscriptions: 0 });
-      expect(yield* terminal.pending).toBe(1);
-      expect(yield* terminal.output).toBe("");
+      const reads28 = yield* terminal.reads;
+      expect(reads28).toEqual({ keys: 0, lines: 0, subscriptions: 0 });
+      const pending29 = yield* terminal.pending;
+      expect(pending29).toBe(1);
+      const output30 = yield* terminal.output;
+      expect(output30).toBe("");
     })
   );
 
@@ -851,15 +874,19 @@ layer(TestLayer, { timeout: "60 seconds" })("skills review prompt gate", (it) =>
       const terminal = yield* TestTerminal.make({ columns: 90, rows: 40 });
       yield* terminal.input([{ name: "down" }, { name: "enter" }]);
       // A person: no agent or CI variable, and a terminal that is not `dumb`.
+      const terminalOf31 = yield* terminalOf(terminal);
+      const argument1 = Effect.provideService(Terminal.Terminal, terminalOf31);
+      const stdioOf2 = yield* stdioOf(true);
       const decider = yield* makeSkillReviewDeciderPrompt.pipe(
-        Effect.provideService(Terminal.Terminal, yield* terminalOf(terminal)),
-        Effect.provideService(Stdio.Stdio, yield* stdioOf(true)),
+        argument1,
+        Effect.provideService(Stdio.Stdio, stdioOf2),
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ TERM: "xterm-256color" }))
       );
       const decided = yield* decider.answer(item);
       deepStrictEqual(decided, SkillReviewDecide.make({ decision: "keep", label: O.some("repo-adaptation") }));
       expect((yield* terminal.reads).keys).toBe(2);
-      expect(yield* terminal.output).toContain("Decision");
+      const output32 = yield* terminal.output;
+      expect(output32).toContain("Decision");
     })
   );
 });

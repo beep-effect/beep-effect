@@ -144,7 +144,8 @@ const buildFixture = Effect.fnUntraced(function* (dir: string) {
   yield* fs.writeFileString(join(dir, "deleted.txt"), "will be deleted\n");
   yield* raw(["add", "-A"]);
   yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit1"]);
-  const commit1 = Str.trim(yield* raw(["rev-parse", "HEAD"]));
+  const raw1 = yield* raw(["rev-parse", "HEAD"]);
+  const commit1 = Str.trim(raw1);
 
   yield* raw(["branch", "feature/git"]);
   // checkout IS Git surface — dogfood the real service for the fixture's
@@ -153,14 +154,16 @@ const buildFixture = Effect.fnUntraced(function* (dir: string) {
   yield* fs.writeFileString(join(dir, "feature.txt"), "feature content\n");
   yield* raw(["add", "-A"]);
   yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "branch commit"]);
-  const branchCommit = Str.trim(yield* raw(["rev-parse", "HEAD"]));
+  const raw2 = yield* raw(["rev-parse", "HEAD"]);
+  const branchCommit = Str.trim(raw2);
 
   yield* git.checkout(dir, "main").pipe(Effect.orDie);
   yield* fs.writeFileString(join(dir, "a.txt"), "two\n");
   yield* fs.remove(join(dir, "deleted.txt"));
   yield* raw(["add", "-A"]);
   yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit2"]);
-  const commit2 = Str.trim(yield* raw(["rev-parse", "HEAD"]));
+  const raw3 = yield* raw(["rev-parse", "HEAD"]);
+  const commit2 = Str.trim(raw3);
 
   yield* raw(["tag", "v1.0.0", commit2]);
 
@@ -168,9 +171,11 @@ const buildFixture = Effect.fnUntraced(function* (dir: string) {
   yield* fs.writeFileString(join(dir, "big.txt"), bigContent);
   yield* raw(["add", "-A"]);
   yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit3: add big file"]);
-  const commit3 = Str.trim(yield* raw(["rev-parse", "HEAD"]));
+  const raw4 = yield* raw(["rev-parse", "HEAD"]);
+  const commit3 = Str.trim(raw4);
 
-  const forkPoint = Str.trim(yield* raw(["merge-base", "main", "feature/git"]));
+  const raw5 = yield* raw(["merge-base", "main", "feature/git"]);
+  const forkPoint = Str.trim(raw5);
 
   return { dir, commit1, commit2, commit3, branchCommit, forkPoint, tag: "v1.0.0", bigContent };
 });
@@ -291,10 +296,12 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
     it.effect("refExists: true for the tag, false for a bogus ref", () =>
       Effect.gen(function* () {
         const git = yield* Git;
-        assert.isTrue(yield* git.refExists(fixture.dir, "v1.0.0"));
+        const refExists6 = yield* git.refExists(fixture.dir, "v1.0.0");
+        assert.isTrue(refExists6);
         // ACCUMULATED OBLIGATION (G4): a real nonexistent branch must
         // resolve Success(false), never a defect.
-        assert.isFalse(yield* git.refExists(fixture.dir, "no-such-branch"));
+        const refExists7 = yield* git.refExists(fixture.dir, "no-such-branch");
+        assert.isFalse(refExists7);
       })
     );
 
@@ -313,12 +320,17 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
     it.effect("isAncestor reads reachability from the exit code: fork point yes, branch tip into main no", () =>
       Effect.gen(function* () {
         const git = yield* Git;
-        assert.isTrue(yield* git.isAncestor(fixture.dir, fixture.commit1, fixture.branchCommit));
-        assert.isTrue(yield* git.isAncestor(fixture.dir, fixture.commit1, "main"));
+        const isAncestor8 = yield* git.isAncestor(fixture.dir, fixture.commit1, fixture.branchCommit);
+        assert.isTrue(isAncestor8);
+        const isAncestor9 = yield* git.isAncestor(fixture.dir, fixture.commit1, "main");
+        assert.isTrue(isAncestor9);
         // A commit is its own ancestor.
-        assert.isTrue(yield* git.isAncestor(fixture.dir, fixture.commit2, fixture.commit2));
-        assert.isFalse(yield* git.isAncestor(fixture.dir, fixture.branchCommit, "main"));
-        assert.isFalse(yield* git.isAncestor(fixture.dir, fixture.commit2, "feature/git"));
+        const isAncestor10 = yield* git.isAncestor(fixture.dir, fixture.commit2, fixture.commit2);
+        assert.isTrue(isAncestor10);
+        const isAncestor11 = yield* git.isAncestor(fixture.dir, fixture.branchCommit, "main");
+        assert.isFalse(isAncestor11);
+        const isAncestor12 = yield* git.isAncestor(fixture.dir, fixture.commit2, "feature/git");
+        assert.isFalse(isAncestor12);
         const unknown = yield* Effect.flip(git.isAncestor(fixture.dir, Str.repeat(40)("0"), "main"));
         assert.instanceOf(unknown, UnknownRefError);
       })
@@ -400,7 +412,8 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
             assert.include(failure.detail, `${64 * 1024} byte`);
           }
           const git = yield* Git;
-          assertSome(yield* git.show(fixture.dir, fixture.commit3, "big.txt"), fixture.bigContent);
+          const show13 = yield* git.show(fixture.dir, fixture.commit3, "big.txt");
+          assertSome(show13, fixture.bigContent);
         }),
       10_000
     );
@@ -414,10 +427,8 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
         const loud = yield* Effect.flip(git.revParse(fixture.dir, "refs/heads/does-not-exist"));
         assert.instanceOf(loud, UnknownRefError);
         // peel: "commit" through the tag resolves to the commit it points at.
-        assert.strictEqual(
-          yield* git.revParse(fixture.dir, fixture.tag, { peel: "commit", quiet: true }),
-          fixture.commit2
-        );
+        const revParse14 = yield* git.revParse(fixture.dir, fixture.tag, { peel: "commit", quiet: true });
+        assert.strictEqual(revParse14, fixture.commit2);
       })
     );
 

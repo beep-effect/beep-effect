@@ -20,8 +20,9 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { dual, identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -33,6 +34,7 @@ import {
   PlanEntry,
   PlanPreservation,
 } from "./Bootstrap.schemas.ts";
+import { GOAL_DECISION_TARGETS, renderGoalDecisionBlock } from "./Decisions.projection.ts";
 import { GoalPlanInputError, GoalPlanOperationalError } from "./Goals.errors.ts";
 import { isCapabilitySlug } from "./Goals.schemas.ts";
 import { listGoalPackets } from "./Inventory.ts";
@@ -42,6 +44,8 @@ import type * as Digest from "effect/crypto/Digest";
 import type * as PlatformError from "effect/PlatformError";
 import type { PlanMode, PlanOwnership, ValidationRequirement } from "./Bootstrap.schemas.ts";
 import type { CapabilitySlug } from "./Goals.schemas.ts";
+
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
 
 const decodeGoalSlug = S.decodeEffect(GoalSlug);
 const encodeUnknownMaterializationPlan = S.encodeUnknownEffect(MaterializationPlan);
@@ -142,7 +146,7 @@ export const archetypePhases = (archetype: PhaseArchetype): ReadonlyArray<Archet
 
 // Pretty-printed manifest bytes are the hashed file payload. Stringify stays in
 // this sync helper; no schema codec owns this exact two-space file layout.
-const renderPrettyJson = (value: unknown): string => `${JSON.stringify(value, null, 2)}\n`;
+const renderPrettyJson = (value: unknown): string => `${Result.getOrThrowWith(encodePrettyJson(value), identity)}\n`;
 
 const manifestPayload = Effect.fnUntraced(function* (input: BootstrapInput) {
   const packetPath = `goals/${input.slug}`;
@@ -320,17 +324,18 @@ git diff --check -- goals/${input.slug}
 
 Decide changes to public API, schema, data migration, auth, infra, security
 behavior, dependencies, lockfiles, generated files, or destructive state
-yourself when the goal needs them: record each in SPEC.md's Decision Log with
+yourself when the goal needs them: record each as a decision file (\`bun run beep goals decisions add\`) with
 its reason and how to reverse it, then continue. Land the reversal path for an
 irreversible change (a tested down-migration, a backup of deleted state) before
 the change merges, and ship a breaking public API or schema change with a major
 changeset. Escalate only what AGENTS.md "Autonomy" lists.
 
-Ship proposedCloseout and the reflection in the final implementation PR while
-initiative.status stays active or paused. A proposal never reports achievement.
-Done only when exact-head hosted readiness and merge evidence verify the proposal
-through \`bun run beep goals completion refresh --slug <slug>\`, or when a blocker
-that needs the operator is reported with file/command evidence.
+Ship proposedCloseout and the reflection in the final PR (status stays active or
+paused). After that merge, verify with \`bun run beep goals completion refresh --slug ${input.slug}\`,
+then adopt with \`bun run beep goals set-status ${input.slug} <status>\` in a
+packet-state PR. Done only once it merges and this passes, or an operator
+blocker is reported with evidence:
+\`git show origin/main:goals/${input.slug}/ops/manifest.json | jq -e '.closeout.status == .initiative.status'\`
 `;
 
 const specPayload = (input: BootstrapInput): string => `# ${input.title} Spec
@@ -384,13 +389,15 @@ Higher sources outrank lower sources when they conflict.
 - The same blocker repeats after reasonable investigation.
 
 Scope growth, destructive side effects and policy calls are not stops: decide
-them and record each in the Decision Log.
+them and record each as a decision file.
 
-## Decision Log
+## Decision log
 
-| Date | Decision | Reason | How to reverse |
-| --- | --- | --- | --- |
-| None | N/A | N/A | N/A |
+Record each decision as its own file under \`decisions/\` (\`bun run beep goals
+decisions add ${input.slug} --title "..." --reversal "..."\`); the block below is
+generated from that directory and never edited by hand.
+
+${renderGoalDecisionBlock(input.slug, GOAL_DECISION_TARGETS[0]!, [])}
 
 ## Exception Ledger
 
@@ -434,6 +441,9 @@ Before marking the packet closed:
 - Preserve unrelated worktree changes.
 - Keep \`SPEC.md\` normative and update it only when the contract changes.
 - Keep this plan current; archive old run outputs under \`history/\`.
+- Status checkpoints are \`kind: checkpoint\` files under \`decisions/\`
+  (\`bun run beep goals decisions add ${input.slug} --kind checkpoint ...\`),
+  rendered into the Checkpoints block at the end of this plan.
 
 ## Verification Commands
 
@@ -443,6 +453,10 @@ jq . goals/${input.slug}/ops/manifest.json
 rg -n "${input.slug}|GOAL.md|agentLaunchers|packetAnchorDocument" goals/${input.slug}
 git diff --check -- goals/${input.slug}
 \`\`\`
+
+## Checkpoints
+
+${renderGoalDecisionBlock(input.slug, GOAL_DECISION_TARGETS[1]!, [])}
 `;
 };
 
@@ -679,58 +693,53 @@ export const compileMaterializationPlan: {
       });
     }
 
-    const entries = A.appendAll(
-      yield* Effect.all([
-        createRow(
-          `${packetPath}/ops/manifest.json`,
-          "generated",
-          "Every byte derives from the input and the archetype.",
-          yield* manifestPayload(input)
-        ),
-        createRow(
-          `${packetPath}/README.md`,
-          "generated-seed",
-          "Written once from input; human-owned immediately after.",
-          readmePayload(input)
-        ),
-        createRow(
-          `${packetPath}/GOAL.md`,
-          "generated-seed",
-          "Written once from mission and scope inputs; human-owned immediately after.",
-          goalMdPayload(input)
-        ),
-        createRow(
-          `${packetPath}/SPEC.md`,
-          "generated-seed",
-          "Written once from input; human-owned immediately after.",
-          specPayload(input)
-        ),
-        createRow(
-          `${packetPath}/PLAN.md`,
-          "generated-seed",
-          "Written once from the archetype phase table; human-owned immediately after.",
-          planPayload(input)
-        ),
-        createRow(
-          `${packetPath}/research/SOURCES.md`,
-          "generated-seed",
-          "Written once from provenance inputs; human-owned immediately after.",
-          sourcesPayload(input)
-        ),
-        createRow(`${packetPath}/research/.gitkeep`, "generated", "Directory marker.", "\n"),
-        createRow(`${packetPath}/history/.gitkeep`, "generated", "Directory marker.", "\n"),
-        createRow(`${packetPath}/history/reflections/.gitkeep`, "generated", "Directory marker.", ""),
-      ]),
-      [
-        {
-          path: "goals/INDEX.md",
-          action: "report",
-          ownership: "generated",
-          reason:
-            "Disposable projection owned by producer://goals/index; regenerate with `bun run beep goals index --write` after publish.",
-        } satisfies PlanRow,
-      ]
-    );
+    const argument1 = `${packetPath}/ops/manifest.json`;
+    const manifestPayload1 = yield* manifestPayload(input);
+    const all1 = yield* Effect.all([
+      createRow(argument1, "generated", "Every byte derives from the input and the archetype.", manifestPayload1),
+      createRow(
+        `${packetPath}/README.md`,
+        "generated-seed",
+        "Written once from input; human-owned immediately after.",
+        readmePayload(input)
+      ),
+      createRow(
+        `${packetPath}/GOAL.md`,
+        "generated-seed",
+        "Written once from mission and scope inputs; human-owned immediately after.",
+        goalMdPayload(input)
+      ),
+      createRow(
+        `${packetPath}/SPEC.md`,
+        "generated-seed",
+        "Written once from input; human-owned immediately after.",
+        specPayload(input)
+      ),
+      createRow(
+        `${packetPath}/PLAN.md`,
+        "generated-seed",
+        "Written once from the archetype phase table; human-owned immediately after.",
+        planPayload(input)
+      ),
+      createRow(
+        `${packetPath}/research/SOURCES.md`,
+        "generated-seed",
+        "Written once from provenance inputs; human-owned immediately after.",
+        sourcesPayload(input)
+      ),
+      createRow(`${packetPath}/research/.gitkeep`, "generated", "Directory marker.", "\n"),
+      createRow(`${packetPath}/history/.gitkeep`, "generated", "Directory marker.", "\n"),
+      createRow(`${packetPath}/history/reflections/.gitkeep`, "generated", "Directory marker.", ""),
+    ]);
+    const entries = A.appendAll(all1, [
+      {
+        path: "goals/INDEX.md",
+        action: "report",
+        ownership: "generated",
+        reason:
+          "Disposable projection owned by producer://goals/index; regenerate with `bun run beep goals index --write` after publish.",
+      } satisfies PlanRow,
+    ]);
 
     return yield* sealMaterializationPlan({
       mode: "bootstrap",

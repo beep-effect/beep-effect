@@ -271,8 +271,9 @@ const assertFreshArtifact = Effect.fn("CacheWorkflow.freshHostedArtifact")(funct
     created > now ||
     now - created > Duration.toMillis(Duration.hours(24)) ||
     DateTime.toEpochMillis(artifact.expires_at) <= now
-  )
+  ) {
     return yield* CacheCommandError.new("Producer artifact is expired or outside its observation lifetime.");
+  }
 });
 
 const readReport = Effect.fn("CacheWorkflow.readHostedReport")(function* (archive: Uint8Array) {
@@ -292,8 +293,9 @@ const readReport = Effect.fn("CacheWorkflow.readHostedReport")(function* (archiv
     timeout: Duration.seconds(10),
     source: "merge",
   });
-  if (result.exitCode !== 0 || result.truncated)
+  if (result.exitCode !== 0 || result.truncated) {
     return yield* CacheCommandError.new("Producer ZIP inspection failed or exceeded its bound.");
+  }
   const text = result.output;
   const report = yield* decodeReport(text);
   return { report, reportSha256: yield* hashBytes(new TextEncoder().encode(text)) };
@@ -329,8 +331,9 @@ const inspectHostedMetadata = Effect.fn("CacheWorkflow.inspectHostedMetadata")(f
       repository: approvedRepository,
       head_repository: approvedRepository,
     })
-  )
+  ) {
     return yield* CacheCommandError.new("Producer run differs from independent approval.");
+  }
   if (
     !sameReusableWorkflows(
       run.referenced_workflows,
@@ -342,8 +345,9 @@ const inspectHostedMetadata = Effect.fn("CacheWorkflow.inspectHostedMetadata")(f
         })
       )
     )
-  )
+  ) {
     return yield* CacheCommandError.new("Producer reusable workflow differs from independent approval.");
+  }
   if (
     !sameArtifact(artifact, {
       ...artifact,
@@ -357,8 +361,9 @@ const inspectHostedMetadata = Effect.fn("CacheWorkflow.inspectHostedMetadata")(f
         head_branch: "main",
       },
     })
-  )
+  ) {
     return yield* CacheCommandError.new("Producer artifact differs from independent approval.");
+  }
 
   return { run, artifact, readRun, readArtifact };
 });
@@ -373,8 +378,9 @@ const assertHostedReport = Effect.fn("CacheWorkflow.assertHostedReport")(functio
     report.attempt !== selected.attempt ||
     !sameBinding(report.binding, approval.binding) ||
     A.dedupe(A.map(report.uploads, (upload) => upload.taskHash)).length !== report.uploads.length
-  )
+  ) {
     return yield* CacheCommandError.new("Producer report identity, binding or unique upload set is invalid.");
+  }
 });
 
 const inspectHostedWorkflows = Effect.fn("CacheWorkflow.inspectHostedWorkflows")(function* (
@@ -390,14 +396,16 @@ const inspectHostedWorkflows = Effect.fn("CacheWorkflow.inspectHostedWorkflows")
     const workflow = yield* content
       .getFile(approvedWorkflow.workflowPath, { ref: approvedWorkflow.revision })
       .pipe(Repo.provide(approval.repository));
-    if (!isAsciiWorkflow(workflow))
+    if (!isAsciiWorkflow(workflow)) {
       return yield* CacheCommandError.new("Producer workflow bytes differ from independent approval.");
+    }
     const workflowBytes = new TextEncoder().encode(workflow);
     if (
       workflowBytes.byteLength > 64 * 1024 - inspectedWorkflowBytes ||
       (yield* hashBytes(workflowBytes)) !== approvedWorkflow.workflowSha256
-    )
+    ) {
       return yield* CacheCommandError.new("Producer workflow bytes differ from independent approval.");
+    }
     inspectedWorkflowBytes += workflowBytes.byteLength;
   }
 });
@@ -436,8 +444,9 @@ export const verifyCacheHostedProducerUpload = Effect.fn("CacheWorkflow.verifyHo
     reference: CacheHostedProducerReference,
     transportedArchive: Uint8Array
   ) {
-    if (transportedArchive.byteLength === 0 || transportedArchive.byteLength > 1024 * 1024)
+    if (transportedArchive.byteLength === 0 || transportedArchive.byteLength > 1024 * 1024) {
       return yield* CacheCommandError.new("Producer archive exceeded its compressed byte bound.");
+    }
     const archive = new Uint8Array(transportedArchive);
     const approval = yield* encodeApproval(approved).pipe(Effect.flatMap(decodeApproval));
     const selected = yield* S.encodeEffect(CacheHostedProducerReference)(reference).pipe(
@@ -446,13 +455,16 @@ export const verifyCacheHostedProducerUpload = Effect.fn("CacheWorkflow.verifyHo
     const { run, artifact, readRun, readArtifact } = yield* inspectHostedMetadata(approval, selected);
     yield* assertFreshArtifact(artifact);
     const artifactSha256 = yield* hashBytes(archive);
-    if (archive.byteLength !== artifact.size_in_bytes || `sha256:${artifactSha256}` !== artifact.digest)
+    if (archive.byteLength !== artifact.size_in_bytes || `sha256:${artifactSha256}` !== artifact.digest) {
       return yield* CacheCommandError.new("Transported producer archive differs from GitHub's immutable digest.");
+    }
     yield* inspectHostedWorkflows(approval, run.head_sha);
     const decoded = yield* readReport(archive);
     yield* assertHostedReport(decoded.report, approval, selected);
-    if (!sameRun(run, yield* readRun) || !sameArtifact(artifact, yield* readArtifact))
+    const readRun1 = yield* readRun;
+    if (!sameRun(run, readRun1) || !(yield* Effect.map(readArtifact, (value) => sameArtifact(artifact, value)))) {
       return yield* CacheCommandError.new("Producer run or immutable artifact changed during verification.");
+    }
     yield* assertFreshArtifact(artifact);
     return CacheHostedProducerObservation.make({
       reference: selected,
@@ -498,11 +510,13 @@ export const buildCacheHostedProducerCompleteReport = Effect.fn("CacheWorkflow.b
   const upload = yield* owned.observation.upload.pipe(
     Effect.fromOption(() => CacheCommandError.new("Complete producer publication requires its owned upload."))
   );
+  const argument = new TextEncoder();
+  const encodedObservation = yield* encodeObservation(owned);
   return CacheHostedProducerCompleteReport.make({
     binding: owned.envelope.body.binding,
     runId: reference.runId,
     attempt: reference.attempt,
-    observationSha256: yield* hashBytes(new TextEncoder().encode(yield* encodeObservation(owned))),
+    observationSha256: yield* hashBytes(argument.encode(encodedObservation)),
     uploads: [upload],
   });
 }, CacheCommandError.mapError("Cannot prepare complete producer publication."));
@@ -550,13 +564,17 @@ export const verifyCacheHostedProducerObservation = Effect.fn("CacheWorkflow.ver
     Effect.fromOption(() => CacheCommandError.new("Complete producer observation requires its owned upload."))
   );
   const hosted = yield* verifyCacheHostedProducerUpload(approval, reference, archive);
-  if (!sameBinding(owned.envelope.body.binding, hosted.report.binding))
+  if (!sameBinding(owned.envelope.body.binding, hosted.report.binding)) {
     return yield* CacheCommandError.new("Complete producer observation differs from independent binding.");
-  if (!S.is(CacheHostedProducerCompleteReport)(hosted.report))
+  }
+  if (!S.is(CacheHostedProducerCompleteReport)(hosted.report)) {
     return yield* CacheCommandError.new("Legacy upload-only publication cannot bind a complete observation.");
-  if (hosted.report.observationSha256 !== (yield* hashBytes(new TextEncoder().encode(contents))))
+  }
+  if (hosted.report.observationSha256 !== (yield* hashBytes(new TextEncoder().encode(contents)))) {
     return yield* CacheCommandError.new("Hosted publication differs from the complete observation bytes.");
-  if (!S.toEquivalence(CacheHostedProducerUpload)(hosted.report.uploads[0], upload))
+  }
+  if (!S.toEquivalence(CacheHostedProducerUpload)(hosted.report.uploads[0], upload)) {
     return yield* CacheCommandError.new("Hosted publication differs from the complete observation's owned upload.");
+  }
   return hosted;
 }, CacheCommandError.mapError("Cannot join complete producer observation to immutable publication."));

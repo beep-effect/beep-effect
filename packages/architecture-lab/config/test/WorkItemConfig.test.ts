@@ -112,18 +112,22 @@ describe("WorkItem configuration", () => {
   it.effect(
     "keeps default encoded configuration shape byte-identical",
     Effect.fnUntraced(function* () {
-      expect(yield* encodeWorkItemPublicConfig(defaultWorkItemPublicConfig)).toEqual({
+      const encodedWorkItemPublicConfig = yield* encodeWorkItemPublicConfig(defaultWorkItemPublicConfig);
+      expect(encodedWorkItemPublicConfig).toEqual({
         assignmentEnabled: true,
         reopenCompletedEnabled: true,
       });
-      expect(yield* encodeWorkItemServerConfig(defaultWorkItemServerConfig)).toEqual({
+      const encodedWorkItemServerConfig = yield* encodeWorkItemServerConfig(defaultWorkItemServerConfig);
+      expect(encodedWorkItemServerConfig).toEqual({
         migrationSchemaName: "architecture_lab",
         repositoryName: "architecture-lab-work-items",
       });
-      expect(yield* encodeWorkItemSecretConfig(defaultWorkItemSecretConfig)).toEqual({
+      const encodedWorkItemSecretConfig = yield* encodeWorkItemSecretConfig(defaultWorkItemSecretConfig);
+      expect(encodedWorkItemSecretConfig).toEqual({
         connectionName: "architecture-lab-proof",
       });
-      expect(yield* encodeWorkItemConfigValue(testWorkItemConfig)).toEqual({
+      const encodedWorkItemConfigValue = yield* encodeWorkItemConfigValue(testWorkItemConfig);
+      expect(encodedWorkItemConfigValue).toEqual({
         publicConfig: {
           assignmentEnabled: true,
           reopenCompletedEnabled: true,
@@ -148,30 +152,18 @@ describe("WorkItem configuration", () => {
       Arbitrary.schema(WorkItemConfigValue),
     ],
     Effect.fnUntraced(function* ([publicConfig, serverConfig, secretConfig, configValue]) {
-      expect(
-        Equal.equals(
-          yield* decodeUnknownWorkItemPublicConfig(yield* encodeWorkItemPublicConfig(publicConfig)),
-          publicConfig
-        )
-      ).toBe(true);
-      expect(
-        Equal.equals(
-          yield* decodeUnknownWorkItemServerConfig(yield* encodeWorkItemServerConfig(serverConfig)),
-          serverConfig
-        )
-      ).toBe(true);
-      expect(
-        Equal.equals(
-          yield* decodeUnknownWorkItemSecretConfig(yield* encodeWorkItemSecretConfig(secretConfig)),
-          secretConfig
-        )
-      ).toBe(true);
-      expect(
-        Equal.equals(
-          yield* decodeUnknownWorkItemConfigValue(yield* encodeWorkItemConfigValue(configValue)),
-          configValue
-        )
-      ).toBe(true);
+      const encodedWorkItemPublicConfig1 = yield* encodeWorkItemPublicConfig(publicConfig);
+      const decodedUnknownWorkItemPublicConfig = yield* decodeUnknownWorkItemPublicConfig(encodedWorkItemPublicConfig1);
+      expect(Equal.equals(decodedUnknownWorkItemPublicConfig, publicConfig)).toBe(true);
+      const encodedWorkItemServerConfig2 = yield* encodeWorkItemServerConfig(serverConfig);
+      const decodedUnknownWorkItemServerConfig = yield* decodeUnknownWorkItemServerConfig(encodedWorkItemServerConfig2);
+      expect(Equal.equals(decodedUnknownWorkItemServerConfig, serverConfig)).toBe(true);
+      const encodedWorkItemSecretConfig3 = yield* encodeWorkItemSecretConfig(secretConfig);
+      const decodedUnknownWorkItemSecretConfig = yield* decodeUnknownWorkItemSecretConfig(encodedWorkItemSecretConfig3);
+      expect(Equal.equals(decodedUnknownWorkItemSecretConfig, secretConfig)).toBe(true);
+      const encodedWorkItemConfigValue4 = yield* encodeWorkItemConfigValue(configValue);
+      const decodedUnknownWorkItemConfigValue = yield* decodeUnknownWorkItemConfigValue(encodedWorkItemConfigValue4);
+      expect(Equal.equals(decodedUnknownWorkItemConfigValue, configValue)).toBe(true);
     }),
     { arbitrary: fcRuns(25) }
   );

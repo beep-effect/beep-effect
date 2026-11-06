@@ -40,7 +40,12 @@
     "explorations/deterministic-doc-structure-extraction/MAP.md",
     "explorations/deterministic-doc-structure-extraction/DECISIONS.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/2026-07-25-academia-corpus-mining-note.md",
+    "research/2026-08-17-academia-wave2-findings.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

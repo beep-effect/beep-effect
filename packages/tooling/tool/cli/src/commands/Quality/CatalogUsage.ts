@@ -344,7 +344,8 @@ export const readCatalogUsageManifest = Effect.fn("CatalogUsage.readCatalogUsage
 });
 
 const readManifest = Effect.fn("CatalogUsage.readManifest")(function* (repoRoot: string, file: string) {
-  return yield* readCatalogUsageManifest(yield* readText(repoRoot, file), file);
+  const readText1 = yield* readText(repoRoot, file);
+  return yield* readCatalogUsageManifest(readText1, file);
 });
 
 const readLockfilePackages = Effect.fn("CatalogUsage.readLockfilePackages")(function* (repoRoot: string) {
@@ -460,7 +461,8 @@ export const runCatalogUsageCheck = Effect.fn("CatalogUsage.runCatalogUsageCheck
   repoRoot: string
 ): Effect.fn.Return<CatalogUsageReport, CatalogUsageError, CatalogUsageSource> {
   const source = yield* CatalogUsageSource;
-  const report = catalogUsageReport(yield* source.snapshot(repoRoot));
+  const snapshot2 = yield* source.snapshot(repoRoot);
+  const report = catalogUsageReport(snapshot2);
   yield* Console.log(
     `[catalog-usage] catalog_entries=${report.catalogEntries} root_overrides=${report.rootOverrides} manifests=${report.manifests} template_references=${report.templateReferences} findings=${A.length(report.findings)}`
   );

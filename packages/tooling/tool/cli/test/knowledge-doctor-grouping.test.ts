@@ -2,7 +2,7 @@ import { CommitLogEntry, Git, NameStatusEntry } from "@beep/git/Git";
 import {
   capabilityPacketFindings,
   goalPacketFindings,
-  makeGoalPacketFilesystemReader,
+  makeGoalPacketWorkingTreeReader,
 } from "@beep/repo-cli/commands/Goals/Doctor";
 import { listGoalPackets } from "@beep/repo-cli/commands/Goals/Inventory";
 import {
@@ -229,7 +229,9 @@ describe("knowledge doctor causal grouping", () => {
             A.map(report.groups, (group) => [group.causeKey, group.rootOrigin, group.root, group.dependents])
           );
         }
-        assert.strictEqual(yield* encodeKnowledgeDoctorReportJson(yield* scanKnowledgeDoctorTree(tree)), expected);
+        const scanKnowledgeDoctorTree3 = yield* scanKnowledgeDoctorTree(tree);
+        const encodedKnowledgeDoctorReportJson = yield* encodeKnowledgeDoctorReportJson(scanKnowledgeDoctorTree3);
+        assert.strictEqual(encodedKnowledgeDoctorReportJson, expected);
         assert.deepStrictEqual(
           A.map(report.groups, (group) => group.causeKey),
           ["goals-doctor:manifest-invalid:demo", "path:docs/gone.md", "path:docs/other.md", "path:goals/nope"]
@@ -337,14 +339,13 @@ describe("knowledge doctor causal grouping", () => {
           },
         });
         const reader = makeKnowledgeGoalPacketReader(tree);
-        assert.deepStrictEqual(yield* reader.reflectionFiles("goals/demo"), ["2026-10-14-claude.md"]);
-        assert.deepStrictEqual(
-          yield* Effect.forEach(
-            ["explorations/live", "explorations/live/README.md", "explorations/gone", "../outside", "/abs", ""],
-            reader.explorationPath
-          ),
-          ["present", "present", "absent", "escapes", "escapes", "present"]
+        const reflectionFiles1 = yield* reader.reflectionFiles("goals/demo");
+        assert.deepStrictEqual(reflectionFiles1, ["2026-10-14-claude.md"]);
+        const forEach2 = yield* Effect.forEach(
+          ["explorations/live", "explorations/live/README.md", "explorations/gone", "../outside", "/abs", ""],
+          reader.explorationPath
         );
+        assert.deepStrictEqual(forEach2, ["present", "present", "absent", "escapes", "escapes", "present"]);
       })
     );
   });
@@ -357,7 +358,7 @@ describe("goals packet core parity", () => {
       Effect.fnUntraced(function* () {
         const repoRoot = yield* findRepoRoot();
         const records = yield* listGoalPackets(repoRoot);
-        const reader = makeGoalPacketFilesystemReader();
+        const reader = yield* makeGoalPacketWorkingTreeReader(repoRoot);
         const results = yield* Effect.forEach(records, (record) => goalPacketFindings(record, reader));
         const filesystem = A.appendAll(
           A.flatMap(results, (result) => result.findings),

@@ -27,8 +27,9 @@ const censusInputs = Effect.fn("VitestIsolationCensus.inputs")(function* (packag
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const testRoot = path.join(packageRoot, "test");
+  const readDirectory1 = yield* fs.readDirectory(testRoot, { recursive: true });
   const testFiles = A.filter(
-    yield* fs.readDirectory(testRoot, { recursive: true }),
+    readDirectory1,
     (entry) => /\.test\.tsx?$/.test(entry) && !Str.startsWith("fixtures/")(entry)
   );
   const leaking = yield* Effect.forEach(testFiles, (entry) =>
@@ -57,7 +58,8 @@ it.layer(NodeServices.layer)("repo-cli vitest isolation census", (it) => {
       // The census reads this checkout's real test sources.
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const packageRoot = yield* fs.realPath(yield* path.fromFileUrl(new URL("..", import.meta.url)));
+      const fromFileUrl2 = yield* path.fromFileUrl(new URL("..", import.meta.url));
+      const packageRoot = yield* fs.realPath(fromFileUrl2);
       const { leaking, declared } = yield* censusInputs(packageRoot);
       expect(declared.length).toBeGreaterThan(0);
       expect(declared).toEqual(A.sort(declared, Str.Order));

@@ -61,7 +61,9 @@ it.layer(PartyLedgerMemory)("mail/contact key equality", (it) => {
         const mailBasis = yield* identifierBasis(mailId.value);
         const cardBasis = yield* identifierBasis(cardId.value);
         expect(mailBasis.value).toBe(cardBasis.value);
-        expect(yield* canonicalBytes(mailBasis)).toEqual(yield* canonicalBytes(cardBasis));
+        const resolved1 = yield* canonicalBytes(mailBasis);
+        const resolved2 = yield* canonicalBytes(cardBasis);
+        expect(resolved1).toEqual(resolved2);
         const reversed = yield* adaptMailRecord(
           MailIndexInput.make({
             ...mailInput,

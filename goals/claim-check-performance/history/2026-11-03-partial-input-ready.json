@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "claim-performance-increment-readiness/v1",
+  "acceptedBase": "6f0539c6026a55a65947af3fab90b184f8ae068f",
+  "implementationHead": "fda6d52bdb",
+  "sourceFreeze": "research/implementation-partial-input-001.json",
+  "runtimeFilesMatchedAfterReplay": 31,
+  "protectedFilesMatched": 1213,
+  "legacyStrictMatches": 37,
+  "legacySelectedClaims": 538,
+  "lostPriorPasses": [],
+  "byteIdenticalPredictionReports": 56,
+  "domainTestFiles": 27,
+  "domainTests": 279,
+  "focusedInputTests": 13,
+  "domainPackageAudit": "passed",
+  "domainDocgen": "passed",
+  "normalizerCoverage": {
+    "statements": 100,
+    "branches": 100,
+    "functions": 100,
+    "lines": 100
+  },
+  "newInputModelsCoverage": {
+    "statements": 100,
+    "branches": 100,
+    "functions": 100,
+    "lines": 100
+  },
+  "requiredReviewFindings": 0,
+  "hostedCI": "required after publication",
+  "substantivePolicyIntegrated": false,
+  "publishedInspectionPortIntegrated": false,
+  "newInputCoverageMeasured": false,
+  "usefulnessEstablished": false,
+  "goalComplete": false
+}

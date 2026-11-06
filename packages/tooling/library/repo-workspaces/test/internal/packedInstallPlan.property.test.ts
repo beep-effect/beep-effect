@@ -81,7 +81,9 @@ it.effect.prop(
       );
       assert.deepStrictEqual(parsed.unresolved, expected);
       assertSuccess(unresolvedSpecifiers(text), expected);
-      const reparsedText = yield* S.encodeEffect(json)(yield* S.decodeEffect(json)(text));
+      const argument = S.encodeEffect(json);
+      const value3 = yield* S.decodeEffect(json)(text);
+      const reparsedText = yield* argument(value3);
       assertSuccess(readPackedManifest(reparsedText), parsed);
       assertSuccess(unresolvedSpecifiers(reparsedText), expected);
       for (const [name, target] of R.toEntries(manifest.bin)) {
@@ -110,7 +112,10 @@ it.effect.prop(
       };
       const normalized = yield* S.encodeEffect(json)(canonical);
       assertSuccess(readPackedManifest(normalized), parsed);
-      assert.strictEqual(yield* S.encodeEffect(json)(yield* S.decodeEffect(json)(normalized)), normalized);
+      const argument1 = S.encodeEffect(json);
+      const value4 = yield* S.decodeEffect(json)(normalized);
+      const value1 = yield* argument1(value4);
+      assert.strictEqual(value1, normalized);
     }),
   runs
 );
@@ -125,10 +130,10 @@ it.effect.prop(
       const parsed = fileOverridesOf(document);
       assert.deepStrictEqual(parsed, expected);
       assert.deepStrictEqual(fileOverridesOf({ overrides: R.map(parsed, (path) => `file:${path}`) }), parsed);
-      assert.deepStrictEqual(
-        fileOverridesOf(yield* S.decodeEffect(json)(yield* S.encodeEffect(json)(document))),
-        parsed
-      );
+      const argument2 = S.decodeEffect(json);
+      const value5 = yield* S.encodeEffect(json)(document);
+      const value2 = yield* argument2(value5);
+      assert.deepStrictEqual(fileOverridesOf(value2), parsed);
     }),
   runs
 );
@@ -163,16 +168,17 @@ it.effect.prop(
       assert.deepStrictEqual(consumerFiles(input), files);
       for (const file of files) {
         if (file.file === "package.json") {
-          const document = yield* S.decodeUnknownEffect(ConsumerDocument)(yield* S.decodeEffect(json)(file.content));
+          const argument3 = S.decodeUnknownEffect(ConsumerDocument);
+          const value6 = yield* S.decodeEffect(json)(file.content);
+          const document = yield* argument3(value6);
           assert.deepStrictEqual(document.dependencies, {
             carrier: `file:${tarball}`,
             member: `file:${tarball}`,
             external: "^2",
           });
-          assert.strictEqual(
-            `${yield* S.encodeEffect(prettyJson)(yield* S.decodeEffect(json)(file.content))}\n`,
-            file.content
-          );
+          const argument4 = S.encodeEffect(prettyJson);
+          const value7 = yield* S.decodeEffect(json)(file.content);
+          assert.strictEqual(`${yield* argument4(value7)}\n`, file.content);
         }
       }
     }),

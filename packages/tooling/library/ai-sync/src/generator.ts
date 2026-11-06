@@ -11,12 +11,14 @@ import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { AiSyncContentHash, AiSyncError, AiSyncSourceMetadata } from "./models.ts";
 import { TIER_ONE_SOURCES } from "./source-map.ts";
 
@@ -68,9 +70,9 @@ const sourceOrder = Order.mapInput(Order.String, (source: AiSyncSourceMetadata) 
 
 const sortedSources = () => A.sort(TIER_ONE_SOURCES, sourceOrder);
 
-const SJsonString: (value: string) => string = JSON.stringify;
+const SJsonString = S.encodeResult(S.fromJsonString(S.String));
 
-const quote = (value: string) => SJsonString(value);
+const quote = (value: string) => Result.getOrThrowWith(SJsonString(value), identity);
 
 const renderOptionalStringField = (name: string, value: O.Option<string>): ReadonlyArray<string> =>
   O.match(value, {

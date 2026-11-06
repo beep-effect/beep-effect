@@ -1685,12 +1685,14 @@ const cloneInode: {
     return yield* InodeEntry.match(source, {
       File: Effect.fn("Volume.cloneFile")(function* (source: FileInode) {
         const [createdState, inode] = yield* createFile(state, source.data);
-        const nextState = applyMetadata(createdState, yield* getInode(createdState, inode, method, path));
+        const gotInode = yield* getInode(createdState, inode, method, path);
+        const nextState = applyMetadata(createdState, gotInode);
         return [nextState, inode] as const;
       }),
       SymbolicLink: Effect.fn("Volume.cloneSymbolicLink")(function* (source: SymbolicLinkInode) {
         const [createdState, inode] = yield* createSymbolicLink(state, source.target);
-        const nextState = applyMetadata(createdState, yield* getInode(createdState, inode, method, path));
+        const gotInode1 = yield* getInode(createdState, inode, method, path);
+        const nextState = applyMetadata(createdState, gotInode1);
         return [nextState, inode] as const;
       }),
       Directory: Effect.fn("Volume.cloneDirectory")(function* (source: DirectoryInode) {
@@ -1706,7 +1708,8 @@ const cloneInode: {
             nextState = yield* linkInode(nextState, inode, name, clone, method);
           }
         }
-        nextState = applyMetadata(nextState, yield* getDirectory(nextState, inode, method, path));
+        const gotDirectory = yield* getDirectory(nextState, inode, method, path);
+        nextState = applyMetadata(nextState, gotDirectory);
         return [nextState, inode] as const;
       }),
     });

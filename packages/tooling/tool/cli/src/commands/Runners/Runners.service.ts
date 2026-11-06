@@ -873,7 +873,8 @@ const bakeImage = Effect.fn("Runners.bake")(function* (config: BakeConfig, repor
   // Only image creation ships the revision to a guest clone; --plan and
   // --check must keep working on an unpushed HEAD.
   yield* assertRevisionPushed(inputs.repoRoot, inputs.gitRevision);
-  const startedAt = DateTime.formatIso(yield* DateTime.now);
+  const now1 = yield* DateTime.now;
+  const startedAt = DateTime.formatIso(now1);
   const bakeDate = Str.slice(0, 10)(startedAt);
   const baseAmiId = yield* getParameter(config.region, config.baseAmiSsmParameter);
   const priorPin = yield* getPriorPin(config.region);
@@ -886,7 +887,8 @@ const bakeImage = Effect.fn("Runners.bake")(function* (config: BakeConfig, repor
     }),
     (instanceId) => terminateInstance(config.region, instanceId)
   );
-  const completedAt = DateTime.formatIso(yield* DateTime.now);
+  const now2 = yield* DateTime.now;
+  const completedAt = DateTime.formatIso(now2);
   const pulumiPinCommand = `cd infra/ci-runners && pulumi config set ciFleetController:amiId ${amiId} --stack production`;
   const report = BakeReport.make({
     amiId,

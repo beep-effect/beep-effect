@@ -242,7 +242,8 @@ describe("GlobPattern construction and schema", () => {
       const p = yield* S.decodeEffect(GlobPattern.FromString)("@scope/*");
       assert.instanceOf(p, GlobPattern);
       assert.isFalse(p.matches("somepkg"));
-      assert.strictEqual(yield* S.encodeEffect(GlobPattern.FromString)(p), "@scope/*");
+      const value1 = yield* S.encodeEffect(GlobPattern.FromString)(p);
+      assert.strictEqual(value1, "@scope/*");
     })
   );
 

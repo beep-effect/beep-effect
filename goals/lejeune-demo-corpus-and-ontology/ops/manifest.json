@@ -34,7 +34,7 @@
     "goals/lejeune-demo-corpus-and-ontology/GOAL.md",
     "goals/lejeune-demo-corpus-and-ontology/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

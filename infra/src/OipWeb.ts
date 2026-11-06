@@ -13,11 +13,13 @@ import * as cloudflare from "@pulumi/cloudflare";
 import * as pulumi from "@pulumi/pulumi";
 import * as vercel from "@pulumiverse/vercel";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { optionalPulumiConfigFields } from "./internal/PulumiConfigSchema.ts";
 import { VercelAuthenticationDeploymentType } from "./Vercel.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $InfraId.create("OipWeb");
 
@@ -621,23 +623,26 @@ export const loadOipWebRuntimeSecrets = (): OipWebRuntimeSecrets => {
 
 const secureBucketPolicy = (bucket: aws.s3.Bucket): pulumi.Output<string> =>
   bucket.arn.apply((arn) =>
-    JSON.stringify({
-      Statement: [
-        {
-          Action: "s3:*",
-          Condition: {
-            Bool: {
-              "aws:SecureTransport": "false",
+    Result.getOrThrowWith(
+      S.encodeUnknownResult(UnknownJson)({
+        Statement: [
+          {
+            Action: "s3:*",
+            Condition: {
+              Bool: {
+                "aws:SecureTransport": "false",
+              },
             },
+            Effect: "Deny",
+            Principal: "*",
+            Resource: [arn, `${arn}/*`],
+            Sid: "DenyInsecureTransport",
           },
-          Effect: "Deny",
-          Principal: "*",
-          Resource: [arn, `${arn}/*`],
-          Sid: "DenyInsecureTransport",
-        },
-      ],
-      Version: "2012-10-17",
-    })
+        ],
+        Version: "2012-10-17",
+      }),
+      identity
+    )
   );
 
 const makeBucketBaseline = (

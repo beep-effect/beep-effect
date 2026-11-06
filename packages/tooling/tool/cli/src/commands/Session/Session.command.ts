@@ -208,7 +208,8 @@ export const sessionOpenCommand = Command.make(
     const program = Effect.gen(function* () {
       const facts = yield* sessionCheckoutFacts(process.cwd());
       const ledger = yield* SessionLedger;
-      const rows = openSessionRows(yield* ledger.list(facts.repository));
+      const list1 = yield* ledger.list(facts.repository);
+      const rows = openSessionRows(list1);
       const goalCloseouts = yield* readGoalCloseoutViews(facts.checkout);
       if (json) {
         const report = SessionOpenReport.make({

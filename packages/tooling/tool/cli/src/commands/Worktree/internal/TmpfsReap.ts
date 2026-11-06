@@ -39,6 +39,12 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { TmpfsReapSkipReason } from "./TmpfsReap.schemas.ts";
 
+class TmpfsReapOperationError extends S.TaggedError<TmpfsReapOperationError, { readonly brand: unique symbol }>()(
+  "TmpfsReapOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in TmpfsReap.ts." }
+) {}
+
 const $I = $RepoCliId.create("commands/Worktree/internal/TmpfsReap");
 
 const HEAD_INSTALL_PREFIX = "beep-yeet-head-install-";
@@ -169,15 +175,17 @@ const readDirectoryOption = Effect.fnUntraced(function* (
 const directoryNames = Effect.fnUntraced(function* (
   directory: string
 ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem> {
-  return O.getOrElse(yield* readDirectoryOption(directory), A.empty<string>);
+  const readDirectoryOption1 = yield* readDirectoryOption(directory);
+  return O.getOrElse(readDirectoryOption1, A.empty<string>);
 });
 
 const isDirectory = Effect.fnUntraced(function* (
   entryPath: string
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
+  const pipe2 = yield* fs.stat(entryPath).pipe(Effect.option);
   return pipe(
-    yield* fs.stat(entryPath).pipe(Effect.option),
+    pipe2,
     O.exists((info) => Str.Equivalence(info.type, "Directory"))
   );
 });
@@ -222,7 +230,8 @@ const gitDirForCandidate = Effect.fnUntraced(function* (
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
   const gitFile = pathService.join(candidatePath, ".git");
-  if (O.isSome(yield* fs.readLink(gitFile).pipe(Effect.option))) {
+  const pipe3 = yield* fs.readLink(gitFile).pipe(Effect.option);
+  if (O.isSome(pipe3)) {
     return O.none();
   }
   const gitFileInfo = yield* fs.stat(gitFile).pipe(Effect.option);
@@ -275,11 +284,13 @@ const danglingStubContentsAreExact = Effect.fnUntraced(function* (
     return false;
   }
   const gitFile = pathService.join(candidatePath, ".git");
-  if (O.isSome(yield* fs.readLink(gitFile).pipe(Effect.option))) {
+  const pipe4 = yield* fs.readLink(gitFile).pipe(Effect.option);
+  if (O.isSome(pipe4)) {
     return false;
   }
+  const pipe5 = yield* fs.stat(gitFile).pipe(Effect.option);
   return pipe(
-    yield* fs.stat(gitFile).pipe(Effect.option),
+    pipe5,
     O.exists(
       (info) =>
         Str.Equivalence(info.type, "File") && ByteSize.isLessThanOrEqualTo(info.size, DANGLING_GIT_FILE_BYTE_LIMIT)
@@ -343,7 +354,8 @@ const fallowIdleSinceMillis = Effect.fnUntraced(function* (
   siblingNames: ReadonlyArray<string>
 ): Effect.fn.Return<number, never, FileSystem.FileSystem | Path.Path> {
   const lastUsedPaths = yield* fallowLastUsedPaths(candidatePath, siblingNames);
-  const readings = A.getSomes(yield* Effect.forEach(lastUsedPaths, statMtimeMillis, { concurrency: 16 }));
+  const forEach6 = yield* Effect.forEach(lastUsedPaths, statMtimeMillis, { concurrency: 16 });
+  const readings = A.getSomes(forEach6);
   return newestMillis(readings, candidateMtimeMillis);
 });
 
@@ -353,11 +365,10 @@ const fallowOwnerRoot = Effect.fnUntraced(function* (
 ): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem | Path.Path> {
   const pathService = yield* Path.Path;
   const lastUsedPaths = yield* fallowLastUsedPaths(candidatePath, siblingNames);
-  const contents = A.getSomes(
-    yield* Effect.forEach(lastUsedPaths, readFallowSidecar, {
-      concurrency: 4,
-    })
-  );
+  const forEach7 = yield* Effect.forEach(lastUsedPaths, readFallowSidecar, {
+    concurrency: 4,
+  });
+  const contents = A.getSomes(forEach7);
   return pipe(
     A.flatMap(contents, (content) => Str.split(content, "\n")),
     A.map(Str.trim),
@@ -372,15 +383,20 @@ const readFallowSidecar = (lastUsed: string): Effect.Effect<O.Option<string>> =>
   Effect.suspend(() => {
     const fs = process.getBuiltinModule("node:fs");
     let descriptor: number | undefined;
-    return Effect.try(() => {
-      descriptor = fs.openSync(lastUsed, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
-      const stat = fs.fstatSync(descriptor);
-      if (!stat.isFile() || stat.size > FALLOW_SIDECAR_BYTE_LIMIT) {
-        return O.none();
-      }
-      const bytes = new Uint8Array(FALLOW_SIDECAR_BYTE_LIMIT + 1);
-      const count = fs.readSync(descriptor, bytes, 0, bytes.length, 0);
-      return count > FALLOW_SIDECAR_BYTE_LIMIT ? O.none() : O.some(new TextDecoder().decode(bytes.subarray(0, count)));
+    return Effect.try({
+      try: () => {
+        descriptor = fs.openSync(lastUsed, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
+        const stat = fs.fstatSync(descriptor);
+        if (!stat.isFile() || stat.size > FALLOW_SIDECAR_BYTE_LIMIT) {
+          return O.none();
+        }
+        const bytes = new Uint8Array(FALLOW_SIDECAR_BYTE_LIMIT + 1);
+        const count = fs.readSync(descriptor, bytes, 0, bytes.length, 0);
+        return count > FALLOW_SIDECAR_BYTE_LIMIT
+          ? O.none()
+          : O.some(new TextDecoder().decode(bytes.subarray(0, count)));
+      },
+      catch: (cause) => TmpfsReapOperationError.make({ cause }),
     }).pipe(
       Effect.orElseSucceed(O.none),
       Effect.ensuring(
@@ -475,75 +491,79 @@ const discoverWorktreeStubs = Effect.fnUntraced(function* (
   const pathService = yield* Path.Path;
   const fs = yield* FileSystem.FileSystem;
   const worktreesRoots = A.filter(topLevelNames, Str.endsWith(WORKTREES_ROOT_SUFFIX));
-  return A.flatten(
-    yield* Effect.forEach(
-      worktreesRoots,
-      Effect.fnUntraced(function* (worktreesRootName: string) {
-        const configuredWorktreesRoot = pathService.join(root, worktreesRootName);
-        if (!(yield* isDirectory(configuredWorktreesRoot))) {
-          return A.empty<DiscoveredCandidate>();
-        }
-        const canonicalWorktreesRoot = yield* fs.realPath(configuredWorktreesRoot).pipe(Effect.option);
-        if (O.isNone(canonicalWorktreesRoot)) {
-          return A.empty<DiscoveredCandidate>();
-        }
-        if (!pathIsWithin(pathService, root, canonicalWorktreesRoot.value)) {
-          return A.of<DiscoveredCandidate>({
+  const forEach8 = yield* Effect.forEach(
+    worktreesRoots,
+    Effect.fnUntraced(function* (worktreesRootName: string) {
+      const configuredWorktreesRoot = pathService.join(root, worktreesRootName);
+      if (!(yield* isDirectory(configuredWorktreesRoot))) {
+        return A.empty<DiscoveredCandidate>();
+      }
+      const canonicalWorktreesRoot = yield* fs.realPath(configuredWorktreesRoot).pipe(Effect.option);
+      if (O.isNone(canonicalWorktreesRoot)) {
+        return A.empty<DiscoveredCandidate>();
+      }
+      if (!pathIsWithin(pathService, root, canonicalWorktreesRoot.value)) {
+        const statMtimeMillis26 = yield* statMtimeMillis(canonicalWorktreesRoot.value);
+        return A.of<DiscoveredCandidate>({
+          root,
+          path: canonicalWorktreesRoot.value,
+          reapClass: "dangling-worktree-stub",
+          idleSinceMillis: O.getOrElse(statMtimeMillis26, () => 0),
+          classified: false,
+          shapeSkipReason: O.some("wrong-shape"),
+          parentRepo: O.none(),
+          ownerRoot: O.none(),
+          ownerRootMissing: O.none(),
+        });
+      }
+      const worktreesRoot = canonicalWorktreesRoot.value;
+      const names = yield* directoryNames(worktreesRoot);
+      const forEach27 = yield* Effect.forEach(
+        names,
+        Effect.fnUntraced(function* (name: string) {
+          const entryPath = pathService.join(worktreesRoot, name);
+          return (yield* isDirectory(entryPath)) ? O.some(entryPath) : O.none<string>();
+        }),
+        { concurrency: 16 }
+      );
+      const directoryEntries = A.filter(forEach27, O.isSome);
+      const candidates = yield* Effect.forEach(
+        A.map(directoryEntries, (entry) => entry.value),
+        Effect.fnUntraced(function* (name: string) {
+          const canonicalCandidate = yield* fs.realPath(name).pipe(Effect.option);
+          if (O.isNone(canonicalCandidate)) {
+            return O.none<DiscoveredCandidate>();
+          }
+          const candidatePath = canonicalCandidate.value;
+          const statMtimeMillis28 = yield* statMtimeMillis(candidatePath);
+          const idleSinceMillis = O.getOrElse(statMtimeMillis28, () => 0);
+          if (!pathIsWithin(pathService, worktreesRoot, candidatePath)) {
+            return O.some<DiscoveredCandidate>({
+              root,
+              path: candidatePath,
+              reapClass: "dangling-worktree-stub",
+              idleSinceMillis,
+              classified: false,
+              shapeSkipReason: O.some("wrong-shape"),
+              parentRepo: O.none(),
+              ownerRoot: O.none(),
+              ownerRootMissing: O.none(),
+            });
+          }
+          const discoverDanglingWorktreeStub29 = yield* discoverDanglingWorktreeStub(
             root,
-            path: canonicalWorktreesRoot.value,
-            reapClass: "dangling-worktree-stub",
-            idleSinceMillis: O.getOrElse(yield* statMtimeMillis(canonicalWorktreesRoot.value), () => 0),
-            classified: false,
-            shapeSkipReason: O.some("wrong-shape"),
-            parentRepo: O.none(),
-            ownerRoot: O.none(),
-            ownerRootMissing: O.none(),
-          });
-        }
-        const worktreesRoot = canonicalWorktreesRoot.value;
-        const names = yield* directoryNames(worktreesRoot);
-        const directoryEntries = A.filter(
-          yield* Effect.forEach(
-            names,
-            Effect.fnUntraced(function* (name: string) {
-              const entryPath = pathService.join(worktreesRoot, name);
-              return (yield* isDirectory(entryPath)) ? O.some(entryPath) : O.none<string>();
-            }),
-            { concurrency: 16 }
-          ),
-          O.isSome
-        );
-        const candidates = yield* Effect.forEach(
-          A.map(directoryEntries, (entry) => entry.value),
-          Effect.fnUntraced(function* (name: string) {
-            const canonicalCandidate = yield* fs.realPath(name).pipe(Effect.option);
-            if (O.isNone(canonicalCandidate)) {
-              return O.none<DiscoveredCandidate>();
-            }
-            const candidatePath = canonicalCandidate.value;
-            const idleSinceMillis = O.getOrElse(yield* statMtimeMillis(candidatePath), () => 0);
-            if (!pathIsWithin(pathService, worktreesRoot, candidatePath)) {
-              return O.some<DiscoveredCandidate>({
-                root,
-                path: candidatePath,
-                reapClass: "dangling-worktree-stub",
-                idleSinceMillis,
-                classified: false,
-                shapeSkipReason: O.some("wrong-shape"),
-                parentRepo: O.none(),
-                ownerRoot: O.none(),
-                ownerRootMissing: O.none(),
-              });
-            }
-            return O.some(yield* discoverDanglingWorktreeStub(root, candidatePath, idleSinceMillis));
-          }),
-          { concurrency: 16 }
-        );
-        return A.getSomes(candidates);
-      }),
-      { concurrency: 8 }
-    )
+            candidatePath,
+            idleSinceMillis
+          );
+          return O.some(discoverDanglingWorktreeStub29);
+        }),
+        { concurrency: 16 }
+      );
+      return A.getSomes(candidates);
+    }),
+    { concurrency: 8 }
   );
+  return A.flatten(forEach8);
 });
 
 const canonicalDirectoryWithin = Effect.fnUntraced(function* (
@@ -552,7 +572,8 @@ const canonicalDirectoryWithin = Effect.fnUntraced(function* (
 ): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
-  if (O.isSome(yield* fs.readLink(candidatePath).pipe(Effect.option))) {
+  const pipe9 = yield* fs.readLink(candidatePath).pipe(Effect.option);
+  if (O.isSome(pipe9)) {
     return O.none();
   }
   const canonicalPath = yield* fs.realPath(candidatePath).pipe(Effect.option);
@@ -578,7 +599,8 @@ const classifyTopLevelDirectory = Effect.fnUntraced(function* (
     return O.none();
   }
   const candidatePath = canonicalPath.value;
-  const candidateMtime = O.getOrElse(yield* statMtimeMillis(candidatePath), () => 0);
+  const statMtimeMillis10 = yield* statMtimeMillis(candidatePath);
+  const candidateMtime = O.getOrElse(statMtimeMillis10, () => 0);
   if (Str.startsWith(HEAD_INSTALL_PREFIX)(name)) {
     return O.some({
       root,
@@ -627,10 +649,12 @@ const discoverTopLevel = Effect.fnUntraced(function* (
   root: string
 ): Effect.fn.Return<ReadonlyArray<DiscoveredCandidate>, never, FileSystem.FileSystem | Path.Path> {
   const names = yield* directoryNames(root);
-  const topLevel = A.getSomes(
-    yield* Effect.forEach(names, (name) => classifyTopLevelDirectory(root, name, names), { concurrency: 16 })
-  );
-  return A.appendAll(topLevel, yield* discoverWorktreeStubs(root, names));
+  const forEach11 = yield* Effect.forEach(names, (name) => classifyTopLevelDirectory(root, name, names), {
+    concurrency: 16,
+  });
+  const topLevel = A.getSomes(forEach11);
+  const discoverWorktreeStubs12 = yield* discoverWorktreeStubs(root, names);
+  return A.appendAll(topLevel, discoverWorktreeStubs12);
 });
 
 // Both disk-backed families live under the beep cache root: head installs
@@ -650,9 +674,10 @@ const discoverCacheFamily = Effect.fnUntraced(function* (
   }
   const names = yield* directoryNames(base);
   const familyNames = A.filter(names, Str.startsWith(prefix));
-  return A.getSomes(
-    yield* Effect.forEach(familyNames, (name) => classifyTopLevelDirectory(base, name, names), { concurrency: 16 })
-  );
+  const forEach13 = yield* Effect.forEach(familyNames, (name) => classifyTopLevelDirectory(base, name, names), {
+    concurrency: 16,
+  });
+  return A.getSomes(forEach13);
 });
 
 const discoverCacheHeadInstalls = (cacheRoot: string) =>
@@ -667,21 +692,20 @@ const discoverExplicitGitWorktrees = Effect.fnUntraced(function* (
 ): Effect.fn.Return<ReadonlyArray<DiscoveredCandidate>, never, FileSystem.FileSystem | Path.Path> {
   const pathService = yield* Path.Path;
   const lexicalPaths = A.filter(A.dedupe(candidatePaths), (candidate) => pathIsWithin(pathService, tmpRoot, candidate));
-  const canonicalPaths = A.getSomes(
-    yield* Effect.forEach(lexicalPaths, (candidate) => canonicalDirectoryWithin(tmpRoot, candidate), {
-      concurrency: 16,
-    })
+  const forEach14 = yield* Effect.forEach(lexicalPaths, (candidate) => canonicalDirectoryWithin(tmpRoot, candidate), {
+    concurrency: 16,
+  });
+  const canonicalPaths = A.getSomes(forEach14);
+  const forEach15 = yield* Effect.forEach(
+    canonicalPaths,
+    Effect.fnUntraced(function* (candidatePath: string) {
+      const statMtimeMillis30 = yield* statMtimeMillis(candidatePath);
+      const mtime = O.getOrElse(statMtimeMillis30, () => 0);
+      return yield* discoverGitWorktree(tmpRoot, candidatePath, mtime);
+    }),
+    { concurrency: 16 }
   );
-  return A.getSomes(
-    yield* Effect.forEach(
-      canonicalPaths,
-      Effect.fnUntraced(function* (candidatePath: string) {
-        const mtime = O.getOrElse(yield* statMtimeMillis(candidatePath), () => 0);
-        return yield* discoverGitWorktree(tmpRoot, candidatePath, mtime);
-      }),
-      { concurrency: 16 }
-    )
-  );
+  return A.getSomes(forEach15);
 });
 
 const readLinkOption = Effect.fnUntraced(function* (
@@ -698,9 +722,10 @@ const processReferences = Effect.fnUntraced(function* (
   const cwd = yield* readLinkOption(pathService.join(procPath, "cwd"));
   const fdRoot = pathService.join(procPath, "fd");
   const fdNames = yield* directoryNames(fdRoot);
-  const fdTargets = A.getSomes(
-    yield* Effect.forEach(fdNames, (name) => readLinkOption(pathService.join(fdRoot, name)), { concurrency: 16 })
-  );
+  const forEach16 = yield* Effect.forEach(fdNames, (name) => readLinkOption(pathService.join(fdRoot, name)), {
+    concurrency: 16,
+  });
+  const fdTargets = A.getSomes(forEach16);
   return {
     cwdTargets: O.match(cwd, { onNone: A.empty<string>, onSome: A.of }),
     fdTargets,
@@ -714,21 +739,22 @@ const listHostProcessCommandLines = Effect.fnUntraced(function* (): Effect.fn.Re
 > {
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
-  const pids = A.filter(yield* directoryNames(PROC_ROOT), isProcPidName);
-  return A.getSomes(
-    yield* Effect.forEach(
-      pids,
-      (pid) => fs.readFileString(pathService.join(PROC_ROOT, pid, "cmdline")).pipe(Effect.option),
-      { concurrency: 16 }
-    )
+  const directoryNames17 = yield* directoryNames(PROC_ROOT);
+  const pids = A.filter(directoryNames17, isProcPidName);
+  const forEach18 = yield* Effect.forEach(
+    pids,
+    (pid) => fs.readFileString(pathService.join(PROC_ROOT, pid, "cmdline")).pipe(Effect.option),
+    { concurrency: 16 }
   );
+  return A.getSomes(forEach18);
 });
 
 const scanProcReferences = Effect.fnUntraced(function* (
   processListing: ProcessCommandLineListing
 ): Effect.fn.Return<ProcReferenceSnapshot, never, FileSystem.FileSystem | Path.Path> {
   const pathService = yield* Path.Path;
-  const pids = A.filter(yield* directoryNames(PROC_ROOT), isProcPidName);
+  const directoryNames19 = yield* directoryNames(PROC_ROOT);
+  const pids = A.filter(directoryNames19, isProcPidName);
   const snapshots = yield* Effect.forEach(pids, (pid) => processReferences(pathService.join(PROC_ROOT, pid)), {
     concurrency: 16,
   });
@@ -1069,11 +1095,13 @@ const candidatePathIsStillSafe = Effect.fnUntraced(function* (
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
-  if (O.isSome(yield* fs.readLink(candidate.path).pipe(Effect.option))) {
+  const pipe20 = yield* fs.readLink(candidate.path).pipe(Effect.option);
+  if (O.isSome(pipe20)) {
     return false;
   }
+  const pipe21 = yield* fs.realPath(candidate.path).pipe(Effect.option);
   return pipe(
-    yield* fs.realPath(candidate.path).pipe(Effect.option),
+    pipe21,
     O.exists(
       (canonicalPath) =>
         Str.Equivalence(canonicalPath, candidate.path) && pathIsWithin(pathService, candidate.root, canonicalPath)
@@ -1149,7 +1177,8 @@ const canonicalRoot = Effect.fnUntraced(function* (
 ): Effect.fn.Return<string, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
-  return O.getOrElse(yield* fs.realPath(root).pipe(Effect.option), () => pathService.resolve(root));
+  const pipe22 = yield* fs.realPath(root).pipe(Effect.option);
+  return O.getOrElse(pipe22, () => pathService.resolve(root));
 });
 
 const unsafeTmpRootWarning = (
@@ -1219,7 +1248,8 @@ const resolveTmpfsRoots = Effect.fnUntraced(function* (
     };
   }
   const configuredSystemRoot = O.getOrElse(systemTmpRootOverride, () => "/tmp");
-  return yield* resolveAmbientTmpfsRoots(yield* canonicalRoot(configuredSystemRoot));
+  const canonicalRoot23 = yield* canonicalRoot(configuredSystemRoot);
+  return yield* resolveAmbientTmpfsRoots(canonicalRoot23);
 });
 
 /**
@@ -1269,16 +1299,15 @@ export const runTmpfsReap = Effect.fn("TmpfsReap.runTmpfsReap")(function* (
   const includeClass = (reapClass: TmpfsReapClass): boolean => A.contains(classes, reapClass);
   const explicitGitWorktreePaths = O.fromUndefinedOr(options.gitWorktreePaths);
 
-  const tmpCandidates = A.flatten(
-    yield* Effect.forEach(
-      tmpRoots,
-      (root) =>
-        O.isSome(explicitGitWorktreePaths)
-          ? discoverExplicitGitWorktrees(root, explicitGitWorktreePaths.value)
-          : discoverTopLevel(root),
-      { concurrency: 2 }
-    )
+  const forEach24 = yield* Effect.forEach(
+    tmpRoots,
+    (root) =>
+      O.isSome(explicitGitWorktreePaths)
+        ? discoverExplicitGitWorktrees(root, explicitGitWorktreePaths.value)
+        : discoverTopLevel(root),
+    { concurrency: 2 }
   );
+  const tmpCandidates = A.flatten(forEach24);
   const cacheRoot = yield* resolveBeepCacheRoot(options.cacheRoot);
   const cacheHeadInstalls = includeClass("head-install")
     ? yield* discoverCacheHeadInstalls(cacheRoot)
@@ -1297,7 +1326,8 @@ export const runTmpfsReap = Effect.fn("TmpfsReap.runTmpfsReap")(function* (
     () => listHostProcessCommandLines
   );
   const proc = yield* scanProcReferences(processListing);
-  const heldLockInodes = lockInodes(yield* fs.readFileString(PROC_LOCKS));
+  const readFileString25 = yield* fs.readFileString(PROC_LOCKS);
+  const heldLockInodes = lockInodes(readFileString25);
   const nowMillis = yield* Clock.currentTimeMillis;
   const effectiveNowMillis = O.getOrElse(O.fromUndefinedOr(options.nowMillis), () => nowMillis);
   const measured = yield* Effect.forEach(

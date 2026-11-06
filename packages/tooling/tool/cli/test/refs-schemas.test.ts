@@ -33,7 +33,8 @@ describe("reference manifest schemas", () => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const file = yield* path.fromFileUrl(new URL("../../../../../scripts/references.json", import.meta.url));
-      const manifest = yield* ReferenceWorkspaceManifest.decodeJson(yield* fs.readFileString(file));
+      const readFileString1 = yield* fs.readFileString(file);
+      const manifest = yield* ReferenceWorkspaceManifest.decodeJson(readFileString1);
       expect(manifest.rootDefault).toBe("$HOME/YeeBois/references/effect");
       expect(A.map(manifest.members, (member) => member.name)).toEqual([
         "effect",
@@ -113,7 +114,8 @@ describe("reference manifest schemas", () => {
       ];
       for (const input of retired) expect((yield* decodeStatusUnknown(input).pipe(Effect.result))._tag).toBe("Failure");
       const status = RefsRefreshStatus.make({ ...base, schemaVersion: "beep-refs-refresh/v2", members: [] });
-      expect(yield* RefsRefreshStatus.encodeJson(status)).toBe(
+      const encodedJson = yield* RefsRefreshStatus.encodeJson(status);
+      expect(encodedJson).toBe(
         '{"schemaVersion":"beep-refs-refresh/v2","timestamp":"2026-10-28T08:30:00.000Z","root":"/refs","members":[]}'
       );
     })
@@ -124,7 +126,8 @@ describe("reference manifest schemas", () => {
     Effect.fnUntraced(function* () {
       const detail = "git pull --ff-only origin main exited 1: fatal: not a git repository";
       const failed = MemberRefreshReport.make({ name: "effect", outcome: "pull-failed", detail: O.some(detail) });
-      const decoded = yield* decodeReport(yield* encodeReport(failed));
+      const encodedReport = yield* encodeReport(failed);
+      const decoded = yield* decodeReport(encodedReport);
       assertSome(decoded.detail, detail);
       const clean = yield* encodeReport(
         MemberRefreshReport.make({ name: "effect", outcome: "unchanged", detail: O.none() })
@@ -150,7 +153,8 @@ describe("reference manifest schemas", () => {
     "round-trips member reports through the JSON codec",
     [Arbitrary.schema(MemberRefreshReport)],
     Effect.fnUntraced(function* ([report]) {
-      const decoded = yield* decodeReport(yield* encodeReport(report));
+      const encodedReport2 = yield* encodeReport(report);
+      const decoded = yield* decodeReport(encodedReport2);
       expect(reportEquivalent(decoded, report)).toBe(true);
     }),
     { arbitrary: fcRuns(100) }

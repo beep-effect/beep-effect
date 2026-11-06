@@ -26,7 +26,7 @@ import { QualityTaskStep } from "@beep/repo-cli/test/Quality";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256Hex } from "@beep/schema";
-import { NodeCrypto } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { afterEach, beforeEach, describe, expect, it, vi } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
 import * as Duration from "effect/Duration";
@@ -40,20 +40,23 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { NodeTestLayer } from "./support/CommandTest.ts";
 
 describe("artifact signing posture", () => {
   it.effect("allows unsigned legacy configuration and requires keys independently of bearer roles", () =>
     Effect.gen(function* () {
       for (const role of CacheSigningRole.pick(["reader", "writer"]).literals) {
         for (const key of CacheSigningKeyState.literals) {
-          expect(yield* resolveCacheSigningPosture(CacheSigningRequest.make({ required: false, role, key }))).toEqual({
+          const resolvedCacheSigningPosture = yield* resolveCacheSigningPosture(
+            CacheSigningRequest.make({ required: false, role, key })
+          );
+          expect(resolvedCacheSigningPosture).toEqual({
             _tag: "Disabled",
           });
         }
-        expect(
-          yield* resolveCacheSigningPosture(CacheSigningRequest.make({ required: true, role, key: "resolved" }))
-        ).toEqual({ _tag: "Ready" });
+        const resolvedCacheSigningPosture1 = yield* resolveCacheSigningPosture(
+          CacheSigningRequest.make({ required: true, role, key: "resolved" })
+        );
+        expect(resolvedCacheSigningPosture1).toEqual({ _tag: "Ready" });
       }
       for (const key of CacheSigningKeyState.literals) {
         const failure = yield* resolveCacheSigningPosture(
@@ -61,13 +64,15 @@ describe("artifact signing posture", () => {
         ).pipe(Effect.flip);
         expect(failure.message).toBe("Signing canary requires native artifact verification to be enabled.");
       }
-      expect(
-        yield* resolveCacheSigningPosture(CacheSigningRequest.make({ required: true, role: "canary", key: "resolved" }))
-      ).toEqual({ _tag: "Ready" });
+      const resolvedCacheSigningPosture2 = yield* resolveCacheSigningPosture(
+        CacheSigningRequest.make({ required: true, role: "canary", key: "resolved" })
+      );
+      expect(resolvedCacheSigningPosture2).toEqual({ _tag: "Ready" });
       for (const key of CacheSigningKeyState.pick(["missing", "unresolved"]).literals) {
-        expect(
-          yield* resolveCacheSigningPosture(CacheSigningRequest.make({ required: true, role: "reader", key }))
-        ).toEqual({ _tag: "LocalOnly", reason: key });
+        const resolvedCacheSigningPosture3 = yield* resolveCacheSigningPosture(
+          CacheSigningRequest.make({ required: true, role: "reader", key })
+        );
+        expect(resolvedCacheSigningPosture3).toEqual({ _tag: "LocalOnly", reason: key });
         for (const role of CacheSigningRole.pick(["writer", "canary"]).literals) {
           const failure = yield* resolveCacheSigningPosture(
             CacheSigningRequest.make({ required: true, role, key })
@@ -137,21 +142,20 @@ describe("cache runtime identity input", () => {
 describe("native task selection arguments", () => {
   it.effect("replaces cache controls without changing forwarded arguments", () =>
     Effect.gen(function* () {
-      expect(
-        yield* cacheTaskSelectionArgs([
-          "run",
-          "lint",
-          "--filter=@qualification/b",
-          "--cache",
-          "remote:rw",
-          "--force",
-          "false",
-          "--",
-          "--cache=remote:rw",
-          "--graph",
-          "--filter=@qualification/c",
-        ])
-      ).toEqual([
+      const cacheTaskSelectionArgs4 = yield* cacheTaskSelectionArgs([
+        "run",
+        "lint",
+        "--filter=@qualification/b",
+        "--cache",
+        "remote:rw",
+        "--force",
+        "false",
+        "--",
+        "--cache=remote:rw",
+        "--graph",
+        "--filter=@qualification/c",
+      ]);
+      expect(cacheTaskSelectionArgs4).toEqual([
         "run",
         "lint",
         "--filter=@qualification/b",
@@ -162,12 +166,13 @@ describe("native task selection arguments", () => {
         "--graph",
         "--filter=@qualification/c",
       ]);
-      expect(yield* cacheTaskSelectionArgs(["run", "lint", "--cache=remote:r", "--remote-only=true"])).toEqual([
+      const cacheTaskSelectionArgs5 = yield* cacheTaskSelectionArgs([
         "run",
         "lint",
-        "--dry=json",
-        "--cache=local:",
+        "--cache=remote:r",
+        "--remote-only=true",
       ]);
+      expect(cacheTaskSelectionArgs5).toEqual(["run", "lint", "--dry=json", "--cache=local:"]);
     })
   );
   it.effect("rejects ambiguous non-execution modes and missing cache values", () =>
@@ -199,67 +204,124 @@ const runtimeSnapshot = CacheToolchainSnapshot.make({
   sources: [],
 });
 
-it.layer(NodeTestLayer, { timeout: "30 seconds" })("Git exclusion runtime identity", (it) => {
-  it.effect("binds content across clone and linked-worktree paths and rejects unsafe files", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-git-exclusions-" });
-      const clone = path.join(root, "clone");
-      const worktree = path.join(root, "linked");
-      yield* fs.makeDirectory(clone);
-      const git = Effect.fn("test.gitExclusions.git")(function* (args: ReadonlyArray<string>) {
-        const result = yield* StepExec.runCaptured({
-          command: "git",
-          args,
-          cwd: clone,
-          extendEnv: false,
-          env: { PATH: "/usr/bin", HOME: root, GIT_CONFIG_NOSYSTEM: "1" },
-          source: "all",
-          timeout: Duration.seconds(10),
-          bound: StepExec.OutputBound.make({ maxChars: 4096, truncatedNotice: "[git fixture overflow]" }),
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+  "file creation runtime identity",
+  (it) => {
+    it.effect("reads inherited masks through real child runtimes without changing the parent", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-creation-mask-" });
+        const before = path.join(root, "before");
+        yield* fs.makeDirectory(before, { mode: 0o777 });
+        const parentPermissions = (yield* fs.stat(before)).mode & 0o777;
+        for (const row of [
+          { name: "shared", program: '#!/bin/sh\numask 022\nexec bun "$@"\n', expected: 0o022 },
+          { name: "private", program: '#!/bin/sh\numask 077\nexec bun "$@"\n', expected: 0o077 },
+        ]) {
+          const executable = path.join(root, row.name);
+          yield* fs.writeFileString(executable, row.program);
+          yield* fs.chmod(executable, 0o700);
+          const observed = yield* Fingerprint.collectCacheFileCreationMask(root, executable);
+          expect(observed).toBe(row.expected);
+        }
+        const after = path.join(root, "after");
+        yield* fs.makeDirectory(after, { mode: 0o777 });
+        expect((yield* fs.stat(after)).mode & 0o777).toBe(parentPermissions);
+      })
+    );
+
+    it.effect("rejects empty, malformed and out-of-range child observations", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-invalid-mask-" });
+        const executable = path.join(root, "invalid");
+        for (const output of ["", "-1", "512", "1.5", "not-a-mask", "NaN", "Infinity", "-Infinity"]) {
+          yield* fs.writeFileString(executable, `#!/bin/sh\nprintf '%s\\n' '${output}'\n`);
+          yield* fs.chmod(executable, 0o700);
+          const result = yield* Fingerprint.collectCacheFileCreationMask(root, executable).pipe(Effect.result);
+          const failure = result.pipe(Result.getFailure, O.getOrThrow);
+          assertInstanceOf(failure, CacheCommandError);
+          expect(failure.message).toBe("Cannot observe the process file creation mask.");
+        }
+      })
+    );
+  }
+);
+
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+  "Git exclusion runtime identity",
+  (it) => {
+    it.effect("binds content across clone and linked-worktree paths and rejects unsafe files", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-git-exclusions-" });
+        const clone = path.join(root, "clone");
+        const worktree = path.join(root, "linked");
+        yield* fs.makeDirectory(clone);
+        const git = Effect.fn("test.gitExclusions.git")(function* (args: ReadonlyArray<string>) {
+          const result = yield* StepExec.runCaptured({
+            command: "git",
+            args,
+            cwd: clone,
+            extendEnv: false,
+            env: { PATH: "/usr/bin", HOME: root, GIT_CONFIG_NOSYSTEM: "1" },
+            source: "all",
+            timeout: Duration.seconds(10),
+            bound: StepExec.OutputBound.make({ maxChars: 4096, truncatedNotice: "[git fixture overflow]" }),
+          });
+          expect(result.exitCode).toBe(0);
+          expect(result.truncated).toBe(false);
         });
-        expect(result.exitCode).toBe(0);
-        expect(result.truncated).toBe(false);
-      });
-      yield* git(["init", "--template=", "."]);
-      yield* git([
-        "-c",
-        "user.name=Fixture",
-        "-c",
-        "user.email=fixture@example.invalid",
-        "commit",
-        "--allow-empty",
-        "-m",
-        "fixture",
-      ]);
-      yield* git(["worktree", "add", "--detach", worktree]);
-      const absent = yield* collectCacheGitExclusions(clone);
-      yield* fs.makeDirectory(path.join(clone, ".git/info"), { recursive: true });
-      const exclude = path.join(clone, ".git/info/exclude");
-      yield* fs.writeFileString(exclude, "");
-      expect(yield* collectCacheGitExclusions(worktree)).toEqual(absent);
-      yield* fs.writeFileString(exclude, "/src/index.ts\n");
-      const changed = yield* collectCacheGitExclusions(worktree);
-      expect(changed).toEqual(yield* collectCacheGitExclusions(clone));
-      expect(changed.path).toBe(".git/info/exclude");
-      expect(changed.sha256).not.toBe(absent.sha256);
-      expect(
-        yield* hashCacheToolchain(CacheToolchainSnapshot.make({ ...runtimeSnapshot, sources: [changed] }))
-      ).not.toBe(yield* hashCacheToolchain(CacheToolchainSnapshot.make({ ...runtimeSnapshot, sources: [absent] })));
-      yield* fs.remove(exclude);
-      yield* fs.makeDirectory(exclude);
-      yield* collectCacheGitExclusions(clone).pipe(Effect.flip);
-      yield* fs.remove(exclude, { recursive: true });
-      yield* fs.writeFileString(path.join(root, "outside"), "/src/index.ts\n");
-      yield* fs.symlink(path.join(root, "outside"), exclude);
-      yield* collectCacheGitExclusions(clone).pipe(Effect.flip);
-      yield* fs.remove(exclude);
-      yield* fs.writeFile(exclude, new Uint8Array(1048577));
-      yield* collectCacheGitExclusions(clone).pipe(Effect.flip);
-    })
-  );
-});
+        yield* git(["init", "--template=", "."]);
+        yield* git([
+          "-c",
+          "user.name=Fixture",
+          "-c",
+          "user.email=fixture@example.invalid",
+          "commit",
+          "--allow-empty",
+          "-m",
+          "fixture",
+        ]);
+        yield* git(["worktree", "add", "--detach", worktree]);
+        const absent = yield* collectCacheGitExclusions(clone);
+        yield* fs.makeDirectory(path.join(clone, ".git/info"), { recursive: true });
+        const exclude = path.join(clone, ".git/info/exclude");
+        yield* fs.writeFileString(exclude, "");
+        const collectCacheGitExclusions6 = yield* collectCacheGitExclusions(worktree);
+        expect(collectCacheGitExclusions6).toEqual(absent);
+        yield* fs.writeFileString(exclude, "/src/index.ts\n");
+        const changed = yield* collectCacheGitExclusions(worktree);
+        const expectation = expect(changed);
+        const collectCacheGitExclusions1 = yield* collectCacheGitExclusions(clone);
+        expectation.toEqual(collectCacheGitExclusions1);
+        expect(changed.path).toBe(".git/info/exclude");
+        expect(changed.sha256).not.toBe(absent.sha256);
+        const hashCacheToolchain7 = yield* hashCacheToolchain(
+          CacheToolchainSnapshot.make({ ...runtimeSnapshot, sources: [changed] })
+        );
+        const argument = expect(hashCacheToolchain7).not;
+        const hashCacheToolchain2 = yield* hashCacheToolchain(
+          CacheToolchainSnapshot.make({ ...runtimeSnapshot, sources: [absent] })
+        );
+        argument.toBe(hashCacheToolchain2);
+        yield* fs.remove(exclude);
+        yield* fs.makeDirectory(exclude);
+        yield* collectCacheGitExclusions(clone).pipe(Effect.flip);
+        yield* fs.remove(exclude, { recursive: true });
+        yield* fs.writeFileString(path.join(root, "outside"), "/src/index.ts\n");
+        yield* fs.symlink(path.join(root, "outside"), exclude);
+        yield* collectCacheGitExclusions(clone).pipe(Effect.flip);
+        yield* fs.remove(exclude);
+        yield* fs.writeFile(exclude, new Uint8Array(1048577));
+        yield* collectCacheGitExclusions(clone).pipe(Effect.flip);
+      })
+    );
+  }
+);
 const runtimeNode = CacheCensusNode.make({
   id: "@fixture/dependency#lint",
   workspace: "@fixture/dependency",
@@ -282,8 +344,8 @@ const runtimeNode = CacheCensusNode.make({
   inputCount: S.Natural.make(0),
   inputsDigest: runtimeDigest,
 });
-const runtimeLayer = FsUtilsLive.pipe(
-  Layer.provideMerge(Git.layer),
+// `Git` over the mocked spawner: the runtime readers take it from the context (W7b, SPEC D-19).
+const runtimeLayer = Layer.provideMerge(Git.layer, FsUtilsLive).pipe(
   Layer.provideMerge(
     Layer.mergeAll(
       FileSystem.layerNoop({}),
@@ -457,7 +519,8 @@ it.layer(runtimeLayer, { timeout: "10 seconds" })("runtime native spawn", (it) =
           )
         );
         const spawn = vi.spyOn(StepExec, "runToExit").mockReturnValue(Effect.succeed(0));
-        expect(yield* runCacheRuntimeTasks("/fixture", ["run", "lint"])).toBe(0);
+        const resultCacheRuntimeTasks = yield* runCacheRuntimeTasks("/fixture", ["run", "lint"]);
+        expect(resultCacheRuntimeTasks).toBe(0);
         expect(profile).toHaveBeenCalledWith("/fixture");
         expect(spawn).toHaveBeenLastCalledWith(
           expect.objectContaining({
@@ -540,7 +603,8 @@ it.layer(runtimeLayer, { timeout: "10 seconds" })("runtime native spawn", (it) =
       const spawn = vi.spyOn(StepExec, "runToExit").mockReturnValue(Effect.succeed(7));
       const expected = yield* hashCacheToolchain(runtimeSnapshot);
       const args = ["run", "lint", "--filter=@fixture/entry"];
-      expect(yield* runCacheRuntimeTasks("/fixture", args)).toBe(7);
+      const resultCacheRuntimeTasks8 = yield* runCacheRuntimeTasks("/fixture", args);
+      expect(resultCacheRuntimeTasks8).toBe(7);
       expect(observe).toHaveBeenCalledOnce();
       expect(spawn).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -594,7 +658,8 @@ it.layer(runtimeLayer, { timeout: "10 seconds" })("runtime native spawn", (it) =
         )
       );
       const spawn = vi.spyOn(StepExec, "runToExit").mockReturnValue(Effect.succeed(0));
-      expect(yield* runCacheRuntimeTasks("/fixture", ["run", "lint"])).toBe(0);
+      const resultCacheRuntimeTasks9 = yield* runCacheRuntimeTasks("/fixture", ["run", "lint"]);
+      expect(resultCacheRuntimeTasks9).toBe(0);
       expect(spawn).toHaveBeenCalledWith(expect.objectContaining({ command: "/fixture/turbo", cwd: "/fixture" }));
     })
   );
@@ -708,7 +773,7 @@ describe("runtime step routing", () => {
   });
 });
 
-it.layer(NodeTestLayer, { timeout: "10 seconds" })("native signing configuration", (it) => {
+it.layer(NodeServices.layer, { timeout: "10 seconds" })("native signing configuration", (it) => {
   it.effect("canonicalizes an explicitly selected client without requiring an installed Turbo package", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -718,7 +783,10 @@ it.layer(NodeTestLayer, { timeout: "10 seconds" })("native signing configuration
       const alias = path.join(root, "client-alias");
       yield* fs.writeFileString(native, "caller-verified fixture");
       yield* fs.symlink(native, alias);
-      expect(yield* Census.resolveCacheTurboBinary(root, O.some(alias))).toBe(yield* fs.realPath(native));
+      const resolvedCacheTurboBinary = yield* Census.resolveCacheTurboBinary(root, O.some(alias));
+      const expectation1 = expect(resolvedCacheTurboBinary);
+      const realPath3 = yield* fs.realPath(native);
+      expectation1.toBe(realPath3);
       const missing = yield* Census.resolveCacheTurboBinary(root).pipe(Effect.flip);
       expect(missing.message).toContain("Native Turbo is not installed");
     })
@@ -771,7 +839,8 @@ it.layer(NodeTestLayer, { timeout: "10 seconds" })("native signing configuration
         { source: '{/* fixture */"remoteCache":{"signature":true}}', expected: true },
       ]) {
         yield* fs.writeFileString(file, row.source);
-        expect(yield* Fingerprint.readCacheSignatureRequired(root)).toBe(row.expected);
+        const readCacheSignatureRequired10 = yield* Fingerprint.readCacheSignatureRequired(root);
+        expect(readCacheSignatureRequired10).toBe(row.expected);
       }
       yield* fs.writeFileString(file, '{"remoteCache":{"signature":"synthetic-private-configuration"}}');
       const invalid = yield* Fingerprint.readCacheSignatureRequired(root).pipe(Effect.flip);

@@ -14,7 +14,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(ToolInstallerError)(value);
       const decoded = yield* S.decodeEffect(ToolInstallerError)(encoded);
       assert.strictEqual(S.toEquivalence(ToolInstallerError)(decoded, value), true);
-      assert.deepStrictEqual(yield* S.encodeEffect(ToolInstallerError)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(ToolInstallerError)(decoded);
+      assert.deepStrictEqual(value1, encoded);
       assert.strictEqual(decoded.message, value.message);
       assert.strictEqual(decoded.retryable, value.retryable);
     }),

@@ -184,9 +184,8 @@ describe("ExecutionRecordTables", () => {
       const decision = yield* allowedDecision;
       const insert = yield* Effect.fromResult(toExecutionDecisionInsert(decision));
 
-      expect(
-        decisionEquivalence(yield* Effect.fromResult(fromExecutionDecisionRow(asSelectedRow(insert))), decision)
-      ).toBe(true);
+      const fromResult1 = yield* Effect.fromResult(fromExecutionDecisionRow(asSelectedRow(insert)));
+      expect(decisionEquivalence(fromResult1, decision)).toBe(true);
     })
   );
 
@@ -197,9 +196,8 @@ describe("ExecutionRecordTables", () => {
       const insert = yield* Effect.fromResult(toExecutionDecisionInsert(decision));
 
       expect(insert.reason).toBe("destination-not-granted");
-      expect(
-        decisionEquivalence(yield* Effect.fromResult(fromExecutionDecisionRow(asSelectedRow(insert))), decision)
-      ).toBe(true);
+      const fromResult2 = yield* Effect.fromResult(fromExecutionDecisionRow(asSelectedRow(insert)));
+      expect(decisionEquivalence(fromResult2, decision)).toBe(true);
     })
   );
 
@@ -209,9 +207,8 @@ describe("ExecutionRecordTables", () => {
       const recorded = yield* outcome;
       const insert = yield* Effect.fromResult(toExecutionOutcomeInsert(recorded));
 
-      expect(
-        outcomeEquivalence(yield* Effect.fromResult(fromExecutionOutcomeRow(asSelectedOutcomeRow(insert))), recorded)
-      ).toBe(true);
+      const fromResult3 = yield* Effect.fromResult(fromExecutionOutcomeRow(asSelectedOutcomeRow(insert)));
+      expect(outcomeEquivalence(fromResult3, recorded)).toBe(true);
     })
   );
 
@@ -246,17 +243,13 @@ describe("ExecutionRecordTables", () => {
         settlement: "completed",
       });
 
-      expect(
-        outcomeEquivalence(
-          yield* Effect.fromResult(
-            toExecutionOutcomeInsert(sealedOutcome).pipe(
-              Result.map(asSelectedOutcomeRow),
-              Result.flatMap(fromExecutionOutcomeRow)
-            )
-          ),
-          sealedOutcome
+      const fromResult4 = yield* Effect.fromResult(
+        toExecutionOutcomeInsert(sealedOutcome).pipe(
+          Result.map(asSelectedOutcomeRow),
+          Result.flatMap(fromExecutionOutcomeRow)
         )
-      ).toBe(true);
+      );
+      expect(outcomeEquivalence(fromResult4, sealedOutcome)).toBe(true);
     })
   );
   it.effect(
@@ -267,32 +260,24 @@ describe("ExecutionRecordTables", () => {
       const recorded = yield* outcome;
       const outcomeInsert = yield* Effect.fromResult(toExecutionOutcomeInsert(recorded));
 
-      expectConverterFailure(
-        yield* converterFailure(toExecutionDecisionInsert(withUnencodableHash(decision))),
-        "toDecisionInsert"
+      const converterFailure5 = yield* converterFailure(toExecutionDecisionInsert(withUnencodableHash(decision)));
+      expectConverterFailure(converterFailure5, "toDecisionInsert");
+      const converterFailure6 = yield* converterFailure(
+        fromExecutionDecisionRow({
+          ...asSelectedRow(decisionInsert),
+          hash: 42,
+        } as unknown as ExecutionDecisionRow)
       );
-      expectConverterFailure(
-        yield* converterFailure(
-          fromExecutionDecisionRow({
-            ...asSelectedRow(decisionInsert),
-            hash: 42,
-          } as unknown as ExecutionDecisionRow)
-        ),
-        "fromDecisionRow"
+      expectConverterFailure(converterFailure6, "fromDecisionRow");
+      const converterFailure7 = yield* converterFailure(toExecutionOutcomeInsert(withUnencodableHash(recorded)));
+      expectConverterFailure(converterFailure7, "toOutcomeInsert");
+      const converterFailure8 = yield* converterFailure(
+        fromExecutionOutcomeRow({
+          ...asSelectedOutcomeRow(outcomeInsert),
+          hash: 42,
+        } as unknown as ExecutionOutcomeRow)
       );
-      expectConverterFailure(
-        yield* converterFailure(toExecutionOutcomeInsert(withUnencodableHash(recorded))),
-        "toOutcomeInsert"
-      );
-      expectConverterFailure(
-        yield* converterFailure(
-          fromExecutionOutcomeRow({
-            ...asSelectedOutcomeRow(outcomeInsert),
-            hash: 42,
-          } as unknown as ExecutionOutcomeRow)
-        ),
-        "fromOutcomeRow"
-      );
+      expectConverterFailure(converterFailure8, "fromOutcomeRow");
     })
   );
 

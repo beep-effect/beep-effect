@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "cache-permission-flag-native-availability/v1",
+  "recordedAt": "2026-11-03T11:22:18.548896+00:00",
+  "authority": "Native configuration parsing only; no mode-hash semantics, task qualification, activation or performance claim.",
+  "sourceState": "working-tree-bound",
+  "sourceBindings": [
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-permission-flag-availability.py",
+      "sha256": "d6b23f7a4a8c14ff58fb8033fb666af68ce2297974895d61d4978ba021fe3f11"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/current-client-pins.json",
+      "sha256": "b3d507054f6e67ae8de5b235f05ae6786aed2f3f4361da20ec49a50d67cacecd"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py",
+      "sha256": "49e4fd3edc49365f32dc2ce3cdec00e8b0d22034a54a9c1a37bbfd08f868baf0"
+    }
+  ],
+  "clients": {
+    "stable": {
+      "reportedVersion": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "reportedVersion": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+    }
+  },
+  "rows": [
+    {
+      "channel": "stable",
+      "enabled": false,
+      "exit": 1,
+      "classification": "configuration-key-rejected",
+      "dryRunTaskCount": 0,
+      "sentinelExecuted": false,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "775054796dccf23b475412c26c43cc3b8a40408e6ea7b52373b4f5d60cedb8f3"
+    },
+    {
+      "channel": "stable",
+      "enabled": true,
+      "exit": 1,
+      "classification": "configuration-key-rejected",
+      "dryRunTaskCount": 0,
+      "sentinelExecuted": false,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "b4aacda3a8be29bfc4ff91b56ca343420f56d63834edd59ca1aec7ae4f2611c2"
+    },
+    {
+      "channel": "canary",
+      "enabled": false,
+      "exit": 0,
+      "classification": "dry-run-accepted",
+      "dryRunTaskCount": 1,
+      "sentinelExecuted": false,
+      "stdoutSha256": "c3769cfd325430a9f07cb8d3f3004196bdeeb2a7fc2667c16cf63fc40790c276",
+      "stderrSha256": "c29d1bee8b94c967ca9498a009aa6a65c5eb670825b37fff42865f34369ff2e0"
+    },
+    {
+      "channel": "canary",
+      "enabled": true,
+      "exit": 0,
+      "classification": "dry-run-accepted",
+      "dryRunTaskCount": 1,
+      "sentinelExecuted": false,
+      "stdoutSha256": "d72fd6b193936ed43b51c3ab0eaa7e9819740befe0a035d5277cc5b5bd97ccbd",
+      "stderrSha256": "c29d1bee8b94c967ca9498a009aa6a65c5eb670825b37fff42865f34369ff2e0"
+    }
+  ],
+  "tasksExecuted": 0,
+  "ownedFixturesRemoved": true,
+  "bounds": {
+    "perProcessSeconds": 20,
+    "maximumProcesses": 4,
+    "stdoutBytes": 1048576,
+    "stderrBytes": 65536,
+    "sequential": true
+  },
+  "productionChanged": false
+}

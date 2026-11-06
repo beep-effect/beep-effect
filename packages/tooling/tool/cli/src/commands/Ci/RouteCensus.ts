@@ -562,7 +562,8 @@ export const ensureRouteHeads = (
       return A.empty<string>();
     }
     // Every head already local means no network at all: a local report runs offline.
-    if (A.isReadonlyArrayEmpty(yield* git.missingCommits(shas))) {
+    const missingCommits1 = yield* git.missingCommits(shas);
+    if (A.isReadonlyArrayEmpty(missingCommits1)) {
       return A.empty<string>();
     }
     yield* git.fetchPullHeads;
@@ -1007,7 +1008,8 @@ export const makeRouteCensusReader: Effect.Effect<
 
   const headEvidence = Effect.fn("RouteCensusReader.headEvidence")(function* (corpus: RouteCorpusLoaded) {
     const heads = pullRequestHeads(corpus.runs);
-    const unresolved = HashSet.fromIterable(yield* git.ensureHeads(A.map(heads, ([headSha]) => headSha)));
+    const ensureHeads2 = yield* git.ensureHeads(A.map(heads, ([headSha]) => headSha));
+    const unresolved = HashSet.fromIterable(ensureHeads2);
     if (HashSet.size(unresolved) > 0) {
       yield* Effect.logWarning("Route heads unresolvable after fetching; routing them as unknown").pipe(
         Effect.annotateLogs({ "route.unresolved": HashSet.size(unresolved) })
@@ -1064,7 +1066,8 @@ export const makeRouteCensusReader: Effect.Effect<
     // Main commits the checkout lacks are fetched by sha; one that stays missing
     // cannot be an ancestor candidate, so its base evidence reads as unknown.
     const mainShas = A.dedupe(A.map(A.sort(mainRuns, NEWEST_FIRST), (run) => run.headSha));
-    const missingMain = HashSet.fromIterable(yield* git.ensureHeads(mainShas));
+    const ensureHeads3 = yield* git.ensureHeads(mainShas);
+    const missingMain = HashSet.fromIterable(ensureHeads3);
     const mainShasNewestFirst = A.filter(mainShas, (sha) => !HashSet.has(missingMain, sha));
     const mainRunsAt = (sha: string): ReadonlyArray<HostedRun> =>
       A.filter(mainRuns, (run) => Str.Equivalence(run.headSha, sha));

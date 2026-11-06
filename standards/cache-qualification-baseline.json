@@ -11,10 +11,10 @@
   "reviews": {
     "//": {
       "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7b, feat/gh-git-w7b-groups)",
-      "reason": "Record the W7b seal drift: the goals completion reads moved onto GitHubContent, so GitHubContent.ts joins the goals-doctor and knowledge policy seals, and the goals doctor dropped GoalsGitError, so Goals.errors.ts leaves them; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
+      "reason": "Record the W7b seal drift and the inherited #2686 manifest drift: the goals completion reads moved onto GitHubContent, so GitHubContent.ts joins the goals-doctor and knowledge policy seals (Goals.errors.ts stays, main's doctor keeps GoalsGitError); @beep/html and @beep/technical-drawing manifests changed in #2686 without a re-stamp; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
         "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7b.md",
-        "sha256": "175314d7b9f5c118d21d040d8a8c91391314977a7810d79496358f1d97b1753e"
+        "sha256": "92674c433ed07d4630843c32dbe2c99e09c5c877a67ab4893db54b0482b62a28"
       }
     },
     "@beep/acp": {
@@ -186,11 +186,11 @@
       }
     },
     "@beep/box-provisioning": {
-      "reviewer": "Claude Opus 5.5 (perf-turbo-granularity, claude/perf-turbo-granularity-110eae)",
-      "reason": "Re-record input lists and policy-task fingerprint edges after quality audit M9, M10 and K3: package-root README/CHANGELOG/LICENSE leave transit, build, check and test hashes, test/** leaves build and transit (eleven test-compiling builds keep it), and the policy seals move to script-less @beep/repo-cli tasks with per-seal root-config routing. Commands, outputs, cache flags and environment are unchanged; no qualification is granted.",
+      "reviewer": "Codex GPT-6.1-Sol (PR 2637 CI repair)",
+      "reason": "Record seven Box provisioning dependency edges to the existing JSONC canonicalizer; commands, outputs, cache settings and qualification remain unchanged.",
       "basis": {
-        "path": "docs/reports/perf-turbo-granularity-cache-review-2026-11-02.md",
-        "sha256": "1da98f30c3c2545b941ca97f7e8bc5fcfad15810713ff25c9f92e2f2ec82fc28"
+        "path": "docs/reports/pr2637-box-jsonc-cache-review-2026-11-03.md",
+        "sha256": "0f8787edabc9d3cc9c32ca73f971724bb03a743aae3a106131d12b8b8e789add"
       }
     },
     "@beep/brand": {
@@ -578,11 +578,11 @@
       }
     },
     "@beep/html": {
-      "reviewer": "Claude Opus 5.5 (perf-turbo-granularity, claude/perf-turbo-granularity-110eae)",
-      "reason": "Re-record input lists and policy-task fingerprint edges after quality audit M9, M10 and K3: package-root README/CHANGELOG/LICENSE leave transit, build, check and test hashes, test/** leaves build and transit (eleven test-compiling builds keep it), and the policy seals move to script-less @beep/repo-cli tasks with per-seal root-config routing. Commands, outputs, cache flags and environment are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7b, feat/gh-git-w7b-groups)",
+      "reason": "Record the W7b seal drift and the inherited #2686 manifest drift: the goals completion reads moved onto GitHubContent, so GitHubContent.ts joins the goals-doctor and knowledge policy seals (Goals.errors.ts stays, main's doctor keeps GoalsGitError); @beep/html and @beep/technical-drawing manifests changed in #2686 without a re-stamp; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/perf-turbo-granularity-cache-review-2026-11-02.md",
-        "sha256": "1da98f30c3c2545b941ca97f7e8bc5fcfad15810713ff25c9f92e2f2ec82fc28"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7b.md",
+        "sha256": "92674c433ed07d4630843c32dbe2c99e09c5c877a67ab4893db54b0482b62a28"
       }
     },
     "@beep/hubspot": {
@@ -642,11 +642,11 @@
       }
     },
     "@beep/law-practice-server": {
-      "reviewer": "Codex (party-slice completion owner)",
-      "reason": "Record audit-named manifest/reference changes and new generated party package tasks; retain existing qualification scope, outputs and cache flags.",
+      "reviewer": "Codex (citation native capture / CI repair)",
+      "reason": "Preserve the Node-only static boundary suite as a disjoint Node continuation while excluding it from incompatible Bun coverage; no production exclusion, floor, cache flag or qualification scope changes.",
       "basis": {
-        "path": "goals/party-slice/research/cache-baseline-review-2026-11-03.md",
-        "sha256": "4a0d2cb90bb55ca51ff283e69ac7ebea53e0e768e9169e03adb51098c6f89596"
+        "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-node-boundary-coverage-review.md",
+        "sha256": "18d54673811c8c4aae6ee9491df6a5884931d59b60ada1b929e4a0ce86890cae"
       }
     },
     "@beep/law-practice-tables": {
@@ -658,11 +658,11 @@
       }
     },
     "@beep/law-practice-use-cases": {
-      "reviewer": "Claude Opus 5.5 (perf-turbo-granularity, claude/perf-turbo-granularity-110eae)",
-      "reason": "Re-record input lists and policy-task fingerprint edges after quality audit M9, M10 and K3: package-root README/CHANGELOG/LICENSE leave transit, build, check and test hashes, test/** leaves build and transit (eleven test-compiling builds keep it), and the policy seals move to script-less @beep/repo-cli tasks with per-seal root-config routing. Commands, outputs, cache flags and environment are unchanged; no qualification is granted.",
+      "reviewer": "GPT-6.1-Sol medium (citation-extraction-engine)",
+      "reason": "Record intentional citation test/integration commands, test configuration and runtime adapter dependency classifications for the server and use-cases subjects. Preserve existing cache settings and qualification scope; grant no qualification.",
       "basis": {
-        "path": "docs/reports/perf-turbo-granularity-cache-review-2026-11-02.md",
-        "sha256": "1da98f30c3c2545b941ca97f7e8bc5fcfad15810713ff25c9f92e2f2ec82fc28"
+        "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-citation-cache-posture-review.md",
+        "sha256": "b5b0aa5b0026651522777c7bc6711fe2fb40fb77b75bb721d33e23bcfd1ddf07"
       }
     },
     "@beep/lejeune-bolt-workbench": {
@@ -1163,10 +1163,10 @@
     },
     "@beep/repo-cli": {
       "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7b, feat/gh-git-w7b-groups)",
-      "reason": "Record the W7b seal drift: the goals completion reads moved onto GitHubContent, so GitHubContent.ts joins the goals-doctor and knowledge policy seals, and the goals doctor dropped GoalsGitError, so Goals.errors.ts leaves them; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
+      "reason": "Record the W7b seal drift and the inherited #2686 manifest drift: the goals completion reads moved onto GitHubContent, so GitHubContent.ts joins the goals-doctor and knowledge policy seals (Goals.errors.ts stays, main's doctor keeps GoalsGitError); @beep/html and @beep/technical-drawing manifests changed in #2686 without a re-stamp; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
         "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7b.md",
-        "sha256": "175314d7b9f5c118d21d040d8a8c91391314977a7810d79496358f1d97b1753e"
+        "sha256": "92674c433ed07d4630843c32dbe2c99e09c5c877a67ab4893db54b0482b62a28"
       }
     },
     "@beep/repo-cli-kit": {
@@ -1362,11 +1362,11 @@
       }
     },
     "@beep/technical-drawing": {
-      "reviewer": "Claude Opus 5.5 (perf-turbo-granularity, claude/perf-turbo-granularity-110eae)",
-      "reason": "Re-record input lists and policy-task fingerprint edges after quality audit M9, M10 and K3: package-root README/CHANGELOG/LICENSE leave transit, build, check and test hashes, test/** leaves build and transit (eleven test-compiling builds keep it), and the policy seals move to script-less @beep/repo-cli tasks with per-seal root-config routing. Commands, outputs, cache flags and environment are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7b, feat/gh-git-w7b-groups)",
+      "reason": "Record the W7b seal drift and the inherited #2686 manifest drift: the goals completion reads moved onto GitHubContent, so GitHubContent.ts joins the goals-doctor and knowledge policy seals (Goals.errors.ts stays, main's doctor keeps GoalsGitError); @beep/html and @beep/technical-drawing manifests changed in #2686 without a re-stamp; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/perf-turbo-granularity-cache-review-2026-11-02.md",
-        "sha256": "1da98f30c3c2545b941ca97f7e8bc5fcfad15810713ff25c9f92e2f2ec82fc28"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7b.md",
+        "sha256": "92674c433ed07d4630843c32dbe2c99e09c5c877a67ab4893db54b0482b62a28"
       }
     },
     "@beep/tesseract": {
@@ -17293,6 +17293,7 @@
         "dependencies": [
           "@beep/box#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build"
@@ -17350,6 +17351,7 @@
         "dependencies": [
           "@beep/box#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build"
@@ -17393,6 +17395,7 @@
         "dependencies": [
           "@beep/box#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build"
@@ -17518,6 +17521,7 @@
         "dependencies": [
           "@beep/box#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -17724,6 +17728,7 @@
         "dependencies": [
           "@beep/box#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit"
@@ -17770,6 +17775,7 @@
         "dependencies": [
           "@beep/box#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -17824,6 +17830,7 @@
         "dependencies": [
           "@beep/box#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build"
@@ -47069,8 +47076,9 @@
       {
         "computation": "@beep/html#build",
         "command": "bun run beep:build",
-        "commandDigest": "6f76936b281cc5a0421d2a0d71932b38f42a02a58275fb14249b1f7d5cbd4583",
+        "commandDigest": "47555925652a577b4dea19369c04df387bfc1bba6ee0d9b48813b1b746c5b73d",
         "dependencies": [
+          "@beep/codegen-kit#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -47126,8 +47134,9 @@
       {
         "computation": "@beep/html#check",
         "command": "bun run beep:check",
-        "commandDigest": "6f76936b281cc5a0421d2a0d71932b38f42a02a58275fb14249b1f7d5cbd4583",
+        "commandDigest": "47555925652a577b4dea19369c04df387bfc1bba6ee0d9b48813b1b746c5b73d",
         "dependencies": [
+          "@beep/codegen-kit#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -47169,8 +47178,9 @@
       {
         "computation": "@beep/html#coverage",
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
-        "commandDigest": "6f76936b281cc5a0421d2a0d71932b38f42a02a58275fb14249b1f7d5cbd4583",
+        "commandDigest": "47555925652a577b4dea19369c04df387bfc1bba6ee0d9b48813b1b746c5b73d",
         "dependencies": [
+          "@beep/codegen-kit#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -47222,7 +47232,7 @@
       {
         "computation": "@beep/html#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "6f76936b281cc5a0421d2a0d71932b38f42a02a58275fb14249b1f7d5cbd4583",
+        "commandDigest": "47555925652a577b4dea19369c04df387bfc1bba6ee0d9b48813b1b746c5b73d",
         "dependencies": [
           "@beep/html#transit",
           "@beep/repo-docgen#transit"
@@ -47261,8 +47271,9 @@
       {
         "computation": "@beep/html#doctest",
         "command": "bun run beep:doctest",
-        "commandDigest": "6f76936b281cc5a0421d2a0d71932b38f42a02a58275fb14249b1f7d5cbd4583",
+        "commandDigest": "47555925652a577b4dea19369c04df387bfc1bba6ee0d9b48813b1b746c5b73d",
         "dependencies": [
+          "@beep/codegen-kit#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -47313,7 +47324,7 @@
       {
         "computation": "@beep/html#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "6f76936b281cc5a0421d2a0d71932b38f42a02a58275fb14249b1f7d5cbd4583",
+        "commandDigest": "47555925652a577b4dea19369c04df387bfc1bba6ee0d9b48813b1b746c5b73d",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -47346,8 +47357,9 @@
       {
         "computation": "@beep/html#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "6f76936b281cc5a0421d2a0d71932b38f42a02a58275fb14249b1f7d5cbd4583",
+        "commandDigest": "47555925652a577b4dea19369c04df387bfc1bba6ee0d9b48813b1b746c5b73d",
         "dependencies": [
+          "@beep/codegen-kit#transit",
           "@beep/identity#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
@@ -47414,7 +47426,7 @@
       {
         "computation": "@beep/html#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "6f76936b281cc5a0421d2a0d71932b38f42a02a58275fb14249b1f7d5cbd4583",
+        "commandDigest": "47555925652a577b4dea19369c04df387bfc1bba6ee0d9b48813b1b746c5b73d",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -47443,7 +47455,7 @@
       {
         "computation": "@beep/html#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "6f76936b281cc5a0421d2a0d71932b38f42a02a58275fb14249b1f7d5cbd4583",
+        "commandDigest": "47555925652a577b4dea19369c04df387bfc1bba6ee0d9b48813b1b746c5b73d",
         "dependencies": [
           "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
         ],
@@ -47498,7 +47510,7 @@
       {
         "computation": "@beep/html#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "6f76936b281cc5a0421d2a0d71932b38f42a02a58275fb14249b1f7d5cbd4583",
+        "commandDigest": "47555925652a577b4dea19369c04df387bfc1bba6ee0d9b48813b1b746c5b73d",
         "dependencies": [
           "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
         ],
@@ -47552,8 +47564,9 @@
       {
         "computation": "@beep/html#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "6f76936b281cc5a0421d2a0d71932b38f42a02a58275fb14249b1f7d5cbd4583",
+        "commandDigest": "47555925652a577b4dea19369c04df387bfc1bba6ee0d9b48813b1b746c5b73d",
         "dependencies": [
+          "@beep/codegen-kit#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -47598,8 +47611,9 @@
       {
         "computation": "@beep/html#test",
         "command": "bun run beep:test",
-        "commandDigest": "6f76936b281cc5a0421d2a0d71932b38f42a02a58275fb14249b1f7d5cbd4583",
+        "commandDigest": "47555925652a577b4dea19369c04df387bfc1bba6ee0d9b48813b1b746c5b73d",
         "dependencies": [
+          "@beep/codegen-kit#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -47652,8 +47666,9 @@
       {
         "computation": "@beep/html#test:integration",
         "command": "bun run beep:test:integration",
-        "commandDigest": "6f76936b281cc5a0421d2a0d71932b38f42a02a58275fb14249b1f7d5cbd4583",
+        "commandDigest": "47555925652a577b4dea19369c04df387bfc1bba6ee0d9b48813b1b746c5b73d",
         "dependencies": [
+          "@beep/codegen-kit#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -47695,8 +47710,9 @@
       {
         "computation": "@beep/html#test:property",
         "command": "bun run beep:test",
-        "commandDigest": "6f76936b281cc5a0421d2a0d71932b38f42a02a58275fb14249b1f7d5cbd4583",
+        "commandDigest": "47555925652a577b4dea19369c04df387bfc1bba6ee0d9b48813b1b746c5b73d",
         "dependencies": [
+          "@beep/codegen-kit#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -52012,7 +52028,7 @@
       {
         "computation": "@beep/law-practice-server#build",
         "command": "bun run beep:build",
-        "commandDigest": "08ba5f4c1eea935dbd9a0c5905566faddae9efd3b757a077b2b033b1ef0c4bd8",
+        "commandDigest": "d26d8a9691908a49d50ccbbcc893e7d92124e48ae6f8f7957de6c9ba7ca1cdab",
         "dependencies": [
           "@beep/box#build",
           "@beep/duckdb#build",
@@ -52095,7 +52111,7 @@
       {
         "computation": "@beep/law-practice-server#check",
         "command": "bun run beep:check",
-        "commandDigest": "08ba5f4c1eea935dbd9a0c5905566faddae9efd3b757a077b2b033b1ef0c4bd8",
+        "commandDigest": "d26d8a9691908a49d50ccbbcc893e7d92124e48ae6f8f7957de6c9ba7ca1cdab",
         "dependencies": [
           "@beep/box#build",
           "@beep/duckdb#build",
@@ -52163,8 +52179,8 @@
       },
       {
         "computation": "@beep/law-practice-server#coverage",
-        "command": "bunx vitest run --coverage",
-        "commandDigest": "08ba5f4c1eea935dbd9a0c5905566faddae9efd3b757a077b2b033b1ef0c4bd8",
+        "command": "bunx --bun vitest run --coverage --exclude=test/integration/** --exclude=test/PartyContactSource.boundary.test.ts",
+        "commandDigest": "d26d8a9691908a49d50ccbbcc893e7d92124e48ae6f8f7957de6c9ba7ca1cdab",
         "dependencies": [
           "@beep/box#build",
           "@beep/duckdb#build",
@@ -52243,7 +52259,7 @@
       {
         "computation": "@beep/law-practice-server#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "08ba5f4c1eea935dbd9a0c5905566faddae9efd3b757a077b2b033b1ef0c4bd8",
+        "commandDigest": "d26d8a9691908a49d50ccbbcc893e7d92124e48ae6f8f7957de6c9ba7ca1cdab",
         "dependencies": [
           "@beep/law-practice-server#transit",
           "@beep/repo-docgen#transit"
@@ -52282,7 +52298,7 @@
       {
         "computation": "@beep/law-practice-server#doctest",
         "command": "bun run beep:doctest",
-        "commandDigest": "08ba5f4c1eea935dbd9a0c5905566faddae9efd3b757a077b2b033b1ef0c4bd8",
+        "commandDigest": "d26d8a9691908a49d50ccbbcc893e7d92124e48ae6f8f7957de6c9ba7ca1cdab",
         "dependencies": [
           "@beep/box#transit",
           "@beep/duckdb#transit",
@@ -52360,7 +52376,7 @@
       {
         "computation": "@beep/law-practice-server#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "08ba5f4c1eea935dbd9a0c5905566faddae9efd3b757a077b2b033b1ef0c4bd8",
+        "commandDigest": "d26d8a9691908a49d50ccbbcc893e7d92124e48ae6f8f7957de6c9ba7ca1cdab",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -52393,7 +52409,7 @@
       {
         "computation": "@beep/law-practice-server#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "08ba5f4c1eea935dbd9a0c5905566faddae9efd3b757a077b2b033b1ef0c4bd8",
+        "commandDigest": "d26d8a9691908a49d50ccbbcc893e7d92124e48ae6f8f7957de6c9ba7ca1cdab",
         "dependencies": [
           "@beep/box#transit",
           "@beep/duckdb#transit",
@@ -52487,7 +52503,7 @@
       {
         "computation": "@beep/law-practice-server#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "08ba5f4c1eea935dbd9a0c5905566faddae9efd3b757a077b2b033b1ef0c4bd8",
+        "commandDigest": "d26d8a9691908a49d50ccbbcc893e7d92124e48ae6f8f7957de6c9ba7ca1cdab",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -52516,7 +52532,7 @@
       {
         "computation": "@beep/law-practice-server#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "08ba5f4c1eea935dbd9a0c5905566faddae9efd3b757a077b2b033b1ef0c4bd8",
+        "commandDigest": "d26d8a9691908a49d50ccbbcc893e7d92124e48ae6f8f7957de6c9ba7ca1cdab",
         "dependencies": [
           "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
         ],
@@ -52571,7 +52587,7 @@
       {
         "computation": "@beep/law-practice-server#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "08ba5f4c1eea935dbd9a0c5905566faddae9efd3b757a077b2b033b1ef0c4bd8",
+        "commandDigest": "d26d8a9691908a49d50ccbbcc893e7d92124e48ae6f8f7957de6c9ba7ca1cdab",
         "dependencies": [
           "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
         ],
@@ -52625,7 +52641,7 @@
       {
         "computation": "@beep/law-practice-server#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "08ba5f4c1eea935dbd9a0c5905566faddae9efd3b757a077b2b033b1ef0c4bd8",
+        "commandDigest": "d26d8a9691908a49d50ccbbcc893e7d92124e48ae6f8f7957de6c9ba7ca1cdab",
         "dependencies": [
           "@beep/box#transit",
           "@beep/duckdb#transit",
@@ -52697,7 +52713,7 @@
       {
         "computation": "@beep/law-practice-server#test",
         "command": "bun run beep:test",
-        "commandDigest": "08ba5f4c1eea935dbd9a0c5905566faddae9efd3b757a077b2b033b1ef0c4bd8",
+        "commandDigest": "d26d8a9691908a49d50ccbbcc893e7d92124e48ae6f8f7957de6c9ba7ca1cdab",
         "dependencies": [
           "@beep/box#transit",
           "@beep/duckdb#transit",
@@ -52767,6 +52783,144 @@
           "dependsOn": [
             "@beep/utils#transit",
             "^transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/law-practice-server#test:integration",
+        "command": "bun run beep:test:integration",
+        "commandDigest": "d26d8a9691908a49d50ccbbcc893e7d92124e48ae6f8f7957de6c9ba7ca1cdab",
+        "dependencies": [
+          "@beep/box#build",
+          "@beep/duckdb#build",
+          "@beep/epistemic-domain#build",
+          "@beep/epistemic-server#build",
+          "@beep/epistemic-tables#build",
+          "@beep/epistemic-use-cases#build",
+          "@beep/file-processing#build",
+          "@beep/identity#build",
+          "@beep/langextract#build",
+          "@beep/law-practice-domain#build",
+          "@beep/law-practice-tables#build",
+          "@beep/law-practice-use-cases#build",
+          "@beep/libpff#build",
+          "@beep/m365#build",
+          "@beep/mcp-kit#build",
+          "@beep/md#build",
+          "@beep/memfs#build",
+          "@beep/nlp#build",
+          "@beep/party-use-cases#build",
+          "@beep/pglite#build",
+          "@beep/postgres#build",
+          "@beep/provenance#build",
+          "@beep/repo-utils#build",
+          "@beep/schema#build",
+          "@beep/shared-domain#build",
+          "@beep/shared-use-cases#build",
+          "@beep/test-runner#build",
+          "@beep/test-utils#build",
+          "@beep/tika#build",
+          "@beep/uspto#build",
+          "@beep/utils#build"
+        ],
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "!.beep/**",
+            "!.fallow/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "../../../vite.shared.ts",
+            "../../../vitest.aliases.generated.json",
+            "../../../vitest.setup.ts",
+            "../../../vitest.shared.ts"
+          ],
+          "env": [
+            "BEEP_TEST_*",
+            "BEEP_TIKA_*",
+            "CLOUD_BOX_TOKEN"
+          ],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "^build"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/law-practice-server#test:integration:parallel",
+        "command": "bun run beep:test:integration",
+        "commandDigest": "d26d8a9691908a49d50ccbbcc893e7d92124e48ae6f8f7957de6c9ba7ca1cdab",
+        "dependencies": [
+          "@beep/box#build",
+          "@beep/duckdb#build",
+          "@beep/epistemic-domain#build",
+          "@beep/epistemic-server#build",
+          "@beep/epistemic-tables#build",
+          "@beep/epistemic-use-cases#build",
+          "@beep/file-processing#build",
+          "@beep/identity#build",
+          "@beep/langextract#build",
+          "@beep/law-practice-domain#build",
+          "@beep/law-practice-tables#build",
+          "@beep/law-practice-use-cases#build",
+          "@beep/libpff#build",
+          "@beep/m365#build",
+          "@beep/mcp-kit#build",
+          "@beep/md#build",
+          "@beep/memfs#build",
+          "@beep/nlp#build",
+          "@beep/party-use-cases#build",
+          "@beep/pglite#build",
+          "@beep/postgres#build",
+          "@beep/provenance#build",
+          "@beep/repo-utils#build",
+          "@beep/schema#build",
+          "@beep/shared-domain#build",
+          "@beep/shared-use-cases#build",
+          "@beep/test-runner#build",
+          "@beep/test-utils#build",
+          "@beep/tika#build",
+          "@beep/uspto#build",
+          "@beep/utils#build"
+        ],
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "!.beep/**",
+            "!.fallow/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "../../../vite.shared.ts",
+            "../../../vitest.aliases.generated.json",
+            "../../../vitest.setup.ts",
+            "../../../vitest.shared.ts"
+          ],
+          "env": [
+            "BEEP_TEST_*",
+            "BEEP_TIKA_*",
+            "CLOUD_BOX_TOKEN"
+          ],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "^build"
           ],
           "persistent": false,
           "interactive": false,
@@ -53351,7 +53505,7 @@
       {
         "computation": "@beep/law-practice-use-cases#build",
         "command": "bun run beep:build",
-        "commandDigest": "39b788cc243e8897719c9f17a2ff1b1424ddb8ea99cb35e9dcc8fe8298f8991b",
+        "commandDigest": "9a5fb366ae9b84e863df707120586f59608dd22a74f6bdbf5ffe653f76d53eca",
         "dependencies": [
           "@beep/epistemic-domain#build",
           "@beep/epistemic-use-cases#build",
@@ -53418,7 +53572,7 @@
       {
         "computation": "@beep/law-practice-use-cases#check",
         "command": "bun run beep:check",
-        "commandDigest": "39b788cc243e8897719c9f17a2ff1b1424ddb8ea99cb35e9dcc8fe8298f8991b",
+        "commandDigest": "9a5fb366ae9b84e863df707120586f59608dd22a74f6bdbf5ffe653f76d53eca",
         "dependencies": [
           "@beep/epistemic-domain#build",
           "@beep/epistemic-use-cases#build",
@@ -53471,7 +53625,7 @@
       {
         "computation": "@beep/law-practice-use-cases#coverage",
         "command": "bunx vitest run --coverage",
-        "commandDigest": "39b788cc243e8897719c9f17a2ff1b1424ddb8ea99cb35e9dcc8fe8298f8991b",
+        "commandDigest": "9a5fb366ae9b84e863df707120586f59608dd22a74f6bdbf5ffe653f76d53eca",
         "dependencies": [
           "@beep/epistemic-domain#build",
           "@beep/epistemic-use-cases#build",
@@ -53534,7 +53688,7 @@
       {
         "computation": "@beep/law-practice-use-cases#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "39b788cc243e8897719c9f17a2ff1b1424ddb8ea99cb35e9dcc8fe8298f8991b",
+        "commandDigest": "9a5fb366ae9b84e863df707120586f59608dd22a74f6bdbf5ffe653f76d53eca",
         "dependencies": [
           "@beep/law-practice-use-cases#transit",
           "@beep/repo-docgen#transit"
@@ -53573,7 +53727,7 @@
       {
         "computation": "@beep/law-practice-use-cases#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "39b788cc243e8897719c9f17a2ff1b1424ddb8ea99cb35e9dcc8fe8298f8991b",
+        "commandDigest": "9a5fb366ae9b84e863df707120586f59608dd22a74f6bdbf5ffe653f76d53eca",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -53606,7 +53760,7 @@
       {
         "computation": "@beep/law-practice-use-cases#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "39b788cc243e8897719c9f17a2ff1b1424ddb8ea99cb35e9dcc8fe8298f8991b",
+        "commandDigest": "9a5fb366ae9b84e863df707120586f59608dd22a74f6bdbf5ffe653f76d53eca",
         "dependencies": [
           "@beep/epistemic-domain#transit",
           "@beep/epistemic-use-cases#transit",
@@ -53684,7 +53838,7 @@
       {
         "computation": "@beep/law-practice-use-cases#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "39b788cc243e8897719c9f17a2ff1b1424ddb8ea99cb35e9dcc8fe8298f8991b",
+        "commandDigest": "9a5fb366ae9b84e863df707120586f59608dd22a74f6bdbf5ffe653f76d53eca",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -53713,7 +53867,7 @@
       {
         "computation": "@beep/law-practice-use-cases#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "39b788cc243e8897719c9f17a2ff1b1424ddb8ea99cb35e9dcc8fe8298f8991b",
+        "commandDigest": "9a5fb366ae9b84e863df707120586f59608dd22a74f6bdbf5ffe653f76d53eca",
         "dependencies": [
           "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
         ],
@@ -53768,7 +53922,7 @@
       {
         "computation": "@beep/law-practice-use-cases#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "39b788cc243e8897719c9f17a2ff1b1424ddb8ea99cb35e9dcc8fe8298f8991b",
+        "commandDigest": "9a5fb366ae9b84e863df707120586f59608dd22a74f6bdbf5ffe653f76d53eca",
         "dependencies": [
           "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
         ],
@@ -53822,7 +53976,7 @@
       {
         "computation": "@beep/law-practice-use-cases#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "39b788cc243e8897719c9f17a2ff1b1424ddb8ea99cb35e9dcc8fe8298f8991b",
+        "commandDigest": "9a5fb366ae9b84e863df707120586f59608dd22a74f6bdbf5ffe653f76d53eca",
         "dependencies": [
           "@beep/epistemic-domain#transit",
           "@beep/epistemic-use-cases#transit",
@@ -53878,7 +54032,7 @@
       {
         "computation": "@beep/law-practice-use-cases#test",
         "command": "bun run beep:test",
-        "commandDigest": "39b788cc243e8897719c9f17a2ff1b1424ddb8ea99cb35e9dcc8fe8298f8991b",
+        "commandDigest": "9a5fb366ae9b84e863df707120586f59608dd22a74f6bdbf5ffe653f76d53eca",
         "dependencies": [
           "@beep/epistemic-domain#transit",
           "@beep/epistemic-use-cases#transit",
@@ -53942,7 +54096,7 @@
       {
         "computation": "@beep/law-practice-use-cases#test:property",
         "command": "bun run beep:test",
-        "commandDigest": "39b788cc243e8897719c9f17a2ff1b1424ddb8ea99cb35e9dcc8fe8298f8991b",
+        "commandDigest": "9a5fb366ae9b84e863df707120586f59608dd22a74f6bdbf5ffe653f76d53eca",
         "dependencies": [
           "@beep/epistemic-domain#transit",
           "@beep/epistemic-use-cases#transit",
@@ -107144,8 +107298,9 @@
       {
         "computation": "@beep/technical-drawing#build",
         "command": "bun run beep:build",
-        "commandDigest": "3ea7637e450725b77f6f5a6170fdb431aea5d965c1a2d65da571a628565bce03",
+        "commandDigest": "b2fb41a906e2b1b79aafd59e2c22d2dabf6f1f4881716286dc50360d89590571",
         "dependencies": [
+          "@beep/codegen-kit#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -107200,8 +107355,9 @@
       {
         "computation": "@beep/technical-drawing#check",
         "command": "bun run beep:check",
-        "commandDigest": "3ea7637e450725b77f6f5a6170fdb431aea5d965c1a2d65da571a628565bce03",
+        "commandDigest": "b2fb41a906e2b1b79aafd59e2c22d2dabf6f1f4881716286dc50360d89590571",
         "dependencies": [
+          "@beep/codegen-kit#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -107242,8 +107398,9 @@
       {
         "computation": "@beep/technical-drawing#coverage",
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
-        "commandDigest": "3ea7637e450725b77f6f5a6170fdb431aea5d965c1a2d65da571a628565bce03",
+        "commandDigest": "b2fb41a906e2b1b79aafd59e2c22d2dabf6f1f4881716286dc50360d89590571",
         "dependencies": [
+          "@beep/codegen-kit#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -107294,7 +107451,7 @@
       {
         "computation": "@beep/technical-drawing#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "3ea7637e450725b77f6f5a6170fdb431aea5d965c1a2d65da571a628565bce03",
+        "commandDigest": "b2fb41a906e2b1b79aafd59e2c22d2dabf6f1f4881716286dc50360d89590571",
         "dependencies": [
           "@beep/repo-docgen#transit",
           "@beep/technical-drawing#transit"
@@ -107333,7 +107490,7 @@
       {
         "computation": "@beep/technical-drawing#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "3ea7637e450725b77f6f5a6170fdb431aea5d965c1a2d65da571a628565bce03",
+        "commandDigest": "b2fb41a906e2b1b79aafd59e2c22d2dabf6f1f4881716286dc50360d89590571",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -107366,8 +107523,9 @@
       {
         "computation": "@beep/technical-drawing#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "3ea7637e450725b77f6f5a6170fdb431aea5d965c1a2d65da571a628565bce03",
+        "commandDigest": "b2fb41a906e2b1b79aafd59e2c22d2dabf6f1f4881716286dc50360d89590571",
         "dependencies": [
+          "@beep/codegen-kit#transit",
           "@beep/identity#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
@@ -107433,7 +107591,7 @@
       {
         "computation": "@beep/technical-drawing#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "3ea7637e450725b77f6f5a6170fdb431aea5d965c1a2d65da571a628565bce03",
+        "commandDigest": "b2fb41a906e2b1b79aafd59e2c22d2dabf6f1f4881716286dc50360d89590571",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -107462,7 +107620,7 @@
       {
         "computation": "@beep/technical-drawing#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "3ea7637e450725b77f6f5a6170fdb431aea5d965c1a2d65da571a628565bce03",
+        "commandDigest": "b2fb41a906e2b1b79aafd59e2c22d2dabf6f1f4881716286dc50360d89590571",
         "dependencies": [
           "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
         ],
@@ -107517,7 +107675,7 @@
       {
         "computation": "@beep/technical-drawing#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "3ea7637e450725b77f6f5a6170fdb431aea5d965c1a2d65da571a628565bce03",
+        "commandDigest": "b2fb41a906e2b1b79aafd59e2c22d2dabf6f1f4881716286dc50360d89590571",
         "dependencies": [
           "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
         ],
@@ -107571,8 +107729,9 @@
       {
         "computation": "@beep/technical-drawing#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "3ea7637e450725b77f6f5a6170fdb431aea5d965c1a2d65da571a628565bce03",
+        "commandDigest": "b2fb41a906e2b1b79aafd59e2c22d2dabf6f1f4881716286dc50360d89590571",
         "dependencies": [
+          "@beep/codegen-kit#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -107616,8 +107775,9 @@
       {
         "computation": "@beep/technical-drawing#test",
         "command": "bun run beep:test",
-        "commandDigest": "3ea7637e450725b77f6f5a6170fdb431aea5d965c1a2d65da571a628565bce03",
+        "commandDigest": "b2fb41a906e2b1b79aafd59e2c22d2dabf6f1f4881716286dc50360d89590571",
         "dependencies": [
+          "@beep/codegen-kit#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -107669,8 +107829,9 @@
       {
         "computation": "@beep/technical-drawing#test:integration",
         "command": "bun run beep:test:integration",
-        "commandDigest": "3ea7637e450725b77f6f5a6170fdb431aea5d965c1a2d65da571a628565bce03",
+        "commandDigest": "b2fb41a906e2b1b79aafd59e2c22d2dabf6f1f4881716286dc50360d89590571",
         "dependencies": [
+          "@beep/codegen-kit#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -121585,7 +121746,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "98e51ac88db9533d63cb946d98e7a6b7f2b2029d1f28eca3248423fbc6860b14"
+        "sha256": "2efbb0c00f77cf59cc97af270e5e4847afecf3d308aa1823e8fd97b98812ffc3"
       }
     ]
   }

@@ -41,10 +41,9 @@
     "explorations/document-structure-ontologies/DECISIONS.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
-    "research/INVENTORY.md",
     "research/CORRESPONDENCE.md",
-    "../../explorations/document-structure-ontologies/research/SOURCES.md"
+    "research/INVENTORY.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {
@@ -93,5 +92,8 @@
     "The design creates a sidecar source of truth or duplicate diagnostic channel.",
     "Exhaustiveness cannot be proven from the live unions.",
     "The implementation would absorb sibling campaign scope."
+  ],
+  "researchReferences": [
+    "../../explorations/document-structure-ontologies/research/SOURCES.md"
   ]
 }

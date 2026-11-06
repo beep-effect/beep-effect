@@ -1,0 +1,189 @@
+{
+  "schemaVersion": "native-source-family-repair/v2",
+  "recordedAt": "2026-11-03T19:36:24.811598+00:00",
+  "authority": "Captured-byte and descriptor-containment repairs. Metadata-only prefix/reader proof; no new native semantic replay, feature acceptance, qualification or production change.",
+  "legacySourceRevision": "63750b8dee65bcc0d6202d78706ed4446c9ddd48",
+  "sourceBindings": [
+    {
+      "path": "native-filter-composition-controls.py",
+      "legacySha256": "d96d2bbb423b9227e1f9be624d64af7004592b22bd85a0c5d16c464461bc8f5c",
+      "currentSha256": "1817749f61dc3b14bd4b47aa99f3bb035eb4b942c5903f19e1b2dfbb6d27e2d5"
+    },
+    {
+      "path": "native-observability-default-controls.py",
+      "legacySha256": "69c955260c49cadce505f5759cf5be20cba24acda7e8911e27eba552fdf1e30e",
+      "currentSha256": "d7eb798667e470211c9eff44b44bb50561f0774a70212dfcec3a3a63c4a6f824"
+    },
+    {
+      "path": "native-selection-controls.py",
+      "legacySha256": "25a1b8766ba91883d761c5942b07fc4011b5ea6329c3d1eed83f758f97a98ce1",
+      "currentSha256": "778619ae43995d2cf38dd562665c7f7dd83a88bbabbf3f0154bf2c6e41bc5191"
+    },
+    {
+      "path": "native-base-ref-controls.py",
+      "legacySha256": "680dcb7f6b6bdf586d8bd9bfa28c03c8d819446d22cac7b967c212c0e84f0182",
+      "currentSha256": "b1dd86613d4c5ecacf3406381f2c93a508422703ce4fa0e48b581b1a45b484a7"
+    },
+    {
+      "path": "native-prune-global-controls.py",
+      "legacySha256": "a61dc3bface802f0704e935050dc6aeb9689027f7ea8060390a3196323f95767",
+      "currentSha256": "86ef166e05fc591e9d57da7f7976ccbd572bc2cf1fc71e251573369d012f3b6b"
+    },
+    {
+      "path": "native-global-configuration-controls.py",
+      "legacySha256": "07d1c3efef835b7c618984b7ab20eb7a49f610f546481656126a283b3e5a503b",
+      "currentSha256": "65283d9abbd83e49373ac9e12f926ad96fae87de7d36cf40a27f3350213147fb"
+    },
+    {
+      "path": "native-setup-controls.py",
+      "legacySha256": "3d1bace02fd76dca80b95eb1efd33bf5cced788e5de42fc67eb2cf3e280be5f8",
+      "currentSha256": "91135a7a8647cd1135d0a831437b6b5622ed73c3cd3c5dbc38a23f461485bd96"
+    },
+    {
+      "path": "native-log-presentation-controls.py",
+      "legacySha256": "47232a3da72af95f48c7fe42c928b4707f415f642d565cb8eeca6b3f8ebdb63a",
+      "currentSha256": "950ee45fe49417977f33f62ba23394234c70ec352e9ef469d61c9d7bcc29c252"
+    },
+    {
+      "path": "native-log-cache-controls.py",
+      "legacySha256": "55097ee5b7ab08bf373c61c31fe93821595b5766ff543e226ba3d584032db685",
+      "currentSha256": "629b02deffc659decad55090c8ee7ba358c19f22fa479b8ec0a807bb1f5daef2"
+    },
+    {
+      "path": "native-signature-key-controls.py",
+      "legacySha256": "2afde39e782ed441b181ce400ac14280a4ce8a1a2c8281a0e86a9fbb80e05b78",
+      "currentSha256": "0f01addd1148b146e9fbe00ca55a08d1c108a876bf5e3ce099ab829ffef58326"
+    },
+    {
+      "path": "native-future-flag-availability.py",
+      "legacySha256": "49e4fd3edc49365f32dc2ce3cdec00e8b0d22034a54a9c1a37bbfd08f868baf0",
+      "currentSha256": "ab4a4f6be9e7c1ed5f132b9600c90d63ff45223f2af59efe58a7b12bf93e7ad2"
+    },
+    {
+      "path": "native-permission-flag-availability.py",
+      "legacySha256": "d6b23f7a4a8c14ff58fb8033fb666af68ce2297974895d61d4978ba021fe3f11",
+      "currentSha256": "227024022e1301561c56fb5f937223d8ef6d89ffd0003f50d7d5d4f5a6d381d3"
+    },
+    {
+      "path": "native-permission-mode-controls.py",
+      "legacySha256": "9c3caea2ec33bfc8afd89199f89e15da0e9f21db659ca516c83cf91d0bef264f",
+      "currentSha256": "cc049b32ae847e98699dcfce024ff3b16c38160ebc864a065cae103223476637"
+    }
+  ],
+  "control": {
+    "path": "native-source-family-controls.py",
+    "sha256": "2cedec4acff7144f44a3a73a21b6a66cfff6e04b03a8e459a8761a57a5954ecd",
+    "report": "native-source-family-controls.json",
+    "reportSha256": "fdf233e2761e0392216581a487d7a0e2c32bea61c7f3aeaeb7f0a84801989daf",
+    "cases": 208,
+    "prefixDrivers": 10,
+    "classificationCounts": {
+      "unchanged-prefix-completed": 20,
+      "legacy-no-pre-probe-refusal": 50,
+      "legacy-external-pin-bytes-read": 20,
+      "source-movement-refused-before-probes": 80,
+      "pin-replacement-refused-before-external-read": 20,
+      "legacy-refusal-after-probes": 4,
+      "external-pins-refused-before-read": 8,
+      "legacy-refusal-before-probes": 6
+    },
+    "nativeInvocations": 0,
+    "taskExecutions": 0
+  },
+  "signaturePrefixControl": {
+    "path": "signature-key-source-binding-controls.py",
+    "sha256": "8bd8361a64cf6926a65648aa08e63cac2ee4bc8c3d27911e7d9a489a2c8accd1",
+    "report": "signature-key-source-binding-contained-controls.json",
+    "reportSha256": "f0a17a45fddd1f59f3816319c70eaef1410327ff9c97ce39e6c127b5ad400270",
+    "cases": 13,
+    "sourceReaderSeam": "stubbed only in these thirteen legacy-binding contrasts; actual descriptor behavior is covered by the separate208 cases"
+  },
+  "collectorAndOracleFunctions": [
+    {
+      "path": "native-filter-composition-controls.py",
+      "existingCollectorAndOracleFunctionsUnchanged": true,
+      "sourceDigestHelperChangeAllowed": false
+    },
+    {
+      "path": "native-observability-default-controls.py",
+      "existingCollectorAndOracleFunctionsUnchanged": true,
+      "sourceDigestHelperChangeAllowed": false
+    },
+    {
+      "path": "native-selection-controls.py",
+      "existingCollectorAndOracleFunctionsUnchanged": true,
+      "sourceDigestHelperChangeAllowed": false
+    },
+    {
+      "path": "native-base-ref-controls.py",
+      "existingCollectorAndOracleFunctionsUnchanged": true,
+      "sourceDigestHelperChangeAllowed": false
+    },
+    {
+      "path": "native-prune-global-controls.py",
+      "existingCollectorAndOracleFunctionsUnchanged": true,
+      "sourceDigestHelperChangeAllowed": false
+    },
+    {
+      "path": "native-global-configuration-controls.py",
+      "existingCollectorAndOracleFunctionsUnchanged": true,
+      "sourceDigestHelperChangeAllowed": false
+    },
+    {
+      "path": "native-setup-controls.py",
+      "existingCollectorAndOracleFunctionsUnchanged": true,
+      "sourceDigestHelperChangeAllowed": false
+    },
+    {
+      "path": "native-log-presentation-controls.py",
+      "existingCollectorAndOracleFunctionsUnchanged": true,
+      "sourceDigestHelperChangeAllowed": false
+    },
+    {
+      "path": "native-log-cache-controls.py",
+      "existingCollectorAndOracleFunctionsUnchanged": true,
+      "sourceDigestHelperChangeAllowed": false
+    },
+    {
+      "path": "native-signature-key-controls.py",
+      "existingCollectorAndOracleFunctionsUnchanged": true,
+      "sourceDigestHelperChangeAllowed": false
+    },
+    {
+      "path": "native-future-flag-availability.py",
+      "existingCollectorAndOracleFunctionsUnchanged": true,
+      "sourceDigestHelperChangeAllowed": false
+    },
+    {
+      "path": "native-permission-flag-availability.py",
+      "existingCollectorAndOracleFunctionsUnchanged": true,
+      "sourceDigestHelperChangeAllowed": false
+    },
+    {
+      "path": "native-permission-mode-controls.py",
+      "existingCollectorAndOracleFunctionsUnchanged": true,
+      "sourceDigestHelperChangeAllowed": true
+    }
+  ],
+  "changes": [
+    "Parse/hash the same captured pin/helper/Bun-version bytes and refuse movement before probes.",
+    "The shared bounded-reader owner opens a descriptor with no-follow/nonblocking flags, verifies its actual kernel path is inside the checkout and regular-file status, then reads at most oneMiB.",
+    "Pin-manifest capture/revalidation uses descriptor containment. Other fixed source/dependency documents retain captured-byte stability checks and may use the approved shared installation.",
+    "Propagate the shared reader to availability and permission drivers.",
+    "Create the two log observation reports exclusively with mode0600."
+  ],
+  "currentNativeReplaysForChangedDrivers": "pending; historical native reports retain their original driver/shared-harness bindings",
+  "separateSignatureReplay": {
+    "path": "signature-key-sourcebound-native-replay.json",
+    "nativeCases": 168,
+    "scope": "Retained under the earlier source envelope; this predates the descriptor repair and is not current-driver proof."
+  },
+  "reviewFinding": "https://github.com/beep-effect/beep-effect/pull/2689#discussion_r4459423768",
+  "reversal": "Revert code/registration changes through Git while retaining historical observations and all repair envelopes.",
+  "productionSettingsChanged": false,
+  "featureDispositionCountsChanged": false,
+  "taskQualificationGranted": false,
+  "retainedCalibrationFailure": "The initial metadata fixture omitted its synthetic canary executable; failed source/receipt retained privately. No native process ran.",
+  "sharedDependencyDocumentationOutsideCheckoutAccepted": true,
+  "retainedCorrectiveWave": "The initial published descriptor reader was applied too broadly to fixed dependency metadata. The actual shared install resolves docs outside the worktree; pin-only containment preserves that layout. The208 controls now include an external shared-doc symlink and all pin replacement negatives."
+}

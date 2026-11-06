@@ -86,15 +86,18 @@ describe("Fibered", () => {
   it.effect(
     "accepts every member encoding and rejects wrong tags and payloads",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeFamilyUnion({ _tag: "text", value: "hello" })).toEqual({
+      const decodedFamilyUnion = yield* decodeFamilyUnion({ _tag: "text", value: "hello" });
+      expect(decodedFamilyUnion).toEqual({
         _tag: "text",
         value: "hello",
       });
-      expect(yield* decodeFamilyUnion({ _tag: "count", value: 3 })).toEqual({
+      const decodedFamilyUnion1 = yield* decodeFamilyUnion({ _tag: "count", value: 3 });
+      expect(decodedFamilyUnion1).toEqual({
         _tag: "count",
         value: 3,
       });
-      expect(yield* decodeFamilyUnion({ _tag: "flag", value: true })).toEqual({
+      const decodedFamilyUnion2 = yield* decodeFamilyUnion({ _tag: "flag", value: true });
+      expect(decodedFamilyUnion2).toEqual({
         _tag: "flag",
         value: true,
       });

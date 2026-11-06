@@ -184,7 +184,8 @@ describe("Yeet inbox harness adapter", () => {
                 stdout: "ignore",
                 stderr: "ignore",
               });
-              expect(yield* handle.exitCode).toBe(0);
+              const exitCode1 = yield* handle.exitCode;
+              expect(exitCode1).toBe(0);
             }
             const result = yield* runHook(
               root,
@@ -197,9 +198,11 @@ describe("Yeet inbox harness adapter", () => {
             );
             expect(result.exitCode).toBe(0);
             expect(result.stderr).toBe("");
-            expect(yield* decodeObject(result.stdout)).toMatchObject({ decision: "block" });
+            const decodedObject = yield* decodeObject(result.stdout);
+            expect(decodedObject).toMatchObject({ decision: "block" });
             expect(result.stdout).toContain("coverage-live");
-            expect(yield* fs.exists(path.join(cwd, ".beep"))).toBe(false);
+            const exists2 = yield* fs.exists(path.join(cwd, ".beep"));
+            expect(exists2).toBe(false);
           })
         )
       );
@@ -222,7 +225,8 @@ describe("Yeet inbox harness adapter", () => {
           const path = yield* Path.Path;
           const git = Effect.fn("YeetInboxHookAdapterTest.git")(function* (args: ReadonlyArray<string>) {
             const handle = yield* ChildProcess.make("git", args, { cwd: root, stdout: "ignore", stderr: "ignore" });
-            expect(yield* handle.exitCode).toBe(0);
+            const exitCode3 = yield* handle.exitCode;
+            expect(exitCode3).toBe(0);
           });
           yield* fs.remove(path.join(root, ".git"), { recursive: true });
           yield* git(["init", "--quiet"]);
@@ -243,7 +247,8 @@ describe("Yeet inbox harness adapter", () => {
           const env = { BEEP_YEET_HOOK_ROOT: "", CLAUDE_PROJECT_DIR: root };
           for (const cwd of [lane, nested]) {
             const result = yield* runHook(root, "claude", { cwd, hook_event_name: "Stop" }, env);
-            expect(yield* decodeObject(result.stdout)).toEqual({});
+            const decodedObject4 = yield* decodeObject(result.stdout);
+            expect(decodedObject4).toEqual({});
           }
           const ownInbox = path.join(lane, ".beep", "inbox");
           yield* fs.makeDirectory(ownInbox, { recursive: true });
@@ -257,13 +262,16 @@ describe("Yeet inbox harness adapter", () => {
           });
           yield* fs.writeFileString(path.join(ownInbox, "failures.ndjson"), ownRow);
           const own = yield* runHook(root, "claude", { cwd: nested, hook_event_name: "Stop" }, env);
-          expect(yield* decodeObject(own.stdout)).toMatchObject({ decision: "block" });
+          const decodedObject5 = yield* decodeObject(own.stdout);
+          expect(decodedObject5).toMatchObject({ decision: "block" });
           expect(own.stdout).toContain("lane-conflict");
           expect(own.stdout).not.toContain("coverage-live");
           const clone = yield* runHook(root, "claude", { cwd: root, hook_event_name: "Stop" }, env);
-          expect(yield* decodeObject(clone.stdout)).toMatchObject({ decision: "block" });
+          const decodedObject6 = yield* decodeObject(clone.stdout);
+          expect(decodedObject6).toMatchObject({ decision: "block" });
           expect(clone.stdout).toContain("coverage-live");
-          expect(yield* fs.exists(path.join(root, ".beep", "inbox", "acks", "coverage-live"))).toBe(false);
+          const exists7 = yield* fs.exists(path.join(root, ".beep", "inbox", "acks", "coverage-live"));
+          expect(exists7).toBe(false);
         })
       )
     );
@@ -283,7 +291,8 @@ describe("Yeet inbox harness adapter", () => {
           expect(first.stdout).toContain("P1 thread-1 [thread-live]");
           expect(first.stdout).toContain("P2 origin/main [drift-live]");
           expect(first.stdout).not.toContain("lint-stale");
-          expect(yield* decodeObject(first.stdout)).toMatchObject({
+          const decodedObject8 = yield* decodeObject(first.stdout);
+          expect(decodedObject8).toMatchObject({
             hookSpecificOutput: { additionalContext: expect.stringContaining(wontfixAckForm) },
           });
           expect(second.stdout).toBe("");
@@ -613,13 +622,16 @@ describe("Yeet inbox hook first-seen stamps", () => {
           const path = yield* Path.Path;
           const sessionsDir = path.join(root, ".beep", "inbox", "sessions");
           const sessionFile = Effect.gen(function* () {
-            const names = A.filter(yield* fs.readDirectory(sessionsDir), (name) => !Str.startsWith(".")(name));
+            const readDirectory9 = yield* fs.readDirectory(sessionsDir);
+            const names = A.filter(readDirectory9, (name) => !Str.startsWith(".")(name));
             expect(names).toHaveLength(1);
             return path.join(sessionsDir, A.getUnsafe(names, 0));
           });
           const readState = Effect.gen(function* () {
-            const text = yield* fs.readFileString(yield* sessionFile);
-            expect(yield* decodeObject(text)).toMatchObject({ schemaVersion: "yeet-hook-session/v1" });
+            const sessionFile10 = yield* sessionFile;
+            const text = yield* fs.readFileString(sessionFile10);
+            const decodedObject11 = yield* decodeObject(text);
+            expect(decodedObject11).toMatchObject({ schemaVersion: "yeet-hook-session/v1" });
             return yield* YeetHookSessionStateJson.decode(text);
           });
           const tool = {
@@ -660,8 +672,9 @@ describe("Yeet inbox hook first-seen stamps", () => {
 
           // A file written before the map existed gains it additively: seenIds
           // and schemaVersion are kept, nothing is pruned.
+          const sessionFile12 = yield* sessionFile;
           yield* fs.writeFileString(
-            yield* sessionFile,
+            sessionFile12,
             '{"schemaVersion":"yeet-hook-session/v1","incidentId":null,"seenIds":["coverage-live","thread-live"]}\n'
           );
           yield* runHook(root, "claude", { cwd: root, hook_event_name: "SessionStart", session_id: "stamp-session" });
@@ -756,17 +769,16 @@ describe("Yeet inbox hook wave-exempt kinds", () => {
           ];
           const encodedRows = yield* Effect.forEach(rows, (value) => encodeUnknown(value));
           yield* fs.writeFileString(path.join(inbox, "failures.ndjson"), `${A.join(encodedRows, "\n")}\n`);
-          yield* fs.writeFileString(
-            path.join(inbox, "dispatch.json"),
-            yield* encodeUnknown({
-              schemaVersion: "yeet-dispatch/v1",
-              capsuleIds: ["conflict-new"],
-              headSha: "new222",
-              prNumber: 900,
-              sessionStartedAt: "2026-09-25T00:00:00Z",
-              updatedAt: "2026-09-25T00:00:00Z",
-            })
-          );
+          const argument = path.join(inbox, "dispatch.json");
+          const encodedUnknown = yield* encodeUnknown({
+            schemaVersion: "yeet-dispatch/v1",
+            capsuleIds: ["conflict-new"],
+            headSha: "new222",
+            prNumber: 900,
+            sessionStartedAt: "2026-09-25T00:00:00Z",
+            updatedAt: "2026-09-25T00:00:00Z",
+          });
+          yield* fs.writeFileString(argument, encodedUnknown);
 
           const started = yield* runHook(root, "claude", {
             cwd: root,

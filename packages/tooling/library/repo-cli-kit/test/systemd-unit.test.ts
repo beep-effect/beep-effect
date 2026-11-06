@@ -30,7 +30,8 @@ const isSystemdUnitPath = S.is(SystemdUnitPath);
 const fixture = Effect.fn("SystemdUnitTest.fixture")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const directory = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "systemd-unit-test-" }));
+  const resolved1 = yield* fs.makeTempDirectoryScoped({ prefix: "systemd-unit-test-" });
+  const directory = yield* fs.realPath(resolved1);
   const home = path.join(directory, "home");
   yield* fs.makeDirectory(home, { recursive: true });
   const unitDir = path.join(home, ".config", "systemd", "user");
@@ -52,17 +53,21 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       const standalone = path.join(home, ".bun", "bin", "bun");
       expect(SystemdBunCandidate.literals).toEqual([".local/share/mise/shims/bun", ".bun/bin/bun"]);
       // Neither candidate: the running executable is the fallback.
-      expect(yield* resolveSystemdBunPath(home)).toBe(process.execPath);
+      const resolved2 = yield* resolveSystemdBunPath(home);
+      expect(resolved2).toBe(process.execPath);
       yield* Effect.forEach([shim, standalone], touch);
       // Both executable: the shim wins because it follows the repo's pinned Bun.
-      expect(yield* resolveSystemdBunPath(home)).toBe(shim);
+      const resolved3 = yield* resolveSystemdBunPath(home);
+      expect(resolved3).toBe(shim);
       // A leftover without execute permission is skipped, not pinned.
       yield* fs.chmod(shim, 0o644);
-      expect(yield* resolveSystemdBunPath(home)).toBe(standalone);
+      const resolved4 = yield* resolveSystemdBunPath(home);
+      expect(resolved4).toBe(standalone);
       // So is a directory sitting where the executable should be.
       yield* fs.remove(standalone);
       yield* fs.makeDirectory(standalone);
-      expect(yield* resolveSystemdBunPath(home)).toBe(process.execPath);
+      const resolved5 = yield* resolveSystemdBunPath(home);
+      expect(resolved5).toBe(process.execPath);
       // A candidate this user cannot even reach is skipped rather than failing
       // the install, so an uninstall is never blocked by the probe either.
       yield* fs.remove(standalone, { recursive: true });
@@ -128,11 +133,13 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       expect(systemdUserUnitDir(path, home)).toBe(unitDir);
       expect(pipe(path, systemdUserUnitDir(home))).toBe(unitDir);
       const options = { home, fileName: "test.service" };
-      assertNone(yield* readInstalledSystemdUnit(options));
+      const resolved6 = yield* readInstalledSystemdUnit(options);
+      assertNone(resolved6);
       yield* fs.makeDirectory(unitDir, { recursive: true });
       yield* fs.writeFileString(path.join(unitDir, options.fileName), "[Service]\nWorkingDirectory= /clone \n");
+      const resolved7 = yield* readInstalledSystemdUnit(options);
       assertSome(
-        yield* readInstalledSystemdUnit(options),
+        resolved7,
         SystemdInstalledUnit.make({
           fileName: options.fileName,
           directives: [SystemdUnitDirective.make({ key: "WorkingDirectory", value: "/clone" })],
@@ -145,11 +152,14 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
     "resolves a pinned Bun path against HOME and probes the candidates when none is pinned",
     Effect.fn(function* () {
       const { path, home, touch } = yield* fixture();
-      expect(yield* resolveUnitBunPath({ home, pinned: O.some("~/tools/bun") })).toBe(path.join(home, "tools", "bun"));
-      expect(yield* resolveUnitBunPath({ home, pinned: O.none() })).toBe(process.execPath);
+      const resolved8 = yield* resolveUnitBunPath({ home, pinned: O.some("~/tools/bun") });
+      expect(resolved8).toBe(path.join(home, "tools", "bun"));
+      const resolved9 = yield* resolveUnitBunPath({ home, pinned: O.none() });
+      expect(resolved9).toBe(process.execPath);
       const standalone = path.join(home, ".bun", "bin", "bun");
       yield* touch(standalone);
-      expect(yield* resolveUnitBunPath({ home, pinned: O.none() })).toBe(standalone);
+      const resolved10 = yield* resolveUnitBunPath({ home, pinned: O.none() });
+      expect(resolved10).toBe(standalone);
     })
   );
 

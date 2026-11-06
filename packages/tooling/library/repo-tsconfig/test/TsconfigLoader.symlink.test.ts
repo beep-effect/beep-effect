@@ -44,7 +44,8 @@ layer(NodeServices.layer, { timeout: "30 seconds" })(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "repo-tsconfig-symlink-" }));
+        const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({ prefix: "repo-tsconfig-symlink-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped);
         yield* linkedWorkspace(root);
         const target = yield* resolveExtendsTarget("lib/tsconfig.json", path.join(root, "app/tsconfig.json"));
         assertSome(target, path.join(root, "packages/lib/tsconfig.json"));
@@ -63,7 +64,8 @@ layer(NodeServices.layer, { timeout: "30 seconds" })(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "repo-tsconfig-symlink-" }));
+        const madeTempDirectoryScoped1 = yield* fs.makeTempDirectoryScoped({ prefix: "repo-tsconfig-symlink-" });
+        const root = yield* fs.realPath(madeTempDirectoryScoped1);
         yield* linkedWorkspace(root);
         const configPath = path.join(root, "app/tsconfig.relative.json");
         const target = yield* resolveExtendsTarget("./linked/tsconfig.json", configPath);

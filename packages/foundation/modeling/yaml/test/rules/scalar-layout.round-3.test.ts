@@ -2,11 +2,14 @@ import { YamlLint, YamlLintConfig, YamlMap, YamlPair, YamlScalar, YamlSeq } from
 import { walkScalars } from "@beep/yaml/internal/rules/util";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as YAML from "yaml";
 import { builtin, testRule, testRuleInference } from "./harness.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 describe("composed scalar blank-line fidelity", () => {
   for (const blankCount of [1, 3]) {
@@ -224,7 +227,7 @@ testRuleInference(builtin("indentation"), [
 
 describe("YAML indentation alphabet", () => {
   for (const prefix of ["\u00A0", "\u2003", "\uFEFF\uFEFF"]) {
-    it(`${JSON.stringify(prefix)} is scalar content rather than an indentation vote`, () => {
+    it(`${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(prefix), identity)} is scalar content rather than an indentation vote`, () => {
       const input = `${prefix}hello\n`;
       const rule = builtin("indentation");
       assert.deepStrictEqual(

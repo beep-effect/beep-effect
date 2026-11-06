@@ -89,7 +89,8 @@ it.layer(PlatformLayer, { timeout: "120 seconds" })((it) => {
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "retired-iri-authorities-" });
         yield* fs.writeFileString(path.join(root, "bun.lock"), "");
-        expect(yield* git(root, ["init", "--quiet"])).toBe(0);
+        const git1 = yield* git(root, ["init", "--quiet"]);
+        expect(git1).toBe(0);
         const files = {
           "docs/seed.md": `see ${RETIRED_IRI}\n`,
           "packages/x/src/a.ts": `export const docs = "${ORIGIN}/docs";\n`,
@@ -102,17 +103,16 @@ it.layer(PlatformLayer, { timeout: "120 seconds" })((it) => {
           yield* fs.makeDirectory(path.dirname(path.join(root, file)), { recursive: true });
           yield* fs.writeFileString(path.join(root, file), content);
         }
-        expect(
-          yield* git(root, [
-            "add",
-            "--",
-            "docs/seed.md",
-            "packages/x/src/a.ts",
-            "packages/x/test/a.test.ts",
-            "goals/x/history/brief.md",
-            "docs/deleted.md",
-          ])
-        ).toBe(0);
+        const git2 = yield* git(root, [
+          "add",
+          "--",
+          "docs/seed.md",
+          "packages/x/src/a.ts",
+          "packages/x/test/a.test.ts",
+          "goals/x/history/brief.md",
+          "docs/deleted.md",
+        ]);
+        expect(git2).toBe(0);
         // A tracked file deleted from the working tree is skipped, not an error.
         yield* fs.remove(path.join(root, "docs/deleted.md"));
 

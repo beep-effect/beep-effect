@@ -59,8 +59,9 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
     while (!(yield* fs.exists(ancestor))) ancestor = path.dirname(ancestor);
     const resolved = yield* fs.realPath(ancestor);
     const within = path.relative(realRoot, resolved);
-    if (path.isAbsolute(within) || within === ".." || Str.startsWith(`..${path.sep}`)(within))
+    if (path.isAbsolute(within) || within === ".." || Str.startsWith(`..${path.sep}`)(within)) {
       return yield* LibraryError.make({ message: "Projection directory escapes library", cause: target });
+    }
     yield* fs
       .makeDirectory(path.dirname(absolute), { recursive: true })
       .pipe(Effect.mapError((cause) => LibraryError.make({ message: "Cannot create projection directory", cause })));
@@ -98,8 +99,10 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
       if (
         Str.startsWith("text/")(artifact.mediaType) ||
         A.contains(["application/json", "application/x-ndjson"], artifact.mediaType)
-      )
-        return escape(yield* fs.readFileString(target));
+      ) {
+        const readFileString1 = yield* fs.readFileString(target);
+        return escape(readFileString1);
+      }
       return "Binary evidence: download the original artifact to inspect it.";
     }).pipe(Effect.catchTag("PlatformError", () => Effect.succeed("Artifact unavailable: read failed.")));
   });

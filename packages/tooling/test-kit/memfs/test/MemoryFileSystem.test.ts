@@ -41,7 +41,8 @@ const watchEvents = Effect.fnUntraced(function* (
   // scheduler runs it to its first real suspension, past `watchers.add`).
   yield* Effect.yieldNow;
   yield* mutation;
-  return Array.from(yield* Fiber.join(events));
+  const join1 = yield* Fiber.join(events);
+  return Array.from(join1);
 });
 
 layer(MemoryFileSystem.layer, { timeout: "30 seconds" })("FileSystem (memory-specific)", (it) => {
@@ -53,8 +54,10 @@ layer(MemoryFileSystem.layer, { timeout: "30 seconds" })("FileSystem (memory-spe
         yield* fs.writeFileString("/paths/parent.txt", "parent");
         yield* fs.writeFileString("/paths/child/./file.txt", "child");
 
-        assert.strictEqual(yield* fs.realPath("/paths/child/../parent.txt"), "/paths/parent.txt");
-        assert.strictEqual(yield* fs.realPath("/paths//child//file.txt"), "/paths/child/file.txt");
+        const realPath2 = yield* fs.realPath("/paths/child/../parent.txt");
+        assert.strictEqual(realPath2, "/paths/parent.txt");
+        const realPath3 = yield* fs.realPath("/paths//child//file.txt");
+        assert.strictEqual(realPath3, "/paths/child/file.txt");
       })
     );
 
@@ -65,11 +68,14 @@ layer(MemoryFileSystem.layer, { timeout: "30 seconds" })("FileSystem (memory-spe
         yield* fs.symlink("target.txt", "/link.txt");
 
         yield* fs.rename("/link.txt", "/renamed-link.txt");
-        assert.strictEqual(yield* fs.readLink("/renamed-link.txt"), "target.txt");
-        assert.strictEqual(yield* fs.readFileString("/target.txt"), "target");
+        const readLink4 = yield* fs.readLink("/renamed-link.txt");
+        assert.strictEqual(readLink4, "target.txt");
+        const readFileString5 = yield* fs.readFileString("/target.txt");
+        assert.strictEqual(readFileString5, "target");
 
         yield* fs.remove("/renamed-link.txt");
-        assert.strictEqual(yield* fs.readFileString("/target.txt"), "target");
+        const readFileString6 = yield* fs.readFileString("/target.txt");
+        assert.strictEqual(readFileString6, "target");
       })
     );
 
@@ -80,8 +86,10 @@ layer(MemoryFileSystem.layer, { timeout: "30 seconds" })("FileSystem (memory-spe
 
         const exit = yield* Effect.exit(fs.writeFileString("/dangling-link.txt", "content", { flag: "wx" }));
         assertExitFailure(exit, Cause.fail(exit.pipe(Exit.findError, Result.getOrThrow)));
-        assert.strictEqual(yield* fs.readLink("/dangling-link.txt"), "missing.txt");
-        assert.isFalse(yield* fs.exists("/missing.txt"));
+        const readLink7 = yield* fs.readLink("/dangling-link.txt");
+        assert.strictEqual(readLink7, "missing.txt");
+        const exists8 = yield* fs.exists("/missing.txt");
+        assert.isFalse(exists8);
       })
     );
 
@@ -93,19 +101,24 @@ layer(MemoryFileSystem.layer, { timeout: "30 seconds" })("FileSystem (memory-spe
 
         yield* fs.rename("/source.txt", "/destination.txt");
 
-        assert.strictEqual(yield* fs.readFileString("/source.txt"), "content");
-        assert.strictEqual(yield* fs.readFileString("/destination.txt"), "content");
+        const readFileString9 = yield* fs.readFileString("/source.txt");
+        assert.strictEqual(readFileString9, "content");
+        const readFileString10 = yield* fs.readFileString("/destination.txt");
+        assert.strictEqual(readFileString10, "content");
       })
     );
   });
 
   it.effect("should provide one isolated virtual volume per fresh layer", () =>
     Effect.gen(function* () {
-      const first = Context.get(yield* MemoryFileSystem.layer.pipe(Layer.fresh, Layer.build), FileSystem.FileSystem);
+      const pipe11 = yield* MemoryFileSystem.layer.pipe(Layer.fresh, Layer.build);
+      const first = Context.get(pipe11, FileSystem.FileSystem);
       yield* first.writeFileString("/shared.txt", "shared");
-      assert.strictEqual(yield* first.readFileString("/shared.txt"), "shared");
+      const readFileString12 = yield* first.readFileString("/shared.txt");
+      assert.strictEqual(readFileString12, "shared");
 
-      const fresh = Context.get(yield* MemoryFileSystem.layer.pipe(Layer.fresh, Layer.build), FileSystem.FileSystem);
+      const pipe13 = yield* MemoryFileSystem.layer.pipe(Layer.fresh, Layer.build);
+      const fresh = Context.get(pipe13, FileSystem.FileSystem);
       const existsInFreshVolume = yield* fresh.exists("/shared.txt");
 
       assert.isFalse(existsInFreshVolume);
@@ -162,7 +175,8 @@ layer(MemoryFileSystem.layer, { timeout: "30 seconds" })("FileSystem (memory-spe
         assert.strictEqual(error.reason.method, "truncate");
       }
 
-      assert.strictEqual(yield* fs.readFileString(path), "content");
+      const readFileString14 = yield* fs.readFileString(path);
+      assert.strictEqual(readFileString14, "content");
     })
   );
 
@@ -193,7 +207,8 @@ layer(MemoryFileSystem.layer, { timeout: "30 seconds" })("FileSystem (memory-spe
       yield* fs.writeFileString("/glob/real/file.ts", "content");
       yield* fs.symlink("real", "/glob/linked");
 
-      assert.deepStrictEqual(yield* fs.glob("**/*.ts", { root: "/glob" }), ["real/file.ts"]);
+      const glob15 = yield* fs.glob("**/*.ts", { root: "/glob" });
+      assert.deepStrictEqual(glob15, ["real/file.ts"]);
     })
   );
 

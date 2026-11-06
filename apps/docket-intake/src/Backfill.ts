@@ -164,11 +164,12 @@ export const backfillQuestions = Effect.fn("DocketIntakeApp.backfillQuestions")(
   readonly state: DocketIntakeState;
 }) {
   const store = yield* ReviewItemStore;
-  const found = A.getSomes(A.map(yield* store.list, unnamedOf));
-  const published = HashSet.fromIterable(
-    A.map(yield* digestPairs(publishedMessageIds(input.state)), ([digest]) => digest)
-  );
-  const journaled = HashMap.fromIterable(yield* digestPairs(markedMessageIds(input.journal)));
+  const list1 = yield* store.list;
+  const found = A.getSomes(A.map(list1, unnamedOf));
+  const digestPairs2 = yield* digestPairs(publishedMessageIds(input.state));
+  const published = HashSet.fromIterable(A.map(digestPairs2, ([digest]) => digest));
+  const digestPairs3 = yield* digestPairs(markedMessageIds(input.journal));
+  const journaled = HashMap.fromIterable(digestPairs3);
   const pending = A.filter(found, ({ digest }) => !HashSet.has(published, digest));
   const matched = A.getSomes(
     A.map(pending, ({ digest, question }) =>

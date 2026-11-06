@@ -33,7 +33,8 @@ import * as Statement from "effect/sql/Statement";
 
 const sha256Hex = Effect.fnUntraced(function* (text: string) {
   const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text)));
+  const digest1 = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text));
+  return Hex.encode(digest1);
 });
 
 const { shouldRunPgliteIntegration, makePgliteLayer } = makePgliteIntegrationGate();

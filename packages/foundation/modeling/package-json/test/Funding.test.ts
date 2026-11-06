@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // `funding` — the manifest field a consumer reaches for when it wants to put a
 // sponsor link beside a maintainer's name.
 //
@@ -24,10 +25,12 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { fixtureText } from "./support/fixtureText.ts";
 
 const Json = S.fromJsonString(S.Unknown);
+
 const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
 
 const decode = <A, I>(schema: S.Codec<A, I>, input: unknown) => S.decodeUnknownEffect(schema)(input);
@@ -56,12 +59,18 @@ describe("Funding — own __proto__ extension fidelity", () => {
         assert.strictEqual(Object.getPrototypeOf(rest), Object.prototype);
         assert.deepStrictEqual(R.keys(rest), ["__proto__", "platform"]);
       }
-      assert.strictEqual(yield* S.encodeEffect(Json)(yield* encode(Funding.FromValue, value)), text);
-      assert.strictEqual(yield* S.encodeEffect(Json)(yield* encode(field, bare)), text);
-      assert.strictEqual(
-        yield* S.encodeEffect(Json)(yield* encode(field, array)),
-        `[${text},"https://second.example"]`
-      );
+      const argument = S.encodeEffect(Json);
+      const encoded1 = yield* encode(Funding.FromValue, value);
+      const value1 = yield* argument(encoded1);
+      assert.strictEqual(value1, text);
+      const argument1 = S.encodeEffect(Json);
+      const encoded2 = yield* encode(field, bare);
+      const value2 = yield* argument1(encoded2);
+      assert.strictEqual(value2, text);
+      const argument2 = S.encodeEffect(Json);
+      const encoded3 = yield* encode(field, array);
+      const value3 = yield* argument2(encoded3);
+      assert.strictEqual(value3, `[${text},"https://second.example"]`);
       for (const entry of [value, bareEntry, arrayEntry]) {
         Object.assign(entry, { url: "https://new.example" } satisfies Partial<Funding>);
       }
@@ -90,10 +99,10 @@ const deletionPersists = Effect.fnUntraced(function* (array: boolean, clear: boo
   const text = '{"remove":2,"url":"https://fund.example","keep":1}';
   const input = yield* S.decodeEffect(JsonObject)(text);
   const entries = yield* decode(field, wrap(input));
-  assert.strictEqual(
-    yield* S.encodeEffect(Json)(yield* encode(field, entries)),
-    array ? `[${text},"${SECOND_ENTRY}"]` : text
-  );
+  const argument3 = S.encodeEffect(Json);
+  const encoded4 = yield* encode(field, entries);
+  const value4 = yield* argument3(encoded4);
+  assert.strictEqual(value4, array ? `[${text},"${SECOND_ENTRY}"]` : text);
   const entry = entries[0];
   assertDefined(entry);
   const rest: Record<string, unknown> | undefined = entry.rest;
@@ -103,7 +112,9 @@ const deletionPersists = Effect.fnUntraced(function* (array: boolean, clear: boo
   const expected = wrap({ url: "https://fund.example", ...(clear ? {} : { keep: 1 }) });
   const encoded = yield* encode(field, entries);
   assert.deepStrictEqual<unknown>(encoded, expected);
-  assert.strictEqual(yield* S.encodeEffect(Json)(encoded), yield* S.encodeEffect(Json)(expected));
+  const value5 = yield* S.encodeEffect(Json)(encoded);
+  const value19 = yield* S.encodeEffect(Json)(expected);
+  assert.strictEqual(value5, value19);
 });
 
 describe("Funding — extension deletions invalidate remembered-wire replay", () => {
@@ -193,14 +204,16 @@ describe("Funding.FromField — wire fidelity", () => {
   it.effect("a lone bare string stays bare", () =>
     Effect.gen(function* () {
       // The mutant this kills: wrapping in an array on encode.
-      assert.deepStrictEqual<unknown>(yield* roundTrip("https://example.com/sponsor"), "https://example.com/sponsor");
+      const roundTrip6 = yield* roundTrip("https://example.com/sponsor");
+      assert.deepStrictEqual<unknown>(roundTrip6, "https://example.com/sponsor");
     })
   );
 
   it.effect("a lone bare object stays bare, verbatim", () =>
     Effect.gen(function* () {
       const wire = { type: "individual", url: "https://example.com/sponsor" };
-      assert.deepStrictEqual<unknown>(yield* roundTrip(wire), wire);
+      const roundTrip7 = yield* roundTrip(wire);
+      assert.deepStrictEqual<unknown>(roundTrip7, wire);
     })
   );
 
@@ -208,16 +221,16 @@ describe("Funding.FromField — wire fidelity", () => {
     Effect.gen(function* () {
       // The other half of the same promise: an author who wrote the array
       // form must not have it collapsed to a bare value either.
-      assert.deepStrictEqual<unknown>(yield* roundTrip(["https://example.com/sponsor"]), [
-        "https://example.com/sponsor",
-      ]);
+      const roundTrip8 = yield* roundTrip(["https://example.com/sponsor"]);
+      assert.deepStrictEqual<unknown>(roundTrip8, ["https://example.com/sponsor"]);
     })
   );
 
   it.effect("a mixed array keeps each entry's own encoding", () =>
     Effect.gen(function* () {
       const wire = ["https://a.example", { type: "github", url: "https://b.example" }];
-      assert.deepStrictEqual<unknown>(yield* roundTrip(wire), wire);
+      const roundTrip9 = yield* roundTrip(wire);
+      assert.deepStrictEqual<unknown>(roundTrip9, wire);
     })
   );
 
@@ -225,10 +238,11 @@ describe("Funding.FromField — wire fidelity", () => {
     Effect.gen(function* () {
       // `url` before `type` is legal and a formatter must not reorder it.
       const wire = [{ url: "https://a.example", type: "github" }];
-      assert.deepStrictEqual<unknown>(
-        yield* S.encodeEffect(Json)(yield* roundTrip(wire)),
-        yield* S.encodeEffect(Json)(wire)
-      );
+      const argument4 = S.encodeEffect(Json);
+      const roundTrip5 = yield* roundTrip(wire);
+      const value10 = yield* argument4(roundTrip5);
+      const value20 = yield* S.encodeEffect(Json)(wire);
+      assert.deepStrictEqual<unknown>(value10, value20);
     })
   );
 
@@ -236,7 +250,8 @@ describe("Funding.FromField — wire fidelity", () => {
     Effect.gen(function* () {
       // Provenance must not survive being copied into a hand-built value.
       const built = [Funding.make({ url: "https://example.com/sponsor" })];
-      assert.deepStrictEqual<unknown>(yield* encode(field, built), [{ url: "https://example.com/sponsor" }]);
+      const encoded11 = yield* encode(field, built);
+      assert.deepStrictEqual<unknown>(encoded11, [{ url: "https://example.com/sponsor" }]);
     })
   );
 
@@ -248,10 +263,8 @@ describe("Funding.FromField — wire fidelity", () => {
       const mutable = entries;
       assertTrue(A.isArray(mutable));
       mutable.push(Funding.make({ url: "https://b.example" }));
-      assert.deepStrictEqual<unknown>(yield* encode(field, entries), [
-        "https://a.example",
-        { url: "https://b.example" },
-      ]);
+      const encoded12 = yield* encode(field, entries);
+      assert.deepStrictEqual<unknown>(encoded12, ["https://a.example", { url: "https://b.example" }]);
     })
   );
 
@@ -263,7 +276,8 @@ describe("Funding.FromField — wire fidelity", () => {
       const entry = entries[0];
       assertDefined(entry);
       Object.assign(entry, { url: "https://new.example" } satisfies Partial<Funding>);
-      assert.deepStrictEqual<unknown>(yield* encode(field, entries), "https://new.example");
+      const encoded13 = yield* encode(field, entries);
+      assert.deepStrictEqual<unknown>(encoded13, "https://new.example");
     })
   );
 
@@ -275,7 +289,8 @@ describe("Funding.FromField — wire fidelity", () => {
       const entry = entries[0];
       assertDefined(entry);
       Object.assign(entry, { type: "github" } satisfies Partial<Funding>);
-      assert.deepStrictEqual<unknown>(yield* encode(field, entries), {
+      const encoded14 = yield* encode(field, entries);
+      assert.deepStrictEqual<unknown>(encoded14, {
         type: "github",
         url: "https://example.com/sponsor",
       });
@@ -288,7 +303,8 @@ describe("Funding — unknown keys", () => {
     Effect.gen(function* () {
       const entries = yield* decode(field, [{ url: "https://a.example", platform: "ko-fi" }]);
       assert.deepStrictEqual(entries[0]?.rest, { platform: "ko-fi" });
-      assert.deepStrictEqual<unknown>(yield* encode(field, entries), [{ url: "https://a.example", platform: "ko-fi" }]);
+      const encoded15 = yield* encode(field, entries);
+      assert.deepStrictEqual<unknown>(encoded15, [{ url: "https://a.example", platform: "ko-fi" }]);
     })
   );
 
@@ -298,7 +314,8 @@ describe("Funding — unknown keys", () => {
       const entry = entries[0];
       assertDefined(entry);
       Object.assign(entry, { rest: { platform: "ko-fi" } } satisfies Partial<Funding>);
-      assert.deepStrictEqual<unknown>(yield* encode(field, entries), [{ url: "https://a.example", platform: "ko-fi" }]);
+      const encoded16 = yield* encode(field, entries);
+      assert.deepStrictEqual<unknown>(encoded16, [{ url: "https://a.example", platform: "ko-fi" }]);
     })
   );
 
@@ -337,7 +354,10 @@ describe("Funding — `url` is required", () => {
 });
 
 describe("funding — the manifest tiers", () => {
-  const fixture: unknown = JSON.parse(fixtureText("package-json.input.json"));
+  const fixture: unknown = Result.getOrThrowWith(
+    S.decodeResult(Json)(fixtureText("package-json.input.json")),
+    identity
+  );
   assertTrue(P.isObject(fixture));
 
   it.effect("Package decodes and round-trips a real manifest's funding field", () =>
@@ -390,7 +410,8 @@ describe("funding — the manifest tiers", () => {
         license: "MIT",
         repository: "dee/pkg",
       })).toJsonString();
-      const keys = R.keys(yield* S.decodeEffect(JsonObject)(json));
+      const value17 = yield* S.decodeEffect(JsonObject)(json);
+      const keys = R.keys(value17);
       assert.isTrue(keys.indexOf("funding") > keys.indexOf("repository"));
       assert.isTrue(keys.indexOf("funding") < keys.indexOf("license"));
     })
@@ -413,7 +434,8 @@ describe("Funding — string shorthand property", () => {
       Effect.gen(function* () {
         const entries = yield* decode(field, url);
         assert.strictEqual(entries[0]?.url, url);
-        assert.strictEqual(yield* encode(field, entries), url);
+        const encoded18 = yield* encode(field, entries);
+        assert.strictEqual(encoded18, url);
       }),
     { arbitrary: fcRuns(50) }
   );

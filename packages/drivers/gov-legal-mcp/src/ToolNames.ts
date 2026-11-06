@@ -502,7 +502,7 @@ export const projectToolNameCandidate = Effect.fn("GovLegalMcp.projectToolNameCa
 ) {
   const normalized = yield* Effect.fromResult(normalizeToolName(candidateText(input)));
   const truncated = N.isGreaterThan(Str.length(normalized), MAX_WIRE_NAME_LENGTH);
-  const digest = truncated ? O.some(yield* sha256Prefix8(normalized)) : O.none<string>();
+  const digest = truncated ? yield* Effect.asSome(sha256Prefix8(normalized)) : O.none<string>();
   return toolNameRow(input, normalized, digest);
 });
 

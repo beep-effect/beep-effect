@@ -24,16 +24,23 @@ it.layer(TestFileSystem, { timeout: "20 seconds" })((it) => {
       const directory = yield* fs.makeTempDirectoryScoped();
       const file = `${directory}/synthetic-private-input`;
       yield* fs.writeFileString(file, "€", { mode: 0o600 });
-      expect(yield* readBoundedMetadata(file, 3, errors)).toBe("€");
-      expect(yield* readBoundedMetadata(3, errors)(file)).toBe("€");
-      expect(yield* readBoundedMetadata(file, 2, errors).pipe(Effect.flip)).toEqual(errors.oversize);
+      const readBoundedMetadata1 = yield* readBoundedMetadata(file, 3, errors);
+      expect(readBoundedMetadata1).toBe("€");
+      const value = yield* readBoundedMetadata(3, errors)(file);
+      expect(value).toBe("€");
+      const pipe2 = yield* readBoundedMetadata(file, 2, errors).pipe(Effect.flip);
+      expect(pipe2).toEqual(errors.oversize);
       yield* fs.writeFile(file, new Uint8Array([0xc3, 0x28]));
-      expect(yield* readBoundedMetadata(file, 2, errors).pipe(Effect.flip)).toEqual(errors.encodingFailed);
-      expect(yield* readBoundedMetadata(`${directory}/absent`, 3, errors).pipe(Effect.flip)).toEqual(errors.readFailed);
+      const pipe3 = yield* readBoundedMetadata(file, 2, errors).pipe(Effect.flip);
+      expect(pipe3).toEqual(errors.encodingFailed);
+      const pipe4 = yield* readBoundedMetadata(`${directory}/absent`, 3, errors).pipe(Effect.flip);
+      expect(pipe4).toEqual(errors.readFailed);
       yield* fs.writeFile(file, new Uint8Array(0));
-      expect(yield* readBoundedMetadata(file, 0, errors)).toBe("");
+      const readBoundedMetadata5 = yield* readBoundedMetadata(file, 0, errors);
+      expect(readBoundedMetadata5).toBe("");
       yield* fs.writeFileString(file, "x");
-      expect(yield* readBoundedMetadata(file, 0, errors).pipe(Effect.flip)).toEqual(errors.oversize);
+      const pipe6 = yield* readBoundedMetadata(file, 0, errors).pipe(Effect.flip);
+      expect(pipe6).toEqual(errors.oversize);
     })
   );
   it.effect("refuses missing owner/link metadata, exposed modes, hardlinks and non-files", () =>

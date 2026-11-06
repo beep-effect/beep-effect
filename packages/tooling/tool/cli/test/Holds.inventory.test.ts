@@ -351,10 +351,10 @@ layer(
       }
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      expect(yield* fs.readFileString(path.join(root, "hold-ledger/syncpack-held.generated.json"))).toBe(
-        '[\n  "jsdom"\n]\n'
-      );
-      expect(yield* runHoldsLint(false)).toEqual(["[holds] lint ok: 5 live hold(s) cover every site."]);
+      const readFileString1 = yield* fs.readFileString(path.join(root, "hold-ledger/syncpack-held.generated.json"));
+      expect(readFileString1).toBe('[\n  "jsdom"\n]\n');
+      const resultHoldsLint = yield* runHoldsLint(false);
+      expect(resultHoldsLint).toEqual(["[holds] lint ok: 5 live hold(s) cover every site."]);
     })
   );
 });
@@ -381,7 +381,8 @@ layer(
         "orphaned: glob-hold anchors override:glob, which is gone",
       ]);
       const ledger = yield* HoldLedger;
-      expect(A.length(yield* ledger.allVersions)).toBe(6);
+      const allVersions2 = yield* ledger.allVersions;
+      expect(A.length(allVersions2)).toBe(6);
     })
   );
 });

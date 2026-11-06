@@ -58,15 +58,18 @@ import { assertInstanceOf, assertNone, assertSome, assertTrue, deepStrictEqual }
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { constant, pipe } from "effect/Function";
+import { constant, identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { OutlineSeparation, ShadingPlan } from "@beep/technical-drawing";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 // A fake engine: every view projects a unit square, except that the "rear"
 // camera (eye +Y) projects the square shifted, so omission proofs can fail.
@@ -171,7 +174,7 @@ const cleanMetrics = (dpi: number, antiAliased: boolean) =>
 
 // the fake backend writes the fonts it was given as JSON, and a test reads them back
 const encodeSheetFonts = S.encodeEffect(S.fromJsonString(SheetFonts));
-const decodeJson = S.decodeEffect(S.fromJsonString(S.Unknown));
+const decodeJson = S.decodeEffect(UnknownJson);
 
 const fakeBackend = Layer.effect(
   PdfBackend,
@@ -182,7 +185,9 @@ const fakeBackend = Layer.effect(
         yield* fs.writeFileString(outputPath, `%PDF-1.6 fake ${A.length(svgPaths)} pages`);
         // the pinned fonts land beside the fake PDF, so a test can read what the backend was given
         if (O.isSome(fonts)) {
-          yield* fs.writeFileString(`${outputPath}.fonts.json`, yield* encodeSheetFonts(fonts.value));
+          const argument = `${outputPath}.fonts.json`;
+          const encodedSheetFonts = yield* encodeSheetFonts(fonts.value);
+          yield* fs.writeFileString(argument, encodedSheetFonts);
         }
       }, Effect.orDie),
       inspect: Effect.fnUntraced(function* (pdfPath) {
@@ -224,16 +229,19 @@ const spec = (
   moreParts: ReadonlyArray<Readonly<Record<string, unknown>>> = [],
   overlays: ReadonlyArray<Readonly<Record<string, unknown>>> = []
 ) =>
-  JSON.stringify({
-    ...extra,
-    title: "Synthetic block",
-    // a spec without overlays leaves the key out, as specs written before overlay lines did
-    model: A.isReadonlyArrayNonEmpty(overlays)
-      ? { parts: [part, ...moreParts], overlays }
-      : { parts: [part, ...moreParts] },
-    figures,
-    omissions,
-  });
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({
+      ...extra,
+      title: "Synthetic block",
+      // a spec without overlays leaves the key out, as specs written before overlay lines did
+      model: A.isReadonlyArrayNonEmpty(overlays)
+        ? { parts: [part, ...moreParts], overlays }
+        : { parts: [part, ...moreParts] },
+      figures,
+      omissions,
+    }),
+    identity
+  );
 
 // A label-alphabet font built in-test with opentype.js (the package's own parser), so the
 // operator fontFile route runs on every runner without a committed font: each inked
@@ -591,7 +599,8 @@ describe("@beep/technical-drawing", () => {
           scale: 20,
           options: styled,
         });
-        expect(yield* sha256Hex(styledEmpty)).toBe("dcfb8611b16781c15f0caf34506a913c44d795e88ce09fc01e6a33bb2b1f6112");
+        const sha256Hex1 = yield* sha256Hex(styledEmpty);
+        expect(sha256Hex1).toBe("dcfb8611b16781c15f0caf34506a913c44d795e88ce09fc01e6a33bb2b1f6112");
         // 0.7 mm by default, the outline caps and joins, drawn last so it sits on the outline it runs along
         const withEmphasis = composeSheet({ ...base, emphasis: [[0, 0, 10, 0]] });
         expect(SheetOptions.make({}).emphasisWeightMm).toBe(0.7);
@@ -949,7 +958,8 @@ describe("@beep/technical-drawing", () => {
         expect(svg).toContain('<path id="label-outlines" d="M');
         expect(svg).toContain('fill="#000000" stroke="none"/>');
         expect(svg).not.toContain('<path id="labels"');
-        expect(yield* sha256Hex(svg)).toBe("dcfb8611b16781c15f0caf34506a913c44d795e88ce09fc01e6a33bb2b1f6112");
+        const sha256Hex2 = yield* sha256Hex(svg);
+        expect(sha256Hex2).toBe("dcfb8611b16781c15f0caf34506a913c44d795e88ce09fc01e6a33bb2b1f6112");
         // without label styles the sheet keeps its single stroked label path
         const plain = composeStyled(3, SheetOptions.make({}));
         expect(plain).toContain('<path id="labels" d="M');
@@ -1000,15 +1010,12 @@ describe("@beep/technical-drawing", () => {
         const decode = S.decodeUnknownEffect(LabelStyle);
         const sans = yield* decode({ typeface: "sans", sizePt: 18, render: "text" });
         expect(labelFontFamily(sans)).toBe("Arial");
-        expect(labelFontFamily(yield* decode({ typeface: "stroke", sizePt: 18 }))).toBe("Times New Roman");
-        expect(labelFontFamily(yield* decode({ typeface: "serif", sizePt: 24, render: "text" }))).toBe(
-          "Times New Roman"
-        );
-        expect(
-          labelFontFamily(
-            yield* decode({ typeface: "sans", sizePt: 18, render: "text", fontFamily: "Liberation Sans" })
-          )
-        ).toBe("Liberation Sans");
+        const decoded3 = yield* decode({ typeface: "stroke", sizePt: 18 });
+        expect(labelFontFamily(decoded3)).toBe("Times New Roman");
+        const decoded4 = yield* decode({ typeface: "serif", sizePt: 24, render: "text" });
+        expect(labelFontFamily(decoded4)).toBe("Times New Roman");
+        const decoded5 = yield* decode({ typeface: "sans", sizePt: 18, render: "text", fontFamily: "Liberation Sans" });
+        expect(labelFontFamily(decoded5)).toBe("Liberation Sans");
         expect(LabelStyle.make({ typeface: "sans", sizePt: 18 }).render).toBe("outline");
         yield* Effect.flip(decode({ typeface: "stroke", sizePt: 18, render: "text" }));
         yield* Effect.flip(decode({ typeface: "sans", sizePt: 18, render: "text", fontFile: "/fonts/arial.ttf" }));
@@ -1463,7 +1470,8 @@ describe("@beep/technical-drawing", () => {
             'stroke-width="2.835" stroke-linecap="round" stroke-linejoin="round"/>\n</svg>'
           );
           assertSome(emphasised.manifest.figures[0]!.emphasisSegments, 1);
-          expect(yield* S.decodeEffect(RenderManifestJson)(emphasised.json)).toEqual(emphasised.manifest);
+          const value6 = yield* S.decodeEffect(RenderManifestJson)(emphasised.json);
+          expect(value6).toEqual(emphasised.manifest);
           // the emphasis line runs along the outline, so the scale is unchanged
           expect(emphasised.manifest.scale).toBe(plain.manifest.scale);
         })
@@ -1502,7 +1510,8 @@ describe("@beep/technical-drawing", () => {
           expect(svg).toContain('width="595.276pt"');
           // the manifest round-trips, and a manifest written before these fields still decodes
           const written = yield* fs.readFileString(path.join(dir, "out", "manifest.json"));
-          expect(yield* S.decodeEffect(RenderManifestJson)(written)).toEqual(manifest);
+          const value7 = yield* S.decodeEffect(RenderManifestJson)(written);
+          expect(value7).toEqual(manifest);
           const legacy = yield* S.encodeEffect(RenderManifestJson)(
             RenderManifest.make({
               ...manifest,
@@ -1567,11 +1576,13 @@ describe("@beep/technical-drawing", () => {
           expect(missing.reason).toBe("font");
           expect(missing.message).toContain("Could not read label font");
           const incompleteFont = path.join(dir, "missing-F.otf");
-          yield* fs.writeFile(incompleteFont, yield* makeLabelAlphabetFont("0123456789IG./ "));
+          const madeLabelAlphabetFont = yield* makeLabelAlphabetFont("0123456789IG./ ");
+          yield* fs.writeFile(incompleteFont, madeLabelAlphabetFont);
           const incomplete = yield* renderWith(incompleteFont);
           expect(incomplete.reason).toBe("font");
           expect(incomplete.message).toContain('the font has no glyph for "F"');
-          expect(yield* fs.exists(outputDir)).toBe(false);
+          const exists8 = yield* fs.exists(outputDir);
+          expect(exists8).toBe(false);
         })
       );
 
@@ -1657,7 +1668,8 @@ describe("@beep/technical-drawing", () => {
             const request = RenderRequest.make({ specPath, outputDir, validate: false });
             const manifest = yield* service.render(request);
             expect(A.some(manifest.labelFonts, (font) => font.fontFile === fontFile)).toBe(true);
-            expect(yield* fs.readFileString(path.join(outputDir, "fig-1.svg"))).toContain("Q");
+            const readFileString9 = yield* fs.readFileString(path.join(outputDir, "fig-1.svg"));
+            expect(readFileString9).toContain("Q");
             capHeight = 1;
             const undersized = yield* Effect.flip(service.render(request));
             expect(undersized.reason).toBe("font");
@@ -1705,7 +1717,8 @@ describe("@beep/technical-drawing", () => {
             ["Label Boxes", fontFile, Buffer.from(digest).toString("hex")],
           ]);
           expect(manifest.labelFonts).toEqual([]);
-          const pinned = yield* decodeJson(yield* fs.readFileString(path.join(dir, "out", "sheets.pdf.fonts.json")));
+          const readFileString10 = yield* fs.readFileString(path.join(dir, "out", "sheets.pdf.fonts.json"));
+          const pinned = yield* decodeJson(readFileString10);
           expect(pinned).toEqual({
             directory: fontDirectory,
             families: [
@@ -1758,11 +1771,15 @@ describe("@beep/technical-drawing", () => {
           const noDirectory = yield* renderWith({ sheetNumberLabel: label });
           expect(noDirectory.reason).toBe("font");
           expect(noDirectory.message).toContain("fontDirectory");
-          yield* fs.writeFile(path.join(dir, "boxes.otf"), yield* labelAlphabetFont);
+          const argument1 = path.join(dir, "boxes.otf");
+          const labelAlphabetFont1 = yield* labelAlphabetFont;
+          yield* fs.writeFile(argument1, labelAlphabetFont1);
           const noArial = yield* renderWith({ sheetNumberLabel: label, fontDirectory: dir });
           expect(noArial.reason).toBe("font");
           expect(noArial.message).toContain('no Regular font of the family "Arial"');
-          yield* fs.writeFile(path.join(dir, "boxes-copy.otf"), yield* labelAlphabetFont);
+          const argument2 = path.join(dir, "boxes-copy.otf");
+          const labelAlphabetFont2 = yield* labelAlphabetFont;
+          yield* fs.writeFile(argument2, labelAlphabetFont2);
           const twice = yield* renderWith({
             sheetNumberLabel: { ...label, fontFamily: "Label Boxes" },
             fontDirectory: dir,
@@ -1871,7 +1888,8 @@ describe("@beep/technical-drawing", () => {
           // the camera, sight included, round-trips through the manifest
           const written = yield* fs.readFileString(path.join(dir, "out", "manifest.json"));
           expect(written).toContain('"sight"');
-          expect(yield* S.decodeEffect(RenderManifestJson)(written)).toEqual(manifest);
+          const value11 = yield* S.decodeEffect(RenderManifestJson)(written);
+          expect(value11).toEqual(manifest);
           // a set without a two-point pictorial writes no sight
           const plain = yield* renderSpec(
             spec(
@@ -1890,41 +1908,42 @@ describe("@beep/technical-drawing", () => {
           // the elevation lies strictly between level and plan; the focus keeps the eye a diagonal clear; a
           // two-point projection belongs to a pictorial only
           const refused = (contents: string) => Effect.flip(renderSpec(contents)).pipe(Effect.map((e) => e.reason));
-          expect(yield* refused(spec(figures, [], { pictorialElevationDeg: 0 }))).toBe("spec");
-          expect(yield* refused(spec(figures, [], { pictorialElevationDeg: 90 }))).toBe("spec");
-          expect(yield* refused(spec(figures, [], { pictorialFocusDiagonals: 0.9 }))).toBe("spec");
-          expect(
-            yield* refused(spec([{ view: "front", description: "is a front elevation view", projection: "two-point" }]))
-          ).toBe("spec");
+          const refused12 = yield* refused(spec(figures, [], { pictorialElevationDeg: 0 }));
+          expect(refused12).toBe("spec");
+          const refused13 = yield* refused(spec(figures, [], { pictorialElevationDeg: 90 }));
+          expect(refused13).toBe("spec");
+          const refused14 = yield* refused(spec(figures, [], { pictorialFocusDiagonals: 0.9 }));
+          expect(refused14).toBe("spec");
+          const refused15 = yield* refused(
+            spec([{ view: "front", description: "is a front elevation view", projection: "two-point" }])
+          );
+          expect(refused15).toBe("spec");
           // a two-point field stays within half the 60° cone of vision, also for an omitted pictorial claimed from a
           // two-point figure
-          expect(yield* refused(spec(figures, [], { pictorialElevationDeg: 31 }))).toBe("spec");
+          const refused16 = yield* refused(spec(figures, [], { pictorialElevationDeg: 31 }));
+          expect(refused16).toBe("spec");
           const isometricTop = { view: "top-perspective", description: "is a top view", projection: "isometric" };
           const perspectiveTop = { view: "top-perspective", description: "is a top view" };
           // an elevation needs an isometric or two-point pictorial to read it, and a focus a perspective or two-point
           // one: on a set without one, either would render the set unchanged
-          expect(yield* refused(spec([perspectiveTop, figures[1]!], [], { pictorialElevationDeg: 20 }))).toBe("spec");
-          expect(yield* refused(spec([isometricTop, figures[1]!], [], { pictorialFocusDiagonals: 3 }))).toBe("spec");
-          expect(
-            yield* refused(
-              spec([figures[1]!], [{ omitted: "rear", shown: "front", relation: "identical" }], {
-                pictorialElevationDeg: 20,
-                pictorialFocusDiagonals: 3,
-              })
-            )
-          ).toBe("spec");
+          const refused17 = yield* refused(spec([perspectiveTop, figures[1]!], [], { pictorialElevationDeg: 20 }));
+          expect(refused17).toBe("spec");
+          const refused18 = yield* refused(spec([isometricTop, figures[1]!], [], { pictorialFocusDiagonals: 3 }));
+          expect(refused18).toBe("spec");
+          const refused19 = yield* refused(
+            spec([figures[1]!], [{ omitted: "rear", shown: "front", relation: "identical" }], {
+              pictorialElevationDeg: 20,
+              pictorialFocusDiagonals: 3,
+            })
+          );
+          expect(refused19).toBe("spec");
           // A missing shown figure uses the default perspective for camera checks, then fails omission validation.
-          expect(
-            yield* refused(
-              spec(
-                [figures[1]!],
-                [{ omitted: "bottom-perspective", shown: "top-perspective", relation: "identical" }],
-                {
-                  pictorialFocusDiagonals: 3,
-                }
-              )
-            )
-          ).toBe("omission");
+          const refused20 = yield* refused(
+            spec([figures[1]!], [{ omitted: "bottom-perspective", shown: "top-perspective", relation: "identical" }], {
+              pictorialFocusDiagonals: 3,
+            })
+          );
+          expect(refused20).toBe("omission");
           // an omitted pictorial reads them as the figure it is claimed from does
           const mirrored = yield* renderSpec(
             spec(
@@ -2304,7 +2323,8 @@ describe("outline spacing through fake ports", () => {
         ]);
         // on the sheet the line moved 0.305 mm to stand 0.7 mm clear with a 0.005 mm margin for the printed
         // coordinates (review loop 4, R4-06), still a second line, and its T-end followed it
-        const drawn = figureSegmentsMm(yield* fs.readFileString(path.join(outputDir, "fig-1.svg")));
+        const readFileString21 = yield* fs.readFileString(path.join(outputDir, "fig-1.svg"));
+        const drawn = figureSegmentsMm(readFileString21);
         expect(A.length(drawn)).toBe(A.length(square) + A.length(closeScene));
         const tolerances = { minOverlap: 1, coincidence: OUTLINE_COINCIDENCE_MM };
         expect(closeOutlineGaps({ segments: drawn, minSpacing: 0.7, ...tolerances })).toEqual([]);

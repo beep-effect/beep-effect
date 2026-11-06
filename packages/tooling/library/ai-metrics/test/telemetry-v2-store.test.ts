@@ -92,18 +92,18 @@ it.layer(NodeServices.layer)("telemetry-v2 store", (it) => {
 
         const result = yield* store.runIngest(enumeration, (enumerationReceipt) =>
           Effect.gen(function* () {
-            pipe(yield* fs.exists(path.join(dataRoot, enumerationReceipt.relativePath)), assertTrue);
-            pipe(yield* fs.exists(manifestsDirectory), assertFalse);
+            const exists1 = yield* fs.exists(path.join(dataRoot, enumerationReceipt.relativePath));
+            pipe(exists1, assertTrue);
+            const exists2 = yield* fs.exists(manifestsDirectory);
+            pipe(exists2, assertFalse);
             return manifest;
           })
         );
 
-        const persistedEnumeration = yield* IngestEnumeration.decodeJsonEffect(
-          yield* fs.readFileString(path.join(dataRoot, result.enumerationReceipt.relativePath))
-        );
-        const persistedManifest = yield* IngestManifest.decodeJsonEffect(
-          yield* fs.readFileString(path.join(dataRoot, result.manifestReceipt.relativePath))
-        );
+        const readFileString3 = yield* fs.readFileString(path.join(dataRoot, result.enumerationReceipt.relativePath));
+        const persistedEnumeration = yield* IngestEnumeration.decodeJsonEffect(readFileString3);
+        const readFileString4 = yield* fs.readFileString(path.join(dataRoot, result.manifestReceipt.relativePath));
+        const persistedManifest = yield* IngestManifest.decodeJsonEffect(readFileString4);
 
         expect(persistedEnumeration.enumerationId).toBe(enumeration.enumerationId);
         expect(persistedManifest.enumerationId).toBe(enumeration.enumerationId);
@@ -124,8 +124,10 @@ it.layer(NodeServices.layer)("telemetry-v2 store", (it) => {
           .pipe(Effect.flip);
 
         expect(failure).toBe("source-read-failed");
-        pipe(yield* fs.exists(path.join(dataRoot, "telemetry-v2/ingest-enumerations")), assertTrue);
-        pipe(yield* fs.exists(path.join(dataRoot, "telemetry-v2/ingest-manifests")), assertFalse);
+        const exists5 = yield* fs.exists(path.join(dataRoot, "telemetry-v2/ingest-enumerations"));
+        pipe(exists5, assertTrue);
+        const exists6 = yield* fs.exists(path.join(dataRoot, "telemetry-v2/ingest-manifests"));
+        pipe(exists6, assertFalse);
       })
     )
   );
@@ -149,7 +151,8 @@ it.layer(NodeServices.layer)("telemetry-v2 store", (it) => {
 
         expect(error._tag).toBe("TelemetryV2StoreError");
         expect(error.operation).toBe("validate-ingest-manifest");
-        pipe(yield* fs.exists(path.join(dataRoot, "telemetry-v2/ingest-manifests")), assertFalse);
+        const exists7 = yield* fs.exists(path.join(dataRoot, "telemetry-v2/ingest-manifests"));
+        pipe(exists7, assertFalse);
       })
     )
   );
@@ -164,18 +167,21 @@ it.layer(NodeServices.layer)("telemetry-v2 store", (it) => {
 
         const first = yield* store.writeFlightRecord(input);
         const second = yield* store.writeFlightRecord(input);
-        const persisted = yield* S.decodeEffect(FlightRecordWriteEventJson)(
-          yield* fs.readFileString(path.join(dataRoot, first.receipt.relativePath))
-        );
+        const argument = S.decodeEffect(FlightRecordWriteEventJson);
+        const readFileString1 = yield* fs.readFileString(path.join(dataRoot, first.receipt.relativePath));
+        const persisted = yield* argument(readFileString1);
 
         expect(second.receipt.artifactDigest).toBe(first.receipt.artifactDigest);
         expect(second.receipt.relativePath).toBe(first.receipt.relativePath);
         expect(first.record.evidenceTier).toBe(sourceRecord.evidenceTier);
         expect(first.record.oipTaint).toBe(sourceRecord.oipTaint);
         expect(persisted.status).toBe("accepted");
-        if (persisted.status !== "accepted") return yield* Effect.die(new Error("expected an accepted event"));
+        if (persisted.status !== "accepted") {
+          return yield* Effect.die(new Error("expected an accepted event"));
+        }
         expect(persisted.record.recordId).toBe(sourceRecord.recordId);
-        expect(yield* fs.readDirectory(path.join(dataRoot, "telemetry-v2/flight-record-events"))).toHaveLength(1);
+        const readDirectory8 = yield* fs.readDirectory(path.join(dataRoot, "telemetry-v2/flight-record-events"));
+        expect(readDirectory8).toHaveLength(1);
       })
     )
   );
@@ -225,12 +231,12 @@ it.layer(NodeServices.layer)("telemetry-v2 store", (it) => {
 
         const transitionReceipt = yield* store.appendSessionLeaseTransition(transition);
         const reconciliationReceipt = yield* store.appendSessionLeaseReconciliation(reconciliation);
-        const persistedTransition = yield* S.decodeEffect(SessionLeaseTransitionJson)(
-          yield* fs.readFileString(path.join(dataRoot, transitionReceipt.relativePath))
-        );
-        const persistedReconciliation = yield* S.decodeEffect(SessionLeaseReconciliationJson)(
-          yield* fs.readFileString(path.join(dataRoot, reconciliationReceipt.relativePath))
-        );
+        const argument1 = S.decodeEffect(SessionLeaseTransitionJson);
+        const readFileString2 = yield* fs.readFileString(path.join(dataRoot, transitionReceipt.relativePath));
+        const persistedTransition = yield* argument1(readFileString2);
+        const argument2 = S.decodeEffect(SessionLeaseReconciliationJson);
+        const readFileString5 = yield* fs.readFileString(path.join(dataRoot, reconciliationReceipt.relativePath));
+        const persistedReconciliation = yield* argument2(readFileString5);
 
         expect(transitionReceipt.artifactKind).toBe("session-lease-transition");
         expect(reconciliationReceipt.artifactKind).toBe("session-lease-reconciliation");

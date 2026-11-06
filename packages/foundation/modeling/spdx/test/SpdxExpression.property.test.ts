@@ -24,7 +24,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -75,7 +76,8 @@ describe("SpdxExpression property floor", () => {
         const encoded = yield* S.encodeEffect(SpdxExpression.FromString)(value);
         const decoded = yield* S.decodeEffect(SpdxExpression.FromString)(encoded);
         assertTrue(S.toEquivalence(SpdxExpression.Schema)(decoded, value));
-        assert.strictEqual(yield* S.encodeEffect(SpdxExpression.FromString)(decoded), encoded);
+        const value2 = yield* S.encodeEffect(SpdxExpression.FromString)(decoded);
+        assert.strictEqual(value2, encoded);
       }),
     runs
   );

@@ -92,10 +92,12 @@ const makeHarness = Effect.fnUntraced(function* (options?: {
       yield* Ref.update(outcomes, A.append(record));
     }),
     readDecisions: Effect.fn("GovernedEgressTest.readDecisions")(function* (runKey) {
-      return A.filter(yield* Ref.get(decisions), (record) => record.runKey === runKey);
+      const got = yield* Ref.get(decisions);
+      return A.filter(got, (record) => record.runKey === runKey);
     }),
     readOutcomes: Effect.fn("GovernedEgressTest.readOutcomes")(function* (runKey) {
-      return A.filter(yield* Ref.get(outcomes), (record) => record.runKey === runKey);
+      const got1 = yield* Ref.get(outcomes);
+      return A.filter(got1, (record) => record.runKey === runKey);
     }),
     readUnsettledAllowed: Effect.fn("GovernedEgressTest.readUnsettledAllowed")(function* () {
       const decisionRows = yield* Ref.get(decisions);
@@ -211,7 +213,8 @@ describe("GovernedEgress", () => {
       expect(outcomes).toHaveLength(1);
       expect(outcomes[0]!.settlement).toBe("failed");
       pipe(verifyOutcomeBinding(outcomes[0]!, decisions[0]!), assertTrue);
-      expect(yield* harness.ledger.readUnsettledAllowed(decisions[0]!.runKey)).toHaveLength(0);
+      const readUnsettledAllowed2 = yield* harness.ledger.readUnsettledAllowed(decisions[0]!.runKey);
+      expect(readUnsettledAllowed2).toHaveLength(0);
     })
   );
 
@@ -222,8 +225,10 @@ describe("GovernedEgress", () => {
 
       expect(response.status).toBe(200);
       expect(harness.attempted).toEqual([allowedUrl]);
-      expect(yield* Ref.get(harness.decisions)).toHaveLength(1);
-      expect(yield* Ref.get(harness.outcomes)).toHaveLength(0);
+      const got3 = yield* Ref.get(harness.decisions);
+      expect(got3).toHaveLength(1);
+      const got4 = yield* Ref.get(harness.outcomes);
+      expect(got4).toHaveLength(0);
     })
   );
 
@@ -235,7 +240,8 @@ describe("GovernedEgress", () => {
 
       const secondResponse = yield* Effect.promise(() => harness.fetch(allowedUrl, { method: "POST" }));
       expect(secondResponse.status).toBe(200);
-      expect(yield* Ref.get(harness.decisions)).toHaveLength(2);
+      const got5 = yield* Ref.get(harness.decisions);
+      expect(got5).toHaveLength(2);
 
       yield* TestClock.adjust(Duration.seconds(1));
       expect((yield* Effect.promise(() => firstResponse)).status).toBe(200);
@@ -251,7 +257,8 @@ describe("GovernedEgress", () => {
       expect(decisions).toHaveLength(1);
       expect(decisions[0]!.verdict).toBe("denied");
       expect(decisions[0]!.verdict === "denied" && decisions[0]!.reason).toBe("principal-not-granted");
-      expect(yield* Ref.get(harness.outcomes)).toHaveLength(0);
+      const got6 = yield* Ref.get(harness.outcomes);
+      expect(got6).toHaveLength(0);
     })
   );
 
@@ -292,7 +299,8 @@ describe("GovernedEgress", () => {
       // The destination is allowed; only the record is unavailable. No record,
       // no request.
       yield* expectDenied(harness, allowedUrl);
-      expect(yield* Ref.get(harness.decisions)).toHaveLength(0);
+      const got7 = yield* Ref.get(harness.decisions);
+      expect(got7).toHaveLength(0);
     })
   );
 

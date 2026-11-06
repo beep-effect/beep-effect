@@ -18,11 +18,15 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-const json = (value: unknown): string => JSON.stringify(value);
+const encodeJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+
+const json = (value: unknown): string => Result.getOrThrowWith(encodeJson(value), identity);
 const decodeJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const manifestJson = (fields: Readonly<Record<string, unknown>>): string =>
@@ -41,7 +45,8 @@ describe("cli/Labs/LabManifest", () => {
       expect(O.getOrNull(withSchema.postgresSchema)).toBe("lab_try_thing");
 
       const encoded = yield* encodeLabManifestJson(withSchema);
-      expect(yield* decodeJson(encoded)).toEqual({
+      const resolved1 = yield* decodeJson(encoded);
+      expect(resolved1).toEqual({
         schemaVersion: "lab-manifest/v1",
         purpose: "Try a thing.",
         created: "2026-11-01",
@@ -99,7 +104,8 @@ describe("cli/Labs/RetiredPackages", () => {
     it.effect("reads no names without a registry and every recorded name otherwise", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        expect(HashSet.size(yield* readRetiredPackageNames("/repo"))).toBe(0);
+        const resolved2 = yield* readRetiredPackageNames("/repo");
+        expect(HashSet.size(resolved2)).toBe(0);
 
         yield* fs.makeDirectory("/repo/standards", { recursive: true });
         yield* fs.writeFileString(

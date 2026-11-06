@@ -133,7 +133,8 @@ describe("QualityScheduler deterministic memory readings", () => {
         yield* Deferred.await(originReleased);
         yield* Fiber.interrupt(fiber);
 
-        expect(yield* Ref.get(memoryReads)).toBe(2);
+        const got = yield* Ref.get(memoryReads);
+        expect(got).toBe(2);
       })
     );
   });

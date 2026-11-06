@@ -84,7 +84,7 @@ export const libraryArtifactsValid = Effect.fn("Library.artifactsValid")(functio
 ) {
   if (A.isReadonlyArrayEmpty(artifacts)) return false;
   for (const artifact of artifacts) {
-    if (O.isSome(yield* libraryArtifactIntegrity(root, artifact))) return false;
+    if (yield* libraryArtifactIntegrity(root, artifact).pipe(Effect.map(O.isSome))) return false;
   }
   return true;
 });
@@ -618,12 +618,12 @@ const prepareGithubContext = Effect.fn("Library.prepareGithubContext")(function*
   const git = (args: ReadonlyArray<string>) =>
     runLibraryCommand(root, "git", ["-c", "core.hooksPath=/dev/null", "-C", clone, ...args]);
   if (
-    Str.trim(yield* git(["remote", "get-url", "origin"])) !== pin.value.remote ||
-    Str.trim(yield* git(["cat-file", "-t", pin.value.revision])) !== "commit"
+    (yield* git(["remote", "get-url", "origin"]).pipe(Effect.map(Str.trim))) !== pin.value.remote ||
+    (yield* Effect.map(git(["cat-file", "-t", pin.value.revision]), Str.trim)) !== "commit"
   )
     return O.none();
   const tree = yield* git(["ls-tree", "-r", "--name-only", pin.value.revision]);
-  if (!A.contains(yield* texts("repository-tree"), tree)) return O.none();
+  if (!(yield* texts("repository-tree").pipe(Effect.map(A.contains(tree))))) return O.none();
   return O.some({
     ...context,
     pin: pin.value,
@@ -739,14 +739,16 @@ const validateGithubCode = Effect.fn("Library.validateGithubCode")(function* (co
       `repos/${source.repository}/commits?sha=${pin.revision}&per_page=100`
     );
   const blob = Str.match(/\/blob\/[^/]+\/(.+?)(?:#|$)/)(url);
-  if (O.isSome(blob))
-    return A.contains(yield* texts("raw-full-text"), yield* git(["show", `${pin.revision}:${blob.value[1]}`]));
+  if (O.isSome(blob)) {
+    return yield* Effect.zipWith(texts("raw-full-text"), git(["show", `${pin.revision}:${blob.value[1]}`]), A.contains);
+  }
   const directory = Str.match(/\/tree\/[^/]+(?:\/(.+?))?(?:[?#]|$)/)(url);
   if (O.isSome(directory)) {
     const target = directory.value[1] ?? "";
-    return A.contains(
-      yield* texts("cited-repository-tree"),
-      yield* git(["ls-tree", "-r", "--name-only", Str.isEmpty(target) ? pin.revision : `${pin.revision}:${target}`])
+    return yield* Effect.zipWith(
+      texts("cited-repository-tree"),
+      git(["ls-tree", "-r", "--name-only", Str.isEmpty(target) ? pin.revision : `${pin.revision}:${target}`]),
+      A.contains
     );
   }
   if (O.isSome(Str.match(/\/commit\/[0-9a-f]{40}(?:[?#]|$)/)(url)))
@@ -1063,7 +1065,8 @@ const validateYoutubeApi = Effect.fn("Library.validateYoutubeApi")(function* (
     )
   )
     return false;
-  const receipts = A.flatten(yield* json("http-response-provenance", CaptionHttpReceipts));
+  const json5 = yield* json("http-response-provenance", CaptionHttpReceipts);
+  const receipts = A.flatten(json5);
   const apis = yield* json("raw-api-response", CaptionApi);
   const receiptArtifact = (sha: string, bytes: number, expectedRole: string) =>
     A.findFirst(role(expectedRole), (item) => item.sha256 === sha && item.bytes === bytes);
@@ -1122,7 +1125,8 @@ const validateNativeCaptionRecord = Effect.fn("Library.validateNativeCaptionReco
     return record.url === url && A.contains(["text", "txt", "text/plain"], record.format) && nonempty(transcript);
   if (record.format !== "vtt") return false;
   for (const artifact of A.filter(role("transcript-full-text"), (item) => item.mediaType === "text/vtt")) {
-    if (nativeVttMatchesTranscript(yield* read(artifact), transcript)) return true;
+    const read6 = yield* read(artifact);
+    if (nativeVttMatchesTranscript(read6, transcript)) return true;
   }
   return false;
 });
@@ -1184,7 +1188,7 @@ const validateXImport = Effect.fn("Library.validateXImport")(function* (
   return (
     imported.provider === "grok" &&
     A.some(posts, (item) => A.some(item.posts, (post) => post.url === url && Str.isNonEmpty(Str.trim(post.text)))) &&
-    nonempty(yield* texts("extracted-full-text"))
+    (yield* Effect.map(texts("extracted-full-text"), nonempty))
   );
 });
 const publisherProofTargetMatches = (context: EvidenceContext, proof: typeof CitationResolution.Type) =>
@@ -1320,9 +1324,9 @@ const validateArxivVersionProof = Effect.fn("Library.validateArxivVersionProof")
     return false;
   const atom = A.findFirst(context.role("arxiv-version-metadata"), (item) => item.sha256 === proof.metadataSha256);
   if (O.isNone(atom)) return false;
-  const observed = Str.match(/<id>\s*https?:\/\/arxiv\.org\/abs\/(\d{4}\.\d{4,5})(v\d+)\s*<\/id>/i)(
-    yield* context.read(atom.value)
-  );
+  const argument1 = Str.match(/<id>\s*https?:\/\/arxiv\.org\/abs\/(\d{4}\.\d{4,5})(v\d+)\s*<\/id>/i);
+  const read2 = yield* context.read(atom.value);
+  const observed = argument1(read2);
   return (
     O.isSome(observed) &&
     observed.value[1] === Str.slice(6)(context.source.identity) &&
@@ -1364,7 +1368,7 @@ const validatePaperEvidence = Effect.fn("Library.validatePaperEvidence")(functio
   return (
     A.some(metadata, (item) => paperMetadataTargetMatches(context, item)) &&
     A.some(pdfs, (bytes) => new TextDecoder().decode(bytes.subarray(0, 5)) === "%PDF-") &&
-    nonempty(yield* texts("extracted-full-text")) &&
+    (yield* Effect.map(texts("extracted-full-text"), nonempty)) &&
     arxivIdentityValid
   );
 });

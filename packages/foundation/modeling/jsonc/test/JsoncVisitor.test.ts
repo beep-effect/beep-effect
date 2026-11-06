@@ -54,13 +54,8 @@ describe("JsoncVisitor", () => {
   describe("visit", () => {
     it.effect("emits a well-formed event sequence for an object", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* tags('{ "a": 1 }'), [
-          "ObjectBegin",
-          "ObjectProperty",
-          "Separator",
-          "LiteralValue",
-          "ObjectEnd",
-        ]);
+        const tags1 = yield* tags('{ "a": 1 }');
+        assert.deepStrictEqual(tags1, ["ObjectBegin", "ObjectProperty", "Separator", "LiteralValue", "ObjectEnd"]);
       })
     );
 
@@ -103,7 +98,8 @@ describe("JsoncVisitor", () => {
 
     it.effect("emits Comment events by default and Error when comments are disallowed", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* tags("/* a */ 1 // c"), ["Comment", "LiteralValue", "Comment"]);
+        const tags2 = yield* tags("/* a */ 1 // c");
+        assert.deepStrictEqual(tags2, ["Comment", "LiteralValue", "Comment"]);
         const disallowed = yield* collect('{ "a": 1 } // c', JsoncParseOptions.make({ disallowComments: true }));
         assert.deepStrictEqual(
           A.map(A.filter(disallowed, JsoncVisitorEvent.guards.Error), (e) => e.code),
@@ -146,8 +142,10 @@ describe("JsoncVisitor", () => {
 
     it.effect("emits nothing for an empty document", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* tags(""), []);
-        assert.deepStrictEqual(yield* tags("  \n"), []);
+        const tags3 = yield* tags("");
+        assert.deepStrictEqual(tags3, []);
+        const tags4 = yield* tags("  \n");
+        assert.deepStrictEqual(tags4, []);
       })
     );
   });
@@ -165,36 +163,36 @@ describe("JsoncVisitor", () => {
 
     it.effect("does not consume a container closer during recovery", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* tags('{ "a": }'), [
-          "ObjectBegin",
-          "ObjectProperty",
-          "Separator",
-          "Error",
-          "ObjectEnd",
-        ]);
+        const tags5 = yield* tags('{ "a": }');
+        assert.deepStrictEqual(tags5, ["ObjectBegin", "ObjectProperty", "Separator", "Error", "ObjectEnd"]);
       })
     );
 
     it.effect("reports missing commas, colons, property names and closers in band", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* errorCodes('{ "a": 1 "b": 2 }'), ["CommaExpected"]);
-        assert.deepStrictEqual(yield* errorCodes("[1 2]"), ["CommaExpected"]);
-        assert.deepStrictEqual(yield* errorCodes('{ "a" 1 }'), ["ColonExpected"]);
-        assert.deepStrictEqual(yield* errorCodes("{ 1: 2 }"), [
-          "PropertyNameExpected",
-          "PropertyNameExpected",
-          "PropertyNameExpected",
-        ]);
-        assert.deepStrictEqual(yield* errorCodes('{ "a": 1'), ["CloseBraceExpected"]);
-        assert.deepStrictEqual(yield* errorCodes("[1"), ["CloseBracketExpected"]);
-        assert.deepStrictEqual(yield* errorCodes("1 2"), ["EndOfFileExpected"]);
-        assert.deepStrictEqual(yield* errorCodes('"abc'), ["UnexpectedEndOfString"]);
+        const errorCodes6 = yield* errorCodes('{ "a": 1 "b": 2 }');
+        assert.deepStrictEqual(errorCodes6, ["CommaExpected"]);
+        const errorCodes7 = yield* errorCodes("[1 2]");
+        assert.deepStrictEqual(errorCodes7, ["CommaExpected"]);
+        const errorCodes8 = yield* errorCodes('{ "a" 1 }');
+        assert.deepStrictEqual(errorCodes8, ["ColonExpected"]);
+        const errorCodes9 = yield* errorCodes("{ 1: 2 }");
+        assert.deepStrictEqual(errorCodes9, ["PropertyNameExpected", "PropertyNameExpected", "PropertyNameExpected"]);
+        const errorCodes10 = yield* errorCodes('{ "a": 1');
+        assert.deepStrictEqual(errorCodes10, ["CloseBraceExpected"]);
+        const errorCodes11 = yield* errorCodes("[1");
+        assert.deepStrictEqual(errorCodes11, ["CloseBracketExpected"]);
+        const errorCodes12 = yield* errorCodes("1 2");
+        assert.deepStrictEqual(errorCodes12, ["EndOfFileExpected"]);
+        const errorCodes13 = yield* errorCodes('"abc');
+        assert.deepStrictEqual(errorCodes13, ["UnexpectedEndOfString"]);
       })
     );
 
     it.effect("accepts trailing commas and emits their separators", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* tags('{ "a": 1, }'), [
+        const tags14 = yield* tags('{ "a": 1, }');
+        assert.deepStrictEqual(tags14, [
           "ObjectBegin",
           "ObjectProperty",
           "Separator",
@@ -202,7 +200,8 @@ describe("JsoncVisitor", () => {
           "Separator",
           "ObjectEnd",
         ]);
-        assert.deepStrictEqual(yield* tags("[1, ]"), ["ArrayBegin", "LiteralValue", "Separator", "ArrayEnd"]);
+        const tags15 = yield* tags("[1, ]");
+        assert.deepStrictEqual(tags15, ["ArrayBegin", "LiteralValue", "Separator", "ArrayEnd"]);
       })
     );
 
@@ -212,7 +211,8 @@ describe("JsoncVisitor", () => {
         const codes = yield* errorCodes(deep);
         assert.deepStrictEqual(codes, ["NestingDepthExceeded"]);
         const objects = `${Str.repeat(300)('{"a":')}1${Str.repeat(300)("}")}`;
-        assert.deepStrictEqual(yield* errorCodes(objects), ["NestingDepthExceeded"]);
+        const errorCodes16 = yield* errorCodes(objects);
+        assert.deepStrictEqual(errorCodes16, ["NestingDepthExceeded"]);
         const parsed = yield* Jsonc.parse(deep).pipe(Effect.asVoid, Effect.flip);
         assert.strictEqual(parsed._tag, "JsoncParseError");
       })
@@ -246,7 +246,8 @@ describe("JsoncVisitor", () => {
           Stream.runCollect
         );
         assert.deepStrictEqual(props, ["name", "age"]);
-        assert.deepStrictEqual(yield* Jsonc.parse('{ "name": "x", "age": 1 }'), { name: "x", age: 1 });
+        const parsed17 = yield* Jsonc.parse('{ "name": "x", "age": 1 }');
+        assert.deepStrictEqual(parsed17, { name: "x", age: 1 });
       })
     );
   });

@@ -18,7 +18,7 @@ import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
@@ -88,13 +88,16 @@ const capturing =
 
 // A tiny extracted text wrapped in oversized metadata: under the old
 // text-only budget this passed, so it pins the metadata-bypass regression.
-const metadataHeavyPayload = JSON.stringify([
-  {
-    "Content-Type": "text/plain",
-    "dc:description": Str.repeat(4_000)("x"),
-    "X-TIKA:content": "hi",
-  },
-]);
+const metadataHeavyPayload = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
+    {
+      "Content-Type": "text/plain",
+      "dc:description": Str.repeat(4_000)("x"),
+      "X-TIKA:content": "hi",
+    },
+  ]),
+  identity
+);
 
 const testLayer = (respond: Respond) =>
   Layer.succeed(
@@ -243,7 +246,8 @@ describe("makeTikaServerFileProcessingEngine", () => {
 
           expect(engine.descriptor.version).toBeUndefined();
 
-          const error = yield* engine.extract(yield* makeExtractOperationFixture("plain-text")).pipe(Effect.flip);
+          const madeExtractOperationFixture = yield* makeExtractOperationFixture("plain-text");
+          const error = yield* engine.extract(madeExtractOperationFixture).pipe(Effect.flip);
 
           expect(error._tag).toBe("FileProcessingOperationError");
           expect(error.reason).toBe("engine-unavailable");
@@ -258,7 +262,8 @@ describe("makeTikaServerFileProcessingEngine", () => {
         `extracts text and metadata for ${format}`,
         Effect.fnUntraced(function* () {
           const engine = yield* makeTikaServerFileProcessingEngine(TikaServerEngineConfig.make({}));
-          const result = yield* engine.extract(yield* makeExtractOperationFixture(format));
+          const madeExtractOperationFixture1 = yield* makeExtractOperationFixture(format);
+          const result = yield* engine.extract(madeExtractOperationFixture1);
 
           expect(result.engine).toBe("apache-tika");
           expect(result.format).toBe(format);
@@ -276,7 +281,8 @@ describe("makeTikaServerFileProcessingEngine", () => {
       "returns metadata only for image-metadata sources",
       Effect.fnUntraced(function* () {
         const engine = yield* makeTikaServerFileProcessingEngine(TikaServerEngineConfig.make({}));
-        const result = yield* engine.extract(yield* makeExtractOperationFixture("image-metadata"));
+        const madeExtractOperationFixture2 = yield* makeExtractOperationFixture("image-metadata");
+        const result = yield* engine.extract(madeExtractOperationFixture2);
 
         expect(result.text).toBeUndefined();
         expect(result.metadata["Content-Type"]).toBe("image/png");
@@ -290,7 +296,8 @@ describe("makeTikaServerFileProcessingEngine", () => {
         `classifies ${format} without extracting it`,
         Effect.fnUntraced(function* () {
           const engine = yield* makeTikaServerFileProcessingEngine(TikaServerEngineConfig.make({}));
-          const error = yield* engine.extract(yield* makeExtractOperationFixture(format)).pipe(Effect.flip);
+          const madeExtractOperationFixture3 = yield* makeExtractOperationFixture(format);
+          const error = yield* engine.extract(madeExtractOperationFixture3).pipe(Effect.flip);
 
           expect(error._tag).toBe("FileProcessingOperationError");
           expect(error.reason).toBe("unsupported-file-format");
@@ -306,9 +313,10 @@ describe("makeTikaServerFileProcessingEngine", () => {
         "fails with file-extraction-failed when the source carries no readable content",
         Effect.fnUntraced(function* () {
           const engine = yield* makeTikaServerFileProcessingEngine(TikaServerEngineConfig.make({}));
-          const error = yield* engine
-            .extract(yield* makeExtractOperationFixture("plain-text", { omitSourceContent: true }))
-            .pipe(Effect.flip);
+          const madeExtractOperationFixture4 = yield* makeExtractOperationFixture("plain-text", {
+            omitSourceContent: true,
+          });
+          const error = yield* engine.extract(madeExtractOperationFixture4).pipe(Effect.flip);
 
           expect(error._tag).toBe("FileProcessingOperationError");
           expect(error.reason).toBe("file-extraction-failed");
@@ -328,7 +336,8 @@ describe("makeTikaServerFileProcessingEngine output budgets", () => {
           const engine = yield* makeTikaServerFileProcessingEngine(
             TikaServerEngineConfig.make({ maxOutputBytes: O.some(PosInt.make(4)) })
           );
-          const error = yield* engine.extract(yield* makeExtractOperationFixture("plain-text")).pipe(Effect.flip);
+          const madeExtractOperationFixture5 = yield* makeExtractOperationFixture("plain-text");
+          const error = yield* engine.extract(madeExtractOperationFixture5).pipe(Effect.flip);
 
           expect(error._tag).toBe("FileProcessingOperationError");
           expect(error.reason).toBe("output-limit-exceeded");
@@ -346,9 +355,10 @@ describe("makeTikaServerFileProcessingEngine output budgets", () => {
           const engine = yield* makeTikaServerFileProcessingEngine(
             TikaServerEngineConfig.make({ maxOutputBytes: O.some(PosInt.make(4_096)) })
           );
-          const error = yield* engine
-            .extract(yield* makeExtractOperationFixture("plain-text", { maxMaterializedBytes: 4 }))
-            .pipe(Effect.flip);
+          const madeExtractOperationFixture6 = yield* makeExtractOperationFixture("plain-text", {
+            maxMaterializedBytes: 4,
+          });
+          const error = yield* engine.extract(madeExtractOperationFixture6).pipe(Effect.flip);
 
           expect(error.reason).toBe("output-limit-exceeded");
         })
@@ -365,9 +375,10 @@ describe("makeTikaServerFileProcessingEngine output budgets", () => {
           const engine = yield* makeTikaServerFileProcessingEngine(
             TikaServerEngineConfig.make({ maxOutputBytes: O.some(PosInt.make(4)) })
           );
-          const error = yield* engine
-            .extract(yield* makeExtractOperationFixture("plain-text", { maxMaterializedBytes: 4_096 }))
-            .pipe(Effect.flip);
+          const madeExtractOperationFixture7 = yield* makeExtractOperationFixture("plain-text", {
+            maxMaterializedBytes: 4_096,
+          });
+          const error = yield* engine.extract(madeExtractOperationFixture7).pipe(Effect.flip);
 
           expect(error.reason).toBe("output-limit-exceeded");
         })
@@ -382,9 +393,10 @@ describe("makeTikaServerFileProcessingEngine output budgets", () => {
         const engine = yield* makeTikaServerFileProcessingEngine(
           TikaServerEngineConfig.make({ maxOutputBytes: O.some(PosInt.make(4_096)) })
         );
-        const result = yield* engine.extract(
-          yield* makeExtractOperationFixture("plain-text", { maxMaterializedBytes: 4_096 })
-        );
+        const madeExtractOperationFixture8 = yield* makeExtractOperationFixture("plain-text", {
+          maxMaterializedBytes: 4_096,
+        });
+        const result = yield* engine.extract(madeExtractOperationFixture8);
 
         expect(result.text).toBe(fixtureText("plain-text"));
       })
@@ -400,7 +412,8 @@ describe("makeTikaServerFileProcessingEngine output budgets", () => {
           const engine = yield* makeTikaServerFileProcessingEngine(
             TikaServerEngineConfig.make({ maxOutputBytes: O.some(PosInt.make(1_024)) })
           );
-          const error = yield* engine.extract(yield* makeExtractOperationFixture("plain-text")).pipe(Effect.flip);
+          const madeExtractOperationFixture9 = yield* makeExtractOperationFixture("plain-text");
+          const error = yield* engine.extract(madeExtractOperationFixture9).pipe(Effect.flip);
 
           expect(error._tag).toBe("FileProcessingOperationError");
           expect(error.reason).toBe("output-limit-exceeded");
@@ -418,7 +431,8 @@ describe("makeTikaServerFileProcessingEngine output budgets", () => {
           const engine = yield* makeTikaServerFileProcessingEngine(
             TikaServerEngineConfig.make({ maxOutputBytes: O.some(PosInt.make(64)) })
           );
-          const error = yield* engine.extract(yield* makeExtractOperationFixture("plain-text")).pipe(Effect.flip);
+          const madeExtractOperationFixture10 = yield* makeExtractOperationFixture("plain-text");
+          const error = yield* engine.extract(madeExtractOperationFixture10).pipe(Effect.flip);
 
           // The body is oversized AND unparseable; the budget must win, which
           // only happens if the check runs before JSON decoding.
@@ -438,7 +452,8 @@ describe("makeTikaServerFileProcessingEngine request shape", () => {
         const engine = yield* makeTikaServerFileProcessingEngine(
           decode(TikaServerEngineConfig, { baseUrl: "http://localhost:9998/" })
         );
-        yield* engine.extract(yield* makeExtractOperationFixture("plain-text"));
+        const madeExtractOperationFixture11 = yield* makeExtractOperationFixture("plain-text");
+        yield* engine.extract(madeExtractOperationFixture11);
 
         expect(capturedUrls).toContain(`${TIKA_SERVER_URL}/version`);
         expect(capturedUrls).toContain(`${TIKA_SERVER_URL}/rmeta/text`);
@@ -456,7 +471,8 @@ describe("makeTikaServerFileProcessingEngine error boundary", () => {
         "maps a 415 response to unsupported-file-format",
         Effect.fnUntraced(function* () {
           const engine = yield* makeTikaServerFileProcessingEngine(TikaServerEngineConfig.make({}));
-          const error = yield* engine.extract(yield* makeExtractOperationFixture("plain-text")).pipe(Effect.flip);
+          const madeExtractOperationFixture12 = yield* makeExtractOperationFixture("plain-text");
+          const error = yield* engine.extract(madeExtractOperationFixture12).pipe(Effect.flip);
 
           expect(error._tag).toBe("FileProcessingOperationError");
           expect(error.reason).toBe("unsupported-file-format");
@@ -472,7 +488,8 @@ describe("makeTikaServerFileProcessingEngine error boundary", () => {
         "maps a 500 response to file-extraction-failed",
         Effect.fnUntraced(function* () {
           const engine = yield* makeTikaServerFileProcessingEngine(TikaServerEngineConfig.make({}));
-          const error = yield* engine.extract(yield* makeExtractOperationFixture("plain-text")).pipe(Effect.flip);
+          const madeExtractOperationFixture13 = yield* makeExtractOperationFixture("plain-text");
+          const error = yield* engine.extract(madeExtractOperationFixture13).pipe(Effect.flip);
 
           expect(error._tag).toBe("FileProcessingOperationError");
           expect(error.reason).toBe("file-extraction-failed");
@@ -488,7 +505,8 @@ describe("makeTikaServerFileProcessingEngine error boundary", () => {
         "maps a 422 response to file-extraction-failed",
         Effect.fnUntraced(function* () {
           const engine = yield* makeTikaServerFileProcessingEngine(TikaServerEngineConfig.make({}));
-          const error = yield* engine.extract(yield* makeExtractOperationFixture("plain-text")).pipe(Effect.flip);
+          const madeExtractOperationFixture14 = yield* makeExtractOperationFixture("plain-text");
+          const error = yield* engine.extract(madeExtractOperationFixture14).pipe(Effect.flip);
 
           expect(error.reason).toBe("file-extraction-failed");
         })
@@ -501,7 +519,8 @@ describe("makeTikaServerFileProcessingEngine error boundary", () => {
       "maps a transport failure to engine-unavailable",
       Effect.fnUntraced(function* () {
         const engine = yield* makeTikaServerFileProcessingEngine(TikaServerEngineConfig.make({}));
-        const error = yield* engine.extract(yield* makeExtractOperationFixture("plain-text")).pipe(Effect.flip);
+        const madeExtractOperationFixture15 = yield* makeExtractOperationFixture("plain-text");
+        const error = yield* engine.extract(madeExtractOperationFixture15).pipe(Effect.flip);
 
         expect(error._tag).toBe("FileProcessingOperationError");
         expect(error.reason).toBe("engine-unavailable");
@@ -516,7 +535,8 @@ describe("makeTikaServerFileProcessingEngine error boundary", () => {
         "maps an undecodable response body to file-extraction-failed",
         Effect.fnUntraced(function* () {
           const engine = yield* makeTikaServerFileProcessingEngine(TikaServerEngineConfig.make({}));
-          const error = yield* engine.extract(yield* makeExtractOperationFixture("plain-text")).pipe(Effect.flip);
+          const madeExtractOperationFixture16 = yield* makeExtractOperationFixture("plain-text");
+          const error = yield* engine.extract(madeExtractOperationFixture16).pipe(Effect.flip);
 
           expect(error.reason).toBe("file-extraction-failed");
         })
@@ -531,7 +551,8 @@ describe("makeTikaServerFileProcessingEngine error boundary", () => {
         "maps an empty rmeta array to file-extraction-failed",
         Effect.fnUntraced(function* () {
           const engine = yield* makeTikaServerFileProcessingEngine(TikaServerEngineConfig.make({}));
-          const error = yield* engine.extract(yield* makeExtractOperationFixture("plain-text")).pipe(Effect.flip);
+          const madeExtractOperationFixture17 = yield* makeExtractOperationFixture("plain-text");
+          const error = yield* engine.extract(madeExtractOperationFixture17).pipe(Effect.flip);
 
           expect(error.reason).toBe("file-extraction-failed");
         })
@@ -548,7 +569,8 @@ describe("makeTikaServerFileProcessingEngine error boundary", () => {
         );
         const operation = yield* makeExtractOperationFixture("plain-text");
         const request = yield* engine.extract(operation).pipe(Effect.flip, Effect.forkChild);
-        yield* Deferred.await(yield* RequestStarted);
+        const RequestStarted18 = yield* RequestStarted;
+        yield* Deferred.await(RequestStarted18);
         // TestClock waits for supervised fibers to suspend before advancing, so both
         // the response delay and the unchanged operation deadline are armed.
         yield* TestClock.adjust("5 millis");
@@ -581,7 +603,8 @@ describe("makeTikaServerFileProcessingEngineFromEnv", () => {
 
           expect(engine.descriptor.version).toBe(tikaVersionResponse);
 
-          const error = yield* engine.extract(yield* makeExtractOperationFixture("plain-text")).pipe(Effect.flip);
+          const madeExtractOperationFixture19 = yield* makeExtractOperationFixture("plain-text");
+          const error = yield* engine.extract(madeExtractOperationFixture19).pipe(Effect.flip);
 
           expect(error.reason).toBe("output-limit-exceeded");
         })

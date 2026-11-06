@@ -1,11 +1,11 @@
 {
-  "previous": "a7db6a94bd0bb30934e7eae8e8f75dca93e50d39737f5f0bcdb519a35b8ad1f2",
+  "previous": "3a7edb194078b25a92eba060c7da503c893db748523ed4b4b2b5ed6882215c67",
   "review": {
     "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7b, feat/gh-git-w7b-groups)",
-    "reason": "Record the W7b seal drift: the goals completion reads moved onto GitHubContent, so GitHubContent.ts joins the goals-doctor and knowledge policy seals, and the goals doctor dropped GoalsGitError, so Goals.errors.ts leaves them; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
+    "reason": "Record the W7b seal drift and the inherited #2686 manifest drift: the goals completion reads moved onto GitHubContent, so GitHubContent.ts joins the goals-doctor and knowledge policy seals (Goals.errors.ts stays, main's doctor keeps GoalsGitError); @beep/html and @beep/technical-drawing manifests changed in #2686 without a re-stamp; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
     "basis": {
       "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7b.md",
-      "sha256": "175314d7b9f5c118d21d040d8a8c91391314977a7810d79496358f1d97b1753e"
+      "sha256": "92674c433ed07d4630843c32dbe2c99e09c5c877a67ab4893db54b0482b62a28"
     }
   },
   "scope": [
@@ -18,6 +18,8 @@
   "epoch": "qualification-v3",
   "subjects": [
     "//",
-    "@beep/repo-cli"
+    "@beep/repo-cli",
+    "@beep/html",
+    "@beep/technical-drawing"
   ]
 }

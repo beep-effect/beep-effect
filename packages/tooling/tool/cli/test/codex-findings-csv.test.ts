@@ -168,31 +168,36 @@ describe("codex findings csv decoding", () => {
 describe("codex findings csv refusals", () => {
   it.effect("refuses a signed-out html response as an expired session", () =>
     Effect.gen(function* () {
-      expect(yield* reason("<!doctype html><html><title>Log in</title></html>")).toBe("auth-expired");
+      const reason1 = yield* reason("<!doctype html><html><title>Log in</title></html>");
+      expect(reason1).toBe("auth-expired");
     })
   );
 
   it.effect("refuses an export whose header drifted", () =>
     Effect.gen(function* () {
-      expect(yield* reason("finding_url,title,severity\nx,y,z\n")).toBe("csv-header-unsupported");
+      const reason2 = yield* reason("finding_url,title,severity\nx,y,z\n");
+      expect(reason2).toBe("csv-header-unsupported");
     })
   );
 
   it.effect("refuses a truncated row rather than padding it", () =>
     Effect.gen(function* () {
-      expect(yield* reason(`${csv([])}${url("a")},kriegcloud/beep-effect\n`)).toBe("csv-row-malformed");
+      const reason3 = yield* reason(`${csv([])}${url("a")},kriegcloud/beep-effect\n`);
+      expect(reason3).toBe("csv-row-malformed");
     })
   );
 
   it.effect("refuses an unknown severity rather than guessing a bucket", () =>
     Effect.gen(function* () {
-      expect(yield* reason(csv([row({ seed: "a", severity: "catastrophic" })]))).toBe("csv-row-malformed");
+      const reason4 = yield* reason(csv([row({ seed: "a", severity: "catastrophic" })]));
+      expect(reason4).toBe("csv-row-malformed");
     })
   );
 
   it.effect("refuses a duplicated finding identity", () =>
     Effect.gen(function* () {
-      expect(yield* reason(csv([row({ seed: "a" }), row({ seed: "a" })]))).toBe("csv-duplicate-finding");
+      const reason5 = yield* reason(csv([row({ seed: "a" }), row({ seed: "a" })]));
+      expect(reason5).toBe("csv-duplicate-finding");
     })
   );
 
@@ -237,22 +242,20 @@ describe("Security Cloud export migration", () => {
   );
   it.effect("refuses mixed repositories in both formats", () =>
     Effect.gen(function* () {
-      expect(
-        yield* reason(
-          cloudCsv([
-            cloudRow(),
-            cloudRow([
-              [0, `commit:${id("b")}`],
-              [2, "https://github.com/example/other"],
-            ]),
-          ])
-        )
-      ).toBe("csv-row-malformed");
-      expect(
-        yield* reason(
-          csv([row({ seed: "a" }), Str.replace("kriegcloud/beep-effect", "example/other")(row({ seed: "b" }))])
-        )
-      ).toBe("csv-row-malformed");
+      const reason6 = yield* reason(
+        cloudCsv([
+          cloudRow(),
+          cloudRow([
+            [0, `commit:${id("b")}`],
+            [2, "https://github.com/example/other"],
+          ]),
+        ])
+      );
+      expect(reason6).toBe("csv-row-malformed");
+      const reason7 = yield* reason(
+        csv([row({ seed: "a" }), Str.replace("kriegcloud/beep-effect", "example/other")(row({ seed: "b" }))])
+      );
+      expect(reason7).toBe("csv-row-malformed");
     })
   );
   it.effect("refuses malformed identity, unsupported source, repository origin, and status", () =>
@@ -263,13 +266,17 @@ describe("Security Cloud export migration", () => {
         [2, "https://evil.example/example/repository"],
         [6, "unknown"],
       ] satisfies ReadonlyArray<readonly [number, string]>) {
-        expect(yield* reason(cloudCsv([cloudRow([override])]))).toBe("csv-row-malformed");
+        const reason8 = yield* reason(cloudCsv([cloudRow([override])]));
+        expect(reason8).toBe("csv-row-malformed");
       }
-      expect(yield* reason(cloudCsv([`commit:${id("a")}`]))).toBe("csv-row-malformed");
-      expect(yield* reason(Str.replace('"Finding ID","Source"', '"Finding ID,Source"')(cloudCsv([cloudRow()])))).toBe(
-        "csv-header-unsupported"
+      const reason9 = yield* reason(cloudCsv([`commit:${id("a")}`]));
+      expect(reason9).toBe("csv-row-malformed");
+      const reason10 = yield* reason(
+        Str.replace('"Finding ID","Source"', '"Finding ID,Source"')(cloudCsv([cloudRow()]))
       );
-      expect(yield* reason(cloudCsv([cloudRow(), cloudRow()]))).toBe("csv-duplicate-finding");
+      expect(reason10).toBe("csv-header-unsupported");
+      const reason11 = yield* reason(cloudCsv([cloudRow(), cloudRow()]));
+      expect(reason11).toBe("csv-duplicate-finding");
     })
   );
 });

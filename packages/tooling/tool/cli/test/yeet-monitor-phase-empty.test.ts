@@ -57,7 +57,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("yeet monitor phase with no p
 
       yield* runMonitorPhaseForTesting(context, A.empty(), recorder, "yeet publish monitor phase failed.");
 
-      expect(yield* Ref.get(recorder)).toStrictEqual(A.empty());
+      const got = yield* Ref.get(recorder);
+      expect(got).toStrictEqual(A.empty());
     })
   );
 
@@ -70,7 +71,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("yeet monitor phase with no p
 
       expect(result.committed).toBe(true);
       expect(result.pushed).toBe(true);
-      expect(yield* Ref.get(recorder)).toStrictEqual(A.empty());
+      const got1 = yield* Ref.get(recorder);
+      expect(got1).toStrictEqual(A.empty());
       // No status snapshot was read, so the verdict must omit mergeReady rather
       // than assert an unobserved answer.
       assertNone((yield* Ref.get(extras)).mergeReady);

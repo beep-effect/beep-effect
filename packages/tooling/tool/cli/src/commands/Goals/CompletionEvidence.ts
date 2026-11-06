@@ -265,7 +265,8 @@ export const readGoalCompletion = Effect.fn("Goals.Completion.read")(function* <
   root: string,
   read: (io: GoalCompletionIo["Service"], root: string) => Effect.Effect<A, YeetCommandError>
 ) {
-  return yield* read(yield* goalCompletionIo(), root);
+  const io = yield* goalCompletionIo();
+  return yield* read(io, root);
 });
 
 const REQUIRED_STATUS_CHECKS = "required_status_checks";
@@ -314,7 +315,8 @@ const readHistoricalRuleset = Effect.fn("Goals.Completion.historicalRuleset")(fu
     return yield* YeetCommandError.make({
       message: "Inherited ruleset history is unavailable through the repository-only adapter",
     });
-  const history = A.flatten(yield* readGoalCompletion(root, (io, root) => io.rulesetHistory(root, ruleset.id)));
+  const pages = yield* readGoalCompletion(root, (io, root) => io.rulesetHistory(root, ruleset.id));
+  const history = A.flatten(pages);
   const version = A.reduce(
     A.filter(history, (row) => DateTime.toEpochMillis(row.updated_at) <= DateTime.toEpochMillis(mergedAt)),
     O.none<GoalCompletionRulesetHistory[number][number]>(),
@@ -367,7 +369,8 @@ const readMergeRuleSuite = Effect.fn("Goals.CompletionEvidence.ruleSuite")(funct
   mergeCommit: string
 ) {
   const ref = `refs/heads/${base}`;
-  const listed = A.flatten(yield* readGoalCompletion(root, (io, root) => io.ruleSuites(root, ref)));
+  const pages = yield* readGoalCompletion(root, (io, root) => io.ruleSuites(root, ref));
+  const listed = A.flatten(pages);
   // Offset pagination can repeat a row when new pushes arrive mid-read; one suite id is one suite.
   const ids = A.dedupe(
     A.map(

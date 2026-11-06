@@ -23,7 +23,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -45,9 +46,13 @@ it.effect.prop(
       const jsonText = S.fromJsonString(S.Json);
       const parsed = yield* S.decodeEffect(jsonText)(body);
       assert.deepStrictEqual(parsed, document.toJsonLd());
-      const reparsed = yield* S.decodeEffect(jsonText)(yield* S.encodeEffect(jsonText)(parsed));
+      const argument = S.decodeEffect(jsonText);
+      const value2 = yield* S.encodeEffect(jsonText)(parsed);
+      const reparsed = yield* argument(value2);
       assert.deepStrictEqual(reparsed, parsed);
-      const restored = yield* S.decodeEffect(JsonLdDocument)(yield* S.encodeEffect(JsonLdDocument)(document));
+      const argument1 = S.decodeEffect(JsonLdDocument);
+      const value3 = yield* S.encodeEffect(JsonLdDocument)(document);
+      const restored = yield* argument1(value3);
       assert.strictEqual(restored.toScriptBody(), body);
       assert.strictEqual(/[<>&]/.test(body), false);
       // README composition guarantee: escaping the already escaped body is idempotent.

@@ -1106,8 +1106,10 @@ export const runSchemaTagIdioms = Effect.fn("SchemaTagIdioms.runSchemaTagIdioms"
   const repoRoot = yield* findRepoRoot(options.cwd).pipe(
     SchemaTagIdiomsExecutionError.mapError("Failed to locate the repository root")
   );
-  const typescript = A.filter(yield* listTracked(repoRoot, TYPESCRIPT_PATHSPECS), isSchemaTagIdiomsTypeScriptPath);
-  const markdown = A.filter(yield* listTracked(repoRoot, MARKDOWN_PATHSPECS), isSchemaTagIdiomsMarkdownPath);
+  const listTracked1 = yield* listTracked(repoRoot, TYPESCRIPT_PATHSPECS);
+  const typescript = A.filter(listTracked1, isSchemaTagIdiomsTypeScriptPath);
+  const listTracked2 = yield* listTracked(repoRoot, MARKDOWN_PATHSPECS);
+  const markdown = A.filter(listTracked2, isSchemaTagIdiomsMarkdownPath);
   const scans = yield* Effect.forEach(
     A.appendAll(
       A.map(typescript, (file) => [file, false] as const),

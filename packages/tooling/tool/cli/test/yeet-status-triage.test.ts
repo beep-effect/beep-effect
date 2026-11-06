@@ -1,5 +1,6 @@
 import * as NodeURL from "node:url";
 import { ReviewThread } from "@beep/github/ReviewThread";
+import { YeetCommandError } from "@beep/repo-cli/commands/Yeet/Yeet.errors";
 import {
   deriveYeetMergeReady,
   GateUnproven,
@@ -40,11 +41,15 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertInclude, assertNone, assertSome, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { recordedGithub } from "./support/YeetGithub.ts";
 import type { YeetReviewWindow } from "@beep/repo-cli/test/Yeet";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const decodePrCloseoutReport = S.decodeEffect(PrCloseoutReport);
 
@@ -460,7 +465,7 @@ const capturedThreadsText = await NodeServices.layer.pipe(
 );
 
 const capturedThreadsPayload = () => {
-  const captured = JSON.parse(capturedThreadsText) as {
+  const captured = Result.getOrThrowWith(S.decodeResult(UnknownJson)(capturedThreadsText), identity) as {
     readonly data: {
       readonly repository: {
         readonly pullRequest: {
@@ -1057,6 +1062,41 @@ describe("yeet remote check partitions", () => {
     assertNone(summary.requiredCheckCount);
     assertNone(summary.optionalCheckCount);
   });
+
+  it("holds readiness when the full check capture fails after required checks pass", () => {
+    const required = GhStatusCheck.make({ bucket: "pass", name: "Check / Lint", state: "SUCCESS" });
+    const summary = summarizeRemoteChecksForTesting(O.none(), O.some([required]));
+    const remote = YeetStatusRemote.make({
+      ...openRemote({}),
+      ...O.getSomesStruct(summary),
+      readFailure: O.some(YeetCommandError.make({ message: "HTTP 503 reading the complete check census" })),
+    });
+
+    assertSome(summary.requiredCheckCount, 1);
+    assertSome(summary.failingRequiredCheckCount, 0);
+    assertNone(summary.checkCount);
+    assertNone(summary.optionalCheckCount);
+    const ready = O.getOrThrow(deriveYeetMergeReady(closeoutArtifact(0, O.none()), remote));
+    strictEqual(ready.ready, false);
+    strictEqual(ready.criteria.requiredChecksGreen, false);
+    assertSome(ready.failing, "required-checks-green");
+  });
+
+  it("does not let zero counts override a failed remote read and recovers after a complete read", () => {
+    const complete = openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0 });
+    const unread = YeetStatusRemote.make({
+      ...complete,
+      readFailure: O.some(YeetCommandError.make({ message: "Required check capture was unreadable" })),
+    });
+    const held = O.getOrThrow(deriveYeetMergeReady(closeoutArtifact(0, O.none()), unread));
+    strictEqual(held.ready, false);
+    assertSome(held.failing, "required-checks-green");
+
+    const recovered = O.getOrThrow(deriveYeetMergeReady(closeoutArtifact(0, O.none()), complete));
+    strictEqual(recovered.ready, true);
+    strictEqual(recovered.criteria.requiredChecksGreen, true);
+    assertNone(recovered.failing);
+  });
 });
 
 describe("yeet status snapshot rendering and encoding", () => {
@@ -1143,6 +1183,27 @@ describe("yeet status snapshot rendering and encoding", () => {
 
     expect(legacySummary).toContain("checks: 18 total, 1 failing, 2 pending (legacy unsplit snapshot)");
     expect(unavailableSummary).toContain("checks: not checked");
+  });
+
+  it("labels an incomplete check read instead of rendering missing counts as zero", () => {
+    const unread = YeetStatusRemote.make({
+      ...remote,
+      requiredCheckCount: 15,
+      failingRequiredCheckCount: 0,
+      pendingRequiredCheckCount: 0,
+      readFailure: O.some(YeetCommandError.make({ message: "Complete check capture unavailable" })),
+    });
+    const summary = renderYeetStatusSummary(
+      YeetStatusSnapshot.make({
+        ...snapshot,
+        remote: unread,
+        mergeReady: deriveYeetMergeReady(closeout, unread),
+      })
+    );
+
+    expect(summary).toContain("checks: incomplete remote read; retry before assessing readiness");
+    expect(summary).not.toContain("15 required (0 failing");
+    expect(summary).toContain("merge-ready: no, blocked on required-checks-green");
   });
 
   it.effect("round-trips through the status JSON codec instead of leaking Option runtime objects", () =>

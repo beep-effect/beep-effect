@@ -82,7 +82,8 @@ describe("@beep/law-practice-server DocketIntake docket sheet", () => {
           ["0000.00001EP02", "reminder", "2030-05-05", "Associate reminder"],
           ["fa-77", "reminder", "2030-05-05", "Associate reminder"],
         ]);
-        expect(yield* forDockets(["0002.00003US01"])).toStrictEqual([]);
+        const forDockets1 = yield* forDockets(["0002.00003US01"]);
+        expect(forDockets1).toStrictEqual([]);
       })
     );
   });

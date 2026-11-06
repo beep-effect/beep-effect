@@ -11,10 +11,10 @@ describe("Range coverage boundaries", () => {
   it.effect("reports position-free and singular errors, invalid decoding, empty extrema and inspection", () =>
     Effect.gen(function* () {
       assert.strictEqual(InvalidRangeError.make({ input: "bad" }).message, 'Invalid range expression: "bad"');
-      assertFailure(
-        yield* Effect.result(S.decodeEffect(Range.FromString)("bad").pipe(Effect.mapError((error) => error._tag))),
-        "SchemaError"
+      const result1 = yield* Effect.result(
+        S.decodeEffect(Range.FromString)("bad").pipe(Effect.mapError((error) => error._tag))
       );
+      assertFailure(result1, "SchemaError");
       const range = yield* Range.parse(">=1.0.0");
       assert.strictEqual(inspect(range), ">=1.0.0");
       assert.strictEqual(
@@ -55,11 +55,9 @@ describe("Range coverage boundaries", () => {
         [">=1.0.0", "1.0.0", false],
       ] as const;
       for (const [sub, sup, expected] of cases) {
-        assert.strictEqual(
-          Range.isSubset(yield* Range.parse(sub), yield* Range.parse(sup)),
-          expected,
-          `${sub} subset ${sup}`
-        );
+        const parsed = yield* Range.parse(sub);
+        const parsed3 = yield* Range.parse(sup);
+        assert.strictEqual(Range.isSubset(parsed, parsed3), expected, `${sub} subset ${sup}`);
       }
     })
   );
@@ -90,7 +88,8 @@ describe("Range coverage boundaries", () => {
   it.effect("a stable lower bound cannot supply a prerelease witness on its own tuple", () =>
     Effect.gen(function* () {
       const impossible = yield* Range.parse(">=1.0.0 <1.0.0-rc");
-      assert.isTrue(Range.isSubset(impossible, yield* Range.parse("2.0.0")));
+      const parsed2 = yield* Range.parse("2.0.0");
+      assert.isTrue(Range.isSubset(impossible, parsed2));
       assert.isFalse(impossible.test(SemVer.of(1, 0, 0, [0])));
       const range = yield* Range.parse(">=1.0.0 <2.0.0");
       assertSome(Range.minSatisfying([SemVer.of(1, 1, 0), SemVer.of(1, 0, 0)], range), SemVer.of(1, 0, 0));

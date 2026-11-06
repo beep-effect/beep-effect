@@ -19,8 +19,10 @@ describe("EvmAddress", () => {
   it.effect(
     "accepts lowercase and checksummed canonical EVM addresses",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownEvmAddressEffect(evmLowercase)).toBe(evmLowercase);
-      expect(yield* decodeUnknownEvmAddressEffect(evmChecksummed)).toBe(evmChecksummed);
+      const decodedUnknownEvmAddressEffect = yield* decodeUnknownEvmAddressEffect(evmLowercase);
+      expect(decodedUnknownEvmAddressEffect).toBe(evmLowercase);
+      const decodedUnknownEvmAddressEffect1 = yield* decodeUnknownEvmAddressEffect(evmChecksummed);
+      expect(decodedUnknownEvmAddressEffect1).toBe(evmChecksummed);
     })
   );
 

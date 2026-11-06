@@ -1,12 +1,12 @@
 # Trustworthy agent observability foundation
 
-Current delivery: coordination-repaired final checkpoint [PR2655](https://github.com/beep-effect/beep-effect/pull/2655). PR2364/2508/2612 retain **unsatisfied** results; PR2578, PR2644 and PR2649 retain canonical **unknown** results. The operator explicitly kept the pre-merge rule and left this final merge to the owning chat. The goal remains active pending actual verified completion; the recovery hold stays intact.
+Current delivery: coordination-repaired final checkpoint [PR2655](https://github.com/beep-effect/beep-effect/pull/2655). PR2364/2508/2612 retain **unsatisfied** results; PR2578, PR2644 and PR2649 retain canonical **unknown** results. The operator explicitly kept the pre-merge rule and left this final merge to the owning chat. PR2655's completion receipt verified, and the closeout was adopted as a committed `closeout` by `goals set-status` in [#2703](https://github.com/beep-effect/beep-effect/pull/2703); the recovery hold stays intact.
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
-Explicitly launched by the operator on 2026-10-27. Source: [manifest](./ops/manifest.json). PR2364 has merged, but canonical completion remains unsatisfied. Current-source qualification and a genuinely verified follow-up delivery are in progress; see the [post-merge audit](./research/POST-MERGE-QUALIFICATION.md). The original forwarder service and timer remain masked and inactive.
+Explicitly launched by the operator on 2026-10-27. Source: [manifest](./ops/manifest.json). Closed: final PR2655 verified through `goals completion refresh` and was adopted as a committed `closeout` by `goals set-status` in [#2703](https://github.com/beep-effect/beep-effect/pull/2703). Earlier deliveries keep their unsatisfied or unknown results; see the [post-merge audit](./research/POST-MERGE-QUALIFICATION.md). The original forwarder service and timer remain masked and inactive.
 
 ## Mission
 

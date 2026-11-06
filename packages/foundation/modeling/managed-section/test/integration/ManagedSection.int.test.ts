@@ -37,7 +37,8 @@ it.layer(ManagedSection.layer.pipe(Layer.provideMerge(NodeServices.layer)), {
         // tag ever changes, `sync` silently loses the ability to create
         // files and every in-memory test stays green.
         const fs = yield* FileSystem.FileSystem;
-        const dir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped(tempDirOptions));
+        const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped(tempDirOptions);
+        const dir = yield* fs.realPath(madeTempDirectoryScoped);
         const nodePath = yield* Path.Path;
         // Asserted against `readFile`, the method `ManagedSection` actually
         // calls — pinning the tag on a method it does not use would prove
@@ -51,20 +52,25 @@ it.layer(ManagedSection.layer.pipe(Layer.provideMerge(NodeServices.layer)), {
     it.effect("reads a missing file as a document with no sections", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const dir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped(tempDirOptions));
+        const madeTempDirectoryScoped1 = yield* fs.makeTempDirectoryScoped(tempDirOptions);
+        const dir = yield* fs.realPath(madeTempDirectoryScoped1);
         const nodePath = yield* Path.Path;
         const sections = yield* ManagedSection;
         const path = nodePath.join(dir, "absent");
-        assertNone(yield* sections.read(path, id("example-tool")));
-        assert.isFalse(yield* sections.isManaged(path, id("example-tool")));
-        assert.isFalse(yield* sections.remove(path, id("example-tool")));
+        const read2 = yield* sections.read(path, id("example-tool"));
+        assertNone(read2);
+        const isManaged3 = yield* sections.isManaged(path, id("example-tool"));
+        assert.isFalse(isManaged3);
+        const remove4 = yield* sections.remove(path, id("example-tool"));
+        assert.isFalse(remove4);
       })
     );
 
     it.effect("creates a file that does not exist yet", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const dir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped(tempDirOptions));
+        const madeTempDirectoryScoped5 = yield* fs.makeTempDirectoryScoped(tempDirOptions);
+        const dir = yield* fs.realPath(madeTempDirectoryScoped5);
         const nodePath = yield* Path.Path;
         const sections = yield* ManagedSection;
         const path = nodePath.join(dir, "created");
@@ -81,7 +87,8 @@ it.layer(ManagedSection.layer.pipe(Layer.provideMerge(NodeServices.layer)), {
         // The converse of the degrade: reading a DIRECTORY as a file is a
         // real platform failure, and it must not be mistaken for "absent".
         const fs = yield* FileSystem.FileSystem;
-        const dir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped(tempDirOptions));
+        const madeTempDirectoryScoped6 = yield* fs.makeTempDirectoryScoped(tempDirOptions);
+        const dir = yield* fs.realPath(madeTempDirectoryScoped6);
         const sections = yield* ManagedSection;
         const error = yield* Effect.flip(sections.read(dir, id("example-tool")));
         assert.strictEqual(error._tag, "SectionFileError");
@@ -98,7 +105,8 @@ it.layer(ManagedSection.layer.pipe(Layer.provideMerge(NodeServices.layer)), {
     it.effect("round-trips a CRLF file without downgrading its line endings", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const dir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped(tempDirOptions));
+        const madeTempDirectoryScoped7 = yield* fs.makeTempDirectoryScoped(tempDirOptions);
+        const dir = yield* fs.realPath(madeTempDirectoryScoped7);
         const nodePath = yield* Path.Path;
         const sections = yield* ManagedSection;
         const path = nodePath.join(dir, "crlf.sh");
@@ -120,7 +128,8 @@ it.layer(ManagedSection.layer.pipe(Layer.provideMerge(NodeServices.layer)), {
     it.effect("does not touch the file's mtime when nothing changed", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const dir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped(tempDirOptions));
+        const madeTempDirectoryScoped8 = yield* fs.makeTempDirectoryScoped(tempDirOptions);
+        const dir = yield* fs.realPath(madeTempDirectoryScoped8);
         const nodePath = yield* Path.Path;
         const sections = yield* ManagedSection;
         const path = nodePath.join(dir, "stable.sh");
@@ -146,7 +155,8 @@ it.layer(ManagedSection.layer.pipe(Layer.provideMerge(NodeServices.layer)), {
     it.effect("preserves a byte-order mark through a sync", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const dir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped(tempDirOptions));
+        const madeTempDirectoryScoped9 = yield* fs.makeTempDirectoryScoped(tempDirOptions);
+        const dir = yield* fs.realPath(madeTempDirectoryScoped9);
         const nodePath = yield* Path.Path;
         const sections = yield* ManagedSection;
         const path = nodePath.join(dir, "bom.md");
@@ -162,7 +172,8 @@ it.layer(ManagedSection.layer.pipe(Layer.provideMerge(NodeServices.layer)), {
     it.effect("creates ordered sections, is idempotent, then removes them", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const dir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped(tempDirOptions));
+        const madeTempDirectoryScoped10 = yield* fs.makeTempDirectoryScoped(tempDirOptions);
+        const dir = yield* fs.realPath(madeTempDirectoryScoped10);
         const nodePath = yield* Path.Path;
         const sections = yield* ManagedSection;
         const path = nodePath.join(dir, "pre-commit");
@@ -189,11 +200,14 @@ it.layer(ManagedSection.layer.pipe(Layer.provideMerge(NodeServices.layer)), {
           ["Unchanged", "Unchanged"]
         );
 
-        assert.isTrue(yield* sections.remove(path, id("tool")));
-        assert.isTrue(yield* sections.remove(path, id("base")));
+        const remove11 = yield* sections.remove(path, id("tool"));
+        assert.isTrue(remove11);
+        const remove12 = yield* sections.remove(path, id("base"));
+        assert.isTrue(remove12);
         const cleaned = yield* fs.readFileString(path);
         assert.strictEqual(cleaned, "#!/bin/sh\n");
-        assert.lengthOf(yield* sections.readAll(path), 0);
+        const readAll13 = yield* sections.readAll(path);
+        assert.lengthOf(readAll13, 0);
       })
     );
   });

@@ -39,8 +39,9 @@ describe("OidcTokenIssuer coverage", () => {
     it.effect("unstubbed claims die naming the missing override", () =>
       Effect.gen(function* () {
         const issuer = yield* OidcTokenIssuer;
+        const exit1 = yield* Effect.exit(issuer.claims());
         assertExitFailure(
-          yield* Effect.exit(issuer.claims()),
+          exit1,
           Cause.die(
             UnstubbedMemberError.make({
               message: "OidcTokenIssuer.makeTest: claims() was called but not stubbed — pass a `claims` override.",

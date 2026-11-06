@@ -396,7 +396,8 @@ const project = Effect.fn("AiMetrics.projectTranscriptRecord")(function* (
     value === undefined || value === "" ? Effect.succeedNone : hash(value).pipe(Effect.asSome);
   const { id, cwd } = recordSession(row, source);
   const identifiers = recordIdentifiers(row, source);
-  const nextSession = mergeSession(session, yield* hashOptional(id));
+  const hashOptional1 = yield* hashOptional(id);
+  const nextSession = mergeSession(session, hashOptional1);
   return TranscriptMetadata.make({
     kind: recordKind(row),
     session: nextSession,
@@ -535,15 +536,14 @@ export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(func
             })
           );
         if (!boundary.complete) return O.none();
-        return O.some(
-          yield* completeFrame(
-            bytes.subarray(local, boundary.end),
-            occurrenceId,
-            occurrenceStart,
-            start + boundary.end,
-            progress.session
-          )
+        const completeFrame2 = yield* completeFrame(
+          bytes.subarray(local, boundary.end),
+          occurrenceId,
+          occurrenceStart,
+          start + boundary.end,
+          progress.session
         );
+        return O.some(completeFrame2);
       });
       const scanPage = Effect.fnUntraced(function* (
         resumed: O.Option<TranscriptCursor>,
@@ -621,9 +621,11 @@ export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(func
         const prior = previous.value;
         if (fileIdentity !== prior.fileIdentity) return "replaced";
         if (size < prior.offset || size < prior.prefixLength) return "truncated";
+        const readAt3 = yield* readAt(0, prior.prefixLength);
         if (
-          (yield* hashBytes(yield* readAt(0, prior.prefixLength))) !== prior.prefixHash ||
-          (yield* hashBytes(yield* readAt(prior.offset - prior.anchorLength, prior.anchorLength))) !== prior.anchorHash
+          (yield* hashBytes(readAt3)) !== prior.prefixHash ||
+          (yield* yield* Effect.map(readAt(prior.offset - prior.anchorLength, prior.anchorLength), hashBytes)) !==
+            prior.anchorHash
         )
           return "rewritten";
         return "none";
@@ -637,7 +639,8 @@ export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(func
       });
       yield* requireLineBoundary();
       const prefixLength = Math.min(256, size);
-      const prefixHash = yield* hashBytes(yield* readAt(0, prefixLength));
+      const readAt4 = yield* readAt(0, prefixLength);
+      const prefixHash = yield* hashBytes(readAt4);
       const generationId = O.isSome(resumed)
         ? resumed.value.generationId
         : yield* hash(
@@ -653,12 +656,14 @@ export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(func
         const again = yield* readAt(start, bytes.length);
         if (
           (yield* hashBytes(again)) !== (yield* hashBytes(bytes)) ||
-          (yield* hashBytes(yield* readAt(0, prefixLength))) !== prefixHash
-        )
+          (yield* yield* Effect.map(readAt(0, prefixLength), hashBytes)) !== prefixHash
+        ) {
           return yield* failure("unstable");
+        }
       });
       yield* verifySample();
       const anchorLength = Math.min(256, offset);
+      const readAt5 = yield* readAt(offset - anchorLength, anchorLength);
       const cursor = TranscriptCursor.make({
         source: input.source,
         pathHash,
@@ -670,7 +675,7 @@ export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(func
         prefixLength,
         prefixHash,
         anchorLength,
-        anchorHash: yield* hashBytes(yield* readAt(offset - anchorLength, anchorLength)),
+        anchorHash: yield* hashBytes(readAt5),
         discarding,
         discardStart,
         session,

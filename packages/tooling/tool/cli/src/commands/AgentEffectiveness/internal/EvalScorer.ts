@@ -282,7 +282,8 @@ export const runAgentEffectivenessEvalScoreCommand = Effect.fn("AgentEffectivene
   const [elapsed, report] = yield* scoreAgentEffectivenessEval({ dir, taskPath }).pipe(Effect.timed);
 
   if (json) {
-    yield* Console.log(yield* encodeAgentEffectivenessEvalScoreReportJson(report));
+    const encodedAgentEffectivenessEvalScoreReportJson = yield* encodeAgentEffectivenessEvalScoreReportJson(report);
+    yield* Console.log(encodedAgentEffectivenessEvalScoreReportJson);
   } else {
     yield* Console.log(
       `agent-effectiveness eval score: task=${report.taskId} status=${report.status} score=${report.score} completion=${report.breakdown.completion} schema-first=${report.breakdown.schemaFirst} tsgo=${report.breakdown.tsgo} biome=${report.breakdown.biome}`

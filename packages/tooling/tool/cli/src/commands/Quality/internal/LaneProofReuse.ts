@@ -174,7 +174,8 @@ export class LaneProofSession extends S.Opaque<LaneProofSession, { readonly bran
 
 const hashText = Effect.fnUntraced(function* (value: string) {
   const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(value)));
+  const digest1 = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(value));
+  return Hex.encode(digest1);
 });
 
 const stableRecordText = (value: Readonly<Record<string, string | undefined>>): string =>
@@ -299,7 +300,8 @@ const shortSha = Str.takeLeft(12);
 const resolveProofBase = Effect.fnUntraced(function* (repoRoot: string) {
   const pinned = pinnedLaneProofBaseSha();
   if (O.isNone(pinned)) {
-    return O.some(yield* revParseLaneRef(repoRoot, Bun.env[LANE_PROOF_BASE_ENV] ?? LANE_BASE_REF));
+    const pinned = yield* revParseLaneRef(repoRoot, Bun.env[LANE_PROOF_BASE_ENV] ?? LANE_BASE_REF);
+    return O.some(pinned);
   }
   const laneBase = yield* revParseLaneRef(repoRoot, LANE_BASE_REF);
   if (laneBase === pinned.value) {

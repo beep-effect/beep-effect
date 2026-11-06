@@ -92,7 +92,8 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
       expect(serialized).not.toContain("private-");
       expect(serialized).not.toContain("synthetic-native-salt");
       expect(serialized).not.toContain("input.value");
-      expect(yield* projectNativeTraceRequest(input)).toEqual(batch);
+      const projectNativeTraceRequest1 = yield* projectNativeTraceRequest(input);
+      expect(projectNativeTraceRequest1).toEqual(batch);
       const anotherRoute = yield* projectNativeTraceRequest(
         NativeTraceRequest.make({ ...input, routeId: Sha256Hex.make(Str.repeat(64)("b")) })
       );
@@ -102,43 +103,42 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
 
   it.effect("rejects invalid spans individually and never echoes rejected values", () =>
     Effect.gen(function* () {
-      const batch = yield* projectNativeTraceRequest(
-        yield* jsonRequest(
-          envelope([
-            { ...span, traceId: "private-invalid-id" },
-            { ...span, endTimeUnixNano: "1" },
-            { ...span, startTimeUnixNano: "18446744073709551616" },
-            { ...span, attributes: [text("session.id", "private-one"), text("session.id", "private-two")] },
-            { ...span, attributes: [count("input_tokens", "9007199254740992")] },
-            { ...span, startTimeUnixNano: "0xFF" },
-            {
-              ...span,
-              attributes: [{ key: "model", value: { stringValue: "private-model", arrayValue: { values: [] } } }],
-            },
-            span,
-          ])
-        )
+      const jsonRequest2 = yield* jsonRequest(
+        envelope([
+          { ...span, traceId: "private-invalid-id" },
+          { ...span, endTimeUnixNano: "1" },
+          { ...span, startTimeUnixNano: "18446744073709551616" },
+          { ...span, attributes: [text("session.id", "private-one"), text("session.id", "private-two")] },
+          { ...span, attributes: [count("input_tokens", "9007199254740992")] },
+          { ...span, startTimeUnixNano: "0xFF" },
+          {
+            ...span,
+            attributes: [{ key: "model", value: { stringValue: "private-model", arrayValue: { values: [] } } }],
+          },
+          span,
+        ])
       );
+      const batch = yield* projectNativeTraceRequest(jsonRequest2);
       expect(batch.spans).toHaveLength(1);
       expect(A.map(batch.rejections, (rejection) => rejection.ordinal)).toEqual([0, 1, 2, 3, 4, 5, 6]);
-      expect(yield* encodeNativeTraceBatchJson(batch)).not.toContain("private-");
+      const encodedNativeTraceBatchJson = yield* encodeNativeTraceBatchJson(batch);
+      expect(encodedNativeTraceBatchJson).not.toContain("private-");
     })
   );
 
   it.effect("accepts case-insensitive hexadecimal IDs and preserves the unsigned timestamp boundary", () =>
     Effect.gen(function* () {
-      const batch = yield* projectNativeTraceRequest(
-        yield* jsonRequest(
-          envelope([
-            {
-              ...span,
-              traceId: Str.repeat(16)("AB"),
-              spanId: Str.repeat(8)("CD"),
-              endTimeUnixNano: "18446744073709551615",
-            },
-          ])
-        )
+      const jsonRequest3 = yield* jsonRequest(
+        envelope([
+          {
+            ...span,
+            traceId: Str.repeat(16)("AB"),
+            spanId: Str.repeat(8)("CD"),
+            endTimeUnixNano: "18446744073709551615",
+          },
+        ])
       );
+      const batch = yield* projectNativeTraceRequest(jsonRequest3);
       const observedSpan = batch.spans[0];
       assertTrue(observedSpan !== undefined);
       expect(observedSpan.traceId).toEqual(Str.repeat(16)("ab"));
@@ -151,19 +151,18 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
 
   it.effect("keeps absent measurements unknown, explicit zero usage intact and unapproved model names hashed", () =>
     Effect.gen(function* () {
-      const batch = yield* projectNativeTraceRequest(
-        yield* jsonRequest(
-          envelope([
-            {
-              traceId: span.traceId,
-              spanId: span.spanId,
-              startTimeUnixNano: "0",
-              endTimeUnixNano: "0",
-              attributes: [text("model", "private-custom-model"), count("input_tokens", 0)],
-            },
-          ])
-        )
+      const jsonRequest4 = yield* jsonRequest(
+        envelope([
+          {
+            traceId: span.traceId,
+            spanId: span.spanId,
+            startTimeUnixNano: "0",
+            endTimeUnixNano: "0",
+            attributes: [text("model", "private-custom-model"), count("input_tokens", 0)],
+          },
+        ])
       );
+      const batch = yield* projectNativeTraceRequest(jsonRequest4);
       const observedSpan = batch.spans[0];
       assertTrue(observedSpan !== undefined);
       assertNone(observedSpan.startTimeUnixNano);
@@ -178,7 +177,8 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
       assertNone(observedSpan.usage.cacheRead);
       assertNone(observedSpan.usage.cacheWrite);
       expect((batch.spans[0]?.modelHash ?? O.none())._tag).toBe("Some");
-      expect(yield* encodeNativeTraceBatchJson(batch)).not.toContain("private-");
+      const encodedNativeTraceBatchJson5 = yield* encodeNativeTraceBatchJson(batch);
+      expect(encodedNativeTraceBatchJson5).not.toContain("private-");
     })
   );
 
@@ -275,7 +275,8 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
         NativeTraceRequest.make({ ...input, usageConvention: "unknown" })
       );
       expect(A.map(unknown.spans, (span) => span.kind)).toEqual(A.map(oi.spans, (span) => span.kind));
-      expect(yield* encodeNativeTraceBatchJson(native)).not.toContain("private-");
+      const encodedNativeTraceBatchJson6 = yield* encodeNativeTraceBatchJson(native);
+      expect(encodedNativeTraceBatchJson6).not.toContain("private-");
     })
   );
 
@@ -292,9 +293,8 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
       const many = {
         resourceSpans: [{ scopeSpans: [{ spans: A.replicate({}, 600) }, { spans: A.replicate({}, 600) }] }],
       };
-      expect((yield* projectNativeTraceRequest(yield* jsonRequest(many)).pipe(Effect.flip)).reason).toBe(
-        "too-many-spans"
-      );
+      const jsonRequest7 = yield* jsonRequest(many);
+      expect((yield* projectNativeTraceRequest(jsonRequest7).pipe(Effect.flip)).reason).toBe("too-many-spans");
       const input = yield* jsonRequest({});
       expect(
         (yield* projectNativeTraceRequest(NativeTraceRequest.make({ ...input, hashSalt: Redacted.make(" ") })).pipe(
@@ -332,22 +332,26 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
       };
       const bytes = type.encode(type.fromObject(envelope([native]))).finish();
       const binary = yield* projectNativeTraceRequest(request(bytes, "application/x-protobuf"));
-      const json = yield* projectNativeTraceRequest(yield* jsonRequest(envelope([span])));
+      const jsonRequest8 = yield* jsonRequest(envelope([span]));
+      const json = yield* projectNativeTraceRequest(jsonRequest8);
       expect(binary.spans).toEqual(json.spans);
       expect(binary.rejections).toEqual([]);
-      expect(yield* encodeNativeTraceBatchJson(binary)).not.toContain("private-");
+      const encodedNativeTraceBatchJson9 = yield* encodeNativeTraceBatchJson(binary);
+      expect(encodedNativeTraceBatchJson9).not.toContain("private-");
     })
   );
   it.effect("only preserves finite synthetic surface labels on an explicitly enabled fixture route", () =>
     Effect.gen(function* () {
-      const original = yield* projectNativeTraceRequest(yield* jsonRequest(envelope([span])));
+      const jsonRequest10 = yield* jsonRequest(envelope([span]));
+      const original = yield* projectNativeTraceRequest(jsonRequest10);
       for (const surface of ["cli", "desktop", "private-unapproved"]) {
         const input = yield* jsonRequest(
           envelope([{ ...span, attributes: [...span.attributes, text("beep.fixture.surface", surface)] }])
         );
         const disabled = yield* projectNativeTraceRequest(input);
         expect(disabled.spans).toEqual(original.spans);
-        expect(yield* encodeNativeTraceBatchJson(disabled)).not.toContain("fixtureSurface");
+        const encodedNativeTraceBatchJson11 = yield* encodeNativeTraceBatchJson(disabled);
+        expect(encodedNativeTraceBatchJson11).not.toContain("fixtureSurface");
         const enabled = yield* projectNativeTraceRequest(
           NativeTraceRequest.make({ ...input, syntheticFixtureMetadata: O.some(true) })
         );
@@ -359,7 +363,8 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
           if (span === undefined) return yield* Effect.die("Missing synthetic span");
           assertSome(span.fixtureSurface, surface);
           expect(enabled.spans[0]?.eventId).toBe(original.spans[0]?.eventId);
-          expect(yield* encodeNativeTraceBatchJson(enabled)).not.toContain("private-");
+          const encodedNativeTraceBatchJson12 = yield* encodeNativeTraceBatchJson(enabled);
+          expect(encodedNativeTraceBatchJson12).not.toContain("private-");
         }
       }
     })

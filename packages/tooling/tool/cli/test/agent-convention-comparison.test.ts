@@ -27,7 +27,9 @@ const ComparableDifferences = S.toType(S.Struct(Decision.cases.Comparable.fields
 const decodeDifferences = S.decodeUnknownEffect(ComparableDifferences);
 const pair = Effect.all([decodeTrial(baselineInput), decodeTrial(candidateInput)]);
 const compare = Effect.fn("ConventionComparisonTest.compare")(function* (candidate: unknown) {
-  return compareAgentConventionTrials(yield* decodeTrial(baselineInput), yield* decodeTrial(candidate));
+  const decodedTrial = yield* decodeTrial(baselineInput);
+  const decodedTrial1 = yield* decodeTrial(candidate);
+  return compareAgentConventionTrials(decodedTrial, decodedTrial1);
 });
 
 describe("declared convention comparisons", () => {
@@ -59,7 +61,8 @@ describe("declared convention comparisons", () => {
         assertNone(report.result.differences.introducedDefects);
         expect(report.result.differences.completion).toBe(0);
       }
-      const restored = yield* decodeComparison(yield* encodeComparison(report));
+      const encodedComparison = yield* encodeComparison(report);
+      const restored = yield* decodeComparison(encodedComparison);
       expect(comparisonEqual(report, restored)).toBe(true);
     })
   );

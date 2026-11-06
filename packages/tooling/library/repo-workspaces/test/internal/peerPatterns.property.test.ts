@@ -29,7 +29,8 @@ it.effect.prop(
       const decoded = yield* S.decodeEffect(patternsJson)(encoded);
       assert.strictEqual(peerNameMatcher(decoded)(name), peerNameMatcher(exclusion)(name));
       assert.strictEqual(peerNameMatcher(decoded)(other), peerNameMatcher(exclusion)(other));
-      assert.strictEqual(yield* S.encodeEffect(patternsJson)(decoded), encoded);
+      const value = yield* S.encodeEffect(patternsJson)(decoded);
+      assert.strictEqual(value, encoded);
     }),
   runs
 );

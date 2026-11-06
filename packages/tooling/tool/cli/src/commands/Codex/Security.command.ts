@@ -112,7 +112,8 @@ export const assertPrivateOutputDirectory = Effect.fn("CodexSecurity.assertPriva
  */
 const resolveSourceReceipt = Effect.fn("CodexSecurity.resolveSourceReceipt")(function* (repo: string) {
   const git = yield* Git;
-  const repository = yield* securityRepositoryFromRemote(O.getOrElse(yield* git.remoteUrl(repo), () => ""));
+  const remoteUrl1 = yield* git.remoteUrl(repo);
+  const repository = yield* securityRepositoryFromRemote(O.getOrElse(remoteUrl1, () => ""));
   return yield* decodeSourceReceipt({
     schemaVersion: "beep-security-source/v1",
     repository,
@@ -206,7 +207,9 @@ const writeSourceReceipt = Effect.fn("CodexSecurity.writeSourceReceipt")(functio
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* assertPrivateOutputDirectory(repoRealPath, outputDir);
-  yield* fs.writeFileString(path.join(outputDir, "beep-source.json"), yield* encodeSourceReceiptJson(source), {
+  const argument = path.join(outputDir, "beep-source.json");
+  const encodedSourceReceiptJson = yield* encodeSourceReceiptJson(source);
+  yield* fs.writeFileString(argument, encodedSourceReceiptJson, {
     flag: "wx",
     mode: 0o600,
   });
@@ -244,7 +247,9 @@ const run = Effect.fn("CodexSecurity.run")(
       timeoutMessage: "Security process timed out. Retained artifacts may be incomplete and are not a passing scan.",
     });
     // Fail closed on a swapped directory before any verdict, even a non-zero exit.
-    if (!preflight) yield* writeSourceReceipt(repoRealPath, outputDir, source);
+    if (!preflight) {
+      yield* writeSourceReceipt(repoRealPath, outputDir, source);
+    }
     if (exitCode !== 0) {
       return yield* CodexSecurityError.make({
         message: `Security CLI exited ${exitCode}. Findings or incomplete coverage require review; this is not a passing scan.`,

@@ -2,9 +2,13 @@ import { MemoryFileSystem } from "@beep/memfs";
 import { LayerPolicy, LayerPolicyError } from "@beep/repo-workspaces/testing";
 import { assert, describe, it, layer } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const VALID = { layers: [["app"], ["core"]], tooling: [], unconstrained: ["@e2e/*"] };
 
@@ -74,9 +78,12 @@ describe("LayerPolicy.decode", () => {
 describe("LayerPolicy.load", () => {
   layer(
     MemoryFileSystem.layerWith({
-      "/repo/layers.json": JSON.stringify(VALID),
+      "/repo/layers.json": Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(VALID), identity),
       "/repo/broken.json": "{ not json",
-      "/repo/foreign.json": JSON.stringify({ ...VALID, harness: ["@e2e/*"] }),
+      "/repo/foreign.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)({ ...VALID, harness: ["@e2e/*"] }),
+        identity
+      ),
     }),
     { timeout: "30 seconds" }
   )((it) => {

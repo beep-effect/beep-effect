@@ -1,0 +1,368 @@
+
+> eyecite-ts@0.34.2 pretest ~/.cache/beep/citation-extraction-engine/eyecite-ts
+> pnpm data:generate
+
+
+> eyecite-ts@0.34.2 data:generate ~/.cache/beep/citation-extraction-engine/eyecite-ts
+> tsx scripts/generate-reporters-data.ts
+
+reporters.gen.ts is up to date
+
+> eyecite-ts@0.34.2 test ~/.cache/beep/citation-extraction-engine/eyecite-ts
+> vitest -- --run
+
+
+ RUN  v4.0.18 ~/.cache/beep/citation-extraction-engine/eyecite-ts
+
+reporters.gen.ts is up to date
+ ✓ tests/extract/caseCitationDraft.test.ts (6 tests) 302ms
+ ✓ tests/extract/extractLexisStateVariants.test.ts (13 tests) 54ms
+ ✓ tests/extract/extractNeutralMultiWord.test.ts (15 tests) 49ms
+ ✓ tests/extract/shortFormCaseCharacterization.test.ts (21 tests) 50ms
+ ✓ tests/extract/issue641LeadingNumericCaseName.test.ts (5 tests) 54ms
+ ✓ tests/extract/issuePageTerminatorQuoteAsterisk.test.ts (8 tests) 60ms
+ ✓ tests/extract/issueDispositionAsCourt.test.ts (8 tests) 60ms
+ ✓ tests/extract/issuePhantomCaseRejection.test.ts (28 tests | 1 skipped) 69ms
+ ✓ tests/resolve/idSkipsParenChildOfShortform.test.ts (7 tests) 75ms
+ ✓ tests/extract/issue884ParallelShortform.test.ts (5 tests) 66ms
+ ✓ tests/extract/extractNeutralHyphenated.test.ts (28 tests) 80ms
+ ✓ tests/extract/issue634CalCourtParentheticalPollution.test.ts (24 tests) 68ms
+ ✓ tests/extract/issuePinciteTypographyTerminator.test.ts (8 tests) 83ms
+ ✓ tests/extract/issue572BlackEraDisambiguation.test.ts (14 tests) 106ms
+ ✓ tests/utils/parenDepths.test.ts (3 tests) 49ms
+ ✓ tests/extract/issue571PeriodlessReporterNormalization.test.ts (15 tests) 107ms
+ ✓ tests/branch-coverage/branchCoverage.test.ts (38 tests) 101ms
+ ✓ tests/resolve/idInheritsPincite.test.ts (21 tests) 102ms
+ ✓ tests/extract/issue439BarePartyShortform.test.ts (64 tests) 125ms
+ ✓ tests/extract/issueAdversarialInputs.test.ts (21 tests | 8 skipped) 92ms
+ ✓ tests/document/citationGraph.test.ts (12 tests) 82ms
+ ✓ tests/extract/issueAdversarialInputs2.test.ts (20 tests) 167ms
+ ✓ tests/extract/realWorldCorpusFixtures.test.ts (130 tests) 162ms
+ ✓ tests/extract/extractShortForms.test.ts (135 tests) 157ms
+ ✓ tests/extract/extractStatute.test.ts (358 tests) 216ms
+ ✓ tests/resolve/issue795_supraShortFormAntecedentAgreement.test.ts (5 tests) 49ms
+ ✓ tests/types/typeSystem.test.ts (31 tests) 40ms
+ ✓ tests/integration/footnotes.test.ts (10 tests) 63ms
+ ✓ tests/resolve/issue480_idAntecedent.test.ts (18 tests) 84ms
+ ✓ tests/extract/componentSpans.case.test.ts (11 tests) 60ms
+ ✓ tests/integration/realWorldGaps.test.ts (5 tests) 66ms
+stderr | tests/extract/issue145FalsePositives.test.ts > issue #145: false positive case citations > footnote/paragraph marker detection — expanded volume range and period handling > flags 'Fed. R. Civ. P.' as false positive despite containing periods
+[eyecite-ts] applyFalsePositiveFilters: called without `originalText` — line-crossing false-positive check (#547) is silently skipped. Pass the original source text as the 3rd argument to enable it. This warning fires only once per process; see issue #606.
+
+ ✓ tests/extract/idConfidence.test.ts (31 tests) 68ms
+ ✓ tests/extract/signalDetection.test.ts (25 tests) 75ms
+ ✓ tests/extract/extractDocket.test.ts (23 tests) 76ms
+ ✓ tests/integration/stringCites.test.ts (8 tests) 65ms
+ ✓ tests/integration/componentSpans.test.ts (17 tests) 92ms
+ ✓ tests/extract/issue555ReporterFallback.test.ts (20 tests) 71ms
+ ✓ tests/extract/validation.test.ts (15 tests) 119ms
+ ✓ tests/resolve/issue830CleanerCoordinateDesync.test.ts (7 tests) 94ms
+ ✓ tests/integration/phase3.test.ts (5 tests) 132ms
+ ✓ tests/extract/issue145FalsePositives.test.ts (21 tests) 122ms
+ ✓ tests/integration/fullPipeline.test.ts (39 tests) 124ms
+ ✓ tests/extract/paragraphMarkerFP.test.ts (9 tests) 99ms
+ ✓ tests/integration/resolution.test.ts (49 tests) 110ms
+ ✓ tests/integration/goldenCorpus.test.ts (34 tests | 1 skipped) 135ms
+ ✓ tests/extract/issue547FullspanOvershoot.test.ts (14 tests) 144ms
+ ✓ tests/utils/durableLocator.test.ts (18 tests) 59ms
+ ✓ tests/extract/extractCase.test.ts (518 tests) 476ms
+ ✓ tests/integration/thornyCorpus.test.ts (96 tests | 8 skipped) 266ms
+ ✓ tests/extract/caseReporterSemantics.test.ts (3 tests) 64ms
+ ✓ tests/patterns/shortForm.test.ts (34 tests) 74ms
+ ✓ tests/extract/issueCompareWithSignal.test.ts (5 tests) 52ms
+ ✓ tests/extract/issue522NestedParenYear.test.ts (7 tests) 61ms
+ ✓ tests/extract/shortFormParentheticalNode.test.ts (9 tests) 61ms
+ ✓ tests/data/reporters.test.ts (11 tests) 68ms
+ ✓ tests/document/randolphFixture.test.ts (4 tests) 86ms
+ ✓ tests/extract/issue639MultiPagePincite.test.ts (36 tests) 82ms
+ ✓ tests/extract/recursiveParenthetical.test.ts (10 tests) 83ms
+ ✓ tests/extract/extractNeutral.test.ts (14 tests) 85ms
+ ✓ tests/extract/realWorldCaptions.test.ts (34 tests) 92ms
+ ✓ tests/integration/expandedCorpus.test.ts (168 tests) 461ms
+ ✓ tests/integration/parallelSecondaryConfidence.test.ts (7 tests) 86ms
+ ✓ tests/extract/issueOcrTypoReporters.test.ts (8 tests) 126ms
+stdout | tests/bughunt/commands.test.ts > bughunt command runner > runs invariants lane and writes artifacts
+bughunt run written to ~/.cache/claude-tmp/bughunt-command-nBKN7w/runs/test-run
+
+stderr | tests/bughunt/commands.test.ts > bughunt command runner > returns non-zero for an unknown command
+Unknown bughunt command: wat
+
+Usage:
+  pnpm bughunt run --lane <lane> [--seed <n>] [--sample <n>]
+  pnpm bughunt inspect <run-or-latest> --id <finding-id>
+  pnpm bughunt promote <run-or-latest> --id <finding-id> [--write]
+
+Lanes: all, corpus, invariants, mutate, resolver, annotate, perf
+
+ ✓ tests/bughunt/core.test.ts (8 tests) 64ms
+ ✓ tests/bughunt/commands.test.ts (5 tests) 73ms
+ ✓ tests/extract/issue549OverlappingSpans.test.ts (11 tests) 56ms
+ ✓ tests/resolve/quoteZoneRobustness.test.ts (7 tests) 71ms
+ ✓ tests/extract/randolphFixture.test.ts (2 tests) 72ms
+ ✓ tests/extract/detectParallelPinciteBetween.test.ts (9 tests) 70ms
+ ✓ tests/extract/issueSemicolonPincite.test.ts (4 tests) 55ms
+ ✓ tests/document/proseOffsets.test.ts (10 tests) 74ms
+ ✓ tests/extract/statutes/extractAbbreviated.test.ts (40 tests) 51ms
+ ✓ tests/extract/issue570CommaBetweenReporterAndPage.test.ts (28 tests) 65ms
+ ✓ tests/extract/issueTrademarkSymbols.test.ts (6 tests) 64ms
+ ✓ tests/extract/issueParallelNoYearParen.test.ts (4 tests) 56ms
+ ✓ tests/extract/issue693BackscanArtifacts.test.ts (4 tests) 60ms
+ ✓ tests/clean/stripHtmlTagsBareAngles.test.ts (6 tests) 42ms
+ ✓ tests/extract/issueTrailingPunctTerminator.test.ts (8 tests) 71ms
+ ✓ tests/resolve/issue514_idFamilyFallback.test.ts (6 tests) 54ms
+ ✓ tests/extract/issue528MaxLookahead.test.ts (4 tests) 61ms
+ ✓ tests/resolve/issue504_supraFullCaption.test.ts (5 tests) 57ms
+ ✓ tests/annotate/annotate.test.ts (38 tests) 55ms
+ ✓ tests/resolve/issue508_idAntecedentAgreement.test.ts (4 tests) 50ms
+ ✓ tests/extract/localOrdinance.test.ts (5 tests) 32ms
+ ✓ tests/extract/issueNycAdminCodeBare.test.ts (4 tests) 32ms
+ ✓ tests/resolve/issue820_degradeSoftBalanceOk.test.ts (4 tests) 60ms
+ ✓ tests/extract/issue640NyAcronymCodes.test.ts (21 tests) 49ms
+ ✓ tests/extract/issue202Footnote.test.ts (5 tests) 76ms
+ ✓ tests/extract/issue201ShortFormRange.test.ts (4 tests) 70ms
+ ✓ tests/resolve/issue498_idSignalAntecedent.test.ts (10 tests) 103ms
+ ✓ tests/resolve/yellenFixture.test.ts (3 tests) 63ms
+ ✓ tests/extract/issue209PhantomCase.test.ts (4 tests) 44ms
+ ✓ tests/extract/issueTypographyTerminator.test.ts (7 tests) 65ms
+ ✓ tests/integration/falsePositives.test.ts (11 tests) 54ms
+ ✓ tests/utils/parentheticalScope.test.ts (15 tests) 58ms
+ ✓ tests/extract/issueTcMemo.test.ts (4 tests) 33ms
+ ✓ tests/resolve/idWalksToUnresolvedAntecedent.test.ts (6 tests) 52ms
+ ✓ tests/extract/issue534ConstitutionalShortForms.test.ts (19 tests) 34ms
+ ✓ tests/extract/canon.test.ts (5 tests) 30ms
+ ✓ tests/resolve/idInheritsCaseName.test.ts (9 tests) 58ms
+ ✓ tests/extract/issue527ChainedHistory.test.ts (4 tests) 46ms
+ ✓ tests/document/issue801_unbalancedParenEdges.test.ts (3 tests) 39ms
+ ✓ tests/extract/paragraphMarkerFPFallback.test.ts (8 tests) 41ms
+ ✓ tests/extract/extractOthers.test.ts (24 tests) 46ms
+ ✓ tests/extract/structuringPass.test.ts (2 tests) 45ms
+ ✓ tests/extract/issueCaseNameHeadingBoundary.test.ts (10 tests) 61ms
+ ✓ tests/resolve/issue818_supraCardinalityAbstain.test.ts (5 tests) 63ms
+ ✓ tests/extract/issue295FederalRuleLongForm.test.ts (5 tests) 31ms
+ ✓ tests/integration/statuteCorpus.test.ts (33 tests) 59ms
+ ✓ tests/extract/issueBareSectionSubd.test.ts (4 tests) 38ms
+ ✓ tests/extract/issueDateModifierAsCourt.test.ts (10 tests) 44ms
+ ✓ tests/extract/issuePhantomCourtRejection.test.ts (10 tests) 56ms
+ ✓ tests/resolve/shortFormProseNameFallback.test.ts (4 tests) 52ms
+ ✓ tests/extract/issue638JournalBareAlrAndScientific.test.ts (15 tests) 53ms
+ ✓ tests/extract/issue513StarRangeEnd.test.ts (3 tests) 39ms
+ ✓ tests/document/footnoteZones.test.ts (2 tests) 39ms
+ ✓ tests/extract/issue203NeutralStarRange.test.ts (3 tests) 41ms
+ ✓ tests/extract/issue529DispositionCourtLeak.test.ts (9 tests) 53ms
+ ✓ tests/clean/stripHtmlTagsScriptStyleCdata.test.ts (14 tests) 39ms
+ ✓ tests/extract/issue890BracketedYear.test.ts (9 tests) 55ms
+ ✓ tests/extract/issueCertDeniedBracketedComma.test.ts (2 tests) 47ms
+ ✓ tests/extract/issueVolParenNotCourt.test.ts (9 tests) 52ms
+ ✓ tests/clean/stripHtmlTagsBlockFusion.test.ts (6 tests) 55ms
+ ✓ tests/extract/issueQuotedCaseName.test.ts (6 tests) 49ms
+ ✓ tests/extract/issue511OldStyleDate.test.ts (4 tests) 38ms
+ ✓ tests/resolve/issueShortformPartynameDisambig.test.ts (6 tests) 49ms
+ ✓ tests/extract/issueCleanerBAPSpacing.test.ts (6 tests) 43ms
+ ✓ tests/document/quoteAttribution.test.ts (7 tests) 57ms
+ ✓ tests/extract/citationId.test.ts (3 tests) 48ms
+ ✓ tests/extract/issue587CommaBeforeSection.test.ts (10 tests) 33ms
+ ✓ tests/extract/issue551SemicolonParallelYear.test.ts (6 tests) 53ms
+ ✓ tests/extract/issue480FollowupNeutralYearVolume.test.ts (4 tests) 39ms
+ ✓ tests/resolve/issue799_supraSkipsParenChild.test.ts (3 tests) 47ms
+ ✓ tests/extract/issueUrlInParensCourt.test.ts (6 tests) 43ms
+ ✓ tests/extract/issueCaseNameYearParenBoundary.test.ts (7 tests) 49ms
+ ✓ tests/extract/caseCoreCharacterization.test.ts (4 tests) 43ms
+ ✓ tests/integration/subsequentHistory.test.ts (4 tests) 47ms
+ ✓ tests/extract/issue659DcCodeJurisdiction.test.ts (8 tests) 46ms
+ ✓ tests/integration/corpusProject.test.ts (2 tests) 43ms
+ ✓ tests/extract/issue147Confidence.test.ts (8 tests) 53ms
+ ✓ tests/resolve/issue819_supraStringCiteScopeLeak.test.ts (3 tests) 45ms
+ ✓ tests/resolve/issue821_triggerLexiconHistory.test.ts (6 tests) 49ms
+ ✓ tests/extract/issueCourtWithTrailingModifier.test.ts (7 tests) 40ms
+ ✓ tests/extract/componentSpans.others.test.ts (10 tests) 45ms
+ ✓ tests/extract/issue210SpansPincite.test.ts (7 tests) 52ms
+ ✓ tests/extract/issue516TildeRangeSeparator.test.ts (4 tests) 34ms
+ ✓ tests/extract/issue505PinciteTerminators.test.ts (7 tests) 54ms
+ ✓ tests/extract/issueBareArticleArabic.test.ts (5 tests) 30ms
+ ✓ tests/extract/historyChain.test.ts (3 tests) 48ms
+ ✓ tests/extract/issueTopologicalInheritance.test.ts (3 tests) 47ms
+ ✓ tests/resolve/issue847_idSectionPincite.test.ts (6 tests) 50ms
+ ✓ tests/resolve/issue809_strayBracketScope.test.ts (2 tests) 42ms
+ ✓ tests/resolve/issue811_candidateScorer.test.ts (2 tests) 38ms
+ ✓ tests/extract/issueCaseNameUnicode.test.ts (6 tests) 43ms
+ ✓ tests/extract/issueNonCourtParentheticals.test.ts (11 tests) 44ms
+ ✓ tests/resolve/issue798_idUnbalancedParenChild.test.ts (4 tests) 45ms
+ ✓ tests/extract/issueCourtDateFormatLeaks.test.ts (6 tests) 41ms
+ ✓ tests/extract/issuePageRangeHyphenWithYear.test.ts (8 tests) 45ms
+ ✓ tests/extract/issueMisspelledMonthStrip.test.ts (8 tests) 44ms
+ ✓ tests/extract/issueNestedYearParen.test.ts (4 tests) 39ms
+ ✓ tests/extract/issue552AtPincitePreservesParen.test.ts (7 tests) 47ms
+ ✓ tests/extract/issueBackscanSentencePrefix.test.ts (6 tests) 46ms
+ ✓ tests/extract/issueMoreNonCourtPrefixes.test.ts (8 tests) 54ms
+ ✓ tests/extract/issueIdCrossType.test.ts (5 tests) 47ms
+ ✓ tests/extract/extractFederalRule.test.ts (14 tests) 50ms
+ ✓ tests/document/analyzer.test.ts (4 tests) 69ms
+ ✓ tests/extract/issue523YearPlausibility.test.ts (19 tests) 41ms
+ ✓ tests/clean/reporterSpacingIllNw.test.ts (11 tests) 47ms
+ ✓ tests/extract/stringCitationGroup.test.ts (2 tests) 40ms
+ ✓ tests/resolve/issueShortformPartyNameSubstringCollision.test.ts (5 tests) 40ms
+ ✓ tests/extract/issueAndReporterRejection.test.ts (9 tests) 42ms
+ ✓ tests/extract/issue636StateRules.test.ts (13 tests) 40ms
+ ✓ tests/extract/issue464MtCoBareSection.test.ts (8 tests) 36ms
+ ✓ tests/resolve/issue800_idConfidenceFloor.test.ts (4 tests) 44ms
+ ✓ tests/extract/issueYearCommaModifier.test.ts (6 tests) 49ms
+ ✓ tests/extract/issue525OcrYearCourt.test.ts (6 tests) 45ms
+ ✓ tests/extract/issue568FullCodeIdentifier.test.ts (6 tests) 37ms
+ ✓ tests/extract/issueImplausibleVolPage.test.ts (7 tests) 36ms
+ ✓ tests/clean/issue835MarkdownCleaner.test.ts (15 tests) 43ms
+ ✓ tests/extract/issue524GeorgiaParenParallelYear.test.ts (5 tests) 49ms
+ ✓ tests/extract/issueNowReversedDisposition.test.ts (8 tests) 42ms
+ ✓ tests/clean/issueSoftWrapPinciteRange.test.ts (5 tests) 41ms
+ ✓ tests/extract/issueSubsequentHistoryConfidence.test.ts (3 tests) 42ms
+ ✓ tests/extract/issueCaseNameOrdinalPrefix.test.ts (7 tests) 38ms
+ ✓ tests/extract/issue701HtmlBlockFusion.test.ts (6 tests) 45ms
+ ✓ tests/utils/entry-point.test.ts (2 tests) 249ms
+ ✓ tests/extract/issuePageRangeHyphen.test.ts (5 tests) 47ms
+ ✓ tests/extract/issue453PluralSection.test.ts (11 tests) 50ms
+ ✓ tests/extract/issue635LpraPuertoRico.test.ts (13 tests) 46ms
+ ✓ tests/extract/sessionLaw.test.ts (9 tests) 37ms
+ ✓ tests/extract/issueIdAtNoSpace.test.ts (5 tests) 49ms
+ ✓ tests/extract/issue658TribalRules.test.ts (10 tests) 34ms
+ ✓ tests/extract/issue637CfrRegulationType.test.ts (14 tests) 40ms
+ ✓ tests/extract/issue584UscsLexisVariant.test.ts (6 tests) 34ms
+ ✓ tests/extract/issueCaseNameColon.test.ts (4 tests) 41ms
+ ✓ tests/extract/issue656StateConstProse.test.ts (10 tests) 37ms
+ ✓ tests/extract/issue566EtSeqFanout.test.ts (5 tests) 48ms
+ ✓ tests/extract/issue512OpenParenStopBoundary.test.ts (4 tests) 43ms
+ ✓ tests/extract/issue517IdAsCaseName.test.ts (4 tests) 35ms
+ ✓ tests/utils/citationBounds.test.ts (2 tests) 40ms
+ ✓ tests/extract/issueXVarPrefixStrip.test.ts (5 tests) 47ms
+ ✓ tests/extract/issueConstSectionNoComma.test.ts (7 tests) 32ms
+ ✓ tests/extract/issue507OhioNeutralParallel.test.ts (4 tests) 38ms
+ ✓ tests/extract/issue567BareShortFormStatute.test.ts (6 tests) 39ms
+ ✓ tests/extract/issue510AtPagePincite.test.ts (4 tests) 40ms
+ ✓ tests/extract/issuePinciteAsymmetricSpacing.test.ts (5 tests) 41ms
+ ✓ tests/extract/issue506SignalComma.test.ts (4 tests) 46ms
+ ✓ tests/extract/issue615JournalPhantom.test.ts (7 tests) 51ms
+ ✓ tests/extract/issueLeadingZeroVolume.test.ts (7 tests) 42ms
+ ✓ tests/extract/issue515FootnoteOnlyPincite.test.ts (8 tests) 40ms
+ ✓ tests/extract/statutes/extractBankruptcyCode.test.ts (4 tests) 35ms
+ ✓ tests/extract/parallelGroup.test.ts (2 tests) 52ms
+ ✓ tests/extract/issue881ExtractorDecline.test.ts (3 tests) 47ms
+ ✓ tests/extract/issueStatuteRangeTo.test.ts (5 tests) 37ms
+ ✓ tests/extract/issueFedRegCommaPage.test.ts (4 tests) 33ms
+ ✓ tests/resolve/resolutionIdRefs.test.ts (1 test) 33ms
+ ✓ tests/extract/issuePluralAmendsChain.test.ts (4 tests) 35ms
+ ✓ tests/extract/issue655CaBareSection.test.ts (7 tests) 35ms
+ ✓ tests/extract/extractStatutesAtLarge.test.ts (8 tests) 37ms
+ ✓ tests/extract/issue586TitleCommaUsc.test.ts (7 tests) 36ms
+ ✓ tests/extract/issueConstSemicolonChain.test.ts (6 tests) 39ms
+ ✓ tests/extract/issueBareArticleSection.test.ts (8 tests) 35ms
+ ✓ tests/extract/issue692NySlipOpNeutral.test.ts (5 tests) 38ms
+ ✓ tests/extract/issueConstInvalidNumeral.test.ts (5 tests) 32ms
+ ✓ tests/extract/casePartySemantics.test.ts (4 tests) 7ms
+ ✓ tests/extract/issue509OpenParenBeforeCore.test.ts (2 tests) 41ms
+ ✓ tests/data/knownCodes.test.ts (30 tests) 16ms
+ ✓ tests/patterns/constitutionalPatterns.test.ts (26 tests) 13ms
+ ✓ tests/clean/cleanText.test.ts (58 tests) 21ms
+ ✓ tests/extract/issue564SectionRange.test.ts (6 tests) 33ms
+ ✓ tests/extract/issue553JournalHyphenatedYear.test.ts (7 tests) 43ms
+ ✓ tests/extract/issue563BarePluralSection.test.ts (6 tests) 36ms
+ ✓ tests/extract/casePostfix.test.ts (3 tests) 11ms
+ ✓ tests/extract/extractTreatise.test.ts (8 tests) 35ms
+ ✓ tests/extract/casePostfixSemantics.test.ts (3 tests) 10ms
+ ✓ tests/patterns/statutePatterns.test.ts (64 tests) 20ms
+ ✓ tests/patterns/redos.test.ts (78 tests) 20ms
+ ✓ tests/patterns/grammarOrder.test.ts (5 tests) 12ms
+ ✓ tests/extract/issueStatPinciteComma.test.ts (5 tests) 29ms
+ ✓ tests/tokenize/tokenizer.test.ts (12 tests) 26ms
+ ✓ tests/integration/corpusIO.test.ts (1 test) 5ms
+ ✓ tests/extract/issue657MultiAmendmentList.test.ts (11 tests) 67ms
+stderr | tests/extract/filterFalsePositives.test.ts > applyFalsePositiveFilters > blocklist — penalize mode (remove: false) > flags I.C.J. as false positive
+[eyecite-ts] applyFalsePositiveFilters: called without `originalText` — line-crossing false-positive check (#547) is silently skipped. Pass the original source text as the 3rd argument to enable it. This warning fires only once per process; see issue #606.
+
+ ✓ tests/extract/filterFalsePositives.test.ts (30 tests) 9ms
+ ✓ tests/unit/resolve/bkTree.test.ts (13 tests) 12ms
+ ✓ tests/extract/dates.test.ts (44 tests) 9ms
+ ✓ tests/extract/caseParentheticals.test.ts (10 tests) 12ms
+ ✓ tests/footnotes/htmlDetector.test.ts (15 tests) 6ms
+ ✓ tests/extract/caseNameSemantics.test.ts (5 tests) 7ms
+ ✓ tests/integration/publishedTarball.test.ts (3 tests) 5698ms
+ ✓ tests/extract/extractRestatement.test.ts (9 tests) 42ms
+ ✓ tests/clean/segmentMap.test.ts (12 tests) 8ms
+ ✓ tests/extract/courtInference.test.ts (85 tests) 10ms
+ ✓ tests/extract/issue789_constitutionalFormerNow.test.ts (6 tests) 35ms
+ ✓ tests/footnotes/textDetector.test.ts (15 tests) 6ms
+ ✓ tests/extract/extractConstitutional.test.ts (21 tests) 11ms
+ ✓ tests/footnotes/detectFootnotes.test.ts (6 tests) 5ms
+ ✓ tests/extract/issue588YearGluedSubsection.test.ts (6 tests) 35ms
+ ✓ tests/extract/extractAnnotation.test.ts (7 tests) 37ms
+ ✓ tests/extract/caseNameScanner.test.ts (4 tests) 10ms
+ ✓ tests/extract/issue569MassChapter.test.ts (5 tests) 34ms
+ ✓ tests/extract/issueNevadaNAC.test.ts (3 tests) 30ms
+ ✓ tests/data/caBareCodes.test.ts (6 tests) 5ms
+ ✓ tests/types/spanFromGroupIndex.test.ts (6 tests) 4ms
+ ✓ tests/data/stateStatutes.test.ts (31 tests) 9ms
+ ✓ tests/extract/issueSupraButPrefix.test.ts (9 tests) 34ms
+ ✓ tests/extract/statutes/extractNamedCode.test.ts (22 tests) 9ms
+ ✓ tests/extract/issueCfrTitleComma.test.ts (5 tests) 34ms
+ ✓ tests/utils/bluebook.test.ts (52 tests) 6ms
+ ✓ tests/extract/statutes/extractFederal.test.ts (18 tests) 9ms
+ ✓ tests/extract/issue565NmDecimalSubsection.test.ts (5 tests) 34ms
+ ✓ tests/extract/issue146ShortFormFP.test.ts (5 tests) 33ms
+ ✓ tests/utils/groupByCase.test.ts (12 tests) 7ms
+ ✓ tests/extract/issueParseDateCommaAfterPeriod.test.ts (5 tests) 5ms
+ ✓ tests/extract/courtNormalization.test.ts (12 tests) 5ms
+ ✓ tests/unit/resolve/levenshtein.test.ts (21 tests) 7ms
+ ✓ tests/extract/detectParallel.test.ts (16 tests) 7ms
+ ✓ tests/extract/detectStringCites.test.ts (15 tests) 8ms
+ ✓ tests/extract/issueFedRuleAcronym.test.ts (10 tests) 36ms
+ ✓ tests/footnotes/resolution.test.ts (7 tests) 6ms
+ ✓ tests/extract/caseParallelSemantics.test.ts (3 tests) 3ms
+ ✓ tests/extract/pincite.test.ts (27 tests) 5ms
+ ✓ tests/patterns/neutralPatterns.test.ts (11 tests) 4ms
+ ✓ tests/utils/contentHash.test.ts (6 tests) 3ms
+ ✓ tests/types/issue843FullCitationGuard.test.ts (6 tests) 4ms
+ ✓ tests/extract/issueFpFilterMissingOriginalTextWarning.test.ts (5 tests) 5ms
+ ✓ tests/clean/reporterSpacing.test.ts (15 tests) 4ms
+ ✓ tests/extract/componentSpans.statute.test.ts (6 tests) 37ms
+ ✓ tests/clean/decodeHtmlEntities.test.ts (18 tests) 6ms
+ ✓ tests/extract/caseEnvelope.test.ts (4 tests) 3ms
+ ✓ tests/footnotes/mapZones.test.ts (5 tests) 4ms
+ ✓ tests/extract/issuePluralSectionConst.test.ts (4 tests) 31ms
+ ✓ tests/utils/tokenBounded.test.ts (7 tests) 3ms
+ ✓ tests/utils/detectQuoteZones.test.ts (5 tests) 4ms
+ ✓ tests/unit/resolve/scopeBoundary.test.ts (13 tests) 4ms
+ ✓ tests/extract/unionFind.test.ts (11 tests) 4ms
+ ✓ tests/extract/caseCore.test.ts (6 tests) 5ms
+ ✓ tests/utils/context.test.ts (15 tests) 4ms
+ ✓ tests/utils/reporterKey.test.ts (10 tests) 5ms
+ ✓ tests/extract/dates.invalidDate.test.ts (6 tests) 4ms
+ ✓ tests/footnotes/tagging.test.ts (6 tests) 3ms
+ ✓ tests/extract/statutes/extractProse.test.ts (5 tests) 4ms
+ ✓ tests/clean/issueNfkcExpansionAudit.test.ts (6 tests) 3ms
+ ✓ tests/footnotes/types.test.ts (2 tests) 3ms
+ ✓ tests/extract/issueTreatiseAuthorPrefix.test.ts (5 tests) 35ms
+ ✓ tests/extract/issueStatuteSupplementSubsection.test.ts (7 tests) 35ms
+ ✓ tests/tokenize/threading.test.ts (2 tests) 4ms
+ ✓ tests/extract/legislativeMaterial.test.ts (6 tests) 33ms
+stderr | tests/extract/issue582FedRuleFP.test.ts > #582: <YEAR> Fed.R.X.X. N false positive > defense in depth — false-positive filter rejects synthetic phantom > flags `vol=1983, reporter=Fed.R.Civ.P.` as a phantom case
+[eyecite-ts] applyFalsePositiveFilters: called without `originalText` — line-crossing false-positive check (#547) is silently skipped. Pass the original source text as the 3rd argument to enable it. This warning fires only once per process; see issue #606.
+
+ ✓ tests/extract/issueBareSectionConfidence.test.ts (3 tests) 31ms
+ ✓ tests/extract/issue582FedRuleFP.test.ts (6 tests) 25ms
+ ✓ tests/extract/issueFedRegYear.test.ts (5 tests) 29ms
+ ✓ tests/extract/statutes/extractChapterAct.test.ts (8 tests) 24ms
+ ✓ tests/extract/statutes/extractUssg.test.ts (5 tests) 32ms
+ ✓ tests/extract/issuePartialDecimalSectionRange.test.ts (4 tests) 30ms
+ ✓ tests/extract/issue881PropagateGenuineErrors.test.ts (1 test) 17ms
+ ✓ tests/extract/treaty.test.ts (7 tests) 33ms
+ ✓ tests/extract/issueStateSubsectionRange.test.ts (4 tests) 31ms
+ ✓ tests/extract/issueStateConstProseArticleFirst.test.ts (4 tests) 31ms
+ ✓ tests/extract/issueConstitutionPreamble.test.ts (5 tests) 28ms
+ ✓ tests/extract/issueIsPlausibleYearCoverage.test.ts (5 tests) 28ms
+ ✓ tests/utils/durableLocator.entry.test.ts (2 tests) 24ms
+ ✓ tests/extract/issue881ExtractorSentinel.test.ts (13 tests) 9ms
+ ✓ tests/extract/groupAccessor.test.ts (3 tests) 2ms
+ ✓ tests/integration/corpus.test.ts (130 tests) 4338ms
+
+ Test Files  323 passed (323)
+      Tests  4844 passed | 10 skipped | 8 todo (4862)
+   Start at  03:29:33
+   Duration  6.85s (transform 92.06s, setup 0ms, import 316.13s, tests 26.16s, environment 34ms)
+

@@ -329,7 +329,8 @@ export const effectSourceTargetVersion = (state: EffectCatalogState): O.Option<s
 export const fetchEffectReleaseCommit = Effect.fn("EffectResolver.fetchEffectReleaseCommit")(function* (
   version: string
 ): Effect.fn.Return<string, NetworkUnavailableError, HttpClient.HttpClient> {
-  const client = HttpClient.filterStatusOk(yield* HttpClient.HttpClient);
+  const HttpClient1 = yield* HttpClient.HttpClient;
+  const client = HttpClient.filterStatusOk(HttpClient1);
   const response = yield* client
     .get(`${EFFECT_RELEASE_COMMIT_URL}/effect@${version}`, {
       headers: {

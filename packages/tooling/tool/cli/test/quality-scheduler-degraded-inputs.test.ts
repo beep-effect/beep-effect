@@ -159,8 +159,10 @@ it.layer(Layer.mergeAll(PlatformLayer, FixedMemoryStatsLayer, RunScopesOffLayer)
       expect(snapshot.tickets).toHaveLength(0);
       expect(snapshot.dead).toHaveLength(0);
       expect(snapshot.quarantined).toHaveLength(0);
-      expect(yield* fs.exists(emptyLease)).toBe(true);
-      expect(yield* fs.exists(emptyTicket)).toBe(true);
+      const exists1 = yield* fs.exists(emptyLease);
+      expect(exists1).toBe(true);
+      const exists2 = yield* fs.exists(emptyTicket);
+      expect(exists2).toBe(true);
     })
   );
 });

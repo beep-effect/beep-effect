@@ -217,7 +217,8 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
       Effect.gen(function* () {
         const session = yield* PacerSession;
         // A token-injecting client for the raw DELETE (httpapi has no DELETE here).
-        const injected = makeInjectingClient(yield* HttpClient.HttpClient, cfg, session.tokenRef);
+        const HttpClient1 = yield* HttpClient.HttpClient;
+        const injected = makeInjectingClient(HttpClient1, cfg, session.tokenRef);
         const client = yield* HttpApiClient.make(PclHttpApi, {
           baseUrl: cfg.pclBaseUrl,
           transformClient: (base) => makeInjectingClient(base, cfg, session.tokenRef),

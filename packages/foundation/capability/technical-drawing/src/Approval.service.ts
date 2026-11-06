@@ -221,12 +221,14 @@ const makeService = Effect.fn("SheetSetApproval.makeService")(function* () {
       onFailure: (reason) => Effect.fail(refused(`Approval refused: ${REFUSAL_MESSAGES[reason]}.`)),
       onSuccess: Effect.succeed,
     });
+    const argument = approvalStatement(sheetSetSha256);
+    const now1 = yield* DateTime.now;
     const record = ApprovalRecord.make({
       sheetSetSha256,
       approver,
-      statement: approvalStatement(sheetSetSha256),
+      statement: argument,
       by: request.by,
-      recordedAt: DateTime.formatIso(yield* DateTime.now),
+      recordedAt: DateTime.formatIso(now1),
       confirmationKind: confirmation.kind,
       confirmationLocator: locatorOf(confirmation),
       confirmationSha256: yield* sha256Hex(encoder.encode(evidence.matchedText)),

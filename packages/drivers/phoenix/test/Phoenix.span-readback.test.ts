@@ -55,13 +55,16 @@ const run = Effect.fn("PhoenixSpanReadTest.run")(function* (body: unknown, statu
 });
 it.effect("returns only requested scalar metadata for an exact unpaginated identity", () =>
   Effect.gen(function* () {
-    expect(yield* run({ data: [row], next_cursor: null })).toMatchObject({
+    const result1 = yield* run({ data: [row], next_cursor: null });
+    expect(result1).toMatchObject({
       value: { attributes: { "ai_metrics.event_id": "synthetic-id" } },
     });
-    const text = yield* encodeJsonValue(yield* run({ data: [row], next_cursor: null }));
+    const result2 = yield* run({ data: [row], next_cursor: null });
+    const text = yield* encodeJsonValue(result2);
     expect(text).not.toContain("private-content");
     expect(text).not.toContain("private-content");
-    assertNone(yield* run({ data: [], next_cursor: null }));
+    const result3 = yield* run({ data: [], next_cursor: null });
+    assertNone(result3);
   })
 );
 it.effect("refuses duplicates, pagination, wrong identities and malformed requested attributes", () =>
@@ -69,27 +72,35 @@ it.effect("refuses duplicates, pagination, wrong identities and malformed reques
     for (const body of [
       { data: [row, row], next_cursor: null },
       { data: [row], next_cursor: "next" },
-    ])
-      expect(yield* run(body).pipe(Effect.flip)).toMatchObject({ reason: "ambiguous" });
+    ]) {
+      const pipe1 = yield* run(body).pipe(Effect.flip);
+      expect(pipe1).toMatchObject({ reason: "ambiguous" });
+    }
     for (const body of [
       { data: [{ ...row, context: { trace_id: traceId, span_id: Str.repeat(16)("3") } }], next_cursor: null },
       { data: [{ ...row, attributes: { "ai_metrics.event_id": { secret: "private" } } }], next_cursor: null },
-    ])
-      expect(yield* run(body).pipe(Effect.flip)).toMatchObject({ reason: "invalid-response" });
-    expect(yield* run({ data: [row], next_cursor: null }, 401).pipe(Effect.flip)).toMatchObject({ reason: "http" });
+    ]) {
+      const pipe2 = yield* run(body).pipe(Effect.flip);
+      expect(pipe2).toMatchObject({ reason: "invalid-response" });
+    }
+    const pipe4 = yield* run({ data: [row], next_cursor: null }, 401).pipe(Effect.flip);
+    expect(pipe4).toMatchObject({ reason: "http" });
   })
 );
 it.effect("keeps an unqueryable new project distinct from an empty successful query", () =>
   Effect.gen(function* () {
-    expect(yield* run({ detail: "private-server-content" }, 404).pipe(Effect.flip)).toMatchObject({
+    const pipe5 = yield* run({ detail: "private-server-content" }, 404).pipe(Effect.flip);
+    expect(pipe5).toMatchObject({
       reason: "not-found",
     });
-    assertNone(yield* run({ data: [], next_cursor: null }));
+    const result6 = yield* run({ data: [], next_cursor: null });
+    assertNone(result6);
   })
 );
 it.effect("bounds response bytes before JSON parsing", () =>
   Effect.gen(function* () {
-    expect(yield* run({ private: Str.repeat(262145)("x") }).pipe(Effect.flip)).toMatchObject({ reason: "oversize" });
+    const pipe7 = yield* run({ private: Str.repeat(262145)("x") }).pipe(Effect.flip);
+    expect(pipe7).toMatchObject({ reason: "oversize" });
   })
 );
 
@@ -102,9 +113,11 @@ it.effect("times out unavailable transport and refuses concurrent waiting work",
     );
     const sending = yield* Effect.forkChild(reader.lookup(lookup).pipe(Effect.flip));
     yield* Deferred.await(reached);
-    expect(yield* reader.lookup(lookup).pipe(Effect.flip)).toMatchObject({ reason: "busy" });
+    const pipe8 = yield* reader.lookup(lookup).pipe(Effect.flip);
+    expect(pipe8).toMatchObject({ reason: "busy" });
     yield* TestClock.adjust("6 seconds");
-    expect(yield* Fiber.join(sending)).toMatchObject({ reason: "timed-out" });
+    const join9 = yield* Fiber.join(sending);
+    expect(join9).toMatchObject({ reason: "timed-out" });
   })
 );
 
@@ -160,7 +173,8 @@ it.effect("uses explicit credentials and fixed response encoding while projectin
         },
       })
     ).pipe(Effect.provideService(HttpClient.HttpClient, client));
-    expect(yield* reader.lookup(lookup)).toMatchObject({
+    const lookup10 = yield* reader.lookup(lookup);
+    expect(lookup10).toMatchObject({
       value: { attributes: { "ai_metrics.event_id": "synthetic-id" } },
     });
   })
@@ -178,7 +192,8 @@ it.effect("keeps transport, malformed bytes and unexpected encodings content-fre
     const reader = yield* makePhoenixSpanReader(PhoenixConfigInput.make({ baseUrl: "http://localhost:6006" })).pipe(
       Effect.provideService(HttpClient.HttpClient, broken)
     );
-    expect(yield* reader.lookup(lookup).pipe(Effect.flip)).toMatchObject({ reason: "transport" });
+    const pipe11 = yield* reader.lookup(lookup).pipe(Effect.flip);
+    expect(pipe11).toMatchObject({ reason: "transport" });
     for (const response of [
       new Response("private-not-json", { headers: { "content-type": "text/plain" } }),
       new Response("private-not-json", { headers: { "content-type": "application/json", "content-encoding": "gzip" } }),
@@ -222,7 +237,8 @@ it.effect("releases admission after a response stream fails without exposing its
     const error = yield* reader.lookup(lookup).pipe(Effect.flip);
     expect(error).toMatchObject({ reason: "transport" });
     expect(String(error)).not.toContain("private-stream-detail");
-    expect(yield* reader.lookup(lookup)).toMatchObject({ value: { traceId, spanId } });
+    const lookup12 = yield* reader.lookup(lookup);
+    expect(lookup12).toMatchObject({ value: { traceId, spanId } });
     expect(requests).toBe(2);
   })
 );

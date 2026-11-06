@@ -183,7 +183,8 @@ describe("readYeetAckState", () => {
           const fs = yield* FileSystem.FileSystem;
           // A directory squatting on the receipt path: it exists, but reading it
           // as a file fails — the ack must survive the read failure.
-          yield* fs.makeDirectory(yield* yeetInboxAckPath(root, "coverage-abc123"), { recursive: true });
+          const yeetInboxAckPath1 = yield* yeetInboxAckPath(root, "coverage-abc123");
+          yield* fs.makeDirectory(yeetInboxAckPath1, { recursive: true });
 
           const state = yield* readYeetAckState(root, "coverage-abc123");
 
@@ -206,7 +207,8 @@ describe("readYeetAckState", () => {
           const id = "coverage-abc123";
           const outsideAck = `${outsideRoot}/${id}`;
           yield* fs.writeFileString(outsideAck, `${yield* YeetAckReceiptJson.encode(fixReceipt(id))}\n`);
-          yield* fs.symlink(outsideAck, yield* yeetInboxAckPath(repoRoot, id));
+          const yeetInboxAckPath2 = yield* yeetInboxAckPath(repoRoot, id);
+          yield* fs.symlink(outsideAck, yeetInboxAckPath2);
 
           const state = yield* readYeetAckState(repoRoot, id);
 
@@ -251,7 +253,8 @@ describe("writeYeetAckReceipt", () => {
           const written = yield* writeYeetAckReceipt(root, receipt);
 
           expect(written).toBe(`${root}/.beep/inbox/acks/coverage-abc123`);
-          const decoded = yield* YeetAckReceiptJson.decode(Str.trim(yield* fs.readFileString(written)));
+          const readFileString3 = yield* fs.readFileString(written);
+          const decoded = yield* YeetAckReceiptJson.decode(Str.trim(readFileString3));
           expect(decoded.id).toBe("coverage-abc123");
         })
       )
@@ -310,12 +313,14 @@ describe("writeYeetAckReceipt", () => {
           const outsideAck = `${outsideRoot}/${id}`;
           const sentinel = "outside target must stay unchanged\n";
           yield* fs.writeFileString(outsideAck, sentinel);
-          yield* fs.symlink(outsideAck, yield* yeetInboxAckPath(repoRoot, id));
+          const yeetInboxAckPath4 = yield* yeetInboxAckPath(repoRoot, id);
+          yield* fs.symlink(outsideAck, yeetInboxAckPath4);
 
           const failure = yield* writeYeetAckReceipt(repoRoot, fixReceipt(id)).pipe(Effect.flip);
 
           expect(failure._tag).toBe("YeetCommandError");
-          expect(yield* fs.readFileString(outsideAck)).toBe(sentinel);
+          const readFileString5 = yield* fs.readFileString(outsideAck);
+          expect(readFileString5).toBe(sentinel);
         })
       )
     );
@@ -339,7 +344,8 @@ describe("writeYeetAckReceipt", () => {
           const failure = yield* writeYeetAckReceipt(repoRoot, fixReceipt(id)).pipe(Effect.flip);
 
           expect(failure._tag).toBe("YeetCommandError");
-          expect(yield* fs.readFileString(outsideAck)).toBe(sentinel);
+          const readFileString6 = yield* fs.readFileString(outsideAck);
+          expect(readFileString6).toBe(sentinel);
         })
       )
     );

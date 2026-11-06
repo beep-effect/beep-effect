@@ -18,7 +18,8 @@ describe("internal YAML token schema property floor", () => {
         const decoded = yield* S.decodeEffect(YamlTokenKind)(encoded);
         assertTrue(S.toEquivalence(YamlTokenKind)(decoded, kind));
         assert.strictEqual(encoded, kind);
-        assert.strictEqual(yield* S.encodeEffect(YamlTokenKind)(decoded), encoded);
+        const value = yield* S.encodeEffect(YamlTokenKind)(decoded);
+        assert.strictEqual(value, encoded);
       }),
     runs
   );
@@ -32,7 +33,8 @@ describe("internal YAML token schema property floor", () => {
         const decoded = yield* S.decodeEffect(YamlToken)(encoded);
         assertTrue(S.toEquivalence(YamlToken)(decoded, token));
         assert.deepStrictEqual(encoded, token);
-        assert.deepStrictEqual(yield* S.encodeEffect(YamlToken)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(YamlToken)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

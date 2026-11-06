@@ -14,7 +14,8 @@ it.effect.prop(
     Effect.gen(function* () {
       const encoded = yield* S.encodeEffect(InvalidPattern)(value);
       const decoded = yield* S.decodeEffect(InvalidPattern)(encoded);
-      assert.deepStrictEqual(yield* S.encodeEffect(InvalidPattern)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(InvalidPattern)(decoded);
+      assert.deepStrictEqual(value1, encoded);
       assert.strictEqual(decoded.message, value.message);
       assert.strictEqual(decoded._tag, value._tag);
     }),

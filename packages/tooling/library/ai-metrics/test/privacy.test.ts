@@ -2,13 +2,14 @@ import {
   AI_METRICS_LOCAL_INSECURE_HASH_SALT,
   hashPrivateIdentifier,
   hashPublicTextSha256,
+  makeAiMetricsSourceAttribution,
   redactAiMetricsSensitiveText,
 } from "@beep/repo-ai-metrics/privacy";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -19,6 +20,22 @@ const isSha256Hex = S.is(Sha256Hex);
 const SecretTokenArbitrary = Arbitrary.schema(S.String.check(S.isPattern(/^[A-Za-z0-9]{8,64}$/)));
 
 describe("AI metrics privacy boundaries", () => {
+  it.effect("attributes gateway metadata by a salted unit identity instead of its private path", () =>
+    Effect.gen(function* () {
+      const hashSalt = O.some("synthetic-gateway-attribution-salt");
+      const attribution = yield* makeAiMetricsSourceAttribution({
+        content: "synthetic unit metadata",
+        hashSalt,
+        relativePath: "openclaw-gateway.service",
+        sourceKind: "openclaw",
+        sourcePath: "/synthetic/private/openclaw-gateway.service",
+      });
+      const expected = yield* hashPrivateIdentifier("openclaw-gateway.service", hashSalt);
+      assertSome(attribution.sessionIdHash, expected);
+      expect(attribution.sourceRole).toBe("gateway_metadata");
+    })
+  );
+
   it.effect("returns schema-valid SHA-256 digests", () =>
     Effect.gen(function* () {
       const hash = yield* hashPublicTextSha256("public identity");
@@ -33,8 +50,12 @@ describe("AI metrics privacy boundaries", () => {
       const salted = yield* hashPrivateIdentifier(value, O.some(salt));
       const unsalted = yield* hashPrivateIdentifier(value, O.none());
 
-      expect(salted).toBe(yield* hashPublicTextSha256(`${salt}\u0000${value}`));
-      expect(unsalted).toBe(yield* hashPublicTextSha256(`${AI_METRICS_LOCAL_INSECURE_HASH_SALT}\u0000${value}`));
+      const expectation = expect(salted);
+      const hashPublicTextSha2561 = yield* hashPublicTextSha256(`${salt}\u0000${value}`);
+      expectation.toBe(hashPublicTextSha2561);
+      const expectation1 = expect(unsalted);
+      const hashPublicTextSha2562 = yield* hashPublicTextSha256(`${AI_METRICS_LOCAL_INSECURE_HASH_SALT}\u0000${value}`);
+      expectation1.toBe(hashPublicTextSha2562);
     })
   );
 

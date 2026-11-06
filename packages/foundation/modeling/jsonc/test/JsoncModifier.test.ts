@@ -102,21 +102,23 @@ describe("JsoncModifier", () => {
   describe("replace", () => {
     it.effect("updates object properties and array elements byte-minimally", () =>
       Effect.gen(function* () {
-        assert.strictEqual(apply('{ "a": 1 }', yield* JsoncModifier.modify('{ "a": 1 }', ["a"], 2)), '{ "a": 2 }');
+        const modify1 = yield* JsoncModifier.modify('{ "a": 1 }', ["a"], 2);
+        assert.strictEqual(apply('{ "a": 1 }', modify1), '{ "a": 2 }');
         const text = '{ "xs": [1, 2, 3] }';
-        assert.strictEqual(apply(text, yield* JsoncModifier.modify(text, ["xs", 1], 99)), '{ "xs": [1, 99, 3] }');
+        const modify2 = yield* JsoncModifier.modify(text, ["xs", 1], 99);
+        assert.strictEqual(apply(text, modify2), '{ "xs": [1, 99, 3] }');
         const commented = '{\n  "a": 1, // keep\n  "b": 2\n}';
-        assert.strictEqual(
-          apply(commented, yield* JsoncModifier.modify(commented, ["b"], 5)),
-          '{\n  "a": 1, // keep\n  "b": 5\n}'
-        );
+        const modify3 = yield* JsoncModifier.modify(commented, ["b"], 5);
+        assert.strictEqual(apply(commented, modify3), '{\n  "a": 1, // keep\n  "b": 5\n}');
       })
     );
 
     it.effect("replaces the value of a quote-containing key", () =>
       Effect.gen(function* () {
         const text = '{ "a\\"b": 1 }';
-        assert.deepStrictEqual(yield* Jsonc.parse(apply(text, yield* JsoncModifier.modify(text, ['a"b'], 42))), {
+        const modify44 = yield* JsoncModifier.modify(text, ['a"b'], 42);
+        const parsed = yield* Jsonc.parse(apply(text, modify44));
+        assert.deepStrictEqual(parsed, {
           'a"b': 42,
         });
       })
@@ -131,52 +133,61 @@ describe("JsoncModifier", () => {
     it.effect("inserts inside a container that ends with a trailing comma", () =>
       Effect.gen(function* () {
         const object = '{ "a": 1, }';
-        assert.deepStrictEqual(yield* Jsonc.parse(apply(object, yield* JsoncModifier.modify(object, ["delta"], []))), {
+        const modify45 = yield* JsoncModifier.modify(object, ["delta"], []);
+        const parsed4 = yield* Jsonc.parse(apply(object, modify45));
+        assert.deepStrictEqual(parsed4, {
           a: 1,
           delta: [],
         });
         const nested = '{ "a": { "b": 1, } }';
-        assert.deepStrictEqual(yield* Jsonc.parse(apply(nested, yield* JsoncModifier.modify(nested, ["a", "c"], 2))), {
+        const modify46 = yield* JsoncModifier.modify(nested, ["a", "c"], 2);
+        const parsed5 = yield* Jsonc.parse(apply(nested, modify46));
+        assert.deepStrictEqual(parsed5, {
           a: { b: 1, c: 2 },
         });
         const array = "[1, ]";
-        assert.deepStrictEqual(yield* Jsonc.parse(apply(array, yield* JsoncModifier.modify(array, [1], 2))), [1, 2]);
+        const modify47 = yield* JsoncModifier.modify(array, [1], 2);
+        const parsed6 = yield* Jsonc.parse(apply(array, modify47));
+        assert.deepStrictEqual(parsed6, [1, 2]);
       })
     );
 
     it.effect("leaves the text alone for a negative or fractional final index", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* JsoncModifier.modify("[1]", [-1], 2), []);
-        assert.deepStrictEqual(yield* JsoncModifier.modify("[1, 2]", [0.5], 3), []);
-        assert.deepStrictEqual(yield* JsoncModifier.modify('{ "a": [1] }', ["a", -1], 2), []);
+        const modify7 = yield* JsoncModifier.modify("[1]", [-1], 2);
+        assert.deepStrictEqual(modify7, []);
+        const modify8 = yield* JsoncModifier.modify("[1, 2]", [0.5], 3);
+        assert.deepStrictEqual(modify8, []);
+        const modify9 = yield* JsoncModifier.modify('{ "a": [1] }', ["a", -1], 2);
+        assert.deepStrictEqual(modify9, []);
       })
     );
 
     it.effect("appends a property after the last one or into an empty object", () =>
       Effect.gen(function* () {
-        assert.strictEqual(
-          apply('{ "a": 1 }', yield* JsoncModifier.modify('{ "a": 1 }', ["b"], 2)),
-          '{ "a": 1,\n  "b": 2 }'
-        );
-        assert.strictEqual(apply("{}", yield* JsoncModifier.modify("{}", ["a"], 1)), '{\n  "a": 1\n}');
+        const modify10 = yield* JsoncModifier.modify('{ "a": 1 }', ["b"], 2);
+        assert.strictEqual(apply('{ "a": 1 }', modify10), '{ "a": 1,\n  "b": 2 }');
+        const modify11 = yield* JsoncModifier.modify("{}", ["a"], 1);
+        assert.strictEqual(apply("{}", modify11), '{\n  "a": 1\n}');
       })
     );
 
     it.effect("appends an element after the last one or into an empty array", () =>
       Effect.gen(function* () {
-        assert.strictEqual(apply("[1]", yield* JsoncModifier.modify("[1]", [1], 2)), "[1,\n  2]");
-        assert.strictEqual(apply("[]", yield* JsoncModifier.modify("[]", [0], 1)), "[\n  1\n]");
-        assert.strictEqual(apply("[1]", yield* JsoncModifier.modify("[1]", [5], 2)), "[1,\n  2]");
+        const modify12 = yield* JsoncModifier.modify("[1]", [1], 2);
+        assert.strictEqual(apply("[1]", modify12), "[1,\n  2]");
+        const modify13 = yield* JsoncModifier.modify("[]", [0], 1);
+        assert.strictEqual(apply("[]", modify13), "[\n  1\n]");
+        const modify14 = yield* JsoncModifier.modify("[1]", [5], 2);
+        assert.strictEqual(apply("[1]", modify14), "[1,\n  2]");
       })
     );
 
     it.effect("indents nested insertions by their depth", () =>
       Effect.gen(function* () {
         const text = '{ "a": { "b": [] } }';
-        assert.strictEqual(
-          apply(text, yield* JsoncModifier.modify(text, ["a", "b", 0], true)),
-          '{ "a": { "b": [\n      true\n    ] } }'
-        );
+        const modify15 = yield* JsoncModifier.modify(text, ["a", "b", 0], true);
+        assert.strictEqual(apply(text, modify15), '{ "a": { "b": [\n      true\n    ] } }');
       })
     );
   });
@@ -185,28 +196,26 @@ describe("JsoncModifier", () => {
     it.effect("removes an object property with its comma, first or last", () =>
       Effect.gen(function* () {
         const text = '{ "a": 1, "b": 2 }';
-        assert.strictEqual(apply(text, yield* JsoncModifier.modify(text, ["a"], undefined)), '{  "b": 2 }');
-        assert.strictEqual(apply(text, yield* JsoncModifier.modify(text, ["b"], undefined)), '{ "a": 1 }');
-        assert.strictEqual(apply('{ "a": 1 }', yield* JsoncModifier.modify('{ "a": 1 }', ["a"], undefined)), "{  }");
+        const modify16 = yield* JsoncModifier.modify(text, ["a"], undefined);
+        assert.strictEqual(apply(text, modify16), '{  "b": 2 }');
+        const modify17 = yield* JsoncModifier.modify(text, ["b"], undefined);
+        assert.strictEqual(apply(text, modify17), '{ "a": 1 }');
+        const modify18 = yield* JsoncModifier.modify('{ "a": 1 }', ["a"], undefined);
+        assert.strictEqual(apply('{ "a": 1 }', modify18), "{  }");
       })
     );
 
     it.effect("removes an array element with its comma", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(
-          yield* Jsonc.parse(apply("[1, 2, 3]", yield* JsoncModifier.modify("[1, 2, 3]", [1], undefined))),
-          [1, 3]
-        );
-        assert.deepStrictEqual(
-          yield* Jsonc.parse(apply("[1, 2, 3]", yield* JsoncModifier.modify("[1, 2, 3]", [2], undefined))),
-          [1, 2]
-        );
-        assert.deepStrictEqual(
-          yield* Jsonc.parse(
-            apply("[ 1 /* c */, 2 ]", yield* JsoncModifier.modify("[ 1 /* c */, 2 ]", [0], undefined))
-          ),
-          [2]
-        );
+        const modify48 = yield* JsoncModifier.modify("[1, 2, 3]", [1], undefined);
+        const parsed19 = yield* Jsonc.parse(apply("[1, 2, 3]", modify48));
+        assert.deepStrictEqual(parsed19, [1, 3]);
+        const modify49 = yield* JsoncModifier.modify("[1, 2, 3]", [2], undefined);
+        const parsed20 = yield* Jsonc.parse(apply("[1, 2, 3]", modify49));
+        assert.deepStrictEqual(parsed20, [1, 2]);
+        const modify50 = yield* JsoncModifier.modify("[ 1 /* c */, 2 ]", [0], undefined);
+        const parsed21 = yield* Jsonc.parse(apply("[ 1 /* c */, 2 ]", modify50));
+        assert.deepStrictEqual(parsed21, [2]);
       })
     );
 
@@ -220,22 +229,27 @@ describe("JsoncModifier", () => {
           ["[1,\n  2\n]", "[1\n]"],
         ] as const) {
           const path = Str.startsWith("{")(text) ? ["a", 1] : [1];
-          assert.strictEqual(apply(text, yield* JsoncModifier.modify(text, path, undefined)), expected);
+          const modify22 = yield* JsoncModifier.modify(text, path, undefined);
+          assert.strictEqual(apply(text, modify22), expected);
         }
       })
     );
 
     it.effect("deleting a missing key or index is a no-op", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* JsoncModifier.modify('{ "a": 1 }', ["missing"], undefined), []);
-        assert.deepStrictEqual(yield* JsoncModifier.modify("[1]", [3], undefined), []);
+        const modify23 = yield* JsoncModifier.modify('{ "a": 1 }', ["missing"], undefined);
+        assert.deepStrictEqual(modify23, []);
+        const modify24 = yield* JsoncModifier.modify("[1]", [3], undefined);
+        assert.deepStrictEqual(modify24, []);
       })
     );
 
     it.effect("deletes a key that contains a quote character without corrupting siblings", () =>
       Effect.gen(function* () {
         const text = '{ "a\\"b": 1, "c": 2 }';
-        assert.deepStrictEqual(yield* Jsonc.parse(apply(text, yield* JsoncModifier.modify(text, ['a"b'], undefined))), {
+        const modify51 = yield* JsoncModifier.modify(text, ['a"b'], undefined);
+        const parsed25 = yield* Jsonc.parse(apply(text, modify51));
+        assert.deepStrictEqual(parsed25, {
           c: 2,
         });
       })
@@ -247,7 +261,8 @@ describe("JsoncModifier", () => {
       Effect.gen(function* () {
         const edits = yield* JsoncModifier.modify('{ "old": 1 }', [], { new: true });
         assert.strictEqual(apply('{ "old": 1 }', edits), '{\n  "new": true\n}');
-        assert.strictEqual(apply('{ "old": 1 }', yield* JsoncModifier.modify('{ "old": 1 }', [], undefined)), "");
+        const modify26 = yield* JsoncModifier.modify('{ "old": 1 }', [], undefined);
+        assert.strictEqual(apply('{ "old": 1 }', modify26), "");
       })
     );
   });
@@ -256,12 +271,16 @@ describe("JsoncModifier", () => {
     it.effect("deleting around comma-bearing comments keeps the document valid", () =>
       Effect.gen(function* () {
         const block = '{ "a": 1, /* x, y */ "b": 2 }';
-        assert.deepStrictEqual(yield* Jsonc.parse(apply(block, yield* JsoncModifier.modify(block, ["b"], undefined))), {
+        const modify52 = yield* JsoncModifier.modify(block, ["b"], undefined);
+        const parsed27 = yield* Jsonc.parse(apply(block, modify52));
+        assert.deepStrictEqual(parsed27, {
           a: 1,
         });
         const line = '{\n  "a": 1, // keep, please\n  "b": 2\n}';
-        const out = apply(line, yield* JsoncModifier.modify(line, ["b"], undefined));
-        assert.deepStrictEqual(yield* Jsonc.parse(out), { a: 1 });
+        const modify28 = yield* JsoncModifier.modify(line, ["b"], undefined);
+        const out = apply(line, modify28);
+        const parsed29 = yield* Jsonc.parse(out);
+        assert.deepStrictEqual(parsed29, { a: 1 });
         assert.notInclude(out, "please");
       })
     );
@@ -269,10 +288,9 @@ describe("JsoncModifier", () => {
     it.effect("deleting the first property of a nested object leaves earlier siblings intact", () =>
       Effect.gen(function* () {
         const text = '{ "z": [1, 2], "o": { "a": 1, "b": 2 } }';
-        assert.deepStrictEqual(
-          yield* Jsonc.parse(apply(text, yield* JsoncModifier.modify(text, ["o", "a"], undefined))),
-          { z: [1, 2], o: { b: 2 } }
-        );
+        const modify53 = yield* JsoncModifier.modify(text, ["o", "a"], undefined);
+        const parsed30 = yield* Jsonc.parse(apply(text, modify53));
+        assert.deepStrictEqual(parsed30, { z: [1, 2], o: { b: 2 } });
       })
     );
   });
@@ -281,7 +299,9 @@ describe("JsoncModifier", () => {
     it.effect("JSON-escapes inserted keys containing special characters", () =>
       Effect.gen(function* () {
         const key = 'he"y\\there';
-        assert.deepStrictEqual(yield* Jsonc.parse(apply("{}", yield* JsoncModifier.modify("{}", [key], 1))), {
+        const modify54 = yield* JsoncModifier.modify("{}", [key], 1);
+        const parsed31 = yield* Jsonc.parse(apply("{}", modify54));
+        assert.deepStrictEqual(parsed31, {
           [key]: 1,
         });
       })
@@ -410,7 +430,8 @@ describe("JsoncModifier", () => {
     it.effect("modifying a value slot that holds a container closer does not swallow the closer", () =>
       Effect.gen(function* () {
         const text = '{"k":}';
-        const out = apply(text, yield* JsoncModifier.modify(text, ["k"], 5));
+        const modify32 = yield* JsoncModifier.modify(text, ["k"], 5);
+        const out = apply(text, modify32);
         assert.strictEqual(out, '{"k":5}');
       })
     );
@@ -427,27 +448,27 @@ describe("JsoncModifier", () => {
     // toward zero, and JSON.stringify truncates it and clamps it to 0..10.
     it.effect("accepts a fractional width, truncated toward zero", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(contents(yield* JsoncModifier.modify("{}", ["a"], 1, width(1.5))), ['\n "a": 1\n']);
-        assert.deepStrictEqual(contents(yield* JsoncModifier.modify("{}", ["a"], 1, width(2.9))), ['\n  "a": 1\n']);
-        assert.deepStrictEqual(contents(yield* JsoncModifier.modify('{"a":0}', ["a"], { b: [1] }, width(1.5))), [
-          '{\n "b": [\n  1\n ]\n}',
-        ]);
+        const modify33 = yield* JsoncModifier.modify("{}", ["a"], 1, width(1.5));
+        assert.deepStrictEqual(contents(modify33), ['\n "a": 1\n']);
+        const modify34 = yield* JsoncModifier.modify("{}", ["a"], 1, width(2.9));
+        assert.deepStrictEqual(contents(modify34), ['\n  "a": 1\n']);
+        const modify35 = yield* JsoncModifier.modify('{"a":0}', ["a"], { b: [1] }, width(1.5));
+        assert.deepStrictEqual(contents(modify35), ['{\n "b": [\n  1\n ]\n}']);
         for (const tabSize of [0.5, -0.5]) {
           assert.isTrue(isModifyOptions(width(tabSize)));
-          assert.deepStrictEqual(contents(yield* JsoncModifier.modify("{}", ["a"], 1, width(tabSize))), ['\n"a": 1\n']);
+          const modify36 = yield* JsoncModifier.modify("{}", ["a"], 1, width(tabSize));
+          assert.deepStrictEqual(contents(modify36), ['\n"a": 1\n']);
         }
-        assert.deepStrictEqual(contents(yield* JsoncModifier.modify('{"a":0}', ["a"], { b: [1] }, width(-0.5))), [
-          '{"b":[1]}',
-        ]);
+        const modify37 = yield* JsoncModifier.modify('{"a":0}', ["a"], { b: [1] }, width(-0.5));
+        assert.deepStrictEqual(contents(modify37), ['{"b":[1]}']);
       })
     );
 
     it.effect("ignores the width when indenting with tabs", () =>
       Effect.gen(function* () {
         for (const tabSize of [-2, -1, 1.5]) {
-          assert.deepStrictEqual(contents(yield* JsoncModifier.modify("{}", ["a"], 1, width(tabSize, false))), [
-            '\n\t"a": 1\n',
-          ]);
+          const modify38 = yield* JsoncModifier.modify("{}", ["a"], 1, width(tabSize, false));
+          assert.deepStrictEqual(contents(modify38), ['\n\t"a": 1\n']);
         }
       })
     );
@@ -460,13 +481,12 @@ describe("JsoncModifier", () => {
     it.effect("stays total for a width of -1 or below, with no indent", () =>
       Effect.gen(function* () {
         for (const tabSize of [-1, -1.5, -100]) {
-          assert.deepStrictEqual(contents(yield* JsoncModifier.modify("{}", ["a"], { b: [1] }, width(tabSize))), [
-            '\n"a": {"b":[1]}\n',
-          ]);
-          assert.deepStrictEqual(contents(yield* JsoncModifier.modify("[1]", [1], 2, width(tabSize))), [",\n2"]);
-          assert.deepStrictEqual(yield* JsoncModifier.modify('{"a":0}', ["a"], undefined, width(tabSize)), [
-            JsoncEdit.make({ offset: 1, length: 5, content: "" }),
-          ]);
+          const modify39 = yield* JsoncModifier.modify("{}", ["a"], { b: [1] }, width(tabSize));
+          assert.deepStrictEqual(contents(modify39), ['\n"a": {"b":[1]}\n']);
+          const modify40 = yield* JsoncModifier.modify("[1]", [1], 2, width(tabSize));
+          assert.deepStrictEqual(contents(modify40), [",\n2"]);
+          const modify41 = yield* JsoncModifier.modify('{"a":0}', ["a"], undefined, width(tabSize));
+          assert.deepStrictEqual(modify41, [JsoncEdit.make({ offset: 1, length: 5, content: "" })]);
         }
       })
     );
@@ -492,12 +512,10 @@ describe("JsoncModifier", () => {
       ([text, value]) =>
         Effect.gen(function* () {
           const content = yield* Jsonc.stringify(value);
-          assert.deepStrictEqual(yield* JsoncModifier.modify(text, [], value), [
-            JsoncEdit.make({ offset: 0, length: text.length, content }),
-          ]);
-          assert.deepStrictEqual(yield* JsoncModifier.modify(text, [], undefined), [
-            JsoncEdit.make({ offset: 0, length: text.length, content: "" }),
-          ]);
+          const modify42 = yield* JsoncModifier.modify(text, [], value);
+          assert.deepStrictEqual(modify42, [JsoncEdit.make({ offset: 0, length: text.length, content })]);
+          const modify43 = yield* JsoncModifier.modify(text, [], undefined);
+          assert.deepStrictEqual(modify43, [JsoncEdit.make({ offset: 0, length: text.length, content: "" })]);
         })
     );
   });

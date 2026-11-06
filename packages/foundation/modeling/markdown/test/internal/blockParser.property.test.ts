@@ -6,6 +6,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -14,6 +15,8 @@ import * as Str from "effect/String";
 import { renderHtml } from "../support/htmlWriter.ts";
 import { normalizeHtml } from "../support/normalizeHtml.ts";
 import { renderOracleHtml } from "../support/oracle.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const runs = { arbitrary: fcRuns(100) };
 const Sample = S.Struct({
@@ -57,7 +60,8 @@ describe("blockParser properties", () => {
         const first = parseBlocks(source, { dialect: sample.dialect });
         const rendered = yield* Markdown.stringify(first.root);
         const reparsed = parseBlocks(rendered, { dialect: sample.dialect });
-        assert.strictEqual(yield* Markdown.stringify(reparsed.root), rendered);
+        const stringify1 = yield* Markdown.stringify(reparsed.root);
+        assert.strictEqual(stringify1, rendered);
         assert.deepStrictEqual(unpositioned(Mdast.toMdast(reparsed.root)), unpositioned(Mdast.toMdast(first.root)));
         assert.isTrue(Str.startsWith(`${sample.heading} ${text}`)(rendered));
         assert.isTrue(Str.includes(`${sample.marker} ${text}`)(rendered));
@@ -163,7 +167,11 @@ describe("blockParser differential oracle: commonmark.js 0.31.2", () => {
       const ours = renderOurs(markdown);
       if (ours !== undefined) {
         const oracle = correctOracleDefect(normalizeHtml(renderOracleHtml(markdown)));
-        assert.strictEqual(ours, oracle, `disagreement on input:\n${JSON.stringify(markdown)}`);
+        assert.strictEqual(
+          ours,
+          oracle,
+          `disagreement on input:\n${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(markdown), identity)}`
+        );
       }
       return true;
     },

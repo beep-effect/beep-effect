@@ -370,11 +370,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("instrumented Vitest run
         })
       );
       const directory = yield* Deferred.await(ready);
-      expect(yield* fs.exists(directory)).toBe(true);
+      const exists1 = yield* fs.exists(directory);
+      expect(exists1).toBe(true);
       yield* Fiber.interrupt(fixture);
       const exit = yield* Fiber.await(fixture);
-      assertExitFailure(exit, Cause.interrupt(yield* Effect.fiberId));
-      expect(yield* fs.exists(directory)).toBe(false);
+      const fiberId2 = yield* Effect.fiberId;
+      assertExitFailure(exit, Cause.interrupt(fiberId2));
+      const exists3 = yield* fs.exists(directory);
+      expect(exists3).toBe(false);
       const retained = path.join(evidenceDirectory, path.basename(directory));
       const errors = yield* fs.readFileString(path.join(retained, "runtime.test.ts.errors.jsonl"));
       const phases = yield* fs.readFileString(path.join(retained, "cleanup.txt.phases.jsonl"));

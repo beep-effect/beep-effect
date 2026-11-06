@@ -31,8 +31,10 @@ describe("LockfileReader coverage", () => {
     Effect.gen(function* () {
       const lockfile = yield* Lockfile.parse('{"lockfileVersion":3,"packages":{}}', { format: "npm" });
       const reader = LockfileReader.makeTest({ read: Effect.succeed(lockfile) });
-      assert.deepStrictEqual(yield* reader.read, lockfile);
-      assertNone(yield* reader.resolvedVersion("missing"));
+      const read1 = yield* reader.read;
+      assert.deepStrictEqual(read1, lockfile);
+      const resolvedVersion2 = yield* reader.resolvedVersion("missing");
+      assertNone(resolvedVersion2);
       yield* reader.refresh;
     })
   );

@@ -26,8 +26,9 @@ it.effect("patch catches up a completed foreign snapshot before deriving data", 
     yield* externalAppend(fs, line(10, "foreign"));
     const patched = yield* journal.appendPatch("noted", { round: 11 });
     assert.deepStrictEqual(patched.data, { round: 11, label: "foreign" });
+    const join1 = yield* Fiber.join(reader);
     assert.deepStrictEqual(
-      A.map(yield* Fiber.join(reader), (row) => row.data.round),
+      A.map(join1, (row) => row.data.round),
       [10, 11]
     );
   })
@@ -46,12 +47,15 @@ it.effect("foreign terminal is published even when it refuses the attempted appe
       ),
       "TerminalViolation"
     );
-    assert.strictEqual(yield* fs.readFileString(path), terminal);
+    const readFileString2 = yield* fs.readFileString(path);
+    assert.strictEqual(readFileString2, terminal);
+    const join3 = yield* Fiber.join(reader);
     assert.deepStrictEqual(
-      A.map(yield* Fiber.join(reader), (row) => row.event),
+      A.map(join3, (row) => row.event),
       ["ended"]
     );
-    assert.isTrue(yield* journal.quiescent);
+    const quiescent4 = yield* journal.quiescent;
+    assert.isTrue(quiescent4);
     yield* journal.append("reopened", null);
   })
 );
@@ -70,9 +74,11 @@ it.effect("invalid patch still publishes foreign state without writing invalid b
       ),
       "InvalidData"
     );
-    assert.strictEqual(yield* fs.readFileString(path), line(10, "foreign"));
+    const readFileString5 = yield* fs.readFileString(path);
+    assert.strictEqual(readFileString5, line(10, "foreign"));
+    const join6 = yield* Fiber.join(reader);
     assert.deepStrictEqual(
-      A.map(yield* Fiber.join(reader), (row) => row.data.round),
+      A.map(join6, (row) => row.data.round),
       [10]
     );
   })
@@ -90,9 +96,11 @@ for (const tail of ["{", "4", Str.slice(0, -1)(line(2))]) {
         ),
         "JournalUnterminated"
       );
-      assert.strictEqual(yield* fs.readFileString(path), seed);
+      const readFileString7 = yield* fs.readFileString(path);
+      assert.strictEqual(readFileString7, seed);
+      const resultCollect = yield* Stream.runCollect(journal.query({ events: ["noted"] }));
       assert.deepStrictEqual(
-        A.map(yield* Stream.runCollect(journal.query({ events: ["noted"] })), (row) => row.data.round),
+        A.map(resultCollect, (row) => row.data.round),
         [1]
       );
     })
@@ -150,18 +158,19 @@ for (const bom of ["", "\ufeff"]) {
         const journal = yield* open(decorated);
         armed = true;
         const expected = cursor === 0 ? [1, 2] : [2];
+        const resultCollect8 = yield* Stream.runCollect(journal.query({ events: ["noted"], cursor }));
         assert.deepStrictEqual(
-          A.map(yield* Stream.runCollect(journal.query({ events: ["noted"], cursor })), (row) => row.data.round),
+          A.map(resultCollect8, (row) => row.data.round),
           expected
         );
         yield* fs.writeFileString(path, bom + line(1) + line(2));
         reads = 0;
         armed = true;
+        const pipe9 = yield* journal
+          .changes({ events: ["noted"], cursor })
+          .pipe(Stream.take(expected.length), Stream.runCollect);
         assert.deepStrictEqual(
-          A.map(
-            yield* journal.changes({ events: ["noted"], cursor }).pipe(Stream.take(expected.length), Stream.runCollect),
-            (row) => row.data.round
-          ),
+          A.map(pipe9, (row) => row.data.round),
           expected
         );
       })
@@ -263,13 +272,13 @@ for (const bom of ["", "\ufeff"]) {
         ),
         "InvalidData"
       );
+      const got = yield* SubscriptionRef.get(journal.latest);
       assertSome(
-        O.map(yield* SubscriptionRef.get(journal.latest), (row) =>
-          row.event === "noted" ? row.data.round : row.event
-        ),
+        O.map(got, (row) => (row.event === "noted" ? row.data.round : row.event)),
         2
       );
-      assert.deepStrictEqual(yield* fs.readFile(path), encoder.encode(bom + retained));
+      const readFile10 = yield* fs.readFile(path);
+      assert.deepStrictEqual(readFile10, encoder.encode(bom + retained));
       const reader = yield* journal
         .changes({ cursor: retainedSize })
         .pipe(Stream.runDrain, Effect.result, Effect.forkChild({ startImmediately: true }));
@@ -281,13 +290,15 @@ for (const bom of ["", "\ufeff"]) {
         ),
         ["truncated", retainedSize, encoder.encode(first).length]
       );
+      const join11 = yield* Fiber.join(reader);
       assertFailure(
-        Result.mapError(yield* Fiber.join(reader), (error) =>
+        Result.mapError(join11, (error) =>
           error._tag === "JournalResync" ? [error.reason, error.expected, error.actual] : error._tag
         ),
         ["truncated", retainedSize, encoder.encode(first).length]
       );
-      assert.deepStrictEqual(yield* fs.readFile(path), encoder.encode(bom + first));
+      const readFile12 = yield* fs.readFile(path);
+      assert.deepStrictEqual(readFile12, encoder.encode(bom + first));
     })
   );
   it.effect(`append after a stat/read truncation reports the postwrite size conflict with BOM${bom.length}`, () =>
@@ -324,16 +335,16 @@ for (const bom of ["", "\ufeff"]) {
         ),
         [path, encoder.encode(sampled).length + appendedSize, written.length]
       );
+      const got13 = yield* SubscriptionRef.get(journal.latest);
       assertSome(
-        O.map(yield* SubscriptionRef.get(journal.latest), (row) =>
-          row.event === "noted" ? row.data.round : row.event
-        ),
+        O.map(got13, (row) => (row.event === "noted" ? row.data.round : row.event)),
         2
       );
       const appended = yield* journal.append("noted", { round: 5, label: "next" });
       assert.strictEqual(appended.line.offset, written.length - encoder.encode(bom).length);
+      const pipe14 = yield* journal.query({ events: ["noted"] }).pipe(Stream.runCollect);
       assert.deepStrictEqual(
-        A.map(yield* journal.query({ events: ["noted"] }).pipe(Stream.runCollect), (row) => row.data.round),
+        A.map(pipe14, (row) => row.data.round),
         [1, 2, 4, 5]
       );
     })
@@ -359,9 +370,11 @@ for (const bom of ["", "\ufeff"]) {
         };
         const journal = yield* open(decorated);
         yield* Deferred.await(registered);
-        assert.isFalse(yield* journal.quiescent);
+        const quiescent15 = yield* journal.quiescent;
+        assert.isFalse(quiescent15);
+        const got16 = yield* SubscriptionRef.get(journal.latest);
         assertSome(
-          O.map(yield* SubscriptionRef.get(journal.latest), (row) => row.event),
+          O.map(got16, (row) => row.event),
           "noted"
         );
         const reader = yield* journal
@@ -373,11 +386,13 @@ for (const bom of ["", "\ufeff"]) {
           A.map(observed, (row) => row.event),
           [terminal ? "ended" : "noted"]
         );
+        const got17 = yield* SubscriptionRef.get(journal.latest);
         assertSome(
-          O.map(yield* SubscriptionRef.get(journal.latest), (row) => row.event),
+          O.map(got17, (row) => row.event),
           terminal ? "ended" : "noted"
         );
-        assert.strictEqual(yield* journal.quiescent, terminal);
+        const quiescent18 = yield* journal.quiescent;
+        assert.strictEqual(quiescent18, terminal);
       })
     );
   }
@@ -471,7 +486,8 @@ it.effect("a partial failed write leaves a recoverable tail that refuses later l
       ),
       "JournalUnterminated"
     );
-    assert.strictEqual(yield* fs.readFileString(path), prefix);
+    const readFileString19 = yield* fs.readFileString(path);
+    assert.strictEqual(readFileString19, prefix);
   })
 );
 it.effect("interrupting a suspended publisher passes its baton to later appends", () =>
@@ -574,15 +590,15 @@ it.effect("replacement during the seed read retains the old identity for resync 
       .changes()
       .pipe(Stream.runCollect, Effect.result, Effect.forkChild({ startImmediately: true }));
     yield* Deferred.succeed(release, undefined);
+    const join20 = yield* Fiber.join(reader);
     assertFailure(
-      Result.mapError(yield* Fiber.join(reader), (error) =>
-        error._tag === "JournalResync" ? error.reason : error._tag
-      ),
+      Result.mapError(join20, (error) => (error._tag === "JournalResync" ? error.reason : error._tag)),
       "replaced"
     );
     yield* journal.append("noted", { round: 4, label: "current file" });
+    const resultCollect21 = yield* Stream.runCollect(journal.query({ events: ["noted"] }));
     assert.deepStrictEqual(
-      A.map(yield* Stream.runCollect(journal.query({ events: ["noted"] })), (row) => row.data.round),
+      A.map(resultCollect21, (row) => row.data.round),
       [2, 3, 4]
     );
   })
@@ -599,7 +615,8 @@ it.effect("invalid committed UTF8 fails layer construction without replacing pay
     const bytes = invalidRecord();
     yield* fs.writeFile(path, bytes);
     assertFailure((yield* Effect.result(open(fs))).pipe(Result.mapError((error) => error._tag)), "InvalidUtf8");
-    assert.deepStrictEqual(yield* fs.readFile(path), bytes);
+    const readFile22 = yield* fs.readFile(path);
+    assert.deepStrictEqual(readFile22, bytes);
   })
 );
 it.effect("query and append expose committed invalid UTF8 through their typed channels", () =>
@@ -618,7 +635,8 @@ it.effect("query and append expose committed invalid UTF8 through their typed ch
       ),
       "InvalidUtf8"
     );
-    assert.deepStrictEqual(yield* fs.readFile(path), bytes);
+    const readFile23 = yield* fs.readFile(path);
+    assert.deepStrictEqual(readFile23, bytes);
   })
 );
 it.effect("a watcher reports committed invalid UTF8 to existing subscribers", () =>
@@ -643,8 +661,9 @@ it.effect("a watcher reports committed invalid UTF8 to existing subscribers", ()
       .changes()
       .pipe(Stream.runCollect, Effect.result, Effect.forkChild({ startImmediately: true }));
     yield* fs.writeFile(path, invalidRecord());
+    const join24 = yield* Fiber.join(reader);
     assertFailure(
-      Result.mapError(yield* Fiber.join(reader), (error) => error._tag),
+      Result.mapError(join24, (error) => error._tag),
       "InvalidUtf8"
     );
   })
@@ -658,8 +677,9 @@ it.effect("a cursor inside an astral code point skips its physical partial line 
     const bytes = new TextEncoder().encode(first);
     const astral = O.getOrThrow(A.findFirstIndex(bytes, (byte) => byte === 0xf0));
     for (const cursor of [astral + 1, astral + 2, astral + 3]) {
+      const resultCollect25 = yield* Stream.runCollect(journal.query({ events: ["noted"], cursor }));
       assert.deepStrictEqual(
-        A.map(yield* Stream.runCollect(journal.query({ events: ["noted"], cursor })), (row) => row.data.round),
+        A.map(resultCollect25, (row) => row.data.round),
         [2]
       );
     }
@@ -687,8 +707,9 @@ it.effect("an unfinished multibyte code point is held until its original writer 
     };
     const journal = yield* open(decorated);
     yield* Deferred.await(registered);
+    const resultCollect26 = yield* Stream.runCollect(journal.query({ events: ["noted"] }));
     assert.deepStrictEqual(
-      A.map(yield* Stream.runCollect(journal.query({ events: ["noted"] })), (row) => row.data.round),
+      A.map(resultCollect26, (row) => row.data.round),
       [1]
     );
     const refusal = yield* Effect.result(journal.append("noted", { round: 3, label: "refused" }));
@@ -725,14 +746,17 @@ it.effect("future replay cursor delivers nothing that starts below the cursor", 
       .changes({ cursor })
       .pipe(Stream.take(1), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
     for (let turn = 0; turn < 8; turn++) yield* Effect.yieldNow;
-    assert.deepStrictEqual(yield* journal.query({ cursor }).pipe(Stream.runCollect), []);
+    const pipe27 = yield* journal.query({ cursor }).pipe(Stream.runCollect);
+    assert.deepStrictEqual(pipe27, []);
     const straddling = yield* journal.append("noted", { round: 2, label: Str.repeat(cursor)("x") });
     assert.isBelow(straddling.line.offset, cursor);
     assert.isAbove(straddling.line.end, cursor);
     const after = yield* journal.append("noted", { round: 3, label: "live" });
-    assert.deepStrictEqual(yield* Fiber.join(reader), [after]);
+    const join28 = yield* Fiber.join(reader);
+    assert.deepStrictEqual(join28, [after]);
+    const pipe29 = yield* journal.query({ events: ["noted"], cursor }).pipe(Stream.runCollect);
     assert.deepStrictEqual(
-      A.map(yield* journal.query({ events: ["noted"], cursor }).pipe(Stream.runCollect), (row) => row.data.round),
+      A.map(pipe29, (row) => row.data.round),
       [3]
     );
   })
@@ -747,9 +771,11 @@ it.effect("invalid UTF-8 suffix is withheld until the original writer commits LF
       new Uint8Array([...new TextEncoder().encode(line(1)), ...bytes.subarray(0, bytes.length - 1)])
     );
     const journal = yield* open({ ...fs, watch: () => Stream.never });
-    assert.strictEqual(O.getOrThrow(yield* SubscriptionRef.get(journal.latest)).event, "noted");
+    const got30 = yield* SubscriptionRef.get(journal.latest);
+    assert.strictEqual(O.getOrThrow(got30).event, "noted");
+    const pipe31 = yield* journal.query({ events: ["noted"] }).pipe(Stream.runCollect);
     assert.deepStrictEqual(
-      A.map(yield* journal.query({ events: ["noted"] }).pipe(Stream.runCollect), (row) => row.data.round),
+      A.map(pipe31, (row) => row.data.round),
       [1]
     );
     assertFailure(
@@ -822,7 +848,8 @@ it.effect("explicit activation directory is watched for a missing journal", () =
         ),
     };
     yield* open(decorated, { path, directory: "/activation" });
-    assert.strictEqual(yield* Deferred.await(registered), "/activation");
+    const await32 = yield* Deferred.await(registered);
+    assert.strictEqual(await32, "/activation");
   })
 );
 
@@ -849,8 +876,9 @@ it.effect("overlapping repeated watch notifications publish each foreign line on
       .pipe(Stream.take(3), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
     yield* externalAppend(fs, line(1) + line(2));
     yield* journal.append("noted", { round: 3, label: "local" });
+    const join33 = yield* Fiber.join(reader);
     assert.deepStrictEqual(
-      A.map(yield* Fiber.join(reader), (row) => row.data.round),
+      A.map(join33, (row) => row.data.round),
       [1, 2, 3]
     );
   })
@@ -920,8 +948,9 @@ it.effect("paged replay discards a long leading fragment before strict Unicode d
     const journal = yield* open({ ...fs, watch: () => Stream.never });
     const bytes = new TextEncoder().encode(first);
     const cursor = O.getOrThrow(A.findFirstIndex(bytes, (byte) => byte === 0xf0)) + 1;
+    const pipe34 = yield* journal.query({ cursor, events: ["noted"] }).pipe(Stream.runCollect);
     assert.deepStrictEqual(
-      A.map(yield* journal.query({ cursor, events: ["noted"] }).pipe(Stream.runCollect), (row) => row.data.round),
+      A.map(pipe34, (row) => row.data.round),
       [2]
     );
   })

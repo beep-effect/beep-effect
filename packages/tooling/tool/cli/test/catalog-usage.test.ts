@@ -111,7 +111,8 @@ const runGit = Effect.fn("CatalogUsageTest.runGit")(function* (repoRoot: string,
     stdout: "ignore",
     stderr: "ignore",
   });
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode1 = yield* handle.exitCode;
+  expect(exitCode1).toBe(0);
 });
 
 const writeRepoFile = Effect.fn("CatalogUsageTest.writeRepoFile")(function* (

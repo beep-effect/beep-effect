@@ -49,7 +49,8 @@ const assertFlagRead = Effect.fnUntraced(function* (
     return;
   }
   const buffer = new Uint8Array(2);
-  assert.strictEqual(yield* file.read(buffer), initialSize);
+  const read1 = yield* file.read(buffer);
+  assert.strictEqual(read1, initialSize);
 });
 
 const assertFlagWrite = Effect.fnUntraced(function* (
@@ -64,20 +65,25 @@ const assertFlagWrite = Effect.fnUntraced(function* (
     return;
   }
   yield* file.writeAll(new Uint8Array([3]));
-  assert.deepStrictEqual(yield* fs.readFile(path), contentAfterWrite(flag, Str.includes("x")(flag), initialSize));
+  const readFile2 = yield* fs.readFile(path);
+  assert.deepStrictEqual(readFile2, contentAfterWrite(flag, Str.includes("x")(flag), initialSize));
 });
 
 const exerciseOpenFlag = Effect.fnUntraced(function* (fs: FileSystem.FileSystem, flag: FileSystem.OpenFlag) {
   const path = `/flag-${flag}`;
   const exclusive = Str.includes("x")(flag);
-  if (!exclusive) yield* fs.writeFile(path, new Uint8Array([1, 2]));
+  if (!exclusive) {
+    yield* fs.writeFile(path, new Uint8Array([1, 2]));
+  }
   const file = yield* fs.open(path, { flag });
   const initialSize = exclusive || Str.startsWith("w")(flag) ? 0 : 2;
   assert.strictEqual(Number((yield* file.stat).size), initialSize);
   yield* assertFlagRead(file, flag, initialSize);
   yield* file.seek(0n, "start");
   yield* assertFlagWrite(fs, file, path, flag, initialSize);
-  if (exclusive) assert.strictEqual((yield* fails(fs.open(path, { flag }))).reason._tag, "AlreadyExists");
+  if (exclusive) {
+    assert.strictEqual((yield* fails(fs.open(path, { flag }))).reason._tag, "AlreadyExists");
+  }
 });
 
 const assertInvalidFlagRejected = Effect.fnUntraced(function* (fs: FileSystem.FileSystem, flag: unknown) {
@@ -85,7 +91,8 @@ const assertInvalidFlagRejected = Effect.fnUntraced(function* (fs: FileSystem.Fi
   assert.strictEqual(error.reason._tag, "BadArgument");
   assert.strictEqual(error.reason.method, "open");
   assert.strictEqual(error.reason.description, "flag must be a supported file-open flag");
-  assert.strictEqual(yield* fs.exists("/invalid-flag"), false);
+  const exists3 = yield* fs.exists("/invalid-flag");
+  assert.strictEqual(exists3, false);
 });
 
 describe("volume uncovered contracts", () => {
@@ -97,10 +104,8 @@ describe("volume uncovered contracts", () => {
       for (const options of [{}, { caseSensitive: undefined }, { caseSensitive: "false" }, { caseSensitive: 0 }]) {
         assert.strictEqual(isOptions(options), false);
       }
-      assert.deepStrictEqual(
-        yield* S.decodeEffect(EngineOptions)({ caseSensitive: false }),
-        EngineOptions.make({ caseSensitive: false })
-      );
+      const value4 = yield* S.decodeEffect(EngineOptions)({ caseSensitive: false });
+      assert.deepStrictEqual(value4, EngineOptions.make({ caseSensitive: false }));
 
       const engine = yield* makeInspectableWith(EngineOptions.make({ caseSensitive: true }));
       const root = engine.lookup("/");
@@ -170,7 +175,8 @@ describe("volume uncovered contracts", () => {
       const decoded = yield* S.decodeEffect(VolumeEntrySnapshot)(file);
       assert.strictEqual(decoded.data, file.data);
       file.data[0] = 9;
-      assert.deepStrictEqual(yield* fs.readFile("/alias"), new Uint8Array([9, 2]));
+      const readFile5 = yield* fs.readFile("/alias");
+      assert.deepStrictEqual(readFile5, new Uint8Array([9, 2]));
       assert.strictEqual(engine.lookup("/file")?.data, file.data);
     })
   );
@@ -227,7 +233,8 @@ describe("volume uncovered contracts", () => {
           assert.strictEqual(error.reason.method, method);
           assert.strictEqual(error.reason.description, "mode must be an unsigned 32-bit integer");
         }
-        assert.strictEqual(yield* fs.exists("/invalid-mode"), false);
+        const exists6 = yield* fs.exists("/invalid-mode");
+        assert.strictEqual(exists6, false);
       }
       for (const value of [...invalid, undefined]) {
         const owner = deliberatelyInvalid<number>(value);
@@ -241,8 +248,10 @@ describe("volume uncovered contracts", () => {
           assert.strictEqual(error.reason.description, `${name} must be an unsigned 32-bit integer`);
         }
       }
-      assert.deepStrictEqual(yield* fs.stat("/file"), before);
-      assert.deepStrictEqual(yield* fs.readFile("/file"), new Uint8Array([1, 2]));
+      const stat7 = yield* fs.stat("/file");
+      assert.deepStrictEqual(stat7, before);
+      const readFile8 = yield* fs.readFile("/file");
+      assert.deepStrictEqual(readFile8, new Uint8Array([1, 2]));
     })
   );
 
@@ -256,7 +265,8 @@ describe("volume uncovered contracts", () => {
       assert.strictEqual(error.reason.cause, undefined);
       if (error.reason._tag === "BadArgument") assert.fail("Expected a system error");
       assert.strictEqual(error.reason.pathOrDescriptor, "/missing/.");
-      assert.strictEqual(yield* fs.exists("/missing"), false);
+      const exists9 = yield* fs.exists("/missing");
+      assert.strictEqual(exists9, false);
     })
   );
 
@@ -287,7 +297,8 @@ describe("volume uncovered contracts", () => {
       assert.strictEqual(error.reason.cause, undefined);
       if (error.reason._tag === "BadArgument") assert.fail("Expected a system error");
       assert.strictEqual(error.reason.pathOrDescriptor, "/allocation");
-      assert.deepStrictEqual(yield* fs.readFile("/allocation"), original);
+      const readFile10 = yield* fs.readFile("/allocation");
+      assert.deepStrictEqual(readFile10, original);
     })
   );
 
@@ -323,20 +334,25 @@ describe("volume uncovered contracts", () => {
       yield* fs.remove("/wide/nested/moved");
       assertSome((yield* file.stat).nlink, 1n);
       const buffer = new Uint8Array(1);
-      assert.strictEqual(yield* file.read(buffer), 1);
+      const read11 = yield* file.read(buffer);
+      assert.strictEqual(read11, 1);
       assert.deepStrictEqual(buffer, new Uint8Array([128]));
       yield* file.seek(0n, "start");
       yield* file.writeAll(new Uint8Array([9, 8]));
-      assert.deepStrictEqual(yield* fs.readFile("/wide/nested/link"), new Uint8Array([9, 8]));
+      const readFile12 = yield* fs.readFile("/wide/nested/link");
+      assert.deepStrictEqual(readFile12, new Uint8Array([9, 8]));
       assert.deepStrictEqual(engine.list("/wide"), [...A.filter(names, (name) => name !== "entry-128"), "nested"]);
       yield* fails(fs.rename("/wide", "/wide/nested/descendant"));
       yield* fs.rename("/wide/nested", "/moved");
-      assert.deepStrictEqual(yield* fs.readDirectory("/moved"), ["link"]);
+      const readDirectory13 = yield* fs.readDirectory("/moved");
+      assert.deepStrictEqual(readDirectory13, ["link"]);
+      const readDirectory14 = yield* fs.readDirectory("/wide");
       assert.deepStrictEqual(
-        yield* fs.readDirectory("/wide"),
+        readDirectory14,
         A.filter(names, (name) => name !== "entry-128")
       );
-      assert.deepStrictEqual(yield* fs.readFile("/wide/entry-255"), new Uint8Array([255]));
+      const readFile15 = yield* fs.readFile("/wide/entry-255");
+      assert.deepStrictEqual(readFile15, new Uint8Array([255]));
       assert.deepStrictEqual(engine.lookup("/moved/link")?.data, new Uint8Array([9, 8]));
       assert.deepStrictEqual(
         A.map(engine.entries(), (entry) => entry.path),
@@ -374,7 +390,8 @@ describe("volume uncovered contracts", () => {
       yield* fails(fs.utimes("/tmp", 1e20, 0));
       yield* fails(fs.utimes("/tmp", Number.NaN, 0));
       yield* fails(fs.utimes("/tmp", 0, Number.POSITIVE_INFINITY));
-      assert.deepStrictEqual(yield* fs.readDirectory("/"), ["empty", "tmp"]);
+      const readDirectory16 = yield* fs.readDirectory("/");
+      assert.deepStrictEqual(readDirectory16, ["empty", "tmp"]);
     })
   );
 
@@ -386,12 +403,15 @@ describe("volume uncovered contracts", () => {
       yield* fs.symlink("relative", "/relative-link");
       yield* fs.copyFile("/source", "/absolute");
       yield* fs.copyFile("/source", "/relative-link");
-      assert.strictEqual(yield* fs.readFileString("/target"), "payload");
-      assert.strictEqual(yield* fs.readFileString("/relative"), "payload");
+      const readFileString17 = yield* fs.readFileString("/target");
+      assert.strictEqual(readFileString17, "payload");
+      const readFileString18 = yield* fs.readFileString("/relative");
+      assert.strictEqual(readFileString18, "payload");
       yield* fs.symlink("/opened", "/open-link");
       const file = yield* fs.open("/open-link", { flag: "w", mode: 0o600 });
       yield* file.writeAll(new Uint8Array([7]));
-      assert.deepStrictEqual(yield* fs.readFile("/opened"), new Uint8Array([7]));
+      const readFile19 = yield* fs.readFile("/opened");
+      assert.deepStrictEqual(readFile19, new Uint8Array([7]));
       yield* fs.symlink("/missing", "/dangling");
       yield* fails(fs.makeDirectory("/dangling", { recursive: true }));
       yield* fails(fs.makeDirectory("/dangling"));
@@ -410,8 +430,10 @@ describe("volume uncovered contracts", () => {
       yield* fs.writeFileString("/dest/sub/a", "old");
       yield* fs.symlink("sub/a", "/src/link");
       yield* fs.copy("/src", "/dest", { overwrite: true, preserveTimestamps: true });
-      assert.strictEqual(yield* fs.readLink("/dest/link"), "sub/a");
-      assert.strictEqual(yield* fs.readFileString("/dest/sub/a"), "a");
+      const readLink20 = yield* fs.readLink("/dest/link");
+      assert.strictEqual(readLink20, "sub/a");
+      const readFileString21 = yield* fs.readFileString("/dest/sub/a");
+      assert.strictEqual(readFileString21, "a");
       const source = yield* fs.stat("/src/sub/a");
       const copied = yield* fs.stat("/dest/sub/a");
       assert.deepStrictEqual(copied.mtime, source.mtime);
@@ -423,15 +445,17 @@ describe("volume uncovered contracts", () => {
       yield* fails(fs.rename("/src", "/file"));
       yield* fs.copyFile("/file", "/new");
       yield* fs.copyFile("/file", "/new");
-      assert.strictEqual(yield* fs.readFileString("/new"), "x");
+      const readFileString22 = yield* fs.readFileString("/new");
+      assert.strictEqual(readFileString22, "x");
     })
   );
 
   it.effect("validates glob syntax and expands braces, escapes and character classes", () =>
     Effect.gen(function* () {
       const fs = yield* make;
-      for (const name of ["a", "b", "c", "A", "-", "]", "{x}", ".hidden", "ab", "abc"])
+      for (const name of ["a", "b", "c", "A", "-", "]", "{x}", ".hidden", "ab", "abc"]) {
         yield* fs.writeFileString(`/${name}`, name);
+      }
       yield* fs.makeDirectory("/dir/sub", { recursive: true });
       const cases: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
         ["{a,b}", ["a", "b"]],
@@ -448,10 +472,16 @@ describe("volume uncovered contracts", () => {
         ["[a--]", ["-", "a"]],
         ["[\\]]", ["]"]],
       ];
-      for (const [pattern, expected] of cases) assert.deepStrictEqual(yield* fs.glob(pattern), expected);
-      assert.deepStrictEqual(yield* fs.glob("**", { exclude: ["**"] }), []);
-      assert.deepStrictEqual(yield* fs.glob("**", { root: "/missing" }), []);
-      assert.deepStrictEqual(yield* fs.glob("**", { root: "/a" }), []);
+      for (const [pattern, expected] of cases) {
+        const glob1 = yield* fs.glob(pattern);
+        assert.deepStrictEqual(glob1, expected);
+      }
+      const glob23 = yield* fs.glob("**", { exclude: ["**"] });
+      assert.deepStrictEqual(glob23, []);
+      const glob24 = yield* fs.glob("**", { root: "/missing" });
+      assert.deepStrictEqual(glob24, []);
+      const glob25 = yield* fs.glob("**", { root: "/a" });
+      assert.deepStrictEqual(glob25, []);
       yield* fails(fs.glob("*", { root: "/bad\0root" }));
       for (const pattern of [
         "[",
@@ -465,11 +495,15 @@ describe("volume uncovered contracts", () => {
         "",
         Str.repeat(257)("{"),
         `{${Str.repeat(1025)("a,")}b}`,
-      ])
+      ]) {
         yield* fails(fs.glob(pattern));
-      assert.deepStrictEqual(yield* fs.glob("\\*"), []);
-      assert.deepStrictEqual(yield* fs.glob("{a}"), []);
-      assert.deepStrictEqual(yield* fs.glob("[{}]"), []);
+      }
+      const glob26 = yield* fs.glob("\\*");
+      assert.deepStrictEqual(glob26, []);
+      const glob27 = yield* fs.glob("{a}");
+      assert.deepStrictEqual(glob27, []);
+      const glob28 = yield* fs.glob("[{}]");
+      assert.deepStrictEqual(glob28, []);
     })
   );
 
@@ -480,8 +514,10 @@ describe("volume uncovered contracts", () => {
       yield* fs.makeDirectory("/Dir/Sub", { recursive: true });
       yield* fs.writeFileString("/Dir/Sub/Z", "z");
       yield* fs.symlink("Dir", "/alias");
-      assert.deepStrictEqual(yield* fs.glob("dir/sub/[a-z]"), ["Dir/Sub/Z"]);
-      assert.deepStrictEqual(yield* fs.glob("DIR/SUB/[Z]"), ["Dir/Sub/Z"]);
+      const glob29 = yield* fs.glob("dir/sub/[a-z]");
+      assert.deepStrictEqual(glob29, ["Dir/Sub/Z"]);
+      const glob30 = yield* fs.glob("DIR/SUB/[Z]");
+      assert.deepStrictEqual(glob30, ["Dir/Sub/Z"]);
       assert.strictEqual(engine.lookup("/alias/Sub"), undefined);
       assert.strictEqual(engine.list("/alias"), undefined);
       assert.strictEqual(engine.lookup("/missing"), undefined);
@@ -507,13 +543,13 @@ describe("volume uncovered contracts", () => {
       const fs = yield* make;
       yield* fs.writeFile("/file", new Uint8Array([1, 2]));
       const file = yield* fs.open("/file", { flag: "r+" });
-      assert.strictEqual(yield* file.read(new Uint8Array()), 0);
-      assert.strictEqual(yield* file.write(new Uint8Array()), 0);
+      const read31 = yield* file.read(new Uint8Array());
+      assert.strictEqual(read31, 0);
+      const write32 = yield* file.write(new Uint8Array());
+      assert.strictEqual(write32, 0);
       yield* fails(file.seek(-1n, "start"));
-      assert.strictEqual(
-        yield* file.seek(BigInt(Number.MAX_SAFE_INTEGER) + 1n, "start"),
-        BigInt(Number.MAX_SAFE_INTEGER) + 1n
-      );
+      const seek33 = yield* file.seek(BigInt(Number.MAX_SAFE_INTEGER) + 1n, "start");
+      assert.strictEqual(seek33, BigInt(Number.MAX_SAFE_INTEGER) + 1n);
       yield* fails(file.read(new Uint8Array([0])));
       yield* fails(file.write(new Uint8Array([0])));
       yield* file.seek(0n, "start");
@@ -528,7 +564,8 @@ describe("volume uncovered contracts", () => {
       const closed = yield* fs.open("/file").pipe(Effect.provideService(Scope.Scope, scope));
       yield* Scope.close(scope, Exit.succeed(undefined));
       yield* fails(closed.stat);
-      assert.strictEqual(yield* closed.seek(1n, "current"), 0n);
+      const seek34 = yield* closed.seek(1n, "current");
+      assert.strictEqual(seek34, 0n);
       yield* Scope.close(scope, Exit.succeed(undefined));
       yield* fs.writeFileString("/file-copy", "old");
       yield* Effect.acquireUseRelease(
@@ -540,8 +577,10 @@ describe("volume uncovered contracts", () => {
         () => fails(fs.copyFile("/file", "/file-copy")),
         (spy) => Effect.sync(() => spy.mockRestore())
       );
-      assert.strictEqual(yield* fs.readFileString("/file-copy"), "old");
-      assert.deepStrictEqual(yield* fs.readFile("/file"), new Uint8Array([1, 2]));
+      const readFileString35 = yield* fs.readFileString("/file-copy");
+      assert.strictEqual(readFileString35, "old");
+      const readFile36 = yield* fs.readFile("/file");
+      assert.deepStrictEqual(readFile36, new Uint8Array([1, 2]));
     })
   );
 
@@ -553,9 +592,11 @@ describe("volume uncovered contracts", () => {
       const scope = yield* Scope.make();
       const temp = yield* fs.makeTempFileScoped().pipe(Effect.provideService(Scope.Scope, scope));
       yield* Scope.close(scope, Exit.succeed(undefined));
-      assert.strictEqual(yield* fs.exists(temp), false);
+      const exists37 = yield* fs.exists(temp);
+      assert.strictEqual(exists37, false);
       const custom = yield* fs.makeTempFile({ directory: "/tmp", suffix: ".txt" });
-      assert.strictEqual(yield* fs.exists(custom), true);
+      const exists38 = yield* fs.exists(custom);
+      assert.strictEqual(exists38, true);
       const result = yield* Effect.result(fs.readFile(custom));
       assertSuccess(result, new Uint8Array());
       assert.deepStrictEqual(result.success, new Uint8Array());
@@ -574,15 +615,18 @@ describe("volume uncovered contracts", () => {
       yield* fs.makeDirectory("/other");
       yield* fs.rename("/relative/child/file", "/other/file");
       yield* fs.rename("/relative/child", "/other/child");
-      assert.strictEqual(yield* fs.exists("/other/file"), true);
-      assert.strictEqual(yield* fs.exists("/other/child"), true);
+      const exists39 = yield* fs.exists("/other/file");
+      assert.strictEqual(exists39, true);
+      const exists40 = yield* fs.exists("/other/child");
+      assert.strictEqual(exists40, true);
       yield* fails(fs.copyFile("/other/file", "/other/file/leaf/"));
       yield* fails(fs.symlink("x", "/other/file/leaf/"));
       yield* fails(fs.copyFile("/other/file", "/other/file/leaf"));
       yield* fs.symlink("/other", "/dir-link");
       yield* fs.symlink("missing-target", "/other/dangling");
       yield* fs.copyFile("/other/file", "/other/dangling");
-      assert.strictEqual(yield* fs.readFileString("/other/missing-target"), "x");
+      const readFileString41 = yield* fs.readFileString("/other/missing-target");
+      assert.strictEqual(readFileString41, "x");
       yield* fails(fs.copyFile("/other/file", "/dir-link"));
       yield* fs.symlink("/loop", "/loop");
       yield* fails(fs.copyFile("/other/file", "/loop"));
@@ -599,9 +643,12 @@ describe("volume uncovered contracts", () => {
       yield* fs.remove("/tmp", { recursive: true });
       yield* fails(fs.makeTempFile());
       yield* fails(fs.makeTempFile({ directory: "/bad\0dir" }));
-      assert.deepStrictEqual(yield* fs.glob("**", { root: "/other/child" }), ["."]);
-      for (const pattern of ["{a\\*,b}", "{[a,b],c}", "{{a,b}}", "{unclosed", "\\a"])
-        assert.deepStrictEqual(yield* fs.glob(pattern, { root: "/other/child" }), []);
+      const glob42 = yield* fs.glob("**", { root: "/other/child" });
+      assert.deepStrictEqual(glob42, ["."]);
+      for (const pattern of ["{a\\*,b}", "{[a,b],c}", "{{a,b}}", "{unclosed", "\\a"]) {
+        const glob2 = yield* fs.glob(pattern, { root: "/other/child" });
+        assert.deepStrictEqual(glob2, []);
+      }
     })
   );
 
@@ -615,12 +662,15 @@ describe("volume uncovered contracts", () => {
       yield* fails(fs.copy("/deep", "/new"));
       yield* fails(fs.copy("/deep", "/existing", { overwrite: true }));
       yield* fails(fs.remove("/deep", { recursive: true }));
-      assert.strictEqual(yield* fs.exists(`/deep/${tail}`), true);
-      assert.strictEqual(yield* fs.exists("/new"), false);
+      const exists43 = yield* fs.exists(`/deep/${tail}`);
+      assert.strictEqual(exists43, true);
+      const exists44 = yield* fs.exists("/new");
+      assert.strictEqual(exists44, false);
       yield* fs.makeDirectory("/src/nested", { recursive: true });
       yield* fs.makeDirectory("/dest");
       yield* fs.copy("/src", "/dest", { overwrite: true });
-      assert.strictEqual(yield* fs.exists("/dest/nested"), true);
+      const exists45 = yield* fs.exists("/dest/nested");
+      assert.strictEqual(exists45, true);
     })
   );
 

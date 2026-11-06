@@ -35,7 +35,14 @@ import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+class NativeAddonOperationError extends S.TaggedError<NativeAddonOperationError, { readonly brand: unique symbol }>()(
+  "NativeAddonOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in NativeAddon.ts." }
+) {}
 
 const NativeAddonPrefix = "@duckdb/node-bindings-";
 
@@ -177,14 +184,17 @@ export const toWideString = (value: string): Uint16Array =>
  * @since 0.0.0
  */
 export const setDllDirectory = Effect.fnUntraced(function* (directory: string) {
-  const registered = yield* Effect.try(() => {
-    const ffi = NodeModule.createRequire(import.meta.url)("bun:ffi") as typeof import("bun:ffi");
-    const kernel32 = ffi.dlopen("kernel32.dll", { SetDllDirectoryW: { args: ["ptr"], returns: "i32" } });
-    try {
-      return kernel32.symbols.SetDllDirectoryW(ffi.ptr(toWideString(Str.replaceAll("/", "\\")(directory)))) !== 0;
-    } finally {
-      kernel32.close();
-    }
+  const registered = yield* Effect.try({
+    try: () => {
+      const ffi = NodeModule.createRequire(import.meta.url)("bun:ffi") as typeof import("bun:ffi");
+      const kernel32 = ffi.dlopen("kernel32.dll", { SetDllDirectoryW: { args: ["ptr"], returns: "i32" } });
+      try {
+        return kernel32.symbols.SetDllDirectoryW(ffi.ptr(toWideString(Str.replaceAll("/", "\\")(directory)))) !== 0;
+      } finally {
+        kernel32.close();
+      }
+    },
+    catch: (cause) => NativeAddonOperationError.make({ cause }),
   }).pipe(Effect.orElseSucceed(() => false));
   yield* Console.error(
     "practice-kg-mcp: could not add the DuckDB addon folder to the DLL search path; duckdb.dll may fail to load."

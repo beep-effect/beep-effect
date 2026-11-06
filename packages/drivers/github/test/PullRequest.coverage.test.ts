@@ -86,20 +86,28 @@ describe("PullRequest coverage", () => {
           requestReviewers: dual(2, (_number: number, _reviewers: object) => Effect.void),
           setAutoMerge: dual(2, (_pullRequest: PullRequestInfo, _method: string) => Effect.void),
         });
-        assert.deepStrictEqual(yield* stub.get(7), info);
-        assert.deepStrictEqual(yield* stub.list(), [info]);
-        assert.deepStrictEqual(yield* stub.listFiles(7), []);
-        assert.deepStrictEqual(yield* stub.listAssociatedWithCommit("abc"), [info]);
-        assert.deepStrictEqual(yield* stub.create(input), info);
-        assert.deepStrictEqual(yield* stub.update(7, {}), info);
-        assert.deepStrictEqual(
-          yield* stub.upsert(input),
-          UpsertedPullRequest.make({ pullRequest: info, created: true })
-        );
-        assert.strictEqual(yield* stub.merge(7), "sha");
-        assert.strictEqual(yield* stub.addLabels(7, []), undefined);
-        assert.strictEqual(yield* stub.requestReviewers(7, {}), undefined);
-        assert.strictEqual(yield* stub.setAutoMerge(info, "off"), undefined);
+        const got = yield* stub.get(7);
+        assert.deepStrictEqual(got, info);
+        const list1 = yield* stub.list();
+        assert.deepStrictEqual(list1, [info]);
+        const listFiles2 = yield* stub.listFiles(7);
+        assert.deepStrictEqual(listFiles2, []);
+        const listAssociatedWithCommit3 = yield* stub.listAssociatedWithCommit("abc");
+        assert.deepStrictEqual(listAssociatedWithCommit3, [info]);
+        const created4 = yield* stub.create(input);
+        assert.deepStrictEqual(created4, info);
+        const update5 = yield* stub.update(7, {});
+        assert.deepStrictEqual(update5, info);
+        const upsert6 = yield* stub.upsert(input);
+        assert.deepStrictEqual(upsert6, UpsertedPullRequest.make({ pullRequest: info, created: true }));
+        const merge7 = yield* stub.merge(7);
+        assert.strictEqual(merge7, "sha");
+        const addLabels8 = yield* stub.addLabels(7, []);
+        assert.strictEqual(addLabels8, undefined);
+        const requestReviewers9 = yield* stub.requestReviewers(7, {});
+        assert.strictEqual(requestReviewers9, undefined);
+        const setAutoMerge10 = yield* stub.setAutoMerge(info, "off");
+        assert.strictEqual(setAutoMerge10, undefined);
       })
     );
   });
@@ -117,7 +125,8 @@ describe("PullRequest coverage", () => {
   )((it) => {
     it.effect("layerTest forwards supplied overrides", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* (yield* PullRequest).merge(7), "layer-sha");
+        const merge11 = yield* (yield* PullRequest).merge(7);
+        assert.strictEqual(merge11, "layer-sha");
       })
     );
   });
@@ -167,7 +176,8 @@ describe("PullRequest coverage", () => {
     it.effect("projects REST responses and sends only present parameters", () =>
       Effect.gen(function* () {
         const service = yield* PullRequest;
-        assert.deepStrictEqual(yield* service.get(7), info);
+        const got12 = yield* service.get(7);
+        assert.deepStrictEqual(got12, info);
         const closed = yield* service.get(7);
         assert.strictEqual(closed.state, "closed");
         assert.strictEqual(closed.draft, true);
@@ -176,15 +186,18 @@ describe("PullRequest coverage", () => {
         assert.strictEqual(closed.mergeCommitSha, "merge-sha");
         assertSome(closed.mergedAt, DateTime.makeUnsafe("2024-01-02T00:00:00Z"));
         assert.strictEqual((yield* service.get(7)).merged, true);
+        const result13 = yield* Effect.result(service.get(7));
         assertFailure(
-          Result.mapError(yield* Effect.result(service.get(7)), (error) => error.kind),
+          Result.mapError(result13, (error) => error.kind),
           "decode"
         );
-        assert.deepStrictEqual(yield* service.list(), [info]);
+        const list14 = yield* service.list();
+        assert.deepStrictEqual(list14, [info]);
         assert.strictEqual(script.queryOf(4).has("head"), false);
         assert.strictEqual(script.queryOf(4).has("base"), false);
         assert.strictEqual(script.queryOf(4).has("state"), false);
-        assert.deepStrictEqual(yield* service.list({ head: "fix", base: "main", state: "closed", page }), [info]);
+        const list15 = yield* service.list({ head: "fix", base: "main", state: "closed", page });
+        assert.deepStrictEqual(list15, [info]);
         assert.strictEqual(script.queryOf(5).get("head"), "acme:fix");
         assert.strictEqual(script.queryOf(5).get("base"), "main");
         assert.strictEqual(script.queryOf(5).get("state"), "closed");
@@ -193,15 +206,22 @@ describe("PullRequest coverage", () => {
         assert.strictEqual(script.queryOf(6).get("head"), "fork:fix");
         const files = yield* service.listFiles(7);
         assert.strictEqual(files[0]?.path, "a.ts");
-        assert.deepStrictEqual(yield* service.listFiles(7, { page }), []);
+        const listFiles16 = yield* service.listFiles(7, { page });
+        assert.deepStrictEqual(listFiles16, []);
         assert.strictEqual(script.queryOf(8).get("per_page"), "3");
-        assert.deepStrictEqual(yield* service.listAssociatedWithCommit("abc"), [info]);
-        assert.deepStrictEqual(yield* service.listAssociatedWithCommit("abc", { page }), []);
+        const listAssociatedWithCommit17 = yield* service.listAssociatedWithCommit("abc");
+        assert.deepStrictEqual(listAssociatedWithCommit17, [info]);
+        const listAssociatedWithCommit18 = yield* service.listAssociatedWithCommit("abc", { page });
+        assert.deepStrictEqual(listAssociatedWithCommit18, []);
         assert.strictEqual(script.queryOf(10).get("per_page"), "3");
-        assert.deepStrictEqual(yield* service.create(input), info);
-        assert.deepStrictEqual(yield* sentBody(11), input);
-        assert.deepStrictEqual(yield* service.create({ ...input, body: "", draft: false }), info);
-        assert.deepStrictEqual(yield* sentBody(12), {
+        const created19 = yield* service.create(input);
+        assert.deepStrictEqual(created19, info);
+        const sentBody20 = yield* sentBody(11);
+        assert.deepStrictEqual(sentBody20, input);
+        const created21 = yield* service.create({ ...input, body: "", draft: false });
+        assert.deepStrictEqual(created21, info);
+        const sentBody22 = yield* sentBody(12);
+        assert.deepStrictEqual(sentBody22, {
           title: "Fix",
           head: "fix",
           base: "main",
@@ -209,43 +229,46 @@ describe("PullRequest coverage", () => {
           draft: false,
         });
         yield* service.update(7, {});
-        assert.deepStrictEqual(yield* sentBody(13), {});
+        const sentBody23 = yield* sentBody(13);
+        assert.deepStrictEqual(sentBody23, {});
         yield* service.update(7, { title: "New", body: "", state: "closed", base: "next" });
-        assert.deepStrictEqual(yield* sentBody(14), {
+        const sentBody24 = yield* sentBody(14);
+        assert.deepStrictEqual(sentBody24, {
           title: "New",
           body: "",
           state: "closed",
           base: "next",
         });
-        assert.deepStrictEqual(
-          yield* service.upsert(input),
-          UpsertedPullRequest.make({ pullRequest: info, created: true })
-        );
-        assert.deepStrictEqual(
-          yield* service.upsert({ ...input, body: "Notes", draft: true }),
-          UpsertedPullRequest.make({ pullRequest: info, created: false })
-        );
-        assert.deepStrictEqual(yield* sentBody(18), {
+        const upsert25 = yield* service.upsert(input);
+        assert.deepStrictEqual(upsert25, UpsertedPullRequest.make({ pullRequest: info, created: true }));
+        const upsert26 = yield* service.upsert({ ...input, body: "Notes", draft: true });
+        assert.deepStrictEqual(upsert26, UpsertedPullRequest.make({ pullRequest: info, created: false }));
+        const sentBody27 = yield* sentBody(18);
+        assert.deepStrictEqual(sentBody27, {
           title: "Fix",
           body: "Notes",
         });
-        assert.strictEqual(yield* service.merge(7), "merged-sha");
-        assert.deepStrictEqual(yield* sentBody(19), {});
-        assert.strictEqual(
-          yield* service.merge(7, { method: "squash", commitTitle: "Title", commitMessage: "Message" }),
-          "merged-sha"
-        );
-        assert.deepStrictEqual(yield* sentBody(20), {
+        const merge28 = yield* service.merge(7);
+        assert.strictEqual(merge28, "merged-sha");
+        const sentBody29 = yield* sentBody(19);
+        assert.deepStrictEqual(sentBody29, {});
+        const merge30 = yield* service.merge(7, { method: "squash", commitTitle: "Title", commitMessage: "Message" });
+        assert.strictEqual(merge30, "merged-sha");
+        const sentBody31 = yield* sentBody(20);
+        assert.deepStrictEqual(sentBody31, {
           merge_method: "squash",
           commit_title: "Title",
           commit_message: "Message",
         });
         yield* service.addLabels(7, ["bug"]);
-        assert.deepStrictEqual(yield* sentBody(21), { labels: ["bug"] });
+        const sentBody32 = yield* sentBody(21);
+        assert.deepStrictEqual(sentBody32, { labels: ["bug"] });
         yield* service.requestReviewers(7, {});
-        assert.deepStrictEqual(yield* sentBody(22), {});
+        const sentBody33 = yield* sentBody(22);
+        assert.deepStrictEqual(sentBody33, {});
         yield* service.requestReviewers(7, { users: ["alice"], teams: ["core"] });
-        assert.deepStrictEqual(yield* sentBody(23), {
+        const sentBody34 = yield* sentBody(23);
+        assert.deepStrictEqual(sentBody34, {
           reviewers: ["alice"],
           team_reviewers: ["core"],
         });
@@ -270,7 +293,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(UpsertedPullRequest)(value);
       const decoded = yield* S.decodeEffect(UpsertedPullRequest)(encoded);
       assert.isTrue(S.toEquivalence(UpsertedPullRequest)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(UpsertedPullRequest)(decoded), encoded);
+      const value35 = yield* S.encodeEffect(UpsertedPullRequest)(decoded);
+      assert.deepStrictEqual(value35, encoded);
     }),
   { arbitrary: fcRuns(100) }
 );

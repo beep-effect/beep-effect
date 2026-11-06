@@ -22,9 +22,12 @@ describe("CryptoTxnHash", () => {
   it.effect(
     "accepts canonical EVM, Bitcoin, and Solana transaction identifiers",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownCryptoTxnHashEffect(evmCryptoTxnHash)).toBe(evmCryptoTxnHash);
-      expect(yield* decodeUnknownCryptoTxnHashEffect(bitcoinCryptoTxnHash)).toBe(bitcoinCryptoTxnHash);
-      expect(yield* decodeUnknownCryptoTxnHashEffect(solanaSignature)).toBe(solanaSignature);
+      const decodedUnknownCryptoTxnHashEffect = yield* decodeUnknownCryptoTxnHashEffect(evmCryptoTxnHash);
+      expect(decodedUnknownCryptoTxnHashEffect).toBe(evmCryptoTxnHash);
+      const decodedUnknownCryptoTxnHashEffect1 = yield* decodeUnknownCryptoTxnHashEffect(bitcoinCryptoTxnHash);
+      expect(decodedUnknownCryptoTxnHashEffect1).toBe(bitcoinCryptoTxnHash);
+      const decodedUnknownCryptoTxnHashEffect2 = yield* decodeUnknownCryptoTxnHashEffect(solanaSignature);
+      expect(decodedUnknownCryptoTxnHashEffect2).toBe(solanaSignature);
     })
   );
 

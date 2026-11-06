@@ -67,7 +67,8 @@ const ManifestSubset = S.Struct({
 const decodeManifest = S.decodeUnknownEffect(ManifestSubset);
 
 const manifestOf = Effect.fnUntraced(function* (documents: ReadonlyArray<PacketDocument>) {
-  return yield* decodeManifest(yield* parseJson(at(documents, "ops/manifest.json").contents));
+  const parsedJson = yield* parseJson(at(documents, "ops/manifest.json").contents);
+  return yield* decodeManifest(parsedJson);
 });
 
 const at = (documents: ReadonlyArray<PacketDocument>, path: string): PacketDocument => {
@@ -84,7 +85,8 @@ describe("codex findings packet clears the goals doctor gates", () => {
       // real gate contract and needs every key the packet actually writes.
       const manifest = yield* parseJson(at(documents, "ops/manifest.json").contents);
 
-      expect(yield* decodeGoalManifest(manifest)).toBeDefined();
+      const decodedGoalManifest = yield* decodeGoalManifest(manifest);
+      expect(decodedGoalManifest).toBeDefined();
     })
   );
 
@@ -144,8 +146,8 @@ describe("codex findings packet launcher budget", () => {
 
   it.effect("does not grow GOAL.md proportionally to the finding count", () =>
     Effect.gen(function* () {
-      const small = [...at(yield* render(26), "GOAL.md").contents].length;
-      const large = [...at(yield* render(200), "GOAL.md").contents].length;
+      const small = [...(yield* Effect.map(render(26), (value) => at(value, "GOAL.md"))).contents].length;
+      const large = [...(yield* Effect.map(render(200), (value) => at(value, "GOAL.md"))).contents].length;
 
       expect(large - small).toBeLessThan(20);
     })
@@ -167,7 +169,8 @@ describe("codex findings packet renders no fabricated judgment", () => {
   it.effect("leaves every triage entry untriaged with no verdict, owner, or lane", () =>
     Effect.gen(function* () {
       const documents = yield* render(3);
-      const ledger = yield* decodeCodexTriageLedger(yield* parseJson(at(documents, "ops/triage.json").contents));
+      const parsedJson1 = yield* parseJson(at(documents, "ops/triage.json").contents);
+      const ledger = yield* decodeCodexTriageLedger(parsedJson1);
 
       expect(A.length(ledger.findings)).toBe(3);
       for (const entry of ledger.findings) {
@@ -275,8 +278,12 @@ describe("Security Cloud packet guidance", () => {
           },
         ],
       });
-      expect(yield* decodeGoalManifest(yield* parseJson(at(documents, "ops/manifest.json").contents))).toBeDefined();
-      expect(yield* decodeCodexTriageLedger(yield* parseJson(at(documents, "ops/triage.json").contents))).toBeDefined();
+      const parsedJson3 = yield* parseJson(at(documents, "ops/manifest.json").contents);
+      const decodedGoalManifest2 = yield* decodeGoalManifest(parsedJson3);
+      expect(decodedGoalManifest2).toBeDefined();
+      const parsedJson4 = yield* parseJson(at(documents, "ops/triage.json").contents);
+      const decodedCodexTriageLedger = yield* decodeCodexTriageLedger(parsedJson4);
+      expect(decodedCodexTriageLedger).toBeDefined();
       const goal = at(documents, "GOAL.md").contents;
       expect(goal.length).toBeLessThanOrEqual(GOAL_MD_MAX_CHARS);
       expect(goal).toContain("Attack-path analysis");

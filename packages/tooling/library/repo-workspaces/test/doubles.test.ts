@@ -48,23 +48,19 @@ describe("WorkspaceCatalogs.makeTest — everything dies until stubbed", () => {
     it.effect("every method dies with a defect naming the unstubbed method", () =>
       Effect.gen(function* () {
         const catalogs = yield* WorkspaceCatalogs;
-        assertDies(yield* Effect.exit(catalogs.set), "WorkspaceCatalogs.makeTest: set() was called but not stubbed");
-        assertDies(
-          yield* Effect.exit(catalogs.resolveSpecifier("effect", "catalog:")),
-          "WorkspaceCatalogs.makeTest: resolveSpecifier() was called but not stubbed"
-        );
-        assertDies(
-          yield* Effect.exit(catalogs.releaseAgeGate),
-          "WorkspaceCatalogs.makeTest: releaseAgeGate() was called but not stubbed"
-        );
-        assertDies(
-          yield* Effect.exit(catalogs.importerVersions),
-          "WorkspaceCatalogs.makeTest: importerVersions() was called but not stubbed"
-        );
+        const exit1 = yield* Effect.exit(catalogs.set);
+        assertDies(exit1, "WorkspaceCatalogs.makeTest: set() was called but not stubbed");
+        const exit2 = yield* Effect.exit(catalogs.resolveSpecifier("effect", "catalog:"));
+        assertDies(exit2, "WorkspaceCatalogs.makeTest: resolveSpecifier() was called but not stubbed");
+        const exit3 = yield* Effect.exit(catalogs.releaseAgeGate);
+        assertDies(exit3, "WorkspaceCatalogs.makeTest: releaseAgeGate() was called but not stubbed");
+        const exit4 = yield* Effect.exit(catalogs.importerVersions);
+        assertDies(exit4, "WorkspaceCatalogs.makeTest: importerVersions() was called but not stubbed");
         // The one honest default besides the derivation: the double holds no
         // memo, so "drop the memoized assembly" is genuinely a no-op —
         // mirroring WorkspaceDiscovery.makeTest's refresh.
-        assert.deepStrictEqual(yield* catalogs.refresh, undefined);
+        const refresh5 = yield* catalogs.refresh;
+        assert.deepStrictEqual(refresh5, undefined);
       })
     );
   });
@@ -81,19 +77,25 @@ describe("WorkspaceCatalogs.makeTest — resolveSpecifier derives from a supplie
       // The shape value directly — no layer needed to use a double inline.
       const double = WorkspaceCatalogs.makeTest({ set: Effect.suspend(() => Effect.succeed(stubbedSet)) });
       assert.strictEqual((yield* double.set).entries.default?.effect, "4.0.0-beta.101");
-      assertSome(yield* double.resolveSpecifier("effect", "catalog:"), "4.0.0-beta.101");
-      assertSome(yield* double.resolveSpecifier("typescript", "catalog:build"), "^5.9.0");
+      const resolvedSpecifier = yield* double.resolveSpecifier("effect", "catalog:");
+      assertSome(resolvedSpecifier, "4.0.0-beta.101");
+      const resolvedSpecifier6 = yield* double.resolveSpecifier("typescript", "catalog:build");
+      assertSome(resolvedSpecifier6, "^5.9.0");
       // Misses stay misses, never a fabricated answer.
-      assertNone(yield* double.resolveSpecifier("left-pad", "catalog:"));
-      assertNone(yield* double.resolveSpecifier("effect", "catalog:missing"));
+      const resolvedSpecifier7 = yield* double.resolveSpecifier("left-pad", "catalog:");
+      assertNone(resolvedSpecifier7);
+      const resolvedSpecifier8 = yield* double.resolveSpecifier("effect", "catalog:missing");
+      assertNone(resolvedSpecifier8);
     })
   );
 
   it.effect("gate and importer methods stay dead — a CatalogSet cannot honestly answer them", () =>
     Effect.gen(function* () {
       const double = WorkspaceCatalogs.makeTest({ set: Effect.suspend(() => Effect.succeed(stubbedSet)) });
-      assertDies(yield* Effect.exit(double.releaseAgeGate), "releaseAgeGate() was called but not stubbed");
-      assertDies(yield* Effect.exit(double.importerVersions), "importerVersions() was called but not stubbed");
+      const exit9 = yield* Effect.exit(double.releaseAgeGate);
+      assertDies(exit9, "releaseAgeGate() was called but not stubbed");
+      const exit10 = yield* Effect.exit(double.importerVersions);
+      assertDies(exit10, "importerVersions() was called but not stubbed");
     })
   );
 
@@ -104,7 +106,8 @@ describe("WorkspaceCatalogs.makeTest — resolveSpecifier derives from a supplie
         resolveSpecifier: () => Effect.succeedSome("pinned"),
         releaseAgeGate: Effect.suspend(() => Effect.succeed(ReleaseAgeGate.combine())),
       });
-      assertSome(yield* double.resolveSpecifier("effect", "catalog:"), "pinned");
+      const resolvedSpecifier11 = yield* double.resolveSpecifier("effect", "catalog:");
+      assertSome(resolvedSpecifier11, "pinned");
       assert.strictEqual((yield* double.releaseAgeGate).ageMinutes, 0);
     })
   );
@@ -126,14 +129,10 @@ describe("WorkspaceSnapshots.makeTest — no honest defaults, no derivations", (
     it.effect("both methods die with a defect naming the unstubbed method", () =>
       Effect.gen(function* () {
         const snapshots = yield* WorkspaceSnapshots;
-        assertDies(
-          yield* Effect.exit(snapshots.at("origin/main")),
-          "WorkspaceSnapshots.makeTest: at() was called but not stubbed"
-        );
-        assertDies(
-          yield* Effect.exit(snapshots.worktree),
-          "WorkspaceSnapshots.makeTest: worktree() was called but not stubbed"
-        );
+        const exit12 = yield* Effect.exit(snapshots.at("origin/main"));
+        assertDies(exit12, "WorkspaceSnapshots.makeTest: at() was called but not stubbed");
+        const exit13 = yield* Effect.exit(snapshots.worktree);
+        assertDies(exit13, "WorkspaceSnapshots.makeTest: worktree() was called but not stubbed");
       })
     );
   });
@@ -143,7 +142,8 @@ describe("WorkspaceSnapshots.makeTest — no honest defaults, no derivations", (
       const double = WorkspaceSnapshots.makeTest({ worktree: Effect.suspend(() => Effect.succeed(EMPTY_SNAPSHOT)) });
       assert.deepStrictEqual((yield* double.worktree).packages, []);
       // `at` and `worktree` read different sources; neither derives the other.
-      assertDies(yield* Effect.exit(double.at("HEAD")), "at() was called but not stubbed");
+      const exit14 = yield* Effect.exit(double.at("HEAD"));
+      assertDies(exit14, "at() was called but not stubbed");
     })
   );
 });
@@ -176,15 +176,12 @@ describe("LockfileReader.makeTest — read dies until stubbed, refresh is honest
     it.effect("the fallible methods die with a defect naming the unstubbed method", () =>
       Effect.gen(function* () {
         const reader = yield* LockfileReader;
-        assertDies(yield* Effect.exit(reader.read), "LockfileReader.makeTest: read() was called but not stubbed");
-        assertDies(
-          yield* Effect.exit(reader.resolvedVersion("effect")),
-          "LockfileReader.makeTest: resolvedVersion() was called but not stubbed"
-        );
-        assertDies(
-          yield* Effect.exit(reader.integrity),
-          "LockfileReader.makeTest: integrity() was called but not stubbed"
-        );
+        const exit15 = yield* Effect.exit(reader.read);
+        assertDies(exit15, "LockfileReader.makeTest: read() was called but not stubbed");
+        const exit16 = yield* Effect.exit(reader.resolvedVersion("effect"));
+        assertDies(exit16, "LockfileReader.makeTest: resolvedVersion() was called but not stubbed");
+        const exit17 = yield* Effect.exit(reader.integrity);
+        assertDies(exit17, "LockfileReader.makeTest: integrity() was called but not stubbed");
       })
     );
 
@@ -226,10 +223,12 @@ describe("LockfileReader.makeTest — resolvedVersion derives from a supplied re
         "1.0.0"
       );
       // A miss is a miss, never a fabricated resolution.
-      assertNone(yield* double.resolvedVersion("right-pad"));
+      const resolvedVersion18 = yield* double.resolvedVersion("right-pad");
+      assertNone(resolvedVersion18);
       // `integrity` needs the workspace manifests discovery enumerates — a
       // lockfile alone cannot honestly answer it, so it stays dead.
-      assertDies(yield* Effect.exit(double.integrity), "integrity() was called but not stubbed");
+      const exit19 = yield* Effect.exit(double.integrity);
+      assertDies(exit19, "integrity() was called but not stubbed");
     })
   );
 
@@ -269,7 +268,8 @@ describe("LockfileReader.layerTest — provides the service", () => {
       Effect.gen(function* () {
         const reader = yield* LockfileReader;
         assert.strictEqual((yield* reader.read).packages.length, 0);
-        assertNone(yield* reader.resolvedVersion("effect"));
+        const resolvedVersion20 = yield* reader.resolvedVersion("effect");
+        assertNone(resolvedVersion20);
       })
     );
   });

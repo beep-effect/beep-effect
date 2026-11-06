@@ -225,7 +225,8 @@ const resolveHomeDir = Effect.fn("AIMetrics.resolveHomeDir")(function* (homeDir:
   // has to be rejected here; letting it through resolves the canonical store to
   // `/.local/state/beep/ai-metrics`, which is absolute and therefore invisible
   // to every downstream absolute-path guard.
-  const envHome = nonBlankOption(yield* readOptionalConfigString("HOME"));
+  const readOptionalConfigString1 = yield* readOptionalConfigString("HOME");
+  const envHome = nonBlankOption(readOptionalConfigString1);
   if (O.isSome(envHome)) {
     return envHome.value;
   }
@@ -317,7 +318,8 @@ const resolveDataRoot = Effect.fn("AIMetrics.resolveDataRoot")(function* (
     return yield* requireAbsoluteDataRoot(probe.value.path);
   }
 
-  const homeDir = O.some(yield* resolveHomeDir(missingHomeDir));
+  const resolvedHomeDir = yield* resolveHomeDir(missingHomeDir);
+  const homeDir = O.some(resolvedHomeDir);
   const resolved = pipe(homeDir, makeInput, resolveAiMetricsDataRoot);
   if (O.isNone(resolved)) {
     return yield* AiMetricsCommandError.make({
@@ -776,7 +778,8 @@ class MakeCommandInstallSpecOptions extends S.Opaque<
 const makeCommandInstallSpec = Effect.fn("AIMetrics.makeCommandInstallSpec")(function* (
   options: MakeCommandInstallSpecOptions
 ) {
-  return yield* makeAiMetricsInstallSpec(yield* makeCommandInstallInput(MakeCommandInstallInputOptions.make(options)));
+  const madeCommandInstallInput = yield* makeCommandInstallInput(MakeCommandInstallInputOptions.make(options));
+  return yield* makeAiMetricsInstallSpec(madeCommandInstallInput);
 });
 
 const renderInstallSpec = Effect.fn("AIMetrics.renderInstallSpec")(function* (
@@ -784,7 +787,8 @@ const renderInstallSpec = Effect.fn("AIMetrics.renderInstallSpec")(function* (
   json: boolean
 ) {
   if (json) {
-    yield* Console.log(yield* encodeInstallSpecCommandJson(spec));
+    const encodedInstallSpecCommandJson = yield* encodeInstallSpecCommandJson(spec);
+    yield* Console.log(encodedInstallSpecCommandJson);
     return;
   }
 
@@ -915,9 +919,10 @@ const makeInstallComposeProgram = Effect.fn("AIMetrics.makeInstallComposeProgram
   target,
   tool,
 }: MakeInstallComposeProgramOptions) {
+  const resolvedDataRoot2 = yield* resolveDataRoot(O.none(), target);
   const spec = yield* makeAiMetricsInstallSpec(
     AiMetricsInstallInput.make({
-      dataRoot: O.some(yield* resolveDataRoot(O.none(), target)),
+      dataRoot: O.some(resolvedDataRoot2),
       defaultTool: tool,
       privacyMode: AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui,
       target,
@@ -926,13 +931,12 @@ const makeInstallComposeProgram = Effect.fn("AIMetrics.makeInstallComposeProgram
   const compose = yield* renderAiMetricsLocalPhoenixCompose(spec);
 
   if (json) {
-    yield* Console.log(
-      yield* encodeCommandJson({
-        compose,
-        target,
-        tool,
-      })
-    );
+    const encodedCommandJson = yield* encodeCommandJson({
+      compose,
+      target,
+      tool,
+    });
+    yield* Console.log(encodedCommandJson);
     return;
   }
 
@@ -944,7 +948,8 @@ const renderInstallPlan = Effect.fn("AIMetrics.renderInstallPlan")(function* (
   json: boolean
 ) {
   if (json) {
-    yield* Console.log(yield* aiMetricsInstallPlanToJson(plan));
+    const aiMetricsInstallPlanToJson3 = yield* aiMetricsInstallPlanToJson(plan);
+    yield* Console.log(aiMetricsInstallPlanToJson3);
     return;
   }
 
@@ -1011,7 +1016,8 @@ const renderInstallDoctor = Effect.fn("AIMetrics.renderInstallDoctor")(function*
   json: boolean
 ) {
   if (json) {
-    yield* Console.log(yield* aiMetricsInstallDoctorToJson(result));
+    const aiMetricsInstallDoctorToJson4 = yield* aiMetricsInstallDoctorToJson(result);
+    yield* Console.log(aiMetricsInstallDoctorToJson4);
     return;
   }
 
@@ -1173,7 +1179,8 @@ const makeInstallApplyProgram = Effect.fn("AIMetrics.makeInstallApplyProgram")(f
   const result = yield* makeAiMetricsInstallApplyDryRunResult(input);
 
   if (json) {
-    yield* Console.log(yield* aiMetricsInstallApplyDryRunToJson(result));
+    const aiMetricsInstallApplyDryRunToJson5 = yield* aiMetricsInstallApplyDryRunToJson(result);
+    yield* Console.log(aiMetricsInstallApplyDryRunToJson5);
     return;
   }
 
@@ -1236,7 +1243,8 @@ const makeIngestProgram = Effect.fn("AIMetrics.makeIngestProgram")(function* ({
   );
 
   if (json) {
-    yield* Console.log(yield* summaryToJson(summary));
+    const summaryToJson6 = yield* summaryToJson(summary);
+    yield* Console.log(summaryToJson6);
     return;
   }
 
@@ -1292,10 +1300,12 @@ const collectJsonlInputFiles = Effect.fn("AIMetrics.collectJsonlInputFiles")(fun
     const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
     const childPaths = A.map(entries, (entry) => path.join(currentPath, entry));
 
-    return A.flatten(yield* Effect.forEach(childPaths, walk));
+    const forEach7 = yield* Effect.forEach(childPaths, walk);
+    return A.flatten(forEach7);
   });
 
-  return pipe(yield* walk(inputPath), A.sort(Order.String));
+  const walk8 = yield* walk(inputPath);
+  return pipe(walk8, A.sort(Order.String));
 });
 
 const readPrivacyInput = Effect.fn("AIMetrics.readPrivacyInput")(function* (input: string) {
@@ -1390,7 +1400,8 @@ const makeSourcesDiscoverProgram = Effect.fn("AIMetrics.makeSourcesDiscoverProgr
   );
 
   if (json) {
-    yield* Console.log(yield* sourceDiscoveryToJson(result));
+    const sourceDiscoveryToJson9 = yield* sourceDiscoveryToJson(result);
+    yield* Console.log(sourceDiscoveryToJson9);
     return;
   }
 
@@ -1445,7 +1456,8 @@ const makeConfigSnapshotProgram = Effect.fn("AIMetrics.makeConfigSnapshotProgram
   );
 
   if (json) {
-    yield* Console.log(yield* configSnapshotToJson(result));
+    const configSnapshotToJson10 = yield* configSnapshotToJson(result);
+    yield* Console.log(configSnapshotToJson10);
     return;
   }
 
@@ -1511,7 +1523,8 @@ const makePrivacyCheckProgram = Effect.fn("AIMetrics.makePrivacyCheckProgram")(f
   });
 
   if (json) {
-    yield* Console.log(yield* privacyCheckToJson(result));
+    const privacyCheckToJson11 = yield* privacyCheckToJson(result);
+    yield* Console.log(privacyCheckToJson11);
     return;
   }
 
@@ -1780,7 +1793,8 @@ const renderForwarderRunResult = Effect.fn("AIMetrics.renderForwarderRunResult")
   retentionEnforcement: O.Option<AiMetricsRetentionEnforcementResult>
 ) {
   if (json) {
-    yield* Console.log(yield* forwarderRunCommandToJson(result, retentionEnforcement));
+    const forwarderRunCommandToJson12 = yield* forwarderRunCommandToJson(result, retentionEnforcement);
+    yield* Console.log(forwarderRunCommandToJson12);
     return;
   }
   yield* Console.log(`ai-metrics forwarder: target=${target}`);
@@ -2064,7 +2078,8 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
   );
 
   if (json) {
-    yield* Console.log(yield* forwarderTimerPlanToJson(plan));
+    const forwarderTimerPlanToJson13 = yield* forwarderTimerPlanToJson(plan);
+    yield* Console.log(forwarderTimerPlanToJson13);
     return;
   }
 
@@ -2142,7 +2157,8 @@ const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(funct
   );
 
   if (json) {
-    yield* Console.log(yield* otlpExportResultToJson(result));
+    const otlpExportResultToJson14 = yield* otlpExportResultToJson(result);
+    yield* Console.log(otlpExportResultToJson14);
     return;
   }
 
@@ -2232,7 +2248,8 @@ const makeBenchmarkRunProgram = Effect.fn("AIMetrics.makeBenchmarkRunProgram")(f
   const result = yield* recordAiMetricsBenchmarkRun(input).pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
 
   if (json) {
-    yield* Console.log(yield* aiMetricsBenchmarkRunToJson(result));
+    const aiMetricsBenchmarkRunToJson15 = yield* aiMetricsBenchmarkRunToJson(result);
+    yield* Console.log(aiMetricsBenchmarkRunToJson15);
     return;
   }
 
@@ -2250,12 +2267,11 @@ const makeBenchmarkCompareProgram = Effect.fn("AIMetrics.makeBenchmarkComparePro
   readonly json: boolean;
 }) {
   if (json) {
-    yield* Console.log(
-      yield* encodeCommandJson({
-        scoreModel: "outcome-heavy",
-        status: "ready-for-derived-runs",
-      })
-    );
+    const encodedCommandJson16 = yield* encodeCommandJson({
+      scoreModel: "outcome-heavy",
+      status: "ready-for-derived-runs",
+    });
+    yield* Console.log(encodedCommandJson16);
     return;
   }
 
@@ -2350,7 +2366,8 @@ const makeLabelQueueProgram = Effect.fn("AIMetrics.makeLabelQueueProgram")(funct
   ).pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
 
   if (json) {
-    yield* Console.log(yield* aiMetricsLabelQueueToJson(result));
+    const aiMetricsLabelQueueToJson17 = yield* aiMetricsLabelQueueToJson(result);
+    yield* Console.log(aiMetricsLabelQueueToJson17);
     return;
   }
 
@@ -2446,7 +2463,8 @@ const makeLabelAddProgram = Effect.fn("AIMetrics.makeLabelAddProgram")(function*
   const result = yield* addAiMetricsOutcomeLabel(input).pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
 
   if (json) {
-    yield* Console.log(yield* aiMetricsOutcomeLabelToJson(result));
+    const aiMetricsOutcomeLabelToJson18 = yield* aiMetricsOutcomeLabelToJson(result);
+    yield* Console.log(aiMetricsOutcomeLabelToJson18);
     return;
   }
 
@@ -2524,7 +2542,8 @@ const makeBenchmarkCaseAddProgram = Effect.fn("AIMetrics.makeBenchmarkCaseAddPro
   ).pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
 
   if (json) {
-    yield* Console.log(yield* aiMetricsBenchmarkCaseToJson(result));
+    const aiMetricsBenchmarkCaseToJson19 = yield* aiMetricsBenchmarkCaseToJson(result);
+    yield* Console.log(aiMetricsBenchmarkCaseToJson19);
     return;
   }
 
@@ -2583,7 +2602,8 @@ const makeBenchmarkCaseListProgram = Effect.fn("AIMetrics.makeBenchmarkCaseListP
   const result = yield* listAiMetricsBenchmarkCases.pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
 
   if (json) {
-    yield* Console.log(yield* aiMetricsBenchmarkCaseListToJson(result));
+    const aiMetricsBenchmarkCaseListToJson20 = yield* aiMetricsBenchmarkCaseListToJson(result);
+    yield* Console.log(aiMetricsBenchmarkCaseListToJson20);
     return;
   }
 
@@ -2654,7 +2674,8 @@ const makeWeeklyReportProgram = Effect.fn("AIMetrics.makeWeeklyReportProgram")(f
   ).pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
 
   if (json) {
-    yield* Console.log(yield* aiMetricsWeeklyReportToJson(result));
+    const aiMetricsWeeklyReportToJson21 = yield* aiMetricsWeeklyReportToJson(result);
+    yield* Console.log(aiMetricsWeeklyReportToJson21);
     return;
   }
 
@@ -2728,7 +2749,8 @@ const resolveMirrorBundleDir = Effect.fn("AIMetrics.resolveMirrorBundleDir")(fun
     return bundle;
   }
 
-  return yield* locateLatestAiMetricsMirrorBundle(yield* resolveDataRoot(dataRoot, target));
+  const resolvedDataRoot22 = yield* resolveDataRoot(dataRoot, target);
+  return yield* locateLatestAiMetricsMirrorBundle(resolvedDataRoot22);
 });
 
 const readMirrorManifest = Effect.fn("AIMetrics.readMirrorManifest")(function* (manifestPath: string) {
@@ -2893,7 +2915,8 @@ const makeMirrorBuildProgram = Effect.fn("AIMetrics.makeMirrorBuildProgram")(fun
   );
 
   if (json) {
-    yield* Console.log(yield* aiMetricsMirrorBundleToJson(result));
+    const aiMetricsMirrorBundleToJson23 = yield* aiMetricsMirrorBundleToJson(result);
+    yield* Console.log(aiMetricsMirrorBundleToJson23);
     return;
   }
 
@@ -2976,7 +2999,14 @@ const renderMirrorSyncResult = Effect.fn("AIMetrics.renderMirrorSyncResult")(fun
   results: ReadonlyArray<CapturedCommandResult>
 ) {
   if (json) {
-    yield* Console.log(yield* encodeCommandJson({ bundleDir, dryRun: false, remoteRoot, results, status: "synced" }));
+    const encodedCommandJson24 = yield* encodeCommandJson({
+      bundleDir,
+      dryRun: false,
+      remoteRoot,
+      results,
+      status: "synced",
+    });
+    yield* Console.log(encodedCommandJson24);
     return;
   }
   yield* Console.log(`ai-metrics mirror sync: synced ${bundleDir} -> ${host}:${remoteRoot}`);
@@ -3066,7 +3096,8 @@ const makeMirrorStatusProgram = Effect.fn("AIMetrics.makeMirrorStatusProgram")(f
   };
 
   if (json) {
-    yield* Console.log(yield* encodeCommandJson(result));
+    const encodedCommandJson25 = yield* encodeCommandJson(result);
+    yield* Console.log(encodedCommandJson25);
     return;
   }
 
@@ -3161,7 +3192,8 @@ const makeRetentionListProgram = Effect.fn("AIMetrics.makeRetentionListProgram")
   const result = yield* listAiMetricsRetentionInventory(selector);
 
   if (json) {
-    yield* Console.log(yield* aiMetricsRetentionInventoryToJson(result));
+    const aiMetricsRetentionInventoryToJson26 = yield* aiMetricsRetentionInventoryToJson(result);
+    yield* Console.log(aiMetricsRetentionInventoryToJson26);
     return;
   }
 
@@ -3225,7 +3257,8 @@ const makeRetentionMutationProgram = Effect.fn("AIMetrics.makeRetentionMutationP
       : yield* runAiMetricsRetentionCompact(selector, dryRun);
 
   if (json) {
-    yield* Console.log(yield* aiMetricsRetentionMutationToJson(result));
+    const aiMetricsRetentionMutationToJson27 = yield* aiMetricsRetentionMutationToJson(result);
+    yield* Console.log(aiMetricsRetentionMutationToJson27);
     return;
   }
 
@@ -3265,7 +3298,8 @@ const makeRetentionEnforceProgram = Effect.fn("AIMetrics.makeRetentionEnforcePro
   );
 
   if (json) {
-    yield* Console.log(yield* aiMetricsRetentionEnforcementToJson(result));
+    const aiMetricsRetentionEnforcementToJson28 = yield* aiMetricsRetentionEnforcementToJson(result);
+    yield* Console.log(aiMetricsRetentionEnforcementToJson28);
     return;
   }
 
@@ -3321,7 +3355,8 @@ const makeRetentionRestoreDrillProgram = Effect.fn("AIMetrics.makeRetentionResto
   );
 
   if (json) {
-    yield* Console.log(yield* aiMetricsRetentionRestoreDrillToJson(result));
+    const aiMetricsRetentionRestoreDrillToJson29 = yield* aiMetricsRetentionRestoreDrillToJson(result);
+    yield* Console.log(aiMetricsRetentionRestoreDrillToJson29);
     return;
   }
 
@@ -3405,7 +3440,8 @@ const makeArchiveDrillProgram = Effect.fn("AIMetrics.makeArchiveDrillProgram")(f
   }).pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
 
   if (json) {
-    yield* Console.log(yield* encodeCommandJson(result));
+    const encodedCommandJson30 = yield* encodeCommandJson(result);
+    yield* Console.log(encodedCommandJson30);
     return;
   }
 

@@ -157,7 +157,8 @@ const answerAt = Effect.fnUntraced(function* (at: number, item: QuestionReviewIt
 });
 
 const digestOn = Effect.fnUntraced(function* (today: LocalDate, items: ReadonlyArray<QuestionReviewItem>) {
-  return A.map(yield* (yield* QuestionQueue).digest(DigestSelection.make({ today, items })), ({ itemId }) => itemId);
+  const digest1 = yield* (yield* QuestionQueue).digest(DigestSelection.make({ today, items }));
+  return A.map(digest1, ({ itemId }) => itemId);
 });
 
 const decided = (itemId: string, optionId: string) => RecordAnswerInput.cases.decided.make({ itemId, optionId });
@@ -195,7 +196,8 @@ describe("@beep/law-practice-use-cases question loop slice", () => {
         const item = yield* question("question:slice:1");
 
         // Raised: no answer yet, so the digest selects it.
-        expect(yield* digestOn(date(2026, 10, 14), [item])).toStrictEqual([item.itemId]);
+        const digestOn2 = yield* digestOn(date(2026, 10, 14), [item]);
+        expect(digestOn2).toStrictEqual([item.itemId]);
 
         // Pending on the client until October 20: skipped before, selected on and after.
         const pending = yield* answerAt(
@@ -204,14 +206,18 @@ describe("@beep/law-practice-use-cases question loop slice", () => {
           RecordAnswerInput.cases["pending-on-client"].make({ itemId: item.itemId, resurfaceOn: date(2026, 10, 20) })
         );
         expect(pending.revision).toBe(1);
-        expect(yield* digestOn(date(2026, 10, 19), [item])).toStrictEqual([]);
-        expect(yield* digestOn(date(2026, 10, 20), [item])).toStrictEqual([item.itemId]);
-        expect(yield* digestOn(date(2026, 10, 21), [item])).toStrictEqual([item.itemId]);
+        const digestOn3 = yield* digestOn(date(2026, 10, 19), [item]);
+        expect(digestOn3).toStrictEqual([]);
+        const digestOn4 = yield* digestOn(date(2026, 10, 20), [item]);
+        expect(digestOn4).toStrictEqual([item.itemId]);
+        const digestOn5 = yield* digestOn(date(2026, 10, 21), [item]);
+        expect(digestOn5).toStrictEqual([item.itemId]);
 
         // Decided on the option that moves the date: it leaves the digest and proposes one write.
         const decision = yield* answerAt(T_ASKED + MINUTE, item, decided(item.itemId, "move-to-2026-11-02"));
         expect(decision.revision).toBe(2);
-        expect(yield* digestOn(date(2026, 10, 21), [item])).toStrictEqual([]);
+        const digestOn6 = yield* digestOn(date(2026, 10, 21), [item]);
+        expect(digestOn6).toStrictEqual([]);
         const proposals = writes.propose({ items: [item], rows: yield* queue.readLog });
         expect(A.map(proposals, ({ optionId }) => optionId)).toStrictEqual(["move-to-2026-11-02"]);
         expect(A.map(proposals, ({ answeredAt }) => DateTime.toEpochMillis(answeredAt))).toStrictEqual([
@@ -228,7 +234,8 @@ describe("@beep/law-practice-use-cases question loop slice", () => {
           O.flatMap(A.head(applied.applied), ({ prior }) => prior),
           seededPrior
         );
-        const moved = HashMap.get(yield* eventsNow, SEEDED_EVENT);
+        const eventsNow7 = yield* eventsNow;
+        const moved = HashMap.get(eventsNow7, SEEDED_EVENT);
         assertSome(
           O.map(moved, ({ fields }) => fields.date.toISOString()),
           "2026-11-02"
@@ -236,8 +243,9 @@ describe("@beep/law-practice-use-cases question loop slice", () => {
 
         // Undone: the event is back as it was.
         yield* writes.undo(applied);
+        const eventsNow8 = yield* eventsNow;
         assertSome(
-          O.map(HashMap.get(yield* eventsNow, SEEDED_EVENT), ({ fields }) => fields),
+          O.map(HashMap.get(eventsNow8, SEEDED_EVENT), ({ fields }) => fields),
           seededPrior
         );
       })
@@ -261,7 +269,8 @@ describe("@beep/law-practice-use-cases question loop slice", () => {
           S.is(UnknownQuestionOptionError)(unknownOption) && [unknownOption.itemId, unknownOption.optionId]
         ).toStrictEqual([item.itemId, "no-such-option"]);
         expect(S.is(QuestionNotFoundError)(otherQuestion) && otherQuestion.itemId).toBe("question:other");
-        expect(yield* queue.readLog).toStrictEqual([]);
+        const readLog9 = yield* queue.readLog;
+        expect(readLog9).toStrictEqual([]);
       })
     );
   });
@@ -286,8 +295,10 @@ describe("@beep/law-practice-use-cases question loop slice", () => {
         yield* answerAt(T_ASKED, withdrawn, RecordAnswerInput.cases.withdrawn.make({ itemId: withdrawn.itemId }));
         yield* answerAt(T_ASKED, keep, decided(keep.itemId, "keep-date"));
 
-        expect(yield* digestOn(date(2026, 10, 14), items)).toStrictEqual([reminding.itemId, unanswered.itemId]);
-        expect(HashMap.size(yield* queue.currentAnswers(items))).toBe(3);
+        const digestOn10 = yield* digestOn(date(2026, 10, 14), items);
+        expect(digestOn10).toStrictEqual([reminding.itemId, unanswered.itemId]);
+        const currentAnswers11 = yield* queue.currentAnswers(items);
+        expect(HashMap.size(currentAnswers11)).toBe(3);
         // A decided option that names no write, and every other state, proposes nothing.
         expect(writes.propose({ items, rows: yield* queue.readLog })).toStrictEqual([]);
 
@@ -298,11 +309,8 @@ describe("@beep/law-practice-use-cases question loop slice", () => {
           RecordAnswerInput.cases["keep-reminding"].make({ itemId: withdrawn.itemId })
         );
         expect(revised.revision).toBe(2);
-        expect(yield* digestOn(date(2026, 10, 14), items)).toStrictEqual([
-          reminding.itemId,
-          withdrawn.itemId,
-          unanswered.itemId,
-        ]);
+        const digestOn12 = yield* digestOn(date(2026, 10, 14), items);
+        expect(digestOn12).toStrictEqual([reminding.itemId, withdrawn.itemId, unanswered.itemId]);
       })
     );
   });
@@ -336,9 +344,11 @@ describe("@beep/law-practice-use-cases question loop slice", () => {
         );
 
         yield* writes.undo(second);
-        expect(yield* eventsNow).toStrictEqual(events);
+        const eventsNow13 = yield* eventsNow;
+        expect(eventsNow13).toStrictEqual(events);
         yield* writes.undo(first);
-        expect(HashMap.size(yield* eventsNow)).toBe(1);
+        const eventsNow14 = yield* eventsNow;
+        expect(HashMap.size(eventsNow14)).toBe(1);
       })
     );
   });
@@ -354,7 +364,8 @@ describe("@beep/law-practice-use-cases question loop slice", () => {
         const error = yield* Effect.flip(writes.apply({ batch, approval: yield* approval }));
 
         expect([error.reason, error.pendingItemIds]).toStrictEqual(["calendar-unavailable", []]);
-        expect(yield* eventsNow).toStrictEqual(before);
+        const eventsNow15 = yield* eventsNow;
+        expect(eventsNow15).toStrictEqual(before);
       })
     );
   });

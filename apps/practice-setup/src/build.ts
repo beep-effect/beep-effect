@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-
 /**
  * Builds `practice-setup.exe`: a bun-compiled Windows executable that embeds
  * the practice gateway `.mcpb` it hands to Claude.
@@ -16,17 +15,20 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { BESIDE_BUNDLE_FILE } from "./bin.ts";
 import { SetupFailure } from "./Setup.errors.ts";
 import { GatewayBundleManifest } from "./Setup.models.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 /**
  * The generated entry module that embeds the bundle and starts the
@@ -61,10 +63,10 @@ export const embeddedEntrySource: {
     [
       `import bundle from "./${BESIDE_BUNDLE_FILE}" with { type: "file" };`,
       `import * as O from "effect/Option";`,
-      `import { main } from ${JSON.stringify(`${srcImport}/bin.ts`)};`,
-      `import { EmbeddedGateway } from ${JSON.stringify(`${srcImport}/Setup.models.ts`)};`,
+      `import { main } from ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(`${srcImport}/bin.ts`), identity)};`,
+      `import { EmbeddedGateway } from ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(`${srcImport}/Setup.models.ts`), identity)};`,
       "",
-      `main(O.some(EmbeddedGateway.make({ bundle, version: ${JSON.stringify(version)} })));`,
+      `main(O.some(EmbeddedGateway.make({ bundle, version: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(version), identity)} })));`,
       "",
     ],
     "\n"

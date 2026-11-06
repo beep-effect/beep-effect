@@ -50,13 +50,22 @@ Higher sources outrank lower sources when they conflict.
 - The same blocker repeats after reasonable investigation.
 
 Scope growth, destructive side effects and policy calls are not stops: decide
-them and record each in the Decision Log.
+them and record each as a decision file.
 
-## Decision Log
+## Decision log
 
-| Date | Decision | Reason | How to reverse |
-| --- | --- | --- | --- |
-| None | N/A | N/A | N/A |
+Record each decision as its own file under `decisions/` (`bun run beep goals
+decisions add <slug> --title "..." --reversal "..."`); the block below is
+generated from that directory by `bun run beep goals decisions write` and never
+edited by hand. Two lanes appending files never conflict; two lanes appending
+to this section's tail always did.
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug <slug>`; add a `kind: decision` file there, never edit this block._
+
+_No decision files yet._
+
+<!-- beep:decisions:end -->
 
 ## Exception Ledger
 

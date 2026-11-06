@@ -17,13 +17,17 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { manifest, platform, platformWith } from "./support/fixtures.ts";
 import type { Tree } from "./support/fixtures.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 /** The full workspaces stack over a virtual tree, rooted at `/repo`. */
 const workspacesOver = (tree: Tree) => {
@@ -115,7 +119,10 @@ describe("CatalogSet", () => {
     // It must come from JSON.parse, not an object literal — in a literal
     // `__proto__:` sets the prototype and creates no own key, so the test would
     // assert nothing. This is the shape a hostile lockfile actually produces.
-    const hostile: unknown = JSON.parse('{"__proto__": {"evil": "1.0.0"}}');
+    const hostile: unknown = Result.getOrThrowWith(
+      S.decodeResult(UnknownJson)('{"__proto__": {"evil": "1.0.0"}}'),
+      identity
+    );
     const set = CatalogSet.fromLockfileCatalogs(hostile);
     assert.isTrue(R.has(set.entries, "__proto__"));
     const empty: Record<string, unknown> = {};
@@ -126,7 +133,10 @@ describe("CatalogSet", () => {
   });
 
   it("a __proto__ DEPENDENCY key inside a catalog does not pollute either", () => {
-    const hostile: unknown = JSON.parse('{"default": {"__proto__": "1.0.0"}}');
+    const hostile: unknown = Result.getOrThrowWith(
+      S.decodeResult(UnknownJson)('{"default": {"__proto__": "1.0.0"}}'),
+      identity
+    );
     const set = CatalogSet.fromLockfileCatalogs(hostile);
     const prototype: unknown = Object.prototype;
     if (!P.isObject(prototype)) return assert.fail("expected Object.prototype to be an object");
@@ -153,7 +163,10 @@ const withLockfileAndInline: Tree = {
     ],
     "\n"
   ),
-  "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
+    identity
+  ),
   "/repo/packages/a/package.json": manifest("@x/a", { dependencies: { effect: "catalog:" } }),
   // The lockfile records a STALE effect range and a react range the inline
   // catalog says nothing about. Inline must win on effect; react must survive.
@@ -208,7 +221,8 @@ describe("WorkspaceCatalogs — assembly precedence", () => {
     it.effect("resolveSpecifier resolves a member's catalog: dependency", () =>
       Effect.gen(function* () {
         const catalogs = yield* WorkspaceCatalogs;
-        assertSome(yield* catalogs.resolveSpecifier("effect", "catalog:"), "^4.0.0");
+        const resolvedSpecifier = yield* catalogs.resolveSpecifier("effect", "catalog:");
+        assertSome(resolvedSpecifier, "^4.0.0");
       })
     );
   });
@@ -227,29 +241,34 @@ describe("the @effected/npm resolver contracts", () => {
       Effect.gen(function* () {
         const resolver = yield* CatalogResolver;
         // The no-op layer @effected/npm ships would return none here.
-        assertSome(yield* resolver.rangeOf("effect", O.none()), "^4.0.0");
-        assertSome(yield* resolver.rangeOf("typescript", O.some("build")), "^6.0.0");
+        const rangeOf1 = yield* resolver.rangeOf("effect", O.none());
+        assertSome(rangeOf1, "^4.0.0");
+        const rangeOf2 = yield* resolver.rangeOf("typescript", O.some("build"));
+        assertSome(rangeOf2, "^6.0.0");
       })
     );
 
     it.effect("CatalogResolver.rangeOf is none — not an error — for an unmatched name", () =>
       Effect.gen(function* () {
         const resolver = yield* CatalogResolver;
-        assertNone(yield* resolver.rangeOf("nothing-here", O.none()));
+        const rangeOf3 = yield* resolver.rangeOf("nothing-here", O.none());
+        assertNone(rangeOf3);
       })
     );
 
     it.effect("WorkspaceResolver.versionOf resolves against the discovered packages", () =>
       Effect.gen(function* () {
         const resolver = yield* WorkspaceResolver;
-        assertSome(yield* resolver.versionOf("@x/a"), "1.0.0");
+        const versionOf4 = yield* resolver.versionOf("@x/a");
+        assertSome(versionOf4, "1.0.0");
       })
     );
 
     it.effect("WorkspaceResolver.versionOf is none for a non-member", () =>
       Effect.gen(function* () {
         const resolver = yield* WorkspaceResolver;
-        assertNone(yield* resolver.versionOf("react"));
+        const versionOf5 = yield* resolver.versionOf("react");
+        assertNone(versionOf5);
       })
     );
   });
@@ -260,7 +279,10 @@ describe("the @effected/npm resolver contracts", () => {
   // _tag-sniff `unknown` to tell assembly from resolution failures.
   const withMalformedInline: Tree = {
     "/repo/pnpm-workspace.yaml": A.join(["packages:", "  - 'packages/*'", "catalog:", "\t- [", ""], "\n"),
-    "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
+    "/repo/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
+      identity
+    ),
   };
 
   it.layer(resolversOver(withMalformedInline), { timeout: "30 seconds" })((it) => {
@@ -279,13 +301,19 @@ describe("the @effected/npm resolver contracts", () => {
 // ── a non-pnpm workspace simply has no catalogs ────────────────────────────
 
 const npmWorkspace: Tree = {
-  "/repo/package.json": JSON.stringify({
-    name: "root",
-    version: "0.0.0",
-    workspaces: ["packages/*"],
-  }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({
+      name: "root",
+      version: "0.0.0",
+      workspaces: ["packages/*"],
+    }),
+    identity
+  ),
   "/repo/packages/a/package.json": manifest("@x/a"),
-  "/repo/package-lock.json": JSON.stringify({ lockfileVersion: 3, packages: {} }),
+  "/repo/package-lock.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ lockfileVersion: 3, packages: {} }),
+    identity
+  ),
 };
 
 describe("WorkspaceCatalogs — a workspace with no pnpm-workspace.yaml", () => {
@@ -302,7 +330,8 @@ describe("WorkspaceCatalogs — a workspace with no pnpm-workspace.yaml", () => 
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
         const detector = yield* PackageManagerDetector;
-        const detected = yield* detector.detect(yield* roots.find("/repo"));
+        const found = yield* roots.find("/repo");
+        const detected = yield* detector.detect(found);
         assert.strictEqual(detected.name, "npm");
       })
     );
@@ -335,7 +364,10 @@ const probeFailTree: Tree = {
   // The workspaces field makes package.json a root marker, so root discovery
   // succeeds even when the pnpm-workspace.yaml presence probe fails — isolating
   // the failure to catalog assembly's probe, which is what this exercises.
-  "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0", workspaces: ["packages/*"] }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0", workspaces: ["packages/*"] }),
+    identity
+  ),
 };
 
 describe("WorkspaceCatalogs — a presence-probe failure is not silent absence", () => {
@@ -373,11 +405,14 @@ describe("WorkspaceCatalogs — a presence-probe failure is not silent absence",
 // lockfile-only (empty) catalogs; with `probeExists` it fails typed.
 const bunProbeFailTree: Tree = {
   // The file EXISTS but its `exists` probe is denied — the locked-down case.
-  "/repo/package.json": JSON.stringify({
-    name: "root",
-    version: "0.0.0",
-    workspaces: { catalog: { effect: "^4.0.0" } },
-  }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({
+      name: "root",
+      version: "0.0.0",
+      workspaces: { catalog: { effect: "^4.0.0" } },
+    }),
+    identity
+  ),
 };
 
 describe("WorkspaceCatalogs — a bun/package.json presence-probe failure is not silent absence", () => {
@@ -392,14 +427,12 @@ describe("WorkspaceCatalogs — a bun/package.json presence-probe failure is not
     ),
     Layer.provide(
       Layer.mock(LockfileReader, {
-        read: Effect.suspend(() =>
-          Effect.fail(
-            LockfileReadError.make({
-              lockfilePath: "/repo/pnpm-lock.yaml",
-              format: "pnpm",
-              cause: new Error("no lockfile"),
-            })
-          )
+        read: Effect.failSync(() =>
+          LockfileReadError.make({
+            lockfilePath: "/repo/pnpm-lock.yaml",
+            format: "pnpm",
+            cause: new Error("no lockfile"),
+          })
         ),
       })
     ),
@@ -434,7 +467,10 @@ const duplicateDefaultTree: Tree = {
     ],
     "\n"
   ),
-  "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
+    identity
+  ),
 };
 
 const malformedCatalogTree: Tree = {
@@ -442,7 +478,10 @@ const malformedCatalogTree: Tree = {
     ["packages:", "  - 'packages/*'", "catalog:", "  effect:", "    nested: bad", ""],
     "\n"
   ),
-  "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
+    identity
+  ),
 };
 
 describe("WorkspaceCatalogs — the pnpm inline path hard-fails, like the bun path", () => {
@@ -488,13 +527,19 @@ const inlineGateTree: Tree = {
     ],
     "\n"
   ),
-  "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
+    identity
+  ),
   "/repo/packages/a/package.json": manifest("@x/a"),
 };
 
 const malformedGateTree: Tree = {
   "/repo/pnpm-workspace.yaml": A.join(["packages:", "  - 'packages/*'", 'minimumReleaseAge: "soon"', ""], "\n"),
-  "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
+    identity
+  ),
 };
 
 describe("WorkspaceCatalogs.releaseAgeGate — the inline pnpm-workspace.yaml source", () => {
@@ -567,7 +612,10 @@ const workspaceYamlWithRules = (allowedKey: string): string =>
 
 const refreshTree: Tree = {
   "/repo/pnpm-workspace.yaml": workspaceYamlWithRules("@x/before>effect"),
-  "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
+    identity
+  ),
 };
 
 describe("WorkspaceCatalogs.refresh — the explicit memoization boundary", () => {

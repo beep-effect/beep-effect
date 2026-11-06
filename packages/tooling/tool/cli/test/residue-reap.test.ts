@@ -249,20 +249,31 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
           };
           const dryRun = yield* runResidueReap(options);
           expect(dryRun.applied).toBe(false);
-          expect(yield* fs.exists(fixture.oldSession)).toBe(true);
-          expect(yield* fs.exists(fixture.oldWorktree)).toBe(true);
+          const exists1 = yield* fs.exists(fixture.oldSession);
+          expect(exists1).toBe(true);
+          const exists2 = yield* fs.exists(fixture.oldWorktree);
+          expect(exists2).toBe(true);
 
           const applied = yield* runResidueReap({ ...options, apply: true });
           expect(applied.reapedCount).toBe(5);
-          expect(yield* fs.exists(fixture.oldSession)).toBe(false);
-          expect(yield* fs.exists(fixture.archivedSession)).toBe(false);
-          expect(yield* fs.exists(fixture.oldWorktree)).toBe(false);
-          expect(yield* fs.exists(fixture.disposable)).toBe(false);
-          expect(yield* fs.exists(fixture.turboEntry)).toBe(false);
-          expect(yield* fs.exists(fixture.sessionsRoot)).toBe(true);
-          expect(yield* fs.exists(fixture.turboCacheRoot)).toBe(true);
-          expect(yield* fs.exists(fixture.durable)).toBe(true);
-          expect(yield* fs.exists(fixture.youngSession)).toBe(true);
+          const exists3 = yield* fs.exists(fixture.oldSession);
+          expect(exists3).toBe(false);
+          const exists4 = yield* fs.exists(fixture.archivedSession);
+          expect(exists4).toBe(false);
+          const exists5 = yield* fs.exists(fixture.oldWorktree);
+          expect(exists5).toBe(false);
+          const exists6 = yield* fs.exists(fixture.disposable);
+          expect(exists6).toBe(false);
+          const exists7 = yield* fs.exists(fixture.turboEntry);
+          expect(exists7).toBe(false);
+          const exists8 = yield* fs.exists(fixture.sessionsRoot);
+          expect(exists8).toBe(true);
+          const exists9 = yield* fs.exists(fixture.turboCacheRoot);
+          expect(exists9).toBe(true);
+          const exists10 = yield* fs.exists(fixture.durable);
+          expect(exists10).toBe(true);
+          const exists11 = yield* fs.exists(fixture.youngSession);
+          expect(exists11).toBe(true);
         }),
       removeTempDirectory
     )
@@ -372,11 +383,13 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
           const dirty = candidateByPath(report, dirtyWorktree);
           expect(dirty.action).toBe("skip");
           expect(dirty.skipReason).toBe("dirty-tree");
-          expect(yield* fs.exists(path.join(dirtyRepo, "uncommitted.txt"))).toBe(true);
+          const exists12 = yield* fs.exists(path.join(dirtyRepo, "uncommitted.txt"));
+          expect(exists12).toBe(true);
           const clean = candidateByPath(report, cleanWorktree);
           expect(clean.action).toBe("remove-dir");
           expect(clean.skipReason).toBeUndefined();
-          expect(yield* fs.exists(cleanWorktree)).toBe(false);
+          const exists13 = yield* fs.exists(cleanWorktree);
+          expect(exists13).toBe(false);
         }),
       removeTempDirectory
     )
@@ -443,7 +456,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
           expect(reaped.action).toBe("remove-dir");
           expect(reaped.path).toBe(lexicalWorktree);
           // The real directory behind the link is gone; the symlink itself is untouched.
-          expect(yield* fs.exists(fixture.oldWorktree)).toBe(false);
+          const exists14 = yield* fs.exists(fixture.oldWorktree);
+          expect(exists14).toBe(false);
           (yield* fs.readLink(linkedHome).pipe(Effect.option)).pipe(O.isSome, assertTrue);
         }),
       removeTempDirectory
@@ -478,8 +492,10 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
             probeLiveCwd: noLiveCwd,
           });
           expect(report.reapedCount).toBe(0);
-          expect(yield* fs.readFileString(payload)).toBe("unrelated work\n");
-          expect(yield* fs.readFileString(session)).toBe("unrelated session\n");
+          const readFileString15 = yield* fs.readFileString(payload);
+          expect(readFileString15).toBe("unrelated work\n");
+          const readFileString16 = yield* fs.readFileString(session);
+          expect(readFileString16).toBe("unrelated session\n");
           expect(A.every(report.candidates, (entry) => ResidueReapAction.is.skip(entry.action))).toBe(true);
         }),
       removeTempDirectory
@@ -518,8 +534,10 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
           });
           expect(report.reapedCount).toBe(0);
           expect(candidateByPath(report, fixture.oldWorktree).skipReason).toBe("path-changed");
-          expect(yield* fs.readFileString(payload)).toBe("unrelated work\n");
-          expect(yield* fs.exists(path.join(moved, "old-worktree", "payload.txt"))).toBe(true);
+          const readFileString17 = yield* fs.readFileString(payload);
+          expect(readFileString17).toBe("unrelated work\n");
+          const exists18 = yield* fs.exists(path.join(moved, "old-worktree", "payload.txt"));
+          expect(exists18).toBe(true);
         }),
       removeTempDirectory
     )
@@ -560,8 +578,10 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
           });
           expect(report.reapedCount).toBe(0);
           expect(candidateByPath(report, entry).skipReason).toBe("path-changed");
-          expect(yield* fs.readFileString(payload)).toBe("unrelated work\n");
-          expect(yield* fs.readFileString(path.join(moved, "old-directory", "payload.txt"))).toBe("original cache\n");
+          const readFileString19 = yield* fs.readFileString(payload);
+          expect(readFileString19).toBe("unrelated work\n");
+          const readFileString20 = yield* fs.readFileString(path.join(moved, "old-directory", "payload.txt"));
+          expect(readFileString20).toBe("original cache\n");
         }),
       removeTempDirectory
     )
@@ -604,7 +624,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
           const skipped = candidateByPath(applied, fixture.oldWorktree);
           expect(skipped.action).toBe("skip");
           // The bystander the link pointed at is never followed for deletion.
-          expect(yield* fs.exists(path.join(bystander, "keep.txt"))).toBe(true);
+          const exists21 = yield* fs.exists(path.join(bystander, "keep.txt"));
+          expect(exists21).toBe(true);
         }),
       removeTempDirectory
     )
@@ -654,8 +675,10 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
           expect(skipped.action).toBe("skip");
           expect(skipped.skipReason).toBe("path-changed");
           // Neither the directory that was assessed nor the one that replaced it was deleted.
-          expect(yield* fs.exists(path.join(fixture.oldWorktree, "fresh.txt"))).toBe(true);
-          expect(A.isReadonlyArrayNonEmpty(yield* fs.readDirectory(moved))).toBe(true);
+          const exists22 = yield* fs.exists(path.join(fixture.oldWorktree, "fresh.txt"));
+          expect(exists22).toBe(true);
+          const readDirectory23 = yield* fs.readDirectory(moved);
+          expect(A.isReadonlyArrayNonEmpty(readDirectory23)).toBe(true);
         }),
       removeTempDirectory
     )
@@ -693,7 +716,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
           const failed = candidateByPath(applied, fixture.oldWorktree);
           expect(failed.action).toBe("skip");
           expect(failed.skipReason).toBe("removal-failed");
-          expect(yield* fs.exists(path.join(sealed, "pinned.txt"))).toBe(true);
+          const exists24 = yield* fs.exists(path.join(sealed, "pinned.txt"));
+          expect(exists24).toBe(true);
         }),
       removeTempDirectory
     )
@@ -793,7 +817,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
           expect(S.is(ResidueReapCandidate)(decoded.candidates[0])).toBe(true);
           // Earlier report tags must not decode as v3 archive reports.
           const v1Payload = Str.replace("residue-reap/v3", "residue-reap/v1")(encoded);
-          expect(S.isSchemaError(yield* Effect.flip(decodeResidueReapReportJson(v1Payload)))).toBe(true);
+          const flip25 = yield* Effect.flip(decodeResidueReapReportJson(v1Payload));
+          expect(S.isSchemaError(flip25)).toBe(true);
 
           const filtered = yield* runResidueReap({
             classes: ["turbo-runs", "qualification-views"],
@@ -880,11 +905,16 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
 
             const applied = yield* runResidueReap({ ...options, apply: true });
             expect(applied.reapedCount).toBe(2);
-            expect(yield* fs.exists(registered)).toBe(false);
-            expect(yield* fs.exists(unregistered)).toBe(false);
-            expect(F.pipe(yield* listedWorktrees(repoRoot), Str.includes("merged-preview-99999"))).toBe(false);
-            expect(yield* fs.readFileString(path.join(external, "keep.txt"))).toBe("unrelated work\n");
-            expect(yield* fs.exists(ignored)).toBe(true);
+            const exists26 = yield* fs.exists(registered);
+            expect(exists26).toBe(false);
+            const exists27 = yield* fs.exists(unregistered);
+            expect(exists27).toBe(false);
+            const listedWorktrees28 = yield* listedWorktrees(repoRoot);
+            expect(F.pipe(listedWorktrees28, Str.includes("merged-preview-99999"))).toBe(false);
+            const readFileString29 = yield* fs.readFileString(path.join(external, "keep.txt"));
+            expect(readFileString29).toBe("unrelated work\n");
+            const exists30 = yield* fs.exists(ignored);
+            expect(exists30).toBe(true);
           }),
         removeTempDirectory
       )
@@ -921,9 +951,12 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
             expect(candidateByPath(report, occupied).skipReason).toBe("live-cwd-ref");
             expect(candidateByPath(report, fresh).skipReason).toBe("too-young");
             expect(report.reapedCount).toBe(0);
-            expect(yield* fs.exists(owned)).toBe(true);
-            expect(yield* fs.exists(occupied)).toBe(true);
-            expect(yield* fs.exists(fresh)).toBe(true);
+            const exists31 = yield* fs.exists(owned);
+            expect(exists31).toBe(true);
+            const exists32 = yield* fs.exists(occupied);
+            expect(exists32).toBe(true);
+            const exists33 = yield* fs.exists(fresh);
+            expect(exists33).toBe(true);
           }),
         removeTempDirectory
       )
@@ -971,8 +1004,10 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
             expect(candidateByPath(gitUnknown, preview).skipReason).toBe("git-probe-failed");
             expect(candidateByPath(gitUnknown, worktree).skipReason).toBe("git-probe-failed");
             expect(gitUnknown.reapedCount).toBe(0);
-            expect(yield* fs.exists(preview)).toBe(true);
-            expect(yield* fs.exists(worktree)).toBe(true);
+            const exists34 = yield* fs.exists(preview);
+            expect(exists34).toBe(true);
+            const exists35 = yield* fs.exists(worktree);
+            expect(exists35).toBe(true);
           }),
         removeTempDirectory
       )
@@ -1012,9 +1047,12 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
             expect(candidateByPath(report, oldRun).action).toBe("remove-file");
             expect(candidateByPath(report, newRun).skipReason).toBe("too-young");
             expect(candidateByPath(report, notes).skipReason).toBe("wrong-shape");
-            expect(yield* fs.exists(oldRun)).toBe(false);
-            expect(yield* fs.exists(newRun)).toBe(true);
-            expect(yield* fs.exists(notes)).toBe(true);
+            const exists36 = yield* fs.exists(oldRun);
+            expect(exists36).toBe(false);
+            const exists37 = yield* fs.exists(newRun);
+            expect(exists37).toBe(true);
+            const exists38 = yield* fs.exists(notes);
+            expect(exists38).toBe(true);
 
             const linkedRepo = path.join(root, "linked-repo");
             const external = path.join(root, "external-runs");
@@ -1036,7 +1074,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
             const linked = yield* runResidueReap({ ...linkedOptions, apply: true });
             expect(linked.reapedCount).toBe(0);
             expect(candidateByPath(linked, linkedRuns).action).toBe("skip");
-            expect(yield* fs.exists(externalRun)).toBe(true);
+            const exists39 = yield* fs.exists(externalRun);
+            expect(exists39).toBe(true);
           }),
         removeTempDirectory
       )
@@ -1141,11 +1180,16 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
               sharedTurboMaxBytes: 3 * 30 + 3 * 40,
             }).pipe(Effect.provideService(FileSystem.FileSystem, rewritingFileSystem));
             expect(candidateByPath(applied, rewritten).skipReason).toBe("path-changed");
-            expect(yield* fs.exists(rewritten)).toBe(true);
-            expect(yield* fs.exists(fixture.member("B", ".tar.zst"))).toBe(false);
-            expect(yield* fs.exists(fixture.member("A", ".tar.zst"))).toBe(false);
-            expect(yield* fs.exists(fixture.member("C", ".tar.zst"))).toBe(true);
-            expect(yield* fs.exists(fixture.member("D", ".tar.zst"))).toBe(true);
+            const exists40 = yield* fs.exists(rewritten);
+            expect(exists40).toBe(true);
+            const exists41 = yield* fs.exists(fixture.member("B", ".tar.zst"));
+            expect(exists41).toBe(false);
+            const exists42 = yield* fs.exists(fixture.member("A", ".tar.zst"));
+            expect(exists42).toBe(false);
+            const exists43 = yield* fs.exists(fixture.member("C", ".tar.zst"));
+            expect(exists43).toBe(true);
+            const exists44 = yield* fs.exists(fixture.member("D", ".tar.zst"));
+            expect(exists44).toBe(true);
           }),
         removeTempDirectory
       )
@@ -1251,9 +1295,12 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
             expect(candidateByPath(report, fixture.view("d")).skipReason).toBe("evidence-referenced");
             expect(candidateByPath(report, fixture.view("e")).action).toBe("remove-dir");
             expect(report.reapedCount).toBe(1);
-            expect(yield* fs.exists(fixture.view("e"))).toBe(false);
-            expect(yield* fs.exists(fixture.view("d"))).toBe(true);
-            expect(yield* fs.exists(fixture.view("a"))).toBe(true);
+            const exists45 = yield* fs.exists(fixture.view("e"));
+            expect(exists45).toBe(false);
+            const exists46 = yield* fs.exists(fixture.view("d"));
+            expect(exists46).toBe(true);
+            const exists47 = yield* fs.exists(fixture.view("a"));
+            expect(exists47).toBe(true);
           }),
         removeTempDirectory
       )
@@ -1279,7 +1326,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
             });
             expect(A.every(report.candidates, (entry) => entry.skipReason === "census-failed")).toBe(true);
             expect(report.candidates).toHaveLength(5);
-            expect(yield* fs.exists(fixture.view("e"))).toBe(true);
+            const exists48 = yield* fs.exists(fixture.view("e"));
+            expect(exists48).toBe(true);
           }),
         removeTempDirectory
       )
@@ -1340,7 +1388,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
             for (const checkout of [first, second]) {
               for (const target of [checkout.cacheEntry, checkout.run, checkout.preview]) {
                 expect(candidateByPath(report, target).checkoutRoot).toBe(checkout.repoRoot);
-                expect(yield* fs.exists(target)).toBe(false);
+                const exists49 = yield* fs.exists(target);
+                expect(exists49).toBe(false);
               }
             }
             expect(report.reapedCount).toBe(6);
@@ -1392,8 +1441,10 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
             expect(report.reapedCount).toBe(0);
             expect(candidateByPath(report, entry).skipReason).toBe("path-changed");
             expect(candidateByPath(report, entry).checkoutRoot).toBe(second);
-            expect(yield* fs.readFileString(payload)).toBe("unrelated work\n");
-            expect(yield* fs.readFileString(path.join(moved, "old-directory", "payload.txt"))).toBe("original cache\n");
+            const readFileString50 = yield* fs.readFileString(payload);
+            expect(readFileString50).toBe("unrelated work\n");
+            const readFileString51 = yield* fs.readFileString(path.join(moved, "old-directory", "payload.txt"));
+            expect(readFileString51).toBe("original cache\n");
           }),
         removeTempDirectory
       )
@@ -1443,7 +1494,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
             expect(inspections).toBeGreaterThanOrEqual(2);
             expect(report.reapedCount).toBe(0);
             expect(candidateByPath(report, entry).skipReason).toBe("path-changed");
-            expect(yield* fs.readFileString(externalData)).toBe("unrelated work\n");
+            const readFileString52 = yield* fs.readFileString(externalData);
+            expect(readFileString52).toBe("unrelated work\n");
           }),
         removeTempDirectory
       )
@@ -1528,11 +1580,12 @@ const retentionFixture = Effect.fn("ResidueReapTest.retentionFixture")(function*
     regeneration: "synthetic scanner",
     reason: "redundant derivative",
   });
-  yield* fs.writeFileString(
-    path.join(repoRoot, ".beep", "retention", "checkout-generated.json"),
-    yield* encodeRulingArrayJson([ruling])
-  );
-  yield* fs.writeFileString(path.join(repoRoot, "standards", "retention.json"), yield* encodeRulingJson(ruling));
+  const argument = path.join(repoRoot, ".beep", "retention", "checkout-generated.json");
+  const encodedRulingArrayJson1 = yield* encodeRulingArrayJson([ruling]);
+  yield* fs.writeFileString(argument, encodedRulingArrayJson1);
+  const argument1 = path.join(repoRoot, "standards", "retention.json");
+  const encodedRulingJson2 = yield* encodeRulingJson(ruling);
+  yield* fs.writeFileString(argument1, encodedRulingJson2);
   yield* runFixtureCommand(repoRoot, "git", ["add", "."]);
   yield* runFixtureCommand(repoRoot, "git", ["commit", "--quiet", "-m", "fixture"]);
   yield* touchTreeDaysAgo(root, path.join(repoRoot, ".beep"), 45);
@@ -1559,7 +1612,8 @@ it.effect.prop(
   "preserves owner, terminal state and evidence binding through JSON for every schema-derived ruling",
   [Arbitrary.schema(ResidueRetentionRuling)],
   Effect.fnUntraced(function* ([ruling]) {
-    const decoded = yield* decodeRulingJson(yield* encodeRulingJson(ruling));
+    const encodedRulingJson = yield* encodeRulingJson(ruling);
+    const decoded = yield* decodeRulingJson(encodedRulingJson);
     expect(equivalentRuling(ruling, decoded)).toBe(true);
     expect(decoded.schemaVersion).toBe("residue-retention/v1");
   }),
@@ -1581,7 +1635,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               expect(row.action).toBe("archive-move");
               expect(row.owner).toBe("quality-fixture");
               expect(row.terminalState).toBe("completed");
-              expect(yield* fs.exists(O.getOrThrow(O.fromUndefinedOr(dry.reportPath)))).toBe(true);
+              const exists53 = yield* fs.exists(O.getOrThrow(O.fromUndefinedOr(dry.reportPath)));
+              expect(exists53).toBe(true);
               const applied = yield* runResidueReap({ ...fixture, apply: true });
               const moved = candidateByPath(applied, fixture.target);
               expect(applied.reapedCount).toBe(1);
@@ -1589,23 +1644,27 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               const runRoot = path.dirname(O.getOrThrow(O.fromUndefinedOr(applied.reportPath)));
               const originalPlan = yield* fs.readFileString(path.join(runRoot, "plan.json"));
               const originalReport = yield* fs.readFileString(path.join(runRoot, "report.json"));
-              expect(yield* fs.exists(fixture.target)).toBe(false);
-              expect(
-                yield* fs.readFileString(
-                  path.join(O.getOrThrow(O.fromUndefinedOr(moved.recoveryDestination)), "payload.txt")
-                )
-              ).toBe("preserve these bytes");
+              const exists54 = yield* fs.exists(fixture.target);
+              expect(exists54).toBe(false);
+              const readFileString55 = yield* fs.readFileString(
+                path.join(O.getOrThrow(O.fromUndefinedOr(moved.recoveryDestination)), "payload.txt")
+              );
+              expect(readFileString55).toBe("preserve these bytes");
               yield* runResidueReap({ ...fixture, restore: O.getOrThrow(O.fromUndefinedOr(applied.runId)) });
-              expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
+              const readFileString56 = yield* fs.readFileString(path.join(fixture.target, "payload.txt"));
+              expect(readFileString56).toBe("preserve these bytes");
               const resumed = yield* runResidueReap({
                 ...fixture,
                 resume: O.getOrThrow(O.fromUndefinedOr(applied.runId)),
               });
               expect(resumed.reapedCount).toBe(0);
               expect(resumed.mode).toBe("resume");
-              expect(yield* fs.exists(fixture.target)).toBe(true);
-              expect(yield* fs.readFileString(path.join(runRoot, "plan.json"))).toBe(originalPlan);
-              expect(yield* fs.readFileString(path.join(runRoot, "report.json"))).toBe(originalReport);
+              const exists57 = yield* fs.exists(fixture.target);
+              expect(exists57).toBe(true);
+              const readFileString58 = yield* fs.readFileString(path.join(runRoot, "plan.json"));
+              expect(readFileString58).toBe(originalPlan);
+              const readFileString59 = yield* fs.readFileString(path.join(runRoot, "report.json"));
+              expect(readFileString59).toBe(originalReport);
             })
           )
         ),
@@ -1630,14 +1689,12 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
                 path: ".beep/ci/second",
                 evidence: "standards/second.json",
               });
-              yield* fs.writeFileString(
-                path.join(fixture.repoRoot, "standards", "second.json"),
-                yield* encodeRulingJson(ruling)
-              );
-              yield* fs.writeFileString(
-                path.join(fixture.repoRoot, ".beep", "retention", "checkout-generated.json"),
-                yield* encodeRulingArrayJson([fixture.ruling, ruling])
-              );
+              const argument2 = path.join(fixture.repoRoot, "standards", "second.json");
+              const encodedRulingJson3 = yield* encodeRulingJson(ruling);
+              yield* fs.writeFileString(argument2, encodedRulingJson3);
+              const argument3 = path.join(fixture.repoRoot, ".beep", "retention", "checkout-generated.json");
+              const encodedRulingArrayJson4 = yield* encodeRulingArrayJson([fixture.ruling, ruling]);
+              yield* fs.writeFileString(argument3, encodedRulingArrayJson4);
               yield* fs.writeFileString(path.join(fixture.repoRoot, "standards", "café.md"), "ordinary evidence");
               yield* runFixtureCommand(fixture.repoRoot, "git", ["add", "."]);
               yield* runFixtureCommand(fixture.repoRoot, "git", ["commit", "--quiet", "-m", "second fixture"]);
@@ -1662,19 +1719,24 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
                 censusEntryCap: 20,
               });
               expect(report.reapedCount).toBe(2);
-              expect(yield* fs.exists(fixture.target)).toBe(false);
-              expect(yield* fs.exists(second)).toBe(false);
-              expect(yield* fs.exists(path.join(oldArchive, "30"))).toBe(true);
+              const exists60 = yield* fs.exists(fixture.target);
+              expect(exists60).toBe(false);
+              const exists61 = yield* fs.exists(second);
+              expect(exists61).toBe(false);
+              const exists62 = yield* fs.exists(path.join(oldArchive, "30"));
+              expect(exists62).toBe(true);
               yield* fs.makeDirectory(fixture.target);
               const blocked = yield* runResidueReap({
                 ...fixture,
                 restore: O.getOrThrow(O.fromUndefinedOr(report.runId)),
               }).pipe(Effect.flip);
               expect(blocked.message).toContain("Restore refuses an occupied source");
-              expect(yield* fs.readFileString(path.join(second, "payload.txt"))).toBe("second payload");
+              const readFileString63 = yield* fs.readFileString(path.join(second, "payload.txt"));
+              expect(readFileString63).toBe("second payload");
               yield* fs.remove(fixture.target, { recursive: true });
               yield* runResidueReap({ ...fixture, restore: O.getOrThrow(O.fromUndefinedOr(report.runId)) });
-              expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
+              const readFileString64 = yield* fs.readFileString(path.join(fixture.target, "payload.txt"));
+              expect(readFileString64).toBe("preserve these bytes");
             })
           )
         ),
@@ -1702,11 +1764,13 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               expect(row.action).toBe("skip");
               expect(row.skipReason).toBe("foreign-owner");
               expect(row.retentionReason).toBe("fleet observation only; archive from the owning checkout");
-              expect(yield* fs.exists(fixture.target)).toBe(true);
+              const exists65 = yield* fs.exists(fixture.target);
+              expect(exists65).toBe(true);
               const unknown = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
               const failed = yield* runResidueReap({ ...fixture, resume: unknown }).pipe(Effect.flip);
               expect(failed.message).toContain("plan.json does not exist");
-              expect(yield* fs.exists(path.join(fixture.repoRoot, ".beep", "residue-reap", unknown))).toBe(false);
+              const exists66 = yield* fs.exists(path.join(fixture.repoRoot, ".beep", "residue-reap", unknown));
+              expect(exists66).toBe(false);
               yield* fs.remove(fixture.repoRoot, { recursive: true });
               for (const mode of ["resume", "restore"] as const) {
                 const recovered = yield* runResidueReap({
@@ -1741,9 +1805,11 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               const applied = yield* runResidueReap({ ...fixture, apply: true });
               expect(applied.reapedCount).toBe(1);
               expect(candidateByPath(applied, fixture.target).action).toBe("archive-move");
-              expect(yield* fs.exists(fixture.target)).toBe(false);
+              const exists67 = yield* fs.exists(fixture.target);
+              expect(exists67).toBe(false);
               yield* runResidueReap({ ...fixture, restore: O.getOrThrow(O.fromUndefinedOr(applied.runId)) });
-              expect(yield* fs.readFileString(path.join(nested, "tracked.txt"))).toBe("nested payload");
+              const readFileString68 = yield* fs.readFileString(path.join(nested, "tracked.txt"));
+              expect(readFileString68).toBe("nested payload");
             })
           )
         ),
@@ -1774,7 +1840,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
               const retained = yield* runResidueReap({ ...fixture, apply: true });
               expect(candidateByPath(retained, fixture.target).skipReason).toBe("protected-name");
-              expect(yield* fs.exists(path.join(linked, "tracked.txt"))).toBe(true);
+              const exists69 = yield* fs.exists(path.join(linked, "tracked.txt"));
+              expect(exists69).toBe(true);
             })
           )
         ),
@@ -1801,15 +1868,18 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
                 path.join(fixture.repoRoot, ".beep", "dangling")
               );
               yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
-              expect(yield* fs.exists(path.join(fixture.homeRoot, "absent"))).toBe(false);
+              const exists70 = yield* fs.exists(path.join(fixture.homeRoot, "absent"));
+              expect(exists70).toBe(false);
               const outside = path.join(fixture.homeRoot, "outside-protected");
               yield* fs.makeDirectory(outside);
               yield* fs.writeFileString(path.join(outside, "proof-ledger.ndjson"), "outside proof");
               yield* fs.symlink(outside, path.join(fixture.repoRoot, ".beep", "outside-reference"));
               const report = yield* runResidueReap({ ...fixture, censusEntryCap: 20, apply: true });
-              expect(yield* fs.readFileString(path.join(outside, "proof-ledger.ndjson"))).toBe("outside proof");
+              const readFileString71 = yield* fs.readFileString(path.join(outside, "proof-ledger.ndjson"));
+              expect(readFileString71).toBe("outside proof");
               expect(candidateByPath(report, fixture.target).action).toBe("archive-move");
-              expect(yield* fs.exists(deps)).toBe(true);
+              const exists72 = yield* fs.exists(deps);
+              expect(exists72).toBe(true);
             })
           )
         ),
@@ -1837,8 +1907,9 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
                 descriptors: Effect.fn("ResidueReapTest.descriptors")(function* () {
                   const destination = yield* Ref.get(holder);
                   if (O.isNone(destination)) return A.empty<string>();
-                  if (!(yield* fs.exists(fixture.target).pipe(Effect.orDie)))
+                  if (!(yield* fs.exists(fixture.target).pipe(Effect.orDie))) {
                     yield* fs.makeDirectory(fixture.target).pipe(Effect.orDie);
+                  }
                   return [destination.value];
                 }),
               };
@@ -1849,10 +1920,10 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
                   phase: "intent" | "moved"
                 ) {
                   if (!Str.Equivalence(phase, "intent")) return;
-                  const runs = A.filter(
-                    yield* fs.readDirectory(path.join(fixture.repoRoot, ".beep", "residue-reap")).pipe(Effect.orDie),
-                    S.is(RunDirectoryName)
-                  );
+                  const pipe73 = yield* fs
+                    .readDirectory(path.join(fixture.repoRoot, ".beep", "residue-reap"))
+                    .pipe(Effect.orDie);
+                  const runs = A.filter(pipe73, S.is(RunDirectoryName));
                   yield* Ref.set(
                     holder,
                     O.some(
@@ -1865,9 +1936,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               expect(candidateByPath(applied, fixture.target).skipReason).toBe("lock-held");
               expect(A.join(applied.warnings, " ")).toContain("phase=fenced-live");
               const runRoot = path.dirname(O.getOrThrow(O.fromUndefinedOr(applied.reportPath)));
-              expect(yield* fs.readFileString(path.join(runRoot, "archive", "0", "payload.txt"))).toBe(
-                "preserve these bytes"
-              );
+              const readFileString74 = yield* fs.readFileString(path.join(runRoot, "archive", "0", "payload.txt"));
+              expect(readFileString74).toBe("preserve these bytes");
               yield* fs.remove(fixture.target, { recursive: true });
               const resumed = yield* runResidueReap({
                 ...fixture,
@@ -1877,9 +1947,11 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               expect(candidateByPath(resumed, fixture.target).retentionReason).toBe(
                 "fenced-live; restore or start a new run"
               );
-              expect(yield* fs.readFileString(path.join(runRoot, "archive", "0.intent.json"))).toContain("fenced-live");
+              const readFileString75 = yield* fs.readFileString(path.join(runRoot, "archive", "0.intent.json"));
+              expect(readFileString75).toContain("fenced-live");
               yield* runResidueReap({ ...fixture, restore: O.getOrThrow(O.fromUndefinedOr(applied.runId)) });
-              expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
+              const readFileString76 = yield* fs.readFileString(path.join(fixture.target, "payload.txt"));
+              expect(readFileString76).toBe("preserve these bytes");
             })
           )
         ),
@@ -1902,7 +1974,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               const applied = yield* runResidueReap({ ...options, apply: true });
               expect(applied.reapedCount).toBe(1);
               yield* runResidueReap({ ...options, restore: O.getOrThrow(O.fromUndefinedOr(applied.runId)) });
-              expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
+              const readFileString77 = yield* fs.readFileString(path.join(fixture.target, "payload.txt"));
+              expect(readFileString77).toBe("preserve these bytes");
             })
           )
         ),
@@ -1926,14 +1999,12 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
                 evidence: "standards/pid.json",
               });
               yield* fs.writeFileString(target, "987654");
-              yield* fs.writeFileString(
-                path.join(fixture.repoRoot, "standards", "pid.json"),
-                yield* encodeRulingJson(ruling)
-              );
-              yield* fs.writeFileString(
-                path.join(fixture.repoRoot, ".beep", "retention", "checkout-pids.json"),
-                yield* encodeRulingArrayJson([ruling])
-              );
+              const argument4 = path.join(fixture.repoRoot, "standards", "pid.json");
+              const encodedRulingJson5 = yield* encodeRulingJson(ruling);
+              yield* fs.writeFileString(argument4, encodedRulingJson5);
+              const argument5 = path.join(fixture.repoRoot, ".beep", "retention", "checkout-pids.json");
+              const encodedRulingArrayJson6 = yield* encodeRulingArrayJson([ruling]);
+              yield* fs.writeFileString(argument5, encodedRulingArrayJson6);
               yield* runFixtureCommand(fixture.repoRoot, "git", ["add", "."]);
               yield* runFixtureCommand(fixture.repoRoot, "git", ["commit", "--quiet", "-m", "pid proof"]);
               yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
@@ -1941,7 +2012,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               const applied = yield* runResidueReap({ ...options, apply: true });
               expect(applied.reapedCount).toBe(1);
               yield* runResidueReap({ ...options, restore: O.getOrThrow(O.fromUndefinedOr(applied.runId)) });
-              expect(yield* fs.readFileString(target)).toBe("987654");
+              const readFileString78 = yield* fs.readFileString(target);
+              expect(readFileString78).toBe("987654");
             })
           )
         ),
@@ -1991,10 +2063,10 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
                         expect(report.reapedCount).toBe(failures === 1 ? 1 : 0);
                         const row = candidateByPath(report, fixture.target);
                         const beforeRecovery = O.getOrThrow(O.fromUndefinedOr(row.recoveryDestination));
-                        expect(yield* fs.exists(fixture.target)).toBe(false);
-                        expect(yield* fs.readFileString(`${beforeRecovery}.intent.json`)).toContain(
-                          failures === 1 ? '"phase":"moved"' : '"phase":"intent"'
-                        );
+                        const exists79 = yield* fs.exists(fixture.target);
+                        expect(exists79).toBe(false);
+                        const readFileString80 = yield* fs.readFileString(`${beforeRecovery}.intent.json`);
+                        expect(readFileString80).toContain(failures === 1 ? '"phase":"moved"' : '"phase":"intent"');
                         const resumed = yield* runResidueReap({
                           ...fixture,
                           resume: O.getOrThrow(O.fromUndefinedOr(report.runId)),
@@ -2003,9 +2075,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
                         const destination = O.getOrThrow(
                           O.fromUndefinedOr(candidateByPath(resumed, fixture.target).recoveryDestination)
                         );
-                        expect(yield* fs.readFileString(path.join(destination, "payload.txt"))).toBe(
-                          "preserve these bytes"
-                        );
+                        const readFileString81 = yield* fs.readFileString(path.join(destination, "payload.txt"));
+                        expect(readFileString81).toBe("preserve these bytes");
                       }),
                     (spy) => Effect.sync(() => spy.mockRestore())
                   );
@@ -2033,7 +2104,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
               const report = yield* runResidueReap({ ...fixture, apply: true });
               expect(candidateByPath(report, fixture.target).skipReason).toBe("protected-name");
-              expect(yield* fs.readFileString(path.join(nested, "proof-ledger.ndjson"))).toBe("durable proof");
+              const readFileString82 = yield* fs.readFileString(path.join(nested, "proof-ledger.ndjson"));
+              expect(readFileString82).toBe("durable proof");
             })
           )
         ),
@@ -2055,9 +2127,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               yield* runFixtureCommand(fixture.repoRoot, "git", ["commit", "--quiet", "-m", "tracked link"]);
               const report = yield* runResidueReap({ ...fixture, apply: true });
               expect(report.reapedCount).toBe(1);
-              expect(yield* fs.readLink(path.join(fixture.repoRoot, "standards", "dangling-link"))).toBe(
-                "absent-document"
-              );
+              const readLink83 = yield* fs.readLink(path.join(fixture.repoRoot, "standards", "dangling-link"));
+              expect(readLink83).toBe("absent-document");
             })
           )
         ),
@@ -2093,7 +2164,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
               const report = yield* runResidueReap({ ...fixture, apply: true });
               expect(candidateByPath(report, fixture.target).skipReason).toBe("protected-name");
-              expect(yield* fs.readFileString(path.join(fixture.target, "proof-ledger.ndjson"))).toBe("ancestor proof");
+              const readFileString84 = yield* fs.readFileString(path.join(fixture.target, "proof-ledger.ndjson"));
+              expect(readFileString84).toBe("ancestor proof");
             })
           )
         ),
@@ -2112,19 +2184,18 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               const path = yield* Path.Path;
               const rulingPath = path.join(fixture.repoRoot, ".beep", "retention", "checkout-generated.json");
               for (const state of ["active", "paused", "unknown"] as const) {
-                yield* fs.writeFileString(
-                  rulingPath,
-                  yield* encodeRulingArrayJson([ResidueRetentionRuling.make({ ...fixture.ruling, state })])
-                );
-                expect(
-                  candidateByPath(yield* runResidueReap({ ...fixture, apply: true }), fixture.target).skipReason
-                ).toBe("terminal-state-unverified");
+                const encodedRulingArrayJson = yield* encodeRulingArrayJson([
+                  ResidueRetentionRuling.make({ ...fixture.ruling, state }),
+                ]);
+                yield* fs.writeFileString(rulingPath, encodedRulingArrayJson);
+                const resultResidueReap = yield* runResidueReap({ ...fixture, apply: true });
+                expect(candidateByPath(resultResidueReap, fixture.target).skipReason).toBe("terminal-state-unverified");
               }
               yield* fs.remove(rulingPath);
-              expect(candidateByPath(yield* runResidueReap(fixture), fixture.target).skipReason).toBe(
-                "owner-ruling-required"
-              );
-              expect(yield* fs.exists(fixture.target)).toBe(true);
+              const resultResidueReap85 = yield* runResidueReap(fixture);
+              expect(candidateByPath(resultResidueReap85, fixture.target).skipReason).toBe("owner-ruling-required");
+              const exists86 = yield* fs.exists(fixture.target);
+              expect(exists86).toBe(true);
             })
           )
         ),
@@ -2143,12 +2214,12 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               const path = yield* Path.Path;
               const receipt = path.join(fixture.repoRoot, "standards", "receipt.md");
               yield* fs.writeFileString(receipt, "Keep proof: .beep/ci/obsolete.\n");
-              expect(candidateByPath(yield* runResidueReap(fixture), fixture.target).skipReason).toBe("dirty-tree");
+              const resultResidueReap87 = yield* runResidueReap(fixture);
+              expect(candidateByPath(resultResidueReap87, fixture.target).skipReason).toBe("dirty-tree");
               yield* runFixtureCommand(fixture.repoRoot, "git", ["add", "."]);
               yield* runFixtureCommand(fixture.repoRoot, "git", ["commit", "--quiet", "-m", "cite"]);
-              expect(candidateByPath(yield* runResidueReap(fixture), fixture.target).skipReason).toBe(
-                "evidence-referenced"
-              );
+              const resultResidueReap88 = yield* runResidueReap(fixture);
+              expect(candidateByPath(resultResidueReap88, fixture.target).skipReason).toBe("evidence-referenced");
             })
           )
         ),
@@ -2179,7 +2250,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
                 yield* fs.writeFileString(receipt, text);
                 yield* runFixtureCommand(fixture.repoRoot, "git", ["add", "."]);
                 yield* runFixtureCommand(fixture.repoRoot, "git", ["commit", "--quiet", "-m", "cite"]);
-                return candidateByPath(yield* runResidueReap(fixture), fixture.target);
+                const resultResidueReap89 = yield* runResidueReap(fixture);
+                return candidateByPath(resultResidueReap89, fixture.target);
               });
               const first = yield* cite("Sibling outputs such as .beep/ci-other and .beep/qa stay apart.\n");
               const listed = yield* runFixtureCommand(fixture.repoRoot, "sh", [
@@ -2208,26 +2280,24 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
             Effect.gen(function* () {
               const fs = yield* FileSystem.FileSystem;
               const path = yield* Path.Path;
-              expect(
-                candidateByPath(
-                  yield* runResidueReap({ ...fixture, probeLiveCwd: () => Effect.succeedSome(true) }),
-                  fixture.target
-                ).skipReason
-              ).toBe("live-cwd-ref");
+              const resultResidueReap90 = yield* runResidueReap({
+                ...fixture,
+                probeLiveCwd: () => Effect.succeedSome(true),
+              });
+              expect(candidateByPath(resultResidueReap90, fixture.target).skipReason).toBe("live-cwd-ref");
               yield* touchDaysAgo(fixture.repoRoot, path.join(fixture.target, "payload.txt"), 1);
-              expect(candidateByPath(yield* runResidueReap(fixture), fixture.target).skipReason).toBe(
-                "checkout-recent-write"
-              );
+              const resultResidueReap91 = yield* runResidueReap(fixture);
+              expect(candidateByPath(resultResidueReap91, fixture.target).skipReason).toBe("checkout-recent-write");
               yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
               yield* fs.writeFileString(path.join(fixture.target, "worker.pid"), "12345");
-              expect(
-                candidateByPath(
-                  yield* runResidueReap({ ...fixture, probePidAlive: () => Effect.succeedSome(true) }),
-                  fixture.target
-                ).skipReason
-              ).toBe("pid-alive");
+              const resultResidueReap92 = yield* runResidueReap({
+                ...fixture,
+                probePidAlive: () => Effect.succeedSome(true),
+              });
+              expect(candidateByPath(resultResidueReap92, fixture.target).skipReason).toBe("pid-alive");
               yield* fs.writeFileString(path.join(fixture.target, "proof-ledger.ndjson"), "durable");
-              expect(candidateByPath(yield* runResidueReap(fixture), fixture.target).skipReason).toBe("protected-name");
+              const resultResidueReap93 = yield* runResidueReap(fixture);
+              expect(candidateByPath(resultResidueReap93, fixture.target).skipReason).toBe("protected-name");
             })
           )
         ),
@@ -2250,9 +2320,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
                 restore: O.getOrThrow(O.fromUndefinedOr(applied.runId)),
               }).pipe(Effect.flip);
               expect(String(failure)).toContain("occupied source");
-              expect(
-                String(yield* runResidueReap({ ...fixture, restore: "../../outside" }).pipe(Effect.flip))
-              ).toContain("Invalid residue");
+              const pipe94 = yield* runResidueReap({ ...fixture, restore: "../../outside" }).pipe(Effect.flip);
+              expect(String(pipe94)).toContain("Invalid residue");
             })
           )
         ),
@@ -2290,17 +2359,21 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("archive interruption 
                 );
                 expect(killed).toBe(true);
                 const runsRoot = path.join(fixture.repoRoot, ".beep", "residue-reap");
-                const runs = A.filter(yield* fs.readDirectory(runsRoot), S.is(RunDirectoryName));
+                const readDirectory95 = yield* fs.readDirectory(runsRoot);
+                const runs = A.filter(readDirectory95, S.is(RunDirectoryName));
                 expect(runs).toHaveLength(1);
                 const runId = O.getOrThrow(A.head(runs));
-                expect(yield* fs.exists(path.join(runsRoot, runId, "plan.json"))).toBe(true);
+                const exists96 = yield* fs.exists(path.join(runsRoot, runId, "plan.json"));
+                expect(exists96).toBe(true);
                 const intentText = yield* fs.readFileString(path.join(runsRoot, runId, "archive", "0.intent.json"));
                 expect(intentText).toContain(`"phase":"${phase}"`);
                 const resumed = yield* runResidueReap({ ...fixture, resume: runId });
                 expect(resumed.reapedCount).toBe(1);
-                expect(yield* fs.exists(fixture.target)).toBe(false);
+                const exists97 = yield* fs.exists(fixture.target);
+                expect(exists97).toBe(false);
                 yield* runResidueReap({ ...fixture, restore: runId });
-                expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
+                const readFileString98 = yield* fs.readFileString(path.join(fixture.target, "payload.txt"));
+                expect(readFileString98).toBe("preserve these bytes");
               })
             )
           ),
@@ -2323,7 +2396,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("retention fences", (i
               yield* fs.open(path.join(fixture.target, "payload.txt"), { flag: "r" });
               const report = yield* runResidueReap({ ...fixture, apply: true });
               expect(candidateByPath(report, fixture.target).skipReason).toBe("lock-held");
-              expect(yield* fs.exists(fixture.target)).toBe(true);
+              const exists99 = yield* fs.exists(fixture.target);
+              expect(exists99).toBe(true);
             })
           )
         ),
@@ -2349,10 +2423,9 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("retention fences", (i
                 "{}",
                 "+",
               ]);
-              yield* fs.writeFileString(
-                path.join(fixture.repoRoot, ".beep", "retention", "checkout-generated.json"),
-                yield* encodeRulingArrayJson([fixture.ruling])
-              );
+              const argument6 = path.join(fixture.repoRoot, ".beep", "retention", "checkout-generated.json");
+              const encodedRulingArrayJson7 = yield* encodeRulingArrayJson([fixture.ruling]);
+              yield* fs.writeFileString(argument6, encodedRulingArrayJson7);
               const report = yield* runResidueReap({
                 repoRoot: fixture.repoRoot,
                 homeRoot: fixture.homeRoot,
@@ -2361,7 +2434,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("retention fences", (i
                 apply: true,
               });
               expect(report.reapedCount).toBe(1);
-              expect(yield* fs.exists(fixture.target)).toBe(false);
+              const exists100 = yield* fs.exists(fixture.target);
+              expect(exists100).toBe(false);
             })
           )
         ),
@@ -2383,7 +2457,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("retention fences", (i
               yield* runFixtureCommand(fixture.repoRoot, "git", ["commit", "--quiet", "-m", "unbound proof"]);
               const report = yield* runResidueReap({ ...fixture, apply: true });
               expect(candidateByPath(report, fixture.target).skipReason).toBe("terminal-state-unverified");
-              expect(yield* fs.exists(fixture.target)).toBe(true);
+              const exists101 = yield* fs.exists(fixture.target);
+              expect(exists101).toBe(true);
             })
           )
         ),
@@ -2420,7 +2495,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("retention fences", (i
               });
               const unread = yield* runResidueReap(fixture).pipe(Effect.provideService(FileSystem.FileSystem, blocked));
               expect(candidateByPath(unread, beep).skipReason).toBe("census-failed");
-              expect(yield* fs.readFileString(qa)).toBe("wrong shape; preserve me");
+              const readFileString102 = yield* fs.readFileString(qa);
+              expect(readFileString102).toBe("wrong shape; preserve me");
             })
           )
         ),
@@ -2442,8 +2518,9 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("retention fences", (i
                 Effect.gen(function* () {
                   const fs = yield* FileSystem.FileSystem;
                   const path = yield* Path.Path;
-                  if (!eligible)
+                  if (!eligible) {
                     yield* fs.remove(path.join(fixture.repoRoot, ".beep", "retention", "checkout-generated.json"));
+                  }
                   const plan = yield* runResidueReap(fixture);
                   expect(candidateByPath(plan, fixture.target).action).toBe(eligible ? "archive-move" : "skip");
                   yield* fs.remove(path.dirname(fixture.target), { recursive: true });
@@ -2487,10 +2564,12 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("retention fences", (i
               const refused = yield* runResidueReap({ ...fixture, restore: id }).pipe(Effect.flip);
               expect(refused.message).toContain("Source parent");
               expect(refused.message).toContain("is unavailable");
-              expect(yield* fs.readFileString(path.join(destination, "payload.txt"))).toBe("preserve these bytes");
+              const readFileString103 = yield* fs.readFileString(path.join(destination, "payload.txt"));
+              expect(readFileString103).toBe("preserve these bytes");
               yield* fs.makeDirectory(path.dirname(fixture.target));
               yield* runResidueReap({ ...fixture, restore: id });
-              expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
+              const readFileString104 = yield* fs.readFileString(path.join(fixture.target, "payload.txt"));
+              expect(readFileString104).toBe("preserve these bytes");
             })
           )
         ),
@@ -2503,7 +2582,8 @@ const TERMINAL_LANE_OWNER = `terminal-lane#${TERMINAL_LANE_PR}`;
 const fixtureRepository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
 
 const gitLine = Effect.fn("ResidueReapTest.gitLine")(function* (cwd: string, args: ReadonlyArray<string>) {
-  return Str.trim(yield* runFixtureCommand(cwd, "git", args));
+  const resultFixtureCommand = yield* runFixtureCommand(cwd, "git", args);
+  return Str.trim(resultFixtureCommand);
 });
 
 // A primary clone with a github origin and one linked lane worktree on `feat/lane`.
@@ -2653,8 +2733,10 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("terminal-lane authori
                 const applied = yield* runResidueReap({ ...fixture.options, apply: true }).pipe(withLaneProbe(probe));
                 expect(applied.reapedCount).toBe(1);
                 expect(candidateByPath(applied, fixture.target).owner).toBe(TERMINAL_LANE_OWNER);
-                expect(yield* fs.exists(fixture.target)).toBe(false);
-                expect(yield* fs.exists(fixture.material)).toBe(true);
+                const exists105 = yield* fs.exists(fixture.target);
+                expect(exists105).toBe(false);
+                const exists106 = yield* fs.exists(fixture.material);
+                expect(exists106).toBe(true);
               })
             )
           ),
@@ -2709,18 +2791,16 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("terminal-lane authori
               yield* fs.remove(path.join(fixture.lane, "scratch.md"));
               // The same lane, clean and with only a done row of its own, is terminal: open
               // rows for the primary clone and for a vanished checkout name other paths.
-              const proven = yield* runResidueReap(fixture.options).pipe(
-                withLaneProbe(
-                  yield* liveLaneProbe({
-                    mergedHeads: merged,
-                    ledger: [
-                      laneLedgerRow(fixture.lane, "done"),
-                      laneLedgerRow(fixture.primary, "open"),
-                      laneLedgerRow(path.join(root, "vanished-lane"), "open"),
-                    ],
-                  })
-                )
-              );
+              const argument7 = runResidueReap(fixture.options);
+              const liveLaneProbe8 = yield* liveLaneProbe({
+                mergedHeads: merged,
+                ledger: [
+                  laneLedgerRow(fixture.lane, "done"),
+                  laneLedgerRow(fixture.primary, "open"),
+                  laneLedgerRow(path.join(root, "vanished-lane"), "open"),
+                ],
+              });
+              const proven = yield* argument7.pipe(withLaneProbe(liveLaneProbe8));
               expect(candidateByPath(proven, fixture.target).action).toBe("archive-move");
             })
           )
@@ -2753,8 +2833,10 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("terminal-lane authori
               expect(applied.reapedCount).toBe(0);
               expect(row.action).toBe("skip");
               expect(row.skipReason).toBe("terminal-state-unverified");
-              expect(yield* Ref.get(calls)).toBe(3);
-              expect(yield* fs.readFileString(`${fixture.target}/payload.txt`)).toBe("lane residue");
+              const got = yield* Ref.get(calls);
+              expect(got).toBe(3);
+              const readFileString107 = yield* fs.readFileString(`${fixture.target}/payload.txt`);
+              expect(readFileString107).toBe("lane residue");
             })
           )
         ),
@@ -2780,18 +2862,23 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("terminal-lane authori
                   Str.Equivalence(phase, "intent") ? Effect.die("simulated crash") : Effect.void,
               }).pipe(probe, Effect.exit);
               expect(interrupted._tag).toBe("Failure");
-              expect(yield* fs.exists(fixture.target)).toBe(true);
+              const exists108 = yield* fs.exists(fixture.target);
+              expect(exists108).toBe(true);
               const runsRoot = path.join(fixture.lane, ".beep", "residue-reap");
-              const runId = O.getOrThrow(A.head(A.filter(yield* fs.readDirectory(runsRoot), S.is(RunDirectoryName))));
-              expect(yield* fs.readFileString(path.join(runsRoot, runId, "archive", "0.intent.json"))).toContain(
-                `"phase":"intent"`
+              const readDirectory109 = yield* fs.readDirectory(runsRoot);
+              const runId = O.getOrThrow(A.head(A.filter(readDirectory109, S.is(RunDirectoryName))));
+              const readFileString110 = yield* fs.readFileString(
+                path.join(runsRoot, runId, "archive", "0.intent.json")
               );
+              expect(readFileString110).toContain(`"phase":"intent"`);
               const resumed = yield* runResidueReap({ ...options, resume: runId }).pipe(probe);
               expect(resumed.reapedCount).toBe(1);
               expect(candidateByPath(resumed, fixture.target).owner).toBe(TERMINAL_LANE_OWNER);
-              expect(yield* fs.exists(fixture.target)).toBe(false);
+              const exists111 = yield* fs.exists(fixture.target);
+              expect(exists111).toBe(false);
               yield* runResidueReap({ ...options, restore: runId }).pipe(probe);
-              expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("lane residue");
+              const readFileString112 = yield* fs.readFileString(path.join(fixture.target, "payload.txt"));
+              expect(readFileString112).toBe("lane residue");
             })
           )
         ),
@@ -2822,7 +2909,8 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("terminal-lane authori
               const fenced = candidateByPath(foreign, fixture.target);
               expect(fenced.skipReason).toBe("foreign-owner");
               expect(fenced.retentionReason).toBe("fleet observation only; archive from the owning checkout");
-              expect(yield* Ref.get(probed)).toEqual([fixture.primary]);
+              const got113 = yield* Ref.get(probed);
+              expect(got113).toEqual([fixture.primary]);
               const ruling = ResidueRetentionRuling.make({
                 path: ".beep/ci/obsolete",
                 owner: "quality-fixture",
@@ -2833,14 +2921,15 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("terminal-lane authori
                 reason: "still in use",
               });
               yield* fs.makeDirectory(path.join(fixture.lane, ".beep", "retention"), { recursive: true });
-              yield* fs.writeFileString(
-                path.join(fixture.lane, ".beep", "retention", "checkout-generated.json"),
-                yield* encodeRulingArrayJson([ruling])
-              );
-              const governed = candidateByPath(yield* runResidueReap(options).pipe(probe), fixture.target);
+              const argument8 = path.join(fixture.lane, ".beep", "retention", "checkout-generated.json");
+              const encodedRulingArrayJson9 = yield* encodeRulingArrayJson([ruling]);
+              yield* fs.writeFileString(argument8, encodedRulingArrayJson9);
+              const pipe114 = yield* runResidueReap(options).pipe(probe);
+              const governed = candidateByPath(pipe114, fixture.target);
               expect(governed.skipReason).toBe("terminal-state-unverified");
               expect(governed.owner).toBe("quality-fixture");
-              expect(yield* Ref.get(probed)).toEqual([fixture.primary]);
+              const got115 = yield* Ref.get(probed);
+              expect(got115).toEqual([fixture.primary]);
             })
           )
         ),

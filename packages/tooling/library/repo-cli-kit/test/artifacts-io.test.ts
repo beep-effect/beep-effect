@@ -125,8 +125,10 @@ describe("artifacts/GeneratedFileDrift", () => {
             onError: toArtifactError,
           });
 
-          expect(yield* fs.readFileString(filePath)).toBe("// generated\n{}\n");
-          expect(yield* Ref.get(wrote)).toBe(true);
+          const readFileString1 = yield* fs.readFileString(filePath);
+          expect(readFileString1).toBe("// generated\n{}\n");
+          const got = yield* Ref.get(wrote);
+          expect(got).toBe(true);
         })
       )
     );
@@ -192,7 +194,8 @@ describe("artifacts/GeneratedFileDrift", () => {
             onError: toArtifactError,
           });
 
-          expect(yield* fs.exists(filePath)).toBe(true);
+          const exists2 = yield* fs.exists(filePath);
+          expect(exists2).toBe(true);
         })
       )
     );

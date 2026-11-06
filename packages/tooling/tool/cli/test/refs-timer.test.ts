@@ -57,7 +57,8 @@ describe("reference refresh timer", () => {
             )
           );
           expect(units[0]?.text).not.toMatch(/^(?:After|Wants|Requires|BindsTo|Requisite|EnvironmentFile)=/mu);
-          expect(yield* f.fs.exists(f.path.join(f.home, ".config"))).toBe(false);
+          const exists1 = yield* f.fs.exists(f.path.join(f.home, ".config"));
+          expect(exists1).toBe(false);
         })
       );
     }
@@ -85,13 +86,14 @@ describe("reference refresh timer", () => {
           expect(serviceText).toContain(`WorkingDirectory=${f.owner}`);
           expect(serviceText).toContain(`--root "${f.root}"`);
           expect(serviceText).not.toContain("--jobs");
-          expect(yield* f.fs.readFileString(f.path.join(unitDir, "beep-refs-refresh.timer"))).toContain(
-            "OnCalendar=*-*-* 04:20:00"
-          );
+          const readFileString2 = yield* f.fs.readFileString(f.path.join(unitDir, "beep-refs-refresh.timer"));
+          expect(readFileString2).toContain("OnCalendar=*-*-* 04:20:00");
           const removed = yield* workspace.use((service) => service.uninstallTimer(f.home));
           expect(removed).toHaveLength(2);
-          expect(yield* f.fs.readDirectory(unitDir)).toEqual([]);
-          expect(yield* f.fs.readFileString(f.path.join(f.home, "systemctl.log"))).toBe(
+          const readDirectory3 = yield* f.fs.readDirectory(unitDir);
+          expect(readDirectory3).toEqual([]);
+          const readFileString4 = yield* f.fs.readFileString(f.path.join(f.home, "systemctl.log"));
+          expect(readFileString4).toBe(
             A.join(
               [
                 "--user daemon-reload",
@@ -151,9 +153,8 @@ describe("reference refresh timer", () => {
           expect(serviceText).toContain(`WorkingDirectory=${f.owner}`);
           expect(serviceText).not.toMatch(/^(?:After|EnvironmentFile)=/mu);
           expect(serviceText).not.toContain("--jobs");
-          expect(yield* f.fs.readFileString(f.path.join(unitDir, "beep-refs-refresh.timer"))).toContain(
-            "OnCalendar=*-*-* 05:10:00"
-          );
+          const readFileString5 = yield* f.fs.readFileString(f.path.join(unitDir, "beep-refs-refresh.timer"));
+          expect(readFileString5).toContain("OnCalendar=*-*-* 05:10:00");
         })
       );
     }
@@ -174,7 +175,8 @@ describe("reference refresh timer", () => {
           .use((service) => service.installTimer(f.home, "/bad\npath", "*-*-* 03:30:00", "/bin/bun"))
           .pipe(Effect.result);
         expect(injected._tag).toBe("Failure");
-        expect(yield* f.fs.exists(f.path.join(f.home, ".config/systemd"))).toBe(false);
+        const exists6 = yield* f.fs.exists(f.path.join(f.home, ".config/systemd"));
+        expect(exists6).toBe(false);
       })
     );
   });
@@ -192,7 +194,8 @@ describe("reference refresh timer", () => {
           yield* f.fs.writeFileString(f.path.join(unitDir, "beep-refs-refresh.timer"), "[Timer]\n");
           const error = yield* workspace.use((service) => service.uninstallTimer(f.home)).pipe(Effect.flip);
           expect(error.message).toBe("systemctl exited 3: unit busy");
-          expect(yield* f.fs.readDirectory(unitDir)).toEqual(["beep-refs-refresh.timer"]);
+          const readDirectory7 = yield* f.fs.readDirectory(unitDir);
+          expect(readDirectory7).toEqual(["beep-refs-refresh.timer"]);
         })
       );
     }

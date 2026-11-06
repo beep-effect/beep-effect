@@ -179,9 +179,12 @@ const appendFiling = Effect.fnUntraced(function* (
   source: Source,
   org = 1
 ) {
-  yield* repository.recordEvent(yield* eventFixture(seed, citingApplication, source, org));
-  yield* repository.recordDisposition(yield* dispositionFixture(seed + 100, citingApplication, seed, source, org));
-  yield* repository.recordSubmissionFact(yield* submissionFactFixture(seed + 200, citingApplication, org));
+  const eventFixture1 = yield* eventFixture(seed, citingApplication, source, org);
+  yield* repository.recordEvent(eventFixture1);
+  const dispositionFixture2 = yield* dispositionFixture(seed + 100, citingApplication, seed, source, org);
+  yield* repository.recordDisposition(dispositionFixture2);
+  const submissionFactFixture3 = yield* submissionFactFixture(seed + 200, citingApplication, org);
+  yield* repository.recordSubmissionFact(submissionFactFixture3);
 });
 
 const ids = <Entity extends { readonly id: number }>(records: ReadonlyArray<Entity>): ReadonlyArray<number> =>
@@ -200,13 +203,19 @@ describe("@beep/law-practice-server candor record repository", () => {
         const tenantOne = yield* decodeFiling(FILING_A, 1);
         const tenantTwo = yield* decodeFiling(FILING_A, 2);
 
-        expect(ids(yield* repository.listEvents(tenantOne))).toEqual([1]);
-        expect(ids(yield* repository.listDispositions(tenantOne))).toEqual([101]);
-        expect(ids(yield* repository.listSubmissionFacts(tenantOne))).toEqual([201]);
+        const listEvents4 = yield* repository.listEvents(tenantOne);
+        expect(ids(listEvents4)).toEqual([1]);
+        const listDispositions5 = yield* repository.listDispositions(tenantOne);
+        expect(ids(listDispositions5)).toEqual([101]);
+        const listSubmissionFacts6 = yield* repository.listSubmissionFacts(tenantOne);
+        expect(ids(listSubmissionFacts6)).toEqual([201]);
 
-        expect(ids(yield* repository.listEvents(tenantTwo))).toEqual([2]);
-        expect(ids(yield* repository.listDispositions(tenantTwo))).toEqual([102]);
-        expect(ids(yield* repository.listSubmissionFacts(tenantTwo))).toEqual([202]);
+        const listEvents7 = yield* repository.listEvents(tenantTwo);
+        expect(ids(listEvents7)).toEqual([2]);
+        const listDispositions8 = yield* repository.listDispositions(tenantTwo);
+        expect(ids(listDispositions8)).toEqual([102]);
+        const listSubmissionFacts9 = yield* repository.listSubmissionFacts(tenantTwo);
+        expect(ids(listSubmissionFacts9)).toEqual([202]);
       })
     );
   });
@@ -254,13 +263,19 @@ describe("@beep/law-practice-server candor record repository", () => {
           const filingA = yield* decodeFiling(FILING_A);
           const filingB = yield* decodeFiling(FILING_B);
 
-          expect(ids(yield* repository.listEvents(filingA))).toEqual([1]);
-          expect(ids(yield* repository.listDispositions(filingA))).toEqual([101]);
-          expect(ids(yield* repository.listSubmissionFacts(filingA))).toEqual([201]);
+          const listEvents10 = yield* repository.listEvents(filingA);
+          expect(ids(listEvents10)).toEqual([1]);
+          const listDispositions11 = yield* repository.listDispositions(filingA);
+          expect(ids(listDispositions11)).toEqual([101]);
+          const listSubmissionFacts12 = yield* repository.listSubmissionFacts(filingA);
+          expect(ids(listSubmissionFacts12)).toEqual([201]);
 
-          expect(ids(yield* repository.listEvents(filingB))).toEqual([2]);
-          expect(ids(yield* repository.listDispositions(filingB))).toEqual([102]);
-          expect(ids(yield* repository.listSubmissionFacts(filingB))).toEqual([202]);
+          const listEvents13 = yield* repository.listEvents(filingB);
+          expect(ids(listEvents13)).toEqual([2]);
+          const listDispositions14 = yield* repository.listDispositions(filingB);
+          expect(ids(listDispositions14)).toEqual([102]);
+          const listSubmissionFacts15 = yield* repository.listSubmissionFacts(filingB);
+          expect(ids(listSubmissionFacts15)).toEqual([202]);
         })
       );
     }
@@ -281,9 +296,12 @@ describe("@beep/law-practice-server candor record repository", () => {
 
           const filing = yield* decodeFiling(FILING_A);
 
-          expect(ids(yield* repository.listEvents(filing))).toEqual([1, 3]);
-          expect(ids(yield* repository.listDispositions(filing))).toEqual([101, 103]);
-          expect(ids(yield* repository.listSubmissionFacts(filing))).toEqual([201, 203]);
+          const listEvents16 = yield* repository.listEvents(filing);
+          expect(ids(listEvents16)).toEqual([1, 3]);
+          const listDispositions17 = yield* repository.listDispositions(filing);
+          expect(ids(listDispositions17)).toEqual([101, 103]);
+          const listSubmissionFacts18 = yield* repository.listSubmissionFacts(filing);
+          expect(ids(listSubmissionFacts18)).toEqual([201, 203]);
         })
       );
     }

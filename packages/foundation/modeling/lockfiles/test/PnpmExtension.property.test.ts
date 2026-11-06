@@ -16,7 +16,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(PnpmCatalogs)(value);
       const decoded = yield* S.decodeEffect(PnpmCatalogs)(encoded);
       assertTrue(S.toEquivalence(PnpmCatalogs)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(PnpmCatalogs)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(PnpmCatalogs)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );
@@ -29,7 +30,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(PnpmExtension)(value);
       const decoded = yield* S.decodeEffect(PnpmExtension)(encoded);
       assertTrue(S.toEquivalence(PnpmExtension)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(PnpmExtension)(decoded), encoded);
+      const value2 = yield* S.encodeEffect(PnpmExtension)(decoded);
+      assert.deepStrictEqual(value2, encoded);
     }),
   runs
 );

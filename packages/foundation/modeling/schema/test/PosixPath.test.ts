@@ -19,9 +19,8 @@ describe("PosixPath", () => {
   it.effect(
     "accepts already normalized paths",
     Effect.fnUntraced(function* () {
-      expect(yield* decodePosixPathEffect("packages/foundation/modeling/schema")).toBe(
-        "packages/foundation/modeling/schema"
-      );
+      const decodedPosixPathEffect = yield* decodePosixPathEffect("packages/foundation/modeling/schema");
+      expect(decodedPosixPathEffect).toBe("packages/foundation/modeling/schema");
     })
   );
 

@@ -30,7 +30,18 @@
     "goals/schema-opaque-default/GOAL.md",
     "goals/schema-opaque-default/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/cache-baseline-request-close-2.json",
+    "research/cache-baseline-request-close-3.json",
+    "research/cache-baseline-request-close.json",
+    "research/cache-baseline-review-close.md",
+    "research/class-census.md",
+    "research/codemod-run.md",
+    "research/jsdoc-examples.log",
+    "research/schema-shape-semantics.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

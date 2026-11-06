@@ -84,9 +84,11 @@ it.layer(Layer.mergeAll(Reactivity.layer, DuckDbTestLayer), { timeout: "30 secon
         yield* storage.write(storeId, [sentinel]);
         assertEntries([yield* Queue.take(changes)], [sentinel], 2);
         yield* Effect.yieldNow;
-        assertNone(yield* Queue.poll(changes));
+        const poll1 = yield* Queue.poll(changes);
+        assertNone(poll1);
 
-        const persisted = yield* Queue.takeAll(yield* openChanges(storage, storeId));
+        const openChanges2 = yield* openChanges(storage, storeId);
+        const persisted = yield* Queue.takeAll(openChanges2);
         assertEntries(persisted, [backlog, sentinel], 1);
       })
     );

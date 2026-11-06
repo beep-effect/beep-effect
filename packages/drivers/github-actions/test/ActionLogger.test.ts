@@ -37,11 +37,14 @@ describe("ActionLogger", () => {
     it.effect("WithBufferOptions preserves plain objects and exact optional flush/discard policies", () =>
       Effect.gen(function* () {
         const omitted: WithBufferOptions.Encoded = {};
-        assert.deepStrictEqual(yield* S.decodeEffect(WithBufferOptions)(omitted), WithBufferOptions.make({}));
-        assert.deepStrictEqual(yield* S.encodeEffect(WithBufferOptions)(WithBufferOptions.make(omitted)), {});
+        const value1 = yield* S.decodeEffect(WithBufferOptions)(omitted);
+        assert.deepStrictEqual(value1, WithBufferOptions.make({}));
+        const value2 = yield* S.encodeEffect(WithBufferOptions)(WithBufferOptions.make(omitted));
+        assert.deepStrictEqual(value2, {});
         for (const onSuccess of ["flush", "discard"] as const) {
           const options: WithBufferOptions.Encoded = { onSuccess };
-          assert.deepStrictEqual(yield* S.decodeEffect(WithBufferOptions)(options), options);
+          const value3 = yield* S.decodeEffect(WithBufferOptions)(options);
+          assert.deepStrictEqual(value3, options);
         }
         assert.isFalse(S.is(WithBufferOptions)({ onSuccess: undefined }));
         assert.isFalse(S.is(WithBufferOptions)({ onSuccess: "ignore" }));
@@ -52,11 +55,14 @@ describe("ActionLogger", () => {
     it.effect("WithStepOptions preserves plain objects, exact optional summaries and empty strings", () =>
       Effect.gen(function* () {
         const omitted: WithStepOptions.Encoded = {};
-        assert.deepStrictEqual(yield* S.decodeEffect(WithStepOptions)(omitted), WithStepOptions.make({}));
-        assert.deepStrictEqual(yield* S.encodeEffect(WithStepOptions)(WithStepOptions.make(omitted)), {});
+        const value4 = yield* S.decodeEffect(WithStepOptions)(omitted);
+        assert.deepStrictEqual(value4, WithStepOptions.make({}));
+        const value5 = yield* S.encodeEffect(WithStepOptions)(WithStepOptions.make(omitted));
+        assert.deepStrictEqual(value5, {});
         for (const summary of ["", "Published"]) {
           const options: WithStepOptions.Encoded = { summary };
-          assert.deepStrictEqual(yield* S.decodeEffect(WithStepOptions)(options), options);
+          const value6 = yield* S.decodeEffect(WithStepOptions)(options);
+          assert.deepStrictEqual(value6, options);
         }
         assert.isFalse(S.is(WithStepOptions)({ summary: undefined }));
         assert.isFalse(S.is(WithStepOptions)({ summary: 7 }));
@@ -144,7 +150,8 @@ describe("ActionLogger", () => {
     it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
       it.effect("maps error to ::error::", () =>
         Effect.gen(function* () {
-          assert.deepStrictEqual(yield* logged(Effect.logError("it broke")), ["::error::it broke"]);
+          const logged7 = yield* logged(Effect.logError("it broke"));
+          assert.deepStrictEqual(logged7, ["::error::it broke"]);
         })
       );
     });
@@ -152,7 +159,8 @@ describe("ActionLogger", () => {
     it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
       it.effect("maps warning to ::warning::", () =>
         Effect.gen(function* () {
-          assert.deepStrictEqual(yield* logged(Effect.logWarning("careful")), ["::warning::careful"]);
+          const logged8 = yield* logged(Effect.logWarning("careful"));
+          assert.deepStrictEqual(logged8, ["::warning::careful"]);
         })
       );
     });
@@ -160,7 +168,8 @@ describe("ActionLogger", () => {
     it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
       it.effect("maps info to plain text, with no command prefix", () =>
         Effect.gen(function* () {
-          assert.deepStrictEqual(yield* logged(Effect.logInfo("hello")), ["hello"]);
+          const logged9 = yield* logged(Effect.logInfo("hello"));
+          assert.deepStrictEqual(logged9, ["hello"]);
         })
       );
     });
@@ -179,9 +188,8 @@ describe("ActionLogger", () => {
     it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
       it.effect("escapes a newline so a log line cannot become a second command", () =>
         Effect.gen(function* () {
-          assert.deepStrictEqual(yield* logged(Effect.logError("line one\n::error::smuggled")), [
-            "::error::line one%0A::error::smuggled",
-          ]);
+          const logged10 = yield* logged(Effect.logError("line one\n::error::smuggled"));
+          assert.deepStrictEqual(logged10, ["::error::line one%0A::error::smuggled"]);
         })
       );
     });
@@ -189,7 +197,8 @@ describe("ActionLogger", () => {
     it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
       it.effect("joins a multi-part message", () =>
         Effect.gen(function* () {
-          assert.deepStrictEqual(yield* logged(Effect.logInfo("count", 3)), ["count 3"]);
+          const logged11 = yield* logged(Effect.logInfo("count", 3));
+          assert.deepStrictEqual(logged11, ["count 3"]);
         })
       );
     });
@@ -428,7 +437,8 @@ describe("ActionLogger", () => {
           // The whole point: two verbose lines in, one summary line out. This is
           // the step `withBuffer({ onSuccess: "discard" })` alone cannot reach —
           // it leaves ZERO lines, which is why the recipe kept coming out wrong.
-          assert.deepStrictEqual(yield* lines, ["✅ install"]);
+          const lines12 = yield* lines;
+          assert.deepStrictEqual(lines12, ["✅ install"]);
         })
       );
     });
@@ -441,7 +451,8 @@ describe("ActionLogger", () => {
         Effect.gen(function* () {
           const logger = yield* ActionLogger;
           yield* logger.withStep("install", Effect.logInfo("resolving"), { summary: "installed 42 packages" });
-          assert.deepStrictEqual(yield* lines, ["installed 42 packages"]);
+          const lines13 = yield* lines;
+          assert.deepStrictEqual(lines13, ["installed 42 packages"]);
         })
       );
     });
@@ -496,7 +507,8 @@ describe("ActionLogger", () => {
         Effect.gen(function* () {
           const logger = yield* ActionLogger;
           yield* logger.withStep("install", Effect.andThen(Effect.logWarning("deprecated"), Effect.logInfo("done")));
-          assert.deepStrictEqual(yield* lines, ["::warning::deprecated", "✅ install"]);
+          const lines14 = yield* lines;
+          assert.deepStrictEqual(lines14, ["::warning::deprecated", "✅ install"]);
         })
       );
     });
@@ -514,7 +526,8 @@ describe("ActionLogger", () => {
           yield* logger.withStep("install", Effect.logInfo("resolving"));
           // Verbose output goes live AND the summary still lands: someone asking
           // for debug output has not asked to lose the line naming what passed.
-          assert.deepStrictEqual(yield* lines, ["resolving", "✅ install"]);
+          const lines15 = yield* lines;
+          assert.deepStrictEqual(lines15, ["resolving", "✅ install"]);
         })
       );
     });
@@ -549,8 +562,10 @@ describe("ActionLogger", () => {
       it.effect("the test double passes the effect through without a summary", () =>
         Effect.gen(function* () {
           const logger = yield* ActionLogger;
-          assert.strictEqual(yield* logger.withStep("step", Effect.succeed("value")), "value");
-          assert.deepStrictEqual(yield* lines, []);
+          const withStep16 = yield* logger.withStep("step", Effect.succeed("value"));
+          assert.strictEqual(withStep16, "value");
+          const lines17 = yield* lines;
+          assert.deepStrictEqual(lines17, []);
         })
       );
     });
@@ -561,7 +576,8 @@ describe("ActionLogger", () => {
       it.effect("layerSilent drops log output entirely", () =>
         Effect.gen(function* () {
           yield* Effect.logError("would be noisy");
-          assert.deepStrictEqual(yield* lines, []);
+          const lines18 = yield* lines;
+          assert.deepStrictEqual(lines18, []);
         })
       );
     });
@@ -570,8 +586,10 @@ describe("ActionLogger", () => {
       it.effect("layerSilent still serves the service, passing effects through", () =>
         Effect.gen(function* () {
           const logger = yield* ActionLogger;
-          assert.strictEqual(yield* logger.group("quiet", Effect.succeed(1)), 1);
-          assert.deepStrictEqual(yield* lines, []);
+          const group19 = yield* logger.group("quiet", Effect.succeed(1));
+          assert.strictEqual(group19, 1);
+          const lines20 = yield* lines;
+          assert.deepStrictEqual(lines20, []);
         })
       );
     });
@@ -583,8 +601,10 @@ describe("ActionLogger", () => {
         Effect.gen(function* () {
           const logger = yield* ActionLogger;
           yield* logger.notice("nothing to see");
-          assert.strictEqual(yield* logger.withBuffer("step", Effect.succeed("value")), "value");
-          assert.deepStrictEqual(yield* lines, []);
+          const withBuffer21 = yield* logger.withBuffer("step", Effect.succeed("value"));
+          assert.strictEqual(withBuffer21, "value");
+          const lines22 = yield* lines;
+          assert.deepStrictEqual(lines22, []);
         })
       );
     });
@@ -618,10 +638,10 @@ describe("WithStepOptions codec property", () => {
     [Arbitrary.schema(WithStepOptions)],
     ([value]) =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(
-          yield* S.decodeEffect(WithStepOptions)(yield* S.encodeEffect(WithStepOptions)(value)),
-          value
-        );
+        const argument = S.decodeEffect(WithStepOptions);
+        const value7 = yield* S.encodeEffect(WithStepOptions)(value);
+        const value23 = yield* argument(value7);
+        assert.deepStrictEqual(value23, value);
       }),
     { arbitrary: fcRuns(100) }
   );

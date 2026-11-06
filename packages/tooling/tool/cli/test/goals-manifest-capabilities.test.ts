@@ -83,7 +83,8 @@ const trackedManifestPaths = Effect.fn("GoalsManifestCapabilitiesTest.trackedMan
     stderr: "ignore",
   });
   const output = yield* handle.stdout.pipe(Stream.decodeText(), Stream.mkString);
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode1 = yield* handle.exitCode;
+  expect(exitCode1).toBe(0);
   return pipeManifestPaths(output);
 });
 

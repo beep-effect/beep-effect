@@ -17,7 +17,7 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
@@ -28,6 +28,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { extract as extractTar } from "tar";
 import {
@@ -96,6 +97,8 @@ import type {
   KnowledgeFindingSeverity,
   KnowledgeRewriteRule,
 } from "./Knowledge.schemas.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.service");
 const KnowledgeRewriteRulesJson = S.fromJsonString(KnowledgeRewriteRules);
@@ -1156,9 +1159,9 @@ import * as Result from "effect/Result"
 import * as Stdio from "effect/Stdio"
 import * as Stream from "effect/Stream"
 import * as Command from "effect/cli/Command"
-import { rootCommand } from ${JSON.stringify(rootCommandModule)}
+import { rootCommand } from ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(rootCommandModule), identity)}
 
-const input = await Bun.file(${JSON.stringify(inputPath)}).text()
+const input = await Bun.file(${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(inputPath), identity)}).text()
 // This file is scratch-owned. Its writer prepends one structural field to every row, making an empty
 // file zero commands and a prefix-only row the root command without trusting archive data.
 const commands = input === "" ? [] : input.split("\\n").map((line) => {
@@ -1216,7 +1219,7 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Stdio from "effect/Stdio"
 import * as Stream from "effect/Stream"
-import { buildPortfolioIndexContent } from ${JSON.stringify(portfolioIndexModule)}
+import { buildPortfolioIndexContent } from ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(portfolioIndexModule), identity)}
 const program = Effect.flatMap(buildPortfolioIndexContent("."), (content) =>
   Stdio.Stdio.pipe(Effect.flatMap((stdio) => Stream.make(content).pipe(Stream.run(stdio.stdout()))))
 )

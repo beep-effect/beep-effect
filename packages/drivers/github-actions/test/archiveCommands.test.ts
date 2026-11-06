@@ -38,8 +38,10 @@ describe("archiveCommands", () => {
         level: 4.9,
       };
       const unzip: UnzipCommandOptions.Encoded = { windows: true, source: "a.zip", destination: "out" };
-      assert.deepStrictEqual(yield* S.decodeEffect(ZipCommandOptions)(zip), zip);
-      assert.deepStrictEqual(yield* S.decodeEffect(UnzipCommandOptions)(unzip), unzip);
+      const value1 = yield* S.decodeEffect(ZipCommandOptions)(zip);
+      assert.deepStrictEqual(value1, zip);
+      const value2 = yield* S.decodeEffect(UnzipCommandOptions)(unzip);
+      assert.deepStrictEqual(value2, unzip);
       // Exact optional keys (EF-40): an optional key is omitted, never undefined.
       assert.isFalse(S.is(TarExtractCommandOptions)({ archive: "a.tgz", destination: "out", flags: undefined }));
       for (const options of [
@@ -47,7 +49,8 @@ describe("archiveCommands", () => {
         { archive: "a.tgz", destination: "out", flags: [] },
       ]) {
         const plain: TarExtractCommandOptions.Encoded = options;
-        assert.deepStrictEqual(yield* S.decodeEffect(TarExtractCommandOptions)(plain), plain);
+        const value3 = yield* S.decodeEffect(TarExtractCommandOptions)(plain);
+        assert.deepStrictEqual(value3, plain);
         assert.deepStrictEqual([...tarExtractCommand(plain).args], ["xzf", "a.tgz", "-C", "out"]);
       }
       assert.isFalse(S.is(ZipCommandOptions)({ ...zip, level: Number.POSITIVE_INFINITY }));
@@ -318,10 +321,10 @@ describe("UnzipCommandOptions codec property", () => {
     [Arbitrary.schema(UnzipCommandOptions)],
     ([value]) =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(
-          yield* S.decodeEffect(UnzipCommandOptions)(yield* S.encodeEffect(UnzipCommandOptions)(value)),
-          value
-        );
+        const argument1 = S.decodeEffect(UnzipCommandOptions);
+        const value5 = yield* S.encodeEffect(UnzipCommandOptions)(value);
+        const value4 = yield* argument1(value5);
+        assert.deepStrictEqual(value4, value);
       }),
     { arbitrary: fcRuns(100) }
   );

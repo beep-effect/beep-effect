@@ -588,7 +588,8 @@ describe("hostile input", () => {
         ["2", '"2"'],
         ['next"\\\n', '"next\\"\\\\\\n"'],
       ] as const) {
-        const error = yield* parseError(yield* S.encodeEffect(JsonString)({ lockfileVersion: raw }), "npm");
+        const value = yield* S.encodeEffect(JsonString)({ lockfileVersion: raw });
+        const error = yield* parseError(value, "npm");
         assert.strictEqual(error.stage, "validation");
         const cause = error.cause;
         assertTrue(isUnsupportedLockfileVersion(cause));

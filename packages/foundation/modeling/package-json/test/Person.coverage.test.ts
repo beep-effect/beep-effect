@@ -7,7 +7,8 @@ describe("hand-built person encoding", () => {
   it.effect("includes a URL when no remembered object is available", () =>
     Effect.gen(function* () {
       const value = Person.make({ name: "Ada", url: "https://ada.dev" });
-      assert.deepStrictEqual(yield* S.encodeEffect(Person.schema)(value), { name: "Ada", url: "https://ada.dev" });
+      const value1 = yield* S.encodeEffect(Person.schema)(value);
+      assert.deepStrictEqual(value1, { name: "Ada", url: "https://ada.dev" });
     })
   );
 });

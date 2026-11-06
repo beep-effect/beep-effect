@@ -67,8 +67,10 @@ describe("goals doctor provenance path security", () => {
 
         yield* runGoalsCommand(["doctor"]).pipe(Effect.provideService(FileSystem.FileSystem, instrumentedFileSystem));
 
-        expect(yield* Ref.get(unsafeProbeCount)).toBe(0);
-        expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain(
+        const got = yield* Ref.get(unsafeProbeCount);
+        expect(got).toBe(0);
+        const errorLines1 = yield* TestConsole.errorLines;
+        expect(A.join(A.map(errorLines1, String), "\n")).toContain(
           `provenance.exploration "${absoluteExplorationPath}" is an invalid path`
         );
       })

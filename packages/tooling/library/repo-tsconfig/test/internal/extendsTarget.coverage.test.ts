@@ -87,7 +87,8 @@ describe("extendsTarget boundary coverage", () => {
     it.layer(fixtureLayer(files), { timeout: "10 seconds" })(name, (it) => {
       it.effect("continues lookup and returns absence", () =>
         Effect.gen(function* () {
-          assertNone(yield* resolveExtendsTarget(spec, "/project/tsconfig.json"));
+          const resolvedExtendsTarget = yield* resolveExtendsTarget(spec, "/project/tsconfig.json");
+          assertNone(resolvedExtendsTarget);
         })
       );
     });
@@ -98,10 +99,8 @@ describe("extendsTarget boundary coverage", () => {
     (it) => {
       it.effect("subpath json retry misses before a farther ancestor succeeds", () =>
         Effect.gen(function* () {
-          assertSome(
-            yield* resolveExtendsTarget("/project/tsconfig.json")("@scope/pkg/base"),
-            "/node_modules/@scope/pkg/base.json"
-          );
+          const value1 = yield* resolveExtendsTarget("/project/tsconfig.json")("@scope/pkg/base");
+          assertSome(value1, "/node_modules/@scope/pkg/base.json");
         })
       );
     }

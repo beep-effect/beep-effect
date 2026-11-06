@@ -41,7 +41,8 @@ describe("SpdxLicense schema", () => {
     Effect.gen(function* () {
       for (const value of ["MIT", "(MIT OR Apache-2.0)", "UNLICENSED", "SEE LICENSE IN LICENSE.txt"]) {
         const decoded = yield* S.decodeEffect(SpdxLicense)(value);
-        assert.strictEqual(yield* S.encodeEffect(SpdxLicense)(decoded), value);
+        const value1 = yield* S.encodeEffect(SpdxLicense)(decoded);
+        assert.strictEqual(value1, value);
       }
       for (const value of ["NOT-A-LICENSE", "SEE LICENSE IN ", ""]) {
         const error = yield* Effect.flip(S.decodeEffect(SpdxLicense)(value));
@@ -52,7 +53,8 @@ describe("SpdxLicense schema", () => {
 
   it.effect("decodes a valid license and rejects an invalid one", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* S.decodeEffect(SpdxLicense)("MIT"), "MIT");
+      const value2 = yield* S.decodeEffect(SpdxLicense)("MIT");
+      assert.strictEqual(value2, "MIT");
       const error = yield* Effect.flip(S.decodeEffect(SpdxLicense)("NOT-A-LICENSE"));
       assert.strictEqual(error._tag, "SchemaError");
     })
@@ -143,7 +145,8 @@ describe("SpdxLicense property", () => {
       Effect.gen(function* () {
         const license = `SEE LICENSE IN ${file}`;
         assert.isTrue(isValidSpdx(license));
-        assert.strictEqual(yield* S.decodeEffect(SpdxLicense)(license), license);
+        const value3 = yield* S.decodeEffect(SpdxLicense)(license);
+        assert.strictEqual(value3, license);
       }),
     { arbitrary: fcRuns(50) }
   );

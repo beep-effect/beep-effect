@@ -150,7 +150,8 @@ const openRoot = Effect.fn("AiMetrics.discovery.openRoot")(function* (
   directory: string,
   input: TranscriptDiscoveryInput
 ) {
-  const scope = yield* Scope.fork(yield* Scope.Scope);
+  const Scope1 = yield* Scope.Scope;
+  const scope = yield* Scope.fork(Scope1);
   const acquire = Effect.gen(function* () {
     const handle = yield* ChildProcess.make(
       "/usr/bin/python3",
@@ -343,7 +344,8 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
     root.candidates = 0;
     root.read = { assessed: 0, accepted: 0, idle: 0, partial: 0, backlogged: 0, failed: 0 };
     root.excludedLinks = 0;
-    root.handle = O.some(yield* openRoot(root.path, input));
+    const openRoot2 = yield* openRoot(root.path, input);
+    root.handle = O.some(openRoot2);
     root.state = "scanning";
   }, Effect.uninterruptible);
   const advanceRoot = Effect.fnUntraced(function* (root: RootRuntime) {

@@ -171,7 +171,8 @@ describe("Mdast.fromMdast", () => {
     Effect.gen(function* () {
       const root = yield* Mdast.fromMdast({ type: "root", children: [{ type: "code", value: "body\r" }] });
       assert.strictEqual(first(Mdast.toMdast(root)).value, "body\r");
-      assert.strictEqual(yield* Markdown.stringify(root), "    body\r\n");
+      const stringify1 = yield* Markdown.stringify(root);
+      assert.strictEqual(stringify1, "    body\r\n");
     })
   );
 
@@ -190,7 +191,8 @@ describe("Mdast.fromMdast", () => {
         assert.instanceOf(result.failure, MdastDecodeError);
         assert.ok(isRecord(result.failure.issue));
         assert.strictEqual(result.failure.issue._tag, "InvalidValue");
-        assertExitSuccess(yield* Effect.exit(Mdast.fromMdast(input).pipe(Effect.flip)), result.failure);
+        const exit2 = yield* Effect.exit(Mdast.fromMdast(input).pipe(Effect.flip));
+        assertExitSuccess(exit2, result.failure);
       }
     })
   );
@@ -468,7 +470,8 @@ describe("Mdast.fromMdast", () => {
       const bad = { type: "widget" };
       const sync = Mdast.fromMdastResult(good);
       assertSuccess(sync, Result.getOrThrow(sync));
-      assertExitSuccess(yield* Effect.exit(Mdast.fromMdast(good)), sync.success);
+      const exit3 = yield* Effect.exit(Mdast.fromMdast(good));
+      assertExitSuccess(exit3, sync.success);
       const effectFailure = yield* Effect.exit(Mdast.fromMdast(bad).pipe(Effect.flip));
       assertExitSuccess(effectFailure, Mdast.fromMdastResult(bad).pipe(Result.flip, Result.getOrThrow));
     })

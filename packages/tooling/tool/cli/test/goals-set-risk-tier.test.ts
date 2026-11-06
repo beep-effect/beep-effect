@@ -166,8 +166,10 @@ describe("set-risk-tier guarded override writer", () => {
           );
           if (!Exit.isSuccess(exit)) throw new Error("Expected a success exit");
 
-          expect(A.length(yield* listEventFiles("preview-override"))).toBe(0);
-          expect(yield* fs.exists("goals/preview-override/ops/trace.json")).toBe(false);
+          const listEventFiles1 = yield* listEventFiles("preview-override");
+          expect(A.length(listEventFiles1)).toBe(0);
+          const exists2 = yield* fs.exists("goals/preview-override/ops/trace.json");
+          expect(exists2).toBe(false);
         })
       ).pipe(provideScopedLayer(testLayer), Effect.runPromise),
     30_000
@@ -185,8 +187,10 @@ describe("set-risk-tier guarded override writer", () => {
             runGoalsCommand(["set-risk-tier", "streamless-demo", "standard", "--reason", "no home for this"])
           );
           expectReportedFailure(exit);
-          expect(yield* fs.exists("goals/streamless-demo/ops/events")).toBe(false);
-          expect(yield* fs.exists("goals/streamless-demo/ops/trace.json")).toBe(false);
+          const exists3 = yield* fs.exists("goals/streamless-demo/ops/events");
+          expect(exists3).toBe(false);
+          const exists4 = yield* fs.exists("goals/streamless-demo/ops/trace.json");
+          expect(exists4).toBe(false);
         })
       ).pipe(provideScopedLayer(testLayer), Effect.runPromise),
     30_000
@@ -231,12 +235,14 @@ describe("set-risk-tier guarded override writer", () => {
             siblingContent
           );
 
-          const beforeCount = A.length(yield* listEventFiles("forked-override"));
+          const listEventFiles5 = yield* listEventFiles("forked-override");
+          const beforeCount = A.length(listEventFiles5);
           const refused = yield* Effect.exit(
             runGoalsCommand(["set-risk-tier", "forked-override", "full", "--reason", "should never land"])
           );
           expectReportedFailure(refused);
-          expect(A.length(yield* listEventFiles("forked-override"))).toBe(beforeCount);
+          const listEventFiles6 = yield* listEventFiles("forked-override");
+          expect(A.length(listEventFiles6)).toBe(beforeCount);
         })
       ).pipe(provideScopedLayer(testLayer), Effect.runPromise),
     30_000
@@ -262,7 +268,8 @@ describe("set-risk-tier guarded override writer", () => {
           );
           expectReportedFailure(blankReason);
 
-          expect(A.length(yield* listEventFiles("usage-demo"))).toBe(0);
+          const listEventFiles7 = yield* listEventFiles("usage-demo");
+          expect(A.length(listEventFiles7)).toBe(0);
         })
       ).pipe(provideScopedLayer(testLayer), Effect.runPromise),
     30_000

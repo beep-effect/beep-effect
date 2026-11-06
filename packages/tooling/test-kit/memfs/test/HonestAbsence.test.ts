@@ -31,14 +31,16 @@ describe("honest absence — the effected#249 contract", () => {
       assert.strictEqual(openError.reason._tag, "NotFound");
 
       // The seeded path still answers — absence is per-path, not global.
-      assert.strictEqual(yield* fs.readFileString("/present.txt"), "here");
+      const readFileString1 = yield* fs.readFileString("/present.txt");
+      assert.strictEqual(readFileString1, "here");
     })
   );
 
   it.effect("an empty volume answers exists with false and reads with NotFound", () =>
     Effect.gen(function* () {
       const fs = yield* MemoryFileSystem.make;
-      assert.isFalse(yield* fs.exists("/anything"));
+      const exists2 = yield* fs.exists("/anything");
+      assert.isFalse(exists2);
       const error = yield* Effect.flip(fs.readFile("/anything"));
       assert.strictEqual(error.reason._tag, "NotFound");
     })

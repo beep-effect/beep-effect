@@ -657,7 +657,8 @@ const planRootVitestAliasSync = Effect.fn(function* (rootDir: string, plannedRoo
     onSome: Effect.succeed,
   });
   const expectedPaths = (yield* parseJsonc(tsconfigContent, tsconfigPath, TsconfigJson)).compilerOptions?.paths ?? {};
-  const currentPaths = yield* parseJsonObject(yield* readFileString(filePath), filePath);
+  const readFileString1 = yield* readFileString(filePath);
+  const currentPaths = yield* parseJsonObject(readFileString1, filePath);
 
   if (aliasPathEntriesEqual(currentPaths, expectedPaths)) {
     return O.none<PlannedFileChange>();
@@ -710,7 +711,8 @@ const planRootFallowBoundarySync = Effect.fn(function* (rootDir: string) {
     Effect.mapError(DomainError.newCause(`Failed to render the Fallow boundary config for "${filePath}"`))
   );
 
-  if (Str.equivalence(yield* readFileString(filePath), content)) {
+  const readFileString2 = yield* readFileString(filePath);
+  if (Str.equivalence(readFileString2, content)) {
     return O.none<PlannedFileChange>();
   }
 

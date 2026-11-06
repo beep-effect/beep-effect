@@ -588,52 +588,47 @@ describe("Run.succeeds", () => {
   it.effect("negative-infinity overflow is false while empty streams still succeed", () =>
     Effect.gen(function* () {
       for (const script of [{ stdout: "x" }, { stderr: "x" }]) {
-        assert.isFalse(
-          yield* withScript(
-            () => Run.succeeds(cmd(), { maxOutputBytes: Number.NEGATIVE_INFINITY }),
-            () => script
-          )
-        );
-      }
-      assert.isTrue(
-        yield* withScript(
+        const withScript1 = yield* withScript(
           () => Run.succeeds(cmd(), { maxOutputBytes: Number.NEGATIVE_INFINITY }),
-          () => ({})
-        )
+          () => script
+        );
+        assert.isFalse(withScript1);
+      }
+      const withScript2 = yield* withScript(
+        () => Run.succeeds(cmd(), { maxOutputBytes: Number.NEGATIVE_INFINITY }),
+        () => ({})
       );
+      assert.isTrue(withScript2);
     })
   );
 
   it.effect("true for a zero exit", () =>
     Effect.gen(function* () {
-      assert.isTrue(
-        yield* withScript(
-          () => Run.succeeds(cmd()),
-          () => ({ exit: 0 })
-        )
+      const withScript3 = yield* withScript(
+        () => Run.succeeds(cmd()),
+        () => ({ exit: 0 })
       );
+      assert.isTrue(withScript3);
     })
   );
 
   it.effect("false for a non-zero exit", () =>
     Effect.gen(function* () {
-      assert.isFalse(
-        yield* withScript(
-          () => Run.succeeds(cmd()),
-          () => ({ exit: 1 })
-        )
+      const withScript4 = yield* withScript(
+        () => Run.succeeds(cmd()),
+        () => ({ exit: 1 })
       );
+      assert.isFalse(withScript4);
     })
   );
 
   it.effect("false — never a failure — when the executable is absent", () =>
     Effect.gen(function* () {
-      assert.isFalse(
-        yield* withScript(
-          () => Run.succeeds(cmd("missing")),
-          () => ScriptedSpawner.notFound("missing")
-        )
+      const withScript5 = yield* withScript(
+        () => Run.succeeds(cmd("missing")),
+        () => ScriptedSpawner.notFound("missing")
       );
+      assert.isFalse(withScript5);
     })
   );
 });

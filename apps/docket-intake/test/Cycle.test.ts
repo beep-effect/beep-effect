@@ -105,9 +105,11 @@ describe("@beep/docket-intake poll cycle", () => {
         expect(A.filter(entries, (entry) => entry.kind === "reminder")).toHaveLength(4);
         assertSome(afterFirst.cursor, "2030-01-09T10:00:00.000Z");
         assertNone(afterFirst.digestedThrough);
-        expect(yield* fs.exists(DIGESTS)).toBe(false);
+        const exists1 = yield* fs.exists(DIGESTS);
+        expect(exists1).toBe(false);
         expect([second.seen, second.processed]).toStrictEqual([1, 0]);
-        expect(yield* Ref.get(harness.listings)).toBe(2);
+        const got = yield* Ref.get(harness.listings);
+        expect(got).toBe(2);
       })
     );
   });
@@ -126,7 +128,8 @@ describe("@beep/docket-intake poll cycle", () => {
 
         yield* pollCycle(fixtureConfig);
         const state = yield* store.load;
-        const files = A.sort(yield* fs.readDirectory(DIGESTS), Str.Order);
+        const readDirectory2 = yield* fs.readDirectory(DIGESTS);
+        const files = A.sort(readDirectory2, Str.Order);
         const dayOne = yield* fs.readFileString(`${DIGESTS}/1969-12-28.md`);
         const dayTwo = yield* fs.readFileString(`${DIGESTS}/1969-12-29.md`);
         const digestEntries = (yield* Ref.get(harness.entries)).pipe(
@@ -164,7 +167,8 @@ describe("@beep/docket-intake poll cycle", () => {
         expect(written).toHaveLength(62);
         assertSome(iso(afterFirst.digestedThrough), addDays(TODAY, -9).toISOString());
         assertSome(iso(afterSecond.digestedThrough), "1969-12-30");
-        expect(yield* fs.readDirectory(DIGESTS)).toHaveLength(70);
+        const readDirectory3 = yield* fs.readDirectory(DIGESTS);
+        expect(readDirectory3).toHaveLength(70);
       })
     );
   });
@@ -181,7 +185,8 @@ describe("@beep/docket-intake poll cycle", () => {
         yield* pollOnSchedule({ config: fixtureConfig, schedule: Schedule.recurs(3) });
         const state = yield* store.load;
 
-        expect(yield* Ref.get(harness.listings)).toBe(4);
+        const got4 = yield* Ref.get(harness.listings);
+        expect(got4).toBe(4);
         expect(R.keys(state.ledger)).toStrictEqual(["m1"]);
         assertSome(state.cursor, "2030-01-09T10:00:00.000Z");
       })
@@ -201,7 +206,8 @@ describe("@beep/docket-intake poll cycle", () => {
           O.map(failure, (error) => [error.stage, error.cause]),
           ["mailbox", "transport"]
         );
-        expect(yield* Ref.get(harness.listings)).toBe(2);
+        const got5 = yield* Ref.get(harness.listings);
+        expect(got5).toBe(2);
       })
     );
   });

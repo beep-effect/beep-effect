@@ -263,13 +263,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
   it.effect(
     "reads snapshot pins and rejects versions without release provenance",
     Effect.fnUntraced(function* () {
-      strictEqual(yield* parseEffectSchemaInventoryPin(snapshotManifest(PIN)), PIN);
-      strictEqual(
-        yield* parseEffectSchemaInventoryPin(
-          `{"workspaces":{"catalog":{"effect":"https://pkg.pr.new/Effect-TS/effect/effect@${PIN}"}}}`
-        ),
-        PIN
+      const snapshotPin = yield* parseEffectSchemaInventoryPin(snapshotManifest(PIN));
+      strictEqual(snapshotPin, PIN);
+      const workspacePin = yield* parseEffectSchemaInventoryPin(
+        `{"workspaces":{"catalog":{"effect":"https://pkg.pr.new/Effect-TS/effect/effect@${PIN}"}}}`
       );
+      strictEqual(workspacePin, PIN);
       const semver = yield* Effect.flip(parseEffectSchemaInventoryPin('{"catalog":{"effect":"4.0.0-rc.118"}}'));
       strictEqual(semver._tag, "EffectSchemaInventoryCatalogPinError");
       strictEqual(semver.specifier, "4.0.0-rc.118");
@@ -285,18 +284,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
   it.effect(
     "reads stable release provenance and rejects stale versions or abbreviated commits",
     Effect.fnUntraced(function* () {
-      strictEqual(
-        yield* parseEffectSchemaInventoryPin(
-          `{"catalog":{"effect":"4.0.1"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`
-        ),
-        PIN
+      const stablePin = yield* parseEffectSchemaInventoryPin(
+        `{"catalog":{"effect":"4.0.1"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`
       );
-      strictEqual(
-        yield* parseEffectSchemaInventoryPin(
-          `{"workspaces":{"catalog":{"effect":"4.0.1"}},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`
-        ),
-        PIN
+      strictEqual(stablePin, PIN);
+      const workspaceStablePin = yield* parseEffectSchemaInventoryPin(
+        `{"workspaces":{"catalog":{"effect":"4.0.1"}},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`
       );
+      strictEqual(workspaceStablePin, PIN);
       for (const manifest of [
         `{"catalog":{"effect":"4.0.2"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`,
         `{"catalog":{"effect":"^4.0.1"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`,
@@ -312,14 +307,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
   it.effect(
     "digests the concatenated JSONL bytes",
     Effect.fnUntraced(function* () {
-      strictEqual(
-        yield* digestEffectSchemaInventoryJsonl([]),
-        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-      );
-      strictEqual(
-        yield* digestEffectSchemaInventoryJsonl(["a\n", "", "b\n"]),
-        yield* digestEffectSchemaInventoryJsonl(["a\nb\n"])
-      );
+      const observed1 = yield* digestEffectSchemaInventoryJsonl([]);
+      strictEqual(observed1, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+      const observed2 = yield* digestEffectSchemaInventoryJsonl(["a\n", "", "b\n"]);
+      const expected2 = yield* digestEffectSchemaInventoryJsonl(["a\nb\n"]);
+      strictEqual(observed2, expected2);
     })
   );
 
@@ -394,7 +386,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
       const body = yield* renderEffectSchemaInventoryJsonl(rows);
       assertTrue(Str.endsWith("\n")(body));
       strictEqual(A.filter(Str.split(body, "\n"), Str.isNonEmpty).length, rows.length);
-      strictEqual(yield* renderEffectSchemaInventoryJsonl([]), "");
+      const observed3 = yield* renderEffectSchemaInventoryJsonl([]);
+      strictEqual(observed3, "");
       const drift = diffEffectSchemaInventoryFiles(
         [
           EffectSchemaInventoryFile.make({ name: "effect-Demo.jsonl", content: "same\nexpected line\n" }),
@@ -473,7 +466,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
         )
       );
       strictEqual(absent._tag, "EffectSchemaInventoryPinAbsentError");
-      strictEqual(yield* Ref.get(reads), 0);
+      const observed4 = yield* Ref.get(reads);
+      strictEqual(observed4, 0);
     })
   );
 
@@ -492,8 +486,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
       // Every module file plus INDEX.md; no prompt directory exists, so no prompt drift.
       strictEqual(failure.drift.length, EffectSchemaInventoryModules.length + 1);
       assertTrue(A.every(failure.drift, (entry) => entry._tag === "missing"));
-      strictEqual(yield* Ref.get(reads), EffectSchemaInventoryModules.length);
-      deepStrictEqual(yield* fs.readDirectory(root), []);
+      const observed5 = yield* Ref.get(reads);
+      strictEqual(observed5, EffectSchemaInventoryModules.length);
+      const rootEntries = yield* fs.readDirectory(root);
+      deepStrictEqual(rootEntries, []);
     })
   );
 
@@ -637,9 +633,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
           ["INDEX.md", "# index\n"],
         ])
       );
-      deepStrictEqual(yield* listing(directory), ["INDEX.md", "README.md", "effect-Demo.jsonl", "notes.jsonl"]);
-      strictEqual(yield* fs.readFileString(path.join(directory, "README.md")), "contract\n");
-      deepStrictEqual(yield* leftovers, []);
+      const listed = yield* listing(directory);
+      deepStrictEqual(listed, ["INDEX.md", "README.md", "effect-Demo.jsonl", "notes.jsonl"]);
+      const observed6 = yield* fs.readFileString(path.join(directory, "README.md"));
+      strictEqual(observed6, "contract\n");
+      const leftover = yield* leftovers;
+      deepStrictEqual(leftover, []);
 
       // ".." resolves to the staging parent, so the second write fails before the swap.
       const failure = yield* Effect.flip(
@@ -652,8 +651,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
         )
       );
       strictEqual(failure._tag, "EffectSchemaInventoryError");
-      strictEqual(yield* fs.readFileString(path.join(directory, "effect-Demo.jsonl")), "x\n");
-      deepStrictEqual(yield* leftovers, []);
+      const observed7 = yield* fs.readFileString(path.join(directory, "effect-Demo.jsonl"));
+      strictEqual(observed7, "x\n");
+      const leftoverAfter = yield* leftovers;
+      deepStrictEqual(leftoverAfter, []);
     })
   );
 
@@ -680,15 +681,21 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
         })
       );
 
-      assertInclude((yield* write).message, "Unable to move the staged fixture into");
-      deepStrictEqual(yield* fs.readDirectory(parent), []);
+      const firstWrite = yield* write;
+      assertInclude(firstWrite.message, "Unable to move the staged fixture into");
+      const parentEntries = yield* fs.readDirectory(parent);
+      deepStrictEqual(parentEntries, []);
 
       yield* fs.makeDirectory(directory);
       yield* fs.writeFileString(path.join(directory, "INDEX.md"), "# old\n");
-      assertInclude((yield* write).message, "Unable to move the staged fixture into");
-      deepStrictEqual(yield* fs.readDirectory(parent), [path.basename(directory)]);
-      deepStrictEqual(yield* fs.readDirectory(directory), ["INDEX.md"]);
-      strictEqual(yield* fs.readFileString(path.join(directory, "INDEX.md")), "# old\n");
+      const secondWrite = yield* write;
+      assertInclude(secondWrite.message, "Unable to move the staged fixture into");
+      const parentAfter = yield* fs.readDirectory(parent);
+      deepStrictEqual(parentAfter, [path.basename(directory)]);
+      const directoryEntries = yield* fs.readDirectory(directory);
+      deepStrictEqual(directoryEntries, ["INDEX.md"]);
+      const observed8 = yield* fs.readFileString(path.join(directory, "INDEX.md"));
+      strictEqual(observed8, "# old\n");
     })
   );
 
@@ -707,7 +714,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
         writeEffectSchemaInventoryFixture(root, renderedFiles([["INDEX.md", "# index\n"]]))
       );
       assertInclude(write.message, "Unable to list");
-      strictEqual(yield* fs.readFileString(directory), "not a directory\n");
+      const observed9 = yield* fs.readFileString(directory);
+      strictEqual(observed9, "not a directory\n");
     })
   );
 
@@ -731,11 +739,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
         [demoModule, demoSource],
         [otherModule, "export const other = 1\n"],
       ]);
-      deepStrictEqual(yield* check, []);
+      const firstCheck = yield* check;
+      deepStrictEqual(firstCheck, []);
       yield* fs.makeDirectory(directory, { recursive: true });
       yield* fs.writeFileString(path.join(directory, "notes.md"), "hand-written\n");
       yield* fs.writeFileString(file, prompt);
-      deepStrictEqual(yield* check, []);
+      const secondCheck = yield* check;
+      deepStrictEqual(secondCheck, []);
       yield* fs.writeFileString(file, Str.replace("return `${x}`", "return x")(prompt));
       const drift = yield* check;
       strictEqual(drift.length, 1);
@@ -836,10 +846,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
       const relative = yield* generate("effect/schema/SchemaJITCompiler/enable", O.some("prompts/enable.md"));
       strictEqual(relative.target, "prompts/enable.md");
       strictEqual(relative.rows, 0);
-      assertInclude(
-        yield* fs.readFileString(path.join(root, "prompts/enable.md")),
-        "| Declarations | 0 top-level declarations"
-      );
+      const relativePrompt = yield* fs.readFileString(path.join(root, "prompts/enable.md"));
+      assertInclude(relativePrompt, "| Declarations | 0 top-level declarations");
       const defaulted = yield* generate("effect/schema/SchemaJITCompiler/enable", O.none());
       strictEqual(defaulted.target, `${EffectSchemaInventoryPromptRoot}/effect-schema-SchemaJITCompiler-enable.md`);
       const outside = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-outside-" });
@@ -873,9 +881,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
       const check = yield* Effect.flip(run(["--check"]));
       assertTrue(check._tag === "EffectSchemaInventoryDriftError");
       assertTrue(A.some(check.drift, (entry) => entry.file === "INDEX.md"));
-      const out = path.join(yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-command-" }), "p.md");
+      const outDir = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-command-" });
+      const out = path.join(outDir, "p.md");
       yield* run(["--prompt", "effect/schema/SchemaJITCompiler/enable", "--out", out]);
-      assertInclude(yield* fs.readFileString(out), "# Lane prompt: `effect/schema/SchemaJITCompiler/enable`");
+      const prompted = yield* fs.readFileString(out);
+      assertInclude(prompted, "# Lane prompt: `effect/schema/SchemaJITCompiler/enable`");
       const conflict = yield* Effect.flip(run(["--write", "--check"]));
       assertTrue(conflict._tag === "EffectSchemaInventoryError");
     })
@@ -922,10 +932,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
           out: O.some("prompts/enable.md"),
         })
       );
-      assertInclude(
-        yield* fs.readFileString(path.join(root, "prompts/enable.md")),
-        "# Lane prompt: `effect/schema/SchemaJITCompiler/enable`"
-      );
+      const enablePrompt = yield* fs.readFileString(path.join(root, "prompts/enable.md"));
+      assertInclude(enablePrompt, "# Lane prompt: `effect/schema/SchemaJITCompiler/enable`");
     })
   );
 
@@ -973,9 +981,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-      const head = Str.trim(
-        yield* spawner.string(ChildProcess.make("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot }))
+      const headOutput = yield* spawner.string(
+        ChildProcess.make("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot })
       );
+      const head = Str.trim(headOutput);
 
       const unreadable = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-unreadable-" });
       const noManifest = yield* Effect.flip((yield* EffectSchemaInventorySource.make(unreadable)).readPin);
@@ -992,7 +1001,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
       EffectSchemaInventorySource.layer(linked).pipe(Layer.isLayer, assertTrue);
       const live = yield* EffectSchemaInventorySource.make(linked);
       yield* live.verifyPin(head);
-      assertInclude(yield* live.readPinned(head, "package.json"), '"name": "@beep/root"');
+      const pinnedManifest = yield* live.readPinned(head, "package.json");
+      assertInclude(pinnedManifest, '"name": "@beep/root"');
       assertInclude(
         (yield* Effect.flip(live.readPinned(head, "missing-file.txt"))).message,
         "Unable to read missing-file.txt"

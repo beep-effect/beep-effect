@@ -97,13 +97,16 @@ const reachableBareImports = Effect.fn("reachableBareImports")(function* (src: s
 /** The modules in `src`, by file name. */
 const sourceModules = Effect.fn("sourceModules")(function* (src: string) {
   const fs = yield* FileSystem.FileSystem;
-  return A.sort(A.filter(yield* fs.readDirectory(src), Str.endsWith(".ts")), Order.String);
+  const readDirectory1 = yield* fs.readDirectory(src);
+  return A.sort(A.filter(readDirectory1, Str.endsWith(".ts")), Order.String);
 });
 
 const readManifest = Effect.fn("readManifest")(function* (packageRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  return yield* S.decodeEffect(PackageManifest)(yield* fs.readFileString(path.resolve(packageRoot, "package.json")));
+  const argument = S.decodeEffect(PackageManifest);
+  const readFileString1 = yield* fs.readFileString(path.resolve(packageRoot, "package.json"));
+  return yield* argument(readFileString1);
 });
 
 const SIGNER = "universal-github-app-jwt";
@@ -133,7 +136,8 @@ describe("bundle reachability", () => {
     const packageRoot = Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const testDirectory = path.dirname(yield* path.fromFileUrl(new URL(import.meta.url)));
+      const fromFileUrl2 = yield* path.fromFileUrl(new URL(import.meta.url));
+      const testDirectory = path.dirname(fromFileUrl2);
       return yield* fs.realPath(path.resolve(testDirectory, ".."));
     });
     const sourceRoot = Effect.flatMap(packageRoot, (root) =>
@@ -145,7 +149,8 @@ describe("bundle reachability", () => {
       Effect.gen(function* () {
         // The control. Without it, the assertion below could pass because the
         // walker is broken rather than because the edge is absent.
-        assert.isTrue(MutableHashSet.has(yield* reachableFrom("GitHubApp.ts"), SIGNER));
+        const reachableFrom3 = yield* reachableFrom("GitHubApp.ts");
+        assert.isTrue(MutableHashSet.has(reachableFrom3, SIGNER));
       })
     );
 
@@ -165,10 +170,9 @@ describe("bundle reachability", () => {
         // them, or a consumer who never writes a secret still pays for the
         // crypto. The module list is derived from the directory, so a NEW module
         // that imports the crypto fails here without anyone updating a list.
-        const others = A.filter(
-          yield* sourceModules(yield* sourceRoot),
-          (name) => name !== "index.ts" && name !== "RepositorySecret.ts"
-        );
+        const sourceRoot11 = yield* sourceRoot;
+        const sourceModules4 = yield* sourceModules(sourceRoot11);
+        const others = A.filter(sourceModules4, (name) => name !== "index.ts" && name !== "RepositorySecret.ts");
         for (const entry of others) {
           const reachable = yield* reachableFrom(entry);
           for (const dep of SEALED_BOX) {
@@ -197,19 +201,18 @@ describe("bundle reachability", () => {
         // `@octokit/types` ships no JavaScript at all, and `plugin-paginate-rest`'s
         // generated route map is likewise types. Leaning on them costs zero
         // runtime bytes, which is why this package types every endpoint.
-        assert.deepStrictEqual(sorted(yield* reachableFrom("Rest.ts")), ["@beep/identity/packages", "effect"]);
+        const reachableFrom5 = yield* reachableFrom("Rest.ts");
+        assert.deepStrictEqual(sorted(reachableFrom5), ["@beep/identity/packages", "effect"]);
       })
     );
 
     it.effect("the pure classes reach nothing but effect", () =>
       Effect.gen(function* () {
+        const reachableFrom6 = yield* reachableFrom("Resilience.ts");
+        assert.deepStrictEqual(sorted(reachableFrom6), ["@beep/identity/packages", "effect"], "Resilience.ts");
+        const reachableFrom7 = yield* reachableFrom("GraphQL.ts");
         assert.deepStrictEqual(
-          sorted(yield* reachableFrom("Resilience.ts")),
-          ["@beep/identity/packages", "effect"],
-          "Resilience.ts"
-        );
-        assert.deepStrictEqual(
-          sorted(yield* reachableFrom("GraphQL.ts")),
+          sorted(reachableFrom7),
           ["@beep/identity/packages", "@beep/utils/Option", "effect"],
           "GraphQL.ts"
         );
@@ -220,7 +223,8 @@ describe("bundle reachability", () => {
       Effect.gen(function* () {
         // Without this a bundler must assume evaluating an unreferenced module
         // matters, and keeps it.
-        const manifest = yield* readManifest(yield* packageRoot);
+        const packageRoot8 = yield* packageRoot;
+        const manifest = yield* readManifest(packageRoot8);
         assert.deepStrictEqual(manifest.sideEffects, []);
       })
     );
@@ -247,8 +251,9 @@ describe("bundle reachability", () => {
         const path = yield* Path.Path;
         const src = yield* sourceRoot;
         const entry = yield* fs.readFileString(path.resolve(src, "index.ts"));
+        const sourceModules9 = yield* sourceModules(src);
         const unreachable = A.filter(
-          yield* sourceModules(src),
+          sourceModules9,
           (name) => name !== "index.ts" && !Str.includes(`"./${name}"`)(entry)
         );
         assert.deepStrictEqual(unreachable, [], "module(s) in src/ that the entrypoint never re-exports");
@@ -260,7 +265,8 @@ describe("bundle reachability", () => {
         // A package you import but do not declare is how a peer closure rots;
         // the classifier in GitHubError reads octokit's throwables structurally
         // rather than importing `@octokit/request-error` for exactly this reason.
-        const manifest = yield* readManifest(yield* packageRoot);
+        const packageRoot10 = yield* packageRoot;
+        const manifest = yield* readManifest(packageRoot10);
         const declared = [...R.keys(manifest.dependencies ?? {}), ...R.keys(manifest.peerDependencies ?? {})];
         const used = [...(yield* reachableFrom("index.ts")), ...(yield* reachableFrom("GitHubApp.ts"))];
         // A `node:` builtin is not a package and can never appear in a manifest.

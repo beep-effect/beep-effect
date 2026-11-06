@@ -325,7 +325,8 @@ describe("MailTagging ledgers", () => {
       const undoneLine = yield* encode(undone);
 
       expect(Str.includes("\n")(appliedLine)).toBe(false);
-      expect(yield* decodeJsonText(appliedLine)).toStrictEqual({
+      const decodedJsonText = yield* decodeJsonText(appliedLine);
+      expect(decodedJsonText).toStrictEqual({
         _tag: "TagApplied",
         runId: "run-0001",
         messageId: "msg-0001",
@@ -335,8 +336,12 @@ describe("MailTagging ledgers", () => {
         decision: { outcome: "MatterMatched", matterKey: "acme.10001", confidence: 0.95, reason: null },
         recordedAt: "2026-07-01T12:00:00.000Z",
       });
-      expect(yield* encode(yield* decode(appliedLine))).toBe(appliedLine);
-      expect(yield* encode(yield* decode(undoneLine))).toBe(undoneLine);
+      const decoded4 = yield* decode(appliedLine);
+      const encoded1 = yield* encode(decoded4);
+      expect(encoded1).toBe(appliedLine);
+      const decoded5 = yield* decode(undoneLine);
+      const encoded2 = yield* encode(decoded5);
+      expect(encoded2).toBe(undoneLine);
       expect((yield* decode(undoneLine))._tag).toBe("TagUndone");
     })
   );
@@ -350,7 +355,8 @@ describe("MailTagging ledgers", () => {
         const line = yield* S.encodeEffect(TagLedgerRecordJsonLine)(record);
 
         expect(Str.includes("\n")(line)).toBe(false);
-        expect(equivalent(yield* S.decodeEffect(TagLedgerRecordJsonLine)(line), record)).toBe(true);
+        const value3 = yield* S.decodeEffect(TagLedgerRecordJsonLine)(line);
+        expect(equivalent(value3, record)).toBe(true);
       }),
     { arbitrary: fcRuns(50) }
   );
@@ -421,7 +427,9 @@ describe("MailTagging ledgers", () => {
       const encoded = yield* S.encodeEffect(TaggingUndoReport)(report);
 
       expect(encoded.originalRunId).toBe("run-0001");
-      expect(S.toEquivalence(TaggingUndoReport)(yield* S.decodeEffect(TaggingUndoReport)(encoded), report)).toBe(true);
+      const argument = S.toEquivalence(TaggingUndoReport);
+      const value1 = yield* S.decodeEffect(TaggingUndoReport)(encoded);
+      expect(argument(value1, report)).toBe(true);
     })
   );
 

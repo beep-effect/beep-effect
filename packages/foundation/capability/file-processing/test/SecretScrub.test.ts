@@ -69,23 +69,20 @@ describe("secret scrub proof and prompt admission", () => {
               !("text" in evidence)
           )
         ).toBe(true);
-        expect(countCanaries(yield* encodeResult(result), canaryBuilders)).toBe(
-          fixture.expected.persistenceCanaryCount
+        const encodedResult = yield* encodeResult(result);
+        expect(countCanaries(encodedResult, canaryBuilders)).toBe(fixture.expected.persistenceCanaryCount);
+        const encodedEvidence = yield* encodeEvidence(result.proof.evidence);
+        expect(countCanaries(encodedEvidence, canaryBuilders)).toBe(0);
+        const encoded = yield* encode(messages);
+        expect(countCanaries(encoded, canaryBuilders)).toBe(fixture.expected.logCanaryCount);
+        const encoded1 = yield* encode(
+          A.map(spans, (span) => ({
+            name: span.name,
+            attributes: A.fromIterable(span.attributes),
+            status: span.status._tag,
+          }))
         );
-        expect(countCanaries(yield* encodeEvidence(result.proof.evidence), canaryBuilders)).toBe(0);
-        expect(countCanaries(yield* encode(messages), canaryBuilders)).toBe(fixture.expected.logCanaryCount);
-        expect(
-          countCanaries(
-            yield* encode(
-              A.map(spans, (span) => ({
-                name: span.name,
-                attributes: A.fromIterable(span.attributes),
-                status: span.status._tag,
-              }))
-            ),
-            canaryBuilders
-          )
-        ).toBe(0);
+        expect(countCanaries(encoded1, canaryBuilders)).toBe(0);
         // The paired action policy is independent of the admission capability.
         if (fixture.id === "action-enabling-public-denied") {
           expect(result.safeForPrompt && !fixture.expected.actionAuthorized).toBe(true);
@@ -134,9 +131,9 @@ describe("ratified secret retention decisions", () => {
       yield* TestClock.setTime(0);
       const record = (retentionClass: SecretScrub.SecretRetentionClass, purposeResolved = false, pinned = false) =>
         SecretScrub.SecretRetentionRecord.make({ retentionClass, createdAtEpochMillis: 0, purposeResolved, pinned });
-      expect(SecretScrub.isSecretPurgeEligible(record("transient-raw", true), yield* Clock.currentTimeMillis)).toBe(
-        true
-      );
+      const argument = record("transient-raw", true);
+      const currentTimeMillis1 = yield* Clock.currentTimeMillis;
+      expect(SecretScrub.isSecretPurgeEligible(argument, currentTimeMillis1)).toBe(true);
       yield* TestClock.adjust(Duration.days(7));
       const rawDeadline = yield* Clock.currentTimeMillis;
       expect(SecretScrub.isSecretPurgeEligible(record("transient-raw"), rawDeadline - 1)).toBe(false);
@@ -161,9 +158,11 @@ describe("ratified secret retention decisions", () => {
       });
       yield* TestClock.setTime(deadline - 1);
       expect(SecretScrub.secretRetentionDeadline(record)).toBe(deadline);
-      expect(SecretScrub.isSecretPurgeEligible(record, yield* Clock.currentTimeMillis)).toBe(false);
+      const currentTimeMillis2 = yield* Clock.currentTimeMillis;
+      expect(SecretScrub.isSecretPurgeEligible(record, currentTimeMillis2)).toBe(false);
       yield* TestClock.adjust(1);
-      expect(SecretScrub.isSecretPurgeEligible(record, yield* Clock.currentTimeMillis)).toBe(true);
+      const currentTimeMillis3 = yield* Clock.currentTimeMillis;
+      expect(SecretScrub.isSecretPurgeEligible(record, currentTimeMillis3)).toBe(true);
     })
   );
 });

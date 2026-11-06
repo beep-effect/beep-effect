@@ -44,7 +44,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
       yield* run;
       const first = yield* fs.readFileString(path.join(root, ".env"));
       expect(first).toContain("TURBO_TOKEN=op://fixture/item/token");
-      expect(A.some(yield* run, Str.startsWith("backup:"))).toBe(false);
+      const result1 = yield* run;
+      expect(A.some(result1, Str.startsWith("backup:"))).toBe(false);
       yield* fs.writeFileString(
         path.join(root, ".env"),
         '# unrelated\nPRIVATE_FIXTURE="keep me"\nexport TURBO_TEAM = ""\nTURBO_API="https://preserved.example.test"\n'
@@ -52,13 +53,15 @@ it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
       const original = yield* fs.readFileString(path.join(root, ".env"));
       const changed = yield* run;
       const backup = yield* Effect.fromOption(A.findFirst(changed, Str.startsWith("backup:")));
-      expect(yield* fs.readFileString(path.join(root, Str.slice(8)(backup)))).toBe(original);
+      const readFileString2 = yield* fs.readFileString(path.join(root, Str.slice(8)(backup)));
+      expect(readFileString2).toBe(original);
       const next = yield* fs.readFileString(path.join(root, ".env"));
       expect(next).toContain('PRIVATE_FIXTURE="keep me"');
       expect(next).toContain('TURBO_API="https://preserved.example.test"');
       expect(next).toContain("TURBO_TEAM=fixture");
       yield* run;
-      expect(yield* fs.readFileString(path.join(root, ".env"))).toBe(next);
+      const readFileString3 = yield* fs.readFileString(path.join(root, ".env"));
+      expect(readFileString3).toBe(next);
     })
   );
 
@@ -80,19 +83,21 @@ it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
       });
       const reports = yield* CacheQualificationService.use((service) => service.remoteReads(relative, input));
       const backup = yield* Effect.fromOption(A.findFirst(reports, Str.startsWith("backup:")));
-      expect(yield* fs.readFileString(path.join(root, Str.slice(8)(backup)))).toBe(original);
+      const readFileString4 = yield* fs.readFileString(path.join(root, Str.slice(8)(backup)));
+      expect(readFileString4).toBe(original);
       const next = yield* fs.readFileString(path.join(root, ".env"));
       expect(next).toContain("PRIVATE_FIXTURE=preserved");
       expect(next).toContain("TURBO_TEAM=fixture");
       expect(next).toContain("TURBO_TOKEN=op://fixture/item/token");
-      expect(A.some(yield* fs.readDirectory(root), (entry) => entry === "tmp" || entry === path.basename(root))).toBe(
-        false
-      );
+      const readDirectory5 = yield* fs.readDirectory(root);
+      expect(A.some(readDirectory5, (entry) => entry === "tmp" || entry === path.basename(root))).toBe(false);
       yield* fs.writeFileString(path.join(root, ".env"), "TURBO_TEAM=one\nTURBO_TEAM=two\n");
-      expect(
-        yield* CacheQualificationService.use((service) => service.remoteReads(relative, input)).pipe(Effect.isFailure)
-      ).toBe(true);
-      expect(yield* fs.readFileString(path.join(root, ".env"))).toBe("TURBO_TEAM=one\nTURBO_TEAM=two\n");
+      const pipe6 = yield* CacheQualificationService.use((service) => service.remoteReads(relative, input)).pipe(
+        Effect.isFailure
+      );
+      expect(pipe6).toBe(true);
+      const readFileString7 = yield* fs.readFileString(path.join(root, ".env"));
+      expect(readFileString7).toBe("TURBO_TEAM=one\nTURBO_TEAM=two\n");
     })
   );
 
@@ -112,18 +117,22 @@ it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
       const run = CacheQualificationService.use((service) => service.remoteReads(root, input));
       const text = 'TURBO_TEAM=one\nexport TURBO_TEAM = "two"\n';
       yield* fs.writeFileString(path.join(root, ".env"), text);
-      expect(yield* run.pipe(Effect.isFailure)).toBe(true);
-      expect(yield* fs.readFileString(path.join(root, ".env"))).toBe(text);
+      const pipe8 = yield* run.pipe(Effect.isFailure);
+      expect(pipe8).toBe(true);
+      const readFileString9 = yield* fs.readFileString(path.join(root, ".env"));
+      expect(readFileString9).toBe(text);
       yield* fs.remove(path.join(root, ".env"));
       yield* fs.writeFileString(path.join(root, "referent"), "keep");
       yield* fs.symlink(path.join(root, "referent"), path.join(root, ".env"));
-      expect(yield* run.pipe(Effect.isFailure)).toBe(true);
-      expect(yield* fs.readFileString(path.join(root, "referent"))).toBe("keep");
-      expect(
-        yield* S.decodeEffect(CacheRemoteReadsRequest)({ ...input, api: "http://cache.example.test" }).pipe(
-          Effect.isFailure
-        )
-      ).toBe(true);
+      const pipe10 = yield* run.pipe(Effect.isFailure);
+      expect(pipe10).toBe(true);
+      const readFileString11 = yield* fs.readFileString(path.join(root, "referent"));
+      expect(readFileString11).toBe("keep");
+      const pipe12 = yield* S.decodeEffect(CacheRemoteReadsRequest)({
+        ...input,
+        api: "http://cache.example.test",
+      }).pipe(Effect.isFailure);
+      expect(pipe12).toBe(true);
     })
   );
   it.effect("repairs blank remote-cache placeholders without replacing configured values", () =>
@@ -312,9 +321,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
       expect(result.exitCode, result.stderr).toBe(0);
       expect(result.stdout).toContain("replaced TURBO_TOKEN");
       expect(result.stdout).not.toContain("resolved-value-must-not-appear");
-      expect(yield* fs.readFileString(path.join(repoRoot, ".env"))).toContain(
-        "TURBO_TOKEN=op://new-vault/new-item/password"
-      );
+      const readFileString13 = yield* fs.readFileString(path.join(repoRoot, ".env"));
+      expect(readFileString13).toContain("TURBO_TOKEN=op://new-vault/new-item/password");
     })
   );
   it.effect("rejects an incomplete replacement reference without modifying the configured token", () =>
@@ -369,7 +377,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain("op://vault/item/[section/]field");
-      expect(yield* fs.readFileString(envPath)).toBe(original);
+      const readFileString14 = yield* fs.readFileString(envPath);
+      expect(readFileString14).toBe(original);
     })
   );
   it.effect("rejects duplicate remote-cache assignments without modifying the file", () =>
@@ -424,7 +433,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain("duplicate TURBO_TEAM assignments in .env; refusing to modify it");
-      expect(yield* fs.readFileString(envPath)).toBe(original);
+      const readFileString15 = yield* fs.readFileString(envPath);
+      expect(readFileString15).toBe(original);
     })
   );
 });

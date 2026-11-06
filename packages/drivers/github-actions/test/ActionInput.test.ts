@@ -38,11 +38,14 @@ describe("ActionInput", () => {
     it.effect("preserves plain objects, exact optional keys and boolean values", () =>
       Effect.gen(function* () {
         const omitted: PairsOptions.Encoded = {};
-        assert.deepStrictEqual(yield* S.decodeEffect(PairsOptions)(omitted), PairsOptions.make({}));
-        assert.deepStrictEqual(yield* S.encodeEffect(PairsOptions)(PairsOptions.make(omitted)), {});
+        const value1 = yield* S.decodeEffect(PairsOptions)(omitted);
+        assert.deepStrictEqual(value1, PairsOptions.make({}));
+        const value2 = yield* S.encodeEffect(PairsOptions)(PairsOptions.make(omitted));
+        assert.deepStrictEqual(value2, {});
         for (const requireValue of [false, true]) {
           const options: PairsOptions.Encoded = { requireValue };
-          assert.deepStrictEqual(yield* S.decodeEffect(PairsOptions)(options), options);
+          const value3 = yield* S.decodeEffect(PairsOptions)(options);
+          assert.deepStrictEqual(value3, options);
         }
         assert.isFalse(S.is(PairsOptions)({ requireValue: undefined }));
         assert.isFalse(S.is(PairsOptions)({ requireValue: "true" }));
@@ -58,7 +61,8 @@ describe("ActionInput", () => {
         // silently got nothing, because the runner publishes
         // INPUT_SBOM-CONFIG. No caller spells the name here, so the class of
         // bug is unrepresentable.
-        assert.strictEqual(yield* readOk(ActionInput.string("sbom-config"), { "INPUT_SBOM-CONFIG": "x" }), "x");
+        const readOk4 = yield* readOk(ActionInput.string("sbom-config"), { "INPUT_SBOM-CONFIG": "x" });
+        assert.strictEqual(readOk4, "x");
       })
     );
 
@@ -68,7 +72,8 @@ describe("ActionInput", () => {
 
     it.effect("replaces spaces with underscores and uppercases", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* readOk(ActionInput.string("my input"), { INPUT_MY_INPUT: "v" }), "v");
+        const readOk5 = yield* readOk(ActionInput.string("my input"), { INPUT_MY_INPUT: "v" });
+        assert.strictEqual(readOk5, "v");
       })
     );
 
@@ -89,8 +94,10 @@ describe("ActionInput", () => {
       Effect.gen(function* () {
         const env = { token: "own-token" };
         Object.setPrototypeOf(env, { INPUT_TOKEN: "prototype-token" });
-        assert.strictEqual(yield* readOk(ActionInput.string("token"), env), "own-token");
-        assert.strictEqual(yield* readOk(Config.String("token"), env), "own-token");
+        const readOk6 = yield* readOk(ActionInput.string("token"), env);
+        assert.strictEqual(readOk6, "own-token");
+        const readOk7 = yield* readOk(Config.String("token"), env);
+        assert.strictEqual(readOk7, "own-token");
       })
     );
   });
@@ -116,7 +123,8 @@ describe("ActionInput", () => {
         // No caller spells INPUT_BIOME-VERSION: the key is the input name
         // exactly as the workflow's `with:` block writes it, and the
         // mangling never leaves the module.
-        assert.strictEqual(yield* readOk(ActionInput.string("biome-version"), { "biome-version": "2.3.14" }), "2.3.14");
+        const readOk8 = yield* readOk(ActionInput.string("biome-version"), { "biome-version": "2.3.14" });
+        assert.strictEqual(readOk8, "2.3.14");
       })
     );
 
@@ -126,7 +134,8 @@ describe("ActionInput", () => {
         // Config.String("biome-version") through the same INPUT_ derivation
         // Action.run installs, so a suite green under ActionInput.layer is
         // green for the same reason the action is.
-        assert.strictEqual(yield* readOk(Config.String("biome-version"), { "biome-version": "2.3.14" }), "2.3.14");
+        const readOk9 = yield* readOk(Config.String("biome-version"), { "biome-version": "2.3.14" });
+        assert.strictEqual(readOk9, "2.3.14");
       })
     );
 
@@ -137,22 +146,22 @@ describe("ActionInput", () => {
         yield* readFails(ActionInput.string("biome-version"), { INPUT_BIOME_VERSION: "x" });
         // …and the same test written input-name-first resolves, because the
         // caller never had a variable name to misspell.
-        assert.strictEqual(yield* readOk(ActionInput.string("biome-version"), { "biome-version": "x" }), "x");
+        const readOk10 = yield* readOk(ActionInput.string("biome-version"), { "biome-version": "x" });
+        assert.strictEqual(readOk10, "x");
       })
     );
 
     it.effect("mangles spaces and case in an input-name key", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* readOk(ActionInput.string("My Input"), { "my input": "v" }), "v");
+        const readOk11 = yield* readOk(ActionInput.string("My Input"), { "my input": "v" });
+        assert.strictEqual(readOk11, "v");
       })
     );
 
     it.effect("an explicit INPUT_-spelled entry wins over the input-name spelling", () =>
       Effect.gen(function* () {
-        assert.strictEqual(
-          yield* readOk(ActionInput.string("flag"), { INPUT_FLAG: "explicit", flag: "named" }),
-          "explicit"
-        );
+        const readOk12 = yield* readOk(ActionInput.string("flag"), { INPUT_FLAG: "explicit", flag: "named" });
+        assert.strictEqual(readOk12, "explicit");
       })
     );
 
@@ -162,10 +171,8 @@ describe("ActionInput", () => {
 
     it.effect("a plain runner variable still resolves verbatim beside input-name keys", () =>
       Effect.gen(function* () {
-        assert.strictEqual(
-          yield* readOk(Config.String("PLAIN_VAR"), { PLAIN_VAR: "y", "biome-version": "2.3.14" }),
-          "y"
-        );
+        const readOk13 = yield* readOk(Config.String("PLAIN_VAR"), { PLAIN_VAR: "y", "biome-version": "2.3.14" });
+        assert.strictEqual(readOk13, "y");
       })
     );
   });
@@ -174,17 +181,20 @@ describe("ActionInput", () => {
     it.effect("accepts every documented true and false spelling", () =>
       Effect.gen(function* () {
         for (const raw of ["true", "True", "TRUE"]) {
-          assert.isTrue(yield* readOk(ActionInput.boolean("flag"), { INPUT_FLAG: raw }), raw);
+          const readOk14 = yield* readOk(ActionInput.boolean("flag"), { INPUT_FLAG: raw });
+          assert.isTrue(readOk14, raw);
         }
         for (const raw of ["false", "False", "FALSE"]) {
-          assert.isFalse(yield* readOk(ActionInput.boolean("flag"), { INPUT_FLAG: raw }), raw);
+          const readOk15 = yield* readOk(ActionInput.boolean("flag"), { INPUT_FLAG: raw });
+          assert.isFalse(readOk15, raw);
         }
       })
     );
 
     it.effect("tolerates surrounding whitespace from a YAML block", () =>
       Effect.gen(function* () {
-        assert.isTrue(yield* readOk(ActionInput.boolean("flag"), { INPUT_FLAG: "  true\n" }));
+        const readOk16 = yield* readOk(ActionInput.boolean("flag"), { INPUT_FLAG: "  true\n" });
+        assert.isTrue(readOk16);
       })
     );
 
@@ -224,8 +234,10 @@ describe("ActionInput", () => {
     it.effect('absent or "" is missing data, so withDefault composes', () =>
       Effect.gen(function* () {
         const config = ActionInput.literals("mode", ["commit", "pr"]).pipe(Config.withDefault("commit"));
-        assert.strictEqual(yield* readOk(config, { INPUT_MODE: "" }), "commit");
-        assert.strictEqual(yield* readOk(config, {}), "commit");
+        const readOk17 = yield* readOk(config, { INPUT_MODE: "" });
+        assert.strictEqual(readOk17, "commit");
+        const readOk18 = yield* readOk(config, {});
+        assert.strictEqual(readOk18, "commit");
       })
     );
 
@@ -432,7 +444,8 @@ describe("ActionInput", () => {
 
     it.effect("reads an integer input", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* readOk(ActionInput.integer("count"), { INPUT_COUNT: "7" }), 7);
+        const readOk19 = yield* readOk(ActionInput.integer("count"), { INPUT_COUNT: "7" });
+        assert.strictEqual(readOk19, 7);
       })
     );
   });
@@ -492,18 +505,16 @@ describe("ActionInput", () => {
         // The false-green class at its root: the runner publishes
         // INPUT_DRY-RUN (dashes survive), and a bare Config.String("dry-run")
         // used to find nothing and fall back to its default.
-        assert.strictEqual(yield* readBare(Config.String("dry-run"), { "INPUT_DRY-RUN": "x" }), "x");
+        const readBare20 = yield* readBare(Config.String("dry-run"), { "INPUT_DRY-RUN": "x" });
+        assert.strictEqual(readBare20, "x");
       })
     );
 
     it.effect("any casing of the bare name sees the input, because the derivation uppercases", () =>
       Effect.gen(function* () {
         for (const spelling of ["dry-run", "DRY-RUN", "Dry-Run"]) {
-          assert.strictEqual(
-            yield* readBare(Config.String(spelling), { "INPUT_DRY-RUN": "x" }),
-            "x",
-            `${spelling} should reach INPUT_DRY-RUN`
-          );
+          const readBare21 = yield* readBare(Config.String(spelling), { "INPUT_DRY-RUN": "x" });
+          assert.strictEqual(readBare21, "x", `${spelling} should reach INPUT_DRY-RUN`);
         }
       })
     );
@@ -512,7 +523,8 @@ describe("ActionInput", () => {
       Effect.gen(function* () {
         // The plain variable resolves exactly as it would without the
         // provider…
-        assert.strictEqual(yield* readBare(Config.String("PLAIN_VAR"), { PLAIN_VAR: "y" }), "y");
+        const readBare22 = yield* readBare(Config.String("PLAIN_VAR"), { PLAIN_VAR: "y" });
+        assert.strictEqual(readBare22, "y");
         // …and the fallback stays case-SENSITIVE: only the attempt
         // uppercases. A lowercase read gained no new spelling.
         yield* readBareFails(Config.String("plain_var"), { PLAIN_VAR: "y" });
@@ -522,8 +534,10 @@ describe("ActionInput", () => {
     it.effect("a supplied input SHADOWS an env var of the same name — the documented trade", () =>
       Effect.gen(function* () {
         const env = { INPUT_FOO: "from-input", FOO: "from-env" };
-        assert.strictEqual(yield* readBare(Config.String("FOO"), env), "from-input");
-        assert.strictEqual(yield* readBare(Config.String("foo"), env), "from-input");
+        const readBare23 = yield* readBare(Config.String("FOO"), env);
+        assert.strictEqual(readBare23, "from-input");
+        const readBare24 = yield* readBare(Config.String("foo"), env);
+        assert.strictEqual(readBare24, "from-input");
       })
     );
 
@@ -532,7 +546,8 @@ describe("ActionInput", () => {
         // The runner writes "" for every input the workflow left out; the
         // attempt resolves through the ambient provider, whose
         // empty-is-absent rule drops it, so the real variable still wins.
-        assert.strictEqual(yield* readBare(Config.String("FOO"), { INPUT_FOO: "", FOO: "from-env" }), "from-env");
+        const readBare25 = yield* readBare(Config.String("FOO"), { INPUT_FOO: "", FOO: "from-env" });
+        assert.strictEqual(readBare25, "from-env");
       })
     );
 
@@ -542,7 +557,8 @@ describe("ActionInput", () => {
         // attempt applies to single-segment names only. A join-then-mangle
         // implementation would resolve INPUT_A_B here and fail this test.
         const nested = Config.String("B").pipe(Config.nested("A"));
-        assert.strictEqual(yield* readBare(nested, { A_B: "base", INPUT_A_B: "from-input" }), "base");
+        const readBare26 = yield* readBare(nested, { A_B: "base", INPUT_A_B: "from-input" });
+        assert.strictEqual(readBare26, "base");
       })
     );
 
@@ -551,13 +567,14 @@ describe("ActionInput", () => {
         // The accessor reads INPUT_DRY-RUN; the attempt re-mangles that to
         // INPUT_INPUT_DRY-RUN, misses, and the fallback resolves the real
         // variable — so the typed surface is unchanged by the installation.
-        assert.strictEqual(yield* readBare(ActionInput.string("dry-run"), { "INPUT_DRY-RUN": "x" }), "x");
+        const readBare27 = yield* readBare(ActionInput.string("dry-run"), { "INPUT_DRY-RUN": "x" });
+        assert.strictEqual(readBare27, "x");
         // And an omitted input still reads as absent, so a default is a
         // default.
-        assert.strictEqual(
-          yield* readBare(ActionInput.string("omitted").pipe(Config.withDefault("fallback")), { INPUT_OMITTED: "" }),
-          "fallback"
-        );
+        const readBare28 = yield* readBare(ActionInput.string("omitted").pipe(Config.withDefault("fallback")), {
+          INPUT_OMITTED: "",
+        });
+        assert.strictEqual(readBare28, "fallback");
       })
     );
 
@@ -572,8 +589,10 @@ describe("ActionInput", () => {
           // How a test injects a deterministic environment without touching the
           // process: install an ambient provider under the runtime and let
           // layerDefault pick it up at build.
-          assert.strictEqual(yield* Config.String("dry-run"), "x");
-          assert.strictEqual(yield* Config.String("PLAIN_VAR"), "y");
+          const String29 = yield* Config.String("dry-run");
+          assert.strictEqual(String29, "x");
+          const String30 = yield* Config.String("PLAIN_VAR");
+          assert.strictEqual(String30, "y");
         })
       );
     });
@@ -586,7 +605,10 @@ describe("PairsOptions codec property", () => {
     [Arbitrary.schema(PairsOptions)],
     ([value]) =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* S.decodeEffect(PairsOptions)(yield* S.encodeEffect(PairsOptions)(value)), value);
+        const argument = S.decodeEffect(PairsOptions);
+        const value4 = yield* S.encodeEffect(PairsOptions)(value);
+        const value31 = yield* argument(value4);
+        assert.deepStrictEqual(value31, value);
       }),
     { arbitrary: fcRuns(100) }
   );

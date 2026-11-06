@@ -390,7 +390,8 @@ export const layerPracticeKgDpapi = (
 
 const optionalEnv = (name: string): Effect.Effect<O.Option<string>> =>
   Effect.gen(function* () {
-    return O.filter(yield* Config.option(Config.String(name)), Str.isNonEmpty);
+    const option1 = yield* Config.option(Config.String(name));
+    return O.filter(option1, Str.isNonEmpty);
   }).pipe(Effect.orElseSucceed(O.none));
 
 /**

@@ -57,15 +57,18 @@ it.layer(
       const repository = yield* GitHubRepository;
       assert.strictEqual(repository.settings, overrides.settings);
       assert.strictEqual(direct.updateSettings, overrides.updateSettings);
-      assert.deepStrictEqual(yield* repository.settings, payload);
-      assert.deepStrictEqual(yield* direct.updateSettings({ has_wiki: true }), payload);
-      assert.strictEqual(yield* repository.defaultBranch, "next");
-      assert.strictEqual(yield* repository.nodeId, "node");
-      assert.strictEqual(yield* repository.ownerType, "Organization");
-      assert.deepStrictEqual(
-        yield* repository.applySettings({ has_wiki: false }),
-        AppliedSettings.make({ rest: ["has_wiki"], graphql: [] })
-      );
+      const settings1 = yield* repository.settings;
+      assert.deepStrictEqual(settings1, payload);
+      const updateSettings2 = yield* direct.updateSettings({ has_wiki: true });
+      assert.deepStrictEqual(updateSettings2, payload);
+      const defaultBranch3 = yield* repository.defaultBranch;
+      assert.strictEqual(defaultBranch3, "next");
+      const nodeId4 = yield* repository.nodeId;
+      assert.strictEqual(nodeId4, "node");
+      const ownerType5 = yield* repository.ownerType;
+      assert.strictEqual(ownerType5, "Organization");
+      const applySettings6 = yield* repository.applySettings({ has_wiki: false });
+      assert.deepStrictEqual(applySettings6, AppliedSettings.make({ rest: ["has_wiki"], graphql: [] }));
     })
   );
 });

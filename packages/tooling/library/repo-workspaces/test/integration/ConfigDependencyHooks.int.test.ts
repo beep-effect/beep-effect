@@ -145,7 +145,8 @@ it.layer(FixtureLayer, { timeout: "30 seconds" })((it) => {
           // This fixture sets no release-age keys, so it contributes an empty gate.
           assert.deepStrictEqual(result.releaseAge, {});
           // The side-effect marker proves the fixture actually executed.
-          assert.isTrue(yield* (yield* RealFileSystem).exists(markerPath));
+          const exists1 = yield* (yield* RealFileSystem).exists(markerPath);
+          assert.isTrue(exists1);
         }).pipe(
           Effect.ensuring(
             Effect.sync(() => {
@@ -190,7 +191,8 @@ it.layer(FixtureLayer, { timeout: "30 seconds" })((it) => {
           assert.strictEqual(result.catalogs.default?.effect, "^4.0.0");
           assert.strictEqual(result.catalogs.mjsExtra?.["mjs-extra-dep"], "^3.4.5");
           // The side-effect marker proves the `.mjs` fixture actually executed.
-          assert.isTrue(yield* (yield* RealFileSystem).exists(markerPath));
+          const exists2 = yield* (yield* RealFileSystem).exists(markerPath);
+          assert.isTrue(exists2);
         }).pipe(
           Effect.ensuring(
             Effect.sync(() => {
@@ -361,7 +363,8 @@ it.layer(FixtureLayer, { timeout: "30 seconds" })((it) => {
           // The inline catalog assembled — proof the default catalog path actually ran.
           assertSome(set.rangeOf("effect", O.none()), "^4.0.0");
           // ...and the config dependency's real pnpmfile never executed.
-          assert.isFalse(yield* (yield* RealFileSystem).exists(markerPath));
+          const exists3 = yield* (yield* RealFileSystem).exists(markerPath);
+          assert.isFalse(exists3);
         }).pipe(
           Effect.ensuring(
             Effect.sync(() => {
@@ -435,9 +438,12 @@ it.layer(FixtureLayer, { timeout: "30 seconds" })((it) => {
           // ...and the three services the git composite adds are all reachable from
           // the same layer. Resolving them is the whole point: before this
           // composite existed, having both halves at once meant hand-composing.
-          assert.isDefined(yield* WorkspaceSnapshots);
-          assert.isDefined(yield* ChangeDetector);
-          assert.isDefined(yield* Git);
+          const WorkspaceSnapshots4 = yield* WorkspaceSnapshots;
+          assert.isDefined(WorkspaceSnapshots4);
+          const ChangeDetector5 = yield* ChangeDetector;
+          assert.isDefined(ChangeDetector5);
+          const Git6 = yield* Git;
+          assert.isDefined(Git6);
         })
       );
     });
@@ -511,7 +517,8 @@ it.layer(FixtureLayer, { timeout: "30 seconds" })((it) => {
               replays: {},
             })
           );
-          assert.isFalse(yield* (yield* RealFileSystem).exists(markerPath));
+          const exists7 = yield* (yield* RealFileSystem).exists(markerPath);
+          assert.isFalse(exists7);
         }).pipe(
           Effect.ensuring(
             Effect.sync(() => {

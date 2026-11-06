@@ -167,10 +167,8 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
           afterText
         );
         const preview = CacheActivationPreview.make({ activation, source, target });
-        const activationRequest = yield* writeEvidence(
-          "activation.json",
-          yield* S.encodeEffect(ActivationPreviewJson)(preview)
-        );
+        const value = yield* S.encodeEffect(ActivationPreviewJson)(preview);
+        const activationRequest = yield* writeEvidence("activation.json", value);
         const signedText = yield* Fingerprint.projectCacheSignedRoot(rootText);
         const signedRoot = yield* writeEvidence("signed-root.json", signedText);
         const identity = yield* Fingerprint.projectCacheSignedActivation(
@@ -288,10 +286,9 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
             }),
           });
           yield* fs.makeDirectory(path.join(root, "standards"));
-          yield* fs.writeFileString(
-            path.join(root, "standards/cache-qualification-baseline.json"),
-            yield* S.encodeEffect(PolicyBaselineJson)(baseline)
-          );
+          const argument = path.join(root, "standards/cache-qualification-baseline.json");
+          const value1 = yield* S.encodeEffect(PolicyBaselineJson)(baseline);
+          yield* fs.writeFileString(argument, value1);
           const candidate = CacheQualificationEntry.make({
             key: contract.key,
             status: { state: "candidate", contract, review },
@@ -329,22 +326,21 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
               .transition(root, CacheTransitionRequest.make({ ...transition, entry: incompleteEntry }))
               .pipe(Effect.flip);
             expect(failure.message).toBe("Signed qualification requires a reviewed execution profile and activation.");
-            expect(yield* fs.readFileString(ledger)).toBe(prior);
+            const readFileString1 = yield* fs.readFileString(ledger);
+            expect(readFileString1).toBe(prior);
             const priorStore = yield* S.decodeEffect(QualificationStoreJson)(prior);
-            yield* fs.writeFileString(
-              ledger,
-              yield* S.encodeEffect(QualificationStoreJson)(
-                CacheQualificationStore.make({
-                  ...priorStore,
-                  revision: 3,
-                  entries: [incompleteEntry],
-                  history: [
-                    ...priorStore.history,
-                    CacheQualificationEvent.make({ revision: S.Int.make(3), entry: incompleteEntry }),
-                  ],
-                })
-              )
+            const value2 = yield* S.encodeEffect(QualificationStoreJson)(
+              CacheQualificationStore.make({
+                ...priorStore,
+                revision: 3,
+                entries: [incompleteEntry],
+                history: [
+                  ...priorStore.history,
+                  CacheQualificationEvent.make({ revision: S.Int.make(3), entry: incompleteEntry }),
+                ],
+              })
             );
+            yield* fs.writeFileString(ledger, value2);
             expect((yield* cache.audit(root).pipe(Effect.flip)).message).toBe(
               "Signed qualification requires a reviewed execution profile and activation."
             );
@@ -359,20 +355,25 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
           expect(A.filter((yield* cache.audit(root)).findings, (finding) => finding.blocking)).toEqual([]);
           const priorAttempt = published.channels.stable.run.run_attempt;
           published.channels.stable.run.run_attempt = priorAttempt + 1;
-          expect(yield* cache.audit(root).pipe(Effect.isFailure)).toBe(true);
+          const pipe3 = yield* cache.audit(root).pipe(Effect.isFailure);
+          expect(pipe3).toBe(true);
           published.channels.stable.run.run_attempt = priorAttempt;
           expect(A.filter((yield* cache.audit(root)).findings, (finding) => finding.blocking)).toEqual([]);
           const promoted = yield* fs.readFileString(ledger);
-          expect(yield* fs.readFileString(path.join(root, child.path))).toBe(beforeText);
+          const readFileString4 = yield* fs.readFileString(path.join(root, child.path));
+          expect(readFileString4).toBe(beforeText);
           expect(node.configuration.cache).toBe(false);
           for (const reference of [rootReference, child, before, after, activationRequest, signedRoot]) {
             const file = path.join(root, reference.path);
             const original = yield* fs.readFileString(file);
             yield* fs.writeFileString(file, `${original} `);
-            expect(yield* cache.audit(root).pipe(Effect.isFailure)).toBe(true);
+            const pipe5 = yield* cache.audit(root).pipe(Effect.isFailure);
+            expect(pipe5).toBe(true);
             yield* fs.writeFileString(ledger, prior);
-            expect(yield* cache.transition(root, transition).pipe(Effect.isFailure)).toBe(true);
-            expect(yield* fs.readFileString(ledger)).toBe(prior);
+            const pipe6 = yield* cache.transition(root, transition).pipe(Effect.isFailure);
+            expect(pipe6).toBe(true);
+            const readFileString7 = yield* fs.readFileString(ledger);
+            expect(readFileString7).toBe(prior);
             yield* fs.writeFileString(file, original);
             yield* fs.writeFileString(ledger, promoted);
           }
@@ -390,12 +391,15 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
                   Effect.succeed(CacheToolchainSnapshot.make({ ...toolchain, kernel }))
                 );
                 yield* fs.writeFileString(ledger, promoted);
-                expect(yield* cache.audit(root).pipe(Effect.isFailure)).toBe(kernel !== toolchain.kernel);
+                const pipe8 = yield* cache.audit(root).pipe(Effect.isFailure);
+                expect(pipe8).toBe(kernel !== toolchain.kernel);
                 yield* fs.writeFileString(ledger, prior);
-                expect(yield* cache.transition(root, transition).pipe(Effect.isFailure)).toBe(
-                  kernel !== toolchain.kernel
-                );
-                if (kernel !== toolchain.kernel) expect(yield* fs.readFileString(ledger)).toBe(prior);
+                const pipe9 = yield* cache.transition(root, transition).pipe(Effect.isFailure);
+                expect(pipe9).toBe(kernel !== toolchain.kernel);
+                if (kernel !== toolchain.kernel) {
+                  const readFileString2 = yield* fs.readFileString(ledger);
+                  expect(readFileString2).toBe(prior);
+                }
                 return true;
               }),
             fcRunsCapped(10)
@@ -404,10 +408,13 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
           observedToolchain.mockReturnValue(Effect.succeed(toolchain));
           yield* revokeCacheProducerIssuer(trust.canary);
           yield* fs.writeFileString(ledger, promoted);
-          expect(yield* cache.audit(root).pipe(Effect.isFailure)).toBe(true);
+          const pipe10 = yield* cache.audit(root).pipe(Effect.isFailure);
+          expect(pipe10).toBe(true);
           yield* fs.writeFileString(ledger, prior);
-          expect(yield* cache.transition(root, transition).pipe(Effect.isFailure)).toBe(true);
-          expect(yield* fs.readFileString(ledger)).toBe(prior);
+          const pipe11 = yield* cache.transition(root, transition).pipe(Effect.isFailure);
+          expect(pipe11).toBe(true);
+          const readFileString12 = yield* fs.readFileString(ledger);
+          expect(readFileString12).toBe(prior);
         }).pipe(Effect.provideService(CacheHostedProducerVerifier, published.verifier));
       })
     );

@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // The MDX vocabulary: construction (schema checks included), serialization
 // conformance against the vendored oracles, and the Mdast interop boundary.
 //
@@ -42,6 +43,8 @@ import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const ProjectedRecords = S.Array(S.Record(S.String, S.Unknown));
 const isRecords = S.is(ProjectedRecords);
@@ -393,7 +396,9 @@ describe("mdx nodes", () => {
         flowElement("ApiSignature", [
           MdxJsxAttribute.make({
             name: "code",
-            value: MdxJsxAttributeValueExpression.make({ value: JSON.stringify(props) }),
+            value: MdxJsxAttributeValueExpression.make({
+              value: Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(props), identity),
+            }),
           }),
         ])
       );

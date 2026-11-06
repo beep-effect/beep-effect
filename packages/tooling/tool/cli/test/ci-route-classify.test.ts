@@ -53,7 +53,7 @@ const fixtureReadAt = Effect.fn("routeClassifyTest.fixtureReadAt")(function* (fi
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const target = path.join(root, ref, file);
-      return (yield* fs.exists(target)) ? O.some(yield* fs.readFileString(target)) : O.none<string>();
+      return (yield* fs.exists(target)) ? yield* Effect.asSome(fs.readFileString(target)) : O.none<string>();
     }).pipe(Effect.mapError(RouteError.mapError("classify", `Failed to read fixture ${file} at ${ref}.`)));
   return read;
 });
@@ -77,7 +77,8 @@ const rows = (changeSet: ChangeSet): ReadonlyArray<ReadonlyArray<string>> =>
 
 const sha256 = Effect.fn("routeClassifyTest.sha256")(function* (text: string) {
   const digest = yield* Digest.Digest;
-  return Hex.encode(yield* digest.digest(Digest.sha256, new TextEncoder().encode(text)));
+  const digest1 = yield* digest.digest(Digest.sha256, new TextEncoder().encode(text));
+  return Hex.encode(digest1);
 });
 
 const Segment = S.Literals([
@@ -160,7 +161,9 @@ it.layer(TestLayer, { timeout: "60 seconds" })("verification route classify", (i
             diffOf([["packages/app/src/index.ts", "M"]]),
             memoryReadAt({ "base:package.json": manifest, "head:package.json": manifest })
           ).pipe(Effect.map(rows));
-        expect(yield* classify(objectForm)).toEqual(yield* classify(ROOT_MANIFEST));
+        const fromObject = yield* classify(objectForm);
+        const fromString = yield* classify(ROOT_MANIFEST);
+        expect(fromObject).toEqual(fromString);
       })
     );
 
@@ -213,26 +216,24 @@ it.layer(TestLayer, { timeout: "60 seconds" })("verification route classify", (i
   describe("package.json field families", () => {
     it.effect("a root catalog bump yields one pkg:catalog atom with the version detail", () =>
       Effect.gen(function* () {
-        const changeSet = yield* classifyChangedPaths(
-          diffOf([["package.json", "M"]]),
-          yield* fixtureReadAt("root-catalog")
-        );
+        const argument = diffOf([["package.json", "M"]]);
+        const fixtureReadAt1 = yield* fixtureReadAt("root-catalog");
+        const changeSet = yield* classifyChangedPaths(argument, fixtureReadAt1);
         expect(rows(changeSet)).toEqual([
           ["package.json", "pkg:catalog", "@fixture/root", "catalog @biomejs/biome 2.5.6 -> 9.9.9"],
         ]);
         expect(A.some(changeSet.atoms, (atom) => atom.kind === "unknown")).toBe(false);
-        expect(changeSet.atoms[0]?.digest).toBe(
-          yield* sha256("pkg:catalog\u0000package.json\u0000catalog @biomejs/biome 2.5.6 -> 9.9.9")
-        );
+        const expectation = expect(changeSet.atoms[0]?.digest);
+        const sha2562 = yield* sha256("pkg:catalog\u0000package.json\u0000catalog @biomejs/biome 2.5.6 -> 9.9.9");
+        expectation.toBe(sha2562);
       })
     );
 
     it.effect("a package script edit yields pkg:script owned by the package", () =>
       Effect.gen(function* () {
-        const changeSet = yield* classifyChangedPaths(
-          diffOf([["packages/app/package.json", "M"]]),
-          yield* fixtureReadAt("package-script")
-        );
+        const argument1 = diffOf([["packages/app/package.json", "M"]]);
+        const fixtureReadAt3 = yield* fixtureReadAt("package-script");
+        const changeSet = yield* classifyChangedPaths(argument1, fixtureReadAt3);
         expect(rows(changeSet)).toEqual([
           ["packages/app/package.json", "pkg:script", "@fixture/app", "scripts test changed"],
         ]);
@@ -241,10 +242,9 @@ it.layer(TestLayer, { timeout: "60 seconds" })("verification route classify", (i
 
     it.effect("dependency fields split into version, added and removed atoms beside other fields", () =>
       Effect.gen(function* () {
-        const changeSet = yield* classifyChangedPaths(
-          diffOf([["packages/app/package.json", "M"]]),
-          yield* fixtureReadAt("dependencies")
-        );
+        const argument2 = diffOf([["packages/app/package.json", "M"]]);
+        const fixtureReadAt4 = yield* fixtureReadAt("dependencies");
+        const changeSet = yield* classifyChangedPaths(argument2, fixtureReadAt4);
         expect(rows(changeSet)).toEqual([
           ["packages/app/package.json", "pkg:dep-version", "@fixture/app", "dependencies effect 4.0.5 -> 4.0.6"],
           ["packages/app/package.json", "pkg:dep-added", "@fixture/app", "dependencies right-pad added 2.0.0"],
@@ -256,10 +256,9 @@ it.layer(TestLayer, { timeout: "60 seconds" })("verification route classify", (i
 
     it.effect("an empty field map that appears or disappears still yields its atom", () =>
       Effect.gen(function* () {
-        const changeSet = yield* classifyChangedPaths(
-          diffOf([["packages/app/package.json", "M"]]),
-          yield* fixtureReadAt("empty-exports")
-        );
+        const argument3 = diffOf([["packages/app/package.json", "M"]]);
+        const fixtureReadAt5 = yield* fixtureReadAt("empty-exports");
+        const changeSet = yield* classifyChangedPaths(argument3, fixtureReadAt5);
         expect(rows(changeSet)).toEqual([
           ["packages/app/package.json", "pkg:exports", "@fixture/app", "exports removed"],
           ["packages/app/package.json", "pkg:manifest-other", "@fixture/app", "version 0.0.0 -> 0.0.1"],
@@ -313,7 +312,9 @@ it.layer(TestLayer, { timeout: "60 seconds" })("verification route classify", (i
         const changeSet = yield* classifyChangedPaths(diffOf([], 2), memoryReadAt({}));
         expect(rows(changeSet)).toEqual([["<commits>", "commits", "-", "2 commit(s) base..head"]]);
         expect(changeSet.changedPaths).toEqual([]);
-        expect(changeSet.atoms[0]?.digest).toBe(yield* sha256("commits\u0000<commits>\u00002 commit(s) base..head"));
+        const expectation1 = expect(changeSet.atoms[0]?.digest);
+        const sha2566 = yield* sha256("commits\u0000<commits>\u00002 commit(s) base..head");
+        expectation1.toBe(sha2566);
       })
     );
 

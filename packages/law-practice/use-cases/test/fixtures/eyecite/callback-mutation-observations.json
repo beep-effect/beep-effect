@@ -1,0 +1,1737 @@
+{
+  "schemaVersion": "citation-callback-mutation-observations/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "pythonVersion": "3.11.15",
+  "pythonHashSeed": "0",
+  "versions": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22"
+  },
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "exporterSha256": "2c9dcdcdc9a821520cb6653219120b38a10322ca738d25539f6788a9c004222c",
+  "sources": {
+    "resolve.py": "651ede8c2a2d5df9ec9c9f1145530a6de7fca15304d1816b7f620a81ab3f2044",
+    "models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a"
+  },
+  "cases": [
+    {
+      "name": "create-empty",
+      "family": "known-group",
+      "kinds": ["case", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ],
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            },
+            {
+              "resource": {
+                "kind": "str",
+                "value": "empty"
+              },
+              "listSlot": 1,
+              "members": []
+            }
+          ]
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "listSlot": 0,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              }
+            ]
+          },
+          {
+            "resource": {
+              "kind": "str",
+              "value": "empty"
+            },
+            "listSlot": 1,
+            "members": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "clear-groups",
+      "family": "known-group",
+      "kinds": ["case", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ],
+          "after": []
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": []
+      }
+    },
+    {
+      "name": "move-members",
+      "family": "known-group",
+      "kinds": ["case", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ],
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "moved"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "moved"
+            },
+            "listSlot": 0,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "reverse-members",
+      "family": "known-group",
+      "kinds": ["case", "case", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          }
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 2
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                },
+                {
+                  "kind": "input",
+                  "index": 1
+                }
+              ]
+            }
+          ],
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 1
+                },
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "listSlot": 0,
+            "members": [
+              {
+                "kind": "input",
+                "index": 1
+              },
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "duplicate-prior",
+      "family": "known-group",
+      "kinds": ["case", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ],
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                },
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "listSlot": 0,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "copy-to-second",
+      "family": "known-group",
+      "kinds": ["case", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ],
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            },
+            {
+              "resource": {
+                "kind": "str",
+                "value": "other"
+              },
+              "listSlot": 1,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "listSlot": 0,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 1
+              }
+            ]
+          },
+          {
+            "resource": {
+              "kind": "str",
+              "value": "other"
+            },
+            "listSlot": 1,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "falsy-key",
+      "family": "known-group",
+      "kinds": ["case", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ],
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            },
+            {
+              "resource": {
+                "kind": "int",
+                "value": 0
+              },
+              "listSlot": 1,
+              "members": []
+            }
+          ]
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "listSlot": 0,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              }
+            ]
+          },
+          {
+            "resource": {
+              "kind": "int",
+              "value": 0
+            },
+            "listSlot": 1,
+            "members": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "none-key",
+      "family": "known-group",
+      "kinds": ["case", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ],
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            },
+            {
+              "resource": {
+                "kind": "NoneType",
+                "value": null
+              },
+              "listSlot": 1,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "listSlot": 0,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              }
+            ]
+          },
+          {
+            "resource": {
+              "kind": "NoneType",
+              "value": null
+            },
+            "listSlot": 1,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "insert-current",
+      "family": "known-group",
+      "kinds": ["case", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ],
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                },
+                {
+                  "kind": "input",
+                  "index": 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "listSlot": 0,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 1
+              },
+              {
+                "kind": "input",
+                "index": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "read-missing-default",
+      "family": "known-group",
+      "kinds": ["case", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ],
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            },
+            {
+              "resource": {
+                "kind": "str",
+                "value": "unused"
+              },
+              "listSlot": 1,
+              "members": []
+            }
+          ]
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "listSlot": 0,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 1
+              }
+            ]
+          },
+          {
+            "resource": {
+              "kind": "str",
+              "value": "unused"
+            },
+            "listSlot": 1,
+            "members": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "alias-member-lists",
+      "family": "alias",
+      "kinds": ["case", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ],
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            },
+            {
+              "resource": {
+                "kind": "str",
+                "value": "other"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "listSlot": 0,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 1
+              }
+            ]
+          },
+          {
+            "resource": {
+              "kind": "str",
+              "value": "other"
+            },
+            "listSlot": 0,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "dictionary-identity",
+      "family": "alias",
+      "kinds": ["case", "id", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ],
+          "retainedDictionaryMatches": null,
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 2
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                },
+                {
+                  "kind": "input",
+                  "index": 1
+                }
+              ]
+            }
+          ],
+          "retainedDictionaryMatches": true,
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                },
+                {
+                  "kind": "input",
+                  "index": 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "listSlot": 0,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 1
+              },
+              {
+                "kind": "input",
+                "index": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "retained-dictionary-full",
+      "family": "alias",
+      "kinds": ["case", "id", "case", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ],
+          "retainedDictionaryMatches": null,
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 2
+          },
+          "clearedDictionarySlot": 0
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 3
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 1,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 2
+                }
+              ]
+            }
+          ],
+          "retainedDictionaryMatches": true,
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 1,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 2
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "listSlot": 1,
+            "members": [
+              {
+                "kind": "input",
+                "index": 2
+              },
+              {
+                "kind": "input",
+                "index": 3
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "detached-member",
+      "family": "detached-member",
+      "kinds": ["case", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            }
+          ],
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            },
+            {
+              "resource": {
+                "kind": "str",
+                "value": "other"
+              },
+              "listSlot": 1,
+              "members": [
+                {
+                  "kind": "detached",
+                  "slot": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "detachedObjects": [
+        {
+          "slot": 0,
+          "citationType": "FullCaseCitation",
+          "groups": {
+            "volume": "9",
+            "reporter": "U.S.",
+            "page": "9"
+          },
+          "metadata": {
+            "parenthetical": null,
+            "pin_cite": null,
+            "pin_cite_span_start": null,
+            "pin_cite_span_end": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": null,
+            "plaintiff": "Detached",
+            "defendant": null,
+            "extra": null,
+            "antecedent_guess": null,
+            "resolved_case_name_short": null,
+            "resolved_case_name": null
+          }
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "listSlot": 0,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              }
+            ]
+          },
+          {
+            "resource": {
+              "kind": "str",
+              "value": "other"
+            },
+            "listSlot": 1,
+            "members": [
+              {
+                "kind": "detached",
+                "slot": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "append-detached-full",
+      "family": "detached-prior-full",
+      "kinds": ["case", "supra", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "supra",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          },
+          "before": [
+            {
+              "citation": {
+                "kind": "input",
+                "index": 0
+              },
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              }
+            }
+          ],
+          "after": [
+            {
+              "citation": {
+                "kind": "input",
+                "index": 0
+              },
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              }
+            },
+            {
+              "citation": {
+                "kind": "detached",
+                "slot": 0
+              },
+              "resource": {
+                "kind": "str",
+                "value": "foreign"
+              }
+            }
+          ]
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 2
+          },
+          "last": {
+            "kind": "str",
+            "value": "foreign"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            },
+            {
+              "resource": {
+                "kind": "str",
+                "value": "foreign"
+              },
+              "listSlot": 1,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 1
+                }
+              ]
+            }
+          ],
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                }
+              ]
+            },
+            {
+              "resource": {
+                "kind": "str",
+                "value": "foreign"
+              },
+              "listSlot": 1,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "detachedObjects": [
+        {
+          "slot": 0,
+          "citationType": "FullCaseCitation",
+          "groups": {
+            "volume": "9",
+            "reporter": "U.S.",
+            "page": "9"
+          },
+          "metadata": {
+            "parenthetical": null,
+            "pin_cite": null,
+            "pin_cite_span_start": null,
+            "pin_cite_span_end": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": null,
+            "plaintiff": "Detached",
+            "defendant": null,
+            "extra": null,
+            "antecedent_guess": null,
+            "resolved_case_name_short": null,
+            "resolved_case_name": null
+          }
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "listSlot": 0,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              }
+            ]
+          },
+          {
+            "resource": {
+              "kind": "str",
+              "value": "foreign"
+            },
+            "listSlot": 1,
+            "members": [
+              {
+                "kind": "input",
+                "index": 1
+              },
+              {
+                "kind": "input",
+                "index": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "replace-detached-full",
+      "family": "detached-prior-full",
+      "kinds": ["case", "supra", "id"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": {
+            "kind": "input",
+            "index": 0
+          }
+        },
+        {
+          "slot": "supra",
+          "mention": {
+            "kind": "input",
+            "index": 1
+          },
+          "before": [
+            {
+              "citation": {
+                "kind": "input",
+                "index": 0
+              },
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              }
+            }
+          ],
+          "after": [
+            {
+              "citation": {
+                "kind": "detached",
+                "slot": 0
+              },
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              }
+            }
+          ]
+        },
+        {
+          "slot": "id",
+          "mention": {
+            "kind": "input",
+            "index": 2
+          },
+          "last": {
+            "kind": "str",
+            "value": "base"
+          },
+          "dictionarySlot": 0,
+          "before": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                },
+                {
+                  "kind": "input",
+                  "index": 1
+                }
+              ]
+            }
+          ],
+          "after": [
+            {
+              "resource": {
+                "kind": "str",
+                "value": "base"
+              },
+              "listSlot": 0,
+              "members": [
+                {
+                  "kind": "input",
+                  "index": 0
+                },
+                {
+                  "kind": "input",
+                  "index": 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "detachedObjects": [
+        {
+          "slot": 0,
+          "citationType": "FullCaseCitation",
+          "groups": {
+            "volume": "9",
+            "reporter": "U.S.",
+            "page": "9"
+          },
+          "metadata": {
+            "parenthetical": null,
+            "pin_cite": null,
+            "pin_cite_span_start": null,
+            "pin_cite_span_end": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": null,
+            "plaintiff": "Detached",
+            "defendant": null,
+            "extra": null,
+            "antecedent_guess": null,
+            "resolved_case_name_short": null,
+            "resolved_case_name": null
+          }
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "listSlot": 0,
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 1
+              },
+              {
+                "kind": "input",
+                "index": 2
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

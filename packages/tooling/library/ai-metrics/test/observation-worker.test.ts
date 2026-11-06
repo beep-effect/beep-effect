@@ -86,7 +86,8 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
       return original;
     },
   });
-  const backend = Context.get(yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh)), HttpServer.HttpServer);
+  const build1 = yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh));
+  const backend = Context.get(build1, HttpServer.HttpServer);
   // The factory-free test layer binds an ephemeral wildcard address; clients dial loopback.
   const origin = pipe(
     HttpServer.formatAddress(backend.address),
@@ -97,14 +98,19 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
     Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
       yield* Ref.update(backendCalls, (n) => n + 1);
-      if (request.method !== "POST") return yield* HttpServerResponse.json({}, { status: 404 });
+      if (request.method !== "POST") {
+        return yield* HttpServerResponse.json({}, { status: 404 });
+      }
       yield* request.arrayBuffer;
       yield* Deferred.succeed(backendStarted, undefined);
-      if (blockBackend === true) yield* Deferred.await(backendRelease);
+      if (blockBackend === true) {
+        yield* Deferred.await(backendRelease);
+      }
       return HttpServerResponse.uint8Array(new Uint8Array(), { contentType: "application/x-protobuf" });
     })
   );
-  const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
+  const build2 = yield* Layer.build(NodeHttpClient.layerNodeHttp);
+  const client = Context.get(build2, HttpClient.HttpClient);
   const salt = "synthetic-worker-salt";
   const delivery = NativeDeliveryPolicy.make({
     endpoint: Redacted.make(`${origin}/v1/traces`),
@@ -152,7 +158,8 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
     Effect.provideService(HttpClient.HttpClient, client),
     Effect.provideService(SqlClient.SqlClient, proxy)
   );
-  const intake = Context.get(yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh)), HttpServer.HttpServer);
+  const build3 = yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh));
+  const intake = Context.get(build3, HttpServer.HttpServer);
   yield* intake.serve(worker.handler);
   const post = Effect.fn("ObservationWorkerTest.post")(function* (digit = "1", protobuf = false) {
     const body = yield* encodeJsonValue({
@@ -164,10 +171,12 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
         HttpClientRequest.setHeader("content-type", protobuf === true ? "application/x-protobuf" : "application/json")
       )
     );
+    const argument = new Headers(response.headers);
+    const arrayBuffer1 = yield* response.arrayBuffer;
     return {
       status: response.status,
-      headers: new Headers(response.headers),
-      bytes: new Uint8Array(yield* response.arrayBuffer),
+      headers: argument,
+      bytes: new Uint8Array(arrayBuffer1),
     };
   });
   const requestFor = (receiptId: Sha256Hex) =>
@@ -177,7 +186,9 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
     Effect.map((rows) => rows[0].id)
   );
   const paused = Effect.gen(function* () {
-    while ((yield* worker.status).accepting) yield* Effect.yieldNow;
+    while ((yield* worker.status).accepting) {
+      yield* Effect.yieldNow;
+    }
   });
   return {
     worker,
@@ -222,7 +233,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       ).root.lookupType("Status");
       expect(binary.status).toBe(503);
       expect(status.toObject(status.decode(binary.bytes))).toMatchObject({ code: 14 });
-      expect(yield* f.worker.stats).toMatchObject({ pages: 0 });
+      const stats4 = yield* f.worker.stats;
+      expect(stats4).toMatchObject({ pages: 0 });
       expect((yield* f.worker.tick.pipe(Effect.flip)).reason).toBe("paused");
       yield* f.worker.resume;
       const accepted = yield* f.post();
@@ -237,17 +249,22 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       expect((yield* f.post("2")).status).toBe(503);
       expect((yield* f.worker.resume.pipe(Effect.flip)).reason).toBe("busy");
       yield* Deferred.succeed(f.backendRelease, undefined);
-      expect(yield* Fiber.join(sending)).toMatchObject({ _tag: "Recorded", outcome: { _tag: "Accepted" } });
-      expect(yield* Fiber.join(pausing)).toMatchObject({ active: 0, accepting: false });
+      const join5 = yield* Fiber.join(sending);
+      expect(join5).toMatchObject({ _tag: "Recorded", outcome: { _tag: "Accepted" } });
+      const join6 = yield* Fiber.join(pausing);
+      expect(join6).toMatchObject({ active: 0, accepting: false });
       const eventId = yield* f.event;
-      expect(yield* f.worker.eventState(eventId)).toMatchObject({
+      const eventState7 = yield* f.worker.eventState(eventId);
+      expect(eventState7).toMatchObject({
         _tag: "Some",
         value: { state: "accepted-unverified" },
       });
       expect((yield* f.worker.send(request).pipe(Effect.flip)).reason).toBe("paused");
       expect((yield* f.worker.reconcile(request, eventId).pipe(Effect.flip)).reason).toBe("paused");
-      expect(yield* Ref.get(f.backendCalls)).toBe(1);
-      assertNone(yield* f.worker.seal(0));
+      const got = yield* Ref.get(f.backendCalls);
+      expect(got).toBe(1);
+      const seal8 = yield* f.worker.seal(0);
+      assertNone(seal8);
       yield* f.worker.resume;
       expect((yield* f.post("2")).status).toBe(200);
     }).pipe(Effect.timeout("15 seconds"))
@@ -265,16 +282,20 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
         yield* Deferred.await(f.admissionStarted);
         const pausing = yield* f.worker.pause.pipe(Effect.forkChild);
         yield* f.paused;
-        expect(yield* f.worker.status).toMatchObject({ active: 1, accepting: false });
+        const status9 = yield* f.worker.status;
+        expect(status9).toMatchObject({ active: 1, accepting: false });
         expect((yield* f.post("2")).status).toBe(503);
         expect((yield* f.worker.seal(0).pipe(Effect.flip)).reason).toBe("busy");
         yield* Deferred.succeed(f.admissionRelease, undefined);
         const accepted = yield* Fiber.join(posting);
         expect(accepted.status).toBe(200);
         expect(accepted.headers.get("x-observation-receipt")).not.toBeNull();
-        expect(yield* Fiber.join(pausing)).toMatchObject({ active: 0, accepting: false });
-        expect(yield* f.worker.stats).toMatchObject({ pages: 1, frames: 1 });
-        expect(yield* f.sql`SELECT count(*) AS n FROM observation_native_receipts`).toEqual([{ n: 1 }]);
+        const join10 = yield* Fiber.join(pausing);
+        expect(join10).toMatchObject({ active: 0, accepting: false });
+        const stats11 = yield* f.worker.stats;
+        expect(stats11).toMatchObject({ pages: 1, frames: 1 });
+        const value12 = yield* f.sql`SELECT count(*) AS n FROM observation_native_receipts`;
+        expect(value12).toEqual([{ n: 1 }]);
       }).pipe(Effect.timeout("15 seconds"))
   )
 );
@@ -293,7 +314,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
           maxLineBytes: 256,
           maxFrames: 1,
         });
-        expect(yield* f.worker.sweep(sweep).pipe(Effect.flip)).toMatchObject({
+        const pipe13 = yield* f.worker.sweep(sweep).pipe(Effect.flip);
+        expect(pipe13).toMatchObject({
           _tag: "ObservationControlError",
           reason: "paused",
         });
@@ -306,20 +328,27 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
         const clock = yield* futureClock;
         yield* f.worker.expire(receiptId).pipe(Effect.provideService(Clock.Clock, clock));
         yield* f.worker.pause;
-        const sealed = O.getOrThrow(yield* f.worker.seal(0).pipe(Effect.provideService(Clock.Clock, clock)));
+        const pipe14 = yield* f.worker.seal(0).pipe(Effect.provideService(Clock.Clock, clock));
+        const sealed = O.getOrThrow(pipe14);
         expect(sealed.record.totals).toMatchObject({ acceptedUnverified: 1, visible: 0, expiredPages: 1 });
-        expect(yield* f.worker.window).toMatchObject({ epoch: 1 });
-        expect(yield* f.worker.restore(sealed.digest)).toBe("restored");
-        expect(yield* f.worker.window).toMatchObject({ epoch: 0 });
-        expect(yield* f.worker.eventState(eventId)).toMatchObject({
+        const window15 = yield* f.worker.window;
+        expect(window15).toMatchObject({ epoch: 1 });
+        const restore16 = yield* f.worker.restore(sealed.digest);
+        expect(restore16).toBe("restored");
+        const window17 = yield* f.worker.window;
+        expect(window17).toMatchObject({ epoch: 0 });
+        const eventState18 = yield* f.worker.eventState(eventId);
+        expect(eventState18).toMatchObject({
           _tag: "Some",
           value: { state: "accepted-unverified" },
         });
-        expect(yield* f.worker.status).toMatchObject({ accepting: false, active: 0, maintenance: false });
+        const status19 = yield* f.worker.status;
+        expect(status19).toMatchObject({ accepting: false, active: 0, maintenance: false });
         yield* f.worker.resume;
         expect((yield* f.post()).status).toBe(410);
         expect((yield* f.post("2")).status).toBe(200);
-        expect(yield* Ref.get(f.backendCalls)).toBe(1);
+        const got20 = yield* Ref.get(f.backendCalls);
+        expect(got20).toBe(1);
       }).pipe(Effect.timeout("15 seconds"))
   )
 );
@@ -334,16 +363,20 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const policy = ObservationBackupPolicy.make({ maxBytes: 1048576 });
       yield* f.worker.resume;
       expect((yield* f.post()).status).toBe(200);
-      expect(yield* f.worker.backup(policy, `${root}/busy`).pipe(Effect.flip)).toMatchObject({
+      const pipe21 = yield* f.worker.backup(policy, `${root}/busy`).pipe(Effect.flip);
+      expect(pipe21).toMatchObject({
         _tag: "ObservationControlError",
         reason: "busy",
       });
-      expect(yield* fs.exists(`${root}/busy`)).toBe(false);
+      const exists22 = yield* fs.exists(`${root}/busy`);
+      expect(exists22).toBe(false);
       yield* f.worker.pause;
       const receipt = yield* f.worker.backup(policy, `${root}/backup`);
       expect(receipt.manifest.hostId).toBe(f.config.intake.hostId);
-      expect(yield* fs.exists(`${root}/backup/manifest.json`)).toBe(true);
-      expect(yield* f.worker.status).toMatchObject({ accepting: false, active: 0, maintenance: false });
+      const exists23 = yield* fs.exists(`${root}/backup/manifest.json`);
+      expect(exists23).toBe(true);
+      const status24 = yield* f.worker.status;
+      expect(status24).toMatchObject({ accepting: false, active: 0, maintenance: false });
       expect((yield* f.post()).status).toBe(503);
     })
   )
@@ -371,7 +404,8 @@ it.layer(Layer.fresh(Layer.merge(sqlLayer, NodeServices.layer)), { timeout: "30 
           })
         );
         const policy = TranscriptDiscoveryReadPolicy.make({ maxBytes: 512, maxLineBytes: 256, maxFrames: 1 });
-        expect(yield* f.worker.discover(discovery, policy).pipe(Effect.flip)).toMatchObject({ reason: "paused" });
+        const pipe25 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
+        expect(pipe25).toMatchObject({ reason: "paused" });
         expect((yield* f.worker.stats).pages).toBe(0);
         yield* f.worker.resume;
         const result = yield* f.worker.discover(discovery, policy);
@@ -379,7 +413,8 @@ it.layer(Layer.fresh(Layer.merge(sqlLayer, NodeServices.layer)), { timeout: "30 
         expect(result.discovery.activeHelpers).toBe(1);
         expect((yield* f.worker.stats).pages).toBe(0);
         yield* f.worker.pause;
-        expect(yield* f.worker.discover(discovery, policy).pipe(Effect.flip)).toMatchObject({ reason: "paused" });
+        const pipe26 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
+        expect(pipe26).toMatchObject({ reason: "paused" });
         yield* f.worker.resume;
         const restarted = yield* f.worker.discover(discovery, policy);
         expect(restarted.discovery.roots[0]).toMatchObject({ cycle: 2, state: "scanning" });
@@ -396,7 +431,8 @@ it.layer(Layer.fresh(Layer.merge(sqlLayer, NodeServices.layer)), { timeout: "30 
             maxCycleEntries: 128,
           })
         );
-        expect(yield* f.worker.discover(other, policy).pipe(Effect.flip)).toMatchObject({ reason: "configuration" });
+        const pipe27 = yield* f.worker.discover(other, policy).pipe(Effect.flip);
+        expect(pipe27).toMatchObject({ reason: "configuration" });
         yield* f.worker.pause;
         expect((yield* f.worker.stats).pages).toBe(1);
       })
@@ -415,10 +451,15 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       yield* f.paused;
       expect((yield* f.worker.tick.pipe(Effect.flip)).reason).toBe("paused");
       yield* Deferred.succeed(f.backendRelease, undefined);
-      expect(yield* Fiber.join(ticking)).toMatchObject({ _tag: "Complete", outcomes: [{ _tag: "Sent" }] });
-      expect(yield* Fiber.join(pausing)).toMatchObject({ active: 0, accepting: false });
-      expect(yield* Ref.get(f.backendCalls)).toBe(1);
-      expect(yield* f.worker.eventState(yield* f.event)).toMatchObject({ value: { state: "accepted-unverified" } });
+      const join28 = yield* Fiber.join(ticking);
+      expect(join28).toMatchObject({ _tag: "Complete", outcomes: [{ _tag: "Sent" }] });
+      const join29 = yield* Fiber.join(pausing);
+      expect(join29).toMatchObject({ active: 0, accepting: false });
+      const got30 = yield* Ref.get(f.backendCalls);
+      expect(got30).toBe(1);
+      const event45 = yield* f.event;
+      const eventState31 = yield* f.worker.eventState(event45);
+      expect(eventState31).toMatchObject({ value: { state: "accepted-unverified" } });
     }).pipe(Effect.timeout("15 seconds"))
   )
 );
@@ -435,7 +476,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       yield* runtime.health.pipe(
         Effect.repeat({ until: (health) => O.isSome(health.lastCycle), schedule: Schedule.spaced(5) })
       );
-      expect(yield* runtime.health).toMatchObject({ phase: "paused", sourceCoverage: "unknown" });
+      const health32 = yield* runtime.health;
+      expect(health32).toMatchObject({ phase: "paused", sourceCoverage: "unknown" });
       expect((yield* f.post()).status).toBe(503);
       yield* f.worker.resume;
       expect((yield* f.post()).status).toBe(200);
@@ -446,10 +488,13 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
           schedule: Schedule.spaced(5),
         })
       );
-      expect(yield* Ref.get(f.backendCalls)).toBe(1);
+      const got33 = yield* Ref.get(f.backendCalls);
+      expect(got33).toBe(1);
       yield* Fiber.interrupt(running);
-      expect(yield* runtime.health).toMatchObject({ phase: "stopped", running: false, sourceCoverage: "unknown" });
-      expect(yield* f.worker.status).toMatchObject({ accepting: false, active: 0 });
+      const health34 = yield* runtime.health;
+      expect(health34).toMatchObject({ phase: "stopped", running: false, sourceCoverage: "unknown" });
+      const status35 = yield* f.worker.status;
+      expect(status35).toMatchObject({ accepting: false, active: 0 });
       expect((yield* f.post("2")).status).toBe(503);
     }).pipe(Effect.timeout("15 seconds"))
   )
@@ -462,7 +507,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const tables = yield* f.sql`SELECT name FROM sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*'`;
       expect(tables.length).toBeGreaterThanOrEqual(20);
       yield* f.sql`CREATE TABLE unexpected_late_table (private_value TEXT)`;
-      expect(yield* makeTranscriptIntakeJournal(f.config.intake).pipe(Effect.isFailure)).toBe(true);
+      const pipe36 = yield* makeTranscriptIntakeJournal(f.config.intake).pipe(Effect.isFailure);
+      expect(pipe36).toBe(true);
       expect((yield* f.sql`SELECT name FROM sqlite_master WHERE name='unexpected_late_table'`).length).toBe(1);
     })
   )
@@ -477,12 +523,12 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped();
       yield* fs.chmod(root, 0o700);
-      expect(
-        yield* f.worker
-          .backup(ObservationBackupPolicy.make({ maxBytes: 1048576 }), `${root}/refused`)
-          .pipe(Effect.isFailure)
-      ).toBe(true);
-      expect(yield* fs.exists(`${root}/refused/manifest.json`)).toBe(false);
+      const pipe37 = yield* f.worker
+        .backup(ObservationBackupPolicy.make({ maxBytes: 1048576 }), `${root}/refused`)
+        .pipe(Effect.isFailure);
+      expect(pipe37).toBe(true);
+      const exists38 = yield* fs.exists(`${root}/refused/manifest.json`);
+      expect(exists38).toBe(false);
     })
   )
 );
@@ -493,13 +539,17 @@ const maintenanceFixture = Effect.fn("ObservationWorkerTest.maintenanceFixture")
   const root = yield* fs.makeTempDirectoryScoped();
   yield* fs.chmod(root, 0o700);
   const maintenance = yield* makeObservationMaintenanceHttp(f.worker, f.config, root);
-  const server = Context.get(yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh)), HttpServer.HttpServer);
+  const build39 = yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh));
+  const server = Context.get(build39, HttpServer.HttpServer);
   yield* server.serve(
     future === true
-      ? maintenance.handler.pipe(Effect.provideService(Clock.Clock, yield* futureClock))
+      ? yield* futureClock.pipe(
+          Effect.map((clock) => maintenance.handler.pipe(Effect.provideService(Clock.Clock, clock)))
+        )
       : maintenance.handler
   );
-  const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
+  const build40 = yield* Layer.build(NodeHttpClient.layerNodeHttp);
+  const client = Context.get(build40, HttpClient.HttpClient);
   const request = Effect.fn("ObservationWorkerTest.maintenanceRequest")(function* (
     command: unknown,
     hostId = f.config.intake.hostId,
@@ -545,10 +595,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       expect((yield* f.request({ _tag: "Backup", slot: 0, directory: "synthetic-private" })).status).toBe(400);
       expect((yield* f.request({ _tag: "Window", extra: Str.repeat(5000)("x") })).status).toBe(413);
       yield* f.worker.resume;
+      const missingState = yield* f.request({ _tag: "EventState", eventId: id("e") });
+      expect(missingState.status).toBe(200);
+      expect(missingState.text).toBe("null");
       expect((yield* f.post()).status).toBe(200);
       expect((yield* f.request({ _tag: "Backup", slot: 0 })).status).toBe(503);
       expect((yield* f.request({ _tag: "Pages", afterSequence: 0 })).status).toBe(503);
-      expect(yield* f.fs.exists(`${f.root}/backup-0`)).toBe(false);
+      const exists41 = yield* f.fs.exists(`${f.root}/backup-0`);
+      expect(exists41).toBe(false);
       yield* f.worker.pause;
       const pages = yield* f.request({ _tag: "Pages", afterSequence: 0 });
       expect(pages.status).toBe(200);
@@ -560,9 +614,11 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       expect(backup.status).toBe(200);
       const original = yield* f.fs.readFileString(`${f.root}/backup-0/manifest.json`);
       expect((yield* f.request({ _tag: "Backup", slot: 0 })).status).toBe(503);
-      expect(yield* f.fs.readFileString(`${f.root}/backup-0/manifest.json`)).toBe(original);
+      const readFileString42 = yield* f.fs.readFileString(`${f.root}/backup-0/manifest.json`);
+      expect(readFileString42).toBe(original);
       expect((yield* f.request({ _tag: "Seal", epoch: 0 })).text).toBe("null");
-      expect(yield* f.worker.status).toMatchObject({ accepting: false, active: 0, maintenance: false });
+      const status43 = yield* f.worker.status;
+      expect(status43).toMatchObject({ accepting: false, active: 0, maintenance: false });
     })
   )
 );
@@ -579,7 +635,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       yield* f.worker.pause;
       const expired = yield* f.request({ _tag: "Expire", receiptId });
       expect(expired.status).toBe(200);
-      expect(yield* decodeJsonValue(expired.text)).toMatchObject({
+      const decodedJsonValue = yield* decodeJsonValue(expired.text);
+      expect(decodedJsonValue).toMatchObject({
         reason: "retention-expired",
       });
       const sealed = yield* f.request({ _tag: "Seal", epoch: 0 });
@@ -588,7 +645,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       expect((yield* f.request({ _tag: "RestoreEvidence", digest: id("f") })).status).toBe(503);
       expect((yield* f.request({ _tag: "RestoreEvidence", digest: seal.digest })).text).toBe('"restored"');
       expect((yield* f.request({ _tag: "RestoreEvidence", digest: seal.digest })).text).toBe('"already-restored"');
-      expect(yield* f.worker.status).toMatchObject({ accepting: false, active: 0, maintenance: false });
+      const status44 = yield* f.worker.status;
+      expect(status44).toMatchObject({ accepting: false, active: 0, maintenance: false });
     })
   )
 );

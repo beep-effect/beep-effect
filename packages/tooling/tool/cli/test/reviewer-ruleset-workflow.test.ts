@@ -316,7 +316,8 @@ describe("reviewer ruleset workflow", () => {
       const payload = yield* decodeObject(put.body);
       expect(payload).toEqual(writable(ruleset(11, false)));
       expect(payload).toMatchObject({ bypass_actors: ruleset(11).bypass_actors, conditions: ruleset(11).conditions });
-      expect(yield* encodeJson(payload)).toContain('{"context":"Heavy / Check","integration_id":15368}');
+      const encodedJson = yield* encodeJson(payload);
+      expect(encodedJson).toContain('{"context":"Heavy / Check","integration_id":15368}');
     })
   );
 
@@ -328,7 +329,8 @@ describe("reviewer ruleset workflow", () => {
       );
       yield* exit;
       const put = O.getOrThrow(A.head(putCalls(calls)));
-      expect(yield* decodeObject(put.body)).toEqual(writable(ruleset(11)));
+      const decodedObject = yield* decodeObject(put.body);
+      expect(decodedObject).toEqual(writable(ruleset(11)));
     })
   );
 
@@ -427,7 +429,8 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("reviewer ruleset command", (i
       const puts = putCalls(result.calls);
       expect(callKeys(puts)).toEqual([`PUT ${ROOT}/rulesets/12`]);
       const put = O.getOrThrow(A.head(puts));
-      expect(yield* decodeObject(put.body)).toEqual(writable(ruleset(12, false)));
+      const decodedObject1 = yield* decodeObject(put.body);
+      expect(decodedObject1).toEqual(writable(ruleset(12, false)));
     })
   );
 

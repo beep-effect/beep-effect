@@ -231,14 +231,16 @@ describe("@beep/technical-drawing sheet-set approval", () => {
         );
         expect(wrongApprover.reason).toBe("approval");
         expect(wrongApprover.message).toContain("from/sender is not the recorded approver");
-        expect(yield* fs.exists(path.join(other.dir, "approval.json"))).toBe(false);
+        const exists1 = yield* fs.exists(path.join(other.dir, "approval.json"));
+        expect(exists1).toBe(false);
         // a set rendered from a spec without an approver cannot be signed at all
         const unbound = yield* writeSheetSet(O.none());
         const noApprover = yield* Effect.flip(
           sign(unbound.manifestPath, ConfirmationSource.cases.email.make({ messageId: "approved" }))
         );
         expect(noApprover.message).toContain("records no approver");
-        expect(yield* fs.exists(path.join(unbound.dir, "approval.json"))).toBe(false);
+        const exists2 = yield* fs.exists(path.join(unbound.dir, "approval.json"));
+        expect(exists2).toBe(false);
       })
     );
 

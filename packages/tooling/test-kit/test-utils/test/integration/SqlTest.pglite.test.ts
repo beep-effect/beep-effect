@@ -196,8 +196,10 @@ const isContainerInspectable = Effect.fn("SqlTestIntegration.isContainerInspecta
 
 it.effect("recognizes only verified container absence during inspection", () =>
   Effect.gen(function* () {
-    expect(yield* inspectContainer(() => Promise.resolve({}))).toBe(true);
-    expect(yield* inspectContainer(() => Promise.reject({ statusCode: 404 }))).toBe(false);
+    const inspectContainer1 = yield* inspectContainer(() => Promise.resolve({}));
+    expect(inspectContainer1).toBe(true);
+    const inspectContainer2 = yield* inspectContainer(() => Promise.reject({ statusCode: 404 }));
+    expect(inspectContainer2).toBe(false);
     const cause = new Error("inspection transport unavailable");
     const error = yield* inspectContainer(() => Promise.reject(cause)).pipe(Effect.flip);
     expect(error).toBeInstanceOf(SqlTestHarnessError);
@@ -425,11 +427,10 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
       const schemaName = yield* Effect.fromOption(info.schema).pipe(Effect.orDie);
       const connectionUri = yield* Effect.fromOption(info.connectionUri).pipe(Effect.orDie);
 
-      expect(
-        yield* schemaExists(schemaName).pipe(
-          Effect.provideService(SqlClient.SqlClient, Context.get(services, SqlClient.SqlClient))
-        )
-      ).toBe(true);
+      const pipe3 = yield* schemaExists(schemaName).pipe(
+        Effect.provideService(SqlClient.SqlClient, Context.get(services, SqlClient.SqlClient))
+      );
+      expect(pipe3).toBe(true);
       yield* Scope.close(scope, Exit.void);
       const existsAfterClose = yield* schemaExists(schemaName).pipe(
         provideScopedLayer(makeExternalNoIsolationLayer(connectionUri)),
@@ -496,12 +497,14 @@ if (hasSharedConnectionUri) {
             const resource = yield* makePgliteTestcontainerResource();
             const id = resource.container.getId();
 
-            expect(yield* isContainerInspectable(id)).toBe(true);
+            const isContainerInspectable4 = yield* isContainerInspectable(id);
+            expect(isContainerInspectable4).toBe(true);
             return id;
           })
         );
 
-        expect(yield* isContainerInspectable(containerId)).toBe(false);
+        const isContainerInspectable5 = yield* isContainerInspectable(containerId);
+        expect(isContainerInspectable5).toBe(false);
       }),
       PgliteTestcontainersIntegrationTimeoutMs
     );

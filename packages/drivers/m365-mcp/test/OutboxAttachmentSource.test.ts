@@ -22,7 +22,8 @@ const encoder = new TextEncoder();
 const stage = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const base = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "outbox-attachments-" }));
+  const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({ prefix: "outbox-attachments-" });
+  const base = yield* fs.realPath(madeTempDirectoryScoped);
   const root = path.join(base, "root");
   const outside = path.join(base, "outside");
   const sibling = path.join(base, "root-evil");
@@ -90,15 +91,24 @@ describe("@beep/m365-mcp outbox attachment source", () => {
         const policy = OutboxAttachmentPolicy.make({ roots: [staged.root] });
         const reason = (candidate: string) => reasonWith(policy, [candidate]);
 
-        assert.strictEqual(yield* reason("abc.txt"), "not-absolute");
-        assert.strictEqual(yield* reason(`${staged.outside}/secret.txt`), "outside-roots");
-        assert.strictEqual(yield* reason(`${staged.root}/../outside/secret.txt`), "outside-roots");
-        assert.strictEqual(yield* reason(`${staged.sibling}/sibling.txt`), "outside-roots");
-        assert.strictEqual(yield* reason(staged.at("escape")), "outside-roots");
-        assert.strictEqual(yield* reason(staged.at("folder")), "not-a-file");
-        assert.strictEqual(yield* reason(staged.root), "outside-roots");
-        assert.strictEqual(yield* reason(staged.at("empty.txt")), "empty");
-        assert.strictEqual(yield* reason(staged.at("missing.pdf")), "unreadable");
+        const reason1 = yield* reason("abc.txt");
+        assert.strictEqual(reason1, "not-absolute");
+        const reason2 = yield* reason(`${staged.outside}/secret.txt`);
+        assert.strictEqual(reason2, "outside-roots");
+        const reason3 = yield* reason(`${staged.root}/../outside/secret.txt`);
+        assert.strictEqual(reason3, "outside-roots");
+        const reason4 = yield* reason(`${staged.sibling}/sibling.txt`);
+        assert.strictEqual(reason4, "outside-roots");
+        const reason5 = yield* reason(staged.at("escape"));
+        assert.strictEqual(reason5, "outside-roots");
+        const reason6 = yield* reason(staged.at("folder"));
+        assert.strictEqual(reason6, "not-a-file");
+        const reason7 = yield* reason(staged.root);
+        assert.strictEqual(reason7, "outside-roots");
+        const reason8 = yield* reason(staged.at("empty.txt"));
+        assert.strictEqual(reason8, "empty");
+        const reason9 = yield* reason(staged.at("missing.pdf"));
+        assert.strictEqual(reason9, "unreadable");
       })
     );
 
@@ -109,33 +119,29 @@ describe("@beep/m365-mcp outbox attachment source", () => {
         const roots = [staged.root] as const;
         const abc = staged.at("abc.txt");
 
-        assert.strictEqual(
-          yield* reasonWith(OutboxAttachmentPolicy.make({ maxAttachmentBytes: 63, roots }), [staged.at("big.bin")]),
-          "too-large"
-        );
-        assert.strictEqual(
-          yield* reasonWith(OutboxAttachmentPolicy.make({ maxAttachments: 2, roots }), [abc, abc, abc]),
-          "too-many"
-        );
-        assert.strictEqual(
-          yield* reasonWith(OutboxAttachmentPolicy.make({ maxMessageAttachmentBytes: 66, roots }), [
-            abc,
-            staged.at("big.bin"),
-          ]),
-          "total-too-large"
-        );
-        assert.lengthOf(
-          yield* resolveWith(OutboxAttachmentPolicy.make({ maxMessageAttachmentBytes: 67, roots }), [
-            abc,
-            staged.at("big.bin"),
-          ]),
-          2
-        );
+        const reasonWith10 = yield* reasonWith(OutboxAttachmentPolicy.make({ maxAttachmentBytes: 63, roots }), [
+          staged.at("big.bin"),
+        ]);
+        assert.strictEqual(reasonWith10, "too-large");
+        const reasonWith11 = yield* reasonWith(OutboxAttachmentPolicy.make({ maxAttachments: 2, roots }), [
+          abc,
+          abc,
+          abc,
+        ]);
+        assert.strictEqual(reasonWith11, "too-many");
+        const reasonWith12 = yield* reasonWith(OutboxAttachmentPolicy.make({ maxMessageAttachmentBytes: 66, roots }), [
+          abc,
+          staged.at("big.bin"),
+        ]);
+        assert.strictEqual(reasonWith12, "total-too-large");
+        const resolvedWith = yield* resolveWith(OutboxAttachmentPolicy.make({ maxMessageAttachmentBytes: 67, roots }), [
+          abc,
+          staged.at("big.bin"),
+        ]);
+        assert.lengthOf(resolvedWith, 2);
         // One bad path refuses the whole list.
-        assert.strictEqual(
-          yield* reasonWith(OutboxAttachmentPolicy.make({ roots }), [abc, staged.at("escape")]),
-          "outside-roots"
-        );
+        const reasonWith13 = yield* reasonWith(OutboxAttachmentPolicy.make({ roots }), [abc, staged.at("escape")]);
+        assert.strictEqual(reasonWith13, "outside-roots");
       })
     );
 
@@ -150,7 +156,8 @@ describe("@beep/m365-mcp outbox attachment source", () => {
         const missingRoot = yield* build(OutboxAttachmentPolicy.make({ roots: [missing] })).pipe(Effect.flip);
         const relativeRoot = yield* build(OutboxAttachmentPolicy.make({ roots: ["staging"] })).pipe(Effect.flip);
         const fileRoot = yield* build(OutboxAttachmentPolicy.make({ roots: [staged.at("abc.txt")] })).pipe(Effect.flip);
-        assert.isFalse(yield* fs.exists(missing));
+        const exists14 = yield* fs.exists(missing);
+        assert.isFalse(exists14);
         yield* build(OutboxAttachmentPolicy.make({ createMissingRoots: true, roots: [missing] }));
         const created = yield* fs.stat(missing);
 

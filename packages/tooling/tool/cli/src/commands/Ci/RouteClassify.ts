@@ -647,7 +647,8 @@ const readWorkspace = Effect.fnUntraced(function* <R>(
   read: RouteReadAt<R>,
   ref: string
 ): Effect.fn.Return<RefWorkspace, RouteError, R> {
-  const manifest = O.flatMap(yield* read(ref, MANIFEST_NAME), decodeManifestText);
+  const read1 = yield* read(ref, MANIFEST_NAME);
+  const manifest = O.flatMap(read1, decodeManifestText);
   return {
     ref,
     globs: pipe(manifest, O.map(workspacePatterns), O.flatMap(flow(GlobSet.compileResult, Result.getSuccess))),

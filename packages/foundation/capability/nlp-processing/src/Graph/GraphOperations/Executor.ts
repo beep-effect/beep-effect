@@ -303,7 +303,8 @@ const cacheResult: {
     key: ResultStore.ResultKey,
     newNodes: ReadonlyArray<GraphNode<B>>
   ): Effect.fn.Return<void, ExecutionError> {
-    const opResult = yield* Types.makeOperationResult(yield* Types.generateExecutionId, {
+    const generateExecutionId1 = yield* Types.generateExecutionId;
+    const opResult = yield* Types.makeOperationResult(generateExecutionId1, {
       originalGraph: O.none(),
       newNodes,
       errors: A.empty<unknown>(),

@@ -75,10 +75,8 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
           ...envelope,
           body: { ...envelope.body, binding: { ...envelope.body.binding, policyDigest } },
         });
-        strictEqual(
-          yield* issuer.verify(altered, receipt).pipe(Effect.isSuccess),
-          policyDigest === envelope.body.binding.policyDigest
-        );
+        const pipe1 = yield* issuer.verify(altered, receipt).pipe(Effect.isSuccess);
+        strictEqual(pipe1, policyDigest === envelope.body.binding.policyDigest);
       }),
     { arbitrary: fcRuns(20) }
   );
@@ -121,31 +119,38 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
         adapterRuntime: O.some(adapterRuntime),
       });
       const envelope = yield* issuer.issue(observed);
-      expect(yield* issuer.verify(envelope, observed)).toEqual(observed);
+      const verify2 = yield* issuer.verify(envelope, observed);
+      expect(verify2).toEqual(observed);
       const altered = CacheProducerBundle.make({
         ...observed,
         upload: O.some(CacheHostedProducerUpload.make({ ...upload, archiveBytes: 18 })),
       });
-      assertTrue(yield* issuer.verify(envelope, altered).pipe(Effect.isFailure));
+      const pipe3 = yield* issuer.verify(envelope, altered).pipe(Effect.isFailure);
+      assertTrue(pipe3);
       const missingRuntime = CacheProducerBundle.make({ ...observed, adapterRuntime: O.none() });
-      assertTrue(yield* issuer.issue(missingRuntime).pipe(Effect.isFailure));
+      const pipe4 = yield* issuer.issue(missingRuntime).pipe(Effect.isFailure);
+      assertTrue(pipe4);
       const changedRuntime = CacheProducerBundle.make({
         ...observed,
         adapterRuntime: O.some(
           CacheProducerAdapterReceipt.make({ ...adapterRuntime, backendSha256: Sha256Hex.make(Str.repeat(64)("0")) })
         ),
       });
-      assertTrue(yield* issuer.verify(envelope, changedRuntime).pipe(Effect.isFailure));
+      const pipe5 = yield* issuer.verify(envelope, changedRuntime).pipe(Effect.isFailure);
+      assertTrue(pipe5);
       const foreignRuntime = CacheProducerBundle.make({
         ...observed,
         adapterRuntime: O.some(
           CacheProducerAdapterReceipt.make({ ...adapterRuntime, targetSha256: Sha256Hex.make(Str.repeat(64)("0")) })
         ),
       });
-      assertTrue(yield* issuer.issue(foreignRuntime).pipe(Effect.isFailure));
-      assertTrue(yield* issuer.issue(receipt).pipe(Effect.isFailure));
+      const pipe6 = yield* issuer.issue(foreignRuntime).pipe(Effect.isFailure);
+      assertTrue(pipe6);
+      const pipe7 = yield* issuer.issue(receipt).pipe(Effect.isFailure);
+      assertTrue(pipe7);
       const historical = yield* makeCacheProducerIssuer(binding);
-      assertTrue(yield* historical.issue(observed).pipe(Effect.isFailure));
+      const pipe8 = yield* historical.issue(observed).pipe(Effect.isFailure);
+      assertTrue(pipe8);
     })
   );
 
@@ -186,7 +191,8 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
         .verify(envelope, receipt)
         .pipe(Effect.flip, Effect.ensuring(Effect.sync(() => verifying.mockRestore())));
       expect(verifyError.message).toContain("Cannot verify producer authentication");
-      expect(yield* issuer.verify(envelope, receipt)).toEqual(receipt);
+      const verify9 = yield* issuer.verify(envelope, receipt);
+      expect(verify9).toEqual(receipt);
     })
   );
 
@@ -196,13 +202,13 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
         { schemaVersion: "cache-pilot-signed/v8" },
         { activatedConfigurationDigest: undefined },
         { signedConfigurationDigest: undefined },
-      ])
-        expect(
-          yield* S.decodeUnknownEffect(CacheProducerBundle)({
-            ...bundleInput,
-            pilot: { ...input, ...patch },
-          }).pipe(Effect.isFailure)
-        ).toBe(true);
+      ]) {
+        const pipe2 = yield* S.decodeUnknownEffect(CacheProducerBundle)({
+          ...bundleInput,
+          pilot: { ...input, ...patch },
+        }).pipe(Effect.isFailure);
+        expect(pipe2).toBe(true);
+      }
     })
   );
   it.effect("authenticates conformance bytes together with the pilot and refuses incomplete bundles", () =>
@@ -233,7 +239,8 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
   it.effect("authenticates a bound observation without exporting keys", () =>
     Effect.gen(function* () {
       const { issuer, receipt, envelope } = yield* setup();
-      expect(yield* issuer.verify(envelope, receipt)).toEqual(receipt);
+      const verify10 = yield* issuer.verify(envelope, receipt);
+      expect(verify10).toEqual(receipt);
       expect(R.keys(issuer)).toEqual(["issue", "verify"]);
     })
   );
@@ -324,7 +331,8 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
       });
       const fresh = yield* issuer.issue(receipt);
       expect(fresh.body.binding.sourceRevision).toBe(receipt.pilot.sourceRevision);
-      expect(yield* issuer.verify(fresh, receipt)).toEqual(receipt);
+      const verify11 = yield* issuer.verify(fresh, receipt);
+      expect(verify11).toEqual(receipt);
     })
   );
   it.layer(TestClock.layer())("own TestClock", (it) => {
@@ -409,12 +417,14 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
       Effect.gen(function* () {
         const { directory, binding, receipt, envelope, contract } = yield* persistentSetup();
         const reopened = yield* openCacheProducerIssuer(directory, binding);
-        expect(yield* reopened.verify(envelope, receipt)).toEqual(receipt);
+        const verify12 = yield* reopened.verify(envelope, receipt);
+        expect(verify12).toEqual(receipt);
         (yield* initializeCacheProducerIssuer(directory, binding, contract).pipe(Effect.result)).pipe(
           Result.isFailure,
           assertTrue
         );
-        expect(yield* reopened.verify(envelope, receipt)).toEqual(receipt);
+        const verify13 = yield* reopened.verify(envelope, receipt);
+        expect(verify13).toEqual(receipt);
       })
     );
     it.effect("cannot rebind an existing issuer by changing caller expectations", () =>
@@ -444,7 +454,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
           if (Result.isFailure(result)) expect(result.failure.message).toContain("different workflow");
         }
         const reopened = yield* openCacheProducerIssuer(directory, binding);
-        expect(yield* reopened.verify(envelope, receipt)).toEqual(receipt);
+        const verify14 = yield* reopened.verify(envelope, receipt);
+        expect(verify14).toEqual(receipt);
       })
     );
     it.effect("revokes live instances and future opens", () =>
@@ -464,7 +475,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const file = path.join(directory, "issuer.key");
         yield* fs.remove(file);
         (yield* openCacheProducerIssuer(directory, binding).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
-        expect(yield* fs.exists(file)).toBe(false);
+        const exists15 = yield* fs.exists(file);
+        expect(exists15).toBe(false);
         yield* fs.remove(directory, { recursive: true });
         const replacement = yield* initializeCacheProducerIssuer(directory, binding, contract);
         (yield* issuer.issue(receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
@@ -527,7 +539,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const { fs, path, directory, receipt, envelope } = yield* persistentSetup();
         const verifier = yield* openCacheProducerVerifier(directory);
         const file = path.join(directory, "approval.json");
-        const approval = yield* S.decodeEffect(ProducerApprovalJson)(yield* fs.readFileString(file));
+        const argument = S.decodeEffect(ProducerApprovalJson);
+        const readFileString3 = yield* fs.readFileString(file);
+        const approval = yield* argument(readFileString3);
         const changedContract = CacheTaskContract.make({ ...approval.contract, negativeCases: ["weaker-policy"] });
         for (const binding of [
           approval.binding,
@@ -537,7 +551,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
           }),
         ]) {
           const changed = CacheProducerApproval.make({ binding, contract: changedContract });
-          yield* fs.writeFileString(file, yield* S.encodeEffect(ProducerApprovalJson)(changed));
+          const value16 = yield* S.encodeEffect(ProducerApprovalJson)(changed);
+          yield* fs.writeFileString(file, value16);
           (yield* openCacheProducerVerifier(directory).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
           (yield* verifier.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         }
@@ -559,10 +574,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
           ...binding,
           policyDigest: Sha256Hex.make(Str.repeat(64)("0")),
         });
-        yield* fs.writeFileString(
-          path.join(directory, "approval.json"),
-          yield* S.encodeEffect(ProducerBindingJson)(changed)
-        );
+        const argument1 = path.join(directory, "approval.json");
+        const value4 = yield* S.encodeEffect(ProducerBindingJson)(changed);
+        yield* fs.writeFileString(argument1, value4);
         (yield* openCacheProducerVerifier(directory).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         (yield* verifier.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       })
@@ -575,7 +589,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         yield* fs.remove(file);
         (yield* openCacheProducerVerifier(directory).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         (yield* verifier.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
-        expect(yield* fs.exists(file)).toBe(false);
+        const exists17 = yield* fs.exists(file);
+        expect(exists17).toBe(false);
       })
     );
     it.effect("rejects permissive, symbolic and hard-linked approval records", () =>
@@ -632,7 +647,8 @@ const executionProfileSetup = Effect.fn("ProducerTest.executionProfileSetup")(fu
     adapterExecutable,
   });
   const file = state.path.join(state.directory, "runtime.json");
-  yield* state.fs.writeFileString(file, yield* encodeExecutionProfile(profile), { mode: 0o600 });
+  const encodedExecutionProfile = yield* encodeExecutionProfile(profile);
+  yield* state.fs.writeFileString(file, encodedExecutionProfile, { mode: 0o600 });
   return { ...state, profile, file };
 });
 
@@ -640,16 +656,12 @@ const provisioningInputsSetup = Effect.fn("ProducerTest.provisioningInputsSetup"
   const state = yield* executionProfileSetup();
   const inputs = state.path.join(state.path.dirname(state.directory), "provisioning-inputs");
   yield* state.fs.makeDirectory(inputs, { mode: 0o700 });
-  yield* state.fs.writeFileString(
-    state.path.join(inputs, "approval.json"),
-    yield* state.fs.readFileString(state.path.join(state.directory, "approval.json")),
-    { mode: 0o600 }
-  );
-  yield* state.fs.writeFileString(
-    state.path.join(inputs, "runtime.json"),
-    yield* encodeExecutionProfile(state.profile),
-    { mode: 0o600 }
-  );
+  const argument2 = state.path.join(inputs, "approval.json");
+  const readFileString5 = yield* state.fs.readFileString(state.path.join(state.directory, "approval.json"));
+  yield* state.fs.writeFileString(argument2, readFileString5, { mode: 0o600 });
+  const argument3 = state.path.join(inputs, "runtime.json");
+  const encodedExecutionProfile6 = yield* encodeExecutionProfile(state.profile);
+  yield* state.fs.writeFileString(argument3, encodedExecutionProfile6, { mode: 0o600 });
   return { ...state, inputs };
 });
 
@@ -659,11 +671,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
     it.effect("installs transferred material without generating a key and preserves independent verification", () =>
       Effect.gen(function* () {
         const f = yield* provisioningInputsSetup();
-        yield* f.fs.writeFile(
-          f.path.join(f.inputs, "issuer.material"),
-          yield* f.fs.readFile(f.path.join(f.directory, "issuer.key")),
-          { flag: "wx", mode: 0o600 }
-        );
+        const argument4 = f.path.join(f.inputs, "issuer.material");
+        const readFile7 = yield* f.fs.readFile(f.path.join(f.directory, "issuer.key"));
+        yield* f.fs.writeFile(argument4, readFile7, { flag: "wx", mode: 0o600 });
         const [approval, , material] = yield* readCacheProducerProvisioning(f.inputs, process.cwd());
         assertSome(
           O.map(material, (value) => Redacted.value(value).byteLength),
@@ -691,26 +701,29 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const f = yield* provisioningInputsSetup();
         for (const length of [0, 64, 95, 97]) {
           const directory = f.path.join(f.path.dirname(f.directory), `bad-${length}`);
-          expect(
-            yield* initializeCacheProducerIssuer(
-              directory,
-              f.binding,
-              f.contract,
-              O.some(Redacted.make(new Uint8Array(length)))
-            ).pipe(Effect.isFailure)
-          ).toBe(true);
-          expect(yield* f.fs.exists(directory)).toBe(false);
+          const pipe18 = yield* initializeCacheProducerIssuer(
+            directory,
+            f.binding,
+            f.contract,
+            O.some(Redacted.make(new Uint8Array(length)))
+          ).pipe(Effect.isFailure);
+          expect(pipe18).toBe(true);
+          const exists19 = yield* f.fs.exists(directory);
+          expect(exists19).toBe(false);
         }
         const directory = f.path.join(f.path.dirname(f.directory), "wrong-binding");
-        const material = Redacted.make(yield* f.fs.readFile(f.path.join(f.directory, "issuer.key")));
+        const readFile20 = yield* f.fs.readFile(f.path.join(f.directory, "issuer.key"));
+        const material = Redacted.make(readFile20);
         const binding = CacheProducerBinding.make({
           ...f.binding,
           workflowImplementation: Sha256Hex.make(Str.repeat(64)("e")),
         });
-        expect(
-          yield* initializeCacheProducerIssuer(directory, binding, f.contract, O.some(material)).pipe(Effect.isFailure)
-        ).toBe(true);
-        expect(yield* f.fs.exists(directory)).toBe(false);
+        const pipe21 = yield* initializeCacheProducerIssuer(directory, binding, f.contract, O.some(material)).pipe(
+          Effect.isFailure
+        );
+        expect(pipe21).toBe(true);
+        const exists22 = yield* f.fs.exists(directory);
+        expect(exists22).toBe(false);
       })
     );
     it.effect("applies private metadata and fixed byte bounds to optional transferred material", () =>
@@ -720,22 +733,26 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const bytes = yield* f.fs.readFile(f.path.join(f.directory, "issuer.key"));
         yield* f.fs.writeFile(materialFile, bytes, { flag: "wx", mode: 0o600 });
         yield* f.fs.chmod(materialFile, 0o644);
-        expect(yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+        const pipe23 = yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure);
+        expect(pipe23).toBe(true);
         yield* f.fs.chmod(materialFile, 0o600);
         for (const length of [0, 64, 95, 97]) {
           yield* f.fs.writeFile(materialFile, new Uint8Array(length));
-          expect(yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+          const pipe24 = yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure);
+          expect(pipe24).toBe(true);
         }
         yield* f.fs.writeFile(materialFile, bytes);
         yield* f.fs.link(materialFile, f.path.join(f.inputs, "material-alias"));
-        expect(yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+        const pipe25 = yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure);
+        expect(pipe25).toBe(true);
       })
     );
     it.effect("refuses provisioning inputs within the loaded checkout", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const inputs = yield* fs.makeTempDirectoryScoped({ directory: process.cwd(), prefix: ".producer-input-test-" });
-        expect(yield* readCacheProducerProvisioning(inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+        const pipe26 = yield* readCacheProducerProvisioning(inputs, process.cwd()).pipe(Effect.isFailure);
+        expect(pipe26).toBe(true);
       })
     );
     it.effect("reads separate private provisioning inputs without issuer material", () =>
@@ -744,15 +761,18 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const [approval, profile] = yield* readCacheProducerProvisioning(f.inputs, process.cwd());
         expect(approval.binding).toEqual(f.binding);
         expect(profile).toEqual(f.profile);
-        expect(yield* f.fs.exists(f.path.join(f.inputs, "issuer.key"))).toBe(false);
-        expect(A.sort(yield* f.fs.readDirectory(f.inputs), Str.Order)).toEqual(["approval.json", "runtime.json"]);
+        const exists27 = yield* f.fs.exists(f.path.join(f.inputs, "issuer.key"));
+        expect(exists27).toBe(false);
+        const readDirectory28 = yield* f.fs.readDirectory(f.inputs);
+        expect(A.sort(readDirectory28, Str.Order)).toEqual(["approval.json", "runtime.json"]);
       })
     );
     it.effect.each(["issuer.key", "revoked"])("refuses provisioning input directories containing %s", (marker) =>
       Effect.gen(function* () {
         const f = yield* provisioningInputsSetup();
         yield* f.fs.symlink(f.path.join(f.inputs, "missing-marker"), f.path.join(f.inputs, marker));
-        expect(yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+        const pipe29 = yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure);
+        expect(pipe29).toBe(true);
       })
     );
     it.effect("retains private-record metadata, bounds and strict decoding for provisioning inputs", () =>
@@ -761,7 +781,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const file = f.path.join(f.inputs, "runtime.json");
         const original = yield* f.fs.readFile(file);
         yield* f.fs.chmod(file, 0o644);
-        expect(yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+        const pipe30 = yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure);
+        expect(pipe30).toBe(true);
         yield* f.fs.chmod(file, 0o600);
         for (const bytes of [
           new Uint8Array(),
@@ -770,11 +791,13 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
           new TextEncoder().encode("{"),
         ]) {
           yield* f.fs.writeFile(file, bytes);
-          expect(yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+          const pipe31 = yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure);
+          expect(pipe31).toBe(true);
         }
         yield* f.fs.writeFile(file, original);
         yield* f.fs.link(file, f.path.join(f.inputs, "runtime-alias.json"));
-        expect(yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+        const pipe32 = yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure);
+        expect(pipe32).toBe(true);
       })
     );
     it.effect.prop(
@@ -794,16 +817,20 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const { fs, path, directory } = yield* persistentSetup();
         const key = path.join(directory, "issuer.key");
         const before = yield* fs.readFile(key);
-        assertTrue(yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure));
-        expect(yield* fs.exists(path.join(directory, "runtime.json"))).toBe(false);
-        expect(yield* fs.readFile(key)).toEqual(before);
+        const pipe33 = yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure);
+        assertTrue(pipe33);
+        const exists34 = yield* fs.exists(path.join(directory, "runtime.json"));
+        expect(exists34).toBe(false);
+        const readFile35 = yield* fs.readFile(key);
+        expect(readFile35).toEqual(before);
       })
     );
     it.effect("rejects a world-readable runtime profile", () =>
       Effect.gen(function* () {
         const { fs, file, directory } = yield* executionProfileSetup();
         yield* fs.chmod(file, 0o644);
-        assertTrue(yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure));
+        const pipe36 = yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure);
+        assertTrue(pipe36);
       })
     );
     it.effect("rejects a symbolic runtime profile", () =>
@@ -812,27 +839,31 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const original = path.join(directory, "original-runtime.json");
         yield* fs.rename(file, original);
         yield* fs.symlink(original, file);
-        assertTrue(yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure));
+        const pipe37 = yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure);
+        assertTrue(pipe37);
       })
     );
     it.effect("rejects a hard-linked runtime profile", () =>
       Effect.gen(function* () {
         const { fs, path, directory, file } = yield* executionProfileSetup();
         yield* fs.link(file, path.join(directory, "runtime-alias.json"));
-        assertTrue(yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure));
+        const pipe38 = yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure);
+        assertTrue(pipe38);
       })
     );
     it.effect("bounds an otherwise valid oversized runtime profile", () =>
       Effect.gen(function* () {
         const { directory } = yield* executionProfileSetup(`/${Str.repeat(16384)("a")}`);
-        assertTrue(yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure));
+        const pipe39 = yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure);
+        assertTrue(pipe39);
       })
     );
     it.effect("honors revocation before opening the execution profile", () =>
       Effect.gen(function* () {
         const { directory } = yield* executionProfileSetup();
         yield* revokeCacheProducerIssuer(directory);
-        assertTrue(yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure));
+        const pipe40 = yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure);
+        assertTrue(pipe40);
       })
     );
   }

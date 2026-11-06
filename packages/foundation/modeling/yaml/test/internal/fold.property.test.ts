@@ -51,7 +51,9 @@ it.effect.prop(
       assert.strictEqual(parse(`${rendered}\n`), value);
       const string = yield* S.decodeUnknownEffect(S.String)(parsed);
       assert.strictEqual(foldScalarLine(string, "  ", columns, 0), rendered);
-      assert.deepStrictEqual(yield* Yaml.parse(yield* Yaml.stringify(parsed)), parsed);
+      const stringify5 = yield* Yaml.stringify(parsed);
+      const parsed1 = yield* Yaml.parse(stringify5);
+      assert.deepStrictEqual(parsed1, parsed);
     }),
   runs
 );
@@ -75,7 +77,9 @@ it.effect.prop(
         const parsed = yield* Yaml.parse(`${rendered}\n`);
         assert.strictEqual(parsed, value);
         assert.strictEqual(parse(`${rendered}\n`), value);
-        assert.deepStrictEqual(yield* Yaml.parse(yield* Yaml.stringify(parsed)), parsed);
+        const stringify6 = yield* Yaml.stringify(parsed);
+        const parsed2 = yield* Yaml.parse(stringify6);
+        assert.deepStrictEqual(parsed2, parsed);
       }
     }),
   runs
@@ -93,7 +97,9 @@ it.effect.prop(
         assert.strictEqual(parse(`${rendered}\n`), value);
         const string = yield* S.decodeUnknownEffect(S.String)(parsed);
         assert.strictEqual(render(string, "  ", "keep"), rendered);
-        assert.deepStrictEqual(yield* Yaml.parse(yield* Yaml.stringify(parsed)), parsed);
+        const stringify7 = yield* Yaml.stringify(parsed);
+        const parsed3 = yield* Yaml.parse(stringify7);
+        assert.deepStrictEqual(parsed3, parsed);
       }
     }),
   runs
@@ -112,7 +118,9 @@ it.effect.prop(
       assert.strictEqual(parse(`${source}\n`), value);
       const string = yield* S.decodeUnknownEffect(S.String)(parsed);
       assert.strictEqual(O.getOrNull(renderSingleQuotedMultiline(string, "  ")), source);
-      assert.deepStrictEqual(yield* Yaml.parse(yield* Yaml.stringify(parsed)), parsed);
+      const stringify8 = yield* Yaml.stringify(parsed);
+      const parsed4 = yield* Yaml.parse(stringify8);
+      assert.deepStrictEqual(parsed4, parsed);
     }),
   runs
 );

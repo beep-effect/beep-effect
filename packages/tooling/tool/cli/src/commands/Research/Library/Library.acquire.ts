@@ -177,7 +177,8 @@ export const acquireLibrarySource = Effect.fn("Library.acquireSource")(function*
 ) {
   const serialize = <A, E, R>(operation: Effect.Effect<A, E, R>) =>
     writer === undefined ? operation : writer.withPermit(operation);
-  const recordedAt = DateTime.formatIso(yield* DateTime.now);
+  const now1 = yield* DateTime.now;
+  const recordedAt = DateTime.formatIso(now1);
   const id = yield* hashBytes(new TextEncoder().encode(`${source.id}\n${source.revision}\n${recordedAt}`));
   const method = libraryAdapterFor(source);
   const start = LibraryCapture.make({
@@ -370,7 +371,8 @@ export const acquireLibrary = Effect.fn("Library.acquire")(function* (root: stri
         if (method === "disposition" || O.getOrElse(Record.get(qualificationValidity, method), () => false)) {
           admitted.push(source);
         } else {
-          const recordedAt = DateTime.formatIso(yield* DateTime.now);
+          const now2 = yield* DateTime.now;
+          const recordedAt = DateTime.formatIso(now2);
           const id = yield* hashBytes(
             new TextEncoder().encode(`${source.id}\n${source.revision}\nblocked\n${recordedAt}`)
           );

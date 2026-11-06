@@ -171,7 +171,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) =>
         driftMechanism: "hash",
       });
 
-      expect(yield* encodeAiSyncSourceMetadata(source)).toEqual({
+      const encodedAiSyncSourceMetadata = yield* encodeAiSyncSourceMetadata(source);
+      expect(encodedAiSyncSourceMetadata).toEqual({
         id: "codex-config",
         agent: "codex",
         domain: "config",
@@ -182,7 +183,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) =>
         isOfficial: true,
         driftMechanism: "version_and_hash",
       });
-      expect(yield* encodeAiSyncSourceMetadata(sourceWithoutOptionals)).toEqual({
+      const encodedAiSyncSourceMetadata1 = yield* encodeAiSyncSourceMetadata(sourceWithoutOptionals);
+      expect(encodedAiSyncSourceMetadata1).toEqual({
         id: "rulesync-config",
         agent: "rulesync",
         domain: "unified-config",
@@ -191,79 +193,76 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) =>
         isOfficial: false,
         driftMechanism: "hash",
       });
-      expect(
-        yield* encodeAiSyncSchemaCell(
-          AiSyncSchemaCell.make({
-            agent: "codex",
-            domain: "hooks",
-            status: "supported",
-            sourceId: O.some(AiSyncSourceId.make("codex-hooks")),
-            rationale: "Codex publishes hook schemas.",
-          })
-        )
-      ).toEqual({
+      const encodedAiSyncSchemaCell = yield* encodeAiSyncSchemaCell(
+        AiSyncSchemaCell.make({
+          agent: "codex",
+          domain: "hooks",
+          status: "supported",
+          sourceId: O.some(AiSyncSourceId.make("codex-hooks")),
+          rationale: "Codex publishes hook schemas.",
+        })
+      );
+      expect(encodedAiSyncSchemaCell).toEqual({
         agent: "codex",
         domain: "hooks",
         status: "supported",
         sourceId: "codex-hooks",
         rationale: "Codex publishes hook schemas.",
       });
-      expect(
-        yield* encodeAiSyncDriftFinding(
-          AiSyncDriftFinding.make({
-            sourceId: AiSyncSourceId.make("codex-config"),
-            expectedHash: O.none(),
-            actualHash: emptyHash,
-            message: "Source moved",
-          })
-        )
-      ).toEqual({
+      const encodedAiSyncDriftFinding = yield* encodeAiSyncDriftFinding(
+        AiSyncDriftFinding.make({
+          sourceId: AiSyncSourceId.make("codex-config"),
+          expectedHash: O.none(),
+          actualHash: emptyHash,
+          message: "Source moved",
+        })
+      );
+      expect(encodedAiSyncDriftFinding).toEqual({
         sourceId: "codex-config",
         actualHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         message: "Source moved",
       });
-      expect(
-        yield* encodeAiSyncValidationResult(
-          AiSyncValidationResult.make({ relativePath: "AGENTS.md", schemaId: "agent-instruction-document" })
-        )
-      ).toEqual({
+      const encodedAiSyncValidationResult = yield* encodeAiSyncValidationResult(
+        AiSyncValidationResult.make({ relativePath: "AGENTS.md", schemaId: "agent-instruction-document" })
+      );
+      expect(encodedAiSyncValidationResult).toEqual({
         relativePath: "AGENTS.md",
         schemaId: "agent-instruction-document",
       });
-      expect(yield* encodeAiSyncError(AiSyncError.make({ message: "Validation failed" }))).toEqual({
+      const encodedAiSyncError = yield* encodeAiSyncError(AiSyncError.make({ message: "Validation failed" }));
+      expect(encodedAiSyncError).toEqual({
         _tag: "AiSyncError",
         message: "Validation failed",
       });
-      expect(
-        yield* encodeAgentCommandMetadata(AgentCommandMetadata.make({ name: "review", description: "Review repo" }))
-      ).toEqual({
+      const encodedAgentCommandMetadata = yield* encodeAgentCommandMetadata(
+        AgentCommandMetadata.make({ name: "review", description: "Review repo" })
+      );
+      expect(encodedAgentCommandMetadata).toEqual({
         name: "review",
         description: "Review repo",
       });
-      expect(
-        yield* encodeAgentPluginManifestMetadata(
-          AgentPluginManifestMetadata.make({ name: "example", version: "0.0.0" })
-        )
-      ).toEqual({
+      const encodedAgentPluginManifestMetadata = yield* encodeAgentPluginManifestMetadata(
+        AgentPluginManifestMetadata.make({ name: "example", version: "0.0.0" })
+      );
+      expect(encodedAgentPluginManifestMetadata).toEqual({
         name: "example",
         version: "0.0.0",
       });
-      expect(
-        yield* encodeUnknownNativeSchemaCell(
-          UnknownNativeSchemaCell.make({
-            agent: "grok-build",
-            domain: "hooks",
-            reason: "Native hook payload schema is not public.",
-          })
-        )
-      ).toEqual({
+      const encodedUnknownNativeSchemaCell = yield* encodeUnknownNativeSchemaCell(
+        UnknownNativeSchemaCell.make({
+          agent: "grok-build",
+          domain: "hooks",
+          reason: "Native hook payload schema is not public.",
+        })
+      );
+      expect(encodedUnknownNativeSchemaCell).toEqual({
         agent: "grok-build",
         domain: "hooks",
         reason: "Native hook payload schema is not public.",
       });
-      expect(yield* decodeNormalizedAgentInstructionDocument("# Rules  \n\nUse Effect.  ")).toBe(
-        "# Rules\n\nUse Effect."
-      );
+      const decodedNormalizedAgentInstructionDocument =
+        yield* decodeNormalizedAgentInstructionDocument("# Rules  \n\nUse Effect.  ");
+      expect(decodedNormalizedAgentInstructionDocument).toBe("# Rules\n\nUse Effect.");
     })
   );
 
@@ -336,7 +335,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) =>
     Effect.fn(function* ([value]) {
       const encoded = yield* encodeAiSyncError(value);
       const decoded = yield* decodeAiSyncError(encoded);
-      expect(yield* encodeAiSyncError(decoded)).toEqual(encoded);
+      const encodedAiSyncError2 = yield* encodeAiSyncError(decoded);
+      expect(encodedAiSyncError2).toEqual(encoded);
     }),
     { arbitrary: fcRuns(25) }
   );
@@ -614,12 +614,10 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
         yield* writeText(codexPath, "[sandbox_workspace_write]\nnetwork_access = false\nwritable_roots = []\n");
         yield* validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" });
 
-        yield* writeText(
-          claudePath,
-          yield* encodeJson({
-            permissions: { allow: ["Bash(gh pr view:*)"], deny: requiredClaudeRepoDenyPermissions },
-          })
-        );
+        const encodedJson = yield* encodeJson({
+          permissions: { allow: ["Bash(gh pr view:*)"], deny: requiredClaudeRepoDenyPermissions },
+        });
+        yield* writeText(claudePath, encodedJson);
         const implicitClaudeMode = yield* Effect.flip(
           validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
         );
@@ -629,12 +627,10 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
           requiredClaudeRepoDenyPermissions,
           (permission) => !Equal.equals(permission, "Bash(git push --force:*)")
         );
-        yield* writeText(
-          claudePath,
-          yield* encodeJson({
-            permissions: { ...repoSafeClaudePermissions, deny: missingForcePushDeny },
-          })
-        );
+        const encodedJson3 = yield* encodeJson({
+          permissions: { ...repoSafeClaudePermissions, deny: missingForcePushDeny },
+        });
+        yield* writeText(claudePath, encodedJson3);
         assert.strictEqual(
           (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
           "claude-settings"
@@ -645,15 +641,13 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
         assert.include(missingCriticalDeny.message, "missing required deny rule: Bash(git push --force:*)");
 
         const unexpectedDeny = "Bash(git branch -D:*)";
-        yield* writeText(
-          claudePath,
-          yield* encodeJson({
-            permissions: {
-              ...repoSafeClaudePermissions,
-              deny: A.append(requiredClaudeRepoDenyPermissions, unexpectedDeny),
-            },
-          })
-        );
+        const encodedJson4 = yield* encodeJson({
+          permissions: {
+            ...repoSafeClaudePermissions,
+            deny: A.append(requiredClaudeRepoDenyPermissions, unexpectedDeny),
+          },
+        });
+        yield* writeText(claudePath, encodedJson4);
         const driftedDenyDomain = yield* Effect.flip(
           validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
         );
@@ -662,15 +656,13 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
           `unexpected deny rule outside exact repository policy: ${unexpectedDeny}`
         );
 
-        yield* writeText(
-          claudePath,
-          yield* encodeJson({
-            permissions: {
-              ...repoSafeClaudePermissions,
-              allow: ["Bash(git push:*)"],
-            },
-          })
-        );
+        const encodedJson5 = yield* encodeJson({
+          permissions: {
+            ...repoSafeClaudePermissions,
+            allow: ["Bash(git push:*)"],
+          },
+        });
+        yield* writeText(claudePath, encodedJson5);
         const directPushGrant = yield* Effect.flip(
           validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
         );
@@ -679,10 +671,10 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
         yield* Effect.forEach(
           ["Write(**/.github/workflows/**)", "WebFetch(domain:example.com)", "mcp__github__create_pull_request"],
           Effect.fn(function* (permission) {
-            yield* writeText(
-              claudePath,
-              yield* encodeJson({ permissions: { ...repoSafeClaudePermissions, allow: [permission] } })
-            );
+            const encodedJson6 = yield* encodeJson({
+              permissions: { ...repoSafeClaudePermissions, allow: [permission] },
+            });
+            yield* writeText(claudePath, encodedJson6);
             const unsafeClaude = yield* Effect.flip(
               validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
             );
@@ -710,13 +702,11 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
             "Bash(git stash drop:*)",
           ],
           Effect.fn(function* (permission) {
-            yield* writeText(
-              claudePath,
-              yield* encodeJson({
-                permissions: { ...repoSafeClaudePermissions, allow: [permission] },
-                enabledMcpjsonServers: ["phoenix"],
-              })
-            );
+            const encodedJson7 = yield* encodeJson({
+              permissions: { ...repoSafeClaudePermissions, allow: [permission] },
+              enabledMcpjsonServers: ["phoenix"],
+            });
+            yield* writeText(claudePath, encodedJson7);
             assert.strictEqual(
               (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
               "claude-settings"
@@ -733,10 +723,8 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
         yield* Effect.forEach(
           ["acceptEdits", "plan", "auto", "dontAsk", "bypassPermissions"],
           Effect.fn(function* (defaultMode) {
-            yield* writeText(
-              claudePath,
-              yield* encodeJson({ permissions: { ...repoSafeClaudePermissions, defaultMode } })
-            );
+            const encodedJson8 = yield* encodeJson({ permissions: { ...repoSafeClaudePermissions, defaultMode } });
+            yield* writeText(claudePath, encodedJson8);
             assert.strictEqual(
               (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
               "claude-settings"
@@ -751,15 +739,13 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
         );
 
         yield* writeText(codexPath, "[features]\napps = false\n");
-        yield* writeText(
-          claudePath,
-          yield* encodeJson({
-            permissions: {
-              ...repoSafeClaudePermissions,
-              allow: ["Bash(gh pr view:*)", "Bash(gh pr checks:*)", "Bash(gh run view:*)"],
-            },
-          })
-        );
+        const encodedJson9 = yield* encodeJson({
+          permissions: {
+            ...repoSafeClaudePermissions,
+            allow: ["Bash(gh pr view:*)", "Bash(gh pr checks:*)", "Bash(gh run view:*)"],
+          },
+        });
+        yield* writeText(claudePath, encodedJson9);
 
         const safeResults = yield* validateDogfoodConfigs(tmpDir);
         assert.deepEqual(
@@ -778,7 +764,8 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
         const codexPath = path.join(tmpDir, ".codex/config.toml");
         const claudePath = path.join(tmpDir, ".claude/settings.json");
         yield* writeText(codexPath, "[features]\napps = false\n");
-        yield* writeText(claudePath, yield* encodeJson({ permissions: repoSafeClaudePermissions }));
+        const encodedJson10 = yield* encodeJson({ permissions: repoSafeClaudePermissions });
+        yield* writeText(claudePath, encodedJson10);
 
         const readPaths = yield* Ref.make(A.empty<string>());
         const countingFs: FileSystem.FileSystem = {
@@ -790,7 +777,8 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
           Effect.provideService(FileSystem.FileSystem, countingFs)
         );
 
-        assert.deepEqual(yield* Ref.get(readPaths), [codexPath, claudePath]);
+        const got = yield* Ref.get(readPaths);
+        assert.deepEqual(got, [codexPath, claudePath]);
         assert.deepEqual(
           A.map(results, (result) => result.relativePath),
           [".codex/config.toml", ".claude/settings.json"]

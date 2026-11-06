@@ -162,8 +162,10 @@ describe("independent coverage reconciliation", () => {
             ...value,
             routes: A.map(value.routes, (route) => ({ ...route, visibleEvents: snapshot([id("2"), id("2")]) })),
           },
-        ])
-          expect(yield* report(invalid).pipe(Effect.isFailure)).toBe(true);
+        ]) {
+          const pipe2 = yield* report(invalid).pipe(Effect.isFailure);
+          expect(pipe2).toBe(true);
+        }
       })
   );
   it.effect("bounds total observation populations independently of the manifest", () =>
@@ -176,13 +178,12 @@ describe("independent coverage reconciliation", () => {
         acceptedEvents: snapshot(ids),
         visibleEvents: snapshot(ids),
       });
-      expect(
-        yield* report({
-          ...value,
-          inventory: { ...value.inventory, routes: [route(), route(id("5"))] },
-          routes: [observed(id("c")), observed(id("5"))],
-        }).pipe(Effect.isFailure)
-      ).toBe(true);
+      const pipe1 = yield* report({
+        ...value,
+        inventory: { ...value.inventory, routes: [route(), route(id("5"))] },
+        routes: [observed(id("c")), observed(id("5"))],
+      }).pipe(Effect.isFailure);
+      expect(pipe1).toBe(true);
     })
   );
 });
@@ -197,13 +198,15 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "20 seconds
       const file = `${directory}/synthetic-coverage.json`;
       const value = input();
       const withUnknown = { ...value, routes: [{ ...value.routes[0], visibleEvents: unknown }] };
-      yield* fs.writeFileString(file, yield* encodeJson(withUnknown), { mode: 0o600 });
+      const encodedUnknown = yield* encodeJson(withUnknown);
+      yield* fs.writeFileString(file, encodedUnknown, { mode: 0o600 });
       const decoded = yield* readObservationCoverage(file);
       expect(reconcileObservationCoverage(decoded).routes[0]?.visibleEvents).toEqual({
         _tag: "ObservationUnknown",
         expected: 2,
       });
-      yield* fs.writeFileString(file, yield* encodeJson({ ...value, boundaryEvidenceId: id("9") }), { mode: 0o600 });
+      const encodedInvalid = yield* encodeJson({ ...value, boundaryEvidenceId: id("9") });
+      yield* fs.writeFileString(file, encodedInvalid, { mode: 0o600 });
       expect((yield* readObservationCoverage(file).pipe(Effect.flip)).message).toBe(
         "Invalid observation coverage boundary or evidence."
       );

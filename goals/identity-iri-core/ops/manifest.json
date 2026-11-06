@@ -32,13 +32,7 @@
     "goals/identity-iri-core/GOAL.md",
     "goals/identity-iri-core/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/identity-as-iri/RESEARCH.md",
-    "../../explorations/identity-as-iri/research/20-repo-mining-synthesis.md",
-    "../../explorations/identity-as-iri/research/21-synthesis-adversarial-review.md",
-    "../../explorations/identity-as-iri/research/11-audit-identity-coupling.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -89,5 +83,11 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "mission": "Rewrite `@beep/identity` in place so identity paths double as literal-typed IRIs/CURIEs: root authority binding, exact-literal `.iri`/`.curie` projections, baked-in CURIE vocabulary types, expand/contract + PN_LOCAL codecs — shape-stable surface, zero call-site changes repo-wide."
+  "mission": "Rewrite `@beep/identity` in place so identity paths double as literal-typed IRIs/CURIEs: root authority binding, exact-literal `.iri`/`.curie` projections, baked-in CURIE vocabulary types, expand/contract + PN_LOCAL codecs — shape-stable surface, zero call-site changes repo-wide.",
+  "researchReferences": [
+    "../../explorations/identity-as-iri/RESEARCH.md",
+    "../../explorations/identity-as-iri/research/11-audit-identity-coupling.md",
+    "../../explorations/identity-as-iri/research/20-repo-mining-synthesis.md",
+    "../../explorations/identity-as-iri/research/21-synthesis-adversarial-review.md"
+  ]
 }

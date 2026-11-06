@@ -62,19 +62,23 @@ it.effect.prop(
     Effect.gen(function* () {
       const encodedWorkItemId = yield* encodeWorkItemId(workItemId);
       const decodedWorkItemId = yield* decodeWorkItemId(encodedWorkItemId);
-      expect(yield* encodeWorkItemId(decodedWorkItemId)).toBe(encodedWorkItemId);
+      const encodedWorkItemId1 = yield* encodeWorkItemId(decodedWorkItemId);
+      expect(encodedWorkItemId1).toBe(encodedWorkItemId);
 
       const encodedTitle = yield* encodeWorkItemTitle(title);
       const decodedTitle = yield* decodeWorkItemTitle(encodedTitle);
-      expect(yield* encodeWorkItemTitle(decodedTitle)).toBe(encodedTitle);
+      const encodedWorkItemTitle = yield* encodeWorkItemTitle(decodedTitle);
+      expect(encodedWorkItemTitle).toBe(encodedTitle);
 
       const encodedWorkerId = yield* encodeWorkerId(workerId);
       const decodedWorkerId = yield* decodeWorkerId(encodedWorkerId);
-      expect(yield* encodeWorkerId(decodedWorkerId)).toBe(encodedWorkerId);
+      const encodedWorkerId2 = yield* encodeWorkerId(decodedWorkerId);
+      expect(encodedWorkerId2).toBe(encodedWorkerId);
 
       const encodedOrganizationId = yield* encodeOrganizationId(organizationId);
       const decodedOrganizationId = yield* decodeOrganizationId(encodedOrganizationId);
-      expect(yield* encodeOrganizationId(decodedOrganizationId)).toBe(encodedOrganizationId);
+      const encodedOrganizationId3 = yield* encodeOrganizationId(decodedOrganizationId);
+      expect(encodedOrganizationId3).toBe(encodedOrganizationId);
     }),
   { arbitrary: fcRuns(25) }
 );

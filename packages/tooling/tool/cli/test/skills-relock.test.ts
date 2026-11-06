@@ -175,7 +175,8 @@ const makeRepo = Effect.fn("SkillsRelockTest.makeRepo")(function* () {
   yield* writeTree(path.join(repoRoot, ".claude/skills/local-one"), [file("SKILL.md", "---\nname: local-one\n---\n")]);
 
   const patchBytes = [{ path: PATCH_PATH, bytes: textEncoder.encode(patchText) }];
-  const base = (yield* decodeSkillsLockDocumentJson(yield* fs.readFileString(oracleLockFixture))).skills.oracle;
+  const readFileString1 = yield* fs.readFileString(oracleLockFixture);
+  const base = (yield* decodeSkillsLockDocumentJson(readFileString1)).skills.oracle;
   assert(base !== undefined && base._tag === "vendored");
   const vendored = VendoredSkillLockEntry.make({
     ...base,
@@ -236,7 +237,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills replay", (it) => {
     Effect.gen(function* () {
       const repoRoot = yield* makeRepo();
       const train = yield* trainWith(pristineFiles);
-      const report = onlyReport(yield* train.replay(repoRoot, O.none()));
+      const replay2 = yield* train.replay(repoRoot, O.none());
+      const report = onlyReport(replay2);
       expect([report.skill, report.status, report.recorded, report.licenseMatches]).toEqual([
         SKILL,
         "clean",
@@ -255,10 +257,12 @@ layer(TestLayer, { timeout: "60 seconds" })("skills replay", (it) => {
       const repoRoot = yield* makeRepo();
       const before = yield* readLockText(repoRoot);
       const train = yield* trainWith(bumpedPristine);
-      const report = onlyReport(yield* train.replay(repoRoot, O.some(SKILL)));
+      const replay3 = yield* train.replay(repoRoot, O.some(SKILL));
+      const report = onlyReport(replay3);
       expect([report.status, report.recorded]).toEqual(["clean", false]);
       expect(O.getOrThrow(report.effectiveTreeHash)).toBe((yield* computeSkillTree(bumpedEffective, "e")).treeHash);
-      expect(yield* readLockText(repoRoot)).toBe(before);
+      const readLockText4 = yield* readLockText(repoRoot);
+      expect(readLockText4).toBe(before);
     })
   );
 
@@ -266,10 +270,12 @@ layer(TestLayer, { timeout: "60 seconds" })("skills replay", (it) => {
     Effect.gen(function* () {
       const repoRoot = yield* makeRepo();
       const train = yield* trainWith(pristineFiles, textEncoder.encode("Apache License\n"));
-      const report = onlyReport(yield* train.replay(repoRoot, O.none()));
+      const replay5 = yield* train.replay(repoRoot, O.none());
+      const report = onlyReport(replay5);
       expect([report.status, report.recorded, report.licenseMatches]).toEqual(["clean", false, false]);
       expect(isSkillReplayClean(report)).toBe(false);
-      const unmoved = onlyReport(yield* (yield* trainWith(pristineFiles)).replay(repoRoot, O.none()));
+      const replay6 = yield* (yield* trainWith(pristineFiles)).replay(repoRoot, O.none());
+      const unmoved = onlyReport(replay6);
       expect(isSkillReplayClean(unmoved)).toBe(true);
     })
   );
@@ -278,7 +284,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills replay", (it) => {
     Effect.gen(function* () {
       const repoRoot = yield* makeRepo();
       const train = yield* trainWith(shiftedPristine);
-      const report = onlyReport(yield* train.replay(repoRoot, O.none()));
+      const replay7 = yield* train.replay(repoRoot, O.none());
+      const report = onlyReport(replay7);
       expect(report.status).toBe("fuzz-only");
       expect(A.map(report.hunks, (row) => [row.status, row.shift])).toEqual([["fuzz-applied", 1]]);
       assertNone(report.effectiveTreeHash);
@@ -289,7 +296,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills replay", (it) => {
     Effect.gen(function* () {
       const repoRoot = yield* makeRepo();
       const train = yield* trainWith(conflictedPristine);
-      const report = onlyReport(yield* train.replay(repoRoot, O.none()));
+      const replay8 = yield* train.replay(repoRoot, O.none());
+      const report = onlyReport(replay8);
       expect(report.status).toBe("conflicted");
       expect(A.map(report.hunks, (row) => [row.file, row.status])).toEqual([["SKILL.md", "conflicted"]]);
       expect(renderSkillReplaySummary(SkillReplayBatch.make({ reports: [report] }))).toContain(`${SKILL}: conflicted`);
@@ -397,14 +405,21 @@ layer(TestLayer, { timeout: "60 seconds" })("skills relock", (it) => {
       const planned = yield* train.relock(repoRoot, SKILL, O.none());
       expect(planned.outcome).toBe("planned");
       expect(planned.snapshot.treeHash).toBe((yield* snapshotOf(bumpedPristine)).treeHash);
-      expect(planned.effective).toEqual(yield* effectiveOf(bumpedEffective));
-      expect(planned.lockSha256).toBe(yield* skillsLockTextSha256(before, "lock"));
-      expect(yield* readLockText(repoRoot)).toBe(before);
+      const expectation = expect(planned.effective);
+      const effectiveOf1 = yield* effectiveOf(bumpedEffective);
+      expectation.toEqual(effectiveOf1);
+      const expectation1 = expect(planned.lockSha256);
+      const skillsLockTextSha2562 = yield* skillsLockTextSha256(before, "lock");
+      expectation1.toBe(skillsLockTextSha2562);
+      const readLockText9 = yield* readLockText(repoRoot);
+      expect(readLockText9).toBe(before);
 
       const written = yield* train.relock(repoRoot, SKILL, O.some(planned.planDigest));
       expect(written.outcome).toBe("written");
       const after = yield* readLockText(repoRoot);
-      expect(O.getOrThrow(written.lock).sha256).toBe(yield* skillsLockTextSha256(after, "lock"));
+      const expectation2 = expect(O.getOrThrow(written.lock).sha256);
+      const skillsLockTextSha2563 = yield* skillsLockTextSha256(after, "lock");
+      expectation2.toBe(skillsLockTextSha2563);
       const entry = (yield* decodeSkillsLockDocumentJson(after)).skills[SKILL];
       assert(entry !== undefined && entry._tag === "vendored");
       expect(entry.snapshot).toEqual(planned.snapshot);
@@ -415,10 +430,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills relock", (it) => {
       );
 
       // Materialize now rebuilds the installed tree at the new pin, and --check proves it.
-      const materializer = Context.get(
-        yield* Layer.build(SkillMaterializerLayer.pipe(Layer.provide(sourceLayer(bumpedPristine)))),
-        SkillMaterializer
-      );
+      const build10 = yield* Layer.build(SkillMaterializerLayer.pipe(Layer.provide(sourceLayer(bumpedPristine))));
+      const materializer = Context.get(build10, SkillMaterializer);
       expect(A.map((yield* materializer.materialize(repoRoot, "check", O.none())).rows, (row) => row.status)).toEqual([
         "would-rebuild",
         "current",
@@ -433,7 +446,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills relock", (it) => {
       const replanned = yield* train.relock(repoRoot, SKILL, O.none());
       const again = yield* train.relock(repoRoot, SKILL, O.some(replanned.planDigest));
       expect(again.outcome).toBe("already-current");
-      expect(yield* readLockText(repoRoot)).toBe(after);
+      const readLockText11 = yield* readLockText(repoRoot);
+      expect(readLockText11).toBe(after);
       // The pre-write digest no longer matches the lock it was sealed against.
       const stale = yield* train.relock(repoRoot, SKILL, O.some(planned.planDigest)).pipe(Effect.flip);
       expect(stale._tag === "SkillsLockWriteRefusal" ? stale.reason : stale._tag).toBe("digest-mismatch");
@@ -447,7 +461,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills relock", (it) => {
       const train = yield* trainWith(bumpedPristine);
       const error = yield* train.relock(repoRoot, SKILL, O.some(Str.repeat(64)("0"))).pipe(Effect.flip);
       expect(error._tag === "SkillsLockWriteRefusal" ? error.reason : error._tag).toBe("digest-mismatch");
-      expect(yield* readLockText(repoRoot)).toBe(before);
+      const readLockText12 = yield* readLockText(repoRoot);
+      expect(readLockText12).toBe(before);
     })
   );
 
@@ -460,7 +475,8 @@ layer(TestLayer, { timeout: "60 seconds" })("skills relock", (it) => {
       assert(error._tag === "SkillRelockRefusal");
       expect(error.reason).toBe("replay-conflicted");
       expect(error.message).toContain(`${PATCH_PATH} SKILL.md hunk 1 (conflicted`);
-      expect(yield* readLockText(repoRoot)).toBe(before);
+      const readLockText13 = yield* readLockText(repoRoot);
+      expect(readLockText13).toBe(before);
     })
   );
 
@@ -502,15 +518,13 @@ layer(TestLayer, { timeout: "60 seconds" })("skills relock", (it) => {
       const path = yield* Path.Path;
       const repoRoot = yield* makeRepo();
       const before = yield* readLockText(repoRoot);
-      const error = yield* publishSkillsLockText(
-        repoRoot,
-        "{}\n",
-        yield* skillsLockTextSha256("other\n", "x"),
-        "t"
-      ).pipe(Effect.flip);
+      const skillsLockTextSha25614 = yield* skillsLockTextSha256("other\n", "x");
+      const error = yield* publishSkillsLockText(repoRoot, "{}\n", skillsLockTextSha25614, "t").pipe(Effect.flip);
       expect(error._tag === "SkillsLockWriteRefusal" ? error.reason : error._tag).toBe("lock-changed");
-      expect(yield* readLockText(repoRoot)).toBe(before);
-      expect(yield* fs.exists(path.join(repoRoot, "skills-lock.json.staging-t"))).toBe(false);
+      const readLockText15 = yield* readLockText(repoRoot);
+      expect(readLockText15).toBe(before);
+      const exists16 = yield* fs.exists(path.join(repoRoot, "skills-lock.json.staging-t"));
+      expect(exists16).toBe(false);
     })
   );
 });
@@ -587,7 +601,9 @@ layer(TestLayer, { timeout: "30 seconds" })("skills update train Renovate manage
   it.effect("matches every vendored lock entry's pin and no local entry", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const renovate = yield* S.decodeEffect(RenovateConfig)(yield* fs.readFileString(`${repoRootDir}renovate.json`));
+      const argument = S.decodeEffect(RenovateConfig);
+      const readFileString4 = yield* fs.readFileString(`${repoRootDir}renovate.json`);
+      const renovate = yield* argument(readFileString4);
       const manager = A.getUnsafe(renovate.customManagers, 0);
       expect(manager.datasourceTemplate).toBe("git-refs");
       const pattern = new RegExp(A.getUnsafe(manager.matchStrings, 0), "gu");
