@@ -77,6 +77,8 @@ export class CitationTokenizerCatalogFailure extends S.TaggedError<
   })
 ) {}
 const fail = (reason: typeof Reason.Type) => CitationTokenizerCatalogFailure.make({ reason });
+const invalidInput = () => fail("invalid-input");
+const metadataMismatch = () => fail("metadata-mismatch");
 const preserve = (error: unknown) => (S.is(CitationSafetyLimitExceeded)(error) ? error : fail("metadata-mismatch"));
 const key = (sha: string, flags: number) => `${flags}:${sha}`;
 
@@ -91,19 +93,15 @@ export const makeCitationCanonicalTokenizerCatalog = Effect.fn("Citation.makeCan
   payloadInput: unknown,
   metadataInput: unknown
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-input"));
+  const limits = yield* decodeCitationRegexPolicy(policy, invalidInput);
   const timing = yield* makeCitationRegexTiming(limits, true);
   const digest = yield* Digest.Digest;
   const prepare = Effect.gen(function* () {
-    const payload = yield* S.decodeUnknownEffect(Payload)(payloadInput).pipe(
-      Effect.mapError(() => fail("invalid-input"))
-    );
+    const payload = yield* S.decodeUnknownEffect(Payload)(payloadInput).pipe(Effect.mapError(invalidInput));
     const hash = yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(payload));
     if (hash !== expected) return yield* fail("artifact-mismatch");
     const source = yield* S.decodeEffect(Source)(payload).pipe(Effect.mapError(() => fail("artifact-mismatch")));
-    const metadata = yield* S.decodeUnknownEffect(Metadata)(metadataInput).pipe(
-      Effect.mapError(() => fail("metadata-mismatch"))
-    );
+    const metadata = yield* S.decodeUnknownEffect(Metadata)(metadataInput).pipe(Effect.mapError(metadataMismatch));
     if (source.length > limits.patterns)
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patterns" });
     const descriptors = HashMap.fromIterable(
@@ -115,12 +113,9 @@ export const makeCitationCanonicalTokenizerCatalog = Effect.fn("Citation.makeCan
     const extractors = yield* Effect.forEach(
       source,
       Effect.fn("Citation.prepareCanonicalExtractor")(function* (row, index) {
-        const recipe = yield* Effect.fromOption(A.get(metadata.recipes, index)).pipe(
-          Effect.mapError(() => fail("metadata-mismatch"))
-        );
-        const [hash, equalityClass] = yield* Effect.fromOption(A.get(metadata.hashes, index)).pipe(
-          Effect.mapError(() => fail("metadata-mismatch"))
-        );
+        // Source and decoded metadata arrays each contain exactly 6805 entries.
+        const recipe = A.getUnsafe(metadata.recipes, index);
+        const [hash, equalityClass] = A.getUnsafe(metadata.hashes, index);
         if (recipe.id !== index || recipe.flags !== row.fields.flags) return yield* fail("metadata-mismatch");
         const prepared = yield* patterns
           .prepareText(row.fields.regex, () => Effect.void)
@@ -132,7 +127,7 @@ export const makeCitationCanonicalTokenizerCatalog = Effect.fn("Citation.makeCan
         );
         if (fingerprint !== recipe.patternSha256) return yield* fail("metadata-mismatch");
         const descriptor = yield* Effect.fromOption(HashMap.get(descriptors, key(fingerprint, row.fields.flags))).pipe(
-          Effect.mapError(() => fail("metadata-mismatch"))
+          Effect.mapError(metadataMismatch)
         );
         const strings = yield* Effect.forEach(
           row.fields.strings,

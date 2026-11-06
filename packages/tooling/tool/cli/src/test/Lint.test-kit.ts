@@ -41,6 +41,13 @@ export {
   POLICY_SHARED_ROOT_FILES,
 } from "../commands/Lint/internal/PolicyRootFiles.ts";
 /**
+ * Schema-first candidate detectors, exposed for focused classification tests.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { SchemaFirstDetectors } from "../commands/Lint/internal/SchemaFirstDetectors.ts";
+/**
  * Schema-first inventory merge, exposed so tests can drive `--write` regeneration on fixture documents.
  *
  * @category testing

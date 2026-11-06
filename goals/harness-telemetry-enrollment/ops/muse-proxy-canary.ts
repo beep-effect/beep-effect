@@ -325,7 +325,7 @@ const observeNativeDescendant = Effect.fn("MuseProxyCanary.observeNativeDescenda
   shellPid: number
 ) {
   const expected = yield* io(() => Fs.stat(request.executable, { bigint: true }), "source");
-  const snapshot = async (pid: number) => {
+  const snapshotIdentity = async (pid: number) => {
     const raw = await Fs.readFile(`/proc/${pid}/stat`, "utf8");
     const fields = raw
       .slice(raw.lastIndexOf(")") + 2)
@@ -336,11 +336,17 @@ const observeNativeDescendant = Effect.fn("MuseProxyCanary.observeNativeDescenda
     if (ticks === undefined || !/^[1-9][0-9]*$/.test(ticks)) throw new Error("native-process-stat");
     const owner = await Fs.stat(`/proc/${pid}`);
     if (owner.uid !== process.getuid?.()) throw new Error("foreign-process");
+    return { pid, parent, ticks };
+  };
+  const snapshot = async (pid: number) => {
+    const identity = await snapshotIdentity(pid);
     const executable = await Fs.stat(`/proc/${pid}/exe`, { bigint: true });
     const cwd = await Fs.readlink(`/proc/${pid}/cwd`);
-    return { pid, parent, ticks, executable, cwd };
+    return { ...identity, executable, cwd };
   };
-  const shell = yield* io(() => snapshot(shellPid), "source");
+  // Pin ownership/start ticks before any retryable exe/cwd read. Failure to obtain
+  // this baseline refuses admission; a later PID must never become the baseline.
+  const shell = yield* io(() => snapshotIdentity(shellPid), "source");
   if (shell.parent !== process.pid) return yield* failed("source");
   for (let attempt = 0; attempt < 100; attempt += 1) {
     const observed = yield* io(async () => {

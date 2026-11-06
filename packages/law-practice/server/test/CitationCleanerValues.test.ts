@@ -13,6 +13,7 @@ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -20,6 +21,7 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
+import * as Str from "effect/String";
 
 const Relations = S.Struct({
   sameInput: S.Boolean,
@@ -251,9 +253,100 @@ it.effect("captures owner lifetime and clears all arena-held values and caches o
       values.text("A").pipe(Effect.asVoid),
       values.subclass("A", {}).pipe(Effect.asVoid),
       values.retainHost({}).pipe(Effect.asVoid),
+      values.builtinName("html").pipe(Effect.asVoid),
+      values.sourceText("A").pipe(Effect.asVoid),
+      values.sourceUnicode({ width: 1, bytes: new Uint8Array([65]) }).pipe(Effect.asVoid),
+      values.bytes(new Uint8Array([65])).pipe(Effect.asVoid),
     ]) {
       const citationResult28 = yield* Effect.flip(read);
       expect(citationResult28).toMatchObject({ reason: "closed-owner" });
     }
+  })
+);
+
+it.effect("rejects malformed policy with a closed failure before installing operations", () =>
+  Effect.gen(function* () {
+    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
+      const failure = yield* makeCitationCleanerValues(policy).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "invalid-input" });
+      expect("cause" in failure).toBe(false);
+    }
+  })
+);
+
+it.effect("rejects malformed bytes and native text without issuing references", () =>
+  Effect.gen(function* () {
+    const limits = (yield* defaultCitationEnginePolicy).limits;
+    const values = yield* makeCitationCleanerValues(limits);
+    const before = yield* values.snapshot;
+    for (const input of [null, [], [65], "private bytes", { bytes: new Uint8Array([65]) }]) {
+      const failure = yield* Effect.flip(values.bytes(input));
+      expect(failure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "invalid-input" });
+      expect("cause" in failure).toBe(false);
+    }
+    for (const operation of [
+      values.text(17),
+      values.sourceText(null),
+      values.subclass({}, {}),
+      values.unicode({ width: 2, bytes: new Uint8Array([65]) }),
+      values.sourceUnicode({ width: 4, bytes: new Uint8Array([0, 0, 17, 0]) }),
+      values.unicodeSubclass({ width: 3, bytes: new Uint8Array([65]) }, {}),
+    ]) {
+      const failure = yield* Effect.flip(operation);
+      expect(failure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "invalid-input" });
+    }
+    const after = yield* values.snapshot;
+    expect(after).toEqual(before);
+    const bytes = new Uint8Array([0, 65, 255]);
+    const ref = yield* values.bytes(bytes);
+    const readBytes = yield* values.getBytes(ref);
+    assertSome(readBytes, bytes);
+    const byteText = yield* values.getText(ref);
+    assertNone(byteText);
+    const textRef = yield* values.text("A");
+    const textBytes = yield* values.getBytes(textRef);
+    assertNone(textBytes);
+  })
+);
+
+it.effect("applies the captured operation deadline to native materialization without publishing partial text", () =>
+  Effect.gen(function* () {
+    const clock = yield* Clock.Clock;
+    let expired = false;
+    let deadlines = 0;
+    const limits = (yield* defaultCitationEnginePolicy).limits;
+    const values = yield* makeCitationCleanerValues(limits).pipe(
+      Effect.provideService(Clock.Clock, {
+        ...clock,
+        sleep: () => (expired && ++deadlines === 2 ? Effect.void : Effect.never),
+      })
+    );
+    const ref = yield* values.text("A");
+    const before = yield* values.snapshot;
+    expired = true;
+    const failure = yield* Effect.flip(
+      values.materialize(ref, {
+        text: Str.repeat(100_000)("a"),
+        allocation: "fresh",
+      })
+    );
+    expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", operation: "clean", limit: "cleanDeadline" });
+    const after = yield* values.snapshot;
+    expect(after).toEqual(before);
+  })
+);
+
+it.effect("rejects native output whose declared text differs from the supplied storage", () =>
+  Effect.gen(function* () {
+    const policy = yield* defaultCitationEnginePolicy;
+    const values = yield* makeCitationCleanerValues(policy.limits);
+    const ref = yield* values.text("A");
+    const before = yield* values.snapshot;
+    const failure = yield* values
+      .materializeUnicode(ref, { text: "B", allocation: "fresh" }, { width: 1, bytes: new Uint8Array([65]) })
+      .pipe(Effect.flip);
+    expect(failure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "invalid-text-allocation" });
+    const after = yield* values.snapshot;
+    expect(after).toEqual(before);
   })
 );

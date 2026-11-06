@@ -157,6 +157,13 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const assembler = yield* makeCitationTokenAssembly(limits).pipe(
           Effect.provideService(CitationTokenAssemblyHost, host)
         );
+        const invalidPolicy = yield* makeCitationTokenAssembly(null).pipe(
+          Effect.provideService(CitationTokenAssemblyHost, host),
+          Effect.flip
+        );
+        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
+        const invalidRequest = yield* assembler.assemble(null).pipe(Effect.flip);
+        expect(invalidRequest).toMatchObject({ reason: "invalid-input" });
         const citationResult2 = yield* assembler.assemble({ length: 3, ids: [0, 0] }).pipe(Effect.flip);
         expect(citationResult2).toMatchObject({
           limit: "candidates",
