@@ -1,0 +1,2220 @@
+{
+  "schemaVersion": "repo-cli-gh-git-consolidation/groups-differential-w7/v1",
+  "tool": "goals/repo-cli-gh-git-consolidation/ops/groups-differential-w7.ts",
+  "base": "8602b24203",
+  "frozen": "ops/frozen-w7b/",
+  "git": "git version 2.56.0",
+  "counts": {
+    "scenarios": 100,
+    "git": 34,
+    "github": 66,
+    "same": 76,
+    "classified": 24,
+    "unclassified": 0
+  },
+  "gates": {
+    "unclassified": true
+  },
+  "rows": [
+    {
+      "site": "RouteClassify.classifyCommitRange",
+      "scenario": "a rename, a deletion and an edit",
+      "old": {
+        "ok": {
+          "base": "565bf465664043a085ed36415a58dd1ac1a9571f",
+          "head": "f26066efb90a921d4ad9e61099fc26b17d80ad95",
+          "changedPaths": [
+            "docs/gone.md",
+            "docs/new.md",
+            "docs/old.md",
+            "goals/demo/PLAN.md",
+            "packages/a/src/index.ts",
+            "packages/a/src/naïve.ts"
+          ],
+          "atoms": [
+            {
+              "kind": "docs:markdown",
+              "path": "docs/gone.md",
+              "pkg": {
+                "_id": "Option",
+                "_tag": "Some",
+                "value": "@fixture/root"
+              },
+              "detail": {
+                "_id": "Option",
+                "_tag": "None"
+              },
+              "digest": "3b70a772dbb8c2682b91d681434de363eeeccfcd4e18fe635ef22cf909e178f3"
+            },
+            {
+              "kind": "docs:markdown",
+              "path": "docs/new.md",
+              "pkg": {
+                "_id": "Option",
+                "_tag": "Some",
+                "value": "@fixture/root"
+              },
+              "detail": {
+                "_id": "Option",
+                "_tag": "None"
+              },
+              "digest": "2829d32a70f903bbbd08c12c46279893c43bf5a6a45e5f35d0b06ec856eab31c"
+            },
+            {
+              "kind": "docs:markdown",
+              "path": "docs/old.md",
+              "pkg": {
+                "_id": "Option",
+                "_tag": "Some",
+                "value": "@fixture/root"
+              },
+              "detail": {
+                "_id": "Option",
+                "_tag": "None"
+              },
+              "digest": "ff5a3f1abe2dc03c7488b5d916774e1c9398a4b296e1a7a8502f9c35f0033c37"
+            },
+            {
+              "kind": "packet",
+              "path": "goals/demo/PLAN.md",
+              "pkg": {
+                "_id": "Option",
+                "_tag": "Some",
+                "value": "@fixture/root"
+              },
+              "detail": {
+                "_id": "Option",
+                "_tag": "None"
+              },
+              "digest": "6e61859e7de2f42ea382827195315731d981e512b13b1502ef39a405fbc6ed38"
+            },
+            {
+              "kind": "src:module",
+              "path": "packages/a/src/index.ts",
+              "pkg": {
+                "_id": "Option",
+                "_tag": "Some",
+                "value": "@fixture/a"
+              },
+              "detail": {
+                "_id": "Option",
+                "_tag": "None"
+              },
+              "digest": "9c50408f2c7699a30a47ed58534e5fcace4a77cfe35f4b52487370e1e746d422"
+            },
+            {
+              "kind": "src:module",
+              "path": "packages/a/src/naïve.ts",
+              "pkg": {
+                "_id": "Option",
+                "_tag": "Some",
+                "value": "@fixture/a"
+              },
+              "detail": {
+                "_id": "Option",
+                "_tag": "None"
+              },
+              "digest": "6c2934cf666f1dd0d863f4834d4316e396a9a4d376ceaa593158396108839040"
+            },
+            {
+              "kind": "commits",
+              "path": "<commits>",
+              "pkg": {
+                "_id": "Option",
+                "_tag": "None"
+              },
+              "detail": {
+                "_id": "Option",
+                "_tag": "Some",
+                "value": "1 commit(s) 565bf4656640..f26066efb90a"
+              },
+              "digest": "38417082d441db75b557fb94ed0a0dd94c41460012324749466ddc9824a2b078"
+            }
+          ]
+        }
+      },
+      "new": {
+        "ok": {
+          "base": "565bf465664043a085ed36415a58dd1ac1a9571f",
+          "head": "f26066efb90a921d4ad9e61099fc26b17d80ad95",
+          "changedPaths": [
+            "docs/gone.md",
+            "docs/new.md",
+            "docs/old.md",
+            "goals/demo/PLAN.md",
+            "packages/a/src/index.ts",
+            "packages/a/src/naïve.ts"
+          ],
+          "atoms": [
+            {
+              "kind": "docs:markdown",
+              "path": "docs/gone.md",
+              "pkg": {
+                "_id": "Option",
+                "_tag": "Some",
+                "value": "@fixture/root"
+              },
+              "detail": {
+                "_id": "Option",
+                "_tag": "None"
+              },
+              "digest": "3b70a772dbb8c2682b91d681434de363eeeccfcd4e18fe635ef22cf909e178f3"
+            },
+            {
+              "kind": "docs:markdown",
+              "path": "docs/new.md",
+              "pkg": {
+                "_id": "Option",
+                "_tag": "Some",
+                "value": "@fixture/root"
+              },
+              "detail": {
+                "_id": "Option",
+                "_tag": "None"
+              },
+              "digest": "2829d32a70f903bbbd08c12c46279893c43bf5a6a45e5f35d0b06ec856eab31c"
+            },
+            {
+              "kind": "docs:markdown",
+              "path": "docs/old.md",
+              "pkg": {
+                "_id": "Option",
+                "_tag": "Some",
+                "value": "@fixture/root"
+              },
+              "detail": {
+                "_id": "Option",
+                "_tag": "None"
+              },
+              "digest": "ff5a3f1abe2dc03c7488b5d916774e1c9398a4b296e1a7a8502f9c35f0033c37"
+            },
+            {
+              "kind": "packet",
+              "path": "goals/demo/PLAN.md",
+              "pkg": {
+                "_id": "Option",
+                "_tag": "Some",
+                "value": "@fixture/root"
+              },
+              "detail": {
+                "_id": "Option",
+                "_tag": "None"
+              },
+              "digest": "6e61859e7de2f42ea382827195315731d981e512b13b1502ef39a405fbc6ed38"
+            },
+            {
+              "kind": "src:module",
+              "path": "packages/a/src/index.ts",
+              "pkg": {
+                "_id": "Option",
+                "_tag": "Some",
+                "value": "@fixture/a"
+              },
+              "detail": {
+                "_id": "Option",
+                "_tag": "None"
+              },
+              "digest": "9c50408f2c7699a30a47ed58534e5fcace4a77cfe35f4b52487370e1e746d422"
+            },
+            {
+              "kind": "src:module",
+              "path": "packages/a/src/naïve.ts",
+              "pkg": {
+                "_id": "Option",
+                "_tag": "Some",
+                "value": "@fixture/a"
+              },
+              "detail": {
+                "_id": "Option",
+                "_tag": "None"
+              },
+              "digest": "6c2934cf666f1dd0d863f4834d4316e396a9a4d376ceaa593158396108839040"
+            },
+            {
+              "kind": "commits",
+              "path": "<commits>",
+              "pkg": {
+                "_id": "Option",
+                "_tag": "None"
+              },
+              "detail": {
+                "_id": "Option",
+                "_tag": "Some",
+                "value": "1 commit(s) 565bf4656640..f26066efb90a"
+              },
+              "digest": "38417082d441db75b557fb94ed0a0dd94c41460012324749466ddc9824a2b078"
+            }
+          ]
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "RouteClassify.classifyCommitRange",
+      "scenario": "an empty range",
+      "old": {
+        "ok": {
+          "base": "f26066efb90a921d4ad9e61099fc26b17d80ad95",
+          "head": "f26066efb90a921d4ad9e61099fc26b17d80ad95",
+          "changedPaths": [],
+          "atoms": []
+        }
+      },
+      "new": {
+        "ok": {
+          "base": "f26066efb90a921d4ad9e61099fc26b17d80ad95",
+          "head": "f26066efb90a921d4ad9e61099fc26b17d80ad95",
+          "changedPaths": [],
+          "atoms": []
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "RouteCensus.mergeBase",
+      "scenario": "the feature head",
+      "old": {
+        "ok": "565bf465664043a085ed36415a58dd1ac1a9571f"
+      },
+      "new": {
+        "ok": "565bf465664043a085ed36415a58dd1ac1a9571f"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "RouteCensus.mergeBase",
+      "scenario": "an unknown object",
+      "old": {
+        "failed": {
+          "tag": "RouteError"
+        }
+      },
+      "new": {
+        "failed": {
+          "tag": "RouteError"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "HeavyAdmission.readHeavyAdmissionChangedPaths",
+      "scenario": "a non-ASCII path",
+      "old": {
+        "ok": [
+          "\"packages/a/src/na\\303\\257ve.ts\"",
+          "docs/gone.md",
+          "docs/new.md",
+          "goals/demo/PLAN.md",
+          "packages/a/src/index.ts"
+        ]
+      },
+      "new": {
+        "ok": [
+          "docs/gone.md",
+          "docs/new.md",
+          "goals/demo/PLAN.md",
+          "packages/a/src/index.ts",
+          "packages/a/src/naïve.ts"
+        ]
+      },
+      "verdict": "classified",
+      "note": "D-19: the kit reads -z output, so a path with a non-ASCII character arrives raw where the line capture received git's C-quoted form"
+    },
+    {
+      "site": "HeavyAdmission.readHeavyAdmissionChangedPaths",
+      "scenario": "outside a repository",
+      "old": {
+        "failed": {
+          "tag": "CiCommandError"
+        }
+      },
+      "new": {
+        "failed": {
+          "tag": "CiCommandError"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Doctest.discoverChangedDoctestFiles",
+      "scenario": "a non-ASCII path",
+      "old": {
+        "ok": [
+          "packages/a/src/dirty.ts",
+          "packages/a/src/index.ts"
+        ]
+      },
+      "new": {
+        "ok": [
+          "packages/a/src/dirty.ts",
+          "packages/a/src/index.ts",
+          "packages/a/src/naïve.ts"
+        ]
+      },
+      "verdict": "classified",
+      "note": "D-19: the kit reads -z output, so a path with a non-ASCII character arrives raw where the line capture received git's C-quoted form"
+    },
+    {
+      "site": "Doctest.discoverChangedDoctestFiles",
+      "scenario": "a clean clone",
+      "old": {
+        "ok": [
+          "packages/a/src/index.ts"
+        ]
+      },
+      "new": {
+        "ok": [
+          "packages/a/src/index.ts",
+          "packages/a/src/naïve.ts"
+        ]
+      },
+      "verdict": "classified",
+      "note": "D-19: the kit reads -z output, so a path with a non-ASCII character arrives raw where the line capture received git's C-quoted form"
+    },
+    {
+      "site": "Knowledge.readKnowledgeGitRefNames",
+      "scenario": "a clone with remote branches",
+      "old": {
+        "ok": [
+          "feature",
+          "origin/HEAD",
+          "origin/feature",
+          "origin/main"
+        ]
+      },
+      "new": {
+        "ok": [
+          "feature",
+          "origin/HEAD",
+          "origin/feature",
+          "origin/main"
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Knowledge.readKnowledgeGitRefNames",
+      "scenario": "outside a repository",
+      "old": {
+        "failed": {
+          "tag": "KnowledgeOperationalError"
+        }
+      },
+      "new": {
+        "failed": {
+          "tag": "KnowledgeOperationalError"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "KnowledgeDoctor.pathRemovals",
+      "scenario": "a rename and a deletion",
+      "old": {
+        "ok": [
+          [
+            "docs/gone.md",
+            "deleted",
+            ""
+          ],
+          [
+            "docs/old.md",
+            "renamed",
+            "docs/new.md"
+          ]
+        ]
+      },
+      "new": {
+        "ok": [
+          [
+            "docs/gone.md",
+            "deleted",
+            ""
+          ],
+          [
+            "docs/old.md",
+            "renamed",
+            "docs/new.md"
+          ]
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "KnowledgeDoctor.pathRemovals",
+      "scenario": "a shallow clone",
+      "old": {
+        "ok": "none"
+      },
+      "new": {
+        "ok": "none"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "KnowledgeDoctor.pathRemovals",
+      "scenario": "an unknown tree commit",
+      "old": {
+        "ok": "none"
+      },
+      "new": {
+        "ok": "none"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "QualityArtifactSupport.listGitVisiblePaths",
+      "scenario": "a non-ASCII path",
+      "old": {
+        "ok": [
+          "\"packages/a/src/na\\303\\257ve.ts\"",
+          ".gitignore",
+          "docs/new.md",
+          "goals/demo/PLAN.md",
+          "goals/demo/README.md",
+          "package.json",
+          "packages/a/package.json",
+          "packages/a/src/dirty.ts",
+          "packages/a/src/index.ts"
+        ]
+      },
+      "new": {
+        "ok": [
+          ".gitignore",
+          "docs/new.md",
+          "goals/demo/PLAN.md",
+          "goals/demo/README.md",
+          "package.json",
+          "packages/a/package.json",
+          "packages/a/src/dirty.ts",
+          "packages/a/src/index.ts",
+          "packages/a/src/naïve.ts"
+        ]
+      },
+      "verdict": "classified",
+      "note": "D-19: the kit reads -z output, so a path with a non-ASCII character arrives raw where the line capture received git's C-quoted form"
+    },
+    {
+      "site": "QualityArtifactSupport.listGitVisiblePaths",
+      "scenario": "scoped to packages",
+      "old": {
+        "ok": [
+          "\"packages/a/src/na\\303\\257ve.ts\"",
+          "packages/a/package.json",
+          "packages/a/src/dirty.ts",
+          "packages/a/src/index.ts"
+        ]
+      },
+      "new": {
+        "ok": [
+          "packages/a/package.json",
+          "packages/a/src/dirty.ts",
+          "packages/a/src/index.ts",
+          "packages/a/src/naïve.ts"
+        ]
+      },
+      "verdict": "classified",
+      "note": "D-19: the kit reads -z output, so a path with a non-ASCII character arrives raw where the line capture received git's C-quoted form"
+    },
+    {
+      "site": "QualityArtifactSupport.listGitVisiblePaths",
+      "scenario": "outside a repository",
+      "old": {
+        "failed": {
+          "tag": "QualityScriptCommandError",
+          "exitCode": 128
+        }
+      },
+      "new": {
+        "failed": {
+          "tag": "QualityScriptCommandError",
+          "exitCode": 128
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "FallowQuality.collectAuditDiffInput",
+      "scenario": "renames and an untracked file",
+      "old": {
+        "ok": {
+          "exitCode": 0,
+          "stdout": "diff --git a/docs/gone.md b/docs/gone.md\ndeleted file mode 100644\nindex dbc2d6b..0000000\n--- a/docs/gone.md\n+++ /dev/null\n@@ -1 +0,0 @@\n-# gone\ndiff --git a/docs/old.md b/docs/new.md\nsimilarity index 100%\nrename from docs/old.md\nrename to docs/new.md\ndiff --git a/goals/demo/PLAN.md b/goals/demo/PLAN.md\nnew file mode 100644\nindex 0000000..a12d2e3\n--- /dev/null\n+++ b/goals/demo/PLAN.md\n@@ -0,0 +1 @@\n+# plan\ndiff --git a/packages/a/src/index.ts b/packages/a/src/index.ts\nindex cc798ff..66d48fc 100644\n--- a/packages/a/src/index.ts\n+++ b/packages/a/src/index.ts\n@@ -1 +1 @@\n-export const a = 1;\n+export const a = 2;\ndiff --git \"a/packages/a/src/na\\303\\257ve.ts\" \"b/packages/a/src/na\\303\\257ve.ts\"\nnew file mode 100644\nindex 0000000..b91082a\n--- /dev/null\n+++ \"b/packages/a/src/na\\303\\257ve.ts\"\n@@ -0,0 +1 @@\n+export const naive = true;\ndiff --git a/.gitignore b/.gitignore\nnew file mode 100644\nindex 0000000..8007d41\n--- /dev/null\n+++ b/.gitignore\n@@ -0,0 +1 @@\n+ignored/\ndiff --git a/packages/a/src/dirty.ts b/packages/a/src/dirty.ts\nnew file mode 100644\nindex 0000000..ac23459\n--- /dev/null\n+++ b/packages/a/src/dirty.ts\n@@ -0,0 +1 @@\n+export const dirty = 1;\n"
+        }
+      },
+      "new": {
+        "ok": {
+          "exitCode": 0,
+          "stdout": "diff --git a/docs/gone.md b/docs/gone.md\ndeleted file mode 100644\nindex dbc2d6b..0000000\n--- a/docs/gone.md\n+++ /dev/null\n@@ -1 +0,0 @@\n-# gone\ndiff --git a/docs/old.md b/docs/new.md\nsimilarity index 100%\nrename from docs/old.md\nrename to docs/new.md\ndiff --git a/goals/demo/PLAN.md b/goals/demo/PLAN.md\nnew file mode 100644\nindex 0000000..a12d2e3\n--- /dev/null\n+++ b/goals/demo/PLAN.md\n@@ -0,0 +1 @@\n+# plan\ndiff --git a/packages/a/src/index.ts b/packages/a/src/index.ts\nindex cc798ff..66d48fc 100644\n--- a/packages/a/src/index.ts\n+++ b/packages/a/src/index.ts\n@@ -1 +1 @@\n-export const a = 1;\n+export const a = 2;\ndiff --git \"a/packages/a/src/na\\303\\257ve.ts\" \"b/packages/a/src/na\\303\\257ve.ts\"\nnew file mode 100644\nindex 0000000..b91082a\n--- /dev/null\n+++ \"b/packages/a/src/na\\303\\257ve.ts\"\n@@ -0,0 +1 @@\n+export const naive = true;\ndiff --git a/.gitignore b/.gitignore\nnew file mode 100644\nindex 0000000..8007d41\n--- /dev/null\n+++ b/.gitignore\n@@ -0,0 +1 @@\n+ignored/\ndiff --git a/packages/a/src/dirty.ts b/packages/a/src/dirty.ts\nnew file mode 100644\nindex 0000000..ac23459\n--- /dev/null\n+++ b/packages/a/src/dirty.ts\n@@ -0,0 +1 @@\n+export const dirty = 1;\n"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "FallowQuality.collectAuditDiffInput",
+      "scenario": "codemod attribution without renames",
+      "old": {
+        "ok": {
+          "exitCode": 0,
+          "stdout": "diff --git a/docs/gone.md b/docs/gone.md\ndeleted file mode 100644\nindex dbc2d6b..0000000\n--- a/docs/gone.md\n+++ /dev/null\n@@ -1 +0,0 @@\n-# gone\ndiff --git a/docs/new.md b/docs/new.md\nnew file mode 100644\nindex 0000000..c2a29eb\n--- /dev/null\n+++ b/docs/new.md\n@@ -0,0 +1 @@\n+# old\ndiff --git a/docs/old.md b/docs/old.md\ndeleted file mode 100644\nindex c2a29eb..0000000\n--- a/docs/old.md\n+++ /dev/null\n@@ -1 +0,0 @@\n-# old\ndiff --git a/goals/demo/PLAN.md b/goals/demo/PLAN.md\nnew file mode 100644\nindex 0000000..a12d2e3\n--- /dev/null\n+++ b/goals/demo/PLAN.md\n@@ -0,0 +1 @@\n+# plan\ndiff --git a/packages/a/src/index.ts b/packages/a/src/index.ts\nindex cc798ff..66d48fc 100644\n--- a/packages/a/src/index.ts\n+++ b/packages/a/src/index.ts\n@@ -1 +1 @@\n-export const a = 1;\n+export const a = 2;\ndiff --git \"a/packages/a/src/na\\303\\257ve.ts\" \"b/packages/a/src/na\\303\\257ve.ts\"\nnew file mode 100644\nindex 0000000..b91082a\n--- /dev/null\n+++ \"b/packages/a/src/na\\303\\257ve.ts\"\n@@ -0,0 +1 @@\n+export const naive = true;\ndiff --git a/.gitignore b/.gitignore\nnew file mode 100644\nindex 0000000..8007d41\n--- /dev/null\n+++ b/.gitignore\n@@ -0,0 +1 @@\n+ignored/\ndiff --git a/packages/a/src/dirty.ts b/packages/a/src/dirty.ts\nnew file mode 100644\nindex 0000000..ac23459\n--- /dev/null\n+++ b/packages/a/src/dirty.ts\n@@ -0,0 +1 @@\n+export const dirty = 1;\n"
+        }
+      },
+      "new": {
+        "ok": {
+          "exitCode": 0,
+          "stdout": "diff --git a/docs/gone.md b/docs/gone.md\ndeleted file mode 100644\nindex dbc2d6b..0000000\n--- a/docs/gone.md\n+++ /dev/null\n@@ -1 +0,0 @@\n-# gone\ndiff --git a/docs/new.md b/docs/new.md\nnew file mode 100644\nindex 0000000..c2a29eb\n--- /dev/null\n+++ b/docs/new.md\n@@ -0,0 +1 @@\n+# old\ndiff --git a/docs/old.md b/docs/old.md\ndeleted file mode 100644\nindex c2a29eb..0000000\n--- a/docs/old.md\n+++ /dev/null\n@@ -1 +0,0 @@\n-# old\ndiff --git a/goals/demo/PLAN.md b/goals/demo/PLAN.md\nnew file mode 100644\nindex 0000000..a12d2e3\n--- /dev/null\n+++ b/goals/demo/PLAN.md\n@@ -0,0 +1 @@\n+# plan\ndiff --git a/packages/a/src/index.ts b/packages/a/src/index.ts\nindex cc798ff..66d48fc 100644\n--- a/packages/a/src/index.ts\n+++ b/packages/a/src/index.ts\n@@ -1 +1 @@\n-export const a = 1;\n+export const a = 2;\ndiff --git \"a/packages/a/src/na\\303\\257ve.ts\" \"b/packages/a/src/na\\303\\257ve.ts\"\nnew file mode 100644\nindex 0000000..b91082a\n--- /dev/null\n+++ \"b/packages/a/src/na\\303\\257ve.ts\"\n@@ -0,0 +1 @@\n+export const naive = true;\ndiff --git a/.gitignore b/.gitignore\nnew file mode 100644\nindex 0000000..8007d41\n--- /dev/null\n+++ b/.gitignore\n@@ -0,0 +1 @@\n+ignored/\ndiff --git a/packages/a/src/dirty.ts b/packages/a/src/dirty.ts\nnew file mode 100644\nindex 0000000..ac23459\n--- /dev/null\n+++ b/packages/a/src/dirty.ts\n@@ -0,0 +1 @@\n+export const dirty = 1;\n"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "FallowQuality.collectAuditDiffInput",
+      "scenario": "an unknown base",
+      "old": {
+        "ok": {
+          "exitCode": 128,
+          "stdout": ""
+        }
+      },
+      "new": {
+        "ok": {
+          "exitCode": 128,
+          "stdout": ""
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "LaneProofReuse.virtualTreeSha",
+      "scenario": "a dirty clone",
+      "old": {
+        "ok": "091fe4aeae371f4c9df5378b40ca6416eaab7621"
+      },
+      "new": {
+        "ok": "091fe4aeae371f4c9df5378b40ca6416eaab7621"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Goals.Doctor.gitReads",
+      "scenario": "a branched history",
+      "old": {
+        "ok": {
+          "shallow": false,
+          "recentPaths": [
+            "goals/demo/README.md"
+          ],
+          "subjects": [
+            "chore: seed"
+          ]
+        }
+      },
+      "new": {
+        "ok": {
+          "shallow": false,
+          "recentPaths": [
+            "goals/demo/README.md"
+          ],
+          "subjects": [
+            "chore: seed"
+          ]
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Goals.Doctor.gitReads",
+      "scenario": "a shallow clone",
+      "old": {
+        "ok": {
+          "shallow": true,
+          "recentPaths": [
+            "goals/demo/PLAN.md",
+            "goals/demo/README.md"
+          ],
+          "subjects": [
+            "feat: move and drop"
+          ]
+        }
+      },
+      "new": {
+        "ok": {
+          "shallow": true,
+          "recentPaths": [
+            "goals/demo/PLAN.md",
+            "goals/demo/README.md"
+          ],
+          "subjects": [
+            "feat: move and drop"
+          ]
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Goals.Doctor.gitReads",
+      "scenario": "unborn repository",
+      "old": {
+        "ok": {
+          "shallow": false,
+          "recentPaths": "none",
+          "subjects": "none"
+        }
+      },
+      "new": {
+        "ok": {
+          "shallow": false,
+          "recentPaths": [],
+          "subjects": []
+        }
+      },
+      "verdict": "classified",
+      "note": "D-19: Git.log reads an unborn HEAD as an empty history where `git log` exited 128, so the goals doctor judges staleness on an empty window there instead of skipping it (advisory findings only; an unborn clone holds no shipped packet)"
+    },
+    {
+      "site": "Goals.Doctor.gitReads",
+      "scenario": "outside a repository",
+      "old": {
+        "ok": {
+          "shallow": "none",
+          "recentPaths": "none",
+          "subjects": "none"
+        }
+      },
+      "new": {
+        "ok": {
+          "shallow": "none",
+          "recentPaths": "none",
+          "subjects": "none"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "TrackedTextFiles.listTrackedRegularFiles",
+      "scenario": "a branched history",
+      "old": {
+        "ok": [
+          "docs/gone.md",
+          "docs/old.md",
+          "goals/demo/README.md",
+          "package.json",
+          "packages/a/package.json",
+          "packages/a/src/index.ts"
+        ]
+      },
+      "new": {
+        "ok": [
+          "docs/gone.md",
+          "docs/old.md",
+          "goals/demo/README.md",
+          "package.json",
+          "packages/a/package.json",
+          "packages/a/src/index.ts"
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "SchemaTagIdioms.listTracked",
+      "scenario": "TypeScript and Markdown pathspecs",
+      "old": {
+        "ok": [
+          "docs/new.md",
+          "goals/demo/PLAN.md",
+          "goals/demo/README.md",
+          "packages/a/src/index.ts",
+          "packages/a/src/naïve.ts"
+        ]
+      },
+      "new": {
+        "ok": [
+          "docs/new.md",
+          "goals/demo/PLAN.md",
+          "goals/demo/README.md",
+          "packages/a/src/index.ts",
+          "packages/a/src/naïve.ts"
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "OpaqueRoundtrips.trackedTests",
+      "scenario": "no test files",
+      "old": {
+        "ok": []
+      },
+      "new": {
+        "ok": []
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Daily.commitVault",
+      "scenario": "the vault ignores its state",
+      "old": {
+        "ok": {
+          "outcome": "done",
+          "tracked": [
+            ".gitignore",
+            "inbox/note.md"
+          ],
+          "commits": "1"
+        }
+      },
+      "new": {
+        "ok": {
+          "outcome": "done",
+          "tracked": [
+            ".gitignore",
+            "inbox/note.md"
+          ],
+          "commits": "1"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Daily.commitVault",
+      "scenario": "the vault does not ignore its state",
+      "old": {
+        "ok": {
+          "outcome": "done",
+          "tracked": [
+            "inbox/note.md"
+          ],
+          "commits": "1"
+        }
+      },
+      "new": {
+        "ok": {
+          "outcome": "done",
+          "tracked": [
+            "inbox/note.md"
+          ],
+          "commits": "1"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Daily.commitVault",
+      "scenario": "outside a repository",
+      "old": {
+        "failed": {
+          "tag": "ResearchCommandError"
+        }
+      },
+      "new": {
+        "failed": {
+          "tag": "ResearchCommandError"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Qa.readCommitProvenance",
+      "scenario": "a dirty clone",
+      "old": {
+        "ok": {
+          "dirty": true,
+          "sha": "f26066efb90a921d4ad9e61099fc26b17d80ad95"
+        }
+      },
+      "new": {
+        "ok": {
+          "dirty": true,
+          "sha": "f26066efb90a921d4ad9e61099fc26b17d80ad95"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Qa.readCommitProvenance",
+      "scenario": "a clean clone",
+      "old": {
+        "ok": {
+          "dirty": false,
+          "sha": "f26066efb90a921d4ad9e61099fc26b17d80ad95"
+        }
+      },
+      "new": {
+        "ok": {
+          "dirty": false,
+          "sha": "f26066efb90a921d4ad9e61099fc26b17d80ad95"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Qa.readCommitProvenance",
+      "scenario": "unborn repository",
+      "old": {
+        "ok": {
+          "dirty": false,
+          "sha": "unknown"
+        }
+      },
+      "new": {
+        "ok": {
+          "dirty": false,
+          "sha": "unknown"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Qa.readCommitProvenance",
+      "scenario": "outside a repository",
+      "old": {
+        "ok": {
+          "dirty": false,
+          "sha": "unknown"
+        }
+      },
+      "new": {
+        "ok": {
+          "dirty": false,
+          "sha": "unknown"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B56",
+      "scenario": "happy",
+      "old": {
+        "value": {
+          "created_at": "2026-11-03T00:00:00.000Z",
+          "number": 7,
+          "merged": true,
+          "merged_at": {
+            "_id": "Option",
+            "_tag": "Some",
+            "value": "2026-11-03T00:00:00.000Z"
+          },
+          "merge_commit_sha": {
+            "_id": "Option",
+            "_tag": "Some",
+            "value": "merge"
+          },
+          "head": {
+            "sha": "head"
+          },
+          "base": {
+            "ref": "main",
+            "repo": {
+              "full_name": "example/repo"
+            }
+          }
+        }
+      },
+      "new": {
+        "value": {
+          "created_at": "2026-11-03T00:00:00.000Z",
+          "number": 7,
+          "merged": true,
+          "merged_at": {
+            "_id": "Option",
+            "_tag": "Some",
+            "value": "2026-11-03T00:00:00.000Z"
+          },
+          "merge_commit_sha": {
+            "_id": "Option",
+            "_tag": "Some",
+            "value": "merge"
+          },
+          "head": {
+            "sha": "head"
+          },
+          "base": {
+            "ref": "main",
+            "repo": {
+              "full_name": "example/repo"
+            }
+          }
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B56",
+      "scenario": "failure",
+      "old": {
+        "error": "goal completion GitHub observation: nonzero-exit"
+      },
+      "new": {
+        "error": "goal completion GitHub observation: read failed"
+      },
+      "verdict": "classified",
+      "note": "Typed kit refusal replaces the process exit diagnostic; caller fallback/unknown semantics remain unchanged."
+    },
+    {
+      "site": "B56",
+      "scenario": "decode",
+      "old": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "new": {
+        "error": "goal completion GitHub observation: read failed"
+      },
+      "verdict": "classified",
+      "note": "Decoder failures remain typed; the kit boundary replaces the JSON-text parser diagnostic."
+    },
+    {
+      "site": "B57",
+      "scenario": "happy",
+      "old": {
+        "value": {
+          "sha": "merge",
+          "parents": [
+            {
+              "sha": "head"
+            }
+          ],
+          "commit": {
+            "tree": {
+              "sha": "tree"
+            }
+          }
+        }
+      },
+      "new": {
+        "value": {
+          "sha": "merge",
+          "parents": [
+            {
+              "sha": "head"
+            }
+          ],
+          "commit": {
+            "tree": {
+              "sha": "tree"
+            }
+          }
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B57",
+      "scenario": "failure",
+      "old": {
+        "error": "goal completion GitHub observation: nonzero-exit"
+      },
+      "new": {
+        "error": "goal completion GitHub observation: read failed"
+      },
+      "verdict": "classified",
+      "note": "Typed kit refusal replaces the process exit diagnostic; caller fallback/unknown semantics remain unchanged."
+    },
+    {
+      "site": "B57",
+      "scenario": "decode",
+      "old": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "new": {
+        "error": "goal completion GitHub observation: read failed"
+      },
+      "verdict": "classified",
+      "note": "Decoder failures remain typed; the kit boundary replaces the JSON-text parser diagnostic."
+    },
+    {
+      "site": "B58",
+      "scenario": "happy",
+      "old": {
+        "value": [
+          {
+            "id": 1,
+            "name": "Check",
+            "status": "completed",
+            "conclusion": "success",
+            "head_sha": "head",
+            "started_at": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "2026-11-03T00:00:00.000Z"
+            },
+            "completed_at": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "2026-11-03T00:00:00.000Z"
+            }
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "id": 1,
+            "name": "Check",
+            "status": "completed",
+            "conclusion": "success",
+            "head_sha": "head",
+            "started_at": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "2026-11-03T00:00:00.000Z"
+            },
+            "completed_at": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "2026-11-03T00:00:00.000Z"
+            }
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B58",
+      "scenario": "failure",
+      "old": {
+        "error": "goal completion GitHub observation: nonzero-exit"
+      },
+      "new": {
+        "error": "goal completion GitHub observation: read failed"
+      },
+      "verdict": "classified",
+      "note": "Typed kit refusal replaces the process exit diagnostic; caller fallback/unknown semantics remain unchanged."
+    },
+    {
+      "site": "B58",
+      "scenario": "pagination",
+      "old": {
+        "value": [
+          {
+            "id": 1,
+            "name": "Check",
+            "status": "completed",
+            "conclusion": "success",
+            "head_sha": "head",
+            "started_at": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "2026-11-03T00:00:00.000Z"
+            },
+            "completed_at": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "2026-11-03T00:00:00.000Z"
+            }
+          },
+          {
+            "id": 2,
+            "name": "Check",
+            "status": "completed",
+            "conclusion": "success",
+            "head_sha": "head",
+            "started_at": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "2026-11-03T00:00:00.000Z"
+            },
+            "completed_at": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "2026-11-03T00:00:00.000Z"
+            }
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "id": 1,
+            "name": "Check",
+            "status": "completed",
+            "conclusion": "success",
+            "head_sha": "head",
+            "started_at": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "2026-11-03T00:00:00.000Z"
+            },
+            "completed_at": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "2026-11-03T00:00:00.000Z"
+            }
+          },
+          {
+            "id": 2,
+            "name": "Check",
+            "status": "completed",
+            "conclusion": "success",
+            "head_sha": "head",
+            "started_at": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "2026-11-03T00:00:00.000Z"
+            },
+            "completed_at": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "2026-11-03T00:00:00.000Z"
+            }
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B58",
+      "scenario": "decode",
+      "old": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "new": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B59",
+      "scenario": "happy",
+      "old": {
+        "value": [
+          {
+            "event": "ready_for_review",
+            "created_at": "2026-11-03T00:00:00.000Z"
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "event": "ready_for_review",
+            "created_at": "2026-11-03T00:00:00.000Z"
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B59",
+      "scenario": "failure",
+      "old": {
+        "error": "goal completion GitHub observation: nonzero-exit"
+      },
+      "new": {
+        "error": "goal completion GitHub observation: read failed"
+      },
+      "verdict": "classified",
+      "note": "Typed kit refusal replaces the process exit diagnostic; caller fallback/unknown semantics remain unchanged."
+    },
+    {
+      "site": "B59",
+      "scenario": "pagination",
+      "old": {
+        "value": [
+          {
+            "event": "ready_for_review",
+            "created_at": "2026-11-03T00:00:00.000Z"
+          },
+          {
+            "event": "ready_for_review"
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "event": "ready_for_review",
+            "created_at": "2026-11-03T00:00:00.000Z"
+          },
+          {
+            "event": "ready_for_review"
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B59",
+      "scenario": "decode",
+      "old": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "new": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B60",
+      "scenario": "happy",
+      "old": {
+        "value": [
+          {
+            "created_at": "2026-11-03T00:00:00.000Z"
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "created_at": "2026-11-03T00:00:00.000Z"
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B60",
+      "scenario": "failure",
+      "old": {
+        "error": "goal completion GitHub observation: nonzero-exit"
+      },
+      "new": {
+        "error": "goal completion GitHub observation: read failed"
+      },
+      "verdict": "classified",
+      "note": "Typed kit refusal replaces the process exit diagnostic; caller fallback/unknown semantics remain unchanged."
+    },
+    {
+      "site": "B60",
+      "scenario": "pagination",
+      "old": {
+        "value": [
+          {
+            "created_at": "2026-11-03T00:00:00.000Z"
+          },
+          {
+            "created_at": "2026-11-02T00:00:00.000Z"
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "created_at": "2026-11-03T00:00:00.000Z"
+          },
+          {
+            "created_at": "2026-11-02T00:00:00.000Z"
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B60",
+      "scenario": "decode",
+      "old": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "new": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B61",
+      "scenario": "happy",
+      "old": {
+        "value": [
+          {
+            "version_id": 1,
+            "updated_at": "2026-11-03T00:00:00.000Z"
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "version_id": 1,
+            "updated_at": "2026-11-03T00:00:00.000Z"
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B61",
+      "scenario": "failure",
+      "old": {
+        "error": "goal completion GitHub observation: nonzero-exit"
+      },
+      "new": {
+        "error": "goal completion GitHub observation: read failed"
+      },
+      "verdict": "classified",
+      "note": "Typed kit refusal replaces the process exit diagnostic; caller fallback/unknown semantics remain unchanged."
+    },
+    {
+      "site": "B61",
+      "scenario": "pagination",
+      "old": {
+        "value": [
+          {
+            "version_id": 1,
+            "updated_at": "2026-11-03T00:00:00.000Z"
+          },
+          {
+            "version_id": 2,
+            "updated_at": "2026-11-03T00:00:00.000Z"
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "version_id": 1,
+            "updated_at": "2026-11-03T00:00:00.000Z"
+          },
+          {
+            "version_id": 2,
+            "updated_at": "2026-11-03T00:00:00.000Z"
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B61",
+      "scenario": "decode",
+      "old": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "new": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B62",
+      "scenario": "happy",
+      "old": {
+        "value": {
+          "state": {
+            "enforcement": "active",
+            "target": "branch",
+            "conditions": {
+              "ref_name": {
+                "include": [
+                  "~ALL"
+                ],
+                "exclude": []
+              }
+            },
+            "rules": []
+          }
+        }
+      },
+      "new": {
+        "value": {
+          "state": {
+            "enforcement": "active",
+            "target": "branch",
+            "conditions": {
+              "ref_name": {
+                "include": [
+                  "~ALL"
+                ],
+                "exclude": []
+              }
+            },
+            "rules": []
+          }
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B62",
+      "scenario": "failure",
+      "old": {
+        "error": "goal completion GitHub observation: nonzero-exit"
+      },
+      "new": {
+        "error": "goal completion GitHub observation: read failed"
+      },
+      "verdict": "classified",
+      "note": "Typed kit refusal replaces the process exit diagnostic; caller fallback/unknown semantics remain unchanged."
+    },
+    {
+      "site": "B62",
+      "scenario": "decode",
+      "old": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "new": {
+        "error": "goal completion GitHub observation: read failed"
+      },
+      "verdict": "classified",
+      "note": "Decoder failures remain typed; the kit boundary replaces the JSON-text parser diagnostic."
+    },
+    {
+      "site": "B63",
+      "scenario": "happy",
+      "old": {
+        "value": [
+          {
+            "id": 1,
+            "ref": "refs/heads/main",
+            "after_sha": "merge"
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "id": 1,
+            "ref": "refs/heads/main",
+            "after_sha": "merge"
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B63",
+      "scenario": "failure",
+      "old": {
+        "error": "goal completion GitHub observation: nonzero-exit"
+      },
+      "new": {
+        "error": "goal completion GitHub observation: read failed"
+      },
+      "verdict": "classified",
+      "note": "Typed kit refusal replaces the process exit diagnostic; caller fallback/unknown semantics remain unchanged."
+    },
+    {
+      "site": "B63",
+      "scenario": "pagination",
+      "old": {
+        "value": [
+          {
+            "id": 1,
+            "ref": "refs/heads/main",
+            "after_sha": "merge"
+          },
+          {
+            "id": 2,
+            "ref": "refs/heads/main",
+            "after_sha": "merge"
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "id": 1,
+            "ref": "refs/heads/main",
+            "after_sha": "merge"
+          },
+          {
+            "id": 2,
+            "ref": "refs/heads/main",
+            "after_sha": "merge"
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B63",
+      "scenario": "decode",
+      "old": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "new": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B64",
+      "scenario": "happy",
+      "old": {
+        "value": {
+          "id": 7,
+          "ref": "refs/heads/main",
+          "after_sha": "merge",
+          "pushed_at": "2026-11-03T00:00:00.000Z",
+          "result": "pass",
+          "rule_evaluations": []
+        }
+      },
+      "new": {
+        "value": {
+          "id": 7,
+          "ref": "refs/heads/main",
+          "after_sha": "merge",
+          "pushed_at": "2026-11-03T00:00:00.000Z",
+          "result": "pass",
+          "rule_evaluations": []
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B64",
+      "scenario": "failure",
+      "old": {
+        "error": "goal completion GitHub observation: nonzero-exit"
+      },
+      "new": {
+        "error": "goal completion GitHub observation: read failed"
+      },
+      "verdict": "classified",
+      "note": "Typed kit refusal replaces the process exit diagnostic; caller fallback/unknown semantics remain unchanged."
+    },
+    {
+      "site": "B64",
+      "scenario": "decode",
+      "old": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "new": {
+        "error": "goal completion GitHub observation: read failed"
+      },
+      "verdict": "classified",
+      "note": "Decoder failures remain typed; the kit boundary replaces the JSON-text parser diagnostic."
+    },
+    {
+      "site": "B65",
+      "scenario": "happy",
+      "old": {
+        "value": [
+          {
+            "id": 1,
+            "source_type": "Repository",
+            "created_at": "2026-11-03T00:00:00.000Z"
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "id": 1,
+            "source_type": "Repository",
+            "created_at": "2026-11-03T00:00:00.000Z"
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B65",
+      "scenario": "failure",
+      "old": {
+        "error": "goal completion GitHub observation: nonzero-exit"
+      },
+      "new": {
+        "error": "goal completion GitHub observation: read failed"
+      },
+      "verdict": "classified",
+      "note": "Typed kit refusal replaces the process exit diagnostic; caller fallback/unknown semantics remain unchanged."
+    },
+    {
+      "site": "B65",
+      "scenario": "pagination",
+      "old": {
+        "value": [
+          {
+            "id": 1,
+            "source_type": "Repository",
+            "created_at": "2026-11-03T00:00:00.000Z"
+          },
+          {
+            "id": 2,
+            "source_type": "Repository",
+            "created_at": "2026-11-03T00:00:00.000Z"
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "id": 1,
+            "source_type": "Repository",
+            "created_at": "2026-11-03T00:00:00.000Z"
+          },
+          {
+            "id": 2,
+            "source_type": "Repository",
+            "created_at": "2026-11-03T00:00:00.000Z"
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B65",
+      "scenario": "decode",
+      "old": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "new": {
+        "error": "Invalid goal completion GitHub payload"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B53",
+      "scenario": "happy",
+      "old": {
+        "value": "manifest"
+      },
+      "new": {
+        "value": "manifest"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B53",
+      "scenario": "failure",
+      "old": {
+        "value": "absent"
+      },
+      "new": {
+        "value": "absent"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B53",
+      "scenario": "absent",
+      "old": {
+        "value": "absent"
+      },
+      "new": {
+        "value": "absent"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B54",
+      "scenario": "happy",
+      "old": {
+        "value": "git@github.com:example/repo.git"
+      },
+      "new": {
+        "value": "git@github.com:example/repo.git"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B54",
+      "scenario": "failure",
+      "old": {
+        "value": "absent"
+      },
+      "new": {
+        "value": "absent"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B54",
+      "scenario": "absent",
+      "old": {
+        "value": "absent"
+      },
+      "new": {
+        "value": "absent"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B55",
+      "scenario": "happy",
+      "old": {
+        "value": "manifest"
+      },
+      "new": {
+        "value": "manifest"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B55",
+      "scenario": "failure",
+      "old": {
+        "value": "absent"
+      },
+      "new": {
+        "value": "absent"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B55",
+      "scenario": "absent",
+      "old": {
+        "value": "absent"
+      },
+      "new": {
+        "value": "absent"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B9",
+      "scenario": "happy",
+      "old": {
+        "value": {
+          "resources": {
+            "core": {
+              "reset": 123
+            }
+          }
+        }
+      },
+      "new": {
+        "value": {
+          "resources": {
+            "core": {
+              "reset": 123
+            }
+          }
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B9",
+      "scenario": "failure",
+      "old": {
+        "error": "gh api rate_limit exited 1: HTTP 403: Forbidden"
+      },
+      "new": {
+        "error": "gh api rate_limit exited 1: GET /rate_limit failed (403): failure"
+      },
+      "verdict": "classified",
+      "note": "REST typed refusal/rate-limit diagnostics replace gh exit text; the corpus still retries ordinary failures and handles rate limits separately."
+    },
+    {
+      "site": "B9",
+      "scenario": "rate-limited",
+      "old": {
+        "error": ""
+      },
+      "new": {
+        "error": ""
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B10",
+      "scenario": "happy",
+      "old": {
+        "value": [
+          {
+            "databaseId": 7,
+            "workflowName": "Check",
+            "event": "pull_request",
+            "status": "completed",
+            "conclusion": "success",
+            "createdAt": "2026-11-03T00:00:00Z",
+            "headBranch": "feat/demo",
+            "headSha": "head",
+            "attempt": 1
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "databaseId": 7,
+            "workflowName": "Check",
+            "event": "pull_request",
+            "status": "completed",
+            "conclusion": "success",
+            "createdAt": "2026-11-03T00:00:00Z",
+            "headBranch": "feat/demo",
+            "headSha": "head",
+            "attempt": 1
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B10",
+      "scenario": "failure",
+      "old": {
+        "error": "gh run list --workflow Check --created 2026-11-03 exited 1: HTTP 403: Forbidden"
+      },
+      "new": {
+        "error": "gh run list --workflow Check --created 2026-11-03 exited 1: GET /repos/{owner}/{repo}/actions/workflows failed (403): failure"
+      },
+      "verdict": "classified",
+      "note": "REST typed refusal/rate-limit diagnostics replace gh exit text; the corpus still retries ordinary failures and handles rate limits separately."
+    },
+    {
+      "site": "B10",
+      "scenario": "pagination",
+      "old": {
+        "value": [
+          {
+            "databaseId": 7,
+            "workflowName": "Check",
+            "event": "pull_request",
+            "status": "completed",
+            "conclusion": "success",
+            "createdAt": "2026-11-03T00:00:00Z",
+            "headBranch": "feat/demo",
+            "headSha": "head",
+            "attempt": 1
+          },
+          {
+            "databaseId": 7,
+            "workflowName": "Check",
+            "event": "pull_request",
+            "status": "completed",
+            "conclusion": "success",
+            "createdAt": "2026-11-03T00:00:00Z",
+            "headBranch": "feat/demo",
+            "headSha": "head",
+            "attempt": 1
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "databaseId": 7,
+            "workflowName": "Check",
+            "event": "pull_request",
+            "status": "completed",
+            "conclusion": "success",
+            "createdAt": "2026-11-03T00:00:00Z",
+            "headBranch": "feat/demo",
+            "headSha": "head",
+            "attempt": 1
+          },
+          {
+            "databaseId": 7,
+            "workflowName": "Check",
+            "event": "pull_request",
+            "status": "completed",
+            "conclusion": "success",
+            "createdAt": "2026-11-03T00:00:00Z",
+            "headBranch": "feat/demo",
+            "headSha": "head",
+            "attempt": 1
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B10",
+      "scenario": "rate-limited",
+      "old": {
+        "error": ""
+      },
+      "new": {
+        "error": ""
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B11",
+      "scenario": "happy",
+      "old": {
+        "value": {
+          "databaseId": 7,
+          "workflowName": "Check",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "createdAt": "2026-11-03T00:00:00Z",
+          "headBranch": "feat/demo",
+          "headSha": "head",
+          "attempt": 1,
+          "jobs": [
+            {
+              "name": "Check",
+              "conclusion": "success",
+              "startedAt": "2026-11-03T00:00:00Z",
+              "completedAt": "2026-11-03T00:00:00Z"
+            }
+          ]
+        }
+      },
+      "new": {
+        "value": {
+          "databaseId": 7,
+          "workflowName": "Check",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "createdAt": "2026-11-03T00:00:00Z",
+          "headBranch": "feat/demo",
+          "headSha": "head",
+          "attempt": 1,
+          "jobs": [
+            {
+              "name": "Check",
+              "conclusion": "success",
+              "startedAt": "2026-11-03T00:00:00Z",
+              "completedAt": "2026-11-03T00:00:00Z"
+            }
+          ]
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B11",
+      "scenario": "failure",
+      "old": {
+        "error": "gh run view 7 exited 1: HTTP 403: Forbidden"
+      },
+      "new": {
+        "error": "gh run view 7 exited 1: GET /repos/{owner}/{repo}/actions/runs/{run_id} failed (403): failure"
+      },
+      "verdict": "classified",
+      "note": "REST typed refusal/rate-limit diagnostics replace gh exit text; the corpus still retries ordinary failures and handles rate limits separately."
+    },
+    {
+      "site": "B11",
+      "scenario": "pagination",
+      "old": {
+        "value": {
+          "databaseId": 7,
+          "workflowName": "Check",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "createdAt": "2026-11-03T00:00:00Z",
+          "headBranch": "feat/demo",
+          "headSha": "head",
+          "attempt": 1,
+          "jobs": [
+            {
+              "name": "Check",
+              "conclusion": "success",
+              "startedAt": "2026-11-03T00:00:00Z",
+              "completedAt": "2026-11-03T00:00:00Z"
+            },
+            {
+              "name": "Check",
+              "conclusion": "success",
+              "startedAt": "2026-11-03T00:00:00Z",
+              "completedAt": "2026-11-03T00:00:00Z"
+            }
+          ]
+        }
+      },
+      "new": {
+        "value": {
+          "databaseId": 7,
+          "workflowName": "Check",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "createdAt": "2026-11-03T00:00:00Z",
+          "headBranch": "feat/demo",
+          "headSha": "head",
+          "attempt": 1,
+          "jobs": [
+            {
+              "name": "Check",
+              "conclusion": "success",
+              "startedAt": "2026-11-03T00:00:00Z",
+              "completedAt": "2026-11-03T00:00:00Z"
+            },
+            {
+              "name": "Check",
+              "conclusion": "success",
+              "startedAt": "2026-11-03T00:00:00Z",
+              "completedAt": "2026-11-03T00:00:00Z"
+            }
+          ]
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B11",
+      "scenario": "rate-limited",
+      "old": {
+        "error": ""
+      },
+      "new": {
+        "error": ""
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B83",
+      "scenario": "happy",
+      "old": {
+        "_id": "Option",
+        "_tag": "Some",
+        "value": "https://github.com/example/repo"
+      },
+      "new": {
+        "_id": "Option",
+        "_tag": "Some",
+        "value": "https://github.com/example/repo"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B84",
+      "scenario": "happy",
+      "old": {
+        "_id": "Option",
+        "_tag": "Some",
+        "value": "2026-11-03T03:00:00+03:00"
+      },
+      "new": {
+        "_id": "Option",
+        "_tag": "Some",
+        "value": "2026-11-03T00:00:00.000Z"
+      },
+      "verdict": "classified",
+      "note": "Git.log committedAt renders the same instant in UTC Z instead of the committer offset."
+    },
+    {
+      "site": "B83",
+      "scenario": "failure",
+      "old": {
+        "_id": "Option",
+        "_tag": "None"
+      },
+      "new": {
+        "_id": "Option",
+        "_tag": "None"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B84",
+      "scenario": "failure",
+      "old": {
+        "_id": "Option",
+        "_tag": "None"
+      },
+      "new": {
+        "_id": "Option",
+        "_tag": "None"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B83",
+      "scenario": "empty-log",
+      "old": {
+        "_id": "Option",
+        "_tag": "Some",
+        "value": "https://github.com/example/repo"
+      },
+      "new": {
+        "_id": "Option",
+        "_tag": "Some",
+        "value": "https://github.com/example/repo"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B84",
+      "scenario": "empty-log",
+      "old": {
+        "_id": "Option",
+        "_tag": "None"
+      },
+      "new": {
+        "_id": "Option",
+        "_tag": "None"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B85",
+      "scenario": "happy",
+      "old": {
+        "value": [
+          {
+            "description": null,
+            "full_name": "example/repo",
+            "html_url": "https://github.com/example/repo",
+            "language": null,
+            "topics": []
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "description": null,
+            "full_name": "example/repo",
+            "html_url": "https://github.com/example/repo",
+            "language": null,
+            "topics": []
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B85",
+      "scenario": "failure",
+      "old": {
+        "error": "Failed listing GitHub stars via `gh api user/starred`; is gh installed and authenticated?"
+      },
+      "new": {
+        "error": "Failed listing GitHub stars via `gh api user/starred`; is gh installed and authenticated?"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B85",
+      "scenario": "pagination",
+      "old": {
+        "value": [
+          {
+            "description": null,
+            "full_name": "example/repo",
+            "html_url": "https://github.com/example/repo",
+            "language": null,
+            "topics": []
+          },
+          {
+            "description": null,
+            "full_name": "example/repo",
+            "html_url": "https://github.com/example/repo",
+            "language": null,
+            "topics": []
+          }
+        ]
+      },
+      "new": {
+        "value": [
+          {
+            "description": null,
+            "full_name": "example/repo",
+            "html_url": "https://github.com/example/repo",
+            "language": null,
+            "topics": []
+          },
+          {
+            "description": null,
+            "full_name": "example/repo",
+            "html_url": "https://github.com/example/repo",
+            "language": null,
+            "topics": []
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "B85",
+      "scenario": "decode",
+      "old": {
+        "error": "GitHub stars failed schema validation."
+      },
+      "new": {
+        "error": "GitHub stars failed schema validation."
+      },
+      "verdict": "same"
+    }
+  ]
+}

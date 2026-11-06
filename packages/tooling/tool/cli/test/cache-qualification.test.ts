@@ -31,14 +31,11 @@ import * as Path from "effect/Path";
 import * as R from "effect/Result";
 import * as S from "effect/Schema";
 import { contractInput } from "./helpers/cache-producer-bundle-fixture.ts";
+import { NodeTestLayer } from "./support/CommandTest.ts";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
-const platform = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
-);
+const platform = Layer.mergeAll(NodeTestLayer, NodeCrypto.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
 const testLayer = CacheQualificationLive.pipe(Layer.provideMerge(platform));
 const key = CacheQualificationKey.make({
   computation: "@beep/fixture#lint",

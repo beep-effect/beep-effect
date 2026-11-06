@@ -1,9 +1,13 @@
-import { detectOpaqueRoundtrips } from "@beep/repo-cli/commands/Lint/OpaqueRoundtrips";
+import { Git, GitCommandError } from "@beep/git/Git";
+import { detectOpaqueRoundtrips, lintOpaqueRoundtripsCommand } from "@beep/repo-cli/commands/Lint/OpaqueRoundtrips";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import { Project } from "ts-morph";
+import { NodeTestLayer } from "./support/CommandTest.ts";
 
 const detect = (body: string) => {
   const project = new Project({ tsConfigFilePath: "test/tsconfig.json", skipAddingFilesFromTsConfig: true });
@@ -284,6 +288,32 @@ describe("opaque-roundtrips", () => {
       );
       expect(findings).toHaveLength(2);
       expect(A.map(findings, (finding) => finding.opaque)).toEqual([["Value"], ["Value"]]);
+    })
+  );
+});
+
+// The scan lists tracked test files through the kit (W7b, SPEC D-19): git's exit code and a git that never ran each
+// keep the command's own error.
+const runCommand = Command.runWith(lintOpaqueRoundtripsCommand, { version: "0.0.0" });
+const scanFailure = (error: GitCommandError) =>
+  runCommand([]).pipe(
+    Effect.provideService(Git, Git.makeTest({ lsFiles: () => Effect.fail(error) })),
+    Effect.flip,
+    Effect.map((failure) => (P.hasProperty(failure, "message") ? String(failure.message) : String(failure)))
+  );
+
+it.layer(NodeTestLayer, { timeout: "30 seconds" })("opaque-roundtrips git listing", (it) => {
+  it.effect(
+    "names git's exit code, or the listing a git that never ran",
+    Effect.fnUntraced(function* () {
+      const exited = yield* scanFailure(
+        GitCommandError.make({ kind: "failed", args: ["ls-files"], cwd: ".", exitCode: 128, stderr: "fatal" })
+      );
+      expect(exited).toContain("exited 128");
+      const unspawned = yield* scanFailure(
+        GitCommandError.make({ kind: "failed", args: ["ls-files"], cwd: ".", stderr: "", detail: "spawn ENOENT" })
+      );
+      expect(unspawned).toContain("git ls-files");
     })
   );
 });
