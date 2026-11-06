@@ -38,6 +38,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -46,8 +47,19 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { admissionStatus, MemoryStats } from "../../internal/repo-run/QualityScheduler.ts";
 import { resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
-import { AccountsStatusReportJson } from "../Accounts/Accounts.schemas.ts";
-import { AccountsUsage, layerAccountsUsageLive, loadAccountsReport } from "../Accounts/AccountsUsage.service.ts";
+import {
+  AccountsStatusReport,
+  AccountsStatusReportJson,
+  groupAccounts,
+  rankAccounts,
+  SignedInLogin,
+} from "../Accounts/Accounts.schemas.ts";
+import {
+  AccountsUsage,
+  layerAccountsUsageLive,
+  loadAccountsReport,
+  retainLastGood,
+} from "../Accounts/AccountsUsage.service.ts";
 import { openSessionRows } from "../Session/Session.schemas.ts";
 import { layerSessionLedgerLive, SessionLedger, sessionCheckoutFacts } from "../Session/SessionLedger.service.ts";
 import { loadYeetInboxView } from "../Yeet/internal/InboxView.ts";
@@ -58,7 +70,6 @@ import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as HttpClient from "effect/http/HttpClient";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { AccountsStatusReport } from "../Accounts/Accounts.schemas.ts";
 import type { SessionLedgerError } from "../Session/Session.errors.ts";
 import type { SessionCheckoutFacts } from "../Session/SessionLedger.service.ts";
 import type { YeetInboxRow } from "../Yeet/internal/Inbox.ts";
@@ -127,10 +138,153 @@ export const writePrivateFile = Effect.fn("PalantiriSource.writePrivateFile")(fu
   }).pipe(Effect.onError(() => fs.remove(temporary).pipe(Effect.ignore)));
 });
 
+const readAccountSnapshot = Effect.fnUntraced(function* (file: string) {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs
+    .readFileString(file)
+    .pipe(Effect.map(AccountsStatusReportJson.decodeOption), Effect.orElseSucceed(O.none));
+});
+
+/**
+ * Stage a completed accounts report without changing its displayed result.
+ * Failed rows retain their previous successful reading and original timestamp;
+ * rejected logins remain definitive. Publication is private, atomic and best-effort.
+ *
+ * **Example** (Build a staging effect)
+ *
+ * ```ts
+ * import { AccountsStatusReport } from "@beep/repo-cli/test/Accounts"
+ * import { stageAccountHeadroomReport } from "@beep/repo-cli/test/Palantiri"
+ * import * as DateTime from "effect/DateTime"
+ * import * as Effect from "effect/Effect"
+ *
+ * const report = AccountsStatusReport.make({ generatedAt: DateTime.makeUnsafe(0), groups: [] })
+ * console.log(Effect.isEffect(stageAccountHeadroomReport(report))) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const stageAccountHeadroomReport = Effect.fn("Palantiri.stageAccountHeadroomReport")(
+  function* (report: AccountsStatusReport) {
+    const path = yield* Path.Path;
+    const dir = yield* palantiriStateDir;
+    const file = path.join(dir, SNAPSHOT_FILE);
+    const previous = yield* readAccountSnapshot(file);
+    const rows = A.flatMap(report.groups, (group) => group.rows);
+    const retained = O.match(previous, {
+      onNone: () => report,
+      onSome: (before) =>
+        AccountsStatusReport.make({
+          ...report,
+          groups: groupAccounts(
+            rankAccounts(
+              retainLastGood(
+                A.map(rows, (row) => row.usage),
+                A.flatMap(before.groups, (group) => A.map(group.rows, (row) => row.usage)),
+                before.generatedAt
+              ),
+              report.generatedAt
+            ),
+            A.map(
+              A.filter(rows, (row) => row.signedIn),
+              (row) => SignedInLogin.make(row.usage.account)
+            )
+          ),
+        }),
+    });
+    yield* AccountsStatusReportJson.encode(retained).pipe(Effect.flatMap((text) => writePrivateFile(file, text)));
+  },
+  Effect.catchCause((cause) =>
+    Effect.logWarning("[palantiri] could not write the account-headroom snapshot", cause).pipe(
+      Effect.provideService(Logger.LogToStderr, true)
+    )
+  )
+);
+
 const sourceFailed = (detail: string) => SourceFailed.make({ parcel: AccountHeadroomSpec.id, detail });
 
 const isWithinBound = (now: DateTime.Utc) => (report: AccountsStatusReport) =>
   !Duration.isGreaterThan(DateTime.distance(report.generatedAt, now), AccountHeadroomSpec.freshnessBound);
+
+const makeAccountHeadroomSource = Effect.fn("Palantiri.makeAccountHeadroomSource")(function* (refresh: boolean) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const usage = yield* AccountsUsage;
+
+  // The snapshot carries account labels, so the directory is owner-only and
+  // the file is written owner-read/write before it is renamed into place.
+  const writeSnapshot = (file: string, text: string) =>
+    writePrivateFile(file, text).pipe(
+      Effect.provideService(FileSystem.FileSystem, fs),
+      Effect.provideService(Path.Path, path)
+    );
+
+  // The providers this host is configured for: every stored login and every
+  // collector snapshot file. A failed listing is `None`, so the parcel reports
+  // unknown attribution instead of treating it as "no providers expected".
+  const expectedProviders = Effect.all([usage.accounts, usage.snapshots], { concurrency: 2 }).pipe(
+    Effect.map(([accounts, snapshots]) =>
+      A.dedupe(
+        A.appendAll(
+          A.map(accounts, (account) => account.provider),
+          A.map(snapshots, (snapshot) => snapshot.account.provider)
+        )
+      )
+    ),
+    Effect.option
+  );
+
+  const snapshot = Effect.gen(function* () {
+    const dir = yield* palantiriStateDir;
+    const file = path.join(dir, SNAPSHOT_FILE);
+    const previous = yield* readAccountSnapshot(file);
+    const now = yield* DateTime.now;
+    const report = yield* O.match(O.filter(previous, isWithinBound(now)), {
+      onSome: Effect.succeed,
+      onNone: () =>
+        refresh
+          ? loadAccountsReport(previous).pipe(
+              Effect.tap((live) =>
+                AccountsStatusReportJson.encode(live).pipe(
+                  Effect.flatMap((text) => writeSnapshot(file, text)),
+                  Effect.catchCause((cause) =>
+                    Effect.logWarning("[palantiri] could not write the account-headroom snapshot", cause)
+                  )
+                )
+              ),
+              // A failed live poll serves the stale snapshot; its age makes the
+              // parcel Unknown{stale}.
+              Effect.catchTag("AccountsError", (error) =>
+                O.match(previous, {
+                  onNone: () => Effect.fail(error),
+                  onSome: (stale) =>
+                    Effect.logWarning("[palantiri] live accounts poll failed; serving the stale snapshot").pipe(
+                      Effect.as(stale)
+                    ),
+                })
+              )
+            )
+          : Effect.fromOption(previous).pipe(Effect.mapError(() => sourceFailed("cached accounts report unavailable"))),
+    });
+    const text = yield* AccountsStatusReportJson.encode(report);
+    return AccountHeadroomInput.make({
+      report: yield* S.decodeEffect(AccountsReportInputJson)(text),
+      expectedProviders: yield* expectedProviders,
+    });
+  }).pipe(
+    Effect.catchTags({
+      AccountsError: (error) => Effect.fail(sourceFailed(`accounts report unavailable (${error.reason})`)),
+      SchemaError: () => Effect.fail(sourceFailed("accounts report did not decode")),
+      ConfigError: () => Effect.fail(sourceFailed("state directory could not be resolved")),
+    }),
+    Effect.provideService(AccountsUsage, usage),
+    Effect.provideService(FileSystem.FileSystem, fs),
+    Effect.withSpan("PalantiriSource.accountHeadroom")
+  );
+
+  return AccountHeadroomSource.of({ snapshot });
+});
 
 /**
  * Build the account-headroom source over the accounts poller, with a snapshot
@@ -165,83 +319,35 @@ const isWithinBound = (now: DateTime.Utc) => (report: AccountsStatusReport) =>
  * @category constructors
  * @since 0.0.0
  */
-export const makeAccountHeadroomSourceLive = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const usage = yield* AccountsUsage;
+export const makeAccountHeadroomSourceLive = makeAccountHeadroomSource(true);
 
-  // The snapshot carries account labels, so the directory is owner-only and
-  // the file is written owner-read/write before it is renamed into place.
-  const writeSnapshot = (file: string, text: string) =>
-    writePrivateFile(file, text).pipe(
-      Effect.provideService(FileSystem.FileSystem, fs),
-      Effect.provideService(Path.Path, path)
-    );
+/**
+ * Read cached account usage for session start, without starting provider polls.
+ * Configured-provider inventory is still checked independently; expired readings
+ * retain their timestamps and missing snapshots stay Unknown.
+ *
+ * **Example** (Build the cached source)
+ *
+ * ```ts
+ * import { makeAccountHeadroomSourceCached } from "@beep/repo-cli/test/Palantiri"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(makeAccountHeadroomSourceCached)) // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeAccountHeadroomSourceCached = makeAccountHeadroomSource(false);
 
-  // The providers this host is configured for: every stored login and every
-  // collector snapshot file. A failed listing is `None`, so the parcel reports
-  // unknown attribution instead of treating it as "no providers expected".
-  const expectedProviders = Effect.all([usage.accounts, usage.snapshots], { concurrency: 2 }).pipe(
-    Effect.map(([accounts, snapshots]) =>
-      A.dedupe(
-        A.appendAll(
-          A.map(accounts, (account) => account.provider),
-          A.map(snapshots, (snapshot) => snapshot.account.provider)
-        )
-      )
-    ),
-    Effect.option
+const accountHeadroomLayer = (source: typeof makeAccountHeadroomSourceLive) =>
+  Layer.effect(AccountHeadroomSource, source).pipe(
+    Layer.provide(layerAccountsUsageLive),
+    Layer.catchTag(["AccountsError", "ConfigError"], () =>
+      Layer.succeed(AccountHeadroomSource, {
+        snapshot: Effect.fail(sourceFailed("accounts poller could not start")),
+      })
+    )
   );
-
-  const snapshot = Effect.gen(function* () {
-    const dir = yield* palantiriStateDir;
-    const file = path.join(dir, SNAPSHOT_FILE);
-    const previous = yield* fs
-      .readFileString(file)
-      .pipe(Effect.map(AccountsStatusReportJson.decodeOption), Effect.orElseSucceed(O.none));
-    const now = yield* DateTime.now;
-    const report = yield* O.match(O.filter(previous, isWithinBound(now)), {
-      onSome: Effect.succeed,
-      onNone: () =>
-        loadAccountsReport(previous).pipe(
-          Effect.tap((live) =>
-            AccountsStatusReportJson.encode(live).pipe(
-              Effect.flatMap((text) => writeSnapshot(file, text)),
-              Effect.catchCause((cause) =>
-                Effect.logWarning("[palantiri] could not write the account-headroom snapshot", cause)
-              )
-            )
-          ),
-          // A failed live poll serves the stale snapshot; its age makes the
-          // parcel Unknown{stale}.
-          Effect.catchTag("AccountsError", (error) =>
-            O.match(previous, {
-              onNone: () => Effect.fail(error),
-              onSome: (stale) =>
-                Effect.logWarning("[palantiri] live accounts poll failed; serving the stale snapshot").pipe(
-                  Effect.as(stale)
-                ),
-            })
-          )
-        ),
-    });
-    const text = yield* AccountsStatusReportJson.encode(report);
-    return AccountHeadroomInput.make({
-      report: yield* S.decodeEffect(AccountsReportInputJson)(text),
-      expectedProviders: yield* expectedProviders,
-    });
-  }).pipe(
-    Effect.catchTags({
-      AccountsError: (error) => Effect.fail(sourceFailed(`accounts report unavailable (${error.reason})`)),
-      SchemaError: () => Effect.fail(sourceFailed("accounts report did not decode")),
-      ConfigError: () => Effect.fail(sourceFailed("state directory could not be resolved")),
-    }),
-    Effect.provideService(AccountsUsage, usage),
-    Effect.withSpan("PalantiriSource.accountHeadroom")
-  );
-
-  return AccountHeadroomSource.of({ snapshot });
-});
 
 /**
  * The live account-headroom source: the accounts poller behind a snapshot
@@ -264,14 +370,7 @@ export const makeAccountHeadroomSourceLive = Effect.gen(function* () {
  * @category layers
  * @since 0.0.0
  */
-export const layerAccountHeadroomSourceLive = Layer.effect(AccountHeadroomSource, makeAccountHeadroomSourceLive).pipe(
-  Layer.provide(layerAccountsUsageLive),
-  Layer.catchTag(["AccountsError", "ConfigError"], () =>
-    Layer.succeed(AccountHeadroomSource, {
-      snapshot: Effect.fail(sourceFailed("accounts poller could not start")),
-    })
-  )
-);
+export const layerAccountHeadroomSourceLive = accountHeadroomLayer(makeAccountHeadroomSourceLive);
 
 /**
  * OTLP export for a Palantiri host, on only when an endpoint is given.
@@ -929,6 +1028,28 @@ export const layerSinceLastCheckSourceLive = Layer.effect(
  */
 export const layerPalantiriSourcesLive = Layer.mergeAll(
   layerAccountHeadroomSourceLive,
+  layerLaneRedsSourceLive,
+  layerHostPressureSourceLive,
+  layerSinceLastCheckSourceLive
+);
+
+/**
+ * Session-start sources: cached usage with independent provider inventory, and
+ * the existing live lane/host sources. Explicit Palantiri reads remain live.
+ *
+ * **Example** (Build hot sources)
+ *
+ * ```ts
+ * import { layerPalantiriSourcesHot } from "@beep/repo-cli/test/Palantiri"
+ * import * as Layer from "effect/Layer"
+ * console.log(Layer.isLayer(layerPalantiriSourcesHot)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const layerPalantiriSourcesHot = Layer.mergeAll(
+  accountHeadroomLayer(makeAccountHeadroomSourceCached),
   layerLaneRedsSourceLive,
   layerHostPressureSourceLive,
   layerSinceLastCheckSourceLive
