@@ -12,5 +12,49 @@
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
-  }
+  },
+  "references": [
+    {
+      "path": "../../../drivers/commands/tsconfig.json"
+    },
+    {
+      "path": "../../../drivers/git/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/capability/walker/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/glob/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/lockfiles/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/npm-spec/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/package-json/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/semver/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/yaml/tsconfig.json"
+    },
+    {
+      "path": "../../test-kit/fc-runs/tsconfig.json"
+    },
+    {
+      "path": "../../test-kit/memfs/tsconfig.json"
+    }
+  ]
 }

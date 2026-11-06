@@ -24,7 +24,7 @@ since this snapshot is where the predecessor stopped.
 
 ```text
 <time>
-#NNNN ready main abcdef1234 clean ok=16/16 threads=0/3 GATE-MET
+#NNNN ready main abcdef1234 clean ok=16/16 threads=0/3 window=ok GATE-MET
 ```
 
 ## Outstanding "final" promises

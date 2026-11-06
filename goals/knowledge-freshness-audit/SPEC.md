@@ -180,8 +180,10 @@ extracting copied claims. The certificate names an immutable audited-source
 snapshot; a final publication comparison must show only validated evidence
 additions afterward, or source changes that have received ordinary audit proof.
 
-Final audit reflection and lifecycle changes land with final audit work.
-The planning packet remains paused after its own PR becomes mergeable.
+Final audit work carries the reflection and proposed closeout. After that PR
+merges, a separate packet-state PR adopts verified completion under AGENTS.md.
+The original planning delivery did not activate or complete the campaign; the
+November operator authorization and execution record describe the current scope.
 
 ## Stop and escalation conditions
 
@@ -196,3 +198,16 @@ Do not weaken verification or reclassify unresolved obligations to close the goa
 
 None approved. The three-frame ADHD adaptation is recorded research provenance,
 not an exception to audit coverage.
+
+## Decision log
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug knowledge-freshness-audit`; add a `kind: decision` file there, never edit this block._
+
+### Publish reviewed local repairs after promotional credits expired, 2026-11-06
+
+The operator authorized local false-positive and omission review, validated repairs, and publication through mergeable PRs. Promotional cloud work has ended; no paid pilot, purchase or new endpoint is admitted. The collected tranche reports are proposals until parent review; repeated claims are not unique coverage. PM T17 missing original and ADHD imported-source provenance remain separately held, with no acceptance inferred. This delivery records partial P1-P3 progress and targeted proof, not complete inventory, extraction, reconciliation, runtime readiness or goal closeout. Raw evidence and failed checks remain in the private archive; only sanitized determinations and repair evidence are published.
+
+Reverse: Revert the bounded repair PR and its packet update; retain the private original reports and decision history.
+
+<!-- beep:decisions:end -->

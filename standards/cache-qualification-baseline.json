@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7c, feat/gh-git-w7c-worktree)",
-      "reason": "Record the W7c seal drift: Worktree.service.ts now imports @beep/github PullRequest and Rest, so PullRequest.ts, Rest.ts and GitHubCommit.ts join the quality-bun-audit, quality-changeset-graph, quality-jsdoc-inventory, quality-jsdoc-module-tags, quality-jsdoc-ratchet and quality-tsgo-rules policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
+      "reviewer": "Codex performance publication review",
+      "reason": "Record hashed compiler/backend selectors, CLI checker scheduling caches and generated policy inputs; preserve qualification scope and trust boundaries.",
       "basis": {
-        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7c.md",
-        "sha256": "6949df094af725c869328c582f2afa39fa07a3ca69f6a50afe66e35630dfce39"
+        "path": "docs/reports/tsrs-performance-cache-review-2026-11-06.md",
+        "sha256": "ac73c5881cd2a6a55fb7cf74c20cc4df752735eab0b1d2ff675f92c0c39df235"
       }
     },
     "@beep/acp": {
@@ -1162,11 +1162,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W7c, feat/gh-git-w7c-worktree)",
-      "reason": "Record the W7c seal drift: Worktree.service.ts now imports @beep/github PullRequest and Rest, so PullRequest.ts, Rest.ts and GitHubCommit.ts join the quality-bun-audit, quality-changeset-graph, quality-jsdoc-inventory, quality-jsdoc-module-tags, quality-jsdoc-ratchet and quality-tsgo-rules policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
+      "reviewer": "Codex performance publication review",
+      "reason": "Record hashed compiler/backend selectors, CLI checker scheduling caches and generated policy inputs; preserve qualification scope and trust boundaries.",
       "basis": {
-        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7c.md",
-        "sha256": "6949df094af725c869328c582f2afa39fa07a3ca69f6a50afe66e35630dfce39"
+        "path": "docs/reports/tsrs-performance-cache-review-2026-11-06.md",
+        "sha256": "ac73c5881cd2a6a55fb7cf74c20cc4df752735eab0b1d2ff675f92c0c39df235"
       }
     },
     "@beep/repo-cli-kit": {
@@ -1574,7 +1574,9 @@
         ],
         "env": [
           "VITE_COSMOS_SPIKE",
-          "REGEN_GOLDENS"
+          "REGEN_GOLDENS",
+          "BEEP_LINT_TSGOLINT",
+          "TSRS_FAST"
         ],
         "passThroughEnv": [
           "BEEP_AGENT_SESSION_ID",
@@ -3272,6 +3274,7 @@
             "packages/drivers/git/package.json",
             "packages/drivers/git/src/**",
             "packages/drivers/github-actions/package.json",
+            "packages/drivers/github-actions/src/**",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/**",
             "packages/drivers/gov-legal-mcp/package.json",
@@ -92321,7 +92324,7 @@
       {
         "computation": "@beep/repo-cli#build",
         "command": "bun run beep:build",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#build",
           "@beep/chalk#build",
@@ -92436,7 +92439,7 @@
       {
         "computation": "@beep/repo-cli#check",
         "command": "bun run beep:check",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#build",
           "@beep/chalk#build",
@@ -92537,7 +92540,7 @@
       {
         "computation": "@beep/repo-cli#coverage",
         "command": "bunx vitest run --coverage",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#build",
           "@beep/chalk#build",
@@ -92648,7 +92651,7 @@
       {
         "computation": "@beep/repo-cli#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/repo-cli#transit",
           "@beep/repo-docgen#transit"
@@ -92687,7 +92690,7 @@
       {
         "computation": "@beep/repo-cli#doctest",
         "command": "bun run beep:doctest",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#transit",
           "@beep/chalk#transit",
@@ -92797,7 +92800,7 @@
       {
         "computation": "@beep/repo-cli#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -92830,7 +92833,7 @@
       {
         "computation": "@beep/repo-cli#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#transit",
           "@beep/chalk#transit",
@@ -92956,7 +92959,7 @@
       {
         "computation": "@beep/repo-cli#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -92985,7 +92988,7 @@
       {
         "computation": "@beep/repo-cli#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
         ],
@@ -93040,7 +93043,7 @@
       {
         "computation": "@beep/repo-cli#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
         ],
@@ -93094,7 +93097,7 @@
       {
         "computation": "@beep/repo-cli#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#transit",
           "@beep/chalk#transit",
@@ -93198,7 +93201,7 @@
       {
         "computation": "@beep/repo-cli#test",
         "command": "bun run beep:test",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#transit",
           "@beep/chalk#transit",
@@ -93328,7 +93331,7 @@
       {
         "computation": "@beep/repo-cli#test:property",
         "command": "bun run beep:test",
-        "commandDigest": "2a28228d3d6cda271f44df76b2f93ad022742075d2915597be05a4e2eb234a5f",
+        "commandDigest": "2b30db03c8c1d672805d7653b702852511c0c1ff6a9833450098e4587d93f057",
         "dependencies": [
           "@beep/ai-sync#transit",
           "@beep/chalk#transit",
@@ -121770,7 +121773,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "9cc66dfe0984bb488f69be4dcb20e96239107cb82448a4447ad97ea185aec43d"
+        "sha256": "fce69b39ea839fcfc240dd94d01e1df361f007e1296ce4d99693ae1fea0ef697"
       }
     ]
   }

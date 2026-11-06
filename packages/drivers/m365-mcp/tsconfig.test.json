@@ -12,5 +12,37 @@
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
-  }
+  },
+  "references": [
+    {
+      "path": "../m365/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/capability/mcp-kit/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/capability/xdg/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/primitive/data/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/memfs/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-runner/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-utils/tsconfig.json"
+    }
+  ]
 }

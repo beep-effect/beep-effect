@@ -952,7 +952,7 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
     );
 
     it.effect(
-      "mirrors package tsconfig references into tsconfig.check.json overlays in the same run",
+      "mirrors same-run references into source and test overlays with relative targets",
       () =>
         Effect.andThen(
           temporaryRepository,
@@ -994,6 +994,16 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
               },
               checkReferences: [],
             });
+            const packageDir = path.join(rootDir, "packages", "example-domain");
+            yield* fs.makeDirectory(path.join(packageDir, "test"), { recursive: true });
+            yield* fs.writeFileString(
+              path.join(packageDir, "tsconfig.test.json"),
+              '{ "extends": "../../tsconfig.base.json", "include": ["src", "test"], "compilerOptions": { "noEmit": true } }\n'
+            );
+            yield* fs.writeFileString(
+              path.join(packageDir, "test", "tsconfig.json"),
+              '{ "extends": "../tsconfig.json", "include": ["./**/*.ts"], "compilerOptions": { "noEmit": true } }\n'
+            );
 
             const drift = yield* syncTsconfigAtRoot(
               rootDir,
@@ -1012,7 +1022,7 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             if (drift?._tag !== "TsconfigSyncDriftError") {
               return;
             }
-            expect(drift.fileCount).toBe(2);
+            expect(drift.fileCount).toBe(4);
 
             const syncResult = yield* syncTsconfigAtRoot(
               rootDir,
@@ -1024,7 +1034,9 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             );
             expect(A.map(syncResult.changes, (change) => change.section)).toEqual([
               "package-check-references",
+              "package-check-references",
               "package-references",
+              "package-check-references",
             ]);
             const overlayChange = A.findFirst(
               syncResult.changes,
@@ -1049,6 +1061,14 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             const overlayText = yield* fs.readFileString(overlayPath);
             expect(overlayText).toContain("// check overlay: references mirror tsconfig.json");
             expect(overlayText).toContain('"noEmit": true');
+            const testConfig = yield* readJsoncFile(path.join(packageDir, "tsconfig.test.json"));
+            const testRefs = yield* decodeTsconfigReferences(testConfig);
+            expect(A.map(testRefs.references, (entry) => entry.path)).toEqual(expectedReferences);
+            const nestedTestConfig = yield* readJsoncFile(path.join(packageDir, "test", "tsconfig.json"));
+            const nestedTestRefs = yield* decodeTsconfigReferences(nestedTestConfig);
+            expect(A.map(nestedTestRefs.references, (entry) => entry.path)).toEqual([
+              "../../foundation/modeling/identity/tsconfig.json",
+            ]);
 
             // Steady state: the mirrored overlay causes no further drift.
             const steadyState = yield* syncTsconfigAtRoot(

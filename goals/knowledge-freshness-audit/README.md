@@ -2,13 +2,13 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `active`
 
 Source: [ops/manifest.json](./ops/manifest.json)
 
-This is an execution-capable campaign whose audit has not started. The current
-delivery is its researched planning packet and docs-only PR. Publishing that
-packet does not complete or activate the audit.
+Operator-authorized audit execution and reviewed local repairs are in progress.
+The promotional cloud phase has ended. This delivery preserves the collected
+work through publication and exact-head PR readiness; it does not complete the audit.
 
 ## Mission
 
@@ -21,16 +21,11 @@ warehouse, and scheduling roadmap remains with that initiative.
 
 ## Launch and resume conditions
 
-After the operator explicitly activates the audit, use:
-
-```text
-/goal follow the instructions in goals/knowledge-freshness-audit/GOAL.md
-```
-
-Activation opens P1 reporting and implementation of read-only audit tooling.
-Mutation of audited content requires the corresponding concrete report and
-recorded false-positive review. The separately authorized Jev experiment is
-bounded to $5 during audit execution; no API trial belongs in P0.
+Continue from the current manifest and the
+[November execution record](./history/2026-11-06-reviewed-local-repairs.md).
+Audited-content mutation requires its concrete report and recorded false-positive
+review. No paid pilot, purchase, new endpoint or resumed promotional cloud work
+is admitted. PM's missing original and ADHD provenance remain separate holds.
 
 ## Reading order
 
@@ -44,11 +39,11 @@ bounded to $5 during audit execution; no API trial belongs in P0.
 
 ## Current phase
 
-P0 delivered this reviewed packet in [PR #1218](https://github.com/beep-effect/beep-effect/pull/1218).
-The delivery history records the observed merge-ready checkpoint. P1-P5 remain
-pending while the campaign is paused.
-The first execution action is to refresh the census at a recorded Git revision
-and check the parent initiative's current capabilities before adding tooling.
+P0 delivered the planning packet in [PR #1218](https://github.com/beep-effect/beep-effect/pull/1218).
+P1-P3 have partial execution and reviewed local repair evidence. P4-P5 remain
+pending. Tranche counts include redeterminations and are neither unique claim
+coverage nor an exhaustive final-tree certificate. See the execution record for
+proof limits, holds and the remaining frontier.
 
 ## Evidence
 
