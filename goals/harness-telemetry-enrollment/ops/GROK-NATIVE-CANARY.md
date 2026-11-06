@@ -129,3 +129,34 @@ and no native consumer, profile, login or retry behavior changes with this
 observation-only revision.
 
 The current candidate pins native 1.0.77 inspection and streaming protocol, matching the qualified current standalone CLI. Its no-network synthetic title/main contract uses the same exact production feature toggles, private profile, 23-tool denylist and zero source inventories. The saved native GROK_AUTH_PATH consumer, profile, native read-only sandbox, untrusted project and empty context/tool requirements remain unchanged; no separate grokv proxy/auth-provider route is inherited. A version correction does not retroactively diagnose the failed1.0.73 attempt.
+
+## Fixed public session context
+
+Request v2 intentionally rejects the old request shape and requires a new owner
+admission and fresh attempt nonce. It adds exactly six public desktop-session fields: `USER`, `LOGNAME`,
+`SHELL`, `TERM`, `XDG_RUNTIME_DIR`, and `DBUS_SESSION_BUS_ADDRESS`. The adapter
+continues to set `HOME` to the owner-only isolated home and `GROK_HOME` to the
+separate exact private profile. It never inherits an environment bag, changes to
+an original user home, or adds an authentication-context home override.
+
+User and login names must match the current OS user. The runtime directory must
+be the canonical `/run/user/<uid>`, owned by that same real/effective UID, with
+mode 0700 and no symlink. Its canonical `bus` entry must be an owned Unix socket.
+The shell is fixed to `/usr/bin/zsh` and resolves to the OS login shell;
+`TERM` is fixed to the qualified `xterm-256color` value. The adapter only inspects this public filesystem metadata. It never
+connects to the session bus itself or reads credential contents. Native Grok
+remains the consumer of the existing login store and public session context.
+The context and runtime/bus inode identities contribute a salted qualification
+hash, rechecked with the existing pre/post policy pins. Raw context fields do not
+enter durable source evidence. Changing a request context invalidates immutable
+metadata replay through the existing request binding.
+
+The fixed profile pre-seeds Grok 1.0.77's observed
+`marketplace.default_skills_installs_purged = true` migration marker. This keeps
+native metadata inspection from rewriting the exact private profile; it grants
+no additional plugin, skill, hook or MCP capability. Both native inventories must
+still prove all seven counts zero and all foreign compatibility sources disabled.
+The explicit main/title `grok-4.7` pins, fixed prompt, 23-tool denylist, native
+read-only sandbox, one source fence and unknown HTTP retry accounting are unchanged.
+Metadata authentication and an empty inventory do not claim successful inference,
+model entitlement, quota, or recovery of any prior failed attempt.

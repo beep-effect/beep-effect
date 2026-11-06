@@ -12,6 +12,8 @@ import { constants, createReadStream } from "node:fs";
 import * as Fs from "node:fs/promises";
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- Fixed private Unix-socket transport has no network destination.
 import * as Http from "node:http";
+// @effect-diagnostics-next-line nodeBuiltinImport:off -- Public same-UID username/login-shell metadata validates the fixed native session context; no credentials are read.
+import * as Os from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
 import {
   encodeManagedControllerObservation,
@@ -62,7 +64,7 @@ const absolute = S.String.check(S.isPattern(/^\/[^\u0000-\u001f"\\]*$/), S.isMax
  * @since 0.0.0
  */
 export const grokCanaryProfile =
-  '[models]\nsession_summary="grok-4.7"\ndefault_reasoning_effort="medium"\n[cli]\nauto_update=false\nuse_leader=false\n[features]\ntelemetry=false\nfeedback=false\ncodebase_indexing=false\nremote_fetch=false\nauto_wake=false\ntitle_refresh=false\nturn_summary=false\n[session]\nload_envrc=false\n';
+  '[models]\nsession_summary="grok-4.7"\ndefault_reasoning_effort="medium"\n[cli]\nauto_update=false\nuse_leader=false\n[features]\ntelemetry=false\nfeedback=false\ncodebase_indexing=false\nremote_fetch=false\nauto_wake=false\ntitle_refresh=false\nturn_summary=false\n[session]\nload_envrc=false\n\n[marketplace]\ndefault_skills_installs_purged = true\n';
 /** Fixed local-only pilot project MCP bytes; never publish this override into the ordinary repository.
  * **Example** (Inspect empty MCP content)
  * ```ts
@@ -130,6 +132,29 @@ const args = [
   "-p",
   "Reply with exactly ENROLLMENT_CANARY_OK. Do not use tools, inspect files, or perform any other work.",
 ];
+/** Fixed public desktop-session context; no arbitrary environment entries are admitted.
+ * **Example** (Inspect the context constructor)
+ * ```ts
+ * console.log(typeof GrokNativeSessionContext.make)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class GrokNativeSessionContext extends S.Opaque<GrokNativeSessionContext, { readonly brand: unique symbol }>()(
+  S.Struct({
+    USER: S.String.check(S.isPattern(/^[A-Za-z_][A-Za-z0-9_.-]{0,127}$/)),
+    LOGNAME: S.String.check(S.isPattern(/^[A-Za-z_][A-Za-z0-9_.-]{0,127}$/)),
+    SHELL: S.tag("/usr/bin/zsh"),
+    TERM: S.tag("xterm-256color"),
+    XDG_RUNTIME_DIR: absolute,
+    DBUS_SESSION_BUS_ADDRESS: S.String.check(S.isPattern(/^unix:path=\/run\/user\/[0-9]+\/bus$/)),
+  }).pipe(
+    $I.annoteSchema("GrokNativeSessionContext", {
+      description:
+        "Six public fields only; same-UID runtime directory, native session bus and login-shell metadata are checked before native dispatch.",
+    })
+  )
+) {}
 /** Serialized owner admission; telemetry salt decodes from JSON into Redacted.
  * **Example** (Inspect the request constructor)
  * ```ts
@@ -140,7 +165,7 @@ const args = [
  */
 export class GrokNativeCanaryRequest extends S.Opaque<GrokNativeCanaryRequest, { readonly brand: unique symbol }>()(
   S.Struct({
-    version: S.tag("grok-native-canary-request/v1"),
+    version: S.tag("grok-native-canary-request/v2"),
     launchId: Sha256Hex,
     identity: ObservationLaunchIdentity,
     hostId: Sha256Hex,
@@ -153,6 +178,7 @@ export class GrokNativeCanaryRequest extends S.Opaque<GrokNativeCanaryRequest, {
     workspace: absolute,
     attemptDirectory: absolute,
     isolatedHome: absolute,
+    sessionContext: GrokNativeSessionContext,
     nativeHome: absolute,
     nativeAuthFile: absolute,
     nativeAuthIdentitySha256: Sha256Hex,
@@ -272,6 +298,7 @@ const qualification = S.Struct({
   projectMcpSha256: Sha256Hex,
   originalPolicySha256: Sha256Hex,
   authIdentitySha256: Sha256Hex,
+  sessionContextSha256: Sha256Hex,
   inspectSha256: Sha256Hex,
   argvSha256: Sha256Hex,
   executableTools: S.tag(0),
@@ -586,6 +613,40 @@ const pinRuntime = Effect.fn("GrokCanary.pinRuntime")(function* (request: GrokNa
     request.isolatedHome === process.env.HOME
   )
     return yield* failed("admission");
+  const sessionIdentity = yield* io(async () => {
+    const uid = process.getuid?.();
+    const user = Os.userInfo();
+    const context = request.sessionContext;
+    if (
+      uid === undefined ||
+      process.geteuid?.() !== uid ||
+      context.USER !== user.username ||
+      context.LOGNAME !== user.username ||
+      user.shell === null ||
+      context.XDG_RUNTIME_DIR !== `/run/user/${uid}` ||
+      context.DBUS_SESSION_BUS_ADDRESS !== `unix:path=/run/user/${uid}/bus` ||
+      (await Fs.realpath(context.SHELL)) !== (await Fs.realpath(user.shell))
+    )
+      throw new Error("public-session-context");
+    const directory = await Fs.lstat(context.XDG_RUNTIME_DIR);
+    if (
+      directory.isSymbolicLink() ||
+      !directory.isDirectory() ||
+      directory.uid !== uid ||
+      (directory.mode & 0o777) !== 0o700 ||
+      (await Fs.realpath(context.XDG_RUNTIME_DIR)) !== context.XDG_RUNTIME_DIR
+    )
+      throw new Error("public-runtime-entry");
+    const busPath = `${context.XDG_RUNTIME_DIR}/bus`;
+    const bus = await Fs.lstat(busPath);
+    if (bus.isSymbolicLink() || !bus.isSocket() || bus.uid !== uid || (await Fs.realpath(busPath)) !== busPath)
+      throw new Error("public-session-entry");
+    return `${uid}:${directory.dev}:${directory.ino}:${bus.dev}:${bus.ino}`;
+  });
+  const sessionContextSha256 = yield* hashPrivateIdentifier(
+    `${yield* S.encodeEffect(S.fromJsonString(GrokNativeSessionContext))(request.sessionContext)}:${sessionIdentity}`,
+    O.some(Redacted.value(request.hashSalt))
+  );
   const projectMcpBytes = yield* io(async () => {
     for (const directory of [request.nativeHome, request.isolatedHome]) await privateEntry(directory, "directory");
     if ((await Fs.realpath(request.workspace)) !== request.workspace) throw new Error("workspace-link");
@@ -670,6 +731,7 @@ const pinRuntime = Effect.fn("GrokCanary.pinRuntime")(function* (request: GrokNa
     projectMcpSha256: yield* hashPublicTextSha256(projectMcpBytes),
     originalPolicySha256: yield* hashPublicTextSha256(originalPolicy),
     authIdentitySha256: nativeAuthIdentitySha256,
+    sessionContextSha256,
   };
 });
 const inventory = S.Struct({
@@ -707,12 +769,19 @@ const encodePin = S.encodeEffect(
       projectMcpSha256: Sha256Hex,
       originalPolicySha256: Sha256Hex,
       authIdentitySha256: Sha256Hex,
+      sessionContextSha256: Sha256Hex,
     })
   )
 );
 const makeEnv = (request: GrokNativeCanaryRequest) => {
   const env: Record<string, string> = {
     HOME: request.isolatedHome,
+    USER: request.sessionContext.USER,
+    LOGNAME: request.sessionContext.LOGNAME,
+    SHELL: request.sessionContext.SHELL,
+    TERM: request.sessionContext.TERM,
+    XDG_RUNTIME_DIR: request.sessionContext.XDG_RUNTIME_DIR,
+    DBUS_SESSION_BUS_ADDRESS: request.sessionContext.DBUS_SESSION_BUS_ADDRESS,
     GROK_HOME: request.nativeHome,
     GROK_AUTH_PATH: request.nativeAuthFile,
     GROK_SESSION_SUMMARY_MODEL: "grok-4.7",

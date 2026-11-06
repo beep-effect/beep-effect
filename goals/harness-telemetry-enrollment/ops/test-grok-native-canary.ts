@@ -23,15 +23,22 @@ import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { vi } from "vitest";
 import {
   GrokNativeCanaryDiagnostic,
   GrokNativeCanaryEvidence,
   GrokNativeCanaryRequest,
+  GrokNativeSessionContext,
   grokCanaryProfile,
   grokCanaryProjectMcp,
   grokCanaryProjectMcpFormatted,
   runGrokNativeCanary,
 } from "./grok-native-canary.ts";
+
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const original = await importOriginal<typeof import("node:fs/promises")>();
+  return { ...original, lstat: vi.fn(original.lstat), realpath: vi.fn(original.realpath) };
+});
 
 const id = (c: string) => Sha256Hex.make(Str.repeat(64)(c));
 const digest = (text: string | Uint8Array) => createHash("sha256").update(text).digest("hex");
@@ -45,6 +52,11 @@ const nativeFixture = String.raw`
 static void record(const char *home,const char *name) {char p[8192];snprintf(p,sizeof(p),"%s/%s",home,name);FILE *f=fopen(p,"a");if(f){fputs("1\n",f);fclose(f);}}
 int main(int argc,char **argv) {
  const char *home=getenv("GROK_HOME");char cwd[4096],p[8192],mode[64]="ok";getcwd(cwd,sizeof(cwd));if(!home)return 83;
+ const char *context[]={"USER","LOGNAME","SHELL","TERM","XDG_RUNTIME_DIR","DBUS_SESSION_BUS_ADDRESS"};
+ for(int i=0;i<6;i++)if(!getenv(context[i])||!strlen(getenv(context[i])))return 87;
+ if(strcmp(getenv("USER"),getenv("LOGNAME")))return 88;
+ char bus[8192];snprintf(bus,sizeof(bus),"unix:path=%s/bus",getenv("XDG_RUNTIME_DIR"));if(strcmp(bus,getenv("DBUS_SESSION_BUS_ADDRESS")))return 89;
+ if(!getenv("HOME")||!strcmp(getenv("HOME"),home))return 90;
  snprintf(p,sizeof(p),"%s/fixture-mode",home);FILE *f=fopen(p,"r");if(f){fgets(mode,sizeof(mode),f);fclose(f);}
  if(argc>1&&!strcmp(argv[1],"inspect")) {
   record(home,"inspect-count");
@@ -80,6 +92,7 @@ const fixture = async (
     readonly mode?: string;
     readonly driftAuthAtPrepared?: boolean;
     readonly projectMcp?: string;
+    readonly sessionMetadata?: "wrong-owner" | "bus-file" | "symlink" | "drift";
   } = {}
 ) => {
   const directory = await Fs.mkdtemp(Path.join(Os.tmpdir(), "grok-canary-"));
@@ -127,6 +140,12 @@ const fixture = async (
     workspace: Path.join(directory, "workspace"),
     attemptDirectory: Path.join(directory, "attempt"),
     isolatedHome: Path.join(directory, "home"),
+    sessionContext: GrokNativeSessionContext.make({
+      USER: Os.userInfo().username,
+      LOGNAME: Os.userInfo().username,
+      XDG_RUNTIME_DIR: `/run/user/${process.getuid?.()}`,
+      DBUS_SESSION_BUS_ADDRESS: `unix:path=/run/user/${process.getuid?.()}/bus`,
+    }),
     nativeHome: Path.join(directory, "native"),
     nativeAuthFile: auth,
     nativeAuthIdentitySha256: Sha256Hex.make(digest(authSignature)),
@@ -196,6 +215,34 @@ const fixture = async (
     server.listen(request.socketPath, resolve);
   });
   await Fs.chmod(request.socketPath, 0o600);
+  // Hermetic public-session metadata: only canonical runtime/bus stat/realpath
+  // calls are mapped to this fixture's owned directory/socket; no bus is contacted.
+  const nativeLstat = vi.mocked(Fs.lstat).getMockImplementation();
+  const nativeRealpath = vi.mocked(Fs.realpath).getMockImplementation();
+  if (nativeLstat === undefined || nativeRealpath === undefined) throw new Error("fixture-filesystem-mock");
+  const runtime = request.sessionContext.XDG_RUNTIME_DIR;
+  const bus = `${runtime}/bus`;
+  let busStats = 0;
+  const mapped = (filename: Parameters<typeof Fs.lstat>[0]) =>
+    filename === runtime
+      ? request.isolatedHome
+      : filename === bus
+        ? options.sessionMetadata === "bus-file"
+          ? auth
+          : request.socketPath
+        : filename;
+  const statMock = vi.mocked(Fs.lstat).mockImplementation(async (filename, settings) => {
+    const value = await nativeLstat(mapped(filename), settings);
+    if (filename === runtime && options.sessionMetadata === "wrong-owner") value.uid = process.getuid?.() === 0 ? 1 : 0;
+    if (filename === runtime && options.sessionMetadata === "symlink") value.isSymbolicLink = () => true;
+    if (filename === bus && ++busStats > 1 && options.sessionMetadata === "drift") value.ino = 0;
+    return value;
+  });
+  const realpathMock = vi.mocked(Fs.realpath).mockImplementation(async (filename, settings) => {
+    if (filename === request.sessionContext.SHELL || filename === Os.userInfo().shell) return "/usr/bin/zsh";
+    const value = await nativeRealpath(mapped(filename), settings);
+    return filename === runtime || filename === bus ? filename : value;
+  });
   const run = runGrokNativeCanary(request).pipe(
     Effect.provide(NodeCrypto.layer.pipe(Layer.provideMerge(NodeServices.layer)))
   );
@@ -217,13 +264,20 @@ const fixture = async (
       epoch = value;
     },
     close: async () => {
+      statMock.mockImplementation(nativeLstat);
+      realpathMock.mockImplementation(nativeRealpath);
       await new Promise<void>((resolve) => server.close(() => resolve()));
       await Fs.rm(directory, { recursive: true, force: true });
     },
   };
 };
 
-it.live("serialized admission round-trips a redacted salt and spawns nothing", () =>
+// Each case owns its public-session metadata mapping; avoid sharing it across
+// globally concurrent tests. No real session bus or login shell is used.
+const nativeCase = (name: string, body: () => Effect.Effect<void, unknown>) =>
+  it.live(name, body, { concurrent: false });
+
+nativeCase("serialized admission round-trips a redacted salt and spawns nothing", () =>
   Effect.tryPromise(async () => {
     const f = await fixture();
     try {
@@ -233,6 +287,29 @@ it.live("serialized admission round-trips a redacted salt and spawns nothing", (
       expect(Redacted.isRedacted(decoded.hashSalt)).toBe(true);
       expect(Redacted.value(decoded.hashSalt) === Redacted.value(f.request.hashSalt)).toBe(true);
       expect(await Effect.runPromise(S.encodeEffect(codec)(decoded))).toBe(encoded);
+      expect(
+        (
+          await Effect.runPromise(
+            S.decodeEffect(codec)(encoded.replace("request/v2", "request/v1")).pipe(Effect.result)
+          )
+        )._tag
+      ).toBe("Failure");
+      expect(
+        (
+          await Effect.runPromise(
+            S.decodeEffect(codec, { onExcessProperty: "error" })(
+              encoded.replace('"sessionContext":{', '"sessionContext":{"XAI_API_KEY":"PRIVATE_FORBIDDEN",')
+            ).pipe(Effect.result)
+          )
+        )._tag
+      ).toBe("Failure");
+      for (const [field, qualified, rejected] of [
+        ["TERM", "xterm-256color", "screen"],
+        ["SHELL", "/usr/bin/zsh", "/usr/bin/bash"],
+      ]) {
+        const changed = encoded.replace(`"${field}":"${qualified}"`, `"${field}":"${rejected}"`);
+        expect((await Effect.runPromise(S.decodeEffect(codec)(changed).pipe(Effect.result)))._tag).toBe("Failure");
+      }
       expect(await f.count("source-count")).toBe(0);
       expect(await Fs.readdir(f.request.attemptDirectory)).toHaveLength(0);
     } finally {
@@ -241,13 +318,16 @@ it.live("serialized admission round-trips a redacted salt and spawns nothing", (
   })
 );
 
-it.live("one real synthetic native process binds process/session and replays only immutable metadata", () =>
+nativeCase("one real synthetic native process binds process/session and replays only immutable metadata", () =>
   Effect.tryPromise(async () => {
     const f = await fixture({ rejectTraceOnce: true });
     try {
       expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
       const raw = await Fs.readFile(Path.join(f.request.attemptDirectory, "source.json"), "utf8");
       const evidence = await Effect.runPromise(S.decodeEffect(S.fromJsonString(GrokNativeCanaryEvidence))(raw));
+      expect(evidence.qualification.sessionContextSha256).toHaveLength(64);
+      expect(raw).not.toContain("DBUS_SESSION_BUS_ADDRESS");
+      expect(raw).not.toContain("xterm-256color");
       const diagnosticRaw = await Fs.readFile(
         Path.join(f.request.attemptDirectory, "diagnostic-090-outcome.json"),
         "utf8"
@@ -302,7 +382,7 @@ it.live("one real synthetic native process binds process/session and replays onl
 );
 
 for (const mode of ["source-fail", "wrong-reply", "tool"]) {
-  it.live(`unknown attempted ${mode} cannot invoke a second native source`, () =>
+  nativeCase(`unknown attempted ${mode} cannot invoke a second native source`, () =>
     Effect.tryPromise(async () => {
       const f = await fixture({ mode });
       try {
@@ -332,7 +412,7 @@ for (const mode of ["source-fail", "wrong-reply", "tool"]) {
 }
 
 for (const mode of ["reported-not-signed-in", "other-native-error"]) {
-  it.live(`finite nonzero failure projection retains only a qualified report: ${mode}`, () =>
+  nativeCase(`finite nonzero failure projection retains only a qualified report: ${mode}`, () =>
     Effect.tryPromise(async () => {
       const f = await fixture({ mode });
       try {
@@ -369,7 +449,7 @@ for (const mode of ["reported-not-signed-in", "other-native-error"]) {
   );
 }
 
-it.live("nonempty native inventory refuses before the main source and retains its fence", () =>
+nativeCase("nonempty native inventory refuses before the main source and retains its fence", () =>
   Effect.tryPromise(async () => {
     const f = await fixture({ mode: "bad-inspect" });
     try {
@@ -383,7 +463,7 @@ it.live("nonempty native inventory refuses before the main source and retains it
   })
 );
 
-it.live("native auth identity drift after Prepared refuses without reading auth contents or launching", () =>
+nativeCase("native auth identity drift after Prepared refuses without reading auth contents or launching", () =>
   Effect.tryPromise(async () => {
     const f = await fixture({ driftAuthAtPrepared: true });
     try {
@@ -396,7 +476,7 @@ it.live("native auth identity drift after Prepared refuses without reading auth 
   })
 );
 
-it.live("changed immutable process proof or stale epoch cannot replay or relaunch", () =>
+nativeCase("changed immutable process proof or stale epoch cannot replay or relaunch", () =>
   Effect.tryPromise(async () => {
     const f = await fixture({ rejectTraceOnce: true });
     try {
@@ -419,7 +499,7 @@ it.live("changed immutable process proof or stale epoch cannot replay or relaunc
   })
 );
 
-it.live("valid-shaped changed source or process identity cannot replay metadata or relaunch", () =>
+nativeCase("valid-shaped changed source or process identity cannot replay metadata or relaunch", () =>
   Effect.tryPromise(async () => {
     const f = await fixture({ rejectTraceOnce: true });
     try {
@@ -449,7 +529,7 @@ it.effect("salt JSON boundary rejects empty and non-string external values", () 
 );
 
 for (const projectMcp of [grokCanaryProjectMcp, grokCanaryProjectMcpFormatted]) {
-  it.live(`exact empty MCP serialization ${projectMcp.length} bytes binds its actual digest`, () =>
+  nativeCase(`exact empty MCP serialization ${projectMcp.length} bytes binds its actual digest`, () =>
     Effect.tryPromise(async () => {
       const f = await fixture({ projectMcp });
       try {
@@ -472,7 +552,7 @@ for (const projectMcp of [
   '{"mcpServers":{"unexpected":{}}}\n',
   '{ "mcpServers": {} }\n',
 ]) {
-  it.live(`unadmitted MCP bytes ${digest(projectMcp).slice(0, 8)} refuse before inventory`, () =>
+  nativeCase(`unadmitted MCP bytes ${digest(projectMcp).slice(0, 8)} refuse before inventory`, () =>
     Effect.tryPromise(async () => {
       const f = await fixture({ projectMcp });
       try {
@@ -486,7 +566,7 @@ for (const projectMcp of [
   );
 }
 
-it.live("a nonregular MCP FIFO refuses before any read can block", () =>
+nativeCase("a nonregular MCP FIFO refuses before any read can block", () =>
   Effect.tryPromise(async () => {
     const f = await fixture();
     try {
@@ -505,7 +585,7 @@ it.live("a nonregular MCP FIFO refuses before any read can block", () =>
   })
 );
 
-it.live("an older native version refuses before source and cannot replay inspection", () =>
+nativeCase("an older native version refuses before source and cannot replay inspection", () =>
   Effect.tryPromise(async () => {
     const f = await fixture({ mode: "wrong-version" });
     try {
@@ -513,6 +593,85 @@ it.live("an older native version refuses before source and cannot replay inspect
       expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
       expect(await f.count("inspect-count")).toBe(1);
       expect(await f.count("source-count")).toBe(0);
+    } finally {
+      await f.close();
+    }
+  })
+);
+
+const publicSessionRefusals: Array<"wrong-owner" | "bus-file" | "symlink"> = ["wrong-owner", "bus-file", "symlink"];
+for (const sessionMetadata of publicSessionRefusals) {
+  nativeCase(`public session ${sessionMetadata} refuses before native inspection and consumes the fence`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ sessionMetadata });
+      try {
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(await f.count("inspect-count")).toBe(0);
+        expect(await f.count("source-count")).toBe(0);
+        expect(await Fs.readFile(Path.join(f.request.attemptDirectory, "attempted"), "utf8")).toHaveLength(64);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+
+nativeCase("a foreign public session identity refuses without borrowing another UID or HOME", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture();
+    try {
+      const request = GrokNativeCanaryRequest.make({
+        ...f.request,
+        sessionContext: GrokNativeSessionContext.make({ ...f.request.sessionContext, LOGNAME: "foreign_session_user" }),
+      });
+      const result = await Effect.runPromise(
+        runGrokNativeCanary(request).pipe(
+          Effect.provide(NodeCrypto.layer.pipe(Layer.provideMerge(NodeServices.layer))),
+          Effect.result
+        )
+      );
+      expect(result._tag).toBe("Failure");
+      expect(await f.count("inspect-count")).toBe(0);
+      expect(await f.count("source-count")).toBe(0);
+    } finally {
+      await f.close();
+    }
+  })
+);
+
+nativeCase("session bus identity drift after inspection refuses source dispatch without replay", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture({ sessionMetadata: "drift" });
+    try {
+      expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+      expect(await f.count("inspect-count")).toBe(1);
+      expect(await f.count("source-count")).toBe(0);
+      expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+      expect(await f.count("inspect-count")).toBe(1);
+    } finally {
+      await f.close();
+    }
+  })
+);
+
+nativeCase("a changed retained session-context pin cannot replay metadata or relaunch", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture();
+    try {
+      expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Success");
+      const filename = Path.join(f.request.attemptDirectory, "source.json");
+      const raw = await Fs.readFile(filename, "utf8");
+      const evidence = await Effect.runPromise(S.decodeEffect(S.fromJsonString(GrokNativeCanaryEvidence))(raw));
+      const changed = raw.replace(
+        `"sessionContextSha256":"${evidence.qualification.sessionContextSha256}"`,
+        `"sessionContextSha256":"${id("7")}"`
+      );
+      expect(changed).not.toBe(raw);
+      await Fs.writeFile(filename, changed, { mode: 0o600 });
+      expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+      expect(await f.count("source-count")).toBe(1);
+      expect(await f.count("inspect-count")).toBe(2);
     } finally {
       await f.close();
     }
