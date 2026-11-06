@@ -5,6 +5,7 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { Citation } from "@beep/law-practice-domain/values";
 import { CourtId, findCourtById } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
+import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -17,10 +18,8 @@ import * as Tuple from "effect/Tuple";
 import { CitationExtractionLoopModel } from "./ExtractionLoop.ts";
 import { CitationGeneratedReference } from "./GeneratedReferences.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { makeCitationSemanticVocabulary } from "./SemanticVocabulary.ts";
-import { CitationTextBudget } from "./TextBudget.ts";
 import { CitationTokenDispatchBindings } from "./TokenDispatch.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";

@@ -2,11 +2,11 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationTokenSeed } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CitationCaseNameSelectionInput } from "./CaseNameSelection.ts";
-import { CitationTokenSeed } from "./TokenObjects.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ExtractionContext");
 /** Actual token and its original built-in Document words, with optional owned geometry.

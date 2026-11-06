@@ -3,7 +3,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
+import { CitationEngineAbsoluteMaxima, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Num from "effect/Number";
@@ -17,7 +17,6 @@ import {
   makeCitationMetadataStage,
 } from "./MetadataComposition.ts";
 import { citationMetadataWhitespaceBoundary, trimCitationMetadataBoundary } from "./MetadataStrings.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";

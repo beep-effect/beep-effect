@@ -67,12 +67,28 @@ export { CitationEngineOperation } from "./CitationEngine/CitationEngine.operati
  * @since 0.0.0
  */
 export { CitationEngineReport, CitationExtractionMeasurements } from "./CitationEngine/CitationEngine.report.ts";
+/** Server-only captured operation work and exact native Unicode layout.
+ * @category services
+ * @since 0.0.0
+ */
+export { CitationPythonUnicodeStorage, CitationTextBudget } from "./CitationEngine/CitationEngine.runtime.ts";
 /**
  * Closed citation resource names and nontruncating safety failures.
  * @category errors
  * @since 0.0.0
  */
 export { CitationSafetyBudget, CitationSafetyLimitExceeded } from "./CitationEngine/CitationEngine.safety.ts";
+/** Captured native tokenizer and token-plan contracts; no request callbacks.
+ * @category services
+ * @since 0.0.0
+ */
+export {
+  CitationAssemblyResult,
+  CitationTokenizer,
+  CitationTokenizerFailure,
+  CitationTokenizerResult,
+  CitationTokenSeed,
+} from "./CitationEngine/CitationEngine.tokenizer.ts";
 /**
  * Local failure-preserving source inspection tool.
  * @category tools

@@ -2,7 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -25,7 +25,6 @@ import {
   prepareCitationNativeRuntime,
   withCitationNativeProcess,
 } from "./NativeProcess.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationPythonSliceLayout, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { captureCitationTextReservation } from "./TextBudget.ts";

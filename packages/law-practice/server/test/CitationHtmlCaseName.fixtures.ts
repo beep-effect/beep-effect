@@ -6,7 +6,8 @@ import {
   CitationHtmlCaseNameConfiguration,
   makeCitationHtmlCaseName,
 } from "@beep/law-practice-server/internal/Citation/HtmlCaseName";
-import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

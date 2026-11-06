@@ -10,7 +10,9 @@ import {
   CitationCleanerFailure,
   CitationCleanerObject,
   CitationEngineLimits,
+  CitationPythonUnicodeStorage,
   CitationSafetyLimitExceeded,
+  CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -23,9 +25,7 @@ import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import { CitationCleanerTextDescriptor, CitationCleanerTextOutput } from "./CleanerTextIdentity.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationPythonUnicodeValue, makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import { CitationTextBudget } from "./TextBudget.ts";
 import type { CitationLiveCleanerObject } from "@beep/law-practice-use-cases/server";
 import type { CitationPythonUnicodeFailure } from "./PythonUnicode.ts";
 

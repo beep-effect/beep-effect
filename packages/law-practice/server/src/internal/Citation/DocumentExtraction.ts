@@ -3,7 +3,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationCleaner } from "@beep/law-practice-use-cases/server";
+import { CitationCleaner, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -19,7 +19,6 @@ import {
   makeCitationInputDocument,
 } from "./InputDocument.ts";
 import { detachCitationMetadataConfiguration, makeCitationMetadataStage } from "./MetadataComposition.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import {
   CitationTokenizedExtractionConfiguration,
   CitationTokenizedExtractionInput,

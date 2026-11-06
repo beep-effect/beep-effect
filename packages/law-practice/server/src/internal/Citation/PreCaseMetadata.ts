@@ -2,7 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
+import { CitationEngineAbsoluteMaxima, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -14,7 +14,6 @@ import {
   matchCitationMetadataContext,
 } from "./MetadataComposition.ts";
 import { makeCitationPinCiteCleaner } from "./MetadataStrings.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationPublicationMetadataConfiguration } from "./MetadataComposition.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";

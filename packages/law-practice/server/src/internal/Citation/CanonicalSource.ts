@@ -2,7 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationSourceRole } from "@beep/law-practice-use-cases/server";
+import { CitationSourceRole, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import {
   VerifiedSourceText,
@@ -16,7 +16,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationExtractionEntryInput } from "./ExtractionEntry.ts";
 import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import { CitationTextBudget } from "./TextBudget.ts";
 import type { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import type * as Digest from "effect/crypto/Digest";
 import type { CitationPythonUnicodeFailure } from "./PythonUnicode.ts";

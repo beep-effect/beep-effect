@@ -4,12 +4,12 @@ import {
   makeCitationCleanerRegistry,
 } from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
 import { CitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
-import { CitationPythonUnicodeStorage } from "@beep/law-practice-server/internal/Citation/PythonHash";
 import {
   CitationCleanerFailure,
   CitationCleanerObject,
   CitationCleanerProduced,
   CitationEngineAbsoluteMaxima,
+  CitationPythonUnicodeStorage,
 } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";

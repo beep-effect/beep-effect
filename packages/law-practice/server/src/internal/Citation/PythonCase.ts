@@ -3,7 +3,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import { CitationEngineLimits, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
@@ -14,7 +14,6 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { citationPythonCaseData } from "./PythonCaseData.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationPythonUnicodeFailure, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/PythonCase");

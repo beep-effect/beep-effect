@@ -3,7 +3,7 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
-import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
+import { CitationEngineAbsoluteMaxima, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -23,7 +23,6 @@ import {
   prepareCitationPublicationMetadata,
   processCitationMetadataStrings,
 } from "./MetadataComposition.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";

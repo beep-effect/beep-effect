@@ -3,7 +3,11 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationPythonUnicodeStorage,
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -19,7 +23,7 @@ import {
   CitationNativeWasmVoid1,
   compileCitationNativeWasm,
 } from "./NativeWasm.ts";
-import { CitationPythonUnicodeStorage, validateCitationPythonStorage } from "./PythonHash.ts";
+import { validateCitationPythonStorage } from "./PythonHash.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
 import { CitationSpanDiffStep, measureCitationSpanDiffSteps } from "./SpanOffsets.ts";
 

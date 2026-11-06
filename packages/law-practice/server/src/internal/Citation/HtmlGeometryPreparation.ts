@@ -4,7 +4,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
+import { CitationEngineAbsoluteMaxima, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -17,7 +17,6 @@ import {
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { CitationSpanOffsetsPlan } from "./SpanOffsets.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";

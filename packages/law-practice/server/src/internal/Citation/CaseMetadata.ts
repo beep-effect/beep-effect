@@ -2,6 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -33,7 +34,6 @@ import {
   extractCitationPostCaseMetadata,
 } from "./PostCaseMetadata.ts";
 import { extractCitationPreCaseMetadata } from "./PreCaseMetadata.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationCaseNameProcessPatch } from "./CaseNameProcess.ts";

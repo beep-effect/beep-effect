@@ -9,6 +9,7 @@ import {
   CitationCleanerRun,
   CitationEngineAbsoluteMaxima,
   CitationLiveCleanerObject,
+  CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Context from "effect/Context";
@@ -25,7 +26,6 @@ import {
 } from "./HtmlGeometryPreparation.ts";
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
-import { CitationTextBudget } from "./TextBudget.ts";
 import type {
   CitationCleanerFailure,
   CitationCleanerObject,

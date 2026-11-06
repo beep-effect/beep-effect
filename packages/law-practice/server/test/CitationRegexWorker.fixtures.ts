@@ -7,10 +7,10 @@ import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
-import { CitationPythonUnicodeStorage } from "@beep/law-practice-server/internal/Citation/PythonHash";
 import { makeCitationRegexWorker } from "@beep/law-practice-server/internal/Citation/RegexWorker";
-import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationTokenContextInput } from "@beep/law-practice-server/internal/Citation/TokenContext";
+import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";

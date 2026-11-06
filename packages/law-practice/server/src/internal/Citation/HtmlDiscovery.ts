@@ -4,7 +4,12 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationPythonUnicodeStorage,
+  CitationSafetyLimitExceeded,
+  CitationTextBudget,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as Num from "effect/Number";
@@ -13,11 +18,9 @@ import * as S from "effect/Schema";
 import { CitationHtmlEmphasis } from "./HtmlTagGeometry.ts";
 import { copyCitationMetadataPatternConfiguration, makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { citationMetadataWhitespaceBoundary, trimCitationMetadataBoundary } from "./MetadataStrings.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { citationPythonPointAt, concatCitationPythonRanges } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexWorker } from "./RegexWorker.ts";
-import { CitationTextBudget } from "./TextBudget.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import type { CitationRegexCapturedRange } from "./RegexResult.ts";

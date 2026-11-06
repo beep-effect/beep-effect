@@ -3,6 +3,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationPythonUnicodeStorage, CitationTokenSeed } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -12,8 +13,6 @@ import {
   CitationFullExtractionResult,
   makeCitationEmptyCaseMetadata,
 } from "./FullExtraction.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
-import { CitationTokenSeed } from "./TokenObjects.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ExtractionShortcut");
 const Keyword = LiteralKit(["eyecite"]).pipe(

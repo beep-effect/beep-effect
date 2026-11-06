@@ -1373,6 +1373,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the source adapter/shared mode ownership and replay wiring; retain original source proofs and every full-goal requirement.
 
+### Publish the captured native tokenizer port, 2026-11-06
+
+The existing default tokenizer consumes CitationTokenizer from the use-case server subpath within the current admitted Scope and budget. Native Unicode storage, text allocation capability, token seed, assembly and result models have one public server-only owner; private factories retain configuration and retirement controls. Closed admission maps to a declared port refusal with zero workers. Eight final tokenizer tests pass after correcting a test provider-order error; other focused regressions, declaration build, docgen and scoped Fallow pass. General custom/mutable tokenizer protocols, final engine integration and all exhaustive acceptance duties remain open. See history/evidence/2026-11-06-tokenizer-port.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert this checkpoint and the tokenizer contract migration together; preserve all open parity and safety obligations.
+
 ### Verified primary occurrence adaptation, 2026-11-06
 
 Builtin semantic results now produce primary mentions only against genuine source capabilities for the exact tokenizer text. Existing canonical offset conversion, provenance verification and cm1 production are reused. Shortcut, invalid spans and native/JavaScript point-layout differences retain explicit unverified semantic data. Shared code-point conversion now scans cooperatively without whole-source arrays or prefix joins, with unchanged public contract. Forty prerequisite tests and both-runtime source/mention regression pass. Full-span/component evidence, warning translation, canonical source production for cleaning and the public service/Layer remain open. See history/evidence/2026-11-06-occurrence-projection.md.

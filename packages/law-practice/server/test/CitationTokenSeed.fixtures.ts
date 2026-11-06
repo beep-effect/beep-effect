@@ -2,7 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationTokenSeed } from "@beep/law-practice-server/internal/Citation/TokenObjects";
+import { CitationTokenSeed } from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";

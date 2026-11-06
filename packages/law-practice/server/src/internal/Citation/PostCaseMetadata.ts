@@ -3,6 +3,7 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CourtId } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -19,7 +20,6 @@ import {
 } from "./MetadataComposition.ts";
 import { makeCitationMetadataStrings } from "./MetadataStrings.ts";
 import { makeCitationMetadataYearFromBound } from "./MetadataYear.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 

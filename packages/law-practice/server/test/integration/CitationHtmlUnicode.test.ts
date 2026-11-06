@@ -8,11 +8,8 @@ import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
-import {
-  CitationPythonUnicodeStorage,
-  makeCitationPythonHash,
-} from "@beep/law-practice-server/internal/Citation/PythonHash";
-import { CitationCleaner } from "@beep/law-practice-use-cases/server";
+import { makeCitationPythonHash } from "@beep/law-practice-server/internal/Citation/PythonHash";
+import { CitationCleaner, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";

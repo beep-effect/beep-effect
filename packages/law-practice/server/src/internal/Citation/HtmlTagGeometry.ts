@@ -4,18 +4,21 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationPythonUnicodeStorage,
+  CitationSafetyLimitExceeded,
+  CitationTextBudget,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationRegexInputLayout, makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import { CitationSpanOffsetsPlan, makeCitationSpanOffsets } from "./SpanOffsets.ts";
-import { CitationTextBudget } from "./TextBudget.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlTagGeometry");
 const max = CitationEngineAbsoluteMaxima;

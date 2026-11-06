@@ -1,12 +1,12 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { convertTextOffsetRange, TextOffsetRange } from "@beep/langextract/VerifiedSpan";
-import { CitationPythonUnicodeStorage } from "@beep/law-practice-server/internal/Citation/PythonHash";
 import {
   CitationRegexInputLayout,
   CitationRegexProjection,
   makeCitationRegexInput,
 } from "@beep/law-practice-server/internal/Citation/RegexInput";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";

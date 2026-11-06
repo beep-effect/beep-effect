@@ -7,8 +7,8 @@ import {
 import { makeCitationHtmlInput } from "@beep/law-practice-server/internal/Citation/HtmlInput";
 import { makeCitationHtmlKernel } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
 import { makeCitationLiteralCleaners } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
-import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationCleanerFailure, CitationCleanerObject } from "@beep/law-practice-use-cases/server";
+import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { CitationCleanerFailure, CitationCleanerObject, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";

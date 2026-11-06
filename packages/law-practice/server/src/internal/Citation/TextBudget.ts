@@ -2,8 +2,11 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import * as Context from "effect/Context";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationSafetyLimitExceeded,
+  CitationTextBudget,
+} from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
 import { constant } from "effect/Function";
 import * as O from "effect/Option";
@@ -18,26 +21,6 @@ const Amount = S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxim
   $I.annoteSchema("Amount", { description: "Bounded native allocation charge in parent-owned UTF-16 units." })
 );
 const exhausted = () => CitationSafetyLimitExceeded.make({ operation: "extract", limit: "producedTextUtf16" });
-/** One invocation's cumulative allocation authority. Reservations are not refunded
- * on failure or retried by an enclosing Effect transaction: allocated buffers
- * are external to transaction rollback. Install a fresh owner per invocation.
- * @internal @category services @since 0.0.0
- */
-export class CitationTextBudget extends Context.Service<
-  CitationTextBudget,
-  {
-    readonly maximum: number;
-    readonly reserve: (units: number) => Effect.Effect<void, CitationSafetyLimitExceeded>;
-    readonly snapshot: Effect.Effect<number>;
-    /** The captured producer enforces the allowance before output allocation and
-     * completes cleanup before return. Failure/interruption publishes no output
-     * or successful charge. Reentry, including child fibers, is forbidden.
-     */
-    readonly withCapacity: <A, E>(
-      produce: (remaining: number) => Effect.Effect<{ readonly value: A; readonly units: number }, E>
-    ) => Effect.Effect<{ readonly value: A; readonly units: number }, E | CitationSafetyLimitExceeded>;
-  }
->()($I`CitationTextBudget`) {}
 /** Share a schema-owned ceiling using Effect's atomic Ref.modify. Rejected
  * charges leave the counter unchanged; methods require no caller services.
  * @internal @category operations @since 0.0.0

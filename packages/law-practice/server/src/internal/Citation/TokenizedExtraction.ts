@@ -3,6 +3,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationTokenizerResult } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -18,7 +19,7 @@ import {
 } from "./ExtractionLoop.ts";
 import { detachCitationMetadataConfiguration, makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
-import { CitationTokenizerConfiguration, CitationTokenizerResult, makeCitationTokenizer } from "./Tokenizer.ts";
+import { CitationTokenizerConfiguration, makeCitationTokenizer } from "./Tokenizer.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
@@ -105,7 +106,7 @@ const prepare = Effect.fn("Citation.tokenizeAndExtract")(function* (
   return yield* Effect.gen(function* () {
     const tokenizer = yield* makeCitationTokenizer(limits, runtime, owned.config.tokenizer);
     const loop = yield* makeCitationExtractionLoop(limits, runtime, owned.config.loop);
-    const tokenized = yield* tokenizer.run(request.plain);
+    const tokenized = yield* tokenizer.port.tokenize(request.plain);
     const input = yield* makeCitationRegexInput(limits, "source");
     const source = yield* input.prepareUnicode(tokenized.source, () => Effect.void);
     const tokens = HashMap.fromIterable(A.map(tokenized.tokens, (row) => Tuple.make(row.id, row.seed)));

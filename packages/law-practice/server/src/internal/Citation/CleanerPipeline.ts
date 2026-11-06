@@ -17,6 +17,7 @@ import {
   CitationEngineLimits,
   CitationLiveCleanerObject,
   CitationSafetyLimitExceeded,
+  CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -27,7 +28,6 @@ import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { CitationTextBudget } from "./TextBudget.ts";
 import { makeCitationTextCapacity } from "./TextCapacity.ts";
 import type { CitationCleanerObject, CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 

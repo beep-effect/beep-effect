@@ -13,7 +13,8 @@ import {
 } from "@beep/law-practice-server/internal/Citation/ExtractionLoop";
 import { projectCitationExtractionSelection } from "@beep/law-practice-server/internal/Citation/ExtractionSelection";
 import { CitationGeneratedReference } from "@beep/law-practice-server/internal/Citation/GeneratedReferences";
-import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";

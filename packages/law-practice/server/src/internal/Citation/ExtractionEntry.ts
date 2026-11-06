@@ -7,6 +7,7 @@ import {
   CitationEngineAbsoluteMaxima,
   CitationEngineExtractionOptions,
   CitationSafetyLimitExceeded,
+  CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
@@ -23,7 +24,6 @@ import {
 import { getCitationExtractionShortcut } from "./ExtractionShortcut.ts";
 import { CitationFullExtractionResult } from "./FullExtraction.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
-import { CitationTextBudget } from "./TextBudget.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 

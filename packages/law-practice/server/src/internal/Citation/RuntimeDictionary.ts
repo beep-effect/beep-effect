@@ -20,7 +20,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
-import type { CitationPythonUnicodeStorage } from "./PythonHash.ts";
+import type { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RuntimeDictionary");
 const Hash = S.BigIntFromString.check(

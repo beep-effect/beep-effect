@@ -9,7 +9,11 @@ import {
   CitationMention,
   CitationOverlapWarning,
 } from "@beep/law-practice-domain/values";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationSafetyLimitExceeded,
+  CitationTextBudget,
+} from "@beep/law-practice-use-cases/server";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import {
   VerifiedSourceText,
@@ -33,7 +37,6 @@ import { measureCitationPythonText } from "./PythonHash.ts";
 import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { CitationSemanticExtractionResult } from "./SemanticExtraction.ts";
 import { snapshotCitationValue } from "./Snapshot.ts";
-import { CitationTextBudget } from "./TextBudget.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";

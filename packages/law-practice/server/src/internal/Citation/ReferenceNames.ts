@@ -3,6 +3,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -11,12 +12,10 @@ import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { makeCitationPythonLower } from "./PythonCase.ts";
 import { makeCitationPythonCharacters } from "./PythonCharacters.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { citationPythonTextData } from "./PythonTextData.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { CitationTextBudget } from "./TextBudget.ts";
 import type { CitationCaseMetadataFields } from "./CaseMetadata.ts";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 

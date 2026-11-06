@@ -3,7 +3,11 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationPythonUnicodeStorage,
+  CitationSafetyLimitExceeded,
+  CitationTextBudget,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
@@ -16,7 +20,6 @@ import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { copyCitationMetadataPatterns, fingerprintCitationMetadataPattern } from "./MetadataComposition.ts";
 import { citationMetadataWhitespaceBoundary } from "./MetadataStrings.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import {
   citationPythonPointAt,
   concatCitationPythonRanges,
@@ -26,7 +29,6 @@ import {
 import { copyCitationReferenceExclusions, makeCitationReferenceNames } from "./ReferenceNames.ts";
 import { CitationRegexPatternDescriptor, CitationRegexPatternProfile } from "./RegexDescriptors.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { CitationTextBudget } from "./TextBudget.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationCaseMetadataFields } from "./CaseMetadata.ts";
 

@@ -172,7 +172,10 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-reports.md",
     "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.report.ts",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-cleaner-port.md",
-    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.cleaner.ts"
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.cleaner.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-tokenizer-port.md",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.runtime.ts",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.tokenizer.ts"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

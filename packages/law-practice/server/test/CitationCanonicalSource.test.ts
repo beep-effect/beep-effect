@@ -1,6 +1,6 @@
 import { deriveCitationCanonicalSource } from "@beep/law-practice-server/internal/Citation/CanonicalSource";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
-import { CitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";

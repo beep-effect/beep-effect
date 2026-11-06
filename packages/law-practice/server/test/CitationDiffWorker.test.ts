@@ -4,7 +4,8 @@ import {
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
 import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
-import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";

@@ -45,6 +45,14 @@ execution remain server implementations. Decoding handle data grants no runtime
 ownership. Declared cleaner-port failures remain distinct from the five engine
 boundary failures and require engine translation.
 
+`CitationTokenizer` captures the existing native token-plan profile with closed
+execution methods. Its token seeds, assembly results and failure contract have
+one owner on `/server`. `CitationPythonUnicodeStorage` preserves explicit native
+code-point storage; `CitationTextBudget` captures per-operation allocation
+authority. The server constructs the default tokenizer within its current Scope
+and budget and consumes this port directly. These contracts grant no verified
+source authority. General mutable/custom-tokenizer protocols remain unfinished.
+
 `CitationEngineReport` and `CitationExtractionMeasurements` describe completed
 operations separately from semantic citations. Counts, captured policy and engine
 identity compare deterministically; measured work duration does not. Reports have

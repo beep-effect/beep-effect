@@ -11,7 +11,8 @@ import {
   makeCitationJournalMetadata,
 } from "@beep/law-practice-server/internal/Citation/JournalMetadata";
 import { CitationLawMetadataInput } from "@beep/law-practice-server/internal/Citation/LawMetadata";
-import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";

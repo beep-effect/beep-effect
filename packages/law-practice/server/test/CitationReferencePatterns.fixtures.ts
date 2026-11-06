@@ -2,14 +2,14 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationPythonUnicodeStorage } from "@beep/law-practice-server/internal/Citation/PythonHash";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { makeCitationReferencePatterns } from "@beep/law-practice-server/internal/Citation/ReferencePatterns";
 import {
   CitationRegexPatternDescriptor,
   makeCitationRegexDescriptorRegistry,
 } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
-import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";

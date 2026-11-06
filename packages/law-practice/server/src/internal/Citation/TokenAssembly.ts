@@ -2,7 +2,11 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationAssemblyResult,
+  CitationEngineAbsoluteMaxima,
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -39,24 +43,11 @@ export class CitationAssemblyView extends S.Opaque<CitationAssemblyView, { reado
     })
   )
 ) {}
-const Text = S.TaggedStruct("Text", { start: Position, end: Position });
-const Token = S.TaggedStruct("Token", { id: Id });
-const Item = S.Union([Text, Token]);
+type Item = CitationAssemblyResult["items"][number];
 const Input = S.Struct({
   length: Position,
   ids: S.Array(Id).check(S.isMaxLength(CitationEngineAbsoluteMaxima.candidates)),
 });
-/** @internal @category models @since 0.0.0 */
-export class CitationAssemblyResult extends S.Opaque<CitationAssemblyResult, { readonly brand: unique symbol }>()(
-  S.Struct({
-    items: S.Array(Item).check(S.isMaxLength(CitationEngineAbsoluteMaxima.tokens)),
-    citations: S.Array(S.Tuple([S.Natural, Id])).check(S.isMaxLength(CitationEngineAbsoluteMaxima.tokens)),
-  }).pipe(
-    $I.annoteSchema("CitationAssemblyResult", {
-      description: "Mixed token/text plans and exact special-token indices; identities refer to the captured host.",
-    })
-  )
-) {}
 /** Captured source-object and gap-planning protocol. Implementations own source
  * token construction/merge semantics and bounded text-span allocation. This
  * profile requires immutable token spans/data/classes during assembly; edition
@@ -110,11 +101,11 @@ export const makeCitationTokenAssembly = Effect.fn("Citation.makeTokenAssembly")
       A.filter(keys, (key) => key.hasData),
       order
     );
-    const items = MutableList.make<typeof Item.Type>();
+    const items = MutableList.make<Item>();
     const citations = MutableList.make<readonly [number, number]>();
     let pending = O.none<number>();
     let offset = 0;
-    const append = Effect.fn("Citation.appendAssemblyItem")(function* (item: typeof Item.Type) {
+    const append = Effect.fn("Citation.appendAssemblyItem")(function* (item: Item) {
       if (items.length >= limits.tokens) return yield* safety("tokens");
       MutableList.append(items, item);
     });

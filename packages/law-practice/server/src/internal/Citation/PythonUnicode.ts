@@ -4,7 +4,11 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationEngineLimits,
+  CitationPythonUnicodeStorage,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -17,11 +21,7 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  CitationPythonUnicodeStorage,
-  measureCitationPythonText,
-  validateCitationPythonStorage,
-} from "./PythonHash.ts";
+import { measureCitationPythonText, validateCitationPythonStorage } from "./PythonHash.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/PythonUnicode");
 const Limits = S.toType(CitationEngineLimits);

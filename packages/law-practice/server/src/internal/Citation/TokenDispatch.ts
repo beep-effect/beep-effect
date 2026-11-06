@@ -3,7 +3,12 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationSafetyLimitExceeded,
+  CitationTokenizerResult,
+  CitationTokenSeed,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -13,8 +18,6 @@ import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { CitationTokenizerResult } from "./Tokenizer.ts";
-import { CitationTokenSeed } from "./TokenObjects.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/TokenDispatch");
 const Action = LiteralKit([

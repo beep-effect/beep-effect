@@ -1,6 +1,7 @@
 import { makeCitationHtmlTagGeometry } from "@beep/law-practice-server/internal/Citation/HtmlTagGeometry";
 import { makeCitationSpanOffsets } from "@beep/law-practice-server/internal/Citation/SpanOffsets";
-import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";

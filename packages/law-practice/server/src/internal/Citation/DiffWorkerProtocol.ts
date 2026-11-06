@@ -3,7 +3,11 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationPythonUnicodeStorage,
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -11,7 +15,6 @@ import { makeCitationNativeFrameReader } from "./ByteFrames.ts";
 import { CitationDiffKernelFailure, CitationDiffKernelRequest } from "./DiffKernel.ts";
 import { citationNativeBase64Length, citationNativeBytes, makeCitationNativeJsonDecoder } from "./NativeJson.ts";
 import { CitationNativeProcessFailureReason } from "./NativeProcess.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationPythonSliceLayout } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/DiffWorkerProtocol");
