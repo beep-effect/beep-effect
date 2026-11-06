@@ -21,8 +21,9 @@ constraints. Sibling packets: [`scripts-to-beep-cli`](../scripts-to-beep-cli/REA
 
 - Changing what the infrastructure does: no new services, no hosting-platform change for OIP
   (stays on Vercel), no runner-economics change (self-hosted fleet stays).
-- Adopting live Pulumi resources in place. Everything is greenfield (D12); `--adopt` is used only
-  to move `BeepEffectWeb` into the shared state store (D6).
+- Adopting live Pulumi resources in place. Everything is greenfield (D12) except the singletons
+  D20 lists (repository, rulesets, existing DNS records, oip.law Vercel domains, `BeepEffectWeb`
+  into the shared store), each adopted per object and named in a decision file.
 - Minting GitHub Apps from IaC (D10); app creation is a beep command in `scripts-to-beep-cli`.
 - Porting `./scripts` or the historical Python outside `infra/` (sibling packets).
 - Upstreaming providers before they are stable here (D14 says in-repo first).
@@ -55,14 +56,19 @@ amendment in `standards/architecture/07-non-slice-families.md` and `DECISIONS.md
   (including the beep-reviewer advisory switch), Actions secrets and variables, environments,
   labels, webhooks for `beep-effect/beep-effect`.
 - `packages/tooling/infra/hosts` (`@beep/infra-hosts`): AI metrics on dankserver via
-  `Docker.Context` over SSH plus `Docker.Service`/`Network`/`Volume`; OpenClaw via `Command.Exec`.
+  `Docker.Context` over SSH plus `Docker.Container`/`Network`/`Volume` (`Docker.Service` is
+  swarm-only); OpenClaw via `Command.Exec` (delete is a no-op, stdout is not an output).
 - `packages/tooling/library/alchemy-vercel` (`@beep/alchemy-vercel`): `Project`, `EnvVar`,
   `Domain` resources over `@distilled.cloud/vercel`.
-- `packages/tooling/library/alchemy-aws-extras` (`@beep/alchemy-aws-extras`): `KmsGrant`,
-  `CostAllocationTag`, `ComputeOptimizerEnrollment`, `CostOptimizationHubEnrollment`.
+- `packages/tooling/library/alchemy-aws-extras` (`@beep/alchemy-aws-extras`):
+  `CostAllocationTag`, `ComputeOptimizerEnrollment`, `CostOptimizationHubEnrollment`,
+  `RunnerLaunchTemplate` (gp3 root volume, EBS-optimised, Spot options Alchemy's
+  `LaunchTemplate` lacks); `KmsGrant` only if the P2 key-policy check shows an IAM condition
+  cannot replace the six grants (D19).
 - `packages/tooling/library/alchemy-github-runners` (`@beep/alchemy-github-runners`): the
-  runner composite (webhook, SQS, scale-up/down, launch template, ASG, SSM, syncer, termination
-  watcher) with MIT attribution to `github-aws-runners/terraform-aws-github-runner`.
+  runner composite (webhook, SQS, scale-up via EC2 `CreateFleet` Spot launches, scale-down,
+  launch template, SSM, syncer, termination watcher; Lambdas ported to Effect and bundled by
+  Alchemy, D19) with MIT attribution to `github-aws-runners/terraform-aws-github-runner`.
 - `apps/oip-web/alchemy.run.ts`, `apps/storybook/alchemy.run.ts`.
 - `apps/beep-effect-web/alchemy.run.ts`: state store switched to the shared S3 store.
 - `.github/workflows/*`: Alchemy deploy jobs per stack (prod only from `main`, concurrency group
@@ -93,8 +99,11 @@ group, `infra:prepare-gha-runners` in root `postinstall`, `infra` in root `works
 - Repo-owned resources follow Alchemy's provider conventions (`infrastructure-as-code/provider`,
   `custom-provider`, `testing/testing-providers`) and the `@alchemy.run/test` harness, so the
   generic ones (Vercel, KMS Grant, cost tag, enrollments) can go upstream unchanged (D14).
-- One state store: AWS S3 `BucketState` in the existing account, new bucket name, bootstrapped
-  once (D6). Every stack declares it; `prod` stages deploy only from CI under a concurrency group.
+- One state store: `AWS.state({ backend: "s3", encryption: <kms> })` in the existing account, new
+  bucket named in the account-regional `<prefix>-<accountId>-<region>-an` form, bootstrapped once
+  with Alchemy's own bootstrap commands under `AWS_PROFILE=elpresidank-vault` (D6, D17, D18).
+  Every stack declares it; `prod` stages deploy only from CI under a concurrency group, except
+  `@beep/infra-hosts` (D21, Exception Ledger).
 - Credentials flow through `op run` with `op://` references; never `alchemy profile`, never
   checked-in ciphertext. Pulumi `secure:` values move to 1Password references (G8).
 - Cutover per stack (D12): deploy beside the live Pulumi stack under new names, verify, flip,
@@ -106,6 +115,10 @@ group, `infra:prepare-gha-runners` in root `postinstall`, `infra` in root `works
   (`infra/r2-cache/cache-input-review.md` content preserved in the package README), and a
   throttle or error-rate alarm equivalent.
 - `goals/repo-cli-gh-git-consolidation` is a requirement, not a dependent (D10).
+- `beep reviewer ruleset release|require` becomes a stage config flag on `@beep/infra-github`;
+  the CLI stops editing rulesets once the stack owns them (D20).
+- `scratchpad/turbo-cache-r2` is on branch `@chore/deps-update-11-6-26`; it must land on `main`
+  before P3 moves it.
 - Every irreversible step (destroying a Pulumi stack) lands its reversal path first: the exported
   state archive location and a `pulumi stack import` recipe recorded in a decision file.
 
@@ -117,8 +130,10 @@ group, `infra:prepare-gha-runners` in root `postinstall`, `infra` in root `works
 - [ ] Each target package exists via `create-package`, passes
       `bun run beep quality package-verify <pkg>`, and has stack tests on the `@alchemy.run/test`
       harness.
-- [ ] `alchemy plan` for every stack is a no-op against its live stage after cutover, and the
-      shared S3 state store lists every stack including `BeepEffectWeb`.
+- [ ] `alchemy plan` for every stack shows no create or replace against its live stage after
+      cutover, `alchemy drift` is clean, and the shared S3 state store lists every stack
+      including `BeepEffectWeb` (`plan` has no changes-pending exit code; GitHub secrets
+      re-upload by design).
 - [ ] CI runs on the Alchemy-built runner fleet; `heavy.yml` and `check.yml` enrolled against the
       Worker turbo cache with hit evidence from a `main` run and a PR run.
 - [ ] oip.law production and staging serve from the Alchemy-managed Vercel project, env vars and
@@ -141,7 +156,7 @@ group, `infra:prepare-gha-runners` in root `postinstall`, `infra` in root `works
 | Manifest JSON | `jq . goals/infra-alchemy-rebuild/ops/manifest.json` | Passes |
 | Whitespace | `git diff --check -- goals/infra-alchemy-rebuild` | Passes |
 | Package gates | `bun run beep quality package-verify @beep/infra-<name>` per package | Passes |
-| Stack plan | `op run --env-file=<lane env> -- bunx alchemy plan --stage prod` per stack | no-op after cutover |
+| Stack plan | `op run --env-file=<lane env> -- bunx alchemy plan --stage prod` per stack | no create/replace after cutover |
 | Drift | `bunx alchemy drift --stage prod` per stack | clean |
 | Pulumi gone | `rg -n '@pulumi|pulumiverse|typescript6' package.json packages apps bun.lock` | no matches |
 | Infra gone | `test ! -d infra && test ! -d scratchpad/turbo-cache-r2` | Passes |
@@ -175,3 +190,4 @@ _No decision files yet._
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | Pulumi stays installed per stack until that stack's cutover | `infra/` | packet owner | destroy needs the CLI and program | the stack's `pulumi destroy` receipt |
+| `@beep/infra-hosts` prod deploys from the operator workstation, never CI | one stack | packet owner | dankserver is reachable only over the YubiKey SSH route; S3 state lease is the overlap guard (D21) | a runner with a scoped deploy key to dankserver |

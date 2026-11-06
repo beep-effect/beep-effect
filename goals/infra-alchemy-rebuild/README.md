@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — in progress (2026-11-06): four grok-4.7 xhigh deep-research lanes cataloguing the 47 alchemy.run blog posts into `research/alchemy-blog/`; docs, source and t3code inventories next; the "use this, never roll that" matrix gates P1.
+P0 Research — reports landed 2026-11-06 (`research/`: docs catalog, alchemy/distilled source inventory, t3code stack patterns, the "use this, never roll that" matrix, t3code patches; `research/alchemy-blog/reports/`: four blog catalogs over all 47 posts with per-post notes). Follow-up decisions D17–D21 recorded. Operator review of the matrix is the P1 gate.
 
 ## Latest Evidence
 

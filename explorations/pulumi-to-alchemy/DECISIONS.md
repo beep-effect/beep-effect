@@ -241,3 +241,56 @@ matrix; P1 scaffolding waits for it. Grok lanes start as soon as the packet exis
 **Rationale:** Every frontier question is answered (D1–D16); the eight 2026-11-02 open
 questions map onto D2, D3, D5–D7, D9, D12 (option-C spike: rejected, nothing to precompile when
 Pulumi leaves) and D9/D14 (account singletons: thin custom resources, upstream candidates).
+
+## 2026-11-06 — P0 research follow-ups (same session, after the source inventory)
+
+The P0 inventory (`goals/infra-alchemy-rebuild/research/alchemy-distilled-source-inventory.md`,
+`use-this-never-roll-that.md`) verified five facts against the checkout that amend earlier
+decisions. Operator answers:
+
+### D17 — State store is S3 explicitly, KMS-encrypted (amends D6)
+
+`AWS.state()` defaults to DynamoDB in beta.85; S3 needs `backend: "s3"`, a bucket name in the
+account-regional `<prefix>-<accountId>-<region>-an` form, and `encryption` because secrets sit in
+state as redacted JSON. **Answer:** keep S3: `AWS.state({ backend: "s3", encryption: <kms> })`.
+
+### D18 — Bootstrap runs Alchemy's own command under aws-vault
+
+`AWS.providers()` dies without a tagged Lambda assets bucket; the documented bootstrap assumes an
+SSO or `aws login` profile. **Answer:** run `alchemy provider aws bootstrap` and
+`alchemy state bootstrap` once under `AWS_PROFILE=elpresidank-vault` (credential_process), record
+the receipt in a decision file; a repo-owned `beep infra bootstrap` only if the command insists
+on SSO. Never `aws login`.
+
+### D19 — Runner Lambdas are ported to Effect and bundled by Alchemy (refines D2)
+
+The upstream module has no autoscaling group: scale-up launches Spot instances through EC2
+`CreateFleet`; Lambdas ship as MIT release zips and `Lambda.Function` bundles a directory.
+**Answer:** port webhook, scale-up, scale-down, syncer and termination watcher to Effect over
+`@distilled.cloud/aws`, bundled by Alchemy, attribution kept. Verified gap: Alchemy's
+`LaunchTemplate` cannot set the gp3 root volume, EBS-optimised or Spot options, so a repo-owned
+`RunnerLaunchTemplate` over distilled EC2 is allowed (upstream PR candidate). `KmsGrant` is
+probably unnecessary once the composite owns the termination-watcher roles (an IAM policy with
+the encryption-context condition replaces it); confirm against the key policy in P2.
+
+### D20 — Singletons are adopted per object; the reviewer switch moves into the stack (amends D12)
+
+The repository, its rulesets, existing DNS records and the oip.law Vercel domains cannot be
+recreated under new names. **Answer:** per-object `adopt(true)` for those, each listed in a
+decision file; everything else stays greenfield. `beep reviewer ruleset release|require` becomes
+a stage config flag on `@beep/infra-github`; the CLI stops editing rulesets directly.
+
+### D21 — Hosts stack deploys prod from the workstation only (exception to the CI-only rule)
+
+CI cannot reach dankserver (YubiKey SSH route). **Answer:** `@beep/infra-hosts` prod runs from
+the operator workstation through `op run` and the wrapped SSH route, refuses to run in CI, and
+relies on the S3 state lease as the only overlap guard. Exception Ledger row; removal condition:
+a runner with a scoped deploy key. Also from the inventory: `Docker.Service` is swarm-only, so
+dankserver uses `Docker.Container` on the SSH `Docker.Context` (D9 wording corrected);
+`Command.Exec` deletes nothing and does not expose stdout, so OpenClaw's probe/acceptance steps
+need `Build` or a small repo-owned resource if their output matters.
+
+Also recorded: `alchemy plan` has no "changes pending" exit code and GitHub secrets re-upload on
+every deploy, so the acceptance check is "plan shows no create or replace" plus `alchemy drift`,
+not a literal no-op; `scratchpad/turbo-cache-r2` lives on branch `@chore/deps-update-11-6-26`
+and must land on `main` before P3 moves it.
