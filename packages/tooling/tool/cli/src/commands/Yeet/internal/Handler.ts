@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { printCommandJson } from "@beep/repo-cli-kit/cli/Json";
 import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
@@ -42,6 +44,7 @@ import {
   sortedUniquePaths,
   withQualityAdmission,
 } from "../../../internal/repo-run/index.ts";
+import { patientGit } from "../../../internal/repo-run/PatientGit.ts";
 import { processIdentityStatus } from "../../../internal/repo-run/ProcessIdentity.ts";
 import { CiLocalStepPlan } from "../../Ci/CiLane.ts";
 import {
@@ -79,7 +82,9 @@ import {
   lockfileChangedSinceBase,
   refreshAndPinBaseRef,
   refreshBaseRef,
-  runGitOutput,
+  resolveYeetMergeBase,
+  resolveYeetRev,
+  yeetGitKitError,
 } from "./GitExec.ts";
 import { validateCommitMessage, validateMonitorGuards, validateRequiredMessage } from "./Guards.ts";
 import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
@@ -162,7 +167,6 @@ import { collectRemoteChecks, collectYeetStatus, renderYeetStatusSummary, writeY
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
 import { BuildYeetVerdictInput, buildYeetVerdict, YeetExecutedStep, YeetVerdictJson } from "./Verdict.ts";
 import { classifyYeetCheckOutcome, YeetCheckSignal } from "./WatchStream.ts";
-import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AdmissionOriginGate, MemoryStats, RepoRunPlan } from "../../../internal/repo-run/index.ts";
@@ -421,7 +425,7 @@ const effectiveStepEnvironment = (step: RepoPlanStep): Readonly<Record<string, s
 // The base the run pinned, else the ref resolved now (plan-only contexts).
 const proofBaseSha = (context: RepoRunContext) =>
   O.match(O.fromUndefinedOr(context.baseSha), {
-    onNone: () => runGitOutput(context.repoRoot, ["rev-parse", context.base]),
+    onNone: () => resolveYeetRev(context.repoRoot, context.base),
     onSome: Effect.succeed,
   });
 
@@ -1540,7 +1544,7 @@ export const runPushFirstPublishPhasesForTesting = runPushFirstPublishPhases;
  */
 export const assertMergeOnlyPublish = Effect.fn("Yeet.assertMergeOnlyPublish")(function* (
   context: RepoRunContext
-): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | Git> {
   const refuse = () =>
     Effect.fail(
       YeetCommandError.make({
@@ -1548,25 +1552,33 @@ export const assertMergeOnlyPublish = Effect.fn("Yeet.assertMergeOnlyPublish")(f
           "yeet publish --push-only requires --reuse-verified unless HEAD is a reproducible merge of the base into the published branch.",
       })
     );
-  const parentOutput = yield* runGitOutput(context.repoRoot, ["show", "-s", "--format=%P", "HEAD"]);
-  const parents = Str.split(Str.trim(parentOutput), " ");
-  if (parents.length !== 2) return yield* refuse();
-  const first = A.get(parents, 0);
-  const second = A.get(parents, 1);
-  if (O.isNone(first) || O.isNone(second)) return yield* refuse();
+  const git = yield* Git;
+  // Exactly two parents: `HEAD^1` and `HEAD^2` resolve and `HEAD^3` does not. A missing parent is the
+  // refusal, as a parent count other than two was (W7a Y18, SPEC D-18).
+  const parent = (ref: string) => resolveYeetRev(context.repoRoot, ref).pipe(Effect.option);
+  const first = yield* parent("HEAD^1");
+  const second = yield* parent("HEAD^2");
+  const third = yield* git
+    .refExists(context.repoRoot, "HEAD^3")
+    .pipe(Effect.mapError(yeetGitKitError(GitCommand.refExists("HEAD^3"))));
+  if (O.isNone(first) || O.isNone(second) || third) return yield* refuse();
   // FETCH_HEAD avoids trusting a stale tracking ref or updating any other checkout.
-  yield* runGitOutput(context.repoRoot, ["fetch", "--quiet", "--no-tags", "origin", `refs/heads/${context.branch}`]);
-  const publishedOutput = yield* runGitOutput(context.repoRoot, ["rev-parse", "FETCH_HEAD"]);
-  const published = Str.trim(publishedOutput);
-  const baseAncestorOutput = yield* runGitOutput(context.repoRoot, ["merge-base", second.value, context.base]);
-  const baseAncestor = Str.trim(baseAncestorOutput);
+  const ref = `refs/heads/${context.branch}`;
+  const fetching = yield* patientGit;
+  yield* fetching
+    .fetch(context.repoRoot, { remote: "origin", ref, noTags: true })
+    .pipe(
+      Effect.mapError(
+        yeetGitKitError(GitCommand.fetch("origin", ref, undefined, false, false, false, { noTags: true }))
+      )
+    );
+  const published = yield* resolveYeetRev(context.repoRoot, "FETCH_HEAD");
+  const baseAncestor = yield* resolveYeetMergeBase(context.repoRoot, second.value, context.base);
   if (first.value !== published || baseAncestor !== second.value) return yield* refuse();
-  const merged = yield* runGitOutput(context.repoRoot, ["merge-tree", "--write-tree", first.value, second.value]).pipe(
-    Effect.catchTag("YeetCommandError", () => refuse())
-  );
-  const treeOutput = yield* runGitOutput(context.repoRoot, ["rev-parse", "HEAD^{tree}"]);
-  const tree = Str.trim(treeOutput);
-  if (Str.trim(merged) !== tree) return yield* refuse();
+  const merged = yield* git.mergeTree(context.repoRoot, first.value, second.value).pipe(Effect.option);
+  const tree = yield* resolveYeetRev(context.repoRoot, "HEAD^{tree}");
+  const clean = O.flatMap(merged, (result) => (result._tag === "clean" ? O.some(result.tree) : O.none()));
+  if (O.isNone(clean) || clean.value !== tree) return yield* refuse();
 });
 
 // The route a publish takes once its commit exists: `yeet open` pushes with no

@@ -3,6 +3,8 @@
  * the lane base 641180ade6 (W5 head) except for import paths and the identity namespace.
  * Imports follow later moves only (beep-cli-composition W1b #2645 and the W6 login wrappers in `GhOps.ts`);
  * the replayed logic is unchanged.
+ * The Yeet `runGitOutput` wrapper retired in W7a (SPEC D-18); its pre-W7 body is the inlined
+ * `oldRunGitOutput` in `../frozen-w7a/GitRunners.old.ts`, imported under its old name.
  */
 
 import { Git } from "@beep/git/Git";
@@ -26,10 +28,7 @@ import {
   runArtifactPathForContext as runOutputPathForContext,
   writeTextFile,
 } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts";
-import {
-  runGitOutput,
-  yeetGitKitError,
-} from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts";
+import { yeetGitKitError } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts";
 import {
   isMergeCommitSubject,
   resolvePullRequestTitle,
@@ -44,6 +43,7 @@ import {
   runRepoCommandCapture,
   sortedUniquePaths,
 } from "../../../../packages/tooling/tool/cli/src/internal/repo-run/index.ts";
+import { oldRunGitOutput as runGitOutput } from "../frozen-w7a/GitRunners.old.ts";
 import {
   ensureProvenanceFooter,
   isProvenanceStampFailure,

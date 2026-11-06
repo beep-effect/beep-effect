@@ -6,6 +6,15 @@ Lifecycle: `active`
 
 Active product-definition initiative.
 
+## Corpus storage handoff — 2026-11-05
+
+Before resuming corpus ingestion, read the
+[workstation consolidation handoff](../oppold-corpus-salvage-restoration/history/2026-11-05-workstation-consolidation-handoff.md).
+Verified encrypted recovery and exact-copy retirement are separate from
+restoration fidelity, semantic ingestion and runtime acceptance. Resolve current
+private corpus sources and preserve the existing practice v1 front; this cleanup
+does not open the gated corpus-v2 or runtime roadmap lanes.
+
 ## Mission
 
 Define the local-first agentic professional-services runtime that beep-effect

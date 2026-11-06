@@ -6,6 +6,16 @@ Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
+## Corpus storage handoff — 2026-11-05
+
+The
+[workstation consolidation handoff](../oppold-corpus-salvage-restoration/history/2026-11-05-workstation-consolidation-handoff.md)
+records verified recovery, retired temporary copies and ongoing extraction.
+Use current retained original PSTs and a fresh private size/nesting inventory for
+this packet. Native extracted output and backup verification establish no
+Purview upload, mailbox import, licensing or tranche acceptance. The raw-PST
+backfill remains independent of the restoration lane.
+
 ## Mission
 
 Make decades of historical mail searchable in the attorney's Outlook: one

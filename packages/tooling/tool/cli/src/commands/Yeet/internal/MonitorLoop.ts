@@ -1030,6 +1030,7 @@ const readFailedJobLog = Effect.fn("YeetMonitorLoop.readFailedJobLog")(function*
   never,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | MonitorGithub
 > {
+  // KEEP (D-15): gh cuts the failing steps out of the run's log archive (`--log-failed`).
   const primary = yield* runRepoCommandCapture(
     "gh",
     ["run", "view", "--job", `${jobDatabaseId}`, "--log-failed"],
