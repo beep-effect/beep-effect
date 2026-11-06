@@ -65,7 +65,17 @@
         "packages/law-practice/server/src/internal/Citation/CaseNamePredicates.ts",
         "packages/law-practice/server/test/CitationCaseNamePredicates.test.ts",
         "packages/law-practice/use-cases/test/fixtures/eyecite/case-name-predicates.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-predicates.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-predicates.md",
+        "goals/citation-extraction-engine/ops/probe-case-name-scan.py",
+        "goals/citation-extraction-engine/ops/probe-regex-boundaries.py",
+        "packages/law-practice/server/src/internal/Citation/CaseNameScan.ts",
+        "packages/law-practice/server/test/CitationCaseNameScan.fixtures.ts",
+        "packages/law-practice/server/test/CitationCaseNameScan.test.ts",
+        "packages/law-practice/server/test/CitationRegexBoundaries.fixtures.ts",
+        "packages/law-practice/server/test/CitationRegexBoundaries.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/case-name-scan.json",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/regex-boundaries.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-scan-and-boundaries.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -371,7 +381,17 @@
         "goals/citation-extraction-engine/ops/probe-default-observations.py",
         "goals/citation-extraction-engine/ops/verify-default-observation-controls.py",
         "packages/law-practice/server/src/internal/Citation/ResourceIdentity.ts",
-        "packages/law-practice/server/src/internal/Citation/Document.ts"
+        "packages/law-practice/server/src/internal/Citation/Document.ts",
+        "goals/citation-extraction-engine/ops/probe-case-name-scan.py",
+        "goals/citation-extraction-engine/ops/probe-regex-boundaries.py",
+        "packages/law-practice/server/src/internal/Citation/CaseNameScan.ts",
+        "packages/law-practice/server/test/CitationCaseNameScan.fixtures.ts",
+        "packages/law-practice/server/test/CitationCaseNameScan.test.ts",
+        "packages/law-practice/server/test/CitationRegexBoundaries.fixtures.ts",
+        "packages/law-practice/server/test/CitationRegexBoundaries.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/case-name-scan.json",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/regex-boundaries.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-scan-and-boundaries.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

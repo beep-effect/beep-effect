@@ -93,6 +93,9 @@ export const makeCitationCaseNamePredicates = Effect.fn("Citation.makeCaseNamePr
   });
 
   return {
+    isNonblank: nonblank,
+    isAlpha: characters.alpha,
+    isLower: characters.lower,
     isLowercaseAfterV: isCitationLowercaseAfterV,
     isCapitalizedAbbreviation: isCitationCapitalizedAbbreviation,
     isLowercaseWithoutV: isCitationLowercaseWithoutV,

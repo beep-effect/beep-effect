@@ -414,6 +414,14 @@
     {
       "path": "ops/probe-case-name-predicates.py",
       "purpose": "Observe every Python upper/lower/alpha code point and execute all three original case-name boundary predicates with exact native words, short circuits and source errors."
+    },
+    {
+      "path": "ops/probe-case-name-scan.py",
+      "purpose": "Execute all initialized source backward scan states/errors with original tokens and recorded real regex calls."
+    },
+    {
+      "path": "ops/probe-regex-boundaries.py",
+      "purpose": "Observe word-boundary grammar/profiles/capture modes in both pinned engines, preserving empty-input and parser-only differences."
     }
   ]
 }

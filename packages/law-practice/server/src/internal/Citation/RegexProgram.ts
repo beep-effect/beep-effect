@@ -45,6 +45,8 @@ const Kind = LiteralKit([
   "begin",
   "end",
   "end-strict",
+  "boundary",
+  "non-boundary",
   "repeat",
 ]).pipe(
   $I.annoteSchema("Kind", { description: "Closed structural program tokens; no raw executable regex fragment." })
@@ -83,7 +85,7 @@ const canonicalToken = (token: typeof TokenShape.Type) => {
       () => Str.isEmpty(token.name) && (token.maximum === "unbounded" || token.maximum >= token.value)
     ),
     Match.when("open", () => ordinary && validOpen(token)),
-    Match.whenOr("atom", "end", () => structure && token.value < max.patternUtf16),
+    Match.whenOr("atom", "end", "boundary", "non-boundary", () => structure && token.value < max.patternUtf16),
     Match.orElse(() => structure && token.value === 0)
   );
 };
@@ -213,7 +215,7 @@ const grammarStep = (
     Match.when("repeat", () =>
       state.quantifiable ? O.some(GrammarState.make({ ...state, quantifiable: false })) : O.none()
     ),
-    Match.when("atom", () =>
+    Match.whenOr("atom", "boundary", "non-boundary", () =>
       token.value < program.sets.atoms ? O.some(GrammarState.make({ ...state, quantifiable: true })) : O.none()
     ),
     Match.when("end", () =>
@@ -340,10 +342,20 @@ const endRender = (atom: string) => {
   const suffix = "?(?![\\s\\S]))";
   return { units: 3 + Str.length(atom) + Str.length(suffix), build: () => `(?=${atom}${suffix}` };
 };
+const boundaryRender = (atom: string, inverse: boolean) => {
+  const first = inverse ? "=" : "!";
+  const second = inverse ? "!" : "=";
+  const skeleton = `(?:(?<=)(?${first})|(?<!)(?${second}))`;
+  return {
+    units: 4 * Str.length(atom) + Str.length(skeleton),
+    build: () => `(?:(?<=${atom})(?${first}${atom})|(?<!${atom})(?${second}${atom}))`,
+  };
+};
 const renderToken = (
   alphabet: CitationRegexAlphabetText,
   token: CitationRegexProgramToken,
-  names: MutableHashSet.MutableHashSet<string>
+  names: MutableHashSet.MutableHashSet<string>,
+  cpython: boolean
 ) =>
   Match.value(token.kind).pipe(
     Match.when("atom", () => renderAtom(alphabet, token).pipe(Effect.map(fixedRender))),
@@ -354,6 +366,13 @@ const renderToken = (
     Match.when("begin", () => Effect.succeed(fixedRender("^"))),
     Match.when("end-strict", () => Effect.succeed(fixedRender("(?![\\s\\S])"))),
     Match.when("end", () => renderAtom(alphabet, token).pipe(Effect.map(endRender))),
+    Match.whenOr("boundary", "non-boundary", () => {
+      if (cpython && alphabet.pythonLength === 0 && token.kind === "non-boundary")
+        return Effect.succeed(fixedRender("(?!)"));
+      return renderAtom(alphabet, token).pipe(
+        Effect.map((atom) => boundaryRender(atom, token.kind === "non-boundary"))
+      );
+    }),
     Match.when("repeat", () => Effect.succeed(repeatRender(token))),
     Match.exhaustive
   );
@@ -722,11 +741,28 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       yield* emit("atom", citationResult4);
       return summary(1);
     });
+    const boundary = Effect.fn("Citation.parseRegexBoundary")(function* () {
+      const kind = peek(1) === 98 ? "boundary" : "non-boundary";
+      index += 2;
+      const word = yield* atom(categories.word);
+      yield* emit(kind, word);
+      return summary(0, false, categories.engine === "python-regex-v0");
+    });
+    const assertionKind = (point: number) => {
+      if (point === 94 || point === 36) return "anchor";
+      if (point !== 92) return "none";
+      return Match.value(peek(1)).pipe(
+        Match.whenOr(65, 90, () => "anchor" as const),
+        Match.whenOr(98, 66, () => "boundary" as const),
+        Match.orElse(() => "none" as const)
+      );
+    };
     const parseAtom = Effect.fn("Citation.parseRegexAtom")(function* (): Effect.fn.Return<Summary, ParseFailure> {
       const point = peek();
       if (point === 40) return yield* group();
-      if (point === 94 || point === 36) return yield* anchor(point);
-      if (point === 92 && (peek(1) === 65 || peek(1) === 90)) return yield* anchor(point);
+      const assertion = assertionKind(point);
+      if (assertion === "anchor") return yield* anchor(point);
+      if (assertion === "boundary") return yield* boundary();
       if (point === 123) yield* repeat(summary(0, false, false));
       if (invalidAtom(point)) return yield* unsupported();
       return yield* characterAtom(point);
@@ -814,7 +850,7 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
     const names = MutableHashSet.empty<string>();
     for (const token of program.tokens) {
       if (index++ % 128 === 0) yield* Effect.yieldNow;
-      const fragment = yield* renderToken(alphabet, token, names);
+      const fragment = yield* renderToken(alphabet, token, names, categories.engine === "python-re");
       if (fragment.units > limits.patternUtf16 - Str.length(pattern)) return yield* budget();
       pattern += fragment.build();
     }
