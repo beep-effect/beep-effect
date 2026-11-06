@@ -1022,12 +1022,10 @@ type DoctorPacket = {
 };
 
 // The slugs whose packet paths appear in the staleness window's git log.
-const touchedSlugs = (recentPathsText: string): HashSet.HashSet<string> =>
+const touchedSlugs = (recentPaths: ReadonlyArray<string>): HashSet.HashSet<string> =>
   HashSet.fromIterable(
     pipe(
-      recentPathsText,
-      Str.split("\n"),
-      A.map(Str.trim),
+      recentPaths,
       A.filter(Str.startsWith("goals/")),
       A.map(flow(Str.split("/"), A.get(1), O.getOrElse(thunkEmptyStr)))
     )
@@ -1080,10 +1078,10 @@ const hasOpenContext = (manifest: GoalManifest): boolean =>
 
 const stalenessAdvisories = (
   packets: ReadonlyArray<DoctorPacket>,
-  recentPathsText: string,
+  recentPaths: ReadonlyArray<string>,
   excluded: HashSet.HashSet<string>
 ): ReadonlyArray<GoalDoctorFinding> => {
-  const touched = touchedSlugs(recentPathsText);
+  const touched = touchedSlugs(recentPaths);
   let findings = A.empty<GoalDoctorFinding>();
   for (const packet of packets) {
     if (O.isNone(packet.manifest) || HashSet.has(excluded, packet.record.slug)) {
@@ -1118,9 +1116,9 @@ const stalenessAdvisories = (
 const activeAfterMergeAdvisories = (
   packets: ReadonlyArray<DoctorPacket>,
   subjectsText: string,
-  recentPathsText: string
+  recentPaths: ReadonlyArray<string>
 ): ReadonlyArray<GoalDoctorFinding> => {
-  const touched = touchedSlugs(recentPathsText);
+  const touched = touchedSlugs(recentPaths);
   const tokens = citationTokens(A.filter(subjectLines(subjectsText), isMergeSubject));
   let findings = A.empty<GoalDoctorFinding>();
   for (const packet of packets) {
@@ -1203,15 +1201,11 @@ const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (packets: Reado
   }
 
   // Single-pass staleness walk: every path under goals/ touched in the window.
-  const recentPaths = yield* git.log(".", { since: `${STALE_ACTIVE_DAYS}.days`, paths: ["goals/"] }).pipe(
-    Effect.map(
-      flow(
-        A.flatMap((entry) => entry.paths),
-        A.join("\n")
-      )
-    ),
-    Effect.option
-  );
+  const recentPaths = yield* git
+    .log(".", { since: `${STALE_ACTIVE_DAYS}.days`, paths: ["goals/"] })
+    .pipe(Effect.map(A.flatMap((entry) => entry.paths)), Effect.option);
+  // Single-pass completion-gate heuristic: merge/squash subjects citing the
+  // packet slug or the packet's recorded PR number.
   const subjects = yield* git.log(".", { limit: 4000, omitPaths: true }).pipe(
     Effect.map(
       flow(

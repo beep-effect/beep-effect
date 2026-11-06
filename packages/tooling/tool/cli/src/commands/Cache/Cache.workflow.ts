@@ -320,14 +320,11 @@ export const collectCacheProducerWorkflowFiles = Effect.fn("CacheWorkflow.files"
         Match.orElse(() =>
           // Metadata preflight limits every read to an exactly representable size.
           readCacheExperimentBytes(root, target, ByteSize.toNumberUnsafe(info.size)).pipe(
-            Effect.flatMap(
-              Effect.fnUntraced(function* (bytes) {
-                if (!ByteSize.equals(ByteSize.bytes(bytes.byteLength), info.size)) {
-                  return yield* CacheCommandError.new("Workflow source size changed during inspection.");
-                }
-                return yield* digest(bytes);
-              })
-            )
+            Effect.filterOrFail(
+              (bytes) => ByteSize.equals(ByteSize.bytes(bytes.byteLength), info.size),
+              () => CacheCommandError.new("Workflow source size changed during inspection.")
+            ),
+            Effect.flatMap(digest)
           )
         )
       );

@@ -1,4 +1,3 @@
-import { Git } from "@beep/git/Git";
 import { collectManifestProjectionRows } from "@beep/repo-cli/commands/Goals/Manifest";
 import {
   GOAL_DECISION_TARGETS,
@@ -13,7 +12,6 @@ import {
   spliceGoalDecisionBlock,
 } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
-import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -21,19 +19,19 @@ import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
-import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import {
   expectReportedExit,
+  NodeTestLayer,
   readProjectFile,
   temporaryWorkingDirectory,
   writeProjectFile,
 } from "./support/CommandTest.ts";
 
-const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const SPEC_TARGET = GOAL_DECISION_TARGETS[0]!;
 const PLAN_TARGET = GOAL_DECISION_TARGETS[1]!;
@@ -190,161 +188,158 @@ describe("goals decisions projection", () => {
   );
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
-  "goals decisions command",
-  (it) => {
-    it.effect("the manifest CLI checks an empty working tree without rewriting files", () =>
-      Effect.gen(function* () {
-        yield* temporaryWorkingDirectory;
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.makeDirectory("goals");
-        const rows = yield* collectManifestProjectionRows();
-        expect(rows).toEqual([]);
-        yield* runGoalsCommand(["manifest"]);
-        const logs = yield* TestConsole.logLines;
-        expect(logs).toContainEqual(expect.stringContaining("OK: every researchReports array matches"));
-      })
-    );
+it.layer(NodeTestLayer, { timeout: "30 seconds" })("goals decisions command", (it) => {
+  it.effect("the manifest CLI checks an empty working tree without rewriting files", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.makeDirectory("goals");
+      const rows = yield* collectManifestProjectionRows();
+      expect(rows).toEqual([]);
+      yield* runGoalsCommand(["manifest"]);
+      const logs = yield* TestConsole.logLines;
+      expect(A.some(A.filter(logs, P.isString), Str.includes("OK: every researchReports array matches"))).toBe(true);
+    })
+  );
 
-    it.effect("add writes the file, projects SPEC.md and PLAN.md, and the doctor blocks on drift", () =>
-      Effect.gen(function* () {
-        yield* temporaryWorkingDirectory;
-        yield* writeProjectFile(
-          "goals/demo/SPEC.md",
-          "# Demo\n\n## Decision Log\n\n| Date | Decision | Reason | How to reverse |\n| --- | --- | --- | --- |\n| None | N/A | N/A | N/A |\n\n## Exception Ledger\n\nnone\n"
-        );
-        yield* writeProjectFile("goals/demo/PLAN.md", "# Demo Plan\n\n## Phases\n\nrows\n");
-        yield* writeProjectFile("goals/demo/README.md", "# Demo\n\nLifecycle: `active`\n");
-        yield* writeProjectFile("goals/demo/ops/manifest.json", "{}\n");
+  it.effect("add writes the file, projects SPEC.md and PLAN.md, and the doctor blocks on drift", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* writeProjectFile(
+        "goals/demo/SPEC.md",
+        "# Demo\n\n## Decision Log\n\n| Date | Decision | Reason | How to reverse |\n| --- | --- | --- | --- |\n| None | N/A | N/A | N/A |\n\n## Exception Ledger\n\nnone\n"
+      );
+      yield* writeProjectFile("goals/demo/PLAN.md", "# Demo Plan\n\n## Phases\n\nrows\n");
+      yield* writeProjectFile("goals/demo/README.md", "# Demo\n\nLifecycle: `active`\n");
+      yield* writeProjectFile("goals/demo/ops/manifest.json", "{}\n");
 
-        // A packet without decisions is untouched: nothing applies, nothing drifts.
-        yield* runGoalsCommand(["decisions", "check", "--slug", "demo"]);
+      // A packet without decisions is untouched: nothing applies, nothing drifts.
+      yield* runGoalsCommand(["decisions", "check", "--slug", "demo"]);
 
-        yield* runGoalsCommand([
-          "decisions",
-          "add",
-          "demo",
-          "--title",
-          "Forward-only migration",
-          "--reversal",
-          "Move the entries back into the table.",
-          "--body",
-          "Legacy rows stay above the block.",
-          "--lane",
-          "feat/x",
-          "--pr",
-          "2700",
-          "--date",
-          "2026-11-05",
-        ]);
-        const file = yield* readProjectFile("goals/demo/decisions/2026-11-05-forward-only-migration.md");
-        expect(file).toContain('title: "Forward-only migration"');
-        expect(file).toContain("pullRequest: 2700");
-        const spec = yield* readProjectFile("goals/demo/SPEC.md");
-        expect(spec).toContain("| None | N/A | N/A | N/A |");
-        expect(spec).toContain("### Forward-only migration, 2026-11-05");
-        expect(spec).toContain("Legacy rows stay above the block.");
-        const endAt = O.getOrThrow(Str.indexOf("<!-- beep:decisions:end -->")(spec));
-        const ledgerAt = O.getOrThrow(Str.indexOf("## Exception Ledger")(spec));
-        expect(endAt).toBeLessThan(ledgerAt);
+      yield* runGoalsCommand([
+        "decisions",
+        "add",
+        "demo",
+        "--title",
+        "Forward-only migration",
+        "--reversal",
+        "Move the entries back into the table.",
+        "--body",
+        "Legacy rows stay above the block.",
+        "--lane",
+        "feat/x",
+        "--pr",
+        "2700",
+        "--date",
+        "2026-11-05",
+      ]);
+      const file = yield* readProjectFile("goals/demo/decisions/2026-11-05-forward-only-migration.md");
+      expect(file).toContain('title: "Forward-only migration"');
+      expect(file).toContain("pullRequest: 2700");
+      const spec = yield* readProjectFile("goals/demo/SPEC.md");
+      expect(spec).toContain("| None | N/A | N/A | N/A |");
+      expect(spec).toContain("### Forward-only migration, 2026-11-05");
+      expect(spec).toContain("Legacy rows stay above the block.");
+      const endAt = O.getOrThrow(Str.indexOf("<!-- beep:decisions:end -->")(spec));
+      const ledgerAt = O.getOrThrow(Str.indexOf("## Exception Ledger")(spec));
+      expect(endAt).toBeLessThan(ledgerAt);
 
-        yield* runGoalsCommand([
-          "decisions",
-          "add",
-          "demo",
-          "--title",
-          "Current checkpoint",
-          "--reversal",
-          "Delete the checkpoint file.",
-          "--kind",
-          "checkpoint",
-          "--date",
-          "2026-11-05",
-        ]);
-        const plan = yield* readProjectFile("goals/demo/PLAN.md");
-        expect(plan).toContain("## Checkpoints");
-        expect(plan).toContain("### Current checkpoint, 2026-11-05");
-        const specAfterCheckpoint = yield* readProjectFile("goals/demo/SPEC.md");
-        expect(specAfterCheckpoint).not.toContain("Current checkpoint");
+      yield* runGoalsCommand([
+        "decisions",
+        "add",
+        "demo",
+        "--title",
+        "Current checkpoint",
+        "--reversal",
+        "Delete the checkpoint file.",
+        "--kind",
+        "checkpoint",
+        "--date",
+        "2026-11-05",
+      ]);
+      const plan = yield* readProjectFile("goals/demo/PLAN.md");
+      expect(plan).toContain("## Checkpoints");
+      expect(plan).toContain("### Current checkpoint, 2026-11-05");
+      const specAfterCheckpoint = yield* readProjectFile("goals/demo/SPEC.md");
+      expect(specAfterCheckpoint).not.toContain("Current checkpoint");
 
-        yield* runGoalsCommand(["decisions", "check", "--slug", "demo"]);
+      yield* runGoalsCommand(["decisions", "check", "--slug", "demo"]);
 
-        // Hand-editing the generated block is drift: check fails, the doctor blocks, write repairs.
-        yield* writeProjectFile(
-          "goals/demo/SPEC.md",
-          Str.replace("Legacy rows stay above the block.", "edited by hand")(spec)
-        );
-        const drifted = yield* Effect.exit(runGoalsCommand(["decisions", "check", "--slug", "demo"]));
-        expectReportedExit(drifted);
-        const reader = makeGoalPacketFilesystemReader();
-        const record = GoalPacketRecord.make({
+      // Hand-editing the generated block is drift: check fails, the doctor blocks, write repairs.
+      yield* writeProjectFile(
+        "goals/demo/SPEC.md",
+        Str.replace("Legacy rows stay above the block.", "edited by hand")(spec)
+      );
+      const drifted = yield* Effect.exit(runGoalsCommand(["decisions", "check", "--slug", "demo"]));
+      expectReportedExit(drifted);
+      const reader = makeGoalPacketFilesystemReader();
+      const record = GoalPacketRecord.make({
+        slug: "demo",
+        packetPath: "goals/demo",
+        manifestPath: "goals/demo/ops/manifest.json",
+        readmePath: "goals/demo/README.md",
+        manifestText: "{}\n",
+        readmeText: "# Demo\n\nLifecycle: `active`\n",
+      });
+      const findings = yield* goalPacketFindings(record, reader);
+      expect(
+        A.map(
+          A.filter(findings.findings, (item) => item.kind === "decision-log-drift"),
+          (item) => item.key
+        )
+      ).toEqual(["demo decision-log-drift SPEC.md"]);
+      yield* runGoalsCommand(["decisions", "write", "--slug", "demo"]);
+      yield* runGoalsCommand(["decisions", "check", "--slug", "demo"]);
+      const repaired = yield* goalDecisionLogReport(record, reader);
+      expect(A.every(repaired.projections, (projection) => !projection.drift)).toBe(true);
+
+      // An invalid file blocks the projection and the doctor.
+      yield* writeProjectFile("goals/demo/decisions/scratch.md", "no frontmatter\n");
+      const invalid = yield* Effect.exit(runGoalsCommand(["decisions", "write", "--slug", "demo"]));
+      expectReportedExit(invalid);
+      const withInvalid = yield* goalPacketFindings(record, reader);
+      expect(A.some(withInvalid.findings, (item) => item.key === "demo decision-file-invalid scratch.md")).toBe(true);
+    })
+  );
+
+  it.effect("rejects bad inputs, reports JSON, and refuses a packet with an unbalanced marker pair", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* writeProjectFile("goals/demo/SPEC.md", "# Demo\n\n## Decision log\n\nlegacy\n");
+      yield* writeProjectFile("goals/demo/README.md", "# Demo\n\nLifecycle: `active`\n");
+      const expectFails = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
+        const exit = yield* Effect.exit(effect);
+        exit.pipe(Exit.isFailure, assertTrue);
+      });
+      const add = (...args: ReadonlyArray<string>) =>
+        expectFails(runGoalsCommand(["decisions", "add", ...args, "--date", "2026-11-05"]));
+      const base = ["--title", "Valid title", "--reversal", "Revert."] as const;
+      yield* add("Bad_Slug", ...base);
+      yield* add("missing", ...base);
+      yield* add("demo", ...base, "--kind", "bogus");
+      yield* add("demo", ...base, "--topic", "!!!");
+      yield* add("demo", ...base, "--pr", "abc");
+      yield* add("demo", "--title", "   ", "--reversal", "Revert.");
+      yield* add("demo", "--title", "Valid title", "--reversal", "   ");
+      yield* expectFails(runGoalsCommand(["decisions", "check", "--slug", "Bad_Slug"]));
+      yield* expectFails(runGoalsCommand(["decisions", "check", "--slug", "missing"]));
+
+      yield* runGoalsCommand(["decisions", "check", "--json"]);
+
+      // A lone marker makes the document ambiguous: the add writes the file but refuses to project.
+      yield* writeProjectFile("goals/demo/SPEC.md", "# Demo\n\n## Decision log\n\n<!-- beep:decisions:begin -->\n");
+      yield* add("demo", ...base);
+      yield* expectFails(runGoalsCommand(["decisions", "check", "--slug", "demo"]));
+      const report = yield* goalDecisionLogReport(
+        GoalPacketRecord.make({
           slug: "demo",
           packetPath: "goals/demo",
           manifestPath: "goals/demo/ops/manifest.json",
           readmePath: "goals/demo/README.md",
-          manifestText: "{}\n",
-          readmeText: "# Demo\n\nLifecycle: `active`\n",
-        });
-        const findings = yield* goalPacketFindings(record, reader);
-        expect(
-          A.map(
-            A.filter(findings.findings, (item) => item.kind === "decision-log-drift"),
-            (item) => item.key
-          )
-        ).toEqual(["demo decision-log-drift SPEC.md"]);
-        yield* runGoalsCommand(["decisions", "write", "--slug", "demo"]);
-        yield* runGoalsCommand(["decisions", "check", "--slug", "demo"]);
-        const repaired = yield* goalDecisionLogReport(record, reader);
-        expect(A.every(repaired.projections, (projection) => !projection.drift)).toBe(true);
-
-        // An invalid file blocks the projection and the doctor.
-        yield* writeProjectFile("goals/demo/decisions/scratch.md", "no frontmatter\n");
-        const invalid = yield* Effect.exit(runGoalsCommand(["decisions", "write", "--slug", "demo"]));
-        expectReportedExit(invalid);
-        const withInvalid = yield* goalPacketFindings(record, reader);
-        expect(A.some(withInvalid.findings, (item) => item.key === "demo decision-file-invalid scratch.md")).toBe(true);
-      })
-    );
-
-    it.effect("rejects bad inputs, reports JSON, and refuses a packet with an unbalanced marker pair", () =>
-      Effect.gen(function* () {
-        yield* temporaryWorkingDirectory;
-        yield* writeProjectFile("goals/demo/SPEC.md", "# Demo\n\n## Decision log\n\nlegacy\n");
-        yield* writeProjectFile("goals/demo/README.md", "# Demo\n\nLifecycle: `active`\n");
-        const expectFails = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
-          const exit = yield* Effect.exit(effect);
-          exit.pipe(Exit.isFailure, assertTrue);
-        });
-        const add = (...args: ReadonlyArray<string>) =>
-          expectFails(runGoalsCommand(["decisions", "add", ...args, "--date", "2026-11-05"]));
-        const base = ["--title", "Valid title", "--reversal", "Revert."] as const;
-        yield* add("Bad_Slug", ...base);
-        yield* add("missing", ...base);
-        yield* add("demo", ...base, "--kind", "bogus");
-        yield* add("demo", ...base, "--topic", "!!!");
-        yield* add("demo", ...base, "--pr", "abc");
-        yield* add("demo", "--title", "   ", "--reversal", "Revert.");
-        yield* add("demo", "--title", "Valid title", "--reversal", "   ");
-        yield* expectFails(runGoalsCommand(["decisions", "check", "--slug", "Bad_Slug"]));
-        yield* expectFails(runGoalsCommand(["decisions", "check", "--slug", "missing"]));
-
-        yield* runGoalsCommand(["decisions", "check", "--json"]);
-
-        // A lone marker makes the document ambiguous: the add writes the file but refuses to project.
-        yield* writeProjectFile("goals/demo/SPEC.md", "# Demo\n\n## Decision log\n\n<!-- beep:decisions:begin -->\n");
-        yield* add("demo", ...base);
-        yield* expectFails(runGoalsCommand(["decisions", "check", "--slug", "demo"]));
-        const report = yield* goalDecisionLogReport(
-          GoalPacketRecord.make({
-            slug: "demo",
-            packetPath: "goals/demo",
-            manifestPath: "goals/demo/ops/manifest.json",
-            readmePath: "goals/demo/README.md",
-          }),
-          makeGoalPacketFilesystemReader()
-        );
-        expect(A.map(report.invalid, (item) => item.file)).toEqual(["SPEC.md"]);
-      })
-    );
-  }
-);
+        }),
+        makeGoalPacketFilesystemReader()
+      );
+      expect(A.map(report.invalid, (item) => item.file)).toEqual(["SPEC.md"]);
+    })
+  );
+});
