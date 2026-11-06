@@ -69,6 +69,22 @@ const Manifest = S.Struct({
   })
 );
 
+type NodeStats = import("node:fs").Stats;
+const validReceiptFile = (file: NodeStats, ownerUid: number) =>
+  file.isFile() &&
+  file.uid === ownerUid &&
+  (file.mode & 0o777) === 0o600 &&
+  file.nlink === 1 &&
+  file.size > 0 &&
+  file.size <= MAX_RECEIPT_BYTES;
+const unchangedReceiptFile = (before: NodeStats, after: NodeStats, size: number) =>
+  size === before.size &&
+  after.dev === before.dev &&
+  after.ino === before.ino &&
+  after.size === before.size &&
+  after.mtimeMs === before.mtimeMs &&
+  after.ctimeMs === before.ctimeMs;
+
 const readBytes = Effect.fnUntraced(function* (directoryFd: number, ref: OwnerCheckpointReceiptRef, ownerUid: number) {
   if (!S.is(OwnerCheckpointReceiptRef)(ref) || ref.name !== `${ref.sha256}.json`) return yield* refuse();
   const fs = nodeFs();
@@ -82,15 +98,7 @@ const readBytes = Effect.fnUntraced(function* (directoryFd: number, ref: OwnerCh
     (opened) => attempt(() => fs.closeSync(opened)).pipe(Effect.ignore)
   );
   const before = yield* attempt(() => fs.fstatSync(fd));
-  if (
-    !before.isFile() ||
-    before.uid !== ownerUid ||
-    (before.mode & 0o777) !== 0o600 ||
-    before.nlink !== 1 ||
-    before.size <= 0 ||
-    before.size > MAX_RECEIPT_BYTES
-  )
-    return yield* refuse();
+  if (!validReceiptFile(before, ownerUid)) return yield* refuse();
   const bytes = new Uint8Array(before.size + 1);
   let offset = 0;
   while (offset < bytes.length) {
@@ -99,15 +107,7 @@ const readBytes = Effect.fnUntraced(function* (directoryFd: number, ref: OwnerCh
     offset += count;
   }
   const after = yield* attempt(() => fs.fstatSync(fd));
-  if (
-    offset !== before.size ||
-    after.dev !== before.dev ||
-    after.ino !== before.ino ||
-    after.size !== before.size ||
-    after.mtimeMs !== before.mtimeMs ||
-    after.ctimeMs !== before.ctimeMs
-  )
-    return yield* refuse();
+  if (!unchangedReceiptFile(before, after, offset)) return yield* refuse();
   const result = bytes.subarray(0, offset);
   const crypto = yield* Digest.Digest;
   const digest = yield* crypto.digest(Digest.sha256, result);

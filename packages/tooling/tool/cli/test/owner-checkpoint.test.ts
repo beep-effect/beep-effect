@@ -75,7 +75,7 @@ const binding = OwnerCheckpointBinding.make({
   head,
   generation: 0,
 });
-const policy = OwnerCheckpointPolicy.make({ applicationId: 123, context: "Owner checkpoint", maxAgeMillis: 1000 });
+const policy = OwnerCheckpointPolicy.make({ applicationId: 123, maxAgeMillis: 1000 });
 const read = (offset = -10, ownSuccess = false) =>
   MergeGateRead.make({
     prNumber: 42,
@@ -139,8 +139,6 @@ const finalCheck = FinalCheckReceipt.make({
 });
 const evidence = OwnerCheckpointEvidence.make({
   observer: OwnerCheckpointObserver.make({
-    phase: "finished",
-    outcome: "success",
     finalizedAt: at(-20),
     snapshot: snapshot(-30),
     digest,
@@ -549,11 +547,7 @@ const lintRun = {
   app: { id: 7 },
   external_id: null,
 };
-const upstreamRoute = (call: GithubCall, own = nativeOwn()): GithubAnswer | undefined => {
-  if (call.path === "{repo}/pulls/42") return { body: livePull() };
-  if (call.path === "{repo}/git/ref/heads/main") return { body: { object: { type: "commit", sha: merge } } };
-  if (call.path === `{repo}/commits/${head}/check-runs`)
-    return { body: { total_count: 2, check_runs: [lintRun, own] } };
+const upstreamReadinessRoute = (call: GithubCall): GithubAnswer | undefined => {
   if (Str.endsWith("/statuses")(call.path)) return { body: [] };
   if (Str.endsWith("/rules/branches/main")(call.path))
     return {
@@ -580,6 +574,15 @@ const upstreamRoute = (call: GithubCall, own = nativeOwn()): GithubAnswer | unde
   if (Str.endsWith("/commits")(call.path)) return { body: [{ commit: { message: "feat: fixed fixture" } }] };
   if (Str.startsWith("{repo}/compare/")(call.path))
     return { body: { merge_base_commit: { sha: merge }, base_commit: { sha: merge } } };
+  return undefined;
+};
+const upstreamRoute = (call: GithubCall, own = nativeOwn()): GithubAnswer | undefined => {
+  if (call.path === "{repo}/pulls/42") return { body: livePull() };
+  if (call.path === "{repo}/git/ref/heads/main") return { body: { object: { type: "commit", sha: merge } } };
+  if (call.path === `{repo}/commits/${head}/check-runs`)
+    return { body: { total_count: 2, check_runs: [lintRun, own] } };
+  const readiness = upstreamReadinessRoute(call);
+  if (readiness !== undefined) return readiness;
   if (call.path === `{repo}/commits/${merge}/check-runs`) return { body: { total_count: 1, check_runs: [lintRun] } };
   if (Str.endsWith("/timeline")(call.path))
     return { body: [{ event: "ready_for_review", created_at: "2026-11-05T00:00:00Z" }] };
@@ -615,6 +618,58 @@ const offline = <Value, Error, Requirements>(effect: Effect.Effect<Value, Error,
     provideTestLayer(NodeCrypto.layer)
   );
 
+const unsupportedStatusFixture = (call: GithubCall, move: string): GithubAnswer | undefined => {
+  if (move !== "status-only") return undefined;
+  if (Str.endsWith("/rules/branches/main")(call.path))
+    return {
+      body: [{ type: "required_status_checks", parameters: { required_status_checks: [{ context: "classic-only" }] } }],
+    };
+  if (Str.endsWith("/statuses")(call.path))
+    return {
+      body: [
+        {
+          id: 12,
+          context: "classic-only",
+          state: "success",
+          creator: { login: "vendor" },
+          description: null,
+          target_url: null,
+          updated_at: DateTime.formatIso(at(-1)),
+        },
+      ],
+    };
+  return undefined;
+};
+const movedOwnFixture = (move: string) =>
+  move === "wrong-app"
+    ? { ...nativeOwn(), app: { id: 999 }, applicationId: 123 }
+    : move === "wrong-external"
+      ? nativeOwn("wrong-pr")
+      : move === "malformed"
+        ? { ...nativeOwn(), app: null }
+        : nativeOwn();
+const movedBaseFixture = (call: GithubCall, move: string, reads: number): GithubAnswer | undefined => {
+  if (call.path !== "{repo}/git/ref/heads/main" || move !== "base") return undefined;
+  return { body: { object: { type: "commit", sha: reads === 0 ? merge : head } } };
+};
+const movedPullFixture = (move: string, pulls: number): GithubAnswer | undefined => {
+  if (pulls > 2 && move === "head") return { body: { ...livePull(), head: { ...livePull().head, sha: merge } } };
+  if (pulls > 2 && move === "closed") return { body: livePull(true) };
+  if (move === "base-repository")
+    return { body: { ...livePull(), base: { ref: "main", repo: { full_name: "other/repo" } } } };
+  return undefined;
+};
+const nativeCheckPage = (page2: boolean, failedPage: boolean): GithubAnswer =>
+  page2
+    ? failedPage
+      ? { status: 503 }
+      : { body: { total_count: 2, check_runs: [nativeOwn()] } }
+    : {
+        body: { total_count: 2, check_runs: [lintRun] },
+        headers: {
+          link: ` <https://api.github.com/repos/beep-effect/beep-effect/commits/${head}/check-runs?page=2>; rel="next"`,
+        },
+      };
 describe("inert owner native adapter", () => {
   for (const fault of ["latest-app-pending", "latest-app-failed", "conflicting-app-rules"]) {
     it.effect(`refuses App-bound context ambiguity: ${fault}`, () => {
@@ -702,17 +757,7 @@ describe("inert owner native adapter", () => {
     it.effect(`consumes native checks, statuses and review thread pages; second page failure=${failedPage}`, () => {
       const github = recordedGithub((call) => {
         const page2 = call.query.get("page") === "2";
-        if (call.path === `{repo}/commits/${head}/check-runs`)
-          return page2
-            ? failedPage
-              ? { status: 503 }
-              : { body: { total_count: 2, check_runs: [nativeOwn()] } }
-            : {
-                body: { total_count: 2, check_runs: [lintRun] },
-                headers: {
-                  link: ` <https://api.github.com/repos/beep-effect/beep-effect/commits/${head}/check-runs?page=2>; rel="next"`,
-                },
-              };
+        if (call.path === `{repo}/commits/${head}/check-runs`) return nativeCheckPage(page2, failedPage);
         if (Str.endsWith("/statuses")(call.path))
           return page2
             ? { body: [] }
@@ -801,44 +846,19 @@ describe("inert owner native adapter", () => {
       const github = recordedGithub((call) => {
         if (call.path === "{repo}/pulls/42") {
           pulls++;
-          if (pulls > 2 && move === "head")
-            return { body: { ...livePull(), head: { ...livePull().head, sha: merge } } };
-          if (pulls > 2 && move === "closed") return { body: livePull(true) };
-          if (move === "base-repository")
-            return { body: { ...livePull(), base: { ref: "main", repo: { full_name: "other/repo" } } } };
+          const moved = movedPullFixture(move, pulls);
+          if (moved !== undefined) return moved;
         }
-        if (call.path === "{repo}/git/ref/heads/main" && move === "base")
-          return { body: { object: { type: "commit", sha: refs++ === 0 ? merge : head } } };
+        const movedBase = movedBaseFixture(call, move, refs);
+        if (movedBase !== undefined) {
+          refs++;
+          return movedBase;
+        }
         if (call.path === `/graphql` && move === "threads-failed") return { status: 503 };
-        if (Str.endsWith("/rules/branches/main")(call.path) && move === "status-only")
-          return {
-            body: [
-              { type: "required_status_checks", parameters: { required_status_checks: [{ context: "classic-only" }] } },
-            ],
-          };
-        if (Str.endsWith("/statuses")(call.path) && move === "status-only")
-          return {
-            body: [
-              {
-                id: 12,
-                context: "classic-only",
-                state: "success",
-                creator: { login: "vendor" },
-                description: null,
-                target_url: null,
-                updated_at: DateTime.formatIso(at(-1)),
-              },
-            ],
-          };
+        const unsupported = unsupportedStatusFixture(call, move);
+        if (unsupported !== undefined) return unsupported;
         if (call.path === `{repo}/commits/${head}/check-runs`) {
-          const own =
-            move === "wrong-app"
-              ? { ...nativeOwn(), app: { id: 999 }, applicationId: 123 }
-              : move === "wrong-external"
-                ? nativeOwn("wrong-pr")
-                : move === "malformed"
-                  ? { ...nativeOwn(), app: null }
-                  : nativeOwn();
+          const own = movedOwnFixture(move);
           return { body: { total_count: 2, check_runs: [lintRun, own] } };
         }
         return upstreamRoute(call);
@@ -852,6 +872,20 @@ describe("inert owner native adapter", () => {
   }
 });
 
+const reconciledPublicationFixture = (
+  fault: string,
+  created: boolean,
+  own: ReturnType<typeof nativeOwn>
+): GithubAnswer => ({
+  body: {
+    total_count: fault === "duplicates" ? 2 : fault === "zero" ? 0 : 1,
+    check_runs: !created || fault === "zero" ? [] : fault === "duplicates" ? [own, { ...own, id: 3 }] : [own],
+  },
+});
+const createPublicationFixture = (fault: string, own: ReturnType<typeof nativeOwn>): GithubAnswer =>
+  fault === "lost-response" || fault === "zero" || fault === "duplicates"
+    ? { unreachable: "PRIVATE_LOST_RESPONSE" }
+    : { body: own };
 describe("inert owner publication fence", () => {
   for (const fault of ["lost-response", "failed-remember", "duplicates", "zero", "wrong-identity"]) {
     it.effect(`reconciles ${fault} without a second create`, () => {
@@ -862,19 +896,11 @@ describe("inert owner publication fence", () => {
           created = true;
           const body = S.decodeUnknownResult(S.Struct({ external_id: S.String }))(call.body);
           own = nativeOwn(Result.getOrThrow(body).external_id);
-          return fault === "lost-response" || fault === "zero" || fault === "duplicates"
-            ? { unreachable: "PRIVATE_LOST_RESPONSE" }
-            : { body: own };
+          return createPublicationFixture(fault, own);
         }
         if (call.path === "{repo}/check-runs/2")
           return { body: fault === "wrong-identity" ? { ...own, id: 999 } : own };
-        if (Str.endsWith("/check-runs")(call.path))
-          return {
-            body: {
-              total_count: fault === "duplicates" ? 2 : fault === "zero" ? 0 : 1,
-              check_runs: !created || fault === "zero" ? [] : fault === "duplicates" ? [own, { ...own, id: 3 }] : [own],
-            },
-          };
+        if (Str.endsWith("/check-runs")(call.path)) return reconciledPublicationFixture(fault, created, own);
         return upstreamRoute(call, own);
       });
       return Effect.gen(function* () {
@@ -946,6 +972,28 @@ describe("inert owner publication fence", () => {
   });
 });
 
+const mutateReceiptFixtureFile = Effect.fnUntraced(function* (
+  root: string,
+  observer: OwnerCheckpointReceiptRef,
+  fault: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  if (fault === "hash") yield* fs.writeFileString(`${root}/${observer.name}`, "{}");
+  if (fault === "permissions") yield* fs.chmod(`${root}/${observer.name}`, 0o644);
+  if (fault === "symlink") {
+    yield* fs.rename(`${root}/${observer.name}`, `${root}/original.json`);
+    yield* fs.symlink(`${root}/original.json`, `${root}/${observer.name}`);
+  }
+});
+const observerReceiptFixture = Effect.fnUntraced(function* (fault: string) {
+  const rawObserver = yield* S.encodeEffect(S.toCodecJson(OwnerCheckpointObserver))(evidence.observer);
+  const encodedObserver = yield* S.decodeUnknownEffect(S.Record(S.String, S.Unknown))(rawObserver);
+  return {
+    ...encodedObserver,
+    ...(fault === "unfinished" ? { phase: "running" } : {}),
+    ...(fault === "stopped-monitor" ? { mode: "publisher-submitted", outcome: "stopped" } : {}),
+  };
+});
 describe("authority receipt root", () => {
   for (const fault of [
     "none",
@@ -976,13 +1024,8 @@ describe("authority receipt root", () => {
             yield* fs.chmod(`${root}/${ref.name}`, 0o600);
             return ref;
           });
-          const rawObserver = yield* S.encodeEffect(S.toCodecJson(OwnerCheckpointObserver))(evidence.observer);
-          const encodedObserver = yield* S.decodeUnknownEffect(S.Record(S.String, S.Unknown))(rawObserver);
-          const observer = yield* write({
-            ...encodedObserver,
-            ...(fault === "unfinished" ? { phase: "running" } : {}),
-            ...(fault === "stopped-monitor" ? { mode: "publisher-submitted", outcome: "stopped" } : {}),
-          });
+          const observerValue = yield* observerReceiptFixture(fault);
+          const observer = yield* write(observerValue);
           const encodedClassic = yield* S.encodeEffect(S.toCodecJson(OwnerCheckpointSnapshot))(
             fault === "base-moved"
               ? OwnerCheckpointSnapshot.make({ ...evidence.classic, base: { ...evidence.classic.base, sha: head } })
@@ -1005,12 +1048,7 @@ describe("authority receipt root", () => {
             classic,
             finalCheck: final,
           });
-          if (fault === "hash") yield* fs.writeFileString(`${root}/${observer.name}`, "{}");
-          if (fault === "permissions") yield* fs.chmod(`${root}/${observer.name}`, 0o644);
-          if (fault === "symlink") {
-            yield* fs.rename(`${root}/${observer.name}`, `${root}/original.json`);
-            yield* fs.symlink(`${root}/original.json`, `${root}/${observer.name}`);
-          }
+          yield* mutateReceiptFixtureFile(root, observer, fault);
           const result = yield* readOwnerCheckpointEvidenceReceipts(root, binding, manifest, policy, digest).pipe(
             Effect.result
           );

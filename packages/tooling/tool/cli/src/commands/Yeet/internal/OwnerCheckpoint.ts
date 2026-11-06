@@ -7,8 +7,10 @@
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FinalCheckGate } from "./FinalCheck.schemas.ts";
 import { finalCheckRefusal } from "./FinalCheck.ts";
@@ -33,12 +35,20 @@ import type {
 } from "./OwnerCheckpoint.schemas.ts";
 
 const refuse = (reason: OwnerCheckpointError["reason"]) => OwnerCheckpointError.make({ reason });
-const sameBinding = (a: OwnerCheckpointBinding, b: OwnerCheckpointBinding): boolean =>
-  a.repository === b.repository &&
-  a.prNumber === b.prNumber &&
-  a.owner === b.owner &&
-  a.head === b.head &&
-  a.generation === b.generation;
+/**
+ * Compare the complete internal owner binding using its retained schema.
+ * **Example** (Inspect binding equality)
+ * ```ts
+ * import { sameOwnerCheckpointBinding } from "@beep/repo-cli/test/Yeet"
+ * console.log(typeof sameOwnerCheckpointBinding) // function
+ * ```
+ * @category predicates
+ * @since 0.0.0
+ */
+export const sameOwnerCheckpointBinding: {
+  (self: OwnerCheckpointBinding, that: OwnerCheckpointBinding): boolean;
+  (that: OwnerCheckpointBinding): (self: OwnerCheckpointBinding) => boolean;
+} = dual(2, S.toEquivalence(OwnerCheckpointBinding));
 const verifiedVercelRateLimit = (status: OwnerCheckpointSnapshot["statuses"][number]): boolean =>
   status.state === "failure" &&
   status.diagnostic._tag === "VercelBuildRateLimit" &&
@@ -329,7 +339,7 @@ export const transitionOwnerCheckpoint = Effect.fn("OwnerCheckpoint.transition")
   policy: OwnerCheckpointPolicy,
   now: DateTime.Utc
 ) {
-  if (!sameBinding(current.binding, request.binding)) return yield* refuse("binding");
+  if (!sameOwnerCheckpointBinding(current.binding, request.binding)) return yield* refuse("binding");
   if (current.revision >= Number.MAX_SAFE_INTEGER - 1) return yield* refuse("conflict");
   if (current.revision !== request.expectedRevision) return yield* refuse("conflict");
   return yield* OwnerCheckpointCommand.match(request.command, {
