@@ -18,6 +18,19 @@ report and its phase records. A publication comparison must account for those
 additions and any intervening main changes separately. The report does not
 claim to contain the hash of its own publication commit.
 
+## Publication boundary
+
+The delivery lane subsequently integrated main PRs #2760, #2754 and #2763.
+Those commits changed 37 paths beyond the source snapshot, including other
+owners' generated inventories, CI tooling and agent instructions. Their changes
+remain intact and create additional final-tree review obligations. This pass
+does not claim to re-extract or accept their substantive content.
+
+This delivery changes seven audit-packet paths: the compact report, checkpoint,
+phase/launcher records and friction ledger. Their authored assertions are
+reviewed against the private receipts. The publication comparison must be
+refreshed when the head moves; no blanket generated-evidence exemption applies.
+
 ## Tracked-entry accounting
 
 | Relation to the cloud snapshot | Entries |
