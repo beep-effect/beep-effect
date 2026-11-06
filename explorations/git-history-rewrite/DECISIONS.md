@@ -41,13 +41,13 @@ is needed in the completed goal.
 
 ## 2026-11-06 — cutover folder ownership
 
-**Question:** What happens to `~/YeeBois/projects/beep-effect-cutover` before
+**Question:** What happens to `$HOME/YeeBois/projects/beep-effect-cutover` before
 `goals/legacy-drain` archives it?
 
 **Answer:** Track the message map in this packet (`census/final-map.json`,
 `excluded-from-map.json`, the validators). Move everything else (cutover and
 rehearsal scripts, branch curation, decision sheet, fleet inventory, research
-reports) to `~/.local/state/beep/archive/beep-effect-cutover/`, with a pointer
+reports) to `$HOME/.local/state/beep/archive/beep-effect-cutover/`, with a pointer
 in `research/SOURCES.md`. Then the folder is removed, which satisfies
 legacy-drain's "archived" line.
 

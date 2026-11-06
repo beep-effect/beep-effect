@@ -27,7 +27,7 @@ A history rewrite is not a gated candidate: it was decided against
    `docs/history/**`, runs `--write` and pushes the ref; `--check` against the
    remote ref proves the result.
 4. **Slice 4: folder retirement and docs.** Archive the remaining cutover
-   folder to `~/.local/state/beep/archive/beep-effect-cutover/`, remove the
+   folder to `$HOME/.local/state/beep/archive/beep-effect-cutover/`, remove the
    folder, record it for `goals/legacy-drain`; document the overlay and the
    blobless-clone recipe.
 
@@ -46,7 +46,7 @@ tracked.
 | Worktree bootstrap hook | `commands/Worktree/Worktree.command.ts` (`worktree new`) | extend |
 | Cloud bootstrap | `scripts/cloud/bootstrap.sh` | extend |
 | Post-merge publication | `.github/workflows/` (existing push/cron workflows such as `knowledge-baseline-mint.yml`) | NET-NEW workflow |
-| Folder archive | `~/.local/state/beep` archive convention (`explorations/agent-fleet-layout/DECISIONS.md:160-162`, `goals/legacy-drain/SPEC.md:5`) | reuse convention |
+| Folder archive | `$HOME/.local/state/beep` archive convention (`explorations/agent-fleet-layout/DECISIONS.md:160-162`, `goals/legacy-drain/SPEC.md:5`) | reuse convention |
 
 ## Inherited risks
 

@@ -10,12 +10,12 @@ dated heading at the bottom.
 ## 2026-11-06 — seed from the July 2026 cutover workspace
 
 Operator asked which goal or exploration packets cover fixing the git history
-through the cutover planned in `~/YeeBois/projects/beep-effect-cutover/`. None
+through the cutover planned in `$HOME/YeeBois/projects/beep-effect-cutover/`. None
 did. This packet opens to own that work.
 
 ### What the July workspace holds (2026-07-24/25, never executed)
 
-`~/YeeBois/projects/beep-effect-cutover/` is a plain notes folder (no `.git`),
+`$HOME/YeeBois/projects/beep-effect-cutover/` is a plain notes folder (no `.git`),
 about 1.1 MB:
 
 - `census/`: the commit-message rewrite map. `final-map.json` (939 rewrites
@@ -69,7 +69,7 @@ first.
   `saving|wip|updated deps|merged `. 961 merge commits.
 - `.repos/` is no longer tracked (0 tracked files): the July option (b),
   untrack plus a pinned reference workspace, has happened
-  (`beep refs provision`, `.repos/*` symlinks into `~/YeeBois/references/effect`).
+  (`beep refs provision`, `.repos/*` symlinks into `$HOME/YeeBois/references/effect`).
   The history still carries 226 `Squashed '.repos/...'` commits.
 - Local pack: 2.49 GiB (`.git` 5.3 GiB in the primary clone, with garbage
   temp packs present).
@@ -98,7 +98,7 @@ first.
   at `SPEC.md:81`, "Subtree policy in README only. No filter-repo. ... History
   rewrite is not a night."
 - `explorations/agent-fleet-layout` `DECISIONS.md:160-162`: archive
-  `beep-effect-cutover` into `~/.local/state/beep` or the research tree, then
+  `beep-effect-cutover` into `$HOME/.local/state/beep` or the research tree, then
   remove it. `goals/legacy-drain` `SPEC.md:5` carries that as "`beep-effect-cutover`
   is archived."
 - The July census map is about 2,100 commits behind main. Every SHA key in

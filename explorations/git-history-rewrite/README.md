@@ -14,7 +14,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 beep-effect's pre-July history carries hundreds of `saving` / `updated deps` /
 `merged in main` subjects and 226 vendored `.repos/` subtree squash commits.
 A full `git filter-repo` cutover was planned and rehearsed in July 2026 in
-`~/YeeBois/projects/beep-effect-cutover/` but never run, and no packet owned
+`$HOME/YeeBois/projects/beep-effect-cutover/` but never run, and no packet owned
 it. This packet does, before `goals/legacy-drain` archives that folder.
 
 ## Next Open Question

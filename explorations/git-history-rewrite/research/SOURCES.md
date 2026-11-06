@@ -8,9 +8,9 @@
 
 | Source | Title | Location | Theme | Disposition |
 |--------|-------|----------|-------|-------------|
-| `july-census` | Commit-message rewrite map and fleet validation | `~/YeeBois/projects/beep-effect-cutover/census/` | message rewrite | reference; ownership decision pending (align) |
-| `july-cutover` | Gated cutover and reconvergence scripts, branch curation, decision sheet | `~/YeeBois/projects/beep-effect-cutover/cutover/` | execution plan | reference; ownership decision pending |
-| `july-research` | Blast radius, checkout fleet inventory, `.repos` coupling | `~/YeeBois/projects/beep-effect-cutover/research/` | impact | reference; inventory needs redaction before any tracked copy |
+| `july-census` | Commit-message rewrite map and fleet validation | `$HOME/YeeBois/projects/beep-effect-cutover/census/` | message rewrite | reference; ownership decision pending (align) |
+| `july-cutover` | Gated cutover and reconvergence scripts, branch curation, decision sheet | `$HOME/YeeBois/projects/beep-effect-cutover/cutover/` | execution plan | reference; ownership decision pending |
+| `july-research` | Blast radius, checkout fleet inventory, `.repos` coupling | `$HOME/YeeBois/projects/beep-effect-cutover/research/` | impact | reference; inventory needs redaction before any tracked copy |
 
 ## 2. Upstream repositories & licenses
 

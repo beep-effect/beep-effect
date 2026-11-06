@@ -47,7 +47,7 @@ Higher sources outrank lower sources when they conflict.
 - `scripts/cloud/bootstrap.sh` — sync step.
 - `.github/workflows/` — one post-merge publication workflow.
 - The git or worktree standards doc — overlay and blobless-clone section.
-- Out of repo: `~/YeeBois/projects/beep-effect-cutover` → `~/.local/state/beep/archive/beep-effect-cutover/`.
+- Out of repo: `$HOME/YeeBois/projects/beep-effect-cutover` → `$HOME/.local/state/beep/archive/beep-effect-cutover/`.
 
 ## Constraints
 
@@ -72,8 +72,8 @@ Higher sources outrank lower sources when they conflict.
 - [ ] `git log` in a freshly bootstrapped worktree shows `Notes (history):` on a
       mapped commit with no manual config.
 - [ ] The post-merge workflow published `refs/notes/history` to origin.
-- [ ] `~/YeeBois/projects/beep-effect-cutover` is archived under
-      `~/.local/state/beep/archive/beep-effect-cutover/` and removed;
+- [ ] `$HOME/YeeBois/projects/beep-effect-cutover` is archived under
+      `$HOME/.local/state/beep/archive/beep-effect-cutover/` and removed;
       `goals/legacy-drain` is told its archive line is done.
 - [ ] Docs explain the overlay and the `--filter=blob:none` clone recipe.
 - [ ] No unrelated refactors or formatting churn.
@@ -115,11 +115,11 @@ Reverse: Change historyNoteBody in commands/History/History.schemas.ts and rebui
 
 ### Track the map, archive the rest of the cutover folder, 2026-11-06
 
-Map and validators move into docs/history/; scripts, curation, decision sheet, fleet inventory and research reports go to ~/.local/state/beep/archive/beep-effect-cutover/ and the folder is removed, closing goals/legacy-drain's archive line. The inventory names local paths and stays out of the public repo. Source: explorations/git-history-rewrite/DECISIONS.md (2026-11-06).
+Map and validators move into docs/history/; scripts, curation, decision sheet, fleet inventory and research reports go to $HOME/.local/state/beep/archive/beep-effect-cutover/ and the folder is removed, closing goals/legacy-drain's archive line. The inventory names local paths and stays out of the public repo. Source: explorations/git-history-rewrite/DECISIONS.md (2026-11-06).
 
 Lane `docs/git-history-rewrite-exploration`
 
-Reverse: Restore the folder from ~/.local/state/beep/archive/beep-effect-cutover/
+Reverse: Restore the folder from $HOME/.local/state/beep/archive/beep-effect-cutover/
 
 ### The write mode builds one parentless, fixed-identity notes commit via fast-import, 2026-11-06
 
@@ -143,7 +143,7 @@ Keep every SHA. Publish the July map as a git notes overlay; size relief via blo
 
 Lane `docs/git-history-rewrite-exploration`
 
-Reverse: Reopen explorations/git-history-rewrite at align; the July cutover scripts are archived under ~/.local/state/beep/archive/beep-effect-cutover/
+Reverse: Reopen explorations/git-history-rewrite at align; the July cutover scripts are archived under $HOME/.local/state/beep/archive/beep-effect-cutover/
 
 ### Dedicated refs/notes/history delivered by bootstrap sync, 2026-11-06
 
@@ -175,7 +175,7 @@ Refines the cutover-folder decision. Only the map data moves to docs/history/ (c
 
 Lane `docs/git-history-rewrite-exploration`
 
-Reverse: Copy census/*.mjs from ~/.local/state/beep/archive/beep-effect-cutover/ into docs/history/
+Reverse: Copy census/*.mjs from $HOME/.local/state/beep/archive/beep-effect-cutover/ into docs/history/
 
 <!-- beep:decisions:end -->
 

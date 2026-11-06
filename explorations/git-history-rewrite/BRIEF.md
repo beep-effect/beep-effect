@@ -55,8 +55,8 @@ docs/history/commit-message-map.json ► builds refs/notes/history from the map
    clone and is idempotent.
 4. **Publication.** A post-merge workflow on `main`, filtered to the map path,
    runs `--write` and pushes `refs/notes/history`.
-5. **Folder retirement.** Move the rest of `~/YeeBois/projects/beep-effect-cutover`
-   to `~/.local/state/beep/archive/beep-effect-cutover/`, then remove the
+5. **Folder retirement.** Move the rest of `$HOME/YeeBois/projects/beep-effect-cutover`
+   to `$HOME/.local/state/beep/archive/beep-effect-cutover/`, then remove the
    folder. Record it so `goals/legacy-drain` can mark its line done.
 6. **Docs.** A short section in the git or worktree standards: what the
    overlay is, how to see it, and the blobless-clone recipe

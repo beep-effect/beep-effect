@@ -25,7 +25,7 @@ Scope:
 
 - In: `docs/history/`, `@beep/git` notes ops, `@beep/repo-cli` History
   command + `worktree new` hook, `scripts/cloud/bootstrap.sh`, one post-merge
-  workflow, retiring `~/YeeBois/projects/beep-effect-cutover`.
+  workflow, retiring `$HOME/YeeBois/projects/beep-effect-cutover`.
 - Out: any history rewrite, filter-repo or force-push; editing commit
   messages, signatures or SHAs; workstation pushes of the notes ref.
 
