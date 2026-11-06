@@ -1,5 +1,6 @@
 ---
 name: modularization-analyst
+model: claude-opus-5-5
 description: Read-only seam analysis and split design for oversized or mixed-concern files anywhere in the repo. Use BEFORE refactoring a large file — it produces the split plan (concerns, natural seams, target role files, shared-extraction candidates, risks) that implementer agents execute. Also use to rank modularization targets across a package or family.
 tools: Bash, Read, Grep, Glob
 ---

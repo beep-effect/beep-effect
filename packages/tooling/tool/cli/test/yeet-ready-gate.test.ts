@@ -900,6 +900,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         yield* runYeetReadyGate(context, {
+          finalCheck: passingFinalCheck,
           recordInherited: () => Effect.void,
           read: () => Effect.succeed(prView({ isDraft: false })),
           markReady: () => Effect.die("the flip must not run"),
@@ -948,6 +949,40 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "pr-open" });
           expect(error.message).toContain(state);
         }
+      })
+    );
+
+    it.effect("verifies an ancestor receipt for an already-ready main merge without another flip", () =>
+      Effect.gen(function* () {
+        const receiptHead = Str.repeat(40)("r");
+        const consulted = yield* Ref.make<ReadonlyArray<string>>([]);
+        const decision = yield* runYeetReadyGate(context, {
+          finalCheck: () => Effect.succeedNone,
+          refresh: (repoContext, head) =>
+            Ref.update(consulted, A.append(head)).pipe(
+              Effect.andThen(passingFinalCheck(repoContext, receiptHead)),
+              Effect.map(O.map((receipt) => FinalCheckRefreshPass.make({ receipt, finalHead: head, ownChanges: [] })))
+            ),
+          squashCommitlint: passingSquashCommitlint,
+          read: () => Effect.succeed(prView({ isDraft: false })),
+          markReady: () => Effect.die("an already-ready merge must not flip again"),
+          requestReview: () => Effect.die("an already-ready merge must not push a review trigger"),
+        });
+        expect(decision._tag).toBe("already-ready");
+        const heads = yield* Ref.get(consulted);
+        expect(heads).toEqual([headSha]);
+      })
+    );
+
+    it.effect("refuses an already-ready head whose final-check proof is missing", () =>
+      Effect.gen(function* () {
+        const error = yield* runYeetReadyGate(context, {
+          finalCheck: () => Effect.succeedNone,
+          refresh: () => Effect.succeedNone,
+          read: () => Effect.succeed(prView({ isDraft: false })),
+          markReady: () => Effect.die("the flip must not run"),
+        }).pipe(Effect.flip);
+        expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
       })
     );
 

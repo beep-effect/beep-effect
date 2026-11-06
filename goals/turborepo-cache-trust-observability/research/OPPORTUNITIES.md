@@ -2494,3 +2494,15 @@ count before release and keep the same aggregate cap. The TypeScript wrapper
 reported only the child exit code, hiding the Python assertion; include its
 bounded, credential-free fixture output in failure diagnostics. Existing
 positive digest and artifact-overflow tests remain the acceptance checks.
+### Shared HTML corpus watchdog blocked dependency-reader acceptance, 2026-11-06
+
+While accepting the bounded dependency-reader repair (#2764), unit-d failed
+`CitationHtmlKernel.test.ts` at its 29,750 ms watchdog. The unchanged main file
+subsequently passed all eight tests in 27,350 ms (run42226885395,
+job127927919435). Coverage refused because `UNIT_RESULT` was failure before
+coverage evaluation; no coverage drop was established. A single shared repair
+(#2768) divides the pinned 1,097 corpus rows into eleven independently timed
+batches, preserving every row, digest and exact expected outcome. Smaller test
+units with explicit corpus coverage would have prevented one aggregate deadline
+from obscuring the failing case range. Hosted repair proof remains pending;
+no local quality suite or production parser/resource limit was changed.
