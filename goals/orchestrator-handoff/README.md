@@ -2,11 +2,11 @@
 
 ## Status
 
-Lifecycle: `active`; all three phases complete and `completed-retained` proposed by the final PR.
+Lifecycle: `completed-retained`. All three phases are complete. Final PR #2812 merged as 6d99cb00b5, and `goals completion refresh` verified it.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
-Latest evidence (2026-11-06): P2 shipped `bun run beep yeet gate-table`, `session handoff`,
+Evidence (2026-11-06): P2 shipped `bun run beep yeet gate-table`, `session handoff`,
 `session ruling add|list` and `session register convert`, plus an `owner-merge-hold` hold in
 `yeet merge-gate`. P3 was a read-only take-over drill a fresh session ran from the files alone
 while the holder stayed live. It refused the take-over correctly, and its findings (carry-over
