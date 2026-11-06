@@ -111,6 +111,8 @@ export const captureIndex = selectRecords("Capture");
  * import { reportOccurrences } from "@beep/repo-cli/commands/Research/Library/Library.views"
  * console.log(reportOccurrences("example").length)
  * ```
+ * @param id - Report identity whose citation occurrences are selected.
+ * @returns SPARQL query selecting visible occurrences for the report.
  * @category queries
  * @since 0.0.0
  */
@@ -126,6 +128,8 @@ export const reportOccurrences = (id: string) =>
  * import { sourceBacklinks } from "@beep/repo-cli/commands/Research/Library/Library.views"
  * console.log(sourceBacklinks("example").length)
  * ```
+ * @param id - Source identity whose direct citation backlinks are selected.
+ * @returns SPARQL query selecting visible occurrences citing the source.
  * @category queries
  * @since 0.0.0
  */
@@ -141,6 +145,8 @@ export const sourceBacklinks = (id: string) =>
  * import { sourceCaptures } from "@beep/repo-cli/commands/Research/Library/Library.views"
  * console.log(sourceCaptures("example").length)
  * ```
+ * @param id - Source identity whose capture receipts are selected.
+ * @returns SPARQL query selecting visible captures in catalog order.
  * @category queries
  * @since 0.0.0
  */
@@ -156,6 +162,8 @@ export const sourceCaptures = (id: string) =>
  * import { captureArtifacts } from "@beep/repo-cli/commands/Research/Library/Library.views"
  * console.log(captureArtifacts("example").length)
  * ```
+ * @param id - Capture identity whose artifact uses are selected.
+ * @returns SPARQL query selecting visible artifacts attached to the capture.
  * @category queries
  * @since 0.0.0
  */
@@ -171,6 +179,8 @@ export const captureArtifacts = (id: string) =>
  * import { relatedRepositories } from "@beep/repo-cli/commands/Research/Library/Library.views"
  * console.log(relatedRepositories("source").length)
  * ```
+ * @param id - Source identity used to find its repository peers.
+ * @returns SPARQL query selecting other visible sources for the same repository.
  * @category queries
  * @since 0.0.0
  */
@@ -183,6 +193,8 @@ export const relatedRepositories = (id: string) =>
  * import { indirectBacklinks } from "@beep/repo-cli/commands/Research/Library/Library.views"
  * console.log(indirectBacklinks("source").length)
  * ```
+ * @param id - Repository source identity whose indirect citations are selected.
+ * @returns SPARQL query selecting visible occurrences citing related sources.
  * @category queries
  * @since 0.0.0
  */
@@ -493,6 +505,8 @@ export const libraryViewDataset = Effect.fn("Library.viewDataset")(function* (
  * import { orderedSourceCaptures } from "@beep/repo-cli/commands/Research/Library/Library.views"
  * console.log(orderedSourceCaptures("source").length)
  * ```
+ * @param id - Source identity whose captures are ordered by readability.
+ * @returns SPARQL query selecting current readable captures first, then catalog order.
  * @category queries
  * @since 0.0.0
  */
@@ -506,6 +520,8 @@ export const orderedSourceCaptures = (id: string) =>
  * import { readableSourceCaptures } from "@beep/repo-cli/commands/Research/Library/Library.views"
  * console.log(readableSourceCaptures("source").length)
  * ```
+ * @param id - Source identity whose current readable captures are selected.
+ * @returns SPARQL query selecting only validated current readable captures.
  * @category queries
  * @since 0.0.0
  */

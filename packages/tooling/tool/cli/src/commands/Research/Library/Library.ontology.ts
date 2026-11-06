@@ -173,6 +173,8 @@ export const libraryReferenceClass: {
  * import { libraryShapes } from "@beep/repo-cli/commands/Research/Library/Library.ontology"
  * console.log(libraryShapes)
  * ```
+ * @param assembled - Assembled ontology containing class and predicate identities.
+ * @returns SHACL node shapes derived from the ontology and catalog field schemas.
  * @category projections
  * @since 0.0.0
  */
@@ -222,6 +224,8 @@ export const libraryShapes = (assembled: AssembledOntology): ReadonlyArray<Shacl
  * import { libraryShapesDataset } from "@beep/repo-cli/commands/Research/Library/Library.ontology"
  * console.log(libraryShapesDataset)
  * ```
+ * @param shapes - Node shapes whose constraints and literal membership lists are serialized.
+ * @returns RDF dataset containing the complete SHACL constraints.
  * @category projections
  * @since 0.0.0
  */

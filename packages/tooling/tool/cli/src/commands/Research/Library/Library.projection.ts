@@ -104,7 +104,7 @@ export const libraryTopics = Effect.fn("Library.topics")(function* (repoRoot: st
 /**
  * Project decoded catalog records using predicate IRIs supplied by the fold.
  * **Details**
- * Evidence keys are source IDs or sourceId@revision for version assessments.
+ * Evidence keys are source IDs or `sourceId@revision` for version assessments.
  * Intake anchors become references only when the catalog contains the anchor.
  * **Example** (Inspect projection)
  * ```ts
