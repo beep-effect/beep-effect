@@ -75,6 +75,7 @@ export const qualifyOwnerCheckpointSnapshot = Effect.fn("OwnerCheckpoint.qualify
   const read = snapshot.read;
   if (
     snapshot.repository !== binding.repository ||
+    snapshot.base.repository !== binding.repository ||
     read.prNumber !== binding.prNumber ||
     read.headSha !== binding.head ||
     snapshot.state !== "open"
@@ -183,6 +184,14 @@ export const qualifyOwnerCheckpointEvidence = Effect.fn("OwnerCheckpoint.qualify
     classic > DateTime.toEpochMillis(now)
   )
     return yield* refuse("evidence");
+  if (evidence.finalCheck.base !== `origin/${evidence.classic.base.ref}`) return yield* refuse("binding");
+  const upstreamBase = evidence.observer.snapshot.base;
+  if (
+    upstreamBase.repository !== evidence.classic.base.repository ||
+    upstreamBase.ref !== evidence.classic.base.ref ||
+    upstreamBase.sha !== evidence.classic.base.sha
+  )
+    return yield* refuse("binding");
   yield* qualifyOwnerCheckpointSnapshot(binding, evidence.observer.snapshot, policy, now);
   return yield* qualifyOwnerCheckpointSnapshot(binding, evidence.classic, policy, now);
 });
@@ -216,8 +225,12 @@ const releaseOwner = Effect.fnUntraced(function* (
   yield* qualifyOwnerCheckpointEvidence(current.binding, evidence, policy, now);
   return mutation(
     current,
-    OwnerCheckpointState.cases.Released.make({ releaseId, evidenceDigest: evidence.digest }),
-    OwnerCheckpointIntent.cases.CheckReleased.make({ releaseId })
+    OwnerCheckpointState.cases.Released.make({
+      releaseId,
+      evidenceDigest: evidence.digest,
+      base: evidence.classic.base,
+    }),
+    OwnerCheckpointIntent.cases.CheckReleased.make({ releaseId, base: evidence.classic.base })
   );
 });
 const synchronizeOwner = Effect.fnUntraced(function* (current: OwnerCheckpointRecord, head: string) {
@@ -253,6 +266,12 @@ const claimOwner = Effect.fnUntraced(function* (
   now: DateTime.Utc
 ) {
   if (current.state._tag !== "Released") return yield* refuse("state");
+  if (
+    current.state.base.repository !== snapshot.base.repository ||
+    current.state.base.ref !== snapshot.base.ref ||
+    current.state.base.sha !== snapshot.base.sha
+  )
+    return yield* refuse("binding");
   yield* qualifyOwnerCheckpointSnapshot(current.binding, snapshot, policy, now);
   return mutation(
     current,

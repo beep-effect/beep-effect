@@ -1,4 +1,11 @@
-import { Annotation, CheckRun, CheckRunOutput, CheckRunRef } from "@beep/github/CheckRun";
+import {
+  Annotation,
+  CheckRun,
+  CheckRunCorrelationOptions,
+  CheckRunNativeIdentity,
+  CheckRunOutput,
+  CheckRunRef,
+} from "@beep/github/CheckRun";
 import { Repo, RepoRef } from "@beep/github/Repo";
 import { assert, it } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
@@ -8,6 +15,7 @@ import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { harness } from "./support/harness.ts";
 import type { ConcludeCheckRun } from "@beep/github/CheckRun";
 
@@ -171,6 +179,92 @@ it.layer(CheckRun.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" 
       const completion = yield* S.decodeEffect(JsonRecord)(script.calls[2]?.body ?? "{}");
       assert.strictEqual(completion.output, undefined);
       assert.strictEqual(completion.conclusion, "skipped");
+    })
+  );
+});
+
+const ownedHead = "0123456789012345678901234567890123456789";
+const nativeOwnedRow = {
+  id: 41,
+  name: "Owner checkpoint",
+  status: "completed",
+  html_url: "https://example.invalid/check/41",
+  app: { id: 456 },
+  applicationId: 999,
+  head_sha: ownedHead,
+  external_id: "owner-release-1",
+  conclusion: "success",
+  output: { title: "PRIVATE_UNSELECTED_BODY", summary: "PRIVATE_UNSELECTED_BODY" },
+};
+const owned = harness([
+  { status: 201, body: nativeOwnedRow },
+  { status: 201, body: nativeOwnedRow },
+]);
+it.layer(CheckRun.layer.pipe(Layer.provideMerge(owned.base)), { timeout: "30 seconds" })((it) => {
+  it.effect("direct and curried creation bind external metadata without claiming idempotency", () =>
+    Effect.gen(function* () {
+      const service = yield* CheckRun;
+      const options = CheckRunCorrelationOptions.make({ externalId: "owner-release-1" });
+      yield* service.create("Owner checkpoint", ownedHead, options);
+      yield* service.create(ownedHead, options)("Owner checkpoint");
+      const first = yield* S.decodeEffect(JsonRecord)(owned.script.calls[0]?.body ?? "{}");
+      const second = yield* S.decodeEffect(JsonRecord)(owned.script.calls[1]?.body ?? "{}");
+      assert.strictEqual(first.external_id, "owner-release-1");
+      assert.strictEqual(first.head_sha, ownedHead);
+      assert.deepStrictEqual(first, second);
+    })
+  );
+});
+const ownedRead = harness([{ status: 200, body: nativeOwnedRow }]);
+it.layer(CheckRun.layer.pipe(Layer.provideMerge(ownedRead.base)), { timeout: "30 seconds" })((it) => {
+  it.effect("native identity uses the same response App and drops unselected output", () =>
+    Effect.gen(function* () {
+      const service = yield* CheckRun;
+      const result = yield* service.get(41);
+      assert.deepStrictEqual(
+        result.nativeIdentity,
+        CheckRunNativeIdentity.make({
+          applicationId: 456,
+          headSha: ownedHead,
+          externalId: "owner-release-1",
+          conclusion: "success",
+        })
+      );
+      const serialized = yield* S.encodeEffect(S.fromJsonString(CheckRunRef))(result);
+      assert.isFalse(Str.includes("PRIVATE_UNSELECTED_BODY")(serialized));
+    })
+  );
+});
+const malformedNative = harness([{ status: 200, body: { ...nativeOwnedRow, head_sha: "short" } }]);
+it.layer(CheckRun.layer.pipe(Layer.provideMerge(malformedNative.base)), { timeout: "30 seconds" })((it) => {
+  it.effect("malformed native identity is a typed decode failure", () =>
+    Effect.gen(function* () {
+      const service = yield* CheckRun;
+      const error = yield* Effect.flip(service.get(41));
+      assert.strictEqual(error.kind, "decode");
+      assert.strictEqual(error.operation, "CheckRun.get");
+    })
+  );
+});
+
+const correlatedCompletion = harness([
+  { status: 200, body: {} },
+  { status: 200, body: {} },
+]);
+it.layer(CheckRun.layer.pipe(Layer.provideMerge(correlatedCompletion.base)), { timeout: "30 seconds" })((it) => {
+  it.effect("release and revocation correlate the same native run in direct and curried calls", () =>
+    Effect.gen(function* () {
+      const service = yield* CheckRun;
+      yield* service.complete(41, "success", undefined, CheckRunCorrelationOptions.make({ externalId: "release-1" }));
+      yield* service.complete("failure", undefined, CheckRunCorrelationOptions.make({ externalId: "revoke-2" }))(41);
+      const released = yield* S.decodeEffect(JsonRecord)(correlatedCompletion.script.calls[0]?.body ?? "{}");
+      const revoked = yield* S.decodeEffect(JsonRecord)(correlatedCompletion.script.calls[1]?.body ?? "{}");
+      assert.strictEqual(correlatedCompletion.script.calls[0]?.path, "/repos/acme/widget/check-runs/41");
+      assert.strictEqual(correlatedCompletion.script.calls[1]?.path, "/repos/acme/widget/check-runs/41");
+      assert.strictEqual(released.external_id, "release-1");
+      assert.strictEqual(released.conclusion, "success");
+      assert.strictEqual(revoked.external_id, "revoke-2");
+      assert.strictEqual(revoked.conclusion, "failure");
     })
   );
 });

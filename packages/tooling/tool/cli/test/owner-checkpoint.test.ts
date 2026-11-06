@@ -1,4 +1,42 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
+import { CheckRun } from "@beep/github/CheckRun";
+import {
+  dispatchOwnerCheckpointMerge,
+  FinalCheckGate,
+  FinalCheckReceipt,
+  FinalCheckStepResult,
+  MergeGateCheckRun,
+  MergeGateRead,
+  makeOwnerCheckpointPublisher,
+  makeOwnerCheckpointStore,
+  OwnerCheckpointBinding,
+  OwnerCheckpointClassicStatus,
+  OwnerCheckpointCommand,
+  OwnerCheckpointError,
+  OwnerCheckpointEvidence,
+  OwnerCheckpointObserver,
+  OwnerCheckpointPolicy,
+  OwnerCheckpointReceiptRef,
+  OwnerCheckpointRequest,
+  OwnerCheckpointSnapshot,
+  OwnerCheckpointState,
+  OwnerCheckpointStatusEvidence,
+  observeOwnerCheckpointMerge,
+  projectOwnerCheckpointClassicStatus,
+  projectOwnerCheckpointSelfCheck,
+  qualifyOwnerCheckpointEvidence,
+  qualifyOwnerCheckpointSnapshot,
+  RepoRunContext,
+  readOwnerCheckpointEvidenceReceipts,
+  readOwnerCheckpointSnapshot,
+  SquashCommitlintPass,
+  SquashCommitlintReport,
+  SquashCommitMessage,
+  YeetReviewWindowElapsed,
+} from "@beep/repo-cli/test/Yeet";
+import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { Sha256Hex } from "@beep/schema";
+import { NodeCrypto } from "@effect/platform-node";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -12,44 +50,10 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
-import {
-  FinalCheckGate,
-  FinalCheckReceipt,
-  FinalCheckStepResult,
-} from "../src/commands/Yeet/internal/FinalCheck.schemas.ts";
-import { MergeGateCheckRun, MergeGateRead } from "../src/commands/Yeet/internal/MergeGate.ts";
-import {
-  dispatchOwnerCheckpointMerge,
-  observeOwnerCheckpointMerge,
-} from "../src/commands/Yeet/internal/OwnerCheckpoint.merge.ts";
-import {
-  OwnerCheckpointBinding,
-  OwnerCheckpointClassicStatus,
-  OwnerCheckpointCommand,
-  OwnerCheckpointError,
-  OwnerCheckpointEvidence,
-  OwnerCheckpointObserver,
-  OwnerCheckpointPolicy,
-  OwnerCheckpointRequest,
-  OwnerCheckpointSnapshot,
-  OwnerCheckpointState,
-  OwnerCheckpointStatusEvidence,
-  projectOwnerCheckpointClassicStatus,
-  projectOwnerCheckpointSelfCheck,
-} from "../src/commands/Yeet/internal/OwnerCheckpoint.schemas.ts";
-import { makeOwnerCheckpointStore } from "../src/commands/Yeet/internal/OwnerCheckpoint.store.ts";
-import {
-  qualifyOwnerCheckpointEvidence,
-  qualifyOwnerCheckpointSnapshot,
-} from "../src/commands/Yeet/internal/OwnerCheckpoint.ts";
-import { YeetReviewWindowElapsed } from "../src/commands/Yeet/internal/ReviewWindow.ts";
-import {
-  SquashCommitlintPass,
-  SquashCommitlintReport,
-  SquashCommitMessage,
-} from "../src/commands/Yeet/internal/SquashCommitlint.ts";
 import pullFixture from "./fixtures/yeet-merge-gate/pull.json" with { type: "json" };
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { recordedGithub } from "./support/YeetGithub.ts";
+import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
 
 const head = Str.repeat(40)("a");
 const merge = Str.repeat(40)("b");
@@ -102,6 +106,7 @@ const read = (offset = -10, ownSuccess = false) =>
 const snapshot = (offset = -10, ownSuccess = false) =>
   OwnerCheckpointSnapshot.make({
     repository: binding.repository,
+    base: { repository: binding.repository, ref: "main", sha: merge },
     state: "open",
     read: read(offset, ownSuccess),
     selfCheck: { id: 2, applicationId: 123, run: O.getOrThrow(A.get(read(offset, ownSuccess).checkRuns, 1)) },
@@ -187,6 +192,9 @@ const livePull = (merged = false) => ({
   merged,
   merged_at: merged ? DateTime.formatIso(now) : null,
   draft: false,
+  title: "feat: fixed fixture",
+  mergeable_state: "clean",
+  base: { ...pullFixture.base, repo: { full_name: binding.repository } },
   head: { ...pullFixture.head, sha: head },
 });
 
@@ -334,105 +342,92 @@ describe("offline owner checkpoint", () => {
     })
   );
   it.effect("allows exactly one concurrent old-revision release and preserves one outbox intent", () =>
-    inMemory(
-      Effect.gen(function* () {
-        const store = yield* makeOwnerCheckpointStore();
-        yield* store.register(binding);
-        const results = yield* Effect.all(
-          [
-            store.apply(release(), policy, now).pipe(Effect.result),
-            store.apply(release(), policy, now).pipe(Effect.result),
-          ],
-          { concurrency: 2 }
-        );
-        expect(A.filter(results, Result.isSuccess)).toHaveLength(1);
-        expect(A.filter(results, Result.isFailure)).toHaveLength(1);
-        const entryOption = yield* store.outbox(binding, 1);
-        const entry = O.getOrThrow(entryOption);
-        expect(entry.intent._tag).toBe("CheckReleased");
-        expect(entry.delivery._tag).toBe("Pending");
-        const found7 = yield* store.read(binding);
-        expect(O.getOrThrow(found7).revision).toBe(1);
-      })
-    )
+    Effect.gen(function* () {
+      const store = yield* makeOwnerCheckpointStore();
+      yield* store.register(binding);
+      const results = yield* Effect.all(
+        [
+          store.apply(release(), policy, now).pipe(Effect.result),
+          store.apply(release(), policy, now).pipe(Effect.result),
+        ],
+        { concurrency: 2 }
+      );
+      expect(A.filter(results, Result.isSuccess)).toHaveLength(1);
+      expect(A.filter(results, Result.isFailure)).toHaveLength(1);
+      const entryOption = yield* store.outbox(binding, 1);
+      const entry = O.getOrThrow(entryOption);
+      expect(entry.intent._tag).toBe("CheckReleased");
+      expect(entry.delivery._tag).toBe("Pending");
+      const found7 = yield* store.read(binding);
+      expect(O.getOrThrow(found7).revision).toBe(1);
+    }).pipe(inMemory)
   );
   it.effect("rolls back owner state when outbox insertion fails", () =>
-    inMemory(
-      Effect.gen(function* () {
-        const store = yield* makeOwnerCheckpointStore();
-        yield* store.register(binding);
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`CREATE TRIGGER refuse_intent BEFORE INSERT ON yeet_owner_checkpoint_outbox
+    Effect.gen(function* () {
+      const store = yield* makeOwnerCheckpointStore();
+      yield* store.register(binding);
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`CREATE TRIGGER refuse_intent BEFORE INSERT ON yeet_owner_checkpoint_outbox
         WHEN NEW.revision = 1 BEGIN SELECT RAISE(ABORT, 'FIXTURE'); END`;
-        expect((yield* Effect.flip(store.apply(release(), policy, now))).reason).toBe("storage");
-        const found6 = yield* store.read(binding);
-        expect(O.getOrThrow(found6).revision).toBe(0);
-        const absentOutbox = yield* store.outbox(binding, 1);
-        expect(O.isNone(absentOutbox)).toBe(true);
-      })
-    )
+      expect((yield* Effect.flip(store.apply(release(), policy, now))).reason).toBe("storage");
+      const found6 = yield* store.read(binding);
+      expect(O.getOrThrow(found6).revision).toBe(0);
+      const absentOutbox = yield* store.outbox(binding, 1);
+      expect(O.isNone(absentOutbox)).toBe(true);
+    }).pipe(inMemory)
   );
   it.effect("cannot claim an unpublished, wrong-run, or nonsuccessful release check", () =>
-    inMemory(
-      Effect.gen(function* () {
-        const store = yield* releasedStore;
-        expect((yield* Effect.flip(store.apply(claim(), policy, now))).reason).toBe("publication");
-        yield* store.acknowledgePublication(binding, 1, 3);
-        expect((yield* Effect.flip(store.apply(claim(), policy, now))).reason).toBe("publication");
-      })
-    )
+    Effect.gen(function* () {
+      const store = yield* releasedStore;
+      expect((yield* Effect.flip(store.apply(claim(), policy, now))).reason).toBe("publication");
+      yield* store.acknowledgePublication(binding, 1, 3);
+      expect((yield* Effect.flip(store.apply(claim(), policy, now))).reason).toBe("publication");
+    }).pipe(inMemory)
   );
   it.effect("synchronization invalidates the old generation without deleting its intent", () =>
-    inMemory(
-      Effect.gen(function* () {
-        const store = yield* releasedStore;
-        const changed = yield* store.apply(
-          request(1, OwnerCheckpointCommand.cases.Synchronize.make({ head: Str.repeat(40)("f") })),
-          policy,
-          now
-        );
-        expect(changed.binding.generation).toBe(1);
-        expect(changed.state._tag).toBe("Held");
-        expect((yield* Effect.flip(store.apply(claim(), policy, now))).reason).toBe("binding");
-        const found5 = yield* store.outbox(binding, 1);
-        expect(O.getOrThrow(found5).intent._tag).toBe("CheckReleased");
-      })
-    )
+    Effect.gen(function* () {
+      const store = yield* releasedStore;
+      const changed = yield* store.apply(
+        request(1, OwnerCheckpointCommand.cases.Synchronize.make({ head: Str.repeat(40)("f") })),
+        policy,
+        now
+      );
+      expect(changed.binding.generation).toBe(1);
+      expect(changed.state._tag).toBe("Held");
+      expect((yield* Effect.flip(store.apply(claim(), policy, now))).reason).toBe("binding");
+      const found5 = yield* store.outbox(binding, 1);
+      expect(O.getOrThrow(found5).intent._tag).toBe("CheckReleased");
+    }).pipe(inMemory)
   );
   it.effect("refuses synchronization and revocation while a merge is in flight", () =>
-    inMemory(
-      Effect.gen(function* () {
-        const store = yield* claimedStore;
-        const sync = request(2, OwnerCheckpointCommand.cases.Synchronize.make({ head: Str.repeat(40)("f") }));
-        expect((yield* Effect.flip(store.apply(sync, policy, now))).reason).toBe("state");
-        yield* store.prepareDispatch(binding, 2);
-        yield* store.apply(request(2, OwnerCheckpointCommand.cases.Unknown.make({ claimId })), policy, now);
-        expect(
-          (yield* Effect.flip(
-            store.apply(
-              request(3, OwnerCheckpointCommand.cases.Synchronize.make({ head: Str.repeat(40)("f") })),
-              policy,
-              now
-            )
-          )).reason
-        ).toBe("state");
-        expect(
-          (yield* Effect.flip(store.apply(request(3, OwnerCheckpointCommand.cases.Revoke.make({})), policy, now)))
-            .reason
-        ).toBe("state");
-      })
-    )
+    Effect.gen(function* () {
+      const store = yield* claimedStore;
+      const sync = request(2, OwnerCheckpointCommand.cases.Synchronize.make({ head: Str.repeat(40)("f") }));
+      expect((yield* Effect.flip(store.apply(sync, policy, now))).reason).toBe("state");
+      yield* store.prepareDispatch(binding, 2);
+      yield* store.apply(request(2, OwnerCheckpointCommand.cases.Unknown.make({ claimId })), policy, now);
+      expect(
+        (yield* Effect.flip(
+          store.apply(
+            request(3, OwnerCheckpointCommand.cases.Synchronize.make({ head: Str.repeat(40)("f") })),
+            policy,
+            now
+          )
+        )).reason
+      ).toBe("state");
+      expect(
+        (yield* Effect.flip(store.apply(request(3, OwnerCheckpointCommand.cases.Revoke.make({})), policy, now))).reason
+      ).toBe("state");
+    }).pipe(inMemory)
   );
   it.effect("public reads reject a different owner or generation at the same PR key", () =>
-    inMemory(
-      Effect.gen(function* () {
-        const store = yield* makeOwnerCheckpointStore();
-        yield* store.register(binding);
-        expect(
-          (yield* Effect.flip(store.read(OwnerCheckpointBinding.make({ ...binding, generation: 1 })))).reason
-        ).toBe("binding");
-      })
-    )
+    Effect.gen(function* () {
+      const store = yield* makeOwnerCheckpointStore();
+      yield* store.register(binding);
+      expect((yield* Effect.flip(store.read(OwnerCheckpointBinding.make({ ...binding, generation: 1 })))).reason).toBe(
+        "binding"
+      );
+    }).pipe(inMemory)
   );
   it.effect("persists a dispatch fence across database reopen and refuses another dispatch", () =>
     Effect.scoped(
@@ -466,70 +461,512 @@ describe("offline owner checkpoint", () => {
     const github = recordedGithub((call) =>
       call.method === "PUT" ? { body: { merged: true, sha: merge, message: "merged" } } : { body: livePull() }
     );
-    return github.provide(
-      inMemory(
-        Effect.gen(function* () {
-          yield* TestClock.setTime(ms);
-          const store = yield* claimedStore;
-          const result = yield* dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy);
-          expect(result._tag).toBe("Confirmed");
-          const found2 = yield* store.read(binding);
-          expect(O.getOrThrow(found2).state._tag).toBe("Merged");
-          const puts = A.filter(github.calls, (call) => call.method === "PUT");
-          expect(puts).toHaveLength(1);
-          expect(puts[0]?.body).toEqual({ sha: head, merge_method: "squash" });
-        })
-      )
-    );
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const store = yield* claimedStore;
+      const result = yield* dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy);
+      expect(result._tag).toBe("Confirmed");
+      const found2 = yield* store.read(binding);
+      expect(O.getOrThrow(found2).state._tag).toBe("Merged");
+      const puts = A.filter(github.calls, (call) => call.method === "PUT");
+      expect(puts).toHaveLength(1);
+      expect(puts[0]?.body).toEqual({ sha: head, merge_method: "squash" });
+    }).pipe(inMemory, github.provide);
   });
   it.effect("retains uncertain dispatch when result persistence fails and never retries merge", () => {
     const github = recordedGithub((call) =>
       call.method === "PUT" ? { unreachable: "PRIVATE_NATIVE_FAILURE" } : { body: livePull() }
     );
-    return github.provide(
-      inMemory(
-        Effect.gen(function* () {
-          yield* TestClock.setTime(ms);
-          const store = yield* claimedStore;
-          const sql = yield* SqlClient.SqlClient;
-          yield* sql`CREATE TRIGGER refuse_result BEFORE UPDATE ON yeet_owner_checkpoint
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const store = yield* claimedStore;
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`CREATE TRIGGER refuse_result BEFORE UPDATE ON yeet_owner_checkpoint
         WHEN NEW.revision = 3 BEGIN SELECT RAISE(ABORT, 'FIXTURE'); END`;
-          const result = yield* dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy);
-          expect(result).toEqual({ _tag: "Uncertain", recording: "pending" });
-          const found1 = yield* store.outbox(binding, 2);
-          expect(O.getOrThrow(found1).delivery._tag).toBe("Dispatched");
-          expect(
-            (yield* Effect.flip(dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy))).reason
-          ).toBe("conflict");
-          expect(A.filter(github.calls, (call) => call.method === "PUT")).toHaveLength(1);
-          expect(String(result)).not.toContain("PRIVATE_NATIVE_FAILURE");
-        })
-      )
-    );
+      const result = yield* dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy);
+      expect(result).toEqual({ _tag: "Uncertain", recording: "pending" });
+      const found1 = yield* store.outbox(binding, 2);
+      expect(O.getOrThrow(found1).delivery._tag).toBe("Dispatched");
+      expect(
+        (yield* Effect.flip(dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy))).reason
+      ).toBe("conflict");
+      expect(A.filter(github.calls, (call) => call.method === "PUT")).toHaveLength(1);
+      expect(String(result)).not.toContain("PRIVATE_NATIVE_FAILURE");
+    }).pipe(inMemory, github.provide);
   });
   it.effect("recovers a confirmed same-PR/head merge by readback alone, retaining unknown commit SHA", () => {
     const github = recordedGithub(() => ({ body: livePull(true) }));
-    return github.provide(
-      inMemory(
-        Effect.gen(function* () {
-          yield* TestClock.setTime(ms);
-          const store = yield* claimedStore;
-          yield* store.prepareDispatch(binding, 2);
-          const result = yield* observeOwnerCheckpointMerge(store, binding, policy);
-          expect(result._tag).toBe("Confirmed");
-          if (result._tag === "Confirmed") expect(O.isNone(result.mergeCommit)).toBe(true);
-          const persistedOption = yield* store.read(binding);
-          const persisted = O.getOrThrow(persistedOption);
-          expect(persisted.state._tag).toBe("Merged");
-          if (persisted.state._tag === "Merged") expect(O.isNone(persisted.state.mergeCommit)).toBe(true);
-          expect(A.filter(github.calls, (call) => call.method === "PUT")).toHaveLength(0);
-        })
-      )
-    );
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const store = yield* claimedStore;
+      yield* store.prepareDispatch(binding, 2);
+      const result = yield* observeOwnerCheckpointMerge(store, binding, policy);
+      expect(result._tag).toBe("Confirmed");
+      if (result._tag === "Confirmed") expect(O.isNone(result.mergeCommit)).toBe(true);
+      const persistedOption = yield* store.read(binding);
+      const persisted = O.getOrThrow(persistedOption);
+      expect(persisted.state._tag).toBe("Merged");
+      if (persisted.state._tag === "Merged") expect(O.isNone(persisted.state.mergeCommit)).toBe(true);
+      expect(A.filter(github.calls, (call) => call.method === "PUT")).toHaveLength(0);
+    }).pipe(inMemory, github.provide);
   });
   it("rejects unknown states and shortened native identities on decode", () => {
     expect(Result.isFailure(S.decodeResult(OwnerCheckpointBinding)({ ...binding, head: "abc" }))).toBe(true);
     expect(Result.isFailure(S.decodeUnknownResult(OwnerCheckpointState)({ _tag: "ReadyAnyway" }))).toBe(true);
     expect(OwnerCheckpointError.make({ reason: "uncertain" }).reason).toBe("uncertain");
+  });
+});
+
+const context = RepoRunContext.make({
+  base: "origin/main",
+  branch: "fixture",
+  cwd: ".",
+  head,
+  originalArgv: [],
+  packetDir: ".beep/yeet",
+  repoRoot: ".",
+  turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
+});
+const nativeOwn = (externalId = "fixture-external") => ({
+  id: 2,
+  name: "Owner checkpoint",
+  status: "in_progress",
+  conclusion: O.getOrNull(O.none<string>()),
+  head_sha: head,
+  app: { id: policy.applicationId },
+  external_id: externalId,
+  html_url: "https://example.invalid/check/2",
+});
+const lintRun = {
+  id: 1,
+  name: "Lint",
+  status: "completed",
+  conclusion: "success",
+  head_sha: head,
+  app: { id: 7 },
+  external_id: null,
+};
+const upstreamRoute = (call: GithubCall, own = nativeOwn()): GithubAnswer | undefined => {
+  if (call.path === "{repo}/pulls/42") return { body: livePull() };
+  if (call.path === "{repo}/git/ref/heads/main") return { body: { object: { type: "commit", sha: merge } } };
+  if (call.path === `{repo}/commits/${head}/check-runs`)
+    return { body: { total_count: 2, check_runs: [lintRun, own] } };
+  if (Str.endsWith("/statuses")(call.path)) return { body: [] };
+  if (Str.endsWith("/rules/branches/main")(call.path))
+    return {
+      body: [
+        {
+          type: "required_status_checks",
+          parameters: { required_status_checks: [{ context: "Lint" }, { context: "Owner checkpoint" }] },
+        },
+      ],
+    };
+  if (call.path === "{repo}")
+    return {
+      body: {
+        id: 1,
+        name: "beep-effect",
+        full_name: binding.repository,
+        private: false,
+        default_branch: "main",
+        owner: { login: "beep-effect", id: 1 },
+        squash_merge_commit_title: "PR_TITLE",
+        squash_merge_commit_message: "PR_BODY",
+      },
+    };
+  if (Str.endsWith("/commits")(call.path)) return { body: [{ commit: { message: "feat: fixed fixture" } }] };
+  if (Str.startsWith("{repo}/compare/")(call.path))
+    return { body: { merge_base_commit: { sha: merge }, base_commit: { sha: merge } } };
+  if (call.path === `{repo}/commits/${merge}/check-runs`) return { body: { total_count: 1, check_runs: [lintRun] } };
+  if (Str.endsWith("/timeline")(call.path))
+    return { body: [{ event: "ready_for_review", created_at: "2026-11-05T00:00:00Z" }] };
+  if (Str.endsWith("/check-suites")(call.path))
+    return { body: { total_count: 1, check_suites: [{ created_at: "2026-11-05T00:00:00Z" }] } };
+  if (call.path === "/graphql")
+    return {
+      body: {
+        data: {
+          repository: {
+            pullRequest: {
+              author: { login: "owner" },
+              reviewThreads: { totalCount: 0, nodes: [], pageInfo: { hasNextPage: false, endCursor: null } },
+            },
+          },
+        },
+      },
+    };
+  return undefined;
+};
+const provideTestLayer =
+  <Out, Error, In>(layer: Layer.Layer<Out, Error, In>) =>
+  <Value, Failure, Requirements>(effect: Effect.Effect<Value, Failure, Requirements>) =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const services = yield* Layer.build(layer);
+        return yield* Effect.provideContext(effect, services);
+      })
+    );
+const offline = <Value, Error, Requirements>(effect: Effect.Effect<Value, Error, Requirements>) =>
+  effect.pipe(
+    provideSpawner(ScriptedSpawner.make(() => ({ stdout: "✔ found 0 problems, 0 warnings" }))),
+    provideTestLayer(NodeCrypto.layer)
+  );
+
+describe("inert owner native adapter", () => {
+  for (const failedPage of [false, true]) {
+    it.effect(`consumes native checks, statuses and review thread pages; second page failure=${failedPage}`, () => {
+      const github = recordedGithub((call) => {
+        const page2 = call.query.get("page") === "2";
+        if (call.path === `{repo}/commits/${head}/check-runs`)
+          return page2
+            ? failedPage
+              ? { status: 503 }
+              : { body: { total_count: 2, check_runs: [nativeOwn()] } }
+            : {
+                body: { total_count: 2, check_runs: [lintRun] },
+                headers: {
+                  link: ` <https://api.github.com/repos/beep-effect/beep-effect/commits/${head}/check-runs?page=2>; rel="next"`,
+                },
+              };
+        if (Str.endsWith("/statuses")(call.path))
+          return page2
+            ? { body: [] }
+            : {
+                body: [
+                  {
+                    id: 8,
+                    context: "classic",
+                    state: "success",
+                    creator: { login: "vendor" },
+                    description: null,
+                    target_url: null,
+                    updated_at: DateTime.formatIso(at(-1)),
+                  },
+                ],
+                headers: {
+                  link: `<https://api.github.com/repos/beep-effect/beep-effect/commits/${head}/statuses?page=2>; rel="next"`,
+                },
+              };
+        if (call.path === "/graphql") {
+          const body = Result.getOrThrow(
+            S.decodeUnknownResult(S.Struct({ variables: S.Struct({ after: S.String.pipe(S.NullOr, S.optionalKey) }) }))(
+              call.body
+            )
+          );
+          const last = body.variables.after === "page-2";
+          return {
+            body: {
+              data: {
+                repository: {
+                  pullRequest: {
+                    author: { login: "owner" },
+                    reviewThreads: {
+                      totalCount: 0,
+                      nodes: [],
+                      pageInfo: { hasNextPage: !last, endCursor: last ? null : "page-2" },
+                    },
+                  },
+                },
+              },
+            },
+          };
+        }
+        return upstreamRoute(call);
+      });
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const result = yield* readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external").pipe(
+          Effect.result
+        );
+        expect(Result.isSuccess(result)).toBe(!failedPage);
+        expect(A.some(github.calls, (call) => call.query.get("page") === "2")).toBe(true);
+        if (!failedPage) {
+          expect(A.filter(github.calls, (call) => Str.endsWith("/statuses")(call.path))).toHaveLength(2);
+          expect(A.filter(github.calls, (call) => call.path === "/graphql")).toHaveLength(2);
+        }
+      }).pipe(offline, github.provide);
+    });
+  }
+
+  it.effect("reads native App identity and actual base ref independently of stale PR base.sha", () => {
+    const github = recordedGithub(upstreamRoute);
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const result = yield* readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external");
+      expect(result.base.sha).toBe(merge);
+      expect(result.base.sha).not.toBe(pullFixture.base.sha);
+      expect(result.selfCheck.applicationId).toBe(123);
+      expect(A.filter(github.calls, (call) => call.path === "{repo}/git/ref/heads/main")).toHaveLength(2);
+    }).pipe(offline, github.provide);
+  });
+  for (const move of [
+    "head",
+    "base",
+    "base-repository",
+    "closed",
+    "wrong-app",
+    "wrong-external",
+    "malformed",
+    "threads-failed",
+    "status-only",
+  ]) {
+    it.effect(`refuses ${move} without treating unread evidence as success`, () => {
+      let refs = 0;
+      let pulls = 0;
+      const github = recordedGithub((call) => {
+        if (call.path === "{repo}/pulls/42") {
+          pulls++;
+          if (pulls > 2 && move === "head")
+            return { body: { ...livePull(), head: { ...livePull().head, sha: merge } } };
+          if (pulls > 2 && move === "closed") return { body: livePull(true) };
+          if (move === "base-repository")
+            return { body: { ...livePull(), base: { ref: "main", repo: { full_name: "other/repo" } } } };
+        }
+        if (call.path === "{repo}/git/ref/heads/main" && move === "base")
+          return { body: { object: { type: "commit", sha: refs++ === 0 ? merge : head } } };
+        if (call.path === `/graphql` && move === "threads-failed") return { status: 503 };
+        if (Str.endsWith("/rules/branches/main")(call.path) && move === "status-only")
+          return {
+            body: [
+              { type: "required_status_checks", parameters: { required_status_checks: [{ context: "classic-only" }] } },
+            ],
+          };
+        if (Str.endsWith("/statuses")(call.path) && move === "status-only")
+          return {
+            body: [
+              {
+                id: 12,
+                context: "classic-only",
+                state: "success",
+                creator: { login: "vendor" },
+                description: null,
+                target_url: null,
+                updated_at: DateTime.formatIso(at(-1)),
+              },
+            ],
+          };
+        if (call.path === `{repo}/commits/${head}/check-runs`) {
+          const own =
+            move === "wrong-app"
+              ? { ...nativeOwn(), app: { id: 999 }, applicationId: 123 }
+              : move === "wrong-external"
+                ? nativeOwn("wrong-pr")
+                : move === "malformed"
+                  ? { ...nativeOwn(), app: null }
+                  : nativeOwn();
+          return { body: { total_count: 2, check_runs: [lintRun, own] } };
+        }
+        return upstreamRoute(call);
+      });
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const error = yield* Effect.flip(readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external"));
+        expect(OwnerCheckpointError.make({ reason: error.reason }).reason).toBe(error.reason);
+      }).pipe(offline, github.provide);
+    });
+  }
+});
+
+describe("inert owner publication fence", () => {
+  for (const fault of ["lost-response", "failed-remember", "duplicates", "zero", "wrong-identity"]) {
+    it.effect(`reconciles ${fault} without a second create`, () => {
+      let own = nativeOwn();
+      let created = false;
+      const github = recordedGithub((call) => {
+        if (call.method === "POST" && call.path === "{repo}/check-runs") {
+          created = true;
+          const body = S.decodeUnknownResult(S.Struct({ external_id: S.String }))(call.body);
+          own = nativeOwn(Result.getOrThrow(body).external_id);
+          return fault === "lost-response" || fault === "zero" || fault === "duplicates"
+            ? { unreachable: "PRIVATE_LOST_RESPONSE" }
+            : { body: own };
+        }
+        if (call.path === "{repo}/check-runs/2")
+          return { body: fault === "wrong-identity" ? { ...own, id: 999 } : own };
+        if (Str.endsWith("/check-runs")(call.path))
+          return {
+            body: {
+              total_count: fault === "duplicates" ? 2 : fault === "zero" ? 0 : 1,
+              check_runs: !created || fault === "zero" ? [] : fault === "duplicates" ? [own, { ...own, id: 3 }] : [own],
+            },
+          };
+        return upstreamRoute(call, own);
+      });
+      return Effect.gen(function* () {
+        const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+        yield* publisher.owner.register(binding);
+        const sql = yield* SqlClient.SqlClient;
+        if (fault === "failed-remember")
+          yield* sql`CREATE TRIGGER refuse_anchor BEFORE INSERT ON yeet_owner_checkpoint_anchor BEGIN SELECT RAISE(ABORT, 'PRIVATE_DB_FAILURE'); END`;
+        const first = yield* publisher.publish(binding, 0);
+        if (fault === "failed-remember") yield* sql`DROP TRIGGER refuse_anchor`;
+        const second = yield* publisher.publish(binding, 0);
+        expect(
+          A.filter(github.calls, (call) => call.method === "POST" && call.path === "{repo}/check-runs")
+        ).toHaveLength(1);
+        expect(second._tag).toBe(
+          fault === "duplicates" || fault === "wrong-identity" ? "Held" : fault === "zero" ? "Unknown" : "Published"
+        );
+        const output = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))([first, second]);
+        expect(output).not.toContain("PRIVATE_");
+        expect(output).not.toContain(binding.owner);
+      }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+    });
+  }
+  it.effect("updates one native identity across release and revoke and rejects stale revisions", () => {
+    let own = nativeOwn();
+    const github = recordedGithub((call) => {
+      if (call.method === "POST" && call.path === "{repo}/check-runs") {
+        const data = Result.getOrThrow(S.decodeUnknownResult(S.Struct({ external_id: S.String }))(call.body));
+        own = nativeOwn(data.external_id);
+        return { body: own };
+      }
+      if (call.method === "PATCH") {
+        const data = Result.getOrThrow(
+          S.decodeUnknownResult(S.Struct({ external_id: S.String, conclusion: S.String }))(call.body)
+        );
+        own = { ...own, external_id: data.external_id, status: "completed", conclusion: data.conclusion };
+        return { body: own };
+      }
+      if (call.path === "{repo}/check-runs/2") return { body: own };
+      return upstreamRoute(call, own);
+    });
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+      yield* publisher.owner.register(binding);
+      expect((yield* publisher.publish(binding, 0))._tag).toBe("Published");
+      yield* publisher.owner.apply(release(), policy, now);
+      expect((yield* publisher.publish(binding, 1))._tag).toBe("Published");
+      const outbox = yield* publisher.owner.outbox(binding, 1);
+      expect(O.getOrThrow(outbox).delivery).toEqual({ _tag: "Published", checkRunId: 2 });
+      own = { ...own, conclusion: "failure" };
+      const nonsuccess = yield* publisher.publish(binding, 1);
+      expect(nonsuccess).toEqual({ _tag: "Held", reason: "native-status" });
+      own = { ...own, conclusion: "success" };
+      yield* publisher.owner.apply(request(1, OwnerCheckpointCommand.cases.Revoke.make({})), policy, now);
+      expect((yield* publisher.publish(binding, 2))._tag).toBe("Published");
+      expect((yield* Effect.flip(publisher.publish(binding, 1))).reason).toBe("conflict");
+      expect(
+        A.filter(github.calls, (call) => call.method === "POST" && call.path === "{repo}/check-runs")
+      ).toHaveLength(1);
+      expect(
+        A.map(
+          A.filter(github.calls, (call) => call.method === "PATCH"),
+          (call) => call.path
+        )
+      ).toEqual(["{repo}/check-runs/2", "{repo}/check-runs/2"]);
+      expect(own.conclusion).toBe("failure");
+    }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+  });
+});
+
+describe("authority receipt root", () => {
+  for (const fault of [
+    "none",
+    "hash",
+    "symlink",
+    "permissions",
+    "unfinished",
+    "stopped-monitor",
+    "post-finalization",
+    "wrong-binding",
+    "wrong-checkout",
+    "missing-family",
+    "base-moved",
+  ]) {
+    it.effect(`hashes bounded receipt bytes before decoding: ${fault}`, () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          yield* TestClock.setTime(ms);
+          const fs = yield* FileSystem.FileSystem;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "checkpoint-receipts-" });
+          yield* fs.chmod(root, 0o700);
+          const write = Effect.fnUntraced(function* (value: unknown) {
+            const text = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(value);
+            const hash = yield* sha256Hex(text);
+            const sha256 = Sha256Hex.make(hash);
+            const ref = OwnerCheckpointReceiptRef.make({ name: `${sha256}.json`, sha256 });
+            yield* fs.writeFileString(`${root}/${ref.name}`, text);
+            yield* fs.chmod(`${root}/${ref.name}`, 0o600);
+            return ref;
+          });
+          const rawObserver = yield* S.encodeEffect(S.toCodecJson(OwnerCheckpointObserver))(evidence.observer);
+          const encodedObserver = yield* S.decodeUnknownEffect(S.Record(S.String, S.Unknown))(rawObserver);
+          const observer = yield* write({
+            ...encodedObserver,
+            ...(fault === "unfinished" ? { phase: "running" } : {}),
+            ...(fault === "stopped-monitor" ? { mode: "publisher-submitted", outcome: "stopped" } : {}),
+          });
+          const encodedClassic = yield* S.encodeEffect(S.toCodecJson(OwnerCheckpointSnapshot))(
+            fault === "base-moved"
+              ? OwnerCheckpointSnapshot.make({ ...evidence.classic, base: { ...evidence.classic.base, sha: head } })
+              : evidence.classic
+          );
+          const classic = yield* write(encodedClassic);
+          const encodedFinal = yield* S.encodeEffect(S.toCodecJson(FinalCheckReceipt))(
+            FinalCheckReceipt.make({
+              ...finalCheck,
+              ...(fault === "post-finalization" ? { finishedAt: DateTime.formatIso(now) } : {}),
+              ...(fault === "missing-family" ? { steps: [] } : {}),
+            })
+          );
+          const final = yield* write(encodedFinal);
+          const manifest = yield* write({
+            version: "owner-checkpoint-receipts/v1",
+            checkout: fault === "wrong-checkout" ? releaseId : digest,
+            binding: fault === "wrong-binding" ? { ...binding, prNumber: 999 } : binding,
+            observer,
+            classic,
+            finalCheck: final,
+          });
+          if (fault === "hash") yield* fs.writeFileString(`${root}/${observer.name}`, "{}");
+          if (fault === "permissions") yield* fs.chmod(`${root}/${observer.name}`, 0o644);
+          if (fault === "symlink") {
+            yield* fs.rename(`${root}/${observer.name}`, `${root}/original.json`);
+            yield* fs.symlink(`${root}/original.json`, `${root}/${observer.name}`);
+          }
+          const result = yield* readOwnerCheckpointEvidenceReceipts(root, binding, manifest, policy, digest).pipe(
+            Effect.result
+          );
+          expect(Result.isSuccess(result)).toBe(fault === "none");
+          if (Result.isFailure(result))
+            expect(result.failure.reason).toBe(fault === "base-moved" ? "binding" : "evidence");
+        })
+      ).pipe(provideTestLayer(NodeServices.layer), offline)
+    );
+  }
+});
+
+describe("publication crash and revision serialization", () => {
+  it.effect("retains an ambiguous create fence after reopen and refuses a later revision overtaking it", () => {
+    const github = recordedGithub((call) =>
+      call.method === "POST" ? { unreachable: "PRIVATE_LOST_RESPONSE" } : { body: { total_count: 0, check_runs: [] } }
+    );
+    return Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "publication-fence-" });
+        const filename = `${directory}/owner.sqlite`;
+        yield* withDb(
+          filename,
+          Effect.gen(function* () {
+            const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+            yield* publisher.owner.register(binding);
+            expect((yield* publisher.publish(binding, 0))._tag).toBe("Unknown");
+          }).pipe(provideTestLayer(CheckRun.layer))
+        );
+        yield* withDb(
+          filename,
+          Effect.gen(function* () {
+            const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+            expect((yield* publisher.publish(binding, 0))._tag).toBe("Unknown");
+            yield* publisher.owner.apply(request(0, OwnerCheckpointCommand.cases.Revoke.make({})), policy, now);
+            expect((yield* Effect.flip(publisher.publish(binding, 1))).reason).toBe("uncertain");
+          }).pipe(provideTestLayer(CheckRun.layer))
+        );
+        expect(A.filter(github.calls, (call) => call.method === "POST")).toHaveLength(1);
+      })
+    ).pipe(provideTestLayer(NodeServices.layer), offline, github.provide);
   });
 });

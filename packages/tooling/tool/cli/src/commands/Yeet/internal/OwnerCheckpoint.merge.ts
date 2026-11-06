@@ -35,7 +35,8 @@ const unknown = Effect.fnUntraced(function* (
   record: OwnerCheckpointRecord,
   policy: OwnerCheckpointPolicy
 ) {
-  const now = DateTime.makeUnsafe(yield* Clock.currentTimeMillis);
+  const millis = yield* Clock.currentTimeMillis;
+  const now = DateTime.makeUnsafe(millis);
   if (record.state._tag !== "Claimed")
     return OwnerCheckpointMergeOutcome.cases.Uncertain.make({ recording: "pending" });
   const recorded = yield* store
@@ -89,7 +90,8 @@ export const dispatchOwnerCheckpointMerge = Effect.fn("OwnerCheckpoint.dispatchM
   snapshot: OwnerCheckpointSnapshot,
   policy: OwnerCheckpointPolicy
 ) {
-  const now = DateTime.makeUnsafe(yield* Clock.currentTimeMillis);
+  const millis = yield* Clock.currentTimeMillis;
+  const now = DateTime.makeUnsafe(millis);
   yield* assertRepository(binding);
   yield* qualifyOwnerCheckpointSnapshot(binding, snapshot, policy, now);
   const rest = yield* GithubRest;
@@ -158,7 +160,8 @@ export const observeOwnerCheckpointMerge = Effect.fn("OwnerCheckpoint.observeMer
   binding: OwnerCheckpointBinding,
   policy: OwnerCheckpointPolicy
 ) {
-  const now = DateTime.makeUnsafe(yield* Clock.currentTimeMillis);
+  const millis = yield* Clock.currentTimeMillis;
+  const now = DateTime.makeUnsafe(millis);
   yield* assertRepository(binding);
   const current = yield* store.read(binding);
   if (
