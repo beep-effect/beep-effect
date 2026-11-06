@@ -6,7 +6,7 @@
     "title": "Goal packet conflict-free appends",
     "status": "active",
     "created": "2026-11-05",
-    "updated": "2026-11-05",
+    "updated": "2026-11-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/goal-packet-conflict-free-appends",
@@ -46,27 +46,27 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
