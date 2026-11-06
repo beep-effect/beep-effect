@@ -71,11 +71,14 @@ the structural schema. A suspended document schema preserves the nominal decoded
 type while carrying the same key metadata and encoded representation. The fields
 now annotate that wrapper; chat draft reconciliation behavior is unchanged.
 Focused checks and package audit/docgen across the five consumer packages pass after this correction.
-A later hosted check reproduced an ordered-list declaration-consumer failure in
-law-practice server. Keeping the defaulted start union behind a suspended schema
-boundary simplifies declaration emit and restores that consumer check under the
-current compiler. The accepted zero/positive start values and default remain the
-same. The failed hosted heads remain evidence, not inherited/environment reds.
+A later hosted check reproduced an ordered-list consumer failure in the separate
+law-practice server test compilation. A suspended start-schema boundary simplifies
+the emitted declaration but was insufficient for that broader program. Importing
+the models and renderer from their owning public leaves resolves the full package
+check; no patent normalization behavior or root barrel export is changed. Source-only
+checking is not equivalent to the test program's check. The accepted zero/positive
+start values and default remain the same. Failed attempts and hosted heads remain
+evidence, not inherited/environment reds.
 
 ## Rejected and qualified inferences
 

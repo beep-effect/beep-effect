@@ -6,7 +6,8 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { Heading, Ol, renderPlainTextBlock } from "@beep/md";
+import { renderPlainTextBlock } from "@beep/md/Md.behavior";
+import { Heading, Ol } from "@beep/md/Md.model";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
