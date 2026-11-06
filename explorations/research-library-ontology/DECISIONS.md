@@ -40,7 +40,7 @@ package now lands in a moving topology).
 
 **Question:** How do ~400 non-GitHub, non-arXiv URLs per hop get acquired?
 
-**Answer:** New `packages/drivers/firecrawl` driver; `acquire` gains a
+**Answer:** New a new `@beep/firecrawl` driver package driver; `acquire` gains a
 native web route whose envelopes match the existing `Library.web.ts`
 validator (`raw-response`, `raw-full-text`, `extracted-full-text`; 2xx and
 `sourceURL` binding).

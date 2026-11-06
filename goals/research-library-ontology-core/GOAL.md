@@ -20,7 +20,7 @@ prose when they conflict.
 
 Scope:
 
-- In: `packages/tooling/tool/cli/src/commands/Research/Library/*`, its tests, `packages/foundation/modeling/rdf/src/Vocab/Dcat.ts`, `docs/runbooks/research-library.md`; generated `ontology/` files in the out-of-repo library root.
+- In: `packages/tooling/tool/cli/src/commands/Research/Library/*`, its tests, a `Dcat` vocabulary module in `@beep/rdf` beside its `Vocab` siblings, `docs/runbooks/research-library.md`; generated `ontology/` files in the out-of-repo library root.
 - Out: acquisition routes, hop-2 acquisition, new intakes, `packages/epistemic`, retained originals and receipts; no hand-authored Turtle/LinkML.
 
 Workflow:

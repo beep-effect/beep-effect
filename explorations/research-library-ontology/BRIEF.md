@@ -52,7 +52,7 @@ Firecrawl runs on the existing key, mining on existing pools (Junie first).
 - Topic scheme: SKOS concepts for every `goals/<slug>` and
   `explorations/<slug>`; a finding is relevant when it has `skos:related` to
   a live packet concept.
-- `research library ontology render` folds the models through
+- the `ontology render` subcommand folds the models through
   `@beep/ontology` into `ontology/research-library.ttl` and
   `ontology/research-library.shacl.ttl` in the library root;
   `research library verify` validates the catalog projection with

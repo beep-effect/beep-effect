@@ -40,11 +40,11 @@ research files; the intake will acquire them as hop-1 sources.
 | Research library command group | `packages/tooling/tool/cli/src/commands/Research/Library/` | extend |
 | `@beep/ontology` fold and projections | `packages/foundation/modeling/ontology/src/Fold.{assembly,projections,models}.ts` | reuse |
 | `@beep/identity` vocab registry | `packages/foundation/modeling/identity/src/{Vocab,Curie,Id}.ts` | reuse |
-| `@beep/rdf` PROV, evidence, vocabularies | `packages/foundation/modeling/rdf/src/{Prov,ProvRdf,Evidence}.ts`, `Vocab/` | reuse; `Vocab/Dcat.ts` NET-NEW |
+| `@beep/rdf` PROV, evidence, vocabularies | `packages/foundation/modeling/rdf/src/{Prov,ProvRdf,Evidence}.ts`, `Vocab/` | reuse; a `Dcat` vocabulary module NET-NEW |
 | `@beep/shacl` | `packages/drivers/shacl/src/Shacl.validation.ts` | reuse |
 | `@beep/oxigraph`, `@beep/n3`, `@beep/rdf-canonize` | `packages/drivers/{oxigraph,n3,rdf-canonize}/` | reuse |
 | `@beep/box` | `packages/drivers/box/src/Box.{service,streaming}.ts` | reuse as adapter |
-| Firecrawl driver | `packages/drivers/firecrawl/` | NET-NEW |
+| Firecrawl driver | `@beep/firecrawl` (planned drivers-family package) | NET-NEW |
 | Runbook | `docs/runbooks/research-library.md` | update |
 
 ## 5. Cross-links & provenance

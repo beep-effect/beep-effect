@@ -40,7 +40,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
-- `packages/drivers/firecrawl` (new, via `bun run beep create-package`):
+- a new `@beep/firecrawl` driver package (drivers family, via `bun run beep create-package`):
   config, errors, models, service, live layer, test layer.
 - `packages/tooling/tool/cli/src/commands/Research/Library/*`: `acquire`
   (web and Box routes), `inventory` (hop extraction), `import-result`

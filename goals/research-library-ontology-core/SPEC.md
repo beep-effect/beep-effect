@@ -47,7 +47,7 @@ Higher sources outrank lower sources when they conflict.
   service, render, verify, status, index facade).
 - `packages/tooling/tool/cli/test/Research/*` (replay fixtures, SHACL
   conformance, hash-equality render tests).
-- `packages/foundation/modeling/rdf/src/Vocab/Dcat.ts` (new vocabulary; the
+- a `Dcat` vocabulary module in `@beep/rdf` beside its `Vocab` siblings (new vocabulary; the
   only foundation change).
 - `docs/runbooks/research-library.md` (ontology render, verify, SPARQL views).
 - The out-of-repo library root: new `ontology/` directory with generated
@@ -101,7 +101,7 @@ Higher sources outrank lower sources when they conflict.
 - [ ] `Library.service.ts` is the `Context.Service` contract and live layer;
       `bun run beep architecture` and the command-topology lint report no
       role drift for the group; `index.ts` has no star re-export.
-- [ ] `bun run beep research library ontology render` writes
+- [ ] a new `ontology render` subcommand under `beep research library` writes
       `ontology/research-library.ttl` and `ontology/research-library.shacl.ttl`
       through `@beep/ontology` `fold` and `toTurtle`; `@beep/n3` parses both.
 - [ ] `bun run beep research library verify` validates the catalog projection
@@ -116,7 +116,7 @@ Higher sources outrank lower sources when they conflict.
 - [ ] The foundational-auditor verdicts (phase vs kind, rigidity of Source vs
       SourceVersion) are recorded as a decision file and reflected in the
       T-Box.
-- [ ] `Vocab/Dcat.ts` exists in `@beep/rdf` with the same shape and tests as
+- [ ] A `Dcat` vocabulary module exists in `@beep/rdf` with the same shape and tests as
       its siblings.
 - [ ] Runbook updated; no absolute or home-relative operator paths in repo
       files (`bun run beep knowledge refs --tree HEAD --check` passes for

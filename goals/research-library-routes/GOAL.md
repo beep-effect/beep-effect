@@ -20,7 +20,7 @@ prose when they conflict.
 
 Scope:
 
-- In: `packages/drivers/firecrawl` (new via `bun run beep create-package`), `packages/tooling/tool/cli/src/commands/Research/Library/*` (acquire, inventory, import-result, qualify, hop-gate policy), their tests, `docs/runbooks/research-library.md`.
+- In: a new `@beep/firecrawl` driver package (drivers family, via `bun run beep create-package`), `packages/tooling/tool/cli/src/commands/Research/Library/*` (acquire, inventory, import-result, qualify, hop-gate policy), their tests, `docs/runbooks/research-library.md`.
 - Out: catalog model changes (consume research-library-ontology-core), full hop-2 crawl, transitive GitHub, X bodies, video files in objects/, any intake run, new paid endpoints.
 
 Workflow:
