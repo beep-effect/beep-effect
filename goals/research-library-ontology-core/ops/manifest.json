@@ -27,13 +27,17 @@
     "pullRequests": [
       {
         "number": 2771,
+        "role": "supporting"
+      },
+      {
+        "number": 2787,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/feat_research-library-ontology-core-5223bafc4710/verdict.json",
+        "ref": ".beep/yeet/runs/docs_research-library-ontology-closeout-1b39a37c8168/verdict.json",
         "gating": true
       }
     ]
@@ -88,7 +92,7 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
@@ -110,6 +114,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2771
+    "finalPullRequest": 2787
   }
 }
