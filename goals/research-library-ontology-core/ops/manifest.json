@@ -39,7 +39,9 @@
     "research/FOUNDATIONAL-AUDIT-REVIEW.md",
     "research/FOUNDATIONAL-AUDIT.md",
     "research/OPPORTUNITIES.md",
-    "research/SOURCES.md"
+    "research/SOURCES.md",
+    "research/cache-baseline-request.json",
+    "research/cache-baseline-review.md"
   ],
   "agentLaunchers": [
     {
