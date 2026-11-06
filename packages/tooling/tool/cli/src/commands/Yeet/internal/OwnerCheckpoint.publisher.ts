@@ -19,9 +19,14 @@ import * as SqlClient from "effect/sql/SqlClient";
 import { readOwnerCheckpointSnapshot } from "./OwnerCheckpoint.adapter.ts";
 import { OwnerCheckpointBinding, OwnerCheckpointError } from "./OwnerCheckpoint.schemas.ts";
 import { makeOwnerCheckpointStore } from "./OwnerCheckpoint.store.ts";
+import { sameOwnerCheckpointBinding } from "./OwnerCheckpoint.ts";
 import type { CheckRunRef } from "@beep/github/CheckRun";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
-import type { OwnerCheckpointOutbox, OwnerCheckpointPolicy } from "./OwnerCheckpoint.schemas.ts";
+import type {
+  OwnerCheckpointOutbox,
+  OwnerCheckpointPolicy,
+  OwnerCheckpointSnapshot,
+} from "./OwnerCheckpoint.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/OwnerCheckpoint.publisher");
 const PositiveId = S.Int.check(S.isGreaterThan(0));
@@ -40,12 +45,6 @@ const PublicationJson = S.fromJsonString(Publication);
 const NativeCorrelation = S.Struct({ id: PositiveId, external_id: S.NullOr(S.String) });
 const refuse = (reason: OwnerCheckpointError["reason"]) => OwnerCheckpointError.make({ reason });
 const storage = () => refuse("storage");
-const sameBinding = (a: OwnerCheckpointBinding, b: OwnerCheckpointBinding) =>
-  a.repository === b.repository &&
-  a.prNumber === b.prNumber &&
-  a.owner === b.owner &&
-  a.head === b.head &&
-  a.generation === b.generation;
 
 /**
  * Finite publication outcome; uncertainty never authorizes another check creation.
@@ -83,6 +82,22 @@ const ownsNative = (row: CheckRunRef, binding: OwnerCheckpointBinding, policy: O
 const hold = (reason: Extract<OwnerCheckpointPublishOutcome, { readonly _tag: "Held" }>["reason"]) =>
   OwnerCheckpointPublishOutcome.cases.Held.make({ reason });
 const unknown = () => OwnerCheckpointPublishOutcome.cases.Unknown.make({});
+
+const sameBase = (a: OwnerCheckpointSnapshot["base"], b: OwnerCheckpointSnapshot["base"]) =>
+  a.sha === b.sha && a.ref === b.ref && a.repository === b.repository;
+const releaseBaseMatches = (entry: OwnerCheckpointOutbox, snapshot: OwnerCheckpointSnapshot) =>
+  entry.intent._tag === "CheckReleased" && sameBase(snapshot.base, entry.intent.base);
+const observedIdentityMatches = (
+  row: CheckRunRef,
+  entry: OwnerCheckpointOutbox,
+  id: number,
+  externalId: string,
+  policy: OwnerCheckpointPolicy
+) => row.id === id && ownsNative(row, entry.binding, policy) && row.nativeIdentity?.externalId === externalId;
+const observedStatusMatches = (row: CheckRunRef, released: boolean) =>
+  released
+    ? row.status === "completed" && row.nativeIdentity?.conclusion === "success"
+    : row.status === "in_progress" || (row.status === "completed" && row.nativeIdentity?.conclusion === "failure");
 
 /**
  * Build inert durable publication operations using the caller's SQLite service.
@@ -148,7 +163,7 @@ export const makeOwnerCheckpointPublisher = Effect.fn("OwnerCheckpoint.makePubli
     );
     if (rows.length === 0) return O.none<typeof Publication.Type>();
     const row = yield* decode((yield* required(A.head(rows))).payload).pipe(Effect.mapError(storage));
-    if (!sameBinding(row.binding, binding) || row.applicationId !== policy.applicationId)
+    if (!sameOwnerCheckpointBinding(row.binding, binding) || row.applicationId !== policy.applicationId)
       return yield* refuse("binding");
     return O.some(row);
   });
@@ -191,7 +206,7 @@ export const makeOwnerCheckpointPublisher = Effect.fn("OwnerCheckpoint.makePubli
           );
           const found = yield* decode((yield* required(A.head(rows))).payload).pipe(Effect.mapError(storage));
           if (
-            !sameBinding(found.binding, entry.binding) ||
+            !sameOwnerCheckpointBinding(found.binding, entry.binding) ||
             found.applicationId !== policy.applicationId ||
             found.externalId !== externalId
           )
@@ -245,39 +260,28 @@ export const makeOwnerCheckpointPublisher = Effect.fn("OwnerCheckpoint.makePubli
       )
       .pipe(Effect.mapError((error) => (S.is(OwnerCheckpointError)(error) ? error : storage())));
   });
+  const acknowledgeRelease = Effect.fnUntraced(function* (
+    entry: OwnerCheckpointOutbox,
+    externalId: string,
+    id: number
+  ) {
+    // Recovery of a lost response still needs fresh exact native prerequisites.
+    const snapshot = yield* readOwnerCheckpointSnapshot(context, entry.binding, id, policy, externalId);
+    if (!releaseBaseMatches(entry, snapshot)) return false;
+    const latest = yield* owner.outbox(entry.binding, entry.revision).pipe(Effect.flatMap(required));
+    if (latest.delivery._tag !== "Published") yield* owner.acknowledgePublication(entry.binding, entry.revision, id);
+    else if (latest.delivery.checkRunId !== id) return yield* refuse("conflict");
+    return true;
+  });
   const observe = Effect.fnUntraced(function* (entry: OwnerCheckpointOutbox, externalId: string, id: number) {
     const observed = yield* native.get(id).pipe(Effect.result);
     if (Result.isFailure(observed)) return unknown();
     const row = observed.success;
-    const identity = row.nativeIdentity;
-    if (
-      row.id !== id ||
-      identity === undefined ||
-      !ownsNative(row, entry.binding, policy) ||
-      identity.externalId !== externalId
-    )
-      return hold("native-identity");
+    if (!observedIdentityMatches(row, entry, id, externalId, policy)) return hold("native-identity");
     const released = entry.intent._tag === "CheckReleased";
-    const matches = released
-      ? row.status === "completed" && identity.conclusion === "success"
-      : row.status === "in_progress" || (row.status === "completed" && identity.conclusion === "failure");
-    if (!matches) return hold("native-status");
+    if (!observedStatusMatches(row, released)) return hold("native-status");
     yield* current(entry.binding, entry.revision);
-    if (released) {
-      // Reconcile a lost response only after fresh native prerequisites; an old
-      // successful row alone cannot acknowledge an outbox after base/head moves.
-      const snapshot = yield* readOwnerCheckpointSnapshot(context, entry.binding, id, policy, externalId);
-      if (
-        entry.intent._tag !== "CheckReleased" ||
-        snapshot.base.sha !== entry.intent.base.sha ||
-        snapshot.base.ref !== entry.intent.base.ref ||
-        snapshot.base.repository !== entry.intent.base.repository
-      )
-        return hold("native-identity");
-      const latest = yield* owner.outbox(entry.binding, entry.revision).pipe(Effect.flatMap(required));
-      if (latest.delivery._tag !== "Published") yield* owner.acknowledgePublication(entry.binding, entry.revision, id);
-      else if (latest.delivery.checkRunId !== id) return yield* refuse("conflict");
-    }
+    if (released && !(yield* acknowledgeRelease(entry, externalId, id))) return hold("native-identity");
     const recorded = yield* remember(entry, externalId, id).pipe(Effect.result);
     if (Result.isFailure(recorded)) return unknown();
     return OwnerCheckpointPublishOutcome.cases.Published.make({
@@ -297,6 +301,50 @@ export const makeOwnerCheckpointPublisher = Effect.fn("OwnerCheckpoint.makePubli
     if (O.exists(expected, (id) => id !== match.id)) return hold("native-identity");
     return yield* observe(entry, externalId, match.id);
   });
+  const ownedAnchorMatches = (
+    row: CheckRunRef,
+    binding: OwnerCheckpointBinding,
+    id: number,
+    previous: O.Option<typeof Publication.Type>
+  ) =>
+    row.id === id &&
+    ownsNative(row, binding, policy) &&
+    O.exists(previous, (anchor) => anchor.externalId === row.nativeIdentity?.externalId);
+  const releaseBaseUnchanged = Effect.fnUntraced(function* (
+    before: O.Option<OwnerCheckpointSnapshot>,
+    entry: OwnerCheckpointOutbox,
+    id: number,
+    externalId: string
+  ) {
+    if (O.isNone(before)) return true;
+    const after = yield* readOwnerCheckpointSnapshot(context, entry.binding, id, policy, externalId);
+    return before.value.base.sha === after.base.sha && before.value.base.ref === after.base.ref;
+  });
+  const readReleaseSnapshot = Effect.fnUntraced(function* (entry: OwnerCheckpointOutbox, id: number, row: CheckRunRef) {
+    if (entry.intent._tag !== "CheckReleased") return undefined;
+    return yield* readOwnerCheckpointSnapshot(context, entry.binding, id, policy, row.nativeIdentity?.externalId ?? "");
+  });
+  const updateAnchor = Effect.fnUntraced(function* (
+    entry: OwnerCheckpointOutbox,
+    externalId: string,
+    previous: O.Option<typeof Publication.Type>,
+    id: number
+  ) {
+    const options = CheckRunCorrelationOptions.make({ externalId });
+    const existing = yield* native.get(id).pipe(Effect.result);
+    if (Result.isFailure(existing)) return unknown();
+    if (!ownedAnchorMatches(existing.success, entry.binding, id, previous)) return hold("native-identity");
+    const beforeSnapshot = yield* readReleaseSnapshot(entry, id, existing.success);
+    const before = O.fromUndefinedOr(beforeSnapshot);
+    if (beforeSnapshot !== undefined && !releaseBaseMatches(entry, beforeSnapshot)) return hold("native-identity");
+    yield* current(entry.binding, entry.revision);
+    const written = yield* native
+      .complete(id, entry.intent._tag === "CheckReleased" ? "success" : "failure", undefined, options)
+      .pipe(Effect.result);
+    if (Result.isFailure(written)) return yield* recover(entry, externalId, O.some(id));
+    if (!(yield* releaseBaseUnchanged(before, entry, id, externalId))) return hold("native-identity");
+    return yield* observe(entry, externalId, id);
+  });
   const publish = Effect.fn("OwnerCheckpoint.publish")(
     function* (binding: OwnerCheckpointBinding, revision: number) {
       const state = yield* current(binding, revision);
@@ -313,44 +361,7 @@ export const makeOwnerCheckpointPublisher = Effect.fn("OwnerCheckpoint.makePubli
       }
       if (O.isNone(attempt.anchor)) return hold("anchor-missing");
       const id = attempt.anchor.value;
-      const existing = yield* native.get(id).pipe(Effect.result);
-      if (Result.isFailure(existing)) return unknown();
-      if (
-        existing.success.id !== id ||
-        !ownsNative(existing.success, binding, policy) ||
-        !O.exists(attempt.previous, (row) => row.externalId === existing.success.nativeIdentity?.externalId)
-      )
-        return hold("native-identity");
-      const beforeSnapshot =
-        state.entry.intent._tag === "CheckReleased"
-          ? yield* readOwnerCheckpointSnapshot(
-              context,
-              binding,
-              id,
-              policy,
-              existing.success.nativeIdentity?.externalId ?? ""
-            )
-          : undefined;
-      const before = O.fromUndefinedOr(beforeSnapshot);
-      if (
-        beforeSnapshot !== undefined &&
-        state.entry.intent._tag === "CheckReleased" &&
-        (beforeSnapshot.base.sha !== state.entry.intent.base.sha ||
-          beforeSnapshot.base.ref !== state.entry.intent.base.ref ||
-          beforeSnapshot.base.repository !== state.entry.intent.base.repository)
-      )
-        return hold("native-identity");
-      yield* current(binding, revision);
-      const written = yield* native
-        .complete(id, state.entry.intent._tag === "CheckReleased" ? "success" : "failure", undefined, options)
-        .pipe(Effect.result);
-      if (Result.isFailure(written)) return yield* recover(state.entry, externalId, O.some(id));
-      if (O.isSome(before)) {
-        const after = yield* readOwnerCheckpointSnapshot(context, binding, id, policy, externalId);
-        if (before.value.base.sha !== after.base.sha || before.value.base.ref !== after.base.ref)
-          return hold("native-identity");
-      }
-      return yield* observe(state.entry, externalId, id);
+      return yield* updateAnchor(state.entry, externalId, attempt.previous, id);
     },
     Effect.timeoutOrElse({ duration: "30 seconds", orElse: () => Effect.succeed(unknown()) })
   );

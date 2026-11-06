@@ -16,7 +16,7 @@ import {
   OwnerCheckpointRecord,
   OwnerCheckpointState,
 } from "./OwnerCheckpoint.schemas.ts";
-import { transitionOwnerCheckpoint } from "./OwnerCheckpoint.ts";
+import { sameOwnerCheckpointBinding, transitionOwnerCheckpoint } from "./OwnerCheckpoint.ts";
 import type * as DateTime from "effect/DateTime";
 import type {
   OwnerCheckpointBinding,
@@ -35,12 +35,6 @@ const storage = () => OwnerCheckpointError.make({ reason: "storage" });
 const conflict = () => OwnerCheckpointError.make({ reason: "conflict" });
 const requiredValue = <Value>(value: O.Option<Value>) =>
   Effect.fromOption(value).pipe(Effect.mapError(() => OwnerCheckpointError.make({ reason: "missing" })));
-const sameBinding = (a: OwnerCheckpointBinding, b: OwnerCheckpointBinding) =>
-  a.repository === b.repository &&
-  a.prNumber === b.prNumber &&
-  a.owner === b.owner &&
-  a.head === b.head &&
-  a.generation === b.generation;
 
 /**
  * Open the offline owner tables in an explicitly provided SQLite service.
@@ -74,7 +68,8 @@ export const makeOwnerCheckpointStore = Effect.fn("OwnerCheckpoint.makeStore")(f
       WHERE repository=${binding.repository} AND pr=${binding.prNumber}`.pipe(Effect.mapError(storage));
     if (rows.length === 0) return O.none<OwnerCheckpointRecord>();
     const found = yield* decodeRecord((yield* requiredValue(A.head(rows))).payload).pipe(Effect.mapError(storage));
-    if (!sameBinding(found.binding, binding)) return yield* OwnerCheckpointError.make({ reason: "binding" });
+    if (!sameOwnerCheckpointBinding(found.binding, binding))
+      return yield* OwnerCheckpointError.make({ reason: "binding" });
     return O.some(found);
   });
   const outbox = Effect.fn("OwnerCheckpoint.outbox")(function* (binding: OwnerCheckpointBinding, revision: number) {
@@ -84,7 +79,8 @@ export const makeOwnerCheckpointStore = Effect.fn("OwnerCheckpoint.makeStore")(f
     );
     if (rows.length === 0) return O.none<OwnerCheckpointOutbox>();
     const found = yield* decodeOutbox((yield* requiredValue(A.head(rows))).payload).pipe(Effect.mapError(storage));
-    if (!sameBinding(found.binding, binding)) return yield* OwnerCheckpointError.make({ reason: "binding" });
+    if (!sameOwnerCheckpointBinding(found.binding, binding))
+      return yield* OwnerCheckpointError.make({ reason: "binding" });
     return O.some(found);
   });
   const append = Effect.fnUntraced(function* (entry: OwnerCheckpointOutbox) {
@@ -169,7 +165,8 @@ export const makeOwnerCheckpointStore = Effect.fn("OwnerCheckpoint.makeStore")(f
   });
   const readRevision = Effect.fnUntraced(function* (binding: OwnerCheckpointBinding, revision: number) {
     const current = yield* read(binding).pipe(Effect.flatMap(requiredValue));
-    if (!sameBinding(current.binding, binding) || current.revision !== revision) return yield* conflict();
+    if (!sameOwnerCheckpointBinding(current.binding, binding) || current.revision !== revision)
+      return yield* conflict();
     return current;
   });
   const apply = Effect.fn("OwnerCheckpoint.apply")(function* (

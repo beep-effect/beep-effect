@@ -61,6 +61,42 @@ const NativeRule = S.Struct({
 }).pipe(
   $I.annoteSchema("NativeRule", { description: "Native required context and optional integration App binding." })
 );
+const collectNativeRows = Effect.fnUntraced(function* <Value, Error, Requirements>(
+  stream: Stream.Stream<Value, Error, Requirements>
+): Effect.fn.Return<ReadonlyArray<Value>, OwnerCheckpointError, Requirements> {
+  const rows = yield* stream.pipe(Stream.take(MAX_NATIVE_ROWS + 1), Stream.runCollect, Effect.mapError(readFailure));
+  if (rows.length > MAX_NATIVE_ROWS) return yield* refuse("evidence");
+  return rows;
+});
+const assertApplicationCheck = Effect.fnUntraced(function* (
+  checks: ReadonlyArray<typeof NativeCheck.Type>,
+  name: string,
+  app: number,
+  selfCheckId: number,
+  policy: OwnerCheckpointPolicy
+) {
+  const matching = A.filter(checks, (run) => run.name === name && run.app.id === app);
+  const latest = A.reduce(matching, O.none<typeof NativeCheck.Type>(), (found, row) =>
+    O.exists(found, (old) => old.id >= row.id) ? found : O.some(row)
+  );
+  if (O.isNone(latest)) return yield* refuse("gate");
+  const own = latest.value.id === selfCheckId && name === policy.context && app === policy.applicationId;
+  if (!own && (latest.value.status !== "completed" || latest.value.conclusion !== "success"))
+    return yield* refuse("gate");
+});
+const assertContextApplications = Effect.fnUntraced(function* (
+  checks: ReadonlyArray<typeof NativeCheck.Type>,
+  required: ReadonlyArray<typeof NativeRequiredContext.Type>,
+  name: string,
+  selfCheckId: number,
+  policy: OwnerCheckpointPolicy
+) {
+  const constraints = A.filter(required, (rule) => rule.context === name);
+  const apps = A.dedupe(A.getSomes(A.map(constraints, (rule) => O.fromNullishOr(rule.integration_id))));
+  if (name === policy.context && A.some(apps, (app) => app !== policy.applicationId)) return yield* refuse("gate");
+  if (apps.length > 1) return yield* refuse("gate");
+  for (const app of apps) yield* assertApplicationCheck(checks, name, app, selfCheckId, policy);
+});
 const assertRequiredApplications = Effect.fnUntraced(function* (
   read: MergeGateRead,
   checks: ReadonlyArray<typeof NativeCheck.Type>,
@@ -86,22 +122,7 @@ const assertRequiredApplications = Effect.fnUntraced(function* (
     )
   )
     return yield* refuse("evidence");
-  for (const name of names) {
-    const constraints = A.filter(required, (rule) => rule.context === name);
-    const apps = A.dedupe(A.getSomes(A.map(constraints, (rule) => O.fromNullishOr(rule.integration_id))));
-    if (name === policy.context && A.some(apps, (app) => app !== policy.applicationId)) return yield* refuse("gate");
-    if (apps.length > 1) return yield* refuse("gate");
-    for (const app of apps) {
-      const matching = A.filter(checks, (run) => run.name === name && run.app.id === app);
-      const latest = A.reduce(matching, O.none<typeof NativeCheck.Type>(), (found, row) =>
-        O.exists(found, (old) => old.id >= row.id) ? found : O.some(row)
-      );
-      if (O.isNone(latest)) return yield* refuse("gate");
-      const own = latest.value.id === selfCheckId && name === policy.context && app === policy.applicationId;
-      if (!own && (latest.value.status !== "completed" || latest.value.conclusion !== "success"))
-        return yield* refuse("gate");
-    }
-  }
+  for (const name of names) yield* assertContextApplications(checks, required, name, selfCheckId, policy);
 });
 
 const assertCurrentPull = Effect.fnUntraced(function* (pull: GithubPullRequestRecord, binding: OwnerCheckpointBinding) {
@@ -213,8 +234,7 @@ export const readOwnerCheckpointSnapshot = Effect.fn("OwnerCheckpoint.readNative
     const at = { owner: repository.owner, repo: repository.repo, ref: binding.head };
     const checkRows = yield* client
       .paginateStream("GET /repos/{owner}/{repo}/commits/{ref}/check-runs", at)
-      .pipe(Stream.take(MAX_NATIVE_ROWS + 1), Stream.runCollect, Effect.mapError(readFailure));
-    if (checkRows.length > MAX_NATIVE_ROWS) return yield* refuse("evidence");
+      .pipe(collectNativeRows);
     const checks = yield* S.decodeUnknownEffect(S.Array(NativeCheck))(checkRows).pipe(Effect.mapError(readFailure));
     yield* assertCheckCensus(read, checks, binding);
     const ruleRows = yield* client
@@ -223,8 +243,7 @@ export const readOwnerCheckpointSnapshot = Effect.fn("OwnerCheckpoint.readNative
         repo: repository.repo,
         branch: base.ref,
       })
-      .pipe(Stream.take(MAX_NATIVE_ROWS + 1), Stream.runCollect, Effect.mapError(readFailure));
-    if (ruleRows.length > MAX_NATIVE_ROWS) return yield* refuse("evidence");
+      .pipe(collectNativeRows);
     const rules = yield* S.decodeUnknownEffect(S.Array(NativeRule))(ruleRows).pipe(Effect.mapError(readFailure));
     yield* assertRequiredApplications(read, checks, rules, selfCheckId, policy);
     const own = A.findFirst(checks, (row) => row.id === selfCheckId);
@@ -232,8 +251,7 @@ export const readOwnerCheckpointSnapshot = Effect.fn("OwnerCheckpoint.readNative
     const selfCheck = yield* projectOwnerCheckpointSelfCheck(own.value);
     const statusRows = yield* client
       .paginateStream("GET /repos/{owner}/{repo}/commits/{ref}/statuses", at)
-      .pipe(Stream.take(MAX_NATIVE_ROWS + 1), Stream.runCollect, Effect.mapError(readFailure));
-    if (statusRows.length > MAX_NATIVE_ROWS) return yield* refuse("evidence");
+      .pipe(collectNativeRows);
     const statuses = yield* Effect.forEach(statusRows, projectOwnerCheckpointClassicStatus);
     if (A.dedupe(A.map(statuses, (row) => row.id)).length !== statuses.length) return yield* refuse("evidence");
     // The retained merge gate models required check runs. Status-only names stay
