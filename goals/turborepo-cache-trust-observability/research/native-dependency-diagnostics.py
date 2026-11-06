@@ -53,15 +53,28 @@ def encoded(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
 
 
-def read_source(path):
+def read_source(path, expected=None):
+    """Read bounded source bytes, or compare retained bytes without a full copy."""
     fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     with os.fdopen(fd, "rb") as handle:
         info = os.fstat(handle.fileno())
         require(stat.S_ISREG(info.st_mode), "source-not-regular")
         require(0 < info.st_size < ARTIFACT_LIMIT, "source-size-bound")
-        data = handle.read(ARTIFACT_LIMIT)
-        require(len(data) == info.st_size, "source-read-drift")
-    return data
+        if expected is None:
+            data = handle.read(info.st_size + 1)
+            require(len(data) == info.st_size, "source-read-drift")
+            return data
+        if info.st_size != len(expected):
+            return False
+        view = memoryview(expected)
+        for offset in range(0, info.st_size, 64 * 1024):
+            size = min(64 * 1024, info.st_size - offset)
+            chunk = handle.read(size)
+            require(len(chunk) == size, "source-read-drift")
+            if chunk != view[offset:offset + size]:
+                return False
+        require(handle.read(1) == b"", "source-read-drift")
+        return True
 
 
 def memory_location(trace):
@@ -217,6 +230,7 @@ def observe(source_path, revision):
     started = time.monotonic()
     deadline = started + DEADLINE_SECONDS
     source_bytes = read_source(source_path)
+    source_size = len(source_bytes)
     source = json.loads(source_bytes)
     require(source["schemaVersion"] == "cache-producer-workflow/v2", "source-version")
     require(bool(re.fullmatch(r"[a-f0-9]{40}", source["revision"])), "source-revision")
@@ -224,19 +238,25 @@ def observe(source_path, revision):
     declared = source["toolchain"]["installedDependencies"]
     require(declared["format"] == "canonical-gnu-tar/v1", "dependency-format")
     require(bool(HEX64.fullmatch(declared["sha256"])), "dependency-digest")
+    source_revision = source["revision"]
+    declared_digest = declared["sha256"]
+    source_digest = hashlib.sha256(source_bytes).hexdigest()
+    # The full source-file inventory is not needed during either archive pass.
+    del source, declared
     first = snapshot(deadline)
     second = snapshot(deadline)
     before = {row[0]: row for row in first["groups"]}
     after = {row[0]: row for row in second["groups"]}
     changed = sorted(key for key in before.keys() | after.keys() if before.get(key) != after.get(key))
     stable = first == second
-    matched = first["sha256"] == declared["sha256"]
-    unchanged = source_bytes == read_source(source_path)
+    matched = first["sha256"] == declared_digest
+    unchanged = read_source(source_path, source_bytes)
+    del source_bytes
     report = {
         "schemaVersion": "cache-dependency-diagnostics/v1",
         "authority": "Observation only; no producer approval, qualification or digest normalization.",
-        "revision": source["revision"], "sourceReportSha256": hashlib.sha256(source_bytes).hexdigest(),
-        "declaredSha256": declared["sha256"],
+        "revision": source_revision, "sourceReportSha256": source_digest,
+        "declaredSha256": declared_digest,
         "status": "stable-match" if stable and matched and unchanged else "refused-drift",
         "sourceUnchanged": unchanged, "declaredDigestMatches": matched, "snapshotsEqual": stable,
         "columns": ["package", "entries", "files", "bytes", "contentSha256", "modeSha256", "linksSha256", "headersSha256"],
@@ -250,7 +270,7 @@ def observe(source_path, revision):
         "elapsedSeconds": round(time.monotonic() - started, 3),
     }
     result = encoded(report) + b"\n"
-    require(len(source_bytes) + len(result) <= ARTIFACT_LIMIT, "aggregate-artifact-bound")
+    require(source_size + len(result) <= ARTIFACT_LIMIT, "aggregate-artifact-bound")
     return result, 0 if report["status"] == "stable-match" else 1
 
 
