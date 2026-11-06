@@ -269,6 +269,7 @@ const turboJobTable = Effect.fnUntraced(function* (documents: {
     [check, "test-unit-shard", true],
     [check, "property-laws", true],
     [check, "fallow-advisory", false],
+    [check, "jsdoc-ratchet", false],
     [yield* workflowJobs(documents.heavyWorkflow), "verify", true],
     [yield* workflowJobs(documents.storybook), "storybook", false],
   ] satisfies ReadonlyArray<readonly [WorkflowJobs, string, boolean]>;
@@ -1125,7 +1126,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
   // The browser cache is keyed on the resolved Playwright version (audit M13):
   // a bun.lock key stored a new Chromium on every lockfile change.
   it.effect(
-    "gates the Storybook lane on docs_only alone and keeps the browser cache push-saved",
+    "gates Storybook browser setup on dependency selection and keeps the browser cache push-saved",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -1158,9 +1159,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.notInclude(workflowText, "storybook_relevant");
       const workflowJobs14 = yield* workflowJobs(workflow);
       const steps = jobSteps(workflowJobs14, "storybook");
-      const gate = "steps.lane-gate.outputs.should_run == 'true'";
+      const setupGate = "steps.lane-gate.outputs.should_run == 'true'";
+      for (const name of ["Setup monorepo CI", "Select Storybook before browser provisioning"]) {
+        assert.strictEqual(stepByName(steps, name).if, setupGate, name);
+      }
+      const gate = "steps.storybook-selection.outputs.should_run == 'true'";
       for (const name of [
-        "Setup monorepo CI",
         "Resolve Playwright version",
         "Restore Playwright Chromium cache",
         "Install Playwright Chromium",

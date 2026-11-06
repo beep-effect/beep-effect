@@ -9,6 +9,7 @@ import {
   CiLanePartitionShard,
   CiLaneRunOptions,
   CiLocalStepPlan,
+  ciLaneCommand,
   ciLaneDefaultPlacementLinesForTesting,
   ciLaneDefaultPlacements,
   ciLanePartitionArgsForTesting,
@@ -33,11 +34,17 @@ import {
 } from "@beep/repo-cli/test/SharedInternals";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
+import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodeStdio from "@effect/platform-node/NodeStdio";
+import * as NodeTerminal from "@effect/platform-node/NodeTerminal";
 import { describe, expect, vi } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -1714,6 +1721,11 @@ describe("ciLaneStepsForTesting", () => {
         expect(workflow).toContain('if [[ "$docs_only" == "true" ]]; then');
         expect(workflow).toContain('shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")');
         expect(workflow).toContain('run_lane ci lane storybook "${shape_args[@]}"');
+        expect(workflow).toContain('bun run beep ci lane storybook --selection-only "${shape_args[@]}"');
+        const selection = Str.indexOf("- name: Select Storybook before browser provisioning")(workflow);
+        const browser = Str.indexOf("- name: Install Playwright Chromium")(workflow);
+        expect(O.getOrThrow(selection)).toBeLessThan(O.getOrThrow(browser));
+        expect(workflow).toContain("if: steps.storybook-selection.outputs.should_run == 'true'");
       })
     );
   });
@@ -1806,6 +1818,37 @@ it.layer(storybookCiLayer(unselectedStorybook), { timeout: "10 seconds" })(
     );
   }
 );
+
+for (const selected of [false, true]) {
+  const probe = storybookSpawner(
+    storybookDryRun(selected ? [{ package: "@beep/storybook", task: "storybook:build" }] : [])
+  );
+  it.layer(storybookCiLayer(probe), { timeout: "10 seconds" })(`storybook selection-only (${selected})`, (it) => {
+    it.effect("writes the dependency-aware decision without provisioning or running the lane", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const output = yield* fs.makeTempFileScoped();
+          yield* Command.runWith(ciLaneCommand, { version: "0.0.0" })([
+            "storybook",
+            "--selection-only",
+            "--affected",
+            "--base",
+            "origin/main",
+          ]).pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ GITHUB_OUTPUT: output }))
+          );
+          expect(probe.spawns).toHaveLength(1);
+          expect(spawnLine(firstOf(probe.spawns))).toBe(storybookProbeLine);
+          expect(firstOf(probe.spawns).env).toMatchObject({ TURBO_SCM_BASE: "origin/main" });
+          const contents = yield* fs.readFileString(output);
+          expect(contents).toContain("should_run");
+          expect(contents).toContain(selected ? "true" : "false");
+        })
+      ).pipe(provideScopedLayer(Layer.mergeAll(NodeFileSystem.layer, NodeStdio.layer, NodeTerminal.layer)))
+    );
+  });
+}
 
 const foreignStorybook = storybookSpawner(
   storybookDryRun([
