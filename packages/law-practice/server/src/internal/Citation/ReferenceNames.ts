@@ -67,6 +67,24 @@ const onlyDigits = Effect.fn("Citation.referenceNameIsDigit")(function* (source:
   }
   return source.pythonLength > 0;
 });
+/** Authenticate and detach the original exclusion list before retaining configuration.
+ * @internal @category operations @since 0.0.0
+ */
+export const copyCitationReferenceExclusions = Effect.fn("Citation.copyReferenceExclusions")(function* (
+  namesInput: unknown
+) {
+  const names = yield* S.decodeUnknownEffect(Names)(namesInput).pipe(
+    Effect.mapError(() => fail("invalid-configuration"))
+  );
+  const encoded = yield* S.encodeEffect(NamesJson)(names).pipe(Effect.mapError(() => fail("invalid-configuration")));
+  const digest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(encoded)).pipe(
+    Effect.mapError(() => fail("invalid-configuration")),
+    Effect.catchDefect(() => Effect.fail(fail("invalid-configuration")))
+  );
+  if (digest !== "4a6957a33e8862f93f0c45d8a73a27548205b7363ae8524781bbe89a887165c9")
+    return yield* fail("invalid-configuration");
+  return A.copy(names);
+});
 /** Capture source-authenticated name data and existing Python primitives.
  * Invoke inside the enclosing extraction operation so native copies/lowercase
  * output consume its captured text authority. Methods require R=never; this
@@ -78,16 +96,7 @@ export const makeCitationReferenceNames = Effect.fn("Citation.makeReferenceNames
   namesInput: unknown
 ) {
   const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
-  const names = yield* S.decodeUnknownEffect(Names)(namesInput).pipe(
-    Effect.mapError(() => fail("invalid-configuration"))
-  );
-  const encoded = yield* S.encodeEffect(NamesJson)(names).pipe(Effect.mapError(() => fail("invalid-configuration")));
-  const digest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(encoded)).pipe(
-    Effect.mapError(() => fail("invalid-configuration")),
-    Effect.catchDefect(() => Effect.fail(fail("invalid-configuration")))
-  );
-  if (digest !== "4a6957a33e8862f93f0c45d8a73a27548205b7363ae8524781bbe89a887165c9")
-    return yield* fail("invalid-configuration");
+  const names = yield* copyCitationReferenceExclusions(namesInput);
   const disallowed = HashSet.fromIterable(names);
   const characters = yield* makeCitationPythonCharacters();
   const lower = yield* makeCitationPythonLower(limits);

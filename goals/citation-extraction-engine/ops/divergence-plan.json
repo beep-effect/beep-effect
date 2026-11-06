@@ -231,7 +231,11 @@
         "packages/law-practice/use-cases/test/fixtures/eyecite/reference-template.json",
         "goals/citation-extraction-engine/ops/probe-reference-template.py",
         "goals/citation-extraction-engine/ops/verify-reference-template.py",
-        "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-pattern-construction.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-pattern-construction.md",
+        "packages/law-practice/server/src/internal/Citation/GeneratedReferences.ts",
+        "packages/law-practice/server/test/CitationGeneratedReferences.fixtures.ts",
+        "packages/law-practice/server/test/CitationGeneratedReferences.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-pin-references.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

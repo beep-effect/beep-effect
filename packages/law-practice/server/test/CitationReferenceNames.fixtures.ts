@@ -26,6 +26,12 @@ const Corpus = S.fromJsonString(
 ).pipe(
   $I.annoteSchema("Corpus", { description: "Sealed original name-validity calls and unmodified disallowed list." })
 );
+/** Read the single sealed original generated-reference corpus for every target replay.
+ * @internal @category testing @since 0.0.0
+ */
+export const readCitationGeneratedReferenceSource = Effect.fn("ReferenceNamesTest.source")(() =>
+  readCitationOracleFixture("generated-references", "a741045d3c71ca4437c54e3af1781063c5ec66c091bfdfc4a4dbb2abce5d4006")
+);
 /** Construct the shared builtin metadata context for reference-name and pattern replay.
  * @internal @category testing @since 0.0.0
  */
@@ -49,10 +55,7 @@ export const makeCitationReferenceNameMetadata = (
  * @internal @category testing @since 0.0.0
  */
 export const replayCitationReferenceNames = Effect.fn("ReferenceNamesTest.replay")(function* () {
-  const corpus = yield* readCitationOracleFixture(
-    "generated-references",
-    "a741045d3c71ca4437c54e3af1781063c5ec66c091bfdfc4a4dbb2abce5d4006"
-  ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
+  const corpus = yield* readCitationGeneratedReferenceSource().pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   const limits = (yield* defaultCitationEnginePolicy).limits;
   const budget = yield* makeCitationTextBudget(limits);
   const names = yield* makeCitationReferenceNames(limits, corpus.disallowedNames).pipe(

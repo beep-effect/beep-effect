@@ -23,10 +23,11 @@ import {
   makeCitationPythonUnicode,
   measureCitationPythonSlice,
 } from "./PythonUnicode.ts";
-import { makeCitationReferenceNames } from "./ReferenceNames.ts";
+import { copyCitationReferenceExclusions, makeCitationReferenceNames } from "./ReferenceNames.ts";
 import { CitationRegexPatternDescriptor, CitationRegexPatternProfile } from "./RegexDescriptors.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationTextBudget } from "./TextBudget.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationCaseMetadataFields } from "./CaseMetadata.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ReferencePatterns");
@@ -114,6 +115,21 @@ const words = Effect.fn("Citation.referenceMarkupWords")(function* (value: Citat
   }
   return output;
 });
+/** Authenticate fixed templates and exclusions before retaining an installed stage.
+ * @internal @category operations @since 0.0.0
+ */
+export const copyCitationReferencePatternConfiguration = Effect.fn("Citation.copyReferencePatternConfiguration")(
+  function* (limits: CitationEngineLimits, config: CitationReferencePatternConfiguration) {
+    const copied = yield* copyCitationMetadataPatterns(limits, config.patterns, fingerprints, () =>
+      fail("invalid-configuration")
+    );
+    const patterns = yield* S.decodeUnknownEffect(Patterns)(copied).pipe(
+      Effect.mapError(() => fail("invalid-configuration"))
+    );
+    const disallowedNames = yield* copyCitationReferenceExclusions(config.disallowedNames);
+    return CitationReferencePatternConfiguration.make({ patterns, disallowedNames });
+  }
+);
 /** Literal-only expansion retains Python point identity, including surrogate words.
  * Shared Unicode assembly preflights output before allocating. The enclosing
  * extraction owner supplies the text authority; methods require R=never.

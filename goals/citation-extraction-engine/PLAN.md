@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Generated plain-reference checkpoint (2026-11-06): original pin-reference
+construction now connects validated names, source patterns and existing owned
+regex workers to complete fresh reference models. All 101 direct source cases
+match 66 references on both runtimes, with 64 source-driven plus one refusal child
+exit each. Final selection accepts the generated model spans and non-resource
+classification. Markup generation and the full extraction loop remain open. See
+[execution evidence](history/evidence/2026-11-06-generated-pin-references.md).
+
 Reference-pattern checkpoint (2026-11-06): validated native names now expand
 source-authenticated pin/markup templates with exact Python escaping. All 65
 existing generated patterns and 278 additional original literal cases match

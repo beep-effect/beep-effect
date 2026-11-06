@@ -16,6 +16,7 @@ import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { CitationOperationAdmission } from "./Admission.ts";
+import { CitationGeneratedReference } from "./GeneratedReferences.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { citationPythonPointAt, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
@@ -113,14 +114,26 @@ const fullPair = (left: CitationExtractionSelectionEntry, right: CitationExtract
   left.kind === "FullCaseCitation" && right.kind === "FullCaseCitation";
 const shortSupra = (left: CitationExtractionSelectionEntry, right: CitationExtractionSelectionEntry) =>
   left.kind === "ShortCaseCitation" && right.kind === "SupraCitation";
+const isGeneratedReference = S.is(CitationGeneratedReference);
 /** Project actual constructed models without copying their text or minting semantic identity.
  * @internal @category operations @since 0.0.0
  */
 export const projectCitationExtractionSelection = Effect.fn("Citation.projectExtractionSelection")(function* (
   id: number,
-  result: CitationFullExtractionResult | CitationReferenceTokenResult
+  result: CitationFullExtractionResult | CitationReferenceTokenResult | CitationGeneratedReference
 ) {
-  if (result.token.data === null) return yield* fail("invalid-input");
+  const data = result.token.data;
+  if (data === null) return yield* fail("invalid-input");
+  if (isGeneratedReference(result))
+    return CitationExtractionSelectionEntry.make({
+      id,
+      kind: result._tag,
+      span: Tuple.make(result.spanStart, result.spanEnd),
+      fullSpan: Tuple.make(result.fullSpanStart, result.fullSpanEnd),
+      matched: data,
+      parenthetical: result.metadata.parenthetical,
+      hasEdition: false,
+    });
   const state = result.outcome;
   const spanEnd = "spanEnd" in state ? state.spanEnd : null;
   const span = Tuple.make(result.token.start, spanEnd ?? result.token.end);
@@ -129,7 +142,7 @@ export const projectCitationExtractionSelection = Effect.fn("Citation.projectExt
     kind: state._tag,
     span,
     fullSpan: Tuple.make(state.fullSpanStart ?? span[0], state.fullSpanEnd ?? span[1]),
-    matched: result.token.data,
+    matched: data,
     parenthetical: state.metadata.parenthetical,
     hasEdition: "editionGuess" in state && state.editionGuess !== null,
   });

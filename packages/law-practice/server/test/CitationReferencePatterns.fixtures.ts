@@ -22,20 +22,33 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { makeCitationReferenceNameMetadata } from "./CitationReferenceNames.fixtures.ts";
+import {
+  makeCitationReferenceNameMetadata,
+  readCitationGeneratedReferenceSource,
+} from "./CitationReferenceNames.fixtures.ts";
 import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationReferencePattern } from "@beep/law-practice-server/internal/Citation/ReferencePatterns";
 
 const $I = $LawPracticeServerId.create("test/CitationReferencePatterns");
-const Names = S.Struct({
-  plaintiff: CitationNativeUnicodeHex.pipe(S.NullOr, S.optionalKey),
-  defendant: CitationNativeUnicodeHex.pipe(S.NullOr, S.optionalKey),
-  resolved_case_name_short: CitationNativeUnicodeHex.pipe(S.NullOr, S.optionalKey),
-  resolved_case_name: CitationNativeUnicodeHex.pipe(S.NullOr, S.optionalKey),
-}).pipe(
-  $I.annoteSchema("Names", { description: "Original controlled four-name metadata; missing law fields remain absent." })
-);
+/** Original four-name source projection, shared by pattern and generated-model replays.
+ * @internal @category testing @since 0.0.0
+ */
+export class CitationReferenceSourceNames extends S.Opaque<
+  CitationReferenceSourceNames,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    plaintiff: CitationNativeUnicodeHex.pipe(S.NullOr, S.optionalKey),
+    defendant: CitationNativeUnicodeHex.pipe(S.NullOr, S.optionalKey),
+    resolved_case_name_short: CitationNativeUnicodeHex.pipe(S.NullOr, S.optionalKey),
+    resolved_case_name: CitationNativeUnicodeHex.pipe(S.NullOr, S.optionalKey),
+  }).pipe(
+    $I.annoteSchema("CitationReferenceSourceNames", {
+      description: "Original controlled four-name metadata; missing law fields remain absent.",
+    })
+  )
+) {}
 const Corpus = S.fromJsonString(
   S.Struct({
     disallowedNames: S.Array(S.String),
@@ -43,7 +56,10 @@ const Corpus = S.fromJsonString(
       S.Struct({ ...CitationRegexPatternDescriptor.fields, pattern: CitationNativeUnicodeHex, id: S.String })
     ),
     cases: S.Array(
-      S.Struct({ citation: S.Struct({ metadata: Names }), calls: S.Array(S.Struct({ pattern: S.String })) })
+      S.Struct({
+        citation: S.Struct({ metadata: CitationReferenceSourceNames }),
+        calls: S.Array(S.Struct({ pattern: S.String })),
+      })
     ),
   })
 ).pipe($I.annoteSchema("Corpus", { description: "Original generated-reference patterns, name state and call order." }));
@@ -73,18 +89,31 @@ const Template = S.fromJsonString(
 );
 const ownName = (value: CitationNativeUnicodeHex | null | undefined) =>
   value === null || value === undefined ? null : CitationPythonUnicodeStorage.make(value);
+/** Load original literal template data through its exact source seal.
+ * @internal @category testing @since 0.0.0
+ */
+export const readCitationReferenceTemplate = Effect.fn("ReferencePatternsTest.template")(() =>
+  readCitationOracleFixture(
+    "reference-template",
+    "25b2e91fac26f724a24f9822d299169cdc2dde8cd55cb91f1210b01f97ff9e68"
+  ).pipe(Effect.flatMap(S.decodeEffect(Template)))
+);
+/** Supply native builtin metadata from the original four source name fields.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationReferenceMetadataFromSource = (m: CitationReferenceSourceNames) =>
+  makeCitationReferenceNameMetadata({
+    plaintiff: ownName(m.plaintiff),
+    defendant: ownName(m.defendant),
+    resolvedCaseNameShort: ownName(m.resolved_case_name_short),
+    resolvedCaseName: ownName(m.resolved_case_name),
+  });
 /** Compare every actually observed dynamic source pattern/profile and bind its compiler facts.
  * @internal @category testing @since 0.0.0
  */
 export const replayCitationReferencePatterns = Effect.fn("ReferencePatternsTest.replay")(function* () {
-  const corpus = yield* readCitationOracleFixture(
-    "generated-references",
-    "a741045d3c71ca4437c54e3af1781063c5ec66c091bfdfc4a4dbb2abce5d4006"
-  ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
-  const template = yield* readCitationOracleFixture(
-    "reference-template",
-    "25b2e91fac26f724a24f9822d299169cdc2dde8cd55cb91f1210b01f97ff9e68"
-  ).pipe(Effect.flatMap(S.decodeEffect(Template)));
+  const corpus = yield* readCitationGeneratedReferenceSource().pipe(Effect.flatMap(S.decodeEffect(Corpus)));
+  const template = yield* readCitationReferenceTemplate();
   const limits = (yield* defaultCitationEnginePolicy).limits;
   const budget = yield* makeCitationTextBudget(limits);
   const configuration = { patterns: template.patterns, disallowedNames: corpus.disallowedNames };
@@ -96,13 +125,7 @@ export const replayCitationReferencePatterns = Effect.fn("ReferencePatternsTest.
   yield* Effect.forEach(
     corpus.cases,
     Effect.fnUntraced(function* (row) {
-      const m = row.citation.metadata;
-      const metadata = makeCitationReferenceNameMetadata({
-        plaintiff: ownName(m.plaintiff),
-        defendant: ownName(m.defendant),
-        resolvedCaseNameShort: ownName(m.resolved_case_name_short),
-        resolvedCaseName: ownName(m.resolved_case_name),
-      });
+      const metadata = citationReferenceMetadataFromSource(row.citation.metadata);
       yield* Effect.forEach(
         row.calls,
         Effect.fnUntraced(function* (call) {
