@@ -1306,7 +1306,7 @@ const isMissingCounterlessCoverageCandidate = (
   filePath: string
 ): boolean =>
   !R.has(files, filePath) &&
-  Str.startsWith(`${entry.baseline.path}/src/`)(filePath) &&
+  Str.startsWith(entry.baseline.path === "." ? "src/" : `${entry.baseline.path}/src/`)(filePath) &&
   (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath)) &&
   !Str.endsWith(".d.ts")(filePath);
 
@@ -1337,9 +1337,19 @@ const isExistingCounterlessCoverageSource = Effect.fn("CoverageRegression.isExis
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const absolute = path.resolve(repoRoot, filePath);
-  const resolved = yield* fs.realPath(absolute).pipe(Effect.option);
-  if (O.isNone(resolved) || !Str.startsWith(`${packageRoot}${path.sep}`)(resolved.value)) return false;
-  const text = yield* fs.readFileString(absolute).pipe(Effect.option);
+  const resolved = yield* Effect.all({
+    repo: fs.realPath(repoRoot),
+    package: fs.realPath(packageRoot),
+    file: fs.realPath(absolute),
+  }).pipe(Effect.option);
+  if (O.isNone(resolved)) return false;
+  if (
+    (resolved.value.package !== resolved.value.repo &&
+      !Str.startsWith(`${resolved.value.repo}${path.sep}`)(resolved.value.package)) ||
+    !Str.startsWith(`${resolved.value.package}${path.sep}`)(resolved.value.file)
+  )
+    return false;
+  const text = yield* fs.readFileString(resolved.value.file).pipe(Effect.option);
   return O.exists(text, (value) => isPureExternalReexportSource(filePath, value));
 });
 

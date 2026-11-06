@@ -880,6 +880,103 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         ).toBe(true);
       })
     );
+    it.effect("canonicalizes checkout aliases and refuses file or package escapes and unresolved roots", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "coverage-counterless-alias-" });
+        const root = path.join(temporary, "checkout");
+        const alias = path.join(temporary, "checkout-alias");
+        const sourceRoot = path.join(root, "packages/existing/src");
+        const externalPackage = path.join(temporary, "external-package");
+        yield* fs.makeDirectory(sourceRoot, { recursive: true });
+        yield* fs.makeDirectory(path.join(externalPackage, "src"), { recursive: true });
+        yield* fs.writeFileString(path.join(sourceRoot, "index.ts"), "export * from './Body.ts';");
+        yield* fs.writeFileString(path.join(root, "Outside.ts"), "export * from './Other.ts';");
+        yield* fs.writeFileString(path.join(externalPackage, "src/index.ts"), "export * from './Body.ts';");
+        yield* fs.symlink(root, alias);
+        yield* fs.symlink(path.join(root, "Outside.ts"), path.join(sourceRoot, "Escaped.ts"));
+        yield* fs.symlink(externalPackage, path.join(root, "packages/escaped"));
+        const packages = {
+          "@beep/existing": CoveragePackageBaseline.make({
+            path: "packages/existing",
+            ...coveragePercentages(100),
+            uncovered: coverageUncovered(0),
+            files: {
+              "packages/existing/src/index.ts": coverageFileBaseline(100, 0),
+              "packages/existing/src/Escaped.ts": coverageFileBaseline(100, 0),
+            },
+          }),
+          "@beep/escaped": CoveragePackageBaseline.make({
+            path: "packages/escaped",
+            ...coveragePercentages(100),
+            uncovered: coverageUncovered(0),
+            files: { "packages/escaped/src/index.ts": coverageFileBaseline(100, 0) },
+          }),
+        };
+        const baseline = CoverageRegressionBaseline.make({ ...coverageRegressionBaseline, packages });
+        const measured = A.map(R.toEntries(packages), ([packageName, row]) =>
+          CoverageSnapshotEntry.make({
+            packageName,
+            baseline: CoveragePackageBaseline.make({ ...row, files: {} }),
+          })
+        );
+        for (const checkout of [root, alias]) {
+          const completed = yield* completeCounterlessCoverageFilesForTesting(checkout, baseline, measured);
+          const existing = A.getUnsafe(completed, 0).baseline;
+          const escaped = A.getUnsafe(completed, 1).baseline;
+          expect(R.keys(existing.files)).toEqual(["packages/existing/src/index.ts"]);
+          expect(escaped.files).toEqual({});
+          expect({ ...existing, files: {} }).toEqual(A.getUnsafe(measured, 0).baseline);
+          expect(escaped).toEqual(A.getUnsafe(measured, 1).baseline);
+        }
+        const unavailable = path.join(temporary, "unavailable-checkout");
+        yield* fs.symlink(path.join(temporary, "missing-target"), unavailable);
+        const unresolved = yield* completeCounterlessCoverageFilesForTesting(unavailable, baseline, measured);
+        expect(unresolved).toEqual(measured);
+      })
+    );
+    it.effect("completes root-package re-exports through physical and aliased checkout roots", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "coverage-counterless-root-" });
+        const root = path.join(temporary, "checkout");
+        const alias = path.join(temporary, "checkout-alias");
+        const sourceRoot = path.join(root, "src");
+        yield* fs.makeDirectory(sourceRoot, { recursive: true });
+        yield* fs.writeFileString(path.join(sourceRoot, "index.ts"), "export * from './Body.ts';");
+        yield* fs.writeFileString(path.join(sourceRoot, "Runtime.ts"), "export const value = 1;");
+        const outside = path.join(temporary, "Outside.ts");
+        yield* fs.writeFileString(outside, "export * from './Other.ts';");
+        yield* fs.symlink(outside, path.join(sourceRoot, "Escaped.ts"));
+        yield* fs.symlink(root, alias);
+        const row = CoveragePackageBaseline.make({
+          path: ".",
+          ...coveragePercentages(50),
+          uncovered: coverageUncovered(2),
+          files: {
+            "src/index.ts": coverageFileBaseline(100, 0),
+            "src/Runtime.ts": coverageFileBaseline(100, 0),
+            "src/Escaped.ts": coverageFileBaseline(100, 0),
+          },
+        });
+        const baseline = CoverageRegressionBaseline.make({
+          ...coverageRegressionBaseline,
+          packages: { "@beep/root": row },
+        });
+        const measured = CoverageSnapshotEntry.make({
+          packageName: "@beep/root",
+          baseline: CoveragePackageBaseline.make({ ...row, files: {} }),
+        });
+        for (const checkout of [root, alias]) {
+          const completed = yield* completeCounterlessCoverageFilesForTesting(checkout, baseline, [measured]);
+          const actual = A.getUnsafe(completed, 0).baseline;
+          expect(actual.files).toEqual({ "src/index.ts": coverageFileBaseline(100, 0) });
+          expect({ ...actual, files: {} }).toEqual(measured.baseline);
+        }
+      })
+    );
     it.effect("adds only new measured identities while preserving every committed floor and unrelated owner", () =>
       Effect.gen(function* () {
         const existing = "packages/existing/src/Existing.ts";
