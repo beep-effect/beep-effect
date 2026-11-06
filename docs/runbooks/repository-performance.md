@@ -110,6 +110,7 @@ unsafe cache/history shortcuts, and identified the early Storybook browser gate.
 | Repeated always-loaded instructions | Condensed; retain portable pins, laws, model projection and runbook pointers |
 | Duplicate reviewer receipt | Fixed in the launcher: save the final response once; use closed stdin and bounded explicit-path searches |
 | Repeated package-verification launches | Implemented batching with preserved per-package evidence and failure behavior |
+| Stale identity lint profile discovered only by hosted lint | Add a commit-time freshness check when either Biome configuration changes; regenerate with `bun run beep cache profile --write` |
 | Generated metadata causing full coverage fallback | Implemented explicit consumer mappings for the Effect Vitest inventory and schema catalog; full fallback remains for unclassified paths |
 | Parallel final-check and audit/docgen | Not enabled: memory admission and concurrent output writes need an equivalent-work experiment first |
 | Duplicate cheap-gate/law tasks and many Turbo starts | Structural hypothesis; task-level receipt parity must precede skipping or batching gates |
