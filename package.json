@@ -1,6 +1,7 @@
 {
   "catalog": {
     "@alchemy.run/cloudflare": "2.0.0-beta.85",
+    "@alchemy.run/test": "2.0.0-beta.85",
     "@arizeai/phoenix-client": "7.18.1",
     "@azure/core-http-compat": "2.5.0",
     "@azure/core-rest-pipeline": "1.25.0",

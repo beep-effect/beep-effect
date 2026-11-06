@@ -16,9 +16,11 @@
     "generate:effect-ontology-migrations": "bun effect-ontology/scripts/generate-migrations.ts",
     "lint:effect-ontology": "biome check --config-path effect-ontology/biome.jsonc effect-ontology",
     "migrations:check:effect-ontology": "bun effect-ontology/scripts/check-migrations-drift.ts",
-    "test:effect-ontology": "bunx --bun vitest run --config effect-ontology/vitest.config.ts"
+    "test:effect-ontology": "bunx --bun vitest run --config effect-ontology/vitest.config.ts",
+    "test:turbo-cache-r2": "bunx --bun vitest run --config turbo-cache-r2/vitest.config.ts"
   },
   "dependencies": {
+    "@alchemy.run/cloudflare": "catalog:",
     "@beep/dock": "workspace:^",
     "@beep/dock-react": "workspace:^",
     "@beep/drizzle": "workspace:^",
@@ -51,12 +53,14 @@
     "@google-cloud/pubsub": "catalog:",
     "@google-cloud/storage": "catalog:",
     "@xenova/transformers": "catalog:",
+    "alchemy": "catalog:",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
     "lexical": "catalog:",
     "n3": "catalog:"
   },
   "devDependencies": {
+    "@alchemy.run/test": "catalog:",
     "@beep/pglite": "workspace:^",
     "@beep/repo-cli": "workspace:^",
     "@beep/test-utils": "workspace:^",
