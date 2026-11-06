@@ -1110,6 +1110,61 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
   });
 
   it.effect(
+    "uses attached readiness monitoring when the user manager is unavailable",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-monitor-attached-" });
+      const fixture = yield* tailFixture(root, 'console.log("merge-ready: yes")');
+      const submit = RepoPlanStep.make({ ...fixture.submit, args: [...fixture.submit.args, "--", "--detach"] });
+      const result = yield* finishPublishWithPullRequestForTesting(
+        fixture.plan,
+        defaultYeetRunOptions({ message: "fix(repo-cli): attached fallback", pr: true }),
+        [submit],
+        fixture.recorder,
+        fixture.extras,
+        false,
+        {
+          ensurePullRequest: fixture.ensurePullRequest,
+          monitorSupport: Effect.succeed("unsupported"),
+          listJobs: () => Effect.succeed([]),
+        }
+      );
+      expect(result.pushed).toBe(true);
+      const entries = yield* Ref.get(fixture.recorder);
+      expect(entries).toHaveLength(1);
+      const entry = O.getOrThrow(A.head(entries));
+      expect(entry.step.args).not.toContain("--detach");
+      expect(entry.step.verification).toBe("attached-until-ready-monitor");
+      expect(entry.result.output).toContain("merge-ready: yes");
+    })
+  );
+
+  it.effect(
+    "does not report publish success when attached readiness monitoring exits with a wave",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-monitor-attached-wave-" });
+      const fixture = yield* tailFixture(root, "process.exit(2)");
+      const error = yield* finishPublishWithPullRequestForTesting(
+        fixture.plan,
+        defaultYeetRunOptions({ message: "fix(repo-cli): attached wave", pr: true }),
+        [fixture.submit],
+        fixture.recorder,
+        fixture.extras,
+        false,
+        {
+          ensurePullRequest: fixture.ensurePullRequest,
+          monitorSupport: Effect.succeed("failed"),
+          listJobs: () => Effect.succeed([]),
+        }
+      ).pipe(Effect.flip);
+      expect(error.message).toContain("The branch is published; its attached monitor needs attention");
+      const entries = yield* Ref.get(fixture.recorder);
+      expect(A.map(entries, (entry) => entry.result.exitCode)).toContain(2);
+    })
+  );
+
+  it.effect(
     "reuses the running monitor for the pull request instead of submitting a second job",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -1126,6 +1181,7 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
         false,
         {
           ensurePullRequest: fixture.ensurePullRequest,
+          monitorSupport: Effect.succeed("active"),
           listJobs: () => Ref.update(listed, (n) => n + 1).pipe(Effect.as([finished, running])),
         }
       );
@@ -1161,6 +1217,7 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
         false,
         {
           ensurePullRequest: fixture.ensurePullRequest,
+          monitorSupport: Effect.succeed("active"),
           listJobs: () => Effect.succeed([finished, running]),
           runnerStatus: (record) =>
             Ref.update(probed, (ids) => [...ids, record.jobId]).pipe(Effect.as("dead" as const)),
@@ -1192,7 +1249,11 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
         fixture.recorder,
         fixture.extras,
         false,
-        { ensurePullRequest: fixture.ensurePullRequest, listJobs: () => Effect.succeed([finished, otherPr]) }
+        {
+          ensurePullRequest: fixture.ensurePullRequest,
+          monitorSupport: Effect.succeed("active"),
+          listJobs: () => Effect.succeed([finished, otherPr]),
+        }
       );
       expect(result.pushed).toBe(true);
       const entries = yield* Ref.get(fixture.recorder);
@@ -1284,7 +1345,7 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
           fixture.recorder,
           fixture.extras,
           false,
-          { ensurePullRequest: fixture.ensurePullRequest, listJobs }
+          { ensurePullRequest: fixture.ensurePullRequest, monitorSupport: Effect.succeed("active"), listJobs }
         );
       yield* Effect.all([publish(first), publish(second)], { concurrency: 2 }).pipe(TestClock.withLive);
       const readFileString21 = yield* fs.readFileString(submits);
@@ -1337,6 +1398,7 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
         false,
         {
           ensurePullRequest: fixture.ensurePullRequest,
+          monitorSupport: Effect.succeed("active"),
           listJobs: () => YeetCommandError.make({ message: "jobs dir unreadable" }),
         }
       );

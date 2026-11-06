@@ -902,6 +902,9 @@ const recordAndConfirmInherited = Effect.fn("Yeet.recordAndConfirmInherited")(fu
  * the applied ones in the PR body (REST), and a failed record refuses the flip
  * with `YeetCommandError`. A second confirmation after the body write requires
  * the same head, a passing gate, and the same applied attributions before flipping.
+ * Already-ready pull requests also verify the current-head receipt, including
+ * the existing ancestor refresh rule after a base-only merge; no flip or
+ * review-trigger push is repeated.
  * Before a flip, and for an already-ready pull request, the squash commit
  * message GitHub will write is predicted and linted as an advisory
  * (`SquashCommitlint.ts`): a failing verdict prints the rule and the offending
@@ -960,7 +963,15 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
         })
       ),
     "already-ready": Effect.fnUntraced(function* ({ prNumber }) {
-      yield* Console.log(`[yeet] pull request #${prNumber} is already ready for review; nothing to flip`);
+      yield* requireFinalCheck(
+        context,
+        dependencies,
+        prNumber,
+        O.getOrElse(read.remote.headSha, () => "unknown")
+      );
+      yield* Console.log(
+        `[yeet] pull request #${prNumber} is already ready for review; current-head final-check proof verified, nothing to flip`
+      );
       yield* adviseSquashCommitlint(context, dependencies, prNumber);
     }),
     flip: Effect.fnUntraced(function* ({ prNumber, headSha }) {
