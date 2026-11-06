@@ -1583,6 +1583,7 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Lint/LintDeprecatedApis.command.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Lint/internal/LintPackage.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Lint/internal/LintProgramAssignment.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",

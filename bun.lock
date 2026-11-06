@@ -4174,6 +4174,7 @@
         "sharp": "catalog:",
         "tar": "catalog:",
         "ts-morph": "catalog:",
+        "tsrs": "catalog:",
         "vitest": "catalog:",
       },
       "devDependencies": {

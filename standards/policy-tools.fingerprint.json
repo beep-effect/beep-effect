@@ -1819,6 +1819,7 @@
         "packages/tooling/tool/cli/src/commands/Lint/LintDeprecatedApis.command.ts",
         "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
         "packages/tooling/tool/cli/src/commands/Lint/internal/LintPackage.ts",
+        "packages/tooling/tool/cli/src/commands/Lint/internal/LintProgramAssignment.ts",
         "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
         "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
         "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",

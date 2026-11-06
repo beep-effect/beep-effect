@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { collectManifestProjectionRows } from "@beep/repo-cli/commands/Goals/Manifest";
 import {
   GOAL_DECISION_TARGETS,
@@ -32,6 +33,7 @@ import {
   writeProjectFile,
 } from "./support/CommandTest.ts";
 
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const SPEC_TARGET = GOAL_DECISION_TARGETS[0]!;
 const PLAN_TARGET = GOAL_DECISION_TARGETS[1]!;
@@ -188,7 +190,7 @@ describe("goals decisions projection", () => {
   );
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
   "goals decisions command",
   (it) => {
     it.effect("the manifest CLI checks an empty working tree without rewriting files", () =>

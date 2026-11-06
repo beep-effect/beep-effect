@@ -146,25 +146,74 @@ findings and exit 0. Separate deprecated-API and Effect `global-console`
 positive controls produced matching diagnostic records and failing exits.
 These are bounded local measurements, not full-repository or hosted CI proof.
 
-The default deprecated-API worker still uses tsgolint. It requires the debug
-assignment summary and unmatched-file inventory to prove every TypeScript
-input has a tsconfig owner. The Rust backend does not emit that evidence,
-including through `effect-tsgo --tsrs-lint oxlint`, so the worker correctly
-fails with `assignment summary missing; cannot prove TypeScript coverage`.
-Adoption must preserve that check through equivalent backend evidence or a
-qualified replacement; a zero diagnostic count is insufficient.
+The default deprecated-API worker now selects the installed patched `tsrs-lint`
+launcher directly. Before linting, it asks Oxlint for its exact selected files
+(`--debug=files`) and uses `tsrs/async` config parsing to prove TypeScript file
+ownership. Config parsing handles extends, include/exclude and solution
+references; parsed membership is cached within the invocation. A failed or
+truncated file inventory, invalid config, or orphan TypeScript input fails the
+gate. Composite-reference traversal is conservative where the API does not
+expose the backend's pruning predicate. The full `packages`, `apps`, `infra`
+sweep passed this guard and lint. `BEEP_LINT_TSGOLINT=true` restores the old Go
+backend and its debug-summary guard for comparison or rollback.
 
 Keep Effect compiler diagnostics enabled: they already gate through Check,
-including the repository's explicit severity map. Enabling Oxlint presets
+including the repository's explicit severity map. The upgrade adds the new
+`matchToResultOrOption` rule at error severity to every copied profile (146
+rules: 141 errors and five explicitly off). Effect-enabled Oxlint presets
 must not silently replace that map or duplicate the same rules in both gates.
 
-`TSRS_FAST=1 oxlint --type-aware --type-check` is a separate qualification.
-The documented whole-program behavior requires fast mode, only checks the
-tsconfigs reached by lint inputs, and omits typechecking files outside every
-tsconfig. It does not establish equivalence with Beep's separate source,
-test, script, configuration and build tasks. Fast mode can also change
-compiler diagnostics and cache compatibility. Neither fast mode nor combined
-lint/typechecking is enabled by this upgrade.
+### Compiler performance defaults
+
+The quality runner supplies `TSRS_FAST=1` to direct and secret-session-wrapped
+Turbo processes, preserving an explicit `TSRS_FAST=0`. Turbo hashes and passes
+this setting, so reference-mode and fast-mode task results cannot share a
+cache key. Standalone compiler invocations and editors retain their existing
+settings. The lint worker explicitly uses `TSRS_FAST=0`: fast mode was slower
+on the measured lint workload.
+
+The CLI's owned `beep:check` implementation gives its large source and test
+projects separate `--checkerCostCache` files. These machine-local
+`*.tsrs-cost-cache` files are gitignored and excluded from build artifacts;
+they can be deleted to reset scheduling history. They help repeated fast-mode
+checks, including checks whose incremental compilation is disabled. Keep
+separate files for different projects. The generated public task bindings
+remain managed by `beep lint package-scripts --write`.
+
+Local qualification on 2026-11-05 (shared workstation; these are not hosted CI
+speedup promises):
+
+| Probe | Reference | Selected configuration | Result |
+| --- | --- | --- | --- |
+| Six compiler projects, sum of per-project median wall times, three cold-incremental rounds | 8.48 s | Fast, automatic checkers: 3.78 s | 55% less time; all exits and diagnostics matched |
+| CLI source, four warm scheduling-cache rounds, cold incremental state | Fast without cost cache: 1.35 s | With per-project cost cache: 1.16 s | About 14% less time |
+| CLI tests, same protocol | Fast without cost cache: 1.92 s | With per-project cost cache: 1.66 s | About 14% less time |
+| Direct Rust lint launcher versus Effect proxy, five rounds | Proxy: 1.03 s | Direct: 0.91 s | Avoids proxy startup for the existing standard rule |
+| Six-project parallel compiler batch, three rounds | Fixed four checkers: 4.24–4.34 s | Automatic checkers: 2.19–2.27 s | Keep automatic checker sizing |
+
+Parallel batch widths of two, four and eight were effectively tied with
+automatic checker sizing. Keep the existing host-aware Turbo admission and
+concurrency profiles; this sample does not justify widening the entire build
+graph. Fast mode passed all 342 repository build/check tasks and the Effect
+smoke canary. A controlled emission comparison produced identical bytes for
+4,524 JS, declaration and map files across the CLI, schema and GitHub Actions
+packages. Upstream documents check-order-sensitive diagnostic cases, so retain
+the reference-mode rollback when investigating a compiler regression.
+
+`TSRS_FAST=1 oxlint --type-aware --type-check` was also tested. It checks the
+programs reached by lint, including intentionally invalid compiler fixtures,
+and does not match Beep's separate source, test, script, configuration and
+build scopes. On the repo-utils sample it took about 8.3 seconds and reported
+fixture errors, versus about 0.9 seconds for lint alone. It is not enabled.
+Do not remove the separate compiler gate based on this option.
+
+Memory targets (`--maxMemory`) recycle checker state in exchange for more CPU;
+they are capacity controls, not unconditional speed improvements. The existing
+quality admission controls remain responsible for host memory pressure. The
+fast preset already enables the qualified lazy-member, declaration-parsing,
+checker-cache and scheduling optimizations; experimental overrides remain at
+upstream defaults. See [tsrs performance options](https://github.com/oxc-project/tsrs/blob/ed745c993a1310daa5e6866b101d2e48818b351d/docs/USAGE.md#performance-options)
+and [persistent scheduling history](https://github.com/oxc-project/tsrs/blob/ed745c993a1310daa5e6866b101d2e48818b351d/notes/perf-balance.md).
 
 ## Binary paths (Linux x64)
 
