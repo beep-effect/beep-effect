@@ -4,14 +4,23 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { projectCitationExtractionSelection } from "@beep/law-practice-server/internal/Citation/ExtractionSelection";
 import {
+  CitationGeneratedCombinedInput,
+  CitationGeneratedMarkupInput,
   CitationGeneratedReferenceInput,
+  makeCitationGeneratedCombinedReferences,
+  makeCitationGeneratedMarkupReferences,
   makeCitationGeneratedReferences,
 } from "@beep/law-practice-server/internal/Citation/GeneratedReferences";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
+import {
+  installCitationHtmlGeometryFixture,
+  prepareCitationOptionalHtmlGeometry,
+} from "./CitationHtmlGeometryPreparation.fixtures.ts";
 import { readCitationGeneratedReferenceSource } from "./CitationReferenceNames.fixtures.ts";
 import {
   CitationReferenceSourceNames,
@@ -34,7 +43,10 @@ const Corpus = S.fromJsonString(
       S.Struct({
         mode: S.Literals(["pin", "combined", "markup"]),
         plain: CitationNativeUnicodeHex,
+        markup: CitationNativeUnicodeHex,
+        missingGeometry: S.Boolean,
         citation: S.Struct({
+          kind: CitationGeneratedCombinedInput.fields.kind,
           span: S.Tuple([S.Int, CitationGeneratedReferenceInput.fields.offset]),
           metadata: CitationReferenceSourceNames,
         }),
@@ -64,7 +76,20 @@ const Corpus = S.fromJsonString(
     description: "Actual original generated references with complete native model state and source point spans.",
   })
 );
-/** Replay every direct original pin-reference constructor on an actual runtime.
+const assertGeometryRefusal = Effect.fn("GeneratedReferencesTest.geometryRefusal")(function* (
+  stage: Effect.Success<ReturnType<typeof makeCitationGeneratedMarkupReferences>>,
+  request: CitationGeneratedMarkupInput
+) {
+  if (O.isNone(request.geometry)) return;
+  const refused = yield* stage
+    .markup({
+      ...request,
+      geometry: O.some({ ...request.geometry.value, plain: request.markup }),
+    })
+    .pipe(Effect.flip);
+  expect(refused).toMatchObject({ _tag: "CitationGeneratedReferenceFailure", reason: "invalid-input" });
+});
+/** Replay every original pin/markup/combined reference caller on an actual runtime.
  * @internal @category testing @since 0.0.0
  */
 export const replayCitationGeneratedReferences = Effect.fn("GeneratedReferencesTest.replay")(function* (
@@ -77,15 +102,34 @@ export const replayCitationGeneratedReferences = Effect.fn("GeneratedReferencesT
     patterns: template.patterns,
     disallowedNames: corpus.disallowedNames,
   }).pipe(Effect.provideContext(setup.provided));
-  const rows = A.filter(corpus.cases, (row) => row.mode === "pin");
+  const configuration = { patterns: template.patterns, disallowedNames: corpus.disallowedNames };
+  const markup = yield* makeCitationGeneratedMarkupReferences(setup.limits, setup.runtime, configuration).pipe(
+    Effect.provideContext(setup.provided)
+  );
+  const combined = yield* makeCitationGeneratedCombinedReferences(setup.limits, setup.runtime, configuration).pipe(
+    Effect.provideContext(setup.provided)
+  );
+  const geometryStage = yield* installCitationHtmlGeometryFixture(kind, setup);
+  const rows = corpus.cases;
   for (const row of rows) {
-    const invocation = stage.pincited({
+    const geometry = yield* prepareCitationOptionalHtmlGeometry(
+      geometryStage,
+      row,
+      row.mode !== "pin" && row.markup.bytes.length > 0 && !row.missingGeometry
+    );
+    const request = {
       plain: row.plain,
+      markup: row.markup,
       offset: row.citation.span[1],
+      start: row.citation.span[0],
+      kind: row.citation.kind,
+      geometry,
       metadata: citationReferenceMetadataFromSource(row.citation.metadata),
-    });
+    };
+    const invocation = { pin: stage.pincited, markup: markup.markup, combined: combined.combined }[row.mode](request);
     const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
     const result: CitationGeneratedReferencesResult = yield* closed;
+    if (row.mode === "markup") yield* assertGeometryRefusal(markup, CitationGeneratedMarkupInput.make(request));
     expect(result.references).toHaveLength(row.expected.length);
     for (const [index, reference] of A.map(result.references, (reference, index) => Tuple.make(index, reference))) {
       const original = A.getUnsafe(row.expected, index);
@@ -94,6 +138,10 @@ export const replayCitationGeneratedReferences = Effect.fn("GeneratedReferencesT
       expect(reference._tag).toBe(original.kind);
       expect(reference.token.kind).toBe(original.tokenKind);
       expect(reference.token.data).toEqual(original.token);
+      expect(reference.token.groups).toEqual({});
+      expect(reference.token.exact).toEqual([]);
+      expect(reference.token.variation).toEqual([]);
+      expect(reference.token.short).toBe(false);
       expect([reference.token.start, reference.token.end]).toEqual([original.tokenStart, original.tokenEnd]);
       expect([reference.spanStart, reference.spanEnd, reference.fullSpanStart, reference.fullSpanEnd]).toEqual([
         original.spanStart,
@@ -109,8 +157,8 @@ export const replayCitationGeneratedReferences = Effect.fn("GeneratedReferencesT
       expect(selection.hasEdition).toBe(false);
     }
   }
-  expect(rows).toHaveLength(101);
-  const multiple = yield* Effect.fromOption(A.findFirst(rows, (row) => row.expected.length > 1));
+  expect(rows).toHaveLength(121);
+  const multiple = yield* Effect.fromOption(A.findFirst(rows, (row) => row.mode === "pin" && row.expected.length > 1));
   const tight = yield* makeCitationGeneratedReferences({ ...setup.limits, candidates: 1 }, setup.runtime, {
     patterns: template.patterns,
     disallowedNames: corpus.disallowedNames,
@@ -125,5 +173,5 @@ export const replayCitationGeneratedReferences = Effect.fn("GeneratedReferencesT
   expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "candidates" });
   const malformed = yield* stage.pincited(null).pipe(Effect.flip);
   expect(malformed).toMatchObject({ _tag: "CitationGeneratedReferenceFailure", reason: "invalid-input" });
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 65);
+  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 173);
 });

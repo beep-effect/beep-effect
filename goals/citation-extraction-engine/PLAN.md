@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Generated markup/combined checkpoint (2026-11-06): original name-only and
+whole-element spans now map through existing bidirectional geometry and regex
+workers, with original following-text rejection and ordered combined guards.
+All 121 original cases match 77 references on both runtimes, with 173 confirmed
+physical exits each including real geometry and the retained refusal control.
+The complete extraction loop remains open. See
+[execution evidence](history/evidence/2026-11-06-generated-markup-references.md).
+
 Generated plain-reference checkpoint (2026-11-06): original pin-reference
 construction now connects validated names, source patterns and existing owned
 regex workers to complete fresh reference models. All 101 direct source cases

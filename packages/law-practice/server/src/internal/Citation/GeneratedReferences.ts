@@ -1,4 +1,4 @@
-/** Original extract_pincited_reference_citations from eyecite 2.7.6 find.py.
+/** Original plain/markup generated-reference helpers from eyecite 2.7.6 find.py.
  * Free Law Project, BSD-2-Clause; source-native private models only.
  * @internal @packageDocumentation @since 0.0.0
  */
@@ -13,6 +13,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { CitationCaseMetadataFields } from "./CaseMetadata.ts";
+import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import {
@@ -20,8 +21,9 @@ import {
   copyCitationReferencePatternConfiguration,
   makeCitationReferencePatterns,
 } from "./ReferencePatterns.ts";
-import { makeCitationRegexInput } from "./RegexInput.ts";
+import { CitationRegexInputLayout, makeCitationRegexInput } from "./RegexInput.ts";
 import { makeCitationRegexWorker } from "./RegexWorker.ts";
+import { makeCitationSpanOffsets } from "./SpanOffsets.ts";
 import { CitationTokenSeed } from "./TokenObjects.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
@@ -108,6 +110,54 @@ export class CitationGeneratedReferencesResult extends S.Opaque<
 const Input = S.toType(CitationGeneratedReferenceInput);
 const Configuration = S.toType(CitationReferencePatternConfiguration);
 const fail = (reason: typeof Reason.Type) => CitationGeneratedReferenceFailure.make({ reason });
+type Evaluation = Effect.Success<ReturnType<Effect.Success<ReturnType<typeof makeCitationRegexWorker>>["evaluate"]>>;
+const readNamedCaptures = Effect.fn("Citation.readReferenceCaptures")(function* (evaluated: Evaluation, index: number) {
+  const named = yield* Effect.forEach(
+    R.toEntries(evaluated.descriptor.profile.names),
+    Effect.fnUntraced(function* ([name, group]) {
+      const capture = yield* evaluated.result.capture(index, group);
+      const value = capture._tag === "Unmatched" ? null : yield* evaluated.source.slice(capture, () => Effect.void);
+      return Tuple.make(name, value);
+    }),
+    { concurrency: 1 }
+  );
+  return R.fromEntries(named);
+});
+const referenceFromCaptures = (
+  data: CitationPythonUnicodeStorage,
+  first: number,
+  last: number,
+  fullFirst: number,
+  fullLast: number,
+  values: Readonly<Record<string, CitationPythonUnicodeStorage | null>>
+) =>
+  CitationGeneratedReference.make({
+    token: CitationTokenSeed.make({
+      kind: "CaseReferenceToken",
+      data,
+      start: first,
+      end: last,
+      groups: {},
+      exact: [],
+      variation: [],
+      short: false,
+    }),
+    spanStart: first,
+    spanEnd: last,
+    fullSpanStart: fullFirst,
+    fullSpanEnd: fullLast,
+    metadata: {
+      pinCite: O.getOrNull(R.get(values, "pin_cite")),
+      parenthetical: null,
+      pinCiteSpanStart: null,
+      pinCiteSpanEnd: null,
+      plaintiff: O.getOrNull(R.get(values, "plaintiff")),
+      defendant: O.getOrNull(R.get(values, "defendant")),
+      resolvedCaseNameShort: O.getOrNull(R.get(values, "resolved_case_name_short")),
+      resolvedCaseName: O.getOrNull(R.get(values, "resolved_case_name")),
+    },
+  });
+const bound = (index: number, length: number) => Num.max(0, Num.min(length, index < 0 ? length + index : index));
 const prepare = Effect.fn("Citation.extractPincitedReferences")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
@@ -134,51 +184,17 @@ const prepare = Effect.fn("Citation.extractPincitedReferences")(function* (
       const whole = yield* evaluated.result.capture(index, 0);
       if (whole._tag === "Unmatched") return yield* fail("invalid-match");
       const data = yield* evaluated.source.slice(whole, () => Effect.void);
-      const named = yield* Effect.forEach(
-        R.toEntries(pattern.value.descriptor.profile.names),
-        Effect.fnUntraced(function* ([name, group]) {
-          const capture = yield* evaluated.result.capture(index, group);
-          const value = capture._tag === "Unmatched" ? null : yield* evaluated.source.slice(capture, () => Effect.void);
-          return Tuple.make(name, value);
-        }),
-        { concurrency: 1 }
-      );
-      const values = R.fromEntries(named);
+      const values = yield* readNamedCaptures(evaluated, index);
       const first = whole.start + request.offset;
       const last = whole.end + request.offset;
-      return CitationGeneratedReference.make({
-        token: CitationTokenSeed.make({
-          kind: "CaseReferenceToken",
-          data,
-          start: first,
-          end: last,
-          groups: {},
-          exact: [],
-          variation: [],
-          short: false,
-        }),
-        spanStart: first,
-        spanEnd: last,
-        fullSpanStart: first,
-        fullSpanEnd: last,
-        metadata: {
-          pinCite: O.getOrNull(R.get(values, "pin_cite")),
-          parenthetical: null,
-          pinCiteSpanStart: null,
-          pinCiteSpanEnd: null,
-          plaintiff: O.getOrNull(R.get(values, "plaintiff")),
-          defendant: O.getOrNull(R.get(values, "defendant")),
-          resolvedCaseNameShort: O.getOrNull(R.get(values, "resolved_case_name_short")),
-          resolvedCaseName: O.getOrNull(R.get(values, "resolved_case_name")),
-        },
-      });
+      return referenceFromCaptures(data, first, last, first, last, values);
     }),
     { concurrency: 1 }
   );
 });
 /** Run original plain-name reference generation through shared admission, captured
  * Scope/deadline/text authority, existing typed regex RPC and retirement barrier.
- * No partial references publish; markup generation and whole-loop assembly follow.
+ * No partial references publish; whole-loop assembly follows.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationGeneratedReferences = makeCitationMetadataStage({
@@ -187,5 +203,166 @@ export const makeCitationGeneratedReferences = makeCitationMetadataStage({
   invalid: () => fail("invalid-configuration"),
   own: copyCitationReferencePatternConfiguration,
   prepare,
+  project: (references, reservedUnits) => CitationGeneratedReferencesResult.make({ references, reservedUnits }),
+});
+
+/** @internal @category models @since 0.0.0 */
+export class CitationGeneratedMarkupInput extends S.Opaque<
+  CitationGeneratedMarkupInput,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    plain: CitationPythonUnicodeStorage,
+    markup: CitationPythonUnicodeStorage,
+    start: CitationTokenSeed.fields.start,
+    metadata: CitationCaseMetadataFields,
+    geometry: CitationHtmlTagGeometryInput.pipe(S.toType, S.Option),
+  }).pipe(
+    $I.annoteSchema("CitationGeneratedMarkupInput", {
+      description: "Original plain/markup document, citation span start and optional prepared bidirectional maps.",
+    })
+  )
+) {}
+const MarkupInput = S.toType(CitationGeneratedMarkupInput);
+const sameLayout = CitationRegexInputLayout.pipe(S.toType, S.toEquivalence);
+const sameNative = CitationPythonUnicodeStorage.pipe(S.toType, S.toEquivalence);
+const prepareMarkup = Effect.fn("Citation.extractMarkupReferences")(function* (
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  config: CitationReferencePatternConfiguration,
+  raw: unknown
+) {
+  const request = yield* S.decodeUnknownEffect(MarkupInput)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+  const builder = yield* makeCitationReferencePatterns(limits, config);
+  const pattern = yield* builder.build(request.metadata, "markup");
+  if (O.isNone(pattern) || O.isNone(request.geometry) || request.markup.bytes.length === 0)
+    return A.empty<CitationGeneratedReference>();
+  const input = yield* makeCitationRegexInput(limits, "source");
+  const plain = yield* input.prepareUnicode(request.plain, () => Effect.void);
+  const markup = yield* input.prepareUnicode(request.markup, () => Effect.void);
+  const geometry = request.geometry.value;
+  if (
+    !sameNative(geometry.plain, plain.value.storage) ||
+    !sameLayout(geometry.forward.before, plain.layout) ||
+    !sameLayout(geometry.backward.after, plain.layout) ||
+    !sameLayout(geometry.backward.before, markup.layout) ||
+    geometry.forward.after.pythonLength !== markup.layout.pythonLength
+  )
+    return yield* fail("invalid-input");
+  const forward = yield* makeCitationSpanOffsets(limits, geometry.forward);
+  const backward = yield* makeCitationSpanOffsets(limits, geometry.backward);
+  const offset = yield* forward.update(request.start, "right");
+  const suffix = yield* markup.slice(
+    { start: bound(offset, markup.value.pythonLength), end: markup.value.pythonLength },
+    () => Effect.void
+  );
+  const worker = yield* makeCitationRegexWorker(limits, runtime, [
+    pattern.value.descriptor,
+    builder.rejection.descriptor,
+  ]);
+  const evaluated = yield* worker.evaluate(pattern.value.pattern, suffix, pattern.value.descriptor.flags);
+  if (evaluated.result.matches === 0) return A.empty<CitationGeneratedReference>();
+  const references = yield* Effect.forEach(
+    A.makeBy(evaluated.result.matches, (index) => index),
+    Effect.fnUntraced(function* (index) {
+      const whole = yield* evaluated.result.capture(index, 0);
+      const name = yield* evaluated.result.capture(index, 1);
+      if (whole._tag === "Unmatched" || name._tag === "Unmatched") return yield* fail("invalid-match");
+      const fullFirst = yield* backward.update(offset + whole.start, "left");
+      const fullLast = yield* backward.update(offset + whole.end, "right");
+      const first = yield* backward.update(offset + name.start, "left");
+      const last = yield* backward.update(offset + name.end, "right");
+      const after = yield* plain.slice(
+        { start: bound(fullLast, plain.value.pythonLength), end: plain.value.pythonLength },
+        () => Effect.void
+      );
+      const rejected = yield* worker.evaluate(
+        builder.rejection.pattern,
+        after,
+        builder.rejection.descriptor.flags,
+        1,
+        "match"
+      );
+      if (rejected.result.matches !== 0) return O.none<CitationGeneratedReference>();
+      const start = bound(first, plain.value.pythonLength);
+      const end = Num.max(start, bound(last, plain.value.pythonLength));
+      const data = yield* plain.slice({ start, end }, () => Effect.void);
+      const values = yield* readNamedCaptures(evaluated, index);
+      return O.some(referenceFromCaptures(data, first, last, fullFirst, fullLast, values));
+    }),
+    { concurrency: 1 }
+  );
+  const kept = A.getSomes(references);
+  if (kept.length > limits.candidates)
+    return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "candidates" });
+  return kept;
+});
+/** Original markup-name reference generation using existing offset plans and
+ * typed regex RPC under one captured operation, deadline and text authority.
+ * @internal @category operations @since 0.0.0
+ */
+export const makeCitationGeneratedMarkupReferences = makeCitationMetadataStage({
+  method: "markup",
+  schema: Configuration,
+  invalid: () => fail("invalid-configuration"),
+  own: copyCitationReferencePatternConfiguration,
+  prepare: prepareMarkup,
+  project: (references, reservedUnits) => CitationGeneratedReferencesResult.make({ references, reservedUnits }),
+});
+
+/** @internal @category models @since 0.0.0 */
+export class CitationGeneratedCombinedInput extends S.Opaque<
+  CitationGeneratedCombinedInput,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    ...CitationGeneratedMarkupInput.fields,
+    offset: CitationGeneratedReferenceInput.fields.offset,
+    kind: S.Literals([
+      "FullCaseCitation",
+      "FullLawCitation",
+      "FullJournalCitation",
+      "ShortCaseCitation",
+      "IdCitation",
+      "SupraCitation",
+      "UnknownCitation",
+      "ReferenceCitation",
+    ]),
+  }).pipe(
+    $I.annoteSchema("CitationGeneratedCombinedInput", {
+      description:
+        "Original reference caller with citation family and span endpoints before ordered plain/markup generation.",
+    })
+  )
+) {}
+const CombinedInput = S.toType(CitationGeneratedCombinedInput);
+const prepareCombined = Effect.fn("Citation.extractGeneratedReferences")(function* (
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  config: CitationReferencePatternConfiguration,
+  raw: unknown
+) {
+  const request = yield* S.decodeUnknownEffect(CombinedInput)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+  const input = yield* makeCitationRegexInput(limits, "source");
+  const plain = yield* input.prepareUnicode(request.plain, () => Effect.void);
+  if (plain.value.pythonLength <= request.offset || request.kind !== "FullCaseCitation")
+    return A.empty<CitationGeneratedReference>();
+  const pin = yield* prepare(limits, runtime, config, request);
+  if (request.markup.bytes.length === 0) return pin;
+  const markup = yield* prepareMarkup(limits, runtime, config, request);
+  if (pin.length + markup.length > limits.candidates)
+    return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "candidates" });
+  return A.appendAll(pin, markup);
+});
+/** Original ordered plain/markup caller, sharing one Scope, deadline and
+ * cumulative text budget across both generators; final filtering stays separate.
+ * @internal @category operations @since 0.0.0
+ */
+export const makeCitationGeneratedCombinedReferences = makeCitationMetadataStage({
+  method: "combined",
+  schema: Configuration,
+  invalid: () => fail("invalid-configuration"),
+  own: copyCitationReferencePatternConfiguration,
+  prepare: prepareCombined,
   project: (references, reservedUnits) => CitationGeneratedReferencesResult.make({ references, reservedUnits }),
 });

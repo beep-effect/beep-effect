@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "30d95e3c63a088e9917f16c2c569efe276b49f164841ee3c442044d587deef39",
+  "planSha256": "70ea4259ce3cf409fd0de137f834a428d2182cd243cd0d16d6183003faa7ba2c",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -924,19 +924,23 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/GeneratedReferences.ts",
-          "sha256": "65a86f77793ec109107299329b7fbdf1143f8a253efebf42095547a0ba731bb6"
+          "sha256": "1b1b29f2f1ac57bff2db3442890dece52cbc18829c972d6b371ffde7b692bde0"
         },
         {
           "path": "packages/law-practice/server/test/CitationGeneratedReferences.fixtures.ts",
-          "sha256": "61a74f643ce47f869ec70c3b553336b585bab066bee81f226260e922a09f0559"
+          "sha256": "58fe0cfff51bf9d6b11005dd5835e13fbab1364be860498ed67adb51074e604f"
         },
         {
           "path": "packages/law-practice/server/test/CitationGeneratedReferences.test.ts",
-          "sha256": "54d26875914afbd852573cc2f5085cd9536a0b624e954662bbb4a775d01dbccd"
+          "sha256": "5cd84a81a9f3c7c47c0384d57f050607d43891ff71b509f448bf6c710ea666f4"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-pin-references.md",
           "sha256": "7328deca3e2cd061733e7e1314fdcbe93e3f26038d0b00338a5ddb83fce8fae9"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-markup-references.md",
+          "sha256": "4f1cc9a7199396af79d19e6ca132ada18d723b4b7b2dbf5c89bb777c028d7592"
         }
       ],
       "workflowState": "audit",
@@ -1353,7 +1357,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlKernel.test.ts",
-          "sha256": "d0c27beb899030178801a2f50722f243ee5f2684f093779fb4a2b2c618d7b6ab"
+          "sha256": "a7f6ee8ef963e96a03a363aa75dafbe950df6b7c7dcf2711fb039648d196b7cb"
         },
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/html-kernel-cases.json",
