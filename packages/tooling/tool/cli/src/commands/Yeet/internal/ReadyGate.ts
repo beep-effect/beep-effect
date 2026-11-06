@@ -584,6 +584,7 @@ const readPullRequestAuthor = Effect.fn("Yeet.ReadyGate.readPullRequestAuthor")(
   context: RepoRunContext,
   prNumber: number
 ): Effect.fn.Return<O.Option<string>, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+  // KEEP (D-13): gh's GraphQL `author.login` comes without the `[bot]` suffix REST adds.
   return yield* ghOutput({
     args: ["pr", "view", `${prNumber}`, "--json", "author", "--jq", ".author.login"],
     cwd: context.repoRoot,

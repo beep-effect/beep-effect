@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { buildPortfolioIndexContent, PORTFOLIO_INDEX_PATH } from "@beep/repo-cli/commands/Goals";
 import {
   enforcePortfolioIndexPublishIntent,
@@ -29,7 +30,8 @@ import * as TestConsole from "effect/testing/TestConsole";
 
 const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
 
-const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
+const PlatformLayer = Git.layer.pipe(
+  Layer.provideMerge(NodeChildProcessSpawner.layer),
   Layer.provideMerge(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
 

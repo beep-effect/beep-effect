@@ -27,6 +27,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { QualityTaskStep, runToExit } from "@beep/repo-cli-kit/process/index";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
@@ -51,8 +53,13 @@ import {
   FinalCheckSkip,
   FinalCheckStepResult,
 } from "./FinalCheck.schemas.ts";
-import { runGitOutput, runGitPathList } from "./GitExec.ts";
-import type { Git } from "@beep/git/Git";
+import {
+  changedYeetPaths,
+  resolveYeetMergeBase,
+  resolveYeetRev,
+  YeetChangedPathsQuery,
+  yeetGitKitError,
+} from "./GitExec.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CiLaneId } from "../../Ci/CiLane.ts";
@@ -545,8 +552,11 @@ const runGates = Effect.fn("Yeet.runFinalCheckGates")(function* (
 // Untracked, non-ignored files count: the gates read them (check typechecks
 // every file), so a receipt for the committed head cannot cover them.
 const dirtyTree = Effect.fn("Yeet.finalCheckDirtyTree")(function* (repoRoot: string) {
-  const resultGitOutput = yield* runGitOutput(repoRoot, ["status", "--porcelain", "--untracked-files=all"]);
-  return Str.isNonEmpty(Str.trim(resultGitOutput));
+  const git = yield* Git;
+  const entries = yield* git
+    .status(repoRoot, { untrackedFiles: "all" })
+    .pipe(Effect.mapError(yeetGitKitError(GitCommand.status({ untrackedFiles: "all" }))));
+  return A.isReadonlyArrayNonEmpty(entries);
 });
 
 const refuseDirtyTree = Effect.fn("Yeet.refuseDirtyFinalCheckTree")(function* (repoRoot: string) {
@@ -563,8 +573,7 @@ const refuseDirtyTree = Effect.fn("Yeet.refuseDirtyFinalCheckTree")(function* (r
 // uncommitted edit landing meanwhile (another session, an editor save) means
 // they checked bytes the pinned head does not hold, so no receipt is written.
 const refuseMovedTree = Effect.fn("Yeet.refuseMovedFinalCheckTree")(function* (repoRoot: string, headSha: string) {
-  const resultGitOutput1 = yield* runGitOutput(repoRoot, ["rev-parse", "HEAD"]);
-  const liveHead = Str.trim(resultGitOutput1);
+  const liveHead = yield* resolveYeetRev(repoRoot, "HEAD");
   if (liveHead !== headSha || (yield* dirtyTree(repoRoot))) {
     return yield* YeetCommandError.make({
       message: `yeet final-check refused: the checkout changed while the gates ran (head ${Str.slice(0, 12)(headSha)} -> ${Str.slice(0, 12)(liveHead)}, or uncommitted edits or untracked files); no receipt was written. Commit, then re-run \`${YEET_FINAL_CHECK_COMMAND}\`.`,
@@ -620,18 +629,12 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
   const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
   const gates = yield* parseFinalCheckGates(options.gates);
   const skips = yield* parseFinalCheckSkips(options.skip);
-  const resultGitOutput2 = yield* runGitOutput(repoRoot, ["rev-parse", "HEAD"]);
-  const headSha = Str.trim(resultGitOutput2);
-  const resultGitOutput3 = yield* runGitOutput(repoRoot, ["merge-base", options.base, "HEAD"]);
-  const mergeBase = Str.trim(resultGitOutput3);
-  const changedFiles = yield* runGitPathList(repoRoot, [
-    "diff",
-    "--name-only",
-    "-z",
-    "--diff-filter=d",
-    mergeBase,
-    "HEAD",
-  ]);
+  const headSha = yield* resolveYeetRev(repoRoot, "HEAD");
+  const mergeBase = yield* resolveYeetMergeBase(repoRoot, options.base, "HEAD");
+  const changedFiles = yield* changedYeetPaths(
+    repoRoot,
+    YeetChangedPathsQuery.make({ base: mergeBase, head: "HEAD", diffFilter: "d" })
+  );
   const run: FinalCheckRun = {
     repoRoot,
     mergeBase,

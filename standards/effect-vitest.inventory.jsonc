@@ -2895,7 +2895,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "checkWithoutWrites builds the read-only FileSystem layer once per check so each check starts with an empty staged temp-file set; that scope is deliberately the check's, shorter than the test, and the drift assertions run on its result. Owner: @beep/codegen-kit. Exit: retire when EV004 recognises a per-call Layer.build scope inside a helper."
     },
     {
       "id": "EV004:packages/tooling/library/qa-capture/test/integration/ClockCorrelator.integration.test.ts:31:scoped@2#1",
@@ -5528,7 +5529,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The file's second test spawns the real generate-label-glyphs CLI through the platform ChildProcessSpawner, and the first proves emitLabelGlyphs' on-disk check/replace path in a temp directory; MemoryFileSystem would prove neither. Owner: @beep/technical-drawing. Exit: retire when the CLI check runs through an injected process and filesystem."
     },
     {
       "id": "EV010:packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts:40:@effect/platform-bun/BunFileSystem@0#1",
