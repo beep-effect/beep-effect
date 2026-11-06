@@ -1,0 +1,776 @@
+{
+  "schemaVersion": "citation-prior-full-observations/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "pythonVersion": "3.11.15",
+  "pythonHashSeed": "0",
+  "versions": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22"
+  },
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "exporterSha256": "46083437fd34e53b8d43ac8e7bfd312694a36aba7f12e61bc64e91659dd639ba",
+  "sources": {
+    "resolve.py": "651ede8c2a2d5df9ec9c9f1145530a6de7fca15304d1816b7f620a81ab3f2044",
+    "models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a"
+  },
+  "cases": [
+    {
+      "name": "list-identity",
+      "kinds": ["case", "supra", "short", "reference"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "retainedListMatches": null,
+          "after": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "result": "base"
+        },
+        {
+          "slot": "short",
+          "mention": 2,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "retainedListMatches": true,
+          "after": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "result": "base"
+        },
+        {
+          "slot": "reference",
+          "mention": 3,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "retainedListMatches": true,
+          "after": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "result": "base"
+        }
+      ],
+      "outcome": {
+        "groups": [
+          {
+            "resource": "base",
+            "members": [0, 1, 2, 3]
+          }
+        ],
+        "fulls": [
+          {
+            "pairSlot": 0,
+            "mention": 0,
+            "resource": "base"
+          }
+        ]
+      }
+    },
+    {
+      "name": "retained-sees-full-append",
+      "kinds": ["case", "supra", "case", "supra"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "retainedListMatches": null,
+          "after": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "result": "base"
+        },
+        {
+          "slot": "full",
+          "mention": 2,
+          "retainedListSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "after": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ]
+        },
+        {
+          "slot": "supra",
+          "mention": 3,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            },
+            {
+              "pairSlot": 1,
+              "mention": 2,
+              "resource": "base"
+            }
+          ],
+          "retainedListMatches": true,
+          "after": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            },
+            {
+              "pairSlot": 1,
+              "mention": 2,
+              "resource": "base"
+            }
+          ],
+          "result": "base"
+        }
+      ],
+      "outcome": {
+        "groups": [
+          {
+            "resource": "base",
+            "members": [0, 1, 2, 3]
+          }
+        ],
+        "fulls": [
+          {
+            "pairSlot": 0,
+            "mention": 0,
+            "resource": "base"
+          },
+          {
+            "pairSlot": 1,
+            "mention": 2,
+            "resource": "base"
+          }
+        ]
+      }
+    },
+    {
+      "name": "retained-clear-from-full",
+      "kinds": ["case", "supra", "case", "supra"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "retainedListMatches": null,
+          "after": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "result": "base"
+        },
+        {
+          "slot": "full",
+          "mention": 2,
+          "retainedListSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "after": []
+        },
+        {
+          "slot": "supra",
+          "mention": 3,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 1,
+              "mention": 2,
+              "resource": "base"
+            }
+          ],
+          "retainedListMatches": true,
+          "after": [
+            {
+              "pairSlot": 1,
+              "mention": 2,
+              "resource": "base"
+            }
+          ],
+          "result": "base"
+        }
+      ],
+      "outcome": {
+        "groups": [
+          {
+            "resource": "base",
+            "members": [0, 1, 2, 3]
+          }
+        ],
+        "fulls": [
+          {
+            "pairSlot": 1,
+            "mention": 2,
+            "resource": "base"
+          }
+        ]
+      }
+    },
+    {
+      "name": "retained-reverse-from-full",
+      "kinds": ["case", "case", "supra", "case", "supra"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "full",
+          "mention": 1
+        },
+        {
+          "slot": "supra",
+          "mention": 2,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            },
+            {
+              "pairSlot": 1,
+              "mention": 1,
+              "resource": "base"
+            }
+          ],
+          "retainedListMatches": null,
+          "after": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            },
+            {
+              "pairSlot": 1,
+              "mention": 1,
+              "resource": "base"
+            }
+          ],
+          "result": "base"
+        },
+        {
+          "slot": "full",
+          "mention": 3,
+          "retainedListSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            },
+            {
+              "pairSlot": 1,
+              "mention": 1,
+              "resource": "base"
+            }
+          ],
+          "after": [
+            {
+              "pairSlot": 1,
+              "mention": 1,
+              "resource": "base"
+            },
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ]
+        },
+        {
+          "slot": "supra",
+          "mention": 4,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 1,
+              "mention": 1,
+              "resource": "base"
+            },
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            },
+            {
+              "pairSlot": 2,
+              "mention": 3,
+              "resource": "base"
+            }
+          ],
+          "retainedListMatches": true,
+          "after": [
+            {
+              "pairSlot": 1,
+              "mention": 1,
+              "resource": "base"
+            },
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            },
+            {
+              "pairSlot": 2,
+              "mention": 3,
+              "resource": "base"
+            }
+          ],
+          "result": "base"
+        }
+      ],
+      "outcome": {
+        "groups": [
+          {
+            "resource": "base",
+            "members": [0, 1, 2, 3, 4]
+          }
+        ],
+        "fulls": [
+          {
+            "pairSlot": 1,
+            "mention": 1,
+            "resource": "base"
+          },
+          {
+            "pairSlot": 0,
+            "mention": 0,
+            "resource": "base"
+          },
+          {
+            "pairSlot": 2,
+            "mention": 3,
+            "resource": "base"
+          }
+        ]
+      }
+    },
+    {
+      "name": "retained-insert-current-full",
+      "kinds": ["case", "supra", "case", "supra"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "retainedListMatches": null,
+          "after": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "result": "base"
+        },
+        {
+          "slot": "full",
+          "mention": 2,
+          "retainedListSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "after": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            },
+            {
+              "pairSlot": 1,
+              "mention": 2,
+              "resource": "foreign"
+            }
+          ]
+        },
+        {
+          "slot": "supra",
+          "mention": 3,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            },
+            {
+              "pairSlot": 1,
+              "mention": 2,
+              "resource": "foreign"
+            },
+            {
+              "pairSlot": 2,
+              "mention": 2,
+              "resource": "base"
+            }
+          ],
+          "retainedListMatches": true,
+          "after": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            },
+            {
+              "pairSlot": 1,
+              "mention": 2,
+              "resource": "foreign"
+            },
+            {
+              "pairSlot": 2,
+              "mention": 2,
+              "resource": "base"
+            }
+          ],
+          "result": null
+        }
+      ],
+      "outcome": {
+        "groups": [
+          {
+            "resource": "base",
+            "members": [0, 1, 2]
+          }
+        ],
+        "fulls": [
+          {
+            "pairSlot": 0,
+            "mention": 0,
+            "resource": "base"
+          },
+          {
+            "pairSlot": 1,
+            "mention": 2,
+            "resource": "foreign"
+          },
+          {
+            "pairSlot": 2,
+            "mention": 2,
+            "resource": "base"
+          }
+        ]
+      }
+    },
+    {
+      "name": "retained-clear-from-id",
+      "kinds": ["case", "supra", "id", "supra"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "retainedListMatches": null,
+          "after": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "result": "base"
+        },
+        {
+          "slot": "id",
+          "mention": 2,
+          "retainedListSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "after": [],
+          "result": "base"
+        },
+        {
+          "slot": "supra",
+          "mention": 3,
+          "listSlot": 0,
+          "before": [],
+          "retainedListMatches": true,
+          "after": [],
+          "result": null
+        }
+      ],
+      "outcome": {
+        "groups": [
+          {
+            "resource": "base",
+            "members": [0, 1, 2]
+          }
+        ],
+        "fulls": []
+      }
+    },
+    {
+      "name": "replace-first-entry",
+      "kinds": ["case", "supra", "supra"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "retainedListMatches": null,
+          "retainedPair": {
+            "pairSlot": 0,
+            "mention": 0,
+            "resource": "base"
+          },
+          "retainedPairMatchesFirst": false,
+          "after": [
+            {
+              "pairSlot": 1,
+              "mention": 0,
+              "resource": "foreign"
+            }
+          ],
+          "result": "foreign"
+        },
+        {
+          "slot": "supra",
+          "mention": 2,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 1,
+              "mention": 0,
+              "resource": "foreign"
+            }
+          ],
+          "retainedListMatches": true,
+          "retainedPair": {
+            "pairSlot": 0,
+            "mention": 0,
+            "resource": "base"
+          },
+          "retainedPairMatchesFirst": false,
+          "after": [
+            {
+              "pairSlot": 1,
+              "mention": 0,
+              "resource": "foreign"
+            }
+          ],
+          "result": "foreign"
+        }
+      ],
+      "outcome": {
+        "groups": [
+          {
+            "resource": "base",
+            "members": [0]
+          },
+          {
+            "resource": "foreign",
+            "members": [1, 2]
+          }
+        ],
+        "fulls": [
+          {
+            "pairSlot": 1,
+            "mention": 0,
+            "resource": "foreign"
+          }
+        ]
+      }
+    },
+    {
+      "name": "equal-replace-pair",
+      "kinds": ["case", "supra", "supra"],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 0,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "retainedListMatches": null,
+          "retainedPair": {
+            "pairSlot": 0,
+            "mention": 0,
+            "resource": "base"
+          },
+          "retainedPairMatchesFirst": false,
+          "after": [
+            {
+              "pairSlot": 1,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "result": "base"
+        },
+        {
+          "slot": "supra",
+          "mention": 2,
+          "listSlot": 0,
+          "before": [
+            {
+              "pairSlot": 1,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "retainedListMatches": true,
+          "retainedPair": {
+            "pairSlot": 0,
+            "mention": 0,
+            "resource": "base"
+          },
+          "retainedPairMatchesFirst": false,
+          "after": [
+            {
+              "pairSlot": 1,
+              "mention": 0,
+              "resource": "base"
+            }
+          ],
+          "result": "base"
+        }
+      ],
+      "outcome": {
+        "groups": [
+          {
+            "resource": "base",
+            "members": [0, 1, 2]
+          }
+        ],
+        "fulls": [
+          {
+            "pairSlot": 1,
+            "mention": 0,
+            "resource": "base"
+          }
+        ]
+      }
+    }
+  ]
+}

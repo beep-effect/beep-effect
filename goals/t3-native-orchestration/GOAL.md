@@ -57,8 +57,9 @@ irreversible change (a tested down-migration, a backup of deleted state) before
 the change merges, and ship a breaking public API or schema change with a major
 changeset. Escalate only what AGENTS.md "Autonomy" lists.
 
-Ship proposedCloseout and the reflection in the final implementation PR while
-initiative.status stays active or paused. A proposal never reports achievement.
-Done only when exact-head hosted readiness and merge evidence verify the proposal
-through `bun run beep goals completion refresh --slug <slug>`, or when a blocker
-that needs the operator is reported with file/command evidence.
+Ship proposedCloseout and the reflection in the final PR (status stays active or
+paused). After that merge, verify with `bun run beep goals completion refresh --slug t3-native-orchestration`,
+then adopt with `bun run beep goals set-status t3-native-orchestration <status>` in a
+packet-state PR. Done only once it merges and this passes, or an operator
+blocker is reported with evidence:
+`git show origin/main:goals/t3-native-orchestration/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

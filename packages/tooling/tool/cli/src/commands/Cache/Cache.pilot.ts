@@ -179,9 +179,11 @@ const NativeTask = S.Struct({
   ),
 });
 const NativeSummary = S.Struct({ tasks: S.Array(NativeTask) });
-class PilotFile extends S.Opaque<PilotFile, { readonly brand: unique symbol }>()(
+class PilotTreeEntry extends S.Opaque<PilotTreeEntry, { readonly brand: unique symbol }>()(
   S.Struct({ path: S.NonEmptyString, mode: S.Natural, sha256: Sha256Hex }).pipe(
-    $I.annoteSchema("PilotFile", { description: "A regular package source file observed before or after execution." })
+    $I.annoteSchema("PilotTreeEntry", {
+      description: "A package root, directory, regular file or symlink observed before or after execution.",
+    })
   )
 ) {}
 class PilotRoot extends S.Opaque<PilotRoot, { readonly brand: unique symbol }>()(
@@ -218,6 +220,7 @@ class PilotShadowScenario extends S.Opaque<PilotShadowScenario, { readonly brand
   )
 ) {}
 
+// KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
 const captureHost = Effect.fn("CachePilot.captureHost")(function* (root: string, args: ReadonlyArray<string>) {
   const result = yield* runCapturedStreams({
     command: "/usr/bin/git",
@@ -275,7 +278,11 @@ const copyPackage = Effect.fn("CachePilot.copyPackage")(function* (source: strin
 const snapshot = Effect.fn("CachePilot.snapshot")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const files: Array<PilotFile> = [];
+  const directoryDigest = yield* hashText("");
+  const rootInfo = yield* fs.stat(root);
+  let entries: ReadonlyArray<PilotTreeEntry> = [
+    PilotTreeEntry.make({ path: ".", mode: S.Natural.make(rootInfo.mode), sha256: directoryDigest }),
+  ];
   const visit = Effect.fn("CachePilot.snapshotVisit")(function* (
     relative: string,
     depth: number
@@ -284,7 +291,7 @@ const snapshot = Effect.fn("CachePilot.snapshot")(function* (root: string) {
     CacheCommandError | FsGuardError | S.SchemaError | PlatformError.PlatformError,
     FileSystem.FileSystem | Path.Path | Digest.Digest
   > {
-    if (depth > 16 || files.length > 5000) {
+    if (depth > 16) {
       return yield* CacheCommandError.new("Pilot source tree exceeded its traversal bound.");
     }
     const readDirectory1 = yield* fs.readDirectory(path.join(root, relative));
@@ -292,22 +299,31 @@ const snapshot = Effect.fn("CachePilot.snapshot")(function* (root: string) {
       A.sort(readDirectory1, Order.String),
       Effect.fn("CachePilot.snapshotEntry")(function* (name) {
         if (relative === "" && name === ".turbo") return;
+        if (A.length(entries) >= 5000) {
+          return yield* CacheCommandError.new("Pilot source tree exceeded its traversal bound.");
+        }
         const child = path.join(relative, name);
         const link = yield* fs.readLink(path.join(root, child)).pipe(Effect.option);
         if (O.isSome(link)) {
-          files.push(
-            PilotFile.make({ path: child, mode: S.Natural.make(0o120000), sha256: yield* hashText(link.value) })
+          entries = A.append(
+            entries,
+            PilotTreeEntry.make({ path: child, mode: S.Natural.make(0o120000), sha256: yield* hashText(link.value) })
           );
           return;
         }
         const info = yield* fs.stat(path.join(root, child));
         if (info.type === "Directory") {
+          entries = A.append(
+            entries,
+            PilotTreeEntry.make({ path: child, mode: S.Natural.make(info.mode), sha256: directoryDigest })
+          );
           yield* visit(child, depth + 1);
         } else if (info.type === "File") {
-          files.push(
-            PilotFile.make({
+          entries = A.append(
+            entries,
+            PilotTreeEntry.make({
               path: child,
-              mode: S.Natural.make(info.mode & 0o777),
+              mode: S.Natural.make(info.mode),
               sha256: yield* readBytes(root, child).pipe(Effect.flatMap(hashBytes)),
             })
           );
@@ -319,7 +335,7 @@ const snapshot = Effect.fn("CachePilot.snapshot")(function* (root: string) {
     );
   });
   yield* visit("", 0);
-  return yield* PilotFile.pipe(S.Array, JsonStringCodec).encode(files).pipe(Effect.flatMap(hashText));
+  return yield* PilotTreeEntry.pipe(S.Array, JsonStringCodec).encode(entries).pipe(Effect.flatMap(hashText));
 });
 
 const validatePilotClient = Effect.fn("CachePilot.validateClient")(function* (
@@ -430,7 +446,9 @@ const runPilot = Effect.fn("CachePilot.run")(
       Order.String
     );
     const context = yield* resolveWorktreeContext(root);
+    // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
     const revision = yield* captureHost(root, ["rev-parse", "HEAD"]).pipe(Effect.flatMap(decodeGitObjectId));
+    // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
     const commonGit = yield* captureHost(root, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
     const sourceRoots = yield* Effect.forEach(request.worktrees, (source) => fs.realPath(source), { concurrency: 1 });
     const verifySourceIssuerExclusion = Effect.fn("CachePilot.verifySourceIssuerExclusion")(function* () {
@@ -459,6 +477,7 @@ const runPilot = Effect.fn("CachePilot.run")(
             "A pilot source is not a distinct registered worktree at the current revision."
           );
         }
+        // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
         if ((yield* captureHost(source, ["status", "--porcelain", "--untracked-files=all"])) !== "") {
           return yield* CacheCommandError.new("Pilot source worktrees must be clean before read-only execution.");
         }
@@ -577,6 +596,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       }
       yield* writeContainedFileString(types, "turbo.json", typesConfig);
       yield* writeContainedFileString(identity, "turbo.json", before);
+      // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
       const gitDirectory = yield* captureHost(source, ["rev-parse", "--absolute-git-dir"]);
       if (path.dirname(gitDirectory) !== path.join(commonGit, "worktrees")) {
         return yield* CacheCommandError.new("Pilot source uses unsupported Git metadata placement.");
@@ -1188,6 +1208,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       }
       for (const source of sourceRoots)
         if (
+          // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
           (yield* captureHost(source, ["status", "--porcelain", "--untracked-files=all"])) !== "" ||
           (yield* captureHost(source, ["rev-parse", "HEAD"])) !== revision
         ) {

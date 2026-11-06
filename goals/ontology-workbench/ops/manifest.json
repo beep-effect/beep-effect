@@ -35,11 +35,11 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
-    "research/ontology-playground-report.md",
     "research/beep-repo-capability-report.md",
     "research/graph-performance-report.md",
-    "research/ontosphere-survey-report.md",
-    "research/ontosphere-delta-report.md"
+    "research/ontology-playground-report.md",
+    "research/ontosphere-delta-report.md",
+    "research/ontosphere-survey-report.md"
   ],
   "agentLaunchers": [
     {

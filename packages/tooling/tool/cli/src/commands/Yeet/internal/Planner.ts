@@ -118,6 +118,10 @@ export class YeetRunPlanModeOptions extends S.Opaque<YeetRunPlanModeOptions, { r
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultKey(Effect.succeed(false))
     ),
+    hostedProof: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultKey(Effect.succeed(false))
+    ),
   }).pipe(
     $I.annoteSchema("YeetRunPlanModeOptions", {
       description: "Options for building a Yeet run plan in a specific mode.",
@@ -481,6 +485,7 @@ const repairCheapGateStep = (context: RepoRunContext): RepoPlanStep => {
   });
 };
 
+// KEEP (D-18): the commit runs the repo's commit hooks, whose output streams live as a recorded lane step and can outlast the kit's 30 s default.
 const commitStep = (
   context: RepoRunContext,
   message: O.Option<string>,
@@ -509,6 +514,7 @@ const publishPushRefspec = (): string => {
 // The prove-first push carries the proof-reuse marker it always carried, so its
 // plan stays byte-identical to the pre-push-first default; the push-first path
 // has no full proof to reuse and pushes without it.
+// KEEP (D-18): the pre-push hook reads a per-step env (`BEEP_YEET_REUSE_PRE_PUSH_PROOF`), and the kit has no per-call env.
 const pushStep = (context: RepoRunContext, reuseProof: boolean): RepoPlanStep =>
   gitStep(
     context,
@@ -626,6 +632,7 @@ const prProvenanceStampStep = (context: RepoRunContext): RepoPlanStep =>
     verification: "registry-backed-provenance-footer",
   });
 
+// KEEP (D-13): a recorded step that resolves the pull request from the checked-out branch.
 const monitorContextStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
     id: "monitor:01-pr-context",
@@ -640,6 +647,7 @@ const monitorContextStep = (context: RepoRunContext): RepoPlanStep =>
     verification: "current-branch-open-pr",
   });
 
+// KEEP (D-13): a recorded step over gh's checks rollup, which no kit member reads.
 const monitorChecksStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
     id: "monitor:02-pr-checks-watch",
@@ -711,6 +719,7 @@ const monitorReadySubmitStep = (context: RepoRunContext): RepoPlanStep =>
     },
   });
 
+// KEEP (D-13): a recorded step that resolves the pull request from the checked-out branch.
 const closeoutPrContextStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
     id: "closeout:01-pr-context",
@@ -725,6 +734,7 @@ const closeoutPrContextStep = (context: RepoRunContext): RepoPlanStep =>
     verification: "current-branch-open-pr",
   });
 
+// KEEP (D-13): a recorded closeout step; its query is a placeholder the closeout reader fills.
 const closeoutReviewGateStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
     id: "closeout:02-review-gates",
@@ -744,6 +754,7 @@ const closeoutSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => 
   closeoutReviewGateStep(context),
 ];
 
+// KEEP (D-18): operator-facing step output; the `--branch` header line has no kit model.
 const statusLocalStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
     id: "status:01-local",
@@ -758,6 +769,7 @@ const statusLocalStep = (context: RepoRunContext): RepoPlanStep =>
     verification: "local-branch-and-worktree-status",
   });
 
+// KEEP (D-13): `mergeStateStatus` and `reviewDecision` are GraphQL-only fields.
 const statusRemoteStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
     id: "status:02-remote-pr",
@@ -796,6 +808,7 @@ const statusRemoteStep = (context: RepoRunContext): RepoPlanStep =>
  */
 export const YEET_STATUS_CHECK_FIELDS = "name,state,bucket,link,workflow,completedAt,startedAt,description" as const;
 
+// KEEP (D-13): a recorded step over gh's checks rollup, which no kit member reads.
 const statusRemoteChecksStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
     id: "status:03-remote-checks",
@@ -866,12 +879,25 @@ const pushFirstPublishSteps = (
   ...pullRequestTailSteps(context, options),
 ];
 
+// `yeet open` (the constrained-compute escape, operator 2026-10-24): push the
+// committed HEAD and run the shared pull-request tail with no local gate, so
+// the draft, its heavy-admission label and its provenance footer come from Yeet
+// even when local admission is saturated. Hosted CI is the whole proof.
+const hostedProofPublishSteps = (
+  context: RepoRunContext,
+  options: YeetRunPlanModeOptions
+): ReadonlyArray<RepoPlanStep> => [pushStep(context, false), ...pullRequestTailSteps(context, options)];
+
 const publishSteps = (
   context: RepoRunContext,
   message: O.Option<string>,
   options: YeetRunPlanModeOptions
 ): ReadonlyArray<RepoPlanStep> =>
   Match.value(options).pipe(
+    Match.when(
+      ({ hostedProof }) => hostedProof,
+      () => hostedProofPublishSteps(context, options)
+    ),
     Match.when(
       ({ pushOnly }) => pushOnly,
       () =>

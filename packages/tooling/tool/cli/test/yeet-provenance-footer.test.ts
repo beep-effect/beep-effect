@@ -23,9 +23,11 @@ import {
   recordPrCreateLane,
   recordPrProvenanceStampLane,
   renderPrProvenance,
+  replacePrBodyKeepingFooter,
   runYeetMergeLoop,
   runYeetWatchLoop,
   splicePrProvenanceFooter,
+  stripPrProvenanceFooter,
   toPublicPrProvenance,
   YeetExecutedStep,
   YeetUntilReadyPolicy,
@@ -346,6 +348,29 @@ describe("Yeet provenance footer splice", () => {
   it("preserves foreign trailing text", () => {
     const existing = `${splicePrProvenanceFooter("Body", footer)}\nForeign tail\n`;
     expect(splicePrProvenanceFooter(existing, footer)).toContain("Foreign tail");
+  });
+
+  it("strips a current footer and leaves a footerless body trimmed", () => {
+    expect(stripPrProvenanceFooter(splicePrProvenanceFooter("Body", footer))).toBe("Body");
+    expect(stripPrProvenanceFooter(`${splicePrProvenanceFooter("Body", footer)}Tail\n`)).toBe("BodyTail\n");
+    expect(stripPrProvenanceFooter("Body\n\n")).toBe("Body");
+  });
+
+  it("replaces a body and carries the live footer over unchanged", () => {
+    const live = splicePrProvenanceFooter("Old summary", footer);
+    const next = replacePrBodyKeepingFooter(live, "## Summary\n\nNew summary");
+    expect(next).toBe(splicePrProvenanceFooter("## Summary\n\nNew summary", footer));
+    expect(next).not.toContain("Old summary");
+    expect(replacePrBodyKeepingFooter("New")(live)).toBe(splicePrProvenanceFooter("New", footer));
+  });
+
+  it("drops a footer pasted into the replacement", () => {
+    const pasted = splicePrProvenanceFooter("Pasted", footer);
+    expect(replacePrBodyKeepingFooter("Live body without footer", pasted)).toBe("Pasted");
+    const live = splicePrProvenanceFooter("Old", footer);
+    const next = replacePrBodyKeepingFooter(live, pasted);
+    expect(next).toBe(splicePrProvenanceFooter("Pasted", footer));
+    expect(Str.split(next, "<!-- yeet-provenance:start -->")).toHaveLength(2);
   });
 
   it.layer(PlatformLayer, { timeout: "10 seconds" })((it) => {

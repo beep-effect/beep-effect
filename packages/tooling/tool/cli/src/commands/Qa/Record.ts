@@ -52,6 +52,7 @@ import {
   resolveRound,
   writeRecordStartHint,
 } from "./Qa.session.ts";
+import type { Git } from "@beep/git/Git";
 import type { CollectorRunning, RoundLayout, RoundNumber } from "@beep/qa-capture";
 import type { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -487,6 +488,7 @@ export const runQaRecord = Effect.fn("QaRecord.run")(function* (
   | FileSystem.FileSystem
   | Path.Path
   | SessionStore
+  | Git
 > {
   const path = yield* Path.Path;
   const store = yield* SessionStore;

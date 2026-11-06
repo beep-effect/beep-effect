@@ -1,0 +1,7 @@
+# Integrated ownership measurement
+
+The unchanged 538-claim actual-service/tool-page evaluation records43 strict matches,537 parsed and453 abstained. All prior41 and original37 passes remain. Exact gains:14659462-root-1 claims12 and17; both are in one family. No additional covered claim is established. Independent owner003 source review and11 public-API probes close both required owner findings; this is not independent legal truth.
+
+Fresh full installed capture implementationDigest7825ab6765344e2c982f542280d4e3aaa3edcf6f69208725068f1236ff8f6bda binds reviewed prospective metadata003. Capture001 failed before prediction on88 retired citation modules; capture002 failed before prediction on two reviewed verifier/test pins. Both remain unchanged. Separate archives preserve every retired source and old verifier/test byte; immutable capture guards were not relaxed. Four independent metadata implementation reviews have zero required findings. All1213 original artifacts verify:1209 originalpaths,3 historicalrunnerarchives,1 historicalgeneratedmanifestarchive.
+
+The previous policy measurement41/453 and all earlier results/labels/source/scorer remain intact. Current43 passes become mandatory retention for subsequent candidates. The broad clause/NP-role bundle is not included here. This remains8.0% exact and84.2% abstention, far below usefulness gates; independently admitted new-cohort references, defect/control truth and final delivery remain outstanding. No goal completion or merge-readiness is claimed.

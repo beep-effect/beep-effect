@@ -1,0 +1,13 @@
+# Inspection colon scope
+
+The additive source-record inspection path now has a distinct deterministic tree-construction strategy for colon groups. The public strict `decomposeClaim` operation retains its existing colon contract, including the historical header-only parent span and first-colon remainder ownership. The original frozen specification and reference labels remain unchanged.
+
+`decomposeClaimInput` continues to qualify the complete raw ledger itself. Its private construction strategy is passed through the shared decomposition algorithm and used for both the current claim and every dependency ancestor. There is no caller-selected feature flag, fixture identity branch, second decomposition algorithm, or change to `PatentClaim`, `PatentClaims` or `ClaimElementTree`.
+
+For inspection, a colon header with children is a group limitation. Its emitted anchor covers the header through the last owned child, while its terms come only from the header span. Children retain their own terms and source anchors. A childless colon header remains an ordinary leaf. This separates source extent from lexical ownership and prevents duplicate child introductions on the parent.
+
+Explicit consecutive enumeration labels can return to an enclosing peer level. Parenthesized, suffix and `Step` label styles are kept distinct; numeric, alphabetic and canonical roman successors are recognized without a fixed roman count ceiling. A scope exit requires exactly one matching active header before the child-level conflict guard is applied. Multiple matching active headers, a conflicting child-level interpretation, a skipped label or a mismatched style do not establish a scope exit. Ambiguous unlabelled `and` and semicolon continuations remain inside their active container.
+
+Exact method-frame wording such as `it comprises the following steps:` is transparent. Complete paired quotations shield body separators, and an explicit `Step 1,` or `Step 1:` separator stays with its action. Incomplete quotations retain ordinary separator scanning. Existing normalization and prefix cleaning remain shared with the strict path.
+
+Synthetic tests cover group extent and header-only terms, nested and peer scopes, conservative label counterexamples, transparent frames, quoted separators, reference brackets, childless headers, strict contract preservation and ancestor lexical ownership. The new strategy is an authorized structural candidate; focused checks and package verification do not establish cohort retention or usefulness. Independent review and a fresh unchanged 538-claim actual-tool-page replay must retain the original 37 and prior 39 matches before acceptance. No claim is made that this lane establishes the 270/538 goal.

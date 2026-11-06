@@ -29,6 +29,8 @@ rows in [`MAP.md`](./MAP.md) (`html-spoke-parser`, `doc-core-promotion`,
 `rule-dsl-projections`, `process-admissibility-gate`) are the re-entry points; a fired gate
 reopens this packet at decompose. The effected-promotion D-02/D-50 amendment is owned by the
 inversion goal.
+The November 5 D-13 clarification extends only the oracle POC's bounded fixture;
+no re-entry gate fired and the inversion contract remains unchanged.
 
 ## Read This First
 
@@ -49,6 +51,10 @@ inversion goal.
 9. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
 
 ## Trail
+
+- 2026-11-05: appended D-13 for a deterministic question-binding fixture in the
+  oracle POC, clarifying D-01/D-08 while preserving D-09/D-10 and the inversion.
+  Planning amendment only; graduation and gated re-entry conditions are unchanged.
 
 - 2026-10-28 (CI reference repair): planned output workspaces are named beneath their existing parent directories; the friction ledger is established. Raw capture retained under `research/capture-2026-10-28.md`, with CAPTURE linking to the archive; no implementation or lifecycle change.
 

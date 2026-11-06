@@ -85,5 +85,6 @@
     "The same blocker repeats after reasonable investigation.",
     "The dependency packet (desktop-chat-surface) is not closed."
   ],
-  "mission": "Bring `apps/professional-desktop`'s chat surface to **full feature parity** with the `effect-lexical-chat` POC. The prior `desktop-chat-surface` packet shipped the surface (atoms, turn kernel, `ChatRpcs`, PGlite persistence) but a POC→port audit found three buckets of dropped parity:"
+  "mission": "Bring `apps/professional-desktop`'s chat surface to **full feature parity** with the `effect-lexical-chat` POC. The prior `desktop-chat-surface` packet shipped the surface (atoms, turn kernel, `ChatRpcs`, PGlite persistence) but a POC→port audit found three buckets of dropped parity:",
+  "researchReports": ["research/2026-06-15-poc-parity-audit.md"]
 }

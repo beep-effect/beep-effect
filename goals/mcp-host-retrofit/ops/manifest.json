@@ -33,11 +33,7 @@
     "goals/mcp-host-retrofit/research/SOURCES.md",
     "goals/mcp-kit/SPEC.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/mcp-auth-gated-registration/research/SOURCES.md",
-    "../../explorations/mcp-auth-gated-registration/reviews/2026-07-01-codex-verification.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "links": {
     "goals": ["mcp-kit", "uspto-mcp"]
   },
@@ -92,5 +88,9 @@
     "The implementation would exceed named scope (a real write-capable tier-gate proof belongs to mcp-write-wall, not this goal).",
     "Retrofitting either host would require behavior changes beyond span/annotation hygiene.",
     "The same blocker repeats after reasonable investigation."
+  ],
+  "researchReferences": [
+    "../../explorations/mcp-auth-gated-registration/research/SOURCES.md",
+    "../../explorations/mcp-auth-gated-registration/reviews/2026-07-01-codex-verification.md"
   ]
 }

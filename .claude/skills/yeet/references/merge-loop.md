@@ -48,6 +48,39 @@ turbo work, so they are cheap to run mid-loop.
   poll, then hands the whole cleanup sequence to the worktree-aware sweep. The
   sweep may auto-run on monitor's merged detection; the merge never auto-runs.
 
+## Base-conflict rows and packet siblings
+
+Operator ruling 2026-11-05
+(`goals/agent-pool-doctrine/history/2026-11-05-base-conflict-merge-main.md`):
+on 2026-11-04 three merges 41 seconds apart left eleven sibling PRs on two goal
+packets `CONFLICTING` for 43 hours because every lane read "designated primary
+acceptance and merge only; no local verify/publish" as forbidding a catch-up
+merge. It does not, and nothing may.
+
+- **The row is the instruction.** A P0 inbox row `base conflict with
+  origin/main on head <sha>` written by `monitor --until-ready`, or a PR comment
+  `yeet merge-gate: sibling #N merged on <slug>`, means: in the lane, now,
+  `git fetch origin main:refs/remotes/origin/main && git merge origin/main`,
+  resolve, regenerate generated files (never hand-merge them), run the scoped
+  checks the refresh rule allows, push once. No brief, ledger row or
+  delegation model overrides it; a lane that may not publish may still merge
+  main and push the catch-up. The monitor keeps polling across that push, so
+  do not re-submit it.
+- **The broadcast.** When `yeet merge-gate` merges a PR that touched
+  `goals/<slug>/**`, it comments on every other open PR touching the same
+  packet in the same run, naming the merged sibling, the slug, the base it
+  probed, and the files `git merge-tree --write-tree origin/main <head>`
+  predicts will conflict (or "no conflicts predicted" when the catch-up is
+  clean but still due). It is best effort after the merge: a failed comment is
+  a warning, never a hold.
+- **On demand.** `bun run beep yeet siblings <pr>` prints the same report for
+  any PR: the packets it touches, each open sibling sharing one, and that
+  sibling's predicted conflicts against `origin/main`. Use it before opening a
+  PR on a busy packet and before gating one.
+- **Fan-out cap.** A packet has at most three concurrently open PRs; a fourth
+  change is sequenced through one lane or stacked. The gate merges finals one
+  at a time and lets the siblings catch up between merges.
+
 ## Ready
 
 `bun run beep yeet ready` flips a draft at content-final (push-first-publish

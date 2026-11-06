@@ -6,6 +6,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { renderTruncatedLines } from "@beep/repo-cli-kit/artifacts/index";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
@@ -31,7 +33,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
-import { resolveGitCommit, runGitLines } from "../../internal/repo-run/GitExec.ts";
+import { adaptGitKitError, resolveGitCommit } from "../../internal/repo-run/GitExec.ts";
 import {
   CHECK_CENSUS_BASELINE_PATH,
   CheckCensusBaselineProvenance,
@@ -52,7 +54,6 @@ import {
 import { compilerOutputLines, isCompilerDiagnosticLine, nameFilterPredicate } from "./internal/CheckCensusOutput.ts";
 import { jsdocGitErrorAdapter } from "./internal/JSDocRatchet.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
-import type { Git } from "@beep/git/Git";
 import type { FsUtils } from "@beep/repo-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -957,7 +958,10 @@ const checkCensusBaselineProvenance = Effect.fn("CheckCensus.baselineProvenance"
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const commit = yield* resolveGitCommit(repoRoot, "HEAD", jsdocGitErrorAdapter);
-  const status = yield* runGitLines(repoRoot, ["status", "--porcelain"], jsdocGitErrorAdapter);
+  const git = yield* Git;
+  const status = yield* git
+    .status(repoRoot)
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.status(), jsdocGitErrorAdapter)));
   const measuredAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
 
   return CheckCensusBaselineProvenance.make({ measuredAt, commit, dirtyWorktree: A.isReadonlyArrayNonEmpty(status) });

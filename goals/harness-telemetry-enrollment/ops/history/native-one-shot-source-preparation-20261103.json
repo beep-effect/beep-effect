@@ -1,0 +1,34 @@
+{
+  "version": "native-one-shot-source-preparation/v1",
+  "date": "2026-11-03",
+  "status": "source-preparation-only",
+  "lifecycle": "active",
+  "sourceAdmission": "pending-for-new-native-extension",
+  "realHarnessPopulation": "Unknown",
+  "runtime": "not-run",
+  "backendVisibility": "Unknown",
+  "historicalAdmission": {
+    "preparationInputs": 81,
+    "disposableBindings": 87,
+    "liveBindings": 86,
+    "scope": "historical selected-source synthetic proof; does not transfer"
+  },
+  "ownedOperations": {
+    "goals/harness-telemetry-enrollment/ops/codex-exec-wire.ts": "91d844d77aeb4aa77c5263198486abc456a1dc04fe2ee0262f22e27a53de8a6c",
+    "goals/harness-telemetry-enrollment/ops/codex-native-canary.ts": "141f6900a6baefa0a2e0ac9a986f8ca5ac15bb104a1dc20408873c5bf1ae4861",
+    "goals/harness-telemetry-enrollment/ops/native-canary-config.ts": "92c4719feca7a264d2be75a19cb7014ccf2e5321745992c689c7a33d0234a84f",
+    "goals/harness-telemetry-enrollment/ops/test-codex-exec-wire.ts": "c3d6889ae9ea1aa62900a703211865f28f017ba7849c498a8f1141ad073f35c7",
+    "goals/harness-telemetry-enrollment/ops/test-codex-native-canary.ts": "0de0373614f387a555a79bb6ff8fbf164d08d40bcef5341141d9fc877387aa7d",
+    "goals/harness-telemetry-enrollment/ops/test-codex-native-config.ts": "83d587e6274bd3b996b6a1e976bff44b108c45d1598a27484c8e57b0cce09018",
+    "goals/harness-telemetry-enrollment/ops/vitest.config.ts": "35489c4e08c095b646586384740e7cab27d1a0b616595c4a6f6393c73d56eaaa"
+  },
+  "localVerification": {
+    "producerTests": 26,
+    "configTests": 9,
+    "integrated": "35 tests passed after the reviewed retained-core port",
+    "goalsOpsCompiler": "complete goals/tsconfig.ops.json compiler passed after the reviewed retained-core port"
+  },
+  "independentReview": "fixed producer/protocol/config isolation reviews accepted at their recorded exact source hashes; packet integration and fresh source admission remain separate",
+  "privacy": "counts and hashes only; native response and credential-bearing fields transient and discarded",
+  "recoveryHold": "preserved"
+}

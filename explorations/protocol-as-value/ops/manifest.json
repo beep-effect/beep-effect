@@ -6,7 +6,7 @@
     "status": "active",
     "stage": "shape",
     "openQuestions": [
-      "Shape review: does BRIEF.md match the picture in Benjamin's head? Exit shape only on his confirmation, then decompose into MAP.md."
+      "Review the complete amended BRIEF before decomposition into MAP.md. The November 5 contract amendments are adopted; full shape approval and Wave 2 activation remain unestablished."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
@@ -15,6 +15,6 @@
       "supersededBy": null
     },
     "created": "2026-08-23",
-    "updated": "2026-08-23"
+    "updated": "2026-11-05"
   }
 }

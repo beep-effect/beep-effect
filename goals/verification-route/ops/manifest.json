@@ -34,7 +34,12 @@
     "goals/verification-route/GOAL.md",
     "goals/verification-route/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/census-2026-10-31.md",
+    "research/corpus/RECEIPTS.json",
+    "research/corpus/hosted-runs.ndjson.gz"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

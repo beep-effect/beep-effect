@@ -113,6 +113,7 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
       20_000
     );
   }
+  // KEEP (D-19): hardened untrusted-clone boundary (isolated config, hooks off, caps, timeout).
   const resultLibraryCommand = yield* runLibraryCommand(
     root,
     "git",

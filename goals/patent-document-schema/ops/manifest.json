@@ -39,10 +39,7 @@
     "explorations/document-structure-ontologies/MAP.md",
     "explorations/document-structure-ontologies/DECISIONS.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/document-structure-ontologies/research/SOURCES.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -90,5 +87,8 @@
     "The implementation requires rhetoric tags in syntax ASTs or a foundation-level jurisdictional patent package.",
     "Normative sources materially contradict the ratified schema.",
     "The first consumer requires widening unrelated sibling contracts."
+  ],
+  "researchReferences": [
+    "../../explorations/document-structure-ontologies/research/SOURCES.md"
   ]
 }

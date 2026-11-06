@@ -1,0 +1,3661 @@
+{
+  "schemaVersion": "citation-model-mutation-observations/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "pythonVersion": "3.11.15",
+  "pythonHashSeed": "0",
+  "versions": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22"
+  },
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "exporterSha256": "fef59de5e6279e8dd1c755247d248803965f3d53c4e33696e57261ee931f1685",
+  "sources": {
+    "resolve.py": "651ede8c2a2d5df9ec9c9f1145530a6de7fca15304d1816b7f620a81ab3f2044",
+    "models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a"
+  },
+  "cases": [
+    {
+      "name": "full-rename-current",
+      "family": "semantic",
+      "kinds": ["case", "supra"],
+      "initialObjects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Changed",
+            "pin_cite": null
+          }
+        }
+      ],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Changed",
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Changed",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Changed",
+                "pin_cite": null
+              }
+            }
+          ],
+          "result": {
+            "kind": "str",
+            "value": "base"
+          }
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Changed",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Changed",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "current": {
+            "reference": {
+              "kind": "input",
+              "index": 1
+            },
+            "groups": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "plaintiff": null,
+              "antecedent_guess": "Changed",
+              "pin_cite": null
+            }
+          },
+          "result": {
+            "kind": "str",
+            "value": "base"
+          }
+        }
+      ],
+      "objects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Changed",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Changed",
+            "pin_cite": null
+          }
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "rename-prior-in-supra",
+      "family": "semantic",
+      "kinds": ["case", "supra"],
+      "initialObjects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Changed",
+            "pin_cite": null
+          }
+        }
+      ],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Changed",
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Changed",
+                "pin_cite": null
+              }
+            }
+          ],
+          "result": {
+            "kind": "str",
+            "value": "base"
+          }
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Changed",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "current": {
+            "reference": {
+              "kind": "input",
+              "index": 1
+            },
+            "groups": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "plaintiff": null,
+              "antecedent_guess": "Changed",
+              "pin_cite": null
+            }
+          },
+          "result": {
+            "kind": "str",
+            "value": "base"
+          }
+        }
+      ],
+      "objects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Changed",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Changed",
+            "pin_cite": null
+          }
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "page-prior-in-id",
+      "family": "semantic",
+      "kinds": ["case", "id"],
+      "initialObjects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": null,
+            "pin_cite": "2"
+          }
+        }
+      ],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": null,
+                "pin_cite": "2"
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": null,
+                "pin_cite": "2"
+              }
+            }
+          ],
+          "result": {
+            "kind": "str",
+            "value": "base"
+          }
+        },
+        {
+          "slot": "id",
+          "mention": 1,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "20"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "current": {
+            "reference": {
+              "kind": "input",
+              "index": 1
+            },
+            "groups": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "plaintiff": null,
+              "antecedent_guess": null,
+              "pin_cite": "2"
+            }
+          },
+          "result": {
+            "kind": "NoneType",
+            "value": null
+          }
+        }
+      ],
+      "objects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "20"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": null,
+            "pin_cite": "2"
+          }
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "volume-prior-in-short",
+      "family": "semantic",
+      "kinds": ["case", "short"],
+      "initialObjects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "2",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Smith",
+            "pin_cite": null
+          }
+        }
+      ],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "2",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "2",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            }
+          ],
+          "result": {
+            "kind": "str",
+            "value": "base"
+          }
+        },
+        {
+          "slot": "short",
+          "mention": 1,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "2",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "current": {
+            "reference": {
+              "kind": "input",
+              "index": 1
+            },
+            "groups": {
+              "volume": "2",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "plaintiff": null,
+              "antecedent_guess": "Smith",
+              "pin_cite": null
+            }
+          },
+          "result": {
+            "kind": "str",
+            "value": "base"
+          }
+        }
+      ],
+      "objects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "2",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "2",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Smith",
+            "pin_cite": null
+          }
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "current-id-pin",
+      "family": "semantic",
+      "kinds": ["case", "id"],
+      "initialObjects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": null,
+            "pin_cite": "2"
+          }
+        }
+      ],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": null,
+                "pin_cite": "2"
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": null,
+                "pin_cite": "2"
+              }
+            }
+          ],
+          "result": {
+            "kind": "str",
+            "value": "base"
+          }
+        },
+        {
+          "slot": "id",
+          "mention": 1,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "current": {
+            "reference": {
+              "kind": "input",
+              "index": 1
+            },
+            "groups": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "plaintiff": null,
+              "antecedent_guess": null,
+              "pin_cite": "200"
+            }
+          },
+          "result": {
+            "kind": "NoneType",
+            "value": null
+          }
+        }
+      ],
+      "objects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": null,
+            "pin_cite": "200"
+          }
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "current-supra-antecedent",
+      "family": "semantic",
+      "kinds": ["case", "supra"],
+      "initialObjects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Smith",
+            "pin_cite": null
+          }
+        }
+      ],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            }
+          ],
+          "result": {
+            "kind": "str",
+            "value": "base"
+          }
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "current": {
+            "reference": {
+              "kind": "input",
+              "index": 1
+            },
+            "groups": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "plaintiff": null,
+              "antecedent_guess": "Missing",
+              "pin_cite": null
+            }
+          },
+          "result": {
+            "kind": "NoneType",
+            "value": null
+          }
+        }
+      ],
+      "objects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Missing",
+            "pin_cite": null
+          }
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "retained-metadata-from-full",
+      "family": "semantic",
+      "kinds": ["case", "supra", "case", "supra"],
+      "initialObjects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Smith",
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 2
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 3
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Changed",
+            "pin_cite": null
+          }
+        }
+      ],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 2
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 3
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Changed",
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 2
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 3
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Changed",
+                "pin_cite": null
+              }
+            }
+          ],
+          "result": {
+            "kind": "str",
+            "value": "base"
+          }
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "current": {
+            "reference": {
+              "kind": "input",
+              "index": 1
+            },
+            "groups": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "plaintiff": null,
+              "antecedent_guess": "Smith",
+              "pin_cite": null
+            }
+          },
+          "result": {
+            "kind": "str",
+            "value": "base"
+          }
+        },
+        {
+          "slot": "full",
+          "mention": 2,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 2
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 3
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Changed",
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Changed",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 2
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 3
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Changed",
+                "pin_cite": null
+              }
+            }
+          ],
+          "result": {
+            "kind": "str",
+            "value": "base"
+          }
+        },
+        {
+          "slot": "supra",
+          "mention": 3,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Changed",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 2
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Changed",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 2
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "current": {
+            "reference": {
+              "kind": "input",
+              "index": 3
+            },
+            "groups": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "plaintiff": null,
+              "antecedent_guess": "Changed",
+              "pin_cite": null
+            }
+          },
+          "result": {
+            "kind": "str",
+            "value": "base"
+          }
+        }
+      ],
+      "objects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Changed",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Smith",
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 2
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 3
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Changed",
+            "pin_cite": null
+          }
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 1
+              },
+              {
+                "kind": "input",
+                "index": 2
+              },
+              {
+                "kind": "input",
+                "index": 3
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "detached-alias-metadata",
+      "family": "semantic",
+      "kinds": ["case", "supra", "supra"],
+      "initialObjects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Detached",
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 2
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Changed",
+            "pin_cite": null
+          }
+        }
+      ],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Detached",
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 2
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Changed",
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Detached",
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 2
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Changed",
+                "pin_cite": null
+              }
+            }
+          ],
+          "result": {
+            "kind": "str",
+            "value": "base"
+          }
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "detached",
+                "slot": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Detached",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "current": {
+            "reference": {
+              "kind": "input",
+              "index": 1
+            },
+            "groups": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "plaintiff": null,
+              "antecedent_guess": "Detached",
+              "pin_cite": null
+            }
+          },
+          "result": {
+            "kind": "str",
+            "value": "foreign"
+          }
+        },
+        {
+          "slot": "supra",
+          "mention": 2,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "detached",
+                "slot": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Detached",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "detached",
+                "slot": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Changed",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "current": {
+            "reference": {
+              "kind": "input",
+              "index": 2
+            },
+            "groups": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "plaintiff": null,
+              "antecedent_guess": "Changed",
+              "pin_cite": null
+            }
+          },
+          "result": {
+            "kind": "str",
+            "value": "foreign"
+          }
+        }
+      ],
+      "objects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Detached",
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 2
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Changed",
+            "pin_cite": null
+          }
+        }
+      ],
+      "detachedObjects": [
+        {
+          "reference": {
+            "kind": "detached",
+            "slot": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Changed",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        }
+      ],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "str",
+              "value": "base"
+            },
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              }
+            ]
+          },
+          {
+            "resource": {
+              "kind": "str",
+              "value": "foreign"
+            },
+            "members": [
+              {
+                "kind": "input",
+                "index": 1
+              },
+              {
+                "kind": "input",
+                "index": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "default-page-before-insertion",
+      "family": "mutable-key",
+      "kinds": ["case", "id"],
+      "initialObjects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": null,
+            "pin_cite": "2"
+          }
+        }
+      ],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": null,
+                "pin_cite": "2"
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "2"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": null,
+                "pin_cite": "2"
+              }
+            }
+          ],
+          "result": {
+            "kind": "default",
+            "slot": 0,
+            "citation": {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "2"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          }
+        },
+        {
+          "slot": "id",
+          "mention": 1,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "2"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "2"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "current": {
+            "reference": {
+              "kind": "input",
+              "index": 1
+            },
+            "groups": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "plaintiff": null,
+              "antecedent_guess": null,
+              "pin_cite": "2"
+            }
+          },
+          "result": {
+            "kind": "default",
+            "slot": 0,
+            "citation": {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "2"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          }
+        }
+      ],
+      "objects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "2"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": null,
+            "pin_cite": "2"
+          }
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "default",
+              "slot": 0,
+              "citation": {
+                "reference": {
+                  "kind": "input",
+                  "index": 0
+                },
+                "groups": {
+                  "volume": "1",
+                  "reporter": "U.S.",
+                  "page": "2"
+                },
+                "metadata": {
+                  "plaintiff": "Smith",
+                  "antecedent_guess": null,
+                  "pin_cite": null
+                }
+              }
+            },
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "default-page-after-insertion",
+      "family": "mutable-key",
+      "kinds": ["case", "supra", "id"],
+      "initialObjects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Smith",
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 2
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": null,
+            "pin_cite": "2"
+          }
+        }
+      ],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 2
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": null,
+                "pin_cite": "2"
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 2
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": null,
+                "pin_cite": "2"
+              }
+            }
+          ],
+          "result": {
+            "kind": "default",
+            "slot": 0,
+            "citation": {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          }
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "20"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "current": {
+            "reference": {
+              "kind": "input",
+              "index": 1
+            },
+            "groups": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "plaintiff": null,
+              "antecedent_guess": "Smith",
+              "pin_cite": null
+            }
+          },
+          "result": {
+            "kind": "default",
+            "slot": 0,
+            "citation": {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "20"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          }
+        },
+        {
+          "slot": "id",
+          "mention": 2,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "20"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "20"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            }
+          ],
+          "current": {
+            "reference": {
+              "kind": "input",
+              "index": 2
+            },
+            "groups": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "plaintiff": null,
+              "antecedent_guess": null,
+              "pin_cite": "2"
+            }
+          },
+          "result": {
+            "kind": "default",
+            "slot": 0,
+            "citation": {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "20"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          }
+        }
+      ],
+      "objects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "20"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Smith",
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 2
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": null,
+            "pin_cite": "2"
+          }
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "default",
+              "slot": 0,
+              "citation": {
+                "reference": {
+                  "kind": "input",
+                  "index": 0
+                },
+                "groups": {
+                  "volume": "1",
+                  "reporter": "U.S.",
+                  "page": "20"
+                },
+                "metadata": {
+                  "plaintiff": "Smith",
+                  "antecedent_guess": null,
+                  "pin_cite": null
+                }
+              }
+            },
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              }
+            ]
+          },
+          {
+            "resource": {
+              "kind": "default",
+              "slot": 0,
+              "citation": {
+                "reference": {
+                  "kind": "input",
+                  "index": 0
+                },
+                "groups": {
+                  "volume": "1",
+                  "reporter": "U.S.",
+                  "page": "20"
+                },
+                "metadata": {
+                  "plaintiff": "Smith",
+                  "antecedent_guess": null,
+                  "pin_cite": null
+                }
+              }
+            },
+            "members": [
+              {
+                "kind": "input",
+                "index": 1
+              },
+              {
+                "kind": "input",
+                "index": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "default-page-after-insertion-two",
+      "family": "mutable-key",
+      "kinds": ["case", "supra", "id"],
+      "initialObjects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Smith",
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 2
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": null,
+            "pin_cite": "2"
+          }
+        }
+      ],
+      "events": [
+        {
+          "slot": "full",
+          "mention": 0,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 2
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": null,
+                "pin_cite": "2"
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 2
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": null,
+                "pin_cite": "2"
+              }
+            }
+          ],
+          "result": {
+            "kind": "default",
+            "slot": 0,
+            "citation": {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          }
+        },
+        {
+          "slot": "supra",
+          "mention": 1,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "2"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          ],
+          "current": {
+            "reference": {
+              "kind": "input",
+              "index": 1
+            },
+            "groups": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "plaintiff": null,
+              "antecedent_guess": "Smith",
+              "pin_cite": null
+            }
+          },
+          "result": {
+            "kind": "default",
+            "slot": 0,
+            "citation": {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "2"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          }
+        },
+        {
+          "slot": "id",
+          "mention": 2,
+          "before": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "2"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            }
+          ],
+          "after": [
+            {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "2"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            },
+            {
+              "reference": {
+                "kind": "input",
+                "index": 1
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "1"
+              },
+              "metadata": {
+                "plaintiff": null,
+                "antecedent_guess": "Smith",
+                "pin_cite": null
+              }
+            }
+          ],
+          "current": {
+            "reference": {
+              "kind": "input",
+              "index": 2
+            },
+            "groups": {
+              "volume": "1",
+              "reporter": "U.S.",
+              "page": "1"
+            },
+            "metadata": {
+              "plaintiff": null,
+              "antecedent_guess": null,
+              "pin_cite": "2"
+            }
+          },
+          "result": {
+            "kind": "default",
+            "slot": 0,
+            "citation": {
+              "reference": {
+                "kind": "input",
+                "index": 0
+              },
+              "groups": {
+                "volume": "1",
+                "reporter": "U.S.",
+                "page": "2"
+              },
+              "metadata": {
+                "plaintiff": "Smith",
+                "antecedent_guess": null,
+                "pin_cite": null
+              }
+            }
+          }
+        }
+      ],
+      "objects": [
+        {
+          "reference": {
+            "kind": "input",
+            "index": 0
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "2"
+          },
+          "metadata": {
+            "plaintiff": "Smith",
+            "antecedent_guess": null,
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 1
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": "Smith",
+            "pin_cite": null
+          }
+        },
+        {
+          "reference": {
+            "kind": "input",
+            "index": 2
+          },
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": "1"
+          },
+          "metadata": {
+            "plaintiff": null,
+            "antecedent_guess": null,
+            "pin_cite": "2"
+          }
+        }
+      ],
+      "detachedObjects": [],
+      "outcome": {
+        "status": "value",
+        "groups": [
+          {
+            "resource": {
+              "kind": "default",
+              "slot": 0,
+              "citation": {
+                "reference": {
+                  "kind": "input",
+                  "index": 0
+                },
+                "groups": {
+                  "volume": "1",
+                  "reporter": "U.S.",
+                  "page": "2"
+                },
+                "metadata": {
+                  "plaintiff": "Smith",
+                  "antecedent_guess": null,
+                  "pin_cite": null
+                }
+              }
+            },
+            "members": [
+              {
+                "kind": "input",
+                "index": 0
+              },
+              {
+                "kind": "input",
+                "index": 1
+              },
+              {
+                "kind": "input",
+                "index": 2
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

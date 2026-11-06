@@ -98,5 +98,6 @@
   "supersededBy": "standards-remediation",
   "statusNote": "legacy status: complete",
   "supersededNote": "remaining exception ledger to zero entries (2026-07-07)",
-  "mission": "Drive repo schema-first governance to zero actionable findings and publish the result as a mergeable PR. Actionable means every non-exception candidate and active advisory is either remediated, eliminated by detector improvements, or reclassified with a durable non-actionable rationale."
+  "mission": "Drive repo schema-first governance to zero actionable findings and publish the result as a mergeable PR. Actionable means every non-exception candidate and active advisory is either remediated, eliminated by detector improvements, or reclassified with a durable non-actionable rationale.",
+  "researchReports": ["research/baseline-2026-06-11.md"]
 }

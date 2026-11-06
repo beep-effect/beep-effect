@@ -18,6 +18,7 @@ import {
   MergeGateRunOptions,
   MergeGateTolerance,
   parseMergeGateTolerance,
+  provenanceFooterBeforeMergeForTesting,
   RepoRunContext,
   readMergeGate,
   renderMergeGateDecision,
@@ -1923,6 +1924,19 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           expect(got25).toHaveLength(0);
         })
       )
+    );
+
+    it.effect("re-asserts the provenance footer before a real merge and never on a dry run", () =>
+      Effect.gen(function* () {
+        const runs = yield* Ref.make(0);
+        const reassert = Ref.update(runs, (n) => n + 1);
+        yield* provenanceFooterBeforeMergeForTesting({ dryRun: true, reassert });
+        const afterDryRun = yield* Ref.get(runs);
+        expect(afterDryRun).toBe(0);
+        yield* provenanceFooterBeforeMergeForTesting({ dryRun: false, reassert });
+        const afterMerge = yield* Ref.get(runs);
+        expect(afterMerge).toBe(1);
+      })
     );
 
     it.effect("the command decodes tolerances, resolves the repo and runs the gate", () =>

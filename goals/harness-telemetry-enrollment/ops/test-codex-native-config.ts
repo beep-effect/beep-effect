@@ -222,25 +222,26 @@ it.layer(Layer.merge(NodeServices.layer, NodeCrypto.layer), { concurrent: false 
       expect(explicit).toEqual(original);
     })
   );
-  it.effect("admits only the finite Claude route while preserving controller intake policy", () =>
-    Effect.gen(function* () {
-      const f = yield* fixture;
-      const receipt = yield* f.provide(
-        generateNativeCanaryConfig(
-          NativeCanaryConfigRequest.make({
-            ...f.request,
-            harness: "claude-code",
-          })
-        )
-      );
-      const raw = yield* f.fs.readFileString(receipt.workerConfigFile);
-      const config = yield* S.decodeEffect(S.fromJsonString(ObservationLaunchConfig))(raw);
-      expect(O.getOrThrow(config.launchHttp).routes).toEqual([
-        { routeId: receipt.launchRouteId, harness: "claude-code", surface: "cli" },
-      ]);
-      expect(config.route.producer).toEqual(O.some("managed-controller"));
-      expect(config.route.approvedModels).toEqual([]);
-      expect(config.route.usageConvention).toBe("unknown");
-    })
-  );
+  for (const harness of ["claude-code", "grok", "muse"] as const)
+    it.effect(`admits the finite ${harness} route while preserving controller intake policy`, () =>
+      Effect.gen(function* () {
+        const f = yield* fixture;
+        const receipt = yield* f.provide(
+          generateNativeCanaryConfig(
+            NativeCanaryConfigRequest.make({
+              ...f.request,
+              harness,
+            })
+          )
+        );
+        const raw = yield* f.fs.readFileString(receipt.workerConfigFile);
+        const config = yield* S.decodeEffect(S.fromJsonString(ObservationLaunchConfig))(raw);
+        expect(O.getOrThrow(config.launchHttp).routes).toEqual([
+          { routeId: receipt.launchRouteId, harness, surface: "cli" },
+        ]);
+        expect(config.route.producer).toEqual(O.some("managed-controller"));
+        expect(config.route.approvedModels).toEqual([]);
+        expect(config.route.usageConvention).toBe("unknown");
+      })
+    );
 });

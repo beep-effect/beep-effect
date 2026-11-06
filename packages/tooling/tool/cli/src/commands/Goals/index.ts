@@ -56,6 +56,34 @@ export * from "./CompletionEvidence.ts";
  */
 export * from "./CompletionReceiptStore.service.ts";
 /**
+ * Pure decision-log parser, renderer and splicer.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./Decisions.projection.ts";
+/**
+ * Decision file schemas.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./Decisions.schemas.ts";
+/**
+ * Decision-log service contract.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./Decisions.service.ts";
+/**
+ * Decision-file projection: filesystem layer and `beep goals decisions` command.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Decisions.ts";
+/**
  * Doctor command and baseline-ratchet exports.
  *
  * @category cli-commands
@@ -125,6 +153,25 @@ export * from "./Graph.ts";
  * @since 0.0.0
  */
 export * from "./Inventory.ts";
+/**
+ * Formatter port of the manifest writer.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./Manifest.service.ts";
+/**
+ * `beep goals manifest`: the generated `researchReports` projection writer and check.
+ *
+ * @since 0.0.0
+ */
+export * from "./Manifest.ts";
+/**
+ * Pure `researchReports` projection core shared by the manifest writer and the doctor.
+ *
+ * @since 0.0.0
+ */
+export * from "./ManifestProjection.ts";
 /**
  * Materialization executor: replay reviewed bootstrap and adoption plans.
  *

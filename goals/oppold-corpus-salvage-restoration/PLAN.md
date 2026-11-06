@@ -6,6 +6,16 @@ Mutable execution plan. `SPEC.md` is normative; this file sequences the work.
 
 Status: `active`
 
+## Current storage and resumption context
+
+Read the [2026-11-05 workstation consolidation handoff](history/2026-11-05-workstation-consolidation-handoff.md)
+and refresh the private operator receipts before executing this plan. Legacy
+archive paths can resolve through verified links; the old temporary backup
+capture is retired. A separate native worker family is still in progress and
+has not met this packet's restoration gates. Preserve the existing frozen
+manifests, accepted/failed seals and execution-identity stop. The phase evidence
+below remains dated proof, not authority to repeat completed operations.
+
 ## Phases
 
 Current phase state:

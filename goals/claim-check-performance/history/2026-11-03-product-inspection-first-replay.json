@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "claim-performance-product-inspection/v1",
+  "sourceFreeze": "research/implementation-product-inspection-002.json",
+  "resultSha256": "95a1eb3cd76089ae0d8a0acaa99437885daabecc81ce9c537ed2c4d3530fa7ec",
+  "counts": {
+    "strict": 37,
+    "parsed": 537,
+    "abstained": 455,
+    "selected": 538
+  },
+  "previouslySuccessfulFamiliesWithIdenticalFullTrees": 56,
+  "newlyParsedSelectedClaims": 42,
+  "lostOriginalPasses": [],
+  "allOriginalLabelsScorerFixturesAndPreviousResultsPreserved": true,
+  "sourceAcquisitionImplemented": true,
+  "domainInspectionPolicyImplemented": true,
+  "publishedInspectionServiceImplemented": true,
+  "readOnlyMcpToolImplemented": true,
+  "canonicalSourceRecordsVerifiedIncludingNormalizationFailures": true,
+  "inputCoverageRate": 0.9981412639405205,
+  "abstentionRate": 0.845724907063197,
+  "coverageGatePassed": false,
+  "overallNumericalGatesPassed": false,
+  "independentServiceToolReviewRequiredFindings": 0,
+  "closedFinding": "INSPECT-GATE-01",
+  "coverageAdapterTests": 7,
+  "pythonGateTestsTotal": 19,
+  "serviceToolFocusedTests": 30,
+  "actualMcpFocusedTests": 2,
+  "sourcePortProof": "offline recorded source transport; separate live source qualification retained",
+  "usefulnessEstablished": false,
+  "goalComplete": false
+}

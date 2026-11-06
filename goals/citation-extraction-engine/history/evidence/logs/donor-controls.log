@@ -1,0 +1,24 @@
+PASS absent-donor
+PASS wrong-pin
+PASS wrong-license
+PASS absent-package-subpath
+PASS absent-export
+PASS duplicate-export
+PASS wrong-export-source
+PASS absent-member
+PASS absent-declaration
+PASS unclassified-source-only-branch
+PASS absent-runtime-case
+PASS duplicate-runtime-case
+PASS stale-case-hash
+PASS wrong-location-with-valid-hash
+PASS false-suite-summary
+PASS absent-disposition
+PASS duplicate-disposition
+PASS unowned-disposition
+PASS composite-workflow
+PASS unknown-disposition
+PASS adopted-without-proof
+PASS follow-up-without-existing-successor
+PASS terminal-with-absent-evidence
+audit baseline passed; unfinished completion rejected; 23 donor corruption controls passed

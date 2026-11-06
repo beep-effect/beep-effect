@@ -56,7 +56,12 @@ All thresholds must pass on the same source/environment freeze.
 
 ## Evaluation Integrity
 
-1. Preserve every file in research/preservation-freeze.json byte for byte.
+1. Preserve every artifact in research/preservation-freeze.json byte for byte.
+   The explicit research/preservation-location-addendum.json relocates only
+   three historical runner sources to exact text archives; 1,210 other paths
+   remain exact. Active runners retain accepted mechanical yield hoisting,
+   are separately hash-checked and require report-equivalence replay. The
+   original freeze, labels, scorer, outputs and numerical gates are unchanged.
    Never rewrite old labels, expected trees, result files, scorer or sampling.
    New findings about an old label are separate overlays; legacy scoring keeps
    its original reference. Keep all prior passes as a mandatory gate.
@@ -93,7 +98,7 @@ All thresholds must pass on the same source/environment freeze.
 
 ## Acceptance Criteria
 
-- [ ] Original 1,213-file preservation freeze verifies and all 37 passes remain.
+- [ ] Original 1,213-artifact preservation freeze and explicit three-runner location addendum verify and all 37 passes remain.
 - [ ] Baseline and recurring error taxonomy recorded without changing references.
 - [ ] Independent source-qualified development/final datasets frozen as above.
 - [ ] Every usefulness gate passes together on one content-final source freeze.
@@ -131,6 +136,8 @@ attempts; report an actual external blocker without claiming usefulness.
 | 2026-11-03 | Conservative unknowns and nonempty output/recall minima | Prevent success through silence, omitted hard inputs or optimistic adjudication | Versioned protocol amendment with sensitivity analysis |
 | 2026-11-03 | Automated independent source review; attorney optional | User directs autonomous completion | Optional separate human overlay, no rewriting automated receipts |
 | 2026-11-03 | Add explicit source-record and sparse-context contracts for partial inspection | One malformed sibling currently rejects an entire source set; dropping rows would violate PatentClaims | Remove additive inspection APIs while retaining strict behavior and all results |
+| 2026-11-05 | Adopt independently reviewed prospective source-only annotation handbook v2; freeze all 24 families / 567 claims with 572 raw context nodes | Resolve representation/recording ambiguity before new independent annotations, retaining all six table gaps and every selected unknown; no old 71 admission or gate change | New prospective reviewed version/frame only; preserve both private activation overlays and all prior outcomes |
+| 2026-11-05 | Admit only the native-generated new ClaimInspection.tools file coverage identity after independent review; preserve every preexisting baseline row | Retain defensive encoding error handling while testing real source-acquisition refusal, substantive findings and stale cursor failure; native package comparison passes | Regenerate the new identity after stronger source tests/coverage; never lower old floors or alter structural labels/scorer |
 
 ## Exception Ledger
 

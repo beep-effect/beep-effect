@@ -190,6 +190,87 @@ class DependencyDiagnostics(unittest.TestCase):
         with self.assertRaisesRegex(PROBE.Refusal, "source-not-regular"):
             PROBE.read_source(fifo)
 
+    def test_refusal_codes_distinguish_failures_without_retaining_exception_details(self):
+        private = "PRIVATE_EXCEPTION_PAYLOAD_SENTINEL"
+        failures = [
+            (PROBE.Refusal("deadline"), "deadline"),
+            (MemoryError(private), "memory-limit"),
+            (subprocess.TimeoutExpired([private], 1, output=private, stderr=private), "subprocess-deadline"),
+            (subprocess.SubprocessError(private), "subprocess-failed"),
+            (PROBE.tarfile.ReadError(private), "archive-read-failed"),
+            (FileNotFoundError(2, private, "/private/" + private), "filesystem-or-process-failed"),
+            (ValueError(private), "invalid-value-or-shape"),
+            (KeyError(private), "invalid-value-or-shape"),
+            (TypeError(private), "invalid-value-or-shape"),
+        ]
+        for index, (failure, expected) in enumerate(failures):
+            with self.subTest(code=expected, failure=type(failure).__name__):
+                output = self.root / f"refusal-{index}.json"
+                arguments = [str(OBSERVER), "--source-report", str(self.source),
+                             "--output", str(output), "--revision", "a" * 40]
+                with patch.object(PROBE.sys, "argv", arguments), \
+                     patch.object(PROBE.resource, "setrlimit"), \
+                     patch.object(PROBE, "observe", side_effect=failure):
+                    self.assertEqual(PROBE.main(), 1)
+                raw = output.read_bytes()
+                self.assertEqual(json.loads(raw), {
+                    "schemaVersion": "cache-dependency-diagnostics/v1", "status": "refused", "code": expected,
+                })
+                self.assertNotIn(private.encode(), raw)
+                self.assertNotIn(str(self.root).encode(), raw)
+                self.assertEqual(output.stat().st_mode & 0o777, 0o600)
+                self.assertLessEqual(len(raw), 256)
+
+    def test_publication_cap_includes_failure_reports_and_refuses_special_paths(self):
+        source = self.root / "publication-source.json"
+        diagnostic = self.root / "publication-diagnostic.json"
+        for source_size, diagnostic_size, expected in [
+            (3, 8, {"source": True, "diagnostic": True}),
+            (4, 8, {"source": True, "diagnostic": True}),
+            (5, 8, {"source": False, "diagnostic": True}),
+            (12, 1, {"source": False, "diagnostic": True}),
+            (13, 1, {"source": False, "diagnostic": True}),
+            (4, 13, {"source": True, "diagnostic": False}),
+            (13, 13, {"source": False, "diagnostic": False}),
+        ]:
+            with self.subTest(source=source_size, diagnostic=diagnostic_size):
+                source.write_bytes(b"s" * source_size)
+                diagnostic.write_bytes(b"d" * diagnostic_size)
+                with patch.object(PROBE, "ARTIFACT_LIMIT", 12):
+                    plan = PROBE.publication_plan(source, diagnostic)
+                self.assertEqual(plan, expected)
+                retained = source_size * plan["source"] + diagnostic_size * plan["diagnostic"]
+                self.assertLessEqual(retained, 12)
+        source.write_bytes(b"source")
+        diagnostic.unlink()
+        self.assertEqual(PROBE.publication_plan(source, diagnostic), {"source": True, "diagnostic": False})
+        alias = self.root / "publication-link"
+        alias.symlink_to(source)
+        self.assertEqual(PROBE.publication_plan(alias, source), {"source": False, "diagnostic": True})
+        fifo = self.root / "publication-fifo"
+        os.mkfifo(fifo)
+        self.assertEqual(PROBE.publication_plan(fifo, source), {"source": False, "diagnostic": True})
+
+    def test_publication_cli_is_read_only_and_emits_only_fixed_flags(self):
+        source = self.root / "publication-source.json"
+        diagnostic = self.root / "publication-diagnostic.json"
+        source.write_bytes(b"PRIVATE_SOURCE_SENTINEL")
+        diagnostic.write_bytes(b"PRIVATE_DIAGNOSTIC_SENTINEL")
+        before = [path.read_bytes() for path in [source, diagnostic]]
+        command = ["/usr/bin/python3", "-I", "-S", str(OBSERVER), "--publication-only",
+                   "--source-report", str(source), "--output", str(diagnostic), "--revision", "a" * 40]
+        result = subprocess.run(command, env={"PATH": "/usr/bin"}, capture_output=True, timeout=5)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, b"source=true\ndiagnostic=true\n")
+        self.assertEqual(result.stderr, b"")
+        self.assertEqual([path.read_bytes() for path in [source, diagnostic]], before)
+        diagnostic.unlink()
+        missing = subprocess.run(command, env={"PATH": "/usr/bin"}, capture_output=True, timeout=5)
+        self.assertEqual(missing.returncode, 1)
+        self.assertEqual(missing.stdout, b"source=true\ndiagnostic=false\n")
+        self.assertEqual(missing.stderr, b"")
+        self.assertEqual(source.read_bytes(), before[0])
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -1,0 +1,15 @@
+PASS stale-schema-source
+PASS stale-child-source
+PASS inflated-hard-ceiling
+PASS understated-hard-ceiling
+PASS forged-default-policy
+PASS fractional-deadline
+PASS unknown-execution-mode
+PASS missing-control-run
+PASS duplicate-control-run
+PASS unconfirmed-exit
+PASS absent-exit-proof
+PASS catastrophic-accepted-as-success
+PASS parent-unresponsive
+PASS wrong-force-stop-signal
+baseline passed; 14 safety-contract corruption controls passed

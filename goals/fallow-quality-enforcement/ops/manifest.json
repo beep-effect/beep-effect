@@ -73,5 +73,22 @@
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
   },
-  "packetPath": "goals/fallow-quality-enforcement"
+  "packetPath": "goals/fallow-quality-enforcement",
+  "researchReports": [
+    "research/README.md",
+    "research/audit.md",
+    "research/boundaries.md",
+    "research/dead-code.md",
+    "research/editor-mcp-hooks.md",
+    "research/feature-matrix.jsonc",
+    "research/feature-matrix.schema.json",
+    "research/fix-preview.md",
+    "research/flags.md",
+    "research/health.md",
+    "research/knip-parity.jsonc",
+    "research/knip-parity.schema.json",
+    "research/report-template.md",
+    "research/runtime-coverage.md",
+    "research/security.md"
+  ]
 }
