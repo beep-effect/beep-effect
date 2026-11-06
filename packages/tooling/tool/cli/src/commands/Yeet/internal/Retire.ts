@@ -136,7 +136,10 @@ const pullRequestLessVerdict = (plan: YeetRetirePlan, state: SweepGitState): Yee
  * never headed one is judged by git: its tip must already be contained in
  * `origin/<main>` and its tree clean (`pr-less-on-main`), the case of a
  * scratch checkout, a stacked parent, or a branch pushed straight to main.
- * Anything else is `refused` with the first reason an operator would check.
+ * A lane standing on the main branch itself is always `refused`: its own
+ * branch is elsewhere, and retiring it would delete `main` and leave that
+ * branch behind. Anything else is `refused` with the first reason an operator
+ * would check.
  *
  * **Example** (Read the gate)
  *
@@ -158,7 +161,13 @@ export const retireVerdict: {
 } = dual(
   2,
   (plan: YeetRetirePlan, state: SweepGitState): YeetRetireVerdict =>
-    O.isSome(state.pullRequestState) ? pullRequestVerdict(plan, state) : pullRequestLessVerdict(plan, state)
+    Eq.equals(plan.branch, state.mainBranch)
+      ? refused(
+          `the lane stands on ${state.mainBranch}, not on its own branch; run \`git switch -\` (or \`git switch <lane-branch>\`) in ${plan.worktreePath}, then retry`
+        )
+      : O.isSome(state.pullRequestState)
+        ? pullRequestVerdict(plan, state)
+        : pullRequestLessVerdict(plan, state)
 );
 
 /**
