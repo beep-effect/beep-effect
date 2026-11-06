@@ -1,5 +1,6 @@
 ---
 name: code-patterns-strategist
+model: claude-opus-5-5
 description: Read-only reuse and consolidation strategist. Use BEFORE writing a helper, schema, service, or utility (finds the existing symbol that already covers the need), and when consolidating near-duplicate implementations across modules (designs the single parameterized replacement and the migration order for every call site).
 tools: Bash, Read, Grep, Glob
 ---
