@@ -97,9 +97,9 @@ const LaneProofMode = LiteralKit(["off", "shadow", "active"]);
 type LaneProofMode = typeof LaneProofMode.Type;
 const isLaneProofMode = S.is(LaneProofMode);
 const ActiveLaneProofMode = LiteralKit(["shadow", "active"]);
-// These lanes query live vulnerability data. A tree-exact record cannot prove
-// that the external advisory set is still current, so they always run.
-const NonReusableLaneProofId = LiteralKit(["quality:security", "repo-sanity:bun-audit"]);
+// Live advisories and independently authenticated cache acceptance can change
+// or expire without source/environment changes, so these guards always run.
+const NonReusableLaneProofId = LiteralKit(["quality:security", "repo-sanity:bun-audit", "quality:cache-policy"]);
 const isNonReusableLaneProofId = S.is(NonReusableLaneProofId);
 
 class LaneProofRecord extends S.Opaque<LaneProofRecord, { readonly brand: unique symbol }>()(
