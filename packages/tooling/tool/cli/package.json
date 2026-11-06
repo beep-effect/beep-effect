@@ -256,7 +256,6 @@
     "@vitest/istanbul-lib-coverage": "catalog:",
     "@vitest/istanbul-lib-instrument": "catalog:",
     "effect": "catalog:",
-    "tsrs": "catalog:",
     "fast-xml-parser": "catalog:",
     "fast-xml-validator": "catalog:",
     "handlebars": "catalog:",
@@ -265,6 +264,7 @@
     "sharp": "catalog:",
     "tar": "catalog:",
     "ts-morph": "catalog:",
+    "tsrs": "catalog:",
     "vitest": "catalog:"
   },
   "devDependencies": {
