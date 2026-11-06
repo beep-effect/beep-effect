@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "semantic-agent-graph-stack",
+    "title": "Semantic agent graph stack",
+    "status": "active",
+    "stage": "research",
+    "openQuestions": [
+      "Which existing beep decision should be the first consumer: a corrected claim that must reach a later action, ontology-session authoring, or agent-run memory?",
+      "Is a document-to-graph extraction pipeline in scope, or only the knowledge / memory / context role split over bricks that already exist?",
+      "When a model drafts ontology structure, what may it emit before a person accepts it?"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-11-06",
+    "updated": "2026-11-06"
+  }
+}
