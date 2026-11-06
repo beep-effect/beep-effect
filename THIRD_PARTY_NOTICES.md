@@ -917,3 +917,17 @@ in the adjacent citation-html directory. The XML wrapper source, receipt and
 rebuild/replacement-library recipe accompany the new binary. No upstream library
 source changes are incorporated. See citation-xml/README.md and the existing
 libxml2/libiconv/runtime license texts above.
+
+## Citation annotation replacement templates
+
+The private `AnnotationTemplate.ts` adapts the fixed one-capture replacement
+behavior of CPython 3.11.15 `Lib/re/_parser.py` (`parse_template`). Python
+Software Foundation attribution and the complete PSF license retained above
+apply. Source SHA-256:
+`4748e39c77d6dc14f81af80e68a62ad99031a8182d5e0b219a6666d0cfb1626f`.
+The adaptation uses Effect services, cooperative native Unicode ranges and
+captured allocation limits. It supports the two equal whole/tag references of
+original eyecite's `wrap_html_tags`; it is not a general Python regex runtime.
+Original wrapping observations derive from eyecite 2.7.6 `utils.py` under its
+existing BSD-2-Clause notice. Source exception diagnostics are retained only in
+public synthetic fixtures; target failures and warnings contain no source text.

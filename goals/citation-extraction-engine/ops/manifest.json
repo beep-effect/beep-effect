@@ -211,7 +211,13 @@
     "packages/law-practice/server/test/CitationAnnotationSkip.fixtures.ts",
     "packages/law-practice/server/test/CitationAnnotationSkip.test.ts",
     "packages/law-practice/server/test/integration/CitationAnnotationSkip.test.ts",
-    "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-skip.json"
+    "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-skip.json",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-template.md",
+    "goals/citation-extraction-engine/ops/probe-annotation-wrap.py",
+    "packages/law-practice/server/src/internal/Citation/AnnotationTemplate.ts",
+    "packages/law-practice/server/src/internal/Citation/AnnotationBudget.ts",
+    "packages/law-practice/server/test/CitationAnnotationTemplate.test.ts",
+    "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-wrap.json"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

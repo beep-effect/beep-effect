@@ -1277,6 +1277,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the style helper and shared native search/slice migration together; restore the prior assembly normalizer and retain all open annotation obligations.
 
+### Preserve original annotation replacement-template interpretation, 2026-11-06
+
+The private template component matches all 1320 cold original observations: 792 outputs using independently observed source match ranges and 528 invalid-template failures. It reuses frozen Unicode/integer services and native range concatenation. Ten regression tests across four files pass in 80.60s, including actual Bun/Node skip composition. Exact allocation/captured-authority controls, server checks, declarations, blocking laws and scoped Fallow pass. Native tag matching, full wrap dispatch, warm-cache warning fidelity, final exception translation and engine integration remain open. All eleven laws, four fidelity questions and fifteen unfinished proof rows remain open. See history/evidence/2026-11-06-annotation-template.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the fixed-capture template adapter and shared reservation extraction together, retaining original corpora and every unfinished acceptance requirement.
+
 ### Qualify the pinned XML annotation balance kernel, 2026-11-06
 
 A small authored query links unchanged authenticated libxml2/converter/runtime archives and uses the shared restricted WASI host. All 300 original outcomes compare, including 57 no-angle fast paths and width-dependent surrogate pairs. Two builds are identical. Twenty XML/HTML kernel tests, package/declaration checks, blocking laws and scoped Fallow pass. This component is not installed in the live engine: typed worker/RPC framing and physical retirement remain required before production use. No new parser/process manager, divergence or completed accounting row is claimed. See history/evidence/2026-11-06-annotation-xml-kernel.md.

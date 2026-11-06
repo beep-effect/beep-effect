@@ -3,15 +3,12 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import {
-  CitationPythonUnicodeStorage,
-  CitationSafetyLimitExceeded,
-  CitationTextBudget,
-} from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { captureCitationAnnotationReservation } from "./AnnotationBudget.ts";
 import {
   findCitationPythonLiteral,
   normalizeCitationPythonSlice,
@@ -71,7 +68,7 @@ const expandTag = Effect.fn("Citation.expandAnnotationStyleTag")(function* (
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationStyleTagBalancer = Effect.fn("Citation.makeStyleTagBalancer")(function* () {
-  const budget = yield* CitationTextBudget;
+  const reserve = yield* captureCitationAnnotationReservation;
   const balance = Effect.fn("Citation.balanceAnnotationStyleSpan")(function* (
     source: CitationPythonUnicodeValue,
     start: number,
@@ -83,11 +80,7 @@ export const makeCitationStyleTagBalancer = Effect.fn("Citation.makeStyleTagBala
     for (const tag of tags) current = yield* expandTag(source, original, current, tag, tolerance ?? 10);
     const bounds = normalizeCitationPythonSlice(source.storage, current.start, current.end);
     const text = yield* sliceCitationPythonStorage(source.storage, bounds.start, bounds.end, (layout) =>
-      budget
-        .reserve(layout.utf16Units)
-        .pipe(
-          Effect.mapError((error) => CitationSafetyLimitExceeded.make({ operation: "annotate", limit: error.limit }))
-        )
+      reserve(layout.utf16Units)
     );
     return CitationBalancedStyleSpan.make({ ...current, text });
   });

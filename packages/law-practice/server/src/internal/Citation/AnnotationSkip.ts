@@ -2,13 +2,10 @@
  * Free Law Project eyecite 2.7.6, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
-import {
-  CitationPythonUnicodeStorage,
-  CitationSafetyLimitExceeded,
-  CitationTextBudget,
-} from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import { captureCitationAnnotationReservation } from "./AnnotationBudget.ts";
 import { CitationAnnotationSpanDecision, CitationAnnotationSpanProcessor } from "./AnnotationSpan.ts";
 import { makeCitationStyleTagBalancer } from "./AnnotationStyle.ts";
 import {
@@ -39,15 +36,9 @@ const hasAngles = Effect.fn("Citation.annotationHasAngles")(function* (
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationSkipAnnotationSpans = Effect.fn("Citation.makeSkipAnnotationSpans")(function* () {
-  const budget = yield* CitationTextBudget;
+  const reserve = yield* captureCitationAnnotationReservation;
   const xml = yield* CitationXmlBalance;
   const styles = yield* makeCitationStyleTagBalancer();
-  const reserve = (units: number) =>
-    budget
-      .reserve(units)
-      .pipe(
-        Effect.mapError((error) => CitationSafetyLimitExceeded.make({ operation: "annotate", limit: error.limit }))
-      );
   const balanced = Effect.fn("Citation.checkExpandedAnnotationSpan")(function* (text: CitationPythonUnicodeStorage) {
     if (!(yield* hasAngles(text, 0, text.bytes.length / text.width))) return true;
     return yield* xml.balance(text);

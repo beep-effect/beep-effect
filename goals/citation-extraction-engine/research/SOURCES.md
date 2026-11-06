@@ -258,3 +258,15 @@ sorting, HTML/callback modes and final annotation service remain open.
 - [Legal parser landscape](../../../explorations/citation-grounding-hallucination-guard/research/legal-citation-parser-landscape.md)
 - [Verified-span sources](../../citation-verified-span-substrate/research/SOURCES.md)
 - [Court/reporter vocabulary audit](../../court-reporter-vocabulary/research/EYECITE_DATA_AUDIT.md)
+
+## Annotation replacement-template reference
+
+The private fixed one-capture template adapter derives from CPython 3.11.15
+[`Lib/re/_parser.py`](https://github.com/python/cpython/blob/v3.11.15/Lib/re/_parser.py),
+SHA-256 `4748e39c77d6dc14f81af80e68a62ad99031a8182d5e0b219a6666d0cfb1626f`.
+The existing complete PSF notice applies; THIRD_PARTY_NOTICES.md records the
+Effect/native-range modifications. Original `wrap_html_tags` observations call
+the unchanged eyecite helper with an explicitly cold template cache per case.
+See [replacement-template evidence](../history/evidence/2026-11-06-annotation-template.md).
+This component proof does not establish native match execution, warm-cache
+warning behavior, full wrap dispatch, custom annotators or engine completion.
