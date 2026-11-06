@@ -2435,3 +2435,16 @@ The native open guard refused this repair when accepted W7b touched the same wor
 ### 2026-11-06: Preserve both Effect error channels in the size guard
 
 PR #2726 hosted Repo Sanity job127660626632 reported TS2322 in the new source size-drift callback. The callback returned a digest Effect or a typed error with different error channels. Use the existing filterOrFail guard before flatMap(digest), retaining size refusal and full hashing. This is an introduced defect repaired through a focused follow-up; no manual local quality run or unchanged inspection retry. Hosted acceptance remains the test gate.
+
+
+### 2026-11-06 — A bounded memory refusal omitted its allocation site
+
+[Observation 42209083425](https://github.com/beep-effect/beep-effect/actions/runs/42209083425)
+passed source inspection but refused dependency diagnosis with `memory-limit`.
+The retained dependency tree contains 251,068 entries and 4,380,753,067 file bytes.
+The 93-byte refusal identifies the resource cap but omits the failing component.
+The [checkpoint](dependency-memory-refusal-2026-11-06.json) retains the run and
+artifact hashes. A fixed module family, line and Python version can locate the
+next refusal without publishing exception messages, file paths or frame locals.
+The 256 MiB process cap, archive digest and every other numeric bound remain
+unchanged. This attempt is a refusal and grants no producer approval.
