@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   assertCacheRuntimeKeyUnspecified,
   CacheCensusNode,
@@ -343,7 +344,8 @@ const runtimeNode = CacheCensusNode.make({
   inputCount: S.Natural.make(0),
   inputsDigest: runtimeDigest,
 });
-const runtimeLayer = FsUtilsLive.pipe(
+// `Git` over the mocked spawner: the runtime readers take it from the context (W7b, SPEC D-19).
+const runtimeLayer = Layer.provideMerge(Git.layer, FsUtilsLive).pipe(
   Layer.provideMerge(
     Layer.mergeAll(
       FileSystem.layerNoop({}),
