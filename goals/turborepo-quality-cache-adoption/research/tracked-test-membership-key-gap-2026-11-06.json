@@ -122,5 +122,13 @@
       "failed/truncated/unterminated output refusal",
       "timeout diagnostic path redaction"
     ]
+  },
+  "preparedSourceCommit": "84aeb7d0551fe4116f5d6fc513d9c61596796c47",
+  "preparedSourceBindings": {
+    "turbo.json": "618d399d293892463c035856a28639ad717589cec59918cb23abd2814fbc02d2",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "76cc2c9677b74b58b2b71b049a20606f2640f0fe7dbe8b016254ae244a605e39",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts": "c5ff2a3e5add483fe2279f02df0895ec26c1ea61adf8425ac43ede068263f437",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "4725146f9243e01a7ba8f461544e8988909bbd8eac3681513a96e923593fd874",
+    "packages/tooling/tool/cli/test/cache-runtime.test.ts": "8352b0b11e730c720e2b806ab8ddda5a44e939c30fb4df02bc1a61962355e9ac"
   }
 }
