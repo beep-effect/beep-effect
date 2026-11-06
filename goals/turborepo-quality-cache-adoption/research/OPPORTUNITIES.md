@@ -856,6 +856,24 @@ observed schema difference changed the matrix and next qualification work.
   Fresh observations record the repaired driver bytes rather than re-hashing
   an older observation onto them. A new source binding requires its own replay.
 
+### Query and dry-run source divergence, 2026-11-04
+
+While preparing current-root selector evidence, source review found that
+`quality turbo-config-proof --base <ref> --head <ref>` passed those refs to
+`turbo query` but omitted them from its --affected dry-run environment. A stale
+shell range could make one report compare two different changes. Bind refs at
+the shared child-command seam and assert that binding for every child in both
+selector modes. No failing runtime or test result is fabricated: this is a
+source finding, with a hosted regression prepared and no local suite run.
+
+### Invalid metadata reported as zero selected tasks, 2026-11-04
+
+The current scoped proof reader treated missing/wrong task-array paths and
+invalid rows as an empty selection. That can make an invalid native response
+look like useful zero-work evidence. Replace the fallback traversal with
+required schema-first envelopes, keep explicit empty arrays valid, and test
+malformed metadata plus synthetic payload redaction through typed failures.
+This belongs in the existing source-range repair PR, before acceptance.
 ## 2026-11-04 UTC: Storybook deployment did not freeze dependency installation
 
 Reviewing actual deployment callers found `apps/storybook/vercel.json` used
