@@ -35,6 +35,12 @@ overwrites an existing or foreign socket. Normal success/error cleanup removes
 only the exact socket inode created by that helper. A hard kill can leave a
 stale socket: a later open then refuses until the owner separately verifies and
 cleans it. No model or native task is replayed to recover delivery.
+Controlled projection/journal failures signal the helper's explicit termination
+handler, allowing that same guarded finalizer to run before a 200-millisecond
+force-kill fallback. Cleanup failure never converts the original refusal into
+acceptance, and a foreign replacement is preserved on both success and failure.
+Public source digests retain the verified file descriptor's metadata identity;
+the canonical entry must match it before enrollment and after the callback.
 
 One `open()` accepts **one callback**, not a whole session. Its receiver-owned
 listen window defaults to 30 seconds and is capped at 5 minutes. The caller owns

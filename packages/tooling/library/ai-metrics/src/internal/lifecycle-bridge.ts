@@ -106,7 +106,8 @@ export const makeLifecycleBridge = Effect.fn("AiMetrics.lifecycle.bridge")(funct
           extendEnv: false,
           stdin: Stream.fromQueue(input),
           stderr: "ignore",
-          killSignal: "SIGKILL",
+          killSignal: socketPathOverride === undefined ? "SIGKILL" : "SIGTERM",
+          forceKillAfter: socketPathOverride === undefined ? undefined : 200,
         });
         let outputBytes = 0;
         const next = yield* child.stdout.pipe(

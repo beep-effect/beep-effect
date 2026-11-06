@@ -25,7 +25,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { expect } from "@effect/vitest";
-import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -41,6 +41,7 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import type { NativeTraceBatch } from "@beep/repo-ai-metrics/native-trace";
 import type { ObservationControl } from "@beep/repo-ai-metrics/observation-control";
 
 const isPolicy = S.is(CoworkLifecyclePolicy);
@@ -49,6 +50,28 @@ const encode = S.encodeUnknownEffect(json);
 const salt = "synthetic-cowork-passive-salt";
 const id = Sha256Hex.make(Str.repeat(64)("a"));
 const sql = makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver });
+const sourceRaceHarness = `import ast, json, os, sys
+config = json.load(sys.stdin)
+tree = ast.parse(config["source"])
+tree.body = [node for node in tree.body if not isinstance(node, ast.Try)]
+exec(compile(tree, "owned-public-helper-fixture", "exec"))
+original_digest = public_digest
+def swapped_digest(filename, maximum):
+    result = original_digest(filename, maximum)
+    if filename == config["target"]:
+        os.replace(config["replacement"], filename)
+    return result
+public_digest = swapped_digest
+bounded_json = lambda: config["policy"]
+sys.argv = ["owned-fixture", config["socketPath"]]
+try:
+    serve()
+except ValueError:
+    assert not os.path.lexists(config["socketPath"])
+    print("refused-before-listen")
+else:
+    raise AssertionError("source replacement admitted")
+`;
 const platformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.merge(NodeFileSystem.layer, NodePath.layer))
 );
@@ -266,6 +289,117 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer
       const retry = yield* f.deliver(start);
       retry.reply.pipe(Result.isSuccess, assertTrue);
       expect((yield* f.journal.stats).pages).toBe(1);
+    })
+  )
+);
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer, platformLayer), {
+  timeout: "45 seconds",
+})((it) =>
+  it.effect("journal capacity refusal and callback projection failure clean the exact owned stable socket", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture(1);
+      const fs = yield* FileSystem.FileSystem;
+      const first = yield* f.deliver(start);
+      first.result.pipe(Result.isSuccess, assertTrue);
+      const afterSuccess = yield* fs.exists(f.policy.socketPath);
+      assertFalse(afterSuccess);
+      const full = yield* f.deliver(start, f.policy, "synthetic-occurrence-full");
+      full.result.pipe(Result.isFailure, assertTrue);
+      full.reply.pipe(Result.isFailure, assertTrue);
+      if (Result.isFailure(full.result)) expect(full.result.failure.reason).toBe("transport");
+      const afterRefusal = yield* fs.exists(f.policy.socketPath);
+      assertFalse(afterRefusal);
+      const receiver = yield* makeCoworkLifecycleFixtureReceiver(f.policy).pipe(
+        Effect.provideService(CoworkLifecycleRuntime, { journal: f.journal, control: f.control })
+      );
+      const opened = yield* receiver.open();
+      const invalidBody = yield* encode({
+        occurrenceId: "synthetic-occurrence-invalid",
+        selector: "local-agent",
+        callback: { ...start, source: "unsupported" },
+      });
+      const sending = yield* Effect.forkChild(
+        Effect.callback<void>((resume) => {
+          const socket = NodeNet.createConnection({ path: opened.socketPath, allowHalfOpen: true });
+          socket.once("connect", () => socket.end(invalidBody));
+          socket.once("end", () => resume(Effect.void));
+          socket.once("error", () => resume(Effect.void));
+          return Effect.sync(() => socket.destroy());
+        })
+      );
+      const invalid = yield* opened.accept.pipe(Effect.result);
+      yield* Fiber.join(sending);
+      invalid.pipe(Result.isFailure, assertTrue);
+      if (Result.isFailure(invalid)) expect(invalid.failure.reason).toBe("callback");
+      const afterProjection = yield* fs.exists(f.policy.socketPath);
+      assertFalse(afterProjection);
+      expect((yield* f.journal.stats).pages).toBe(1);
+    })
+  )
+);
+for (const capacityRefusal of [false, true]) {
+  it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer, platformLayer), {
+    timeout: "45 seconds",
+  })((it) =>
+    it.effect(`a foreign replacement survives ${capacityRefusal ? "refused" : "successful"} journal finalization`, () =>
+      Effect.gen(function* () {
+        const f = yield* fixture(capacityRefusal ? 1 : 32);
+        const fs = yield* FileSystem.FileSystem;
+        if (capacityRefusal) yield* f.deliver(start);
+        const journal: typeof f.journal = {
+          ...f.journal,
+          acceptBatch: Effect.fnUntraced(function* (batch: NativeTraceBatch) {
+            yield* fs.remove(f.policy.socketPath).pipe(Effect.orDie);
+            yield* fs.writeFileString(f.policy.socketPath, "SYNTHETIC-FOREIGN-REPLACEMENT").pipe(Effect.orDie);
+            return yield* f.journal.acceptBatch(batch);
+          }),
+        };
+        const deliver = makeDelivery(f.policy, journal, f.control);
+        const delivered = yield* deliver(start, f.policy, "synthetic-occurrence-replaced");
+        deepStrictEqual(Result.isFailure(delivered.result), capacityRefusal);
+        const retained = yield* fs.readFileString(f.policy.socketPath);
+        expect(retained).toBe("SYNTHETIC-FOREIGN-REPLACEMENT");
+      })
+    )
+  );
+}
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer, platformLayer), {
+  timeout: "45 seconds",
+})((it) =>
+  it.effect("a public source replacement between verified FD hashing and path capture refuses before listening", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const fs = yield* FileSystem.FileSystem;
+      const source = yield* Effect.fromOption(A.head(f.policy.sourcePins));
+      const target = source.path;
+      const replacement = `${target}.replacement`;
+      yield* fs.writeFileString(replacement, "// different owned public fixture\n");
+      const body = yield* encode({
+        source: coworkPeerSource,
+        target,
+        replacement,
+        socketPath: f.policy.socketPath,
+        policy: {
+          workspace: f.policy.workspace,
+          listenMillis: f.policy.listenMillis,
+          sourcePins: f.policy.sourcePins,
+          runtimeExecutable: f.policy.runtimeExecutable,
+          runtimeSha256: f.policy.runtimeSha256,
+          appExecutable: f.policy.appExecutable,
+          appSha256: f.policy.appSha256,
+        },
+      });
+      const child = yield* ChildProcess.make(f.policy.pythonExecutable, ["-I", "-B", "-c", sourceRaceHarness], {
+        extendEnv: false,
+        stdin: Stream.make(new TextEncoder().encode(body)),
+        stderr: "ignore",
+      });
+      const output = yield* child.stdout.pipe(Stream.decodeText(), Stream.mkString, Effect.timeout("3 seconds"));
+      const exitCode = yield* child.exitCode;
+      expect(exitCode).toBe(0);
+      expect(output).toBe("refused-before-listen\n");
+      const present = yield* fs.exists(f.policy.socketPath);
+      assertFalse(present);
     })
   )
 );

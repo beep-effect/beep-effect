@@ -12,6 +12,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import signal
 import socket
 import stat
 import struct
@@ -53,7 +54,7 @@ def public_digest(filename, maximum):
             remaining -= len(body)
         if remaining == 0 or identity(os.fstat(fd)) != identity(before):
             reject()
-        return result.hexdigest()
+        return result.hexdigest(), identity(before)
     finally:
         os.close(fd)
 
@@ -104,6 +105,14 @@ def observe(connection, policy):
 active_socket = None
 
 
+def terminate(_signal, _frame):
+    # A controlled parent failure unwinds the exact-owned socket finalizer.
+    raise SystemExit(2)
+
+
+signal.signal(signal.SIGTERM, terminate)
+
+
 def serve():
     global active_socket
     policy = bounded_json()
@@ -111,9 +120,11 @@ def serve():
     for pin in policy["sourcePins"] + [
             {"path": policy["runtimeExecutable"], "sha256": policy["runtimeSha256"]},
             {"path": policy["appExecutable"], "sha256": policy["appSha256"]}]:
-        if public_digest(pin["path"], 536870912) != pin["sha256"]:
+        digest, verified_identity = public_digest(pin["path"], 536870912)
+        if (digest != pin["sha256"] or os.path.realpath(pin["path"]) != pin["path"] or
+                identity(os.stat(pin["path"], follow_symlinks=False)) != verified_identity):
             reject()
-        pinned[pin["path"]] = identity(os.stat(pin["path"], follow_symlinks=False))
+        pinned[pin["path"]] = verified_identity
     if os.path.realpath(policy["workspace"]) != policy["workspace"]:
         reject()
     path = sys.argv[1]
@@ -156,7 +167,6 @@ def serve():
             if not acknowledgement.endswith(b"\n") or len(acknowledgement) > 1024:
                 reject()
             connection.sendall(acknowledgement)
-    os.unlink(path)
 
 
 try:
