@@ -310,3 +310,156 @@ it.layer(NodeCrypto.layer)((it) => {
     );
   }
 });
+
+const sdkAssistantErrorKinds = [
+  "authentication_failed",
+  "oauth_org_not_allowed",
+  "account_on_hold",
+  "verification_required",
+  "billing_error",
+  "rate_limit",
+  "overloaded",
+  "invalid_request",
+  "model_not_found",
+  "server_error",
+  "unknown",
+  "max_output_tokens",
+  "cloud_credential_error",
+];
+const sdkTerminalErrorSubtypes = [
+  "error_during_execution",
+  "error_max_turns",
+  "error_max_budget_usd",
+  "error_max_structured_output_retries",
+];
+const assistantFailure = (error: unknown) => ({ ...response, error, uuid: "PRIVATE_UUID" });
+const terminalFailure = (subtype: unknown) => ({
+  ...final,
+  subtype,
+  is_error: true,
+  result: "PRIVATE_RESULT",
+  errors: ["PRIVATE_ERROR_MESSAGE"],
+});
+for (const kind of sdkAssistantErrorKinds) {
+  it.effect(`retains only the reported SDK assistant ${kind} count`, () =>
+    Effect.gen(function* () {
+      const diagnostic = yield* inspectMuseProxyCanaryOutput(output([initial, assistantFailure(kind)]), cwd);
+      const reported = O.getOrThrow(diagnostic.reportedSdkErrors);
+      expect(Object.entries(reported.assistant).filter(([, n]) => n !== 0)).toEqual([[kind, 1]]);
+      expect(reported.assistantUnclassified).toBe(0);
+      const encoded = yield* S.encodeEffect(S.fromJsonString(NativeProtocolDiagnostics))(diagnostic);
+      expect(encoded).not.toContain("PRIVATE_");
+      expect(encoded).not.toContain(cwd);
+    })
+  );
+}
+for (const subtype of sdkTerminalErrorSubtypes) {
+  it.effect(`retains only the reported terminal ${subtype} count`, () =>
+    Effect.gen(function* () {
+      const diagnostic = yield* inspectMuseProxyCanaryOutput(output([initial, terminalFailure(subtype)]), cwd);
+      const reported = O.getOrThrow(diagnostic.reportedSdkErrors);
+      expect(Object.entries(reported.terminal).filter(([, n]) => n !== 0)).toEqual([[subtype, 1]]);
+      const encoded = yield* S.encodeEffect(S.fromJsonString(NativeProtocolDiagnostics))(diagnostic);
+      expect(encoded).not.toContain("PRIVATE_");
+    })
+  );
+}
+it.effect("drops unknown kind strings and malformed values into finite unclassified counts", () =>
+  Effect.gen(function* () {
+    for (const unknown of ["PRIVATE_UNKNOWN_ERROR", { body: "PRIVATE_SECRET" }, null, 7]) {
+      const diagnostic = yield* inspectMuseProxyCanaryOutput(
+        output([initial, assistantFailure(unknown), terminalFailure(unknown)]),
+        cwd
+      );
+      const reported = O.getOrThrow(diagnostic.reportedSdkErrors);
+      expect(reported.assistantUnclassified).toBe(1);
+      expect(reported.terminalUnclassified).toBe(1);
+      expect(Object.values(reported.assistant).every((n) => n === 0)).toBe(true);
+      expect(Object.values(reported.terminal).every((n) => n === 0)).toBe(true);
+      expect(yield* S.encodeEffect(S.fromJsonString(NativeProtocolDiagnostics))(diagnostic)).not.toContain("PRIVATE_");
+    }
+  })
+);
+it.effect("projects no SDK kind from foreign, subagent, aborted or out-of-order error frames", () =>
+  Effect.gen(function* () {
+    const failure = assistantFailure("rate_limit");
+    const end = terminalFailure("error_during_execution");
+    for (const events of [
+      [failure, initial],
+      [initial, { ...failure, session_id: "PRIVATE_FOREIGN" }, { ...end, session_id: "PRIVATE_FOREIGN" }],
+      [initial, { ...failure, parent_tool_use_id: "PRIVATE_TOOL" }, { ...end, parent_tool_use_id: "PRIVATE_TOOL" }],
+      [initial, { ...failure, agent_id: "PRIVATE_AGENT" }, { ...end, agent_id: "PRIVATE_AGENT" }],
+      [initial, { ...failure, aborted: true }],
+      [{ ...initial, tools: ["Read"] }, failure, end],
+      [{ ...initial, model: "PRIVATE_WRONG_MODEL" }, failure, end],
+      [initial, { ...initial, session_id: "PRIVATE_SECOND" }, failure, end],
+      [initial, final, failure, end],
+    ]) {
+      const diagnostic = yield* inspectMuseProxyCanaryOutput(output(events), cwd);
+      const reported = O.getOrThrow(diagnostic.reportedSdkErrors);
+      expect(
+        [
+          ...Object.values(reported.assistant),
+          ...Object.values(reported.terminal),
+          reported.assistantUnclassified,
+          reported.terminalUnclassified,
+        ].every((n) => n === 0)
+      ).toBe(true);
+    }
+  })
+);
+it.effect("bounds SDK kind projection to the existing24line and1MiB native protocol limits", () =>
+  Effect.gen(function* () {
+    for (const events of [
+      [initial, ...Array.from({ length: 24 }, () => assistantFailure("rate_limit"))],
+      [initial, { ...assistantFailure("rate_limit"), privateBody: "x".repeat(1048576) }],
+    ]) {
+      const diagnostic = yield* inspectMuseProxyCanaryOutput(output(events), cwd);
+      const reported = O.getOrThrow(diagnostic.reportedSdkErrors);
+      expect(reported.assistant.rate_limit).toBe(0);
+      expect(reported.assistantUnclassified).toBe(0);
+    }
+  })
+);
+
+it.effect("leaves the prior diagnostic encoding unchanged when the optional SDK projection is absent", () =>
+  Effect.gen(function* () {
+    const old = {
+      version: "native-print-protocol-diagnostics/v1",
+      bytes: 0,
+      lines: 0,
+      inspectedLines: 0,
+      truncated: false,
+      malformed: 0,
+      init: 0,
+      assistant: 0,
+      result: 0,
+      uiInvalidate: 0,
+      trailingUiInvalidate: 0,
+      apiRetry: 0,
+      rateLimit: 0,
+      unknownRoot: 0,
+      unknownSystem: 0,
+      assistantError: 0,
+      terminalError: 0,
+    };
+    const decoded = yield* S.decodeUnknownEffect(NativeProtocolDiagnostics)(old);
+    expect(O.isNone(decoded.reportedSdkErrors)).toBe(true);
+    expect(yield* S.encodeEffect(S.fromJsonString(NativeProtocolDiagnostics))(decoded)).toBe(JSON.stringify(old));
+  })
+);
+
+it.effect("a successful turn never manufactures an unclassified error from missing error fields", () =>
+  Effect.gen(function* () {
+    const diagnostic = yield* inspectMuseProxyCanaryOutput(output(), cwd);
+    const reported = O.getOrThrow(diagnostic.reportedSdkErrors);
+    expect(
+      [
+        ...Object.values(reported.assistant),
+        ...Object.values(reported.terminal),
+        reported.assistantUnclassified,
+        reported.terminalUnclassified,
+      ].every((n) => n === 0)
+    ).toBe(true);
+  })
+);

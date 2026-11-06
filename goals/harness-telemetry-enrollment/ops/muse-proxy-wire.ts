@@ -18,6 +18,9 @@ import * as Str from "effect/String";
 import {
   NativeProtocolDiagnostics as MuseProxyCanaryWireDiagnostics,
   NativeProtocolFailure,
+  NativeReportedAssistantErrorKind,
+  NativeReportedSdkErrors,
+  NativeReportedTerminalErrorSubtype,
 } from "./native-attempt-diagnostic.ts";
 
 const $I = $RepoCliId.create("goals/harness-telemetry-enrollment/ops/muse-proxy-wire");
@@ -106,6 +109,27 @@ const assistant = S.Struct({
     model: S.tag("muse-wonder-1.0(medium)"),
     content: S.Array(content).check(S.isMinLength(1), S.isMaxLength(4)),
   }),
+});
+// Diagnostic metadata boundary only. Message/content/errors/UUIDs are never selected.
+const reportedAssistantError = S.Struct({
+  type: S.tag("assistant"),
+  session_id: session,
+  parent_tool_use_id: S.Null,
+  aborted: S.optionalKey(S.Never),
+  agent_id: S.optionalKey(S.Never),
+  subagent_type: S.optionalKey(S.Never),
+  error: S.Unknown,
+  message: S.Struct({ role: S.tag("assistant"), model: S.tag("muse-wonder-1.0(medium)") }),
+});
+const reportedTerminalError = S.Struct({
+  type: S.tag("result"),
+  session_id: session,
+  is_error: S.tag(true),
+  subtype: S.Unknown,
+  parent_tool_use_id: S.optionalKey(S.Null),
+  aborted: S.optionalKey(S.Never),
+  agent_id: S.optionalKey(S.Never),
+  subagent_type: S.optionalKey(S.Never),
 });
 const terminal = S.Struct({
   type: S.tag("result"),
@@ -335,6 +359,31 @@ export const inspectMuseProxyCanaryOutput = Effect.fn("HarnessEnrollment.inspect
     assistantError: 0,
     terminalError: 0,
   };
+  const assistantKinds = {
+    authentication_failed: 0,
+    oauth_org_not_allowed: 0,
+    account_on_hold: 0,
+    verification_required: 0,
+    billing_error: 0,
+    rate_limit: 0,
+    overloaded: 0,
+    invalid_request: 0,
+    model_not_found: 0,
+    server_error: 0,
+    unknown: 0,
+    max_output_tokens: 0,
+    cloud_credential_error: 0,
+  };
+  const terminalSubtypes = {
+    error_during_execution: 0,
+    error_max_turns: 0,
+    error_max_budget_usd: 0,
+    error_max_structured_output_retries: 0,
+  };
+  let assistantUnclassified = 0;
+  let terminalUnclassified = 0;
+  let admittedSession = O.none<string>();
+  const errorProjectionWithinBounds = lines.length <= 24 && Buffer.byteLength(stdout) <= 1048576;
   let version = O.none<boolean>();
   let model = O.none<boolean>();
   let cwd = O.none<boolean>();
@@ -373,6 +422,16 @@ export const inspectMuseProxyCanaryOutput = Effect.fn("HarnessEnrollment.inspect
             ) === A.join(A.sort(builtinPlugins, Str.Order), "\n") &&
             A.join(A.sort(agents.success, Str.Order), "\n") === A.join(A.sort(builtinAgents, Str.Order), "\n")
         );
+        const decodedInit = yield* S.decodeUnknownEffect(init)(value).pipe(Effect.result);
+        admittedSession =
+          counts.init === 1 &&
+          counts.assistant === 0 &&
+          counts.result === 0 &&
+          Result.isSuccess(decodedInit) &&
+          O.getOrElse(cwd, () => false) &&
+          O.getOrElse(inventory, () => false)
+            ? O.some(decodedInit.success.session_id)
+            : O.none();
       } else if (value.subtype === "ui_invalidate") {
         counts.uiInvalidate += 1;
         if (counts.result > 0) counts.trailingUiInvalidate += 1;
@@ -381,10 +440,26 @@ export const inspectMuseProxyCanaryOutput = Effect.fn("HarnessEnrollment.inspect
     } else if (value.type === "assistant") {
       counts.assistant += 1;
       if (R.has(value, "error") || R.has(value, "aborted")) counts.assistantError += 1;
+      if (errorProjectionWithinBounds && counts.result === 0 && R.has(value, "error") && O.isSome(admittedSession)) {
+        const frame = yield* S.decodeUnknownEffect(reportedAssistantError)(value).pipe(Effect.result);
+        if (Result.isSuccess(frame) && frame.success.session_id === admittedSession.value) {
+          const kind = frame.success.error;
+          if (S.is(NativeReportedAssistantErrorKind)(kind)) assistantKinds[kind] += 1;
+          else assistantUnclassified += 1;
+        }
+      }
     } else if (value.type === "result") {
       counts.result += 1;
       if (value.subtype !== "success" || value.is_error !== false) counts.terminalError += 1;
       constant = O.some(value.result === "ENROLLMENT_CANARY_OK");
+      if (errorProjectionWithinBounds && counts.result === 1 && O.isSome(admittedSession)) {
+        const frame = yield* S.decodeUnknownEffect(reportedTerminalError)(value).pipe(Effect.result);
+        if (Result.isSuccess(frame) && frame.success.session_id === admittedSession.value) {
+          const subtype = frame.success.subtype;
+          if (S.is(NativeReportedTerminalErrorSubtype)(subtype)) terminalSubtypes[subtype] += 1;
+          else terminalUnclassified += 1;
+        }
+      }
     } else if (value.type === "rate_limit_event") counts.rateLimit += 1;
     else counts.unknownRoot += 1;
   }
@@ -400,5 +475,13 @@ export const inspectMuseProxyCanaryOutput = Effect.fn("HarnessEnrollment.inspect
     initAuthMatches: auth,
     initInventoryMatches: inventory,
     terminalConstantMatches: constant,
+    reportedSdkErrors: O.some(
+      NativeReportedSdkErrors.make({
+        assistant: assistantKinds,
+        assistantUnclassified,
+        terminal: terminalSubtypes,
+        terminalUnclassified,
+      })
+    ),
   });
 });

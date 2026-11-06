@@ -74,3 +74,9 @@ in source metadata. Selected optional numeric fields are validated then discarde
 as are warning text, UUID and account details. A rejected notification never
 overrides native exit or the requirement for the valid fixed assistant/terminal;
 notifications do not become API or billing counts.
+
+## Finite reported SDK failure categories
+
+The diagnostic projector can retain the13 published SDK0.3.318 assistant error kinds and four unsuccessful terminal subtypes as fixed counts. It selects only metadata from root frames belonging to the sole admitted init session and existing24line/1MiB protocol bounds. It never persists assistant content, result.errors messages, UUIDs, arbitrary kind strings, credentials or account details. Unknown values become an unclassified count. These are native-reported categories, not an independent diagnosis of auth, quota, billing or upstream state. Error/native-exit failure still governs; no source retry is added.
+
+A failed occurrence currently records Prepared, Started and Finished(failed) in the durable lifecycle journal and produces no successful source event or Phoenix span. Exporting failed outcomes needs a separate provenance design: define a distinct metadata-only failure event and stable identity, bind its observed native/lifecycle facts, preserve unknown usage/upstream/request counts, and review worker/export policy plus a new admission. Do not manufacture a successful source receipt, reuse a discarded response, rewrite epochs or replay a model to create a span.

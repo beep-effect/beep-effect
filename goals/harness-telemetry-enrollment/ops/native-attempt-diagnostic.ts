@@ -6,7 +6,7 @@
 import { constants } from "node:fs";
 import * as Fs from "node:fs/promises";
 import { $RepoCliId } from "@beep/identity/packages";
-import { Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
@@ -65,6 +65,85 @@ export const NativeProtocolFailure = S.Literals([
 ]);
 const count = S.Natural.check(S.isLessThanOrEqualTo(Number.MAX_SAFE_INTEGER));
 /**
+ * Public SDK 0.3.318 reported assistant error kinds, never account diagnosis.
+ * **Example** (Inspect the finite domain)
+ * ```ts
+ * console.log(NativeReportedAssistantErrorKind.literals.length)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const NativeReportedAssistantErrorKind = LiteralKit([
+  "authentication_failed",
+  "oauth_org_not_allowed",
+  "account_on_hold",
+  "verification_required",
+  "billing_error",
+  "rate_limit",
+  "overloaded",
+  "invalid_request",
+  "model_not_found",
+  "server_error",
+  "unknown",
+  "max_output_tokens",
+  "cloud_credential_error",
+]).pipe(
+  $I.annoteSchema("NativeReportedAssistantErrorKind", { description: "Finite native-reported SDK error labels only." })
+);
+/**
+ * Runtime type of the finite assistant error domain.
+ * @category models
+ * @since 0.0.0
+ */
+export type NativeReportedAssistantErrorKind = typeof NativeReportedAssistantErrorKind.Type;
+/**
+ * Public SDK 0.3.318 unsuccessful terminal subtypes.
+ * **Example** (Inspect the finite domain)
+ * ```ts
+ * console.log(NativeReportedTerminalErrorSubtype.literals.length)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const NativeReportedTerminalErrorSubtype = LiteralKit([
+  "error_during_execution",
+  "error_max_turns",
+  "error_max_budget_usd",
+  "error_max_structured_output_retries",
+]).pipe(
+  $I.annoteSchema("NativeReportedTerminalErrorSubtype", {
+    description: "Finite native-reported error terminal labels only.",
+  })
+);
+/**
+ * Runtime type of the finite terminal error domain.
+ * @category models
+ * @since 0.0.0
+ */
+export type NativeReportedTerminalErrorSubtype = typeof NativeReportedTerminalErrorSubtype.Type;
+const reportedCount = count.check(S.isLessThanOrEqualTo(24));
+/**
+ * Reported SDK errors from bounded, admitted-session root frames; no error strings.
+ * **Example** (Inspect the safe diagnostic model)
+ * ```ts
+ * console.log(typeof NativeReportedSdkErrors.make)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class NativeReportedSdkErrors extends S.Opaque<NativeReportedSdkErrors, { readonly brand: unique symbol }>()(
+  S.Struct({
+    assistant: S.Record(NativeReportedAssistantErrorKind, reportedCount),
+    assistantUnclassified: reportedCount,
+    terminal: S.Record(NativeReportedTerminalErrorSubtype, reportedCount),
+    terminalUnclassified: reportedCount,
+  }).pipe(
+    $I.annoteSchema("NativeReportedSdkErrors", {
+      description: "Fixed SDK error counts; not proof of auth, quota or upstream cause.",
+    })
+  )
+) {}
+/**
  * Bounded protocol counts and match booleans. No raw kind, source text, ID or error is retained.
  * **Example** (Inspect safe diagnostics)
  * ```ts
@@ -92,6 +171,9 @@ export class NativeProtocolDiagnostics extends S.Opaque<NativeProtocolDiagnostic
     unknownSystem: count,
     assistantError: count,
     terminalError: count,
+    reportedSdkErrors: S.OptionFromOptionalKey(NativeReportedSdkErrors).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     initVersionMatches: S.OptionFromOptionalKey(S.Boolean),
     initModelMatches: S.OptionFromOptionalKey(S.Boolean),
     initCwdMatches: S.OptionFromOptionalKey(S.Boolean),
