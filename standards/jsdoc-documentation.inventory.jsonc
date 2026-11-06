@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-06T01:47:39.549Z",
+  "generatedAt": "2026-11-06T01:56:21.884Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -490305,8 +490305,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 212,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-212-assertcacheproducerworkflowprofile",
+          "line": 215,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-215-assertcacheproducerworkflowprofile",
           "currentTags": [
             "@internal",
             "@category",
@@ -490328,8 +490328,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 246,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-246-assertcacheproducerworkflowlocation",
+          "line": 249,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-249-assertcacheproducerworkflowlocation",
           "currentTags": [
             "@internal",
             "@category",
@@ -490351,8 +490351,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 277,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-277-collectcacheproducerworkflowfiles",
+          "line": 280,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-280-collectcacheproducerworkflowfiles",
           "currentTags": [
             "@internal",
             "@category",
@@ -490374,8 +490374,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 336,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-336-inspectcacheproducerworkflow",
+          "line": 365,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-365-inspectcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",
@@ -490397,8 +490397,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 380,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-380-hashcacheproducerworkflow",
+          "line": 409,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-409-hashcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",
@@ -490420,8 +490420,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 410,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-410-hashcacheproduceruploadtarget",
+          "line": 439,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-439-hashcacheproduceruploadtarget",
           "currentTags": [
             "@internal",
             "@category",
@@ -490443,8 +490443,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 430,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-430-hashcacheproduceruploadkey",
+          "line": 459,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-459-hashcacheproduceruploadkey",
           "currentTags": [
             "@internal",
             "@category",
@@ -490466,8 +490466,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 551,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-551-assertcacheproduceruploadruntime",
+          "line": 580,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-580-assertcacheproduceruploadruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -490489,8 +490489,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 585,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-585-loadcacheproducerexecutionruntime",
+          "line": 614,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-614-loadcacheproducerexecutionruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -490512,8 +490512,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 637,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-637-loadcacheproducerstorageruntime",
+          "line": 666,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-666-loadcacheproducerstorageruntime",
           "currentTags": [
             "@internal",
             "@category",
@@ -490535,8 +490535,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 682,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-682-initializecacheproducerexecution",
+          "line": 711,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-711-initializecacheproducerexecution",
           "currentTags": [
             "@internal",
             "@category",
@@ -490558,8 +490558,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 760,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-760-runcacheproducerworkflow",
+          "line": 789,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-789-runcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",
@@ -527358,8 +527358,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.command.ts",
-          "line": 46,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-command-ts-46-buildkb",
+          "line": 90,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-command-ts-90-buildkb",
           "currentTags": [
             "@category",
             "@since"
@@ -527380,8 +527380,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.command.ts",
-          "line": 151,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-command-ts-151-kbcommand",
+          "line": 169,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-command-ts-169-kbcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -527424,8 +527424,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.projection.ts",
-          "line": 37,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-projection-ts-37-projectkb",
+          "line": 107,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-projection-ts-107-projectkb",
           "currentTags": [
             "@category",
             "@since"
@@ -527446,8 +527446,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.projection.ts",
-          "line": 151,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-projection-ts-151-haskbcanary",
+          "line": 166,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-projection-ts-166-haskbcanary",
           "currentTags": [
             "@param",
             "@returns",
@@ -527846,8 +527846,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.service.ts",
-          "line": 42,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-42-isoutwardassertion",
+          "line": 43,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-43-isoutwardassertion",
           "currentTags": [
             "@param",
             "@returns",
@@ -527870,8 +527870,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.service.ts",
-          "line": 60,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-60-validatekb",
+          "line": 177,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-177-validatekb",
           "currentTags": [
             "@category",
             "@since"
@@ -527892,8 +527892,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.service.ts",
-          "line": 155,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-155-selectkb",
+          "line": 208,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-208-selectkb",
           "currentTags": [
             "@category",
             "@since"
@@ -527914,8 +527914,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Kb/Kb.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.service.ts",
-          "line": 180,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-180-kbledger",
+          "line": 233,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-233-kbledger",
           "currentTags": [
             "@category",
             "@since"
@@ -527936,8 +527936,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Kb/Kb.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Kb/Kb.service.ts",
-          "line": 199,
-          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-199-makekbledger",
+          "line": 252,
+          "anchor": "packages-tooling-tool-cli-src-commands-kb-kb-service-ts-252-makekbledger",
           "currentTags": [
             "@category",
             "@since"
