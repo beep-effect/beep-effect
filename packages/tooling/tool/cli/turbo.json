@@ -6,6 +6,8 @@
       "inputs": [
         "$TURBO_EXTENDS$",
         "$TURBO_ROOT$/turbo.json",
+        "$TURBO_ROOT$/goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
+        "$TURBO_ROOT$/goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
         "$TURBO_ROOT$/goals/time-to-certainty/research/economics.json",
         "$TURBO_ROOT$/goals/time-to-certainty/research/gate-order-handoff.json",
         "$TURBO_ROOT$/packages/architecture-lab/**",

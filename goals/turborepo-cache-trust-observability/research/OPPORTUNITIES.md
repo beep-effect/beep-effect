@@ -2506,3 +2506,16 @@ batches, preserving every row, digest and exact expected outcome. Smaller test
 units with explicit corpus coverage would have prevented one aggregate deadline
 from obscuring the failing case range. Hosted repair proof remains pending;
 no local quality suite or production parser/resource limit was changed.
+
+### Package-only diagnostics could not attribute cross-install byte drift, 2026-11-06
+
+Runs 42236224771 and 42238818447 succeeded individually, but their installed-tree
+digests differ only in node-gyp content. Counts, sizes, modes, links and headers
+match. The original package-level digest reports cannot identify the differing
+files, so they do not justify a bytecode cleanup or normalization policy. A
+bounded file-hash/kind summary, with opaque filename hashes and no payloads,
+would have resolved that uncertainty in the same two passes. Both reports are
+privately retained; their sanitized identities and hashes are in the paired
+observation report. While adding this evidence, source review found the CLI
+test's two consumed Python files absent from its declared Turbo inputs; adding
+them prevents Python-only edits from silently reusing the old test result.
