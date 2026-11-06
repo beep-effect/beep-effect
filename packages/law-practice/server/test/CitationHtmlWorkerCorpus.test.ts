@@ -26,6 +26,7 @@ import * as Layer from "effect/Layer";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 
 const CorpusJson = S.fromJsonString(
   S.Struct({
@@ -46,11 +47,10 @@ const CorpusJson = S.fromJsonString(
 
 const runtime = Effect.gen(function* () {
   const citationResult1 = yield* FileSystem.FileSystem;
+  const workerRuntime = yield* citationHtmlWorkerTestRuntime();
   return {
-    kind: "bun",
-    executable: process.execPath,
+    ...workerRuntime,
     cwd: yield* citationResult1.makeTempDirectoryScoped({ prefix: "citation-html-corpus-" }),
-    workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
   };
 });
 const TestRuntime = Layer.merge(BunServices.layer, BunCrypto.layer);

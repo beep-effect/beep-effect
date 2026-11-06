@@ -4,21 +4,25 @@ import {
   makeCitationClosedHtmlWasi,
   makeCitationHtmlKernel,
 } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
+import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import { expect } from "@effect/vitest";
+import { expect, vi } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/internal/Citation/HtmlCompletion";
 import type { CitationHtmlKernelFailure } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
@@ -91,6 +95,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
       );
       expect(A.fromIterable(bytes)).toEqual(A.replicate(7, 32));
       expect(host.imports.environ_get()).toBe(0);
+      expect(host.imports.proc_exit()).toBeUndefined();
       expect(host.imports.environ_sizes_get(0, 4)).toBe(0);
       expect(host.imports.clock_time_get(0, BigInt(1), 8)).toBe(0);
       expect(A.fromIterable(bytes)).toEqual([...A.replicate(0, 16), ...A.replicate(7, 16)]);
@@ -187,6 +192,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
   it.effect("rejects altered assets and enforces exact output ceilings without poisoning later instances", () =>
     Effect.gen(function* () {
       const bytes = yield* loadAsset();
+      const malformed = yield* makeCitationHtmlKernel({}).pipe(Effect.flip);
+      expect(malformed).toMatchObject({ reason: "invalid-asset" });
       const changed = new Uint8Array(bytes);
       changed[0] = 1;
       const citationResult11 = yield* Effect.flip(makeCitationHtmlKernel(changed));
@@ -210,6 +217,171 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
       expect(citationResult16).toBe("😀AB");
       const citationResult17 = yield* Effect.flip(kernel.run({ input, outputUtf16: -1 }));
       expect(citationResult17._tag).toBe("CitationHtmlKernelFailure");
+    })
+  );
+
+  it.effect("sanitizes invalid digest output and defects during asset and runtime inventory authentication", () =>
+    Effect.gen(function* () {
+      const bytes = yield* loadAsset();
+      const crypto = yield* Digest.Digest;
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const prep = yield* makeCitationHtmlInput(limits);
+      const input = yield* prep.prepare("<p>Example</p>");
+      for (const broken of [Effect.succeed(new Uint8Array(1)), Effect.die("synthetic-digest-defect")]) {
+        for (const successfulReads of [0, 1]) {
+          const reads = yield* Ref.make(0);
+          const digest = makeTestCitationDigest((algorithm, value) =>
+            Ref.getAndUpdate(reads, (count) => count + 1).pipe(
+              Effect.flatMap((count) => (count < successfulReads ? crypto.digest(algorithm, value) : broken))
+            )
+          );
+          const failure = yield* makeCitationHtmlKernel(bytes).pipe(
+            Effect.flatMap((kernel) => kernel.run({ input, outputUtf16: 100 })),
+            Effect.provideService(Digest.Digest, digest),
+            Effect.flip
+          );
+          expect(failure).toMatchObject({ _tag: "CitationHtmlKernelFailure", reason: "invalid-asset" });
+          expect("cause" in failure).toBe(false);
+        }
+      }
+    })
+  );
+
+  it.effect("fails closed when the host cannot compile or instantiate the authenticated module", () =>
+    Effect.gen(function* () {
+      const bytes = yield* loadAsset();
+      const input = { encoding: "UTF-8", bytes: new TextEncoder().encode("<p>Example</p>"), fullHtml: false };
+      const cases = [
+        { runtime: {}, reason: "invalid-asset" },
+        {
+          runtime: {
+            Module: class {
+              constructor() {
+                throw new Error("synthetic compile failure");
+              }
+            },
+            Instance: class {},
+          },
+          reason: "invalid-asset",
+        },
+        {
+          runtime: {
+            Module: class {},
+            Instance: class {
+              constructor() {
+                throw new Error("synthetic instantiate failure");
+              }
+            },
+          },
+          reason: "kernel-failed",
+        },
+        { runtime: { Module: class {}, Instance: class {} }, reason: "kernel-failed" },
+        {
+          runtime: {
+            Module: class {},
+            Instance: class {
+              readonly exports = {};
+            },
+          },
+          reason: "kernel-failed",
+        },
+      ];
+      for (const row of cases) {
+        const failure = yield* Effect.acquireUseRelease(
+          Effect.sync(() => vi.stubGlobal("WebAssembly", row.runtime)),
+          () =>
+            makeCitationHtmlKernel(bytes).pipe(
+              Effect.flatMap((kernel) => kernel.run({ input, outputUtf16: 100 })),
+              Effect.flip
+            ),
+          () => Effect.sync(() => vi.unstubAllGlobals())
+        );
+        expect(failure).toMatchObject({ _tag: "CitationHtmlKernelFailure", reason: row.reason });
+        expect("cause" in failure).toBe(false);
+      }
+    })
+  );
+  it.effect("sanitizes ABI faults and releases allocated native input on every failed completion", () =>
+    Effect.gen(function* () {
+      const bytes = yield* loadAsset();
+      const input = { encoding: "UTF-8", bytes: new TextEncoder().encode("<p>Example</p>"), fullHtml: false };
+      const native = globalThis.WebAssembly;
+      const trap = () => {
+        throw new Error("synthetic ABI trap");
+      };
+      const cases: ReadonlyArray<{
+        readonly patch: WebAssembly.Instance["exports"];
+        readonly reason: string;
+        readonly released: number;
+      }> = [
+        { patch: { _initialize: trap }, reason: "kernel-failed", released: 0 },
+        { patch: { html_version: () => 0 }, reason: "invalid-asset", released: 0 },
+        { patch: { html_iconv_version: () => 0 }, reason: "invalid-asset", released: 0 },
+        { patch: { html_iconv_inventory: trap }, reason: "invalid-asset", released: 0 },
+        { patch: { html_iconv_inventory: () => -1 }, reason: "invalid-asset", released: 0 },
+        { patch: { html_iconv_inventory: () => 2 ** 32 }, reason: "invalid-asset", released: 0 },
+        { patch: { html_iconv_inventory_length: () => 32769 }, reason: "invalid-asset", released: 0 },
+        { patch: { malloc: trap }, reason: "kernel-failed", released: 0 },
+        { patch: { html_clean: trap }, reason: "kernel-failed", released: 1 },
+        { patch: { html_clean: () => 2 }, reason: "kernel-failed", released: 1 },
+        { patch: { html_output_length: trap }, reason: "kernel-failed", released: 1 },
+        { patch: { html_output_length: () => -1 }, reason: "kernel-failed", released: 1 },
+        { patch: { html_output_units: () => 101 }, reason: "kernel-failed", released: 1 },
+        { patch: { html_output: () => 2 ** 32 }, reason: "kernel-failed", released: 1 },
+        { patch: { html_output_length: () => 0, html_output_units: () => 1 }, reason: "kernel-failed", released: 1 },
+      ];
+      for (const row of cases) {
+        let releases = 0;
+        let frees = 0;
+        const runtime = {
+          Module: native.Module,
+          Instance: class {
+            readonly exports: WebAssembly.Instance["exports"];
+            constructor(module: WebAssembly.Module, imports: Bun.WebAssembly.Imports) {
+              this.exports = {
+                ...new native.Instance(module, imports).exports,
+                ...row.patch,
+                html_release: () => {
+                  releases++;
+                },
+                free: () => {
+                  frees++;
+                },
+              };
+            }
+          },
+        };
+        const failure = yield* Effect.acquireUseRelease(
+          Effect.sync(() => vi.stubGlobal("WebAssembly", runtime)),
+          () =>
+            makeCitationHtmlKernel(bytes).pipe(
+              Effect.flatMap((kernel) => kernel.run({ input, outputUtf16: 100 })),
+              Effect.flip
+            ),
+          () => Effect.sync(() => vi.unstubAllGlobals())
+        );
+        expect(failure).toMatchObject({ _tag: "CitationHtmlKernelFailure", reason: row.reason });
+        expect("cause" in failure).toBe(false);
+        expect(releases).toBe(row.released);
+        expect(frees).toBe(row.released);
+      }
+    })
+  );
+  it.effect("rejects an oversized byte carrier before entering the authenticated native parser", () =>
+    Effect.gen(function* () {
+      const asset = yield* loadAsset();
+      const kernel = yield* makeCitationHtmlKernel(asset);
+      const failure = yield* kernel
+        .run({
+          input: {
+            encoding: "UTF-8",
+            fullHtml: false,
+            bytes: new Uint8Array(4 * CitationEngineAbsoluteMaxima.producedTextUtf16 + 1),
+          },
+          outputUtf16: 0,
+        })
+        .pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationHtmlKernelFailure", reason: "invalid-input" });
     })
   );
 });

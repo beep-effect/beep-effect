@@ -82,7 +82,8 @@ export const makeCitationUnicodePipelineHarness = Effect.fn("UnicodePipelineTest
     : base;
   const values = yield* makeCitationCleanerValues(limits);
   const observed = yield* makeCitationObservedSpawner();
-  const builtins = yield* makeCitationBuiltinCleaners(limits, citationHtmlWorkerTestRuntime()).pipe(
+  const htmlRuntime = yield* citationHtmlWorkerTestRuntime();
+  const builtins = yield* makeCitationBuiltinCleaners(limits, htmlRuntime).pipe(
     Effect.provideService(CitationCleanerValues, values),
     Effect.provideService(ChildProcessSpawner, {
       ...observed.spawner,

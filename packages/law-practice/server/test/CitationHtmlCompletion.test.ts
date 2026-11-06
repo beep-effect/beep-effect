@@ -38,6 +38,16 @@ const NativeHtmlSafetyFailureJson = S.fromJsonString(
 );
 
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("approved HTML safety completion", (it) => {
+  it.effect("rejects malformed native diagnostics and text without exposing their contents", () =>
+    Effect.gen(function* () {
+      const diagnostics = yield* completeCitationHtml({ text: "private text", diagnostics: null }).pipe(Effect.flip);
+      const text = yield* completeCitationHtml({ text: 42, diagnostics: [] }).pipe(Effect.flip);
+      expect(diagnostics).toMatchObject({ _tag: "CitationHtmlCompletionFailure" });
+      expect(text).toMatchObject({ _tag: "CitationHtmlCompletionFailure" });
+      expect(diagnostics).not.toHaveProperty("cause");
+      expect(text).not.toHaveProperty("text");
+    })
+  );
   it.effect("changes only the three source native-depth exhaustion outcomes", () =>
     Effect.gen(function* () {
       const citationResult1 = yield* FileSystem.FileSystem;

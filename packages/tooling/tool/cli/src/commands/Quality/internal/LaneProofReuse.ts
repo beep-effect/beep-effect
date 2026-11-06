@@ -227,13 +227,13 @@ const environmentProfileHash = Effect.fnUntraced(function* (lane: GithubCheckLan
 const runGit = Effect.fnUntraced(function* (
   cwd: string,
   args: ReadonlyArray<string>,
-  env?: Readonly<Record<string, string | undefined>>
+  env: Readonly<Record<string, string | undefined>>
 ) {
   const result = yield* runCapturedStreams({
     command: "git",
     args,
     cwd,
-    ...(env === undefined ? {} : { env: { ...env } }),
+    env: { ...env },
     extendEnv: true,
     trim: true,
   }).pipe(Effect.mapError(() => LaneProofGitError.make({ message: `Unable to run git ${A.join(args, " ")}.` })));

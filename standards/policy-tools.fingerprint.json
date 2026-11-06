@@ -1786,6 +1786,7 @@
         "packages/tooling/library/repo-cli-kit/src/cli/Labs/index.ts",
         "packages/tooling/library/repo-cli-kit/src/cli/OptionRecord.ts",
         "packages/tooling/library/repo-cli-kit/src/process/index.ts",
+        "packages/tooling/library/repo-cli-kit/src/tsmorph/ProjectFactory.ts",
         "packages/tooling/library/repo-utils/src/JSDoc/JSDocSections.ts",
         "packages/tooling/library/repo-workspaces/package.json",
         "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",

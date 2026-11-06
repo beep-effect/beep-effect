@@ -78,8 +78,6 @@
       "!packages/law-practice/use-cases/test/fixtures/eyecite/html-bytes.json",
       // Complete source identity relations sealed by ops/verify-cleaner-identities.py.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-identities.json",
-      // Producer-owned bytes sealed by ops/verify-case-name-process.py.
-      "!packages/law-practice/use-cases/test/fixtures/eyecite/case-name-process.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/unicode-dictionary.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/python-hashes.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-unicode.json",
@@ -94,6 +92,8 @@
       // Keep one authenticated source dispatch vector per line for review.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/token-dispatch.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/token-context.json",
+      // Source process traces are hash-authenticated by CitationCaseNameProcess.fixtures.ts.
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/case-name-process.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/typescript-extensions.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/vocabulary-mapping.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/regex-adversarial-corpus.json",
