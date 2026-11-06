@@ -1132,26 +1132,19 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       cwd: string,
       key: string,
       value: string,
-      options?: { readonly file?: string; readonly add?: boolean }
+      options: { readonly file?: string; readonly add?: boolean } = {}
     ) {
-      yield* Effect.annotateCurrentSpan({
-        cwd,
-        key,
-        file: options?.file ?? "(repository config)",
-        add: options?.add ?? false,
-      });
+      const file = O.fromUndefinedOr(options.file);
+      const add = options.add === true;
+      yield* Effect.annotateCurrentSpan({ cwd, key, file: O.getOrElse(file, () => "(repository config)"), add });
       // git config has no documented -- separator, so key, value AND file are all
       // guarded — a leading-dash value is refused typed rather than risking git
       // reading it as a flag. Recorded limitation: a legitimate "-..." config
       // value cannot be written through this method. The value rides the
       // SENSITIVE arm: a refused config value is reported as <redacted>, never
       // echoed into the error (the redaction policy).
-      yield* rejectOptionLikeRefs(cwd, [key, ...(options?.file !== undefined ? [options.file] : [])], [value]);
-      const classified = yield* runFor(
-        GitCommand.configSet(key, value, options?.file, options?.add ?? false),
-        cwd,
-        "generic"
-      );
+      yield* rejectOptionLikeRefs(cwd, [key, ...O.toArray(file)], [value]);
+      const classified = yield* runFor(GitCommand.configSet(key, value, O.getOrUndefined(file), add), cwd, "generic");
       return yield* Match.valueTags(classified, {
         success: () => Effect.void,
         ...refFailureArms(cwd, key),
