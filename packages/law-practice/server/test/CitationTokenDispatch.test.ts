@@ -211,6 +211,36 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         };
         const plan = yield* dispatch.plan(input);
         expect(plan.decisions).toEqual([{ index: 1, id: 7, action: "IdCitation" }]);
+        const bounded = yield* makeCitationTokenDispatch({ ...limits, candidates: 1 }, corpus.bindings).pipe(
+          Effect.provideService(CitationFrozenEditions, {
+            source: unavailable,
+            lookup: unavailable,
+            lookupMany: unavailable,
+          })
+        );
+        const doubled = {
+          ...input,
+          assembly: {
+            items: [
+              { _tag: "Token", id: 7 },
+              { _tag: "Token", id: 8 },
+            ],
+            citations: [
+              [0, 7],
+              [1, 8],
+            ],
+          },
+          tokens: [...input.tokens, { id: 8, seed }],
+        };
+        const refused = yield* bounded.plan(doubled).pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "candidates" });
+        const recovered = yield* bounded.plan(input);
+        expect(recovered.decisions).toEqual(plan.decisions);
+        const larger = yield* dispatch.plan(doubled);
+        expect(larger.decisions).toEqual([
+          { index: 0, id: 7, action: "IdCitation" },
+          { index: 1, id: 8, action: "IdCitation" },
+        ]);
         for (const value of [
           { ...input, assembly: { ...input.assembly, citations: [[0, 7]] } },
           { ...input, assembly: { ...input.assembly, citations: [[9, 7]] } },
