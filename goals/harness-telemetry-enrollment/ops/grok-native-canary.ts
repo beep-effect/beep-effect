@@ -679,6 +679,71 @@ const requireAbsent = async (filename: string) => {
   }
   throw new Error("required-policy-or-private-auth-present");
 };
+// @effect-diagnostics-next-line asyncFunction:off -- Only the two private-home native placeholders may be empty; no policy bytes are read.
+const privatePolicyPlaceholder = async (home: string, name: "managed_config.toml" | "requirements.toml") => {
+  const directory = await Fs.open(home, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+  try {
+    const parent = await directory.stat({ bigint: true });
+    const parentIdentity = `${parent.dev}:${parent.ino}:${parent.uid}:${parent.mode}`;
+    if (parent.uid !== BigInt(process.getuid?.() ?? -1) || (parent.mode & 0o777n) !== 0o700n)
+      throw new Error("private-policy-parent");
+    if ((await Fs.realpath(home)) !== home) throw new Error("private-policy-parent-link");
+    const filename = `${home}/${name}`;
+    const anchored = `/proc/self/fd/${directory.fd}/${name}`;
+    let descriptor: Awaited<ReturnType<typeof Fs.open>>;
+    try {
+      descriptor = await Fs.open(anchored, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    } catch (error) {
+      if (typeof error !== "object" || error === null || !("code" in error) || error.code !== "ENOENT") throw error;
+      await requireAbsent(filename);
+      const finalParent = await Fs.lstat(home, { bigint: true });
+      if (`${finalParent.dev}:${finalParent.ino}:${finalParent.uid}:${finalParent.mode}` !== parentIdentity)
+        throw new Error("private-policy-parent-race");
+      return;
+    }
+    try {
+      const value = await descriptor.stat({ bigint: true });
+      if (
+        !value.isFile() ||
+        value.uid !== parent.uid ||
+        (value.mode & 0o777n) !== 0o600n ||
+        value.nlink !== 1n ||
+        value.size !== 0n
+      )
+        throw new Error("private-policy-entry");
+      const identity = `${value.dev}:${value.ino}:${value.uid}:${value.mode}:${value.nlink}:${value.size}:${value.mtimeNs}:${value.ctimeNs}`;
+      for (const entry of [
+        await Fs.lstat(anchored, { bigint: true }),
+        await Fs.lstat(filename, { bigint: true }),
+        await descriptor.stat({ bigint: true }),
+      ]) {
+        if (
+          entry.isSymbolicLink() ||
+          `${entry.dev}:${entry.ino}:${entry.uid}:${entry.mode}:${entry.nlink}:${entry.size}:${entry.mtimeNs}:${entry.ctimeNs}` !==
+            identity
+        )
+          throw new Error("private-policy-entry-race");
+      }
+      const finalParent = await Fs.lstat(home, { bigint: true });
+      if (
+        finalParent.isSymbolicLink() ||
+        `${finalParent.dev}:${finalParent.ino}:${finalParent.uid}:${finalParent.mode}` !== parentIdentity ||
+        (await Fs.realpath(filename)) !== filename
+      )
+        throw new Error("private-policy-parent-race");
+      const finalValue = await descriptor.stat({ bigint: true });
+      if (
+        `${finalValue.dev}:${finalValue.ino}:${finalValue.uid}:${finalValue.mode}:${finalValue.nlink}:${finalValue.size}:${finalValue.mtimeNs}:${finalValue.ctimeNs}` !==
+        identity
+      )
+        throw new Error("private-policy-descriptor-drift");
+    } finally {
+      await descriptor.close();
+    }
+  } finally {
+    await directory.close();
+  }
+};
 const originalConfig = S.Record(S.String, S.Unknown).pipe(
   $I.annoteSchema("GrokOriginalConfigMetadata", {
     description: "Transient parse solely to reject original security-policy tables; values are never retained.",
@@ -738,11 +803,11 @@ const pinRuntime = Effect.fn("GrokCanary.pinRuntime")(function* (
       "/etc/grok/requirements.toml",
       `${shared}/managed_config.toml`,
       `${shared}/requirements.toml`,
-      `${request.nativeHome}/managed_config.toml`,
-      `${request.nativeHome}/requirements.toml`,
       `${request.nativeHome}/auth.json`,
     ])
       await requireAbsent(filename);
+    await privatePolicyPlaceholder(request.nativeHome, "managed_config.toml");
+    await privatePolicyPlaceholder(request.nativeHome, "requirements.toml");
     const stat = await Fs.lstat(request.executable);
     if (
       !stat.isFile() ||

@@ -32,7 +32,18 @@ marketplaces, MCP or LSP entries, no enabled foreign compatibility source and
 only the one exact private configuration layer. Unexpected required policy or
 config drift refuses admission. Existing host/user managed and requirements
 files must be absent under this finite qualification; if they appear, preserve
-and requalify them rather than hiding or deleting them. Remote policy and cloud
+and requalify them rather than hiding or deleting them. Only the exact private
+`GROK_HOME/managed_config.toml` and `GROK_HOME/requirements.toml` placeholders
+may instead exist as owned single-link regular 0600 files of exactly zero bytes.
+The adapter checks metadata through the held canonical private-parent descriptor,
+with no-follow opens and stable entry/descriptor/parent observations; it reads no
+placeholder contents. Zero-byte TOML contains no policy directives and is treated
+as equivalent to absence only for these two private placeholders. Whitespace and
+any other policy bytes refuse. This exception
+never applies to system/original-user policy or private authentication files.
+A native-created empty placeholder does not change the fixed profile, the two
+fresh zero-inventory inspections, auth checks, source budget or replay fence.
+Remote policy and cloud
 retention are not frozen by the local qualification.
 
 Authentication uses the existing normal native login-store consumer through
