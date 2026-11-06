@@ -6,6 +6,7 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { expect } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -31,6 +32,24 @@ export const citationHtmlWorkerTestRuntime = () =>
     cwd: process.cwd(),
     workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
   });
+
+/** Resolve the Bun executable the "bun" runtime leg spawns. Under the Bun test
+ * runner it is the process itself; under Node (every test runs on both runtimes)
+ * it is the installed `bun` on `PATH`, resolved here because worker launches
+ * receive an empty environment and cannot search `PATH` themselves.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationBunTestExecutable: Effect.Effect<string, PlatformError.PlatformError, ChildProcessSpawner> =
+  process.versions.bun !== undefined
+    ? Effect.succeed(process.execPath)
+    : Effect.gen(function* () {
+        const spawner = yield* ChildProcessSpawner;
+        const candidates = yield* spawner.lines(ChildProcess.make("which", ["bun"]));
+        return yield* O.match(A.head(A.map(candidates, Str.trim)), {
+          onNone: () => Effect.die("Citation qualification requires an installed Bun executable"),
+          onSome: Effect.succeed,
+        });
+      });
 
 /** Reject Bun's test-runner node shim and resolve an actual installed Node
  * executable through fixed probes. Effect owns probe processes and timeouts.
@@ -65,6 +84,10 @@ export const citationNodeTestExecutable = Effect.gen(function* () {
 
 /** Bundle a trusted test subject for the installed Node executable. The caller
  * owns the scoped output directory; actual worker launches receive empty env.
+ *
+ * The bundler is Bun's. Under the Bun test runner it is the in-process
+ * `Bun.build`; under Node (repo law: every test runs on both runtimes) the same
+ * build runs through the `bun build` CLI, which `bunx` guarantees on `PATH`.
  * @internal @category testing @since 0.0.0
  */
 export const makeCitationNodeTestRuntime = Effect.fn("NativeSourceTest.nodeRuntime")(function* (
@@ -73,18 +96,39 @@ export const makeCitationNodeTestRuntime = Effect.fn("NativeSourceTest.nodeRunti
 ) {
   const path = yield* Path.Path;
   const executable = yield* citationNodeTestExecutable;
-  const bundle = yield* Effect.promise(() =>
-    Bun.build({
-      entrypoints: [entrypoint],
-      target: "node",
-      format: "esm",
-      packages: "bundle",
-      outdir: cwd,
-      naming: "worker.mjs",
-    })
-  );
-  expect(bundle.success).toBe(true);
-  return CitationNativeProcessRuntime.make({ kind: "node", executable, cwd, workerFile: path.join(cwd, "worker.mjs") });
+  const workerFile = path.join(cwd, "worker.mjs");
+  if (process.versions.bun !== undefined) {
+    const bundle = yield* Effect.promise(() =>
+      Bun.build({
+        entrypoints: [entrypoint],
+        target: "node",
+        format: "esm",
+        packages: "bundle",
+        outdir: cwd,
+        naming: "worker.mjs",
+      })
+    );
+    expect(bundle.success).toBe(true);
+  } else {
+    const spawner = yield* ChildProcessSpawner;
+    const exitCode = yield* spawner.exitCode(
+      ChildProcess.make(
+        "bun",
+        [
+          "build",
+          entrypoint,
+          "--target=node",
+          "--format=esm",
+          "--packages=bundle",
+          `--outdir=${cwd}`,
+          "--entry-naming=worker.mjs",
+        ],
+        { stdout: "ignore", stderr: "inherit" }
+      )
+    );
+    expect(exitCode).toBe(0);
+  }
+  return CitationNativeProcessRuntime.make({ kind: "node", executable, cwd, workerFile });
 });
 
 /** Share actual regex runtime selection across worker and tokenizer controls.

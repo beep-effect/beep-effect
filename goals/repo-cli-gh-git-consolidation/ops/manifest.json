@@ -289,6 +289,38 @@
     {
       "path": "ops/frozen-w7a/PullRequestTitle.old.ts",
       "purpose": "Frozen pre-W7 PullRequestTitle resolver (resolvePullRequestTitle) (lane base 8602b24203), replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/groups-differential-w7.ts",
+      "purpose": "W7b differential: the command-group git sites of the Ci, Docgen, Knowledge, Quality, Goals, Holds, Laws, Lint, Runners, Research, Cache, Qa and Refs groups (census rows B1-B136, SPEC D-19) on @beep/git against the frozen pre-W7 bodies under ops/frozen-w7b over scratch repositories; the gh half runs through ops/groups-differential-w7.github.ts."
+    },
+    {
+      "path": "ops/groups-differential-w7.github.ts",
+      "purpose": "W7b differential, GitHub half: the command-group gh sites (RouteCorpus, Completion, CompletionEvidence, RepoCards) on @beep/github against their frozen pre-W7 bodies under ops/frozen-w7b, each case owning its scripted spawner and paginating HTTP world."
+    },
+    {
+      "path": "ops/frozen-w7b/GitRunners.old.ts",
+      "purpose": "Frozen pre-W7 generic git runners from packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts, the runners the W7 retirement deletes, inlined verbatim (lane base 8602b24203), replayed by ops/groups-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7b/Groups.old.ts",
+      "purpose": "Frozen pre-W7 W7b command-group git site bodies over GitRunners.old.ts (lane base 8602b24203), replayed by ops/groups-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7b/RouteCorpus.old.ts",
+      "purpose": "Frozen pre-W7 Ci RouteCorpus production gh runner (lane base 8602b24203), replayed by ops/groups-differential-w7.github.ts."
+    },
+    {
+      "path": "ops/frozen-w7b/Completion.old.ts",
+      "purpose": "Frozen pre-W7 Goals Completion wire decoders and gh read expressions (lane base 8602b24203), replayed by ops/groups-differential-w7.github.ts."
+    },
+    {
+      "path": "ops/frozen-w7b/CompletionEvidence.old.ts",
+      "purpose": "Frozen pre-W7 Goals CompletionEvidence observation helpers and wire decoders, with runGitOutput inlined (lane base 8602b24203), replayed by ops/groups-differential-w7.github.ts."
+    },
+    {
+      "path": "ops/frozen-w7b/RepoCards.old.ts",
+      "purpose": "Frozen pre-W7 Research repo-card knowledge-card extraction gh sites (lane base 8602b24203), replayed by ops/groups-differential-w7.github.ts."
     }
   ]
 }
