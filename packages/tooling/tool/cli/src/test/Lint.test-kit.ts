@@ -40,6 +40,7 @@ export {
   POLICY_ROOT_FILE_ROUTES,
   POLICY_SHARED_ROOT_FILES,
 } from "../commands/Lint/internal/PolicyRootFiles.ts";
+export { SchemaFirstDetectors } from "../commands/Lint/internal/SchemaFirstDetectors.ts";
 /**
  * Schema-first inventory merge, exposed so tests can drive `--write` regeneration on fixture documents.
  *
