@@ -273,6 +273,8 @@ describe("goals archive", () => {
     assertFalse(tombstoneKeeps("goals", "research/notes.md"));
     assertTrue(tombstoneKeeps("explorations", "BRIEF.md"));
     assertFalse(tombstoneKeeps("explorations", "history/reflections/a.md"));
+    assertTrue(tombstoneKeeps("explorations", "research/harvest/ledger.jsonl"));
+    assertFalse(tombstoneKeeps("explorations", "research/notes.md"));
   });
 
   it.effect("doctor flags a terminal goal with neither archive nor retentionReason as advisory", () =>

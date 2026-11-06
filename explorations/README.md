@@ -114,7 +114,8 @@ terminal goal: `bun run beep goals archive --kind explorations --slug <slug> --p
 then `--write --expect <planId>` (see [`goals/README.md`](../goals/README.md#archive)).
 The full tree moves to `beep-effect/beep-effect-goals-archive` at the same path;
 the tombstone keeps `ops/manifest.json`, a generated stub `README.md` (status
-region, archive URL), `DECISIONS.md` and `BRIEF.md`. The manifest's
+region, archive URL), `DECISIONS.md`, `BRIEF.md` and any `research/harvest/`
+subtree (the harvest ledger's home). The manifest's
 `exploration.archive` block records `repo`, `path`, `commit`, `contentHash`,
 `archivedAt` and `sourceCommit`; inbound links move to the archive's `blob/main`
 URLs. An exploration that must stay whole declares `exploration.retentionReason`;

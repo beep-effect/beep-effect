@@ -166,7 +166,9 @@ export type RetentionReason = typeof RetentionReason.Type;
  * **Details**
  *
  * A trailing `/**` keeps the whole subtree. `README.md` is kept as a path but
- * regenerated as the archive stub, not kept verbatim.
+ * regenerated as the archive stub, not kept verbatim. Explorations also keep
+ * `research/harvest/**`: the harvest ledger and its panel verdicts live on
+ * `main` there, beside the exploration that defined them.
  *
  * **Example** (Read the goal keep-set)
  *
@@ -181,7 +183,7 @@ export type RetentionReason = typeof RetentionReason.Type;
  */
 export const TombstoneKeep: { readonly [K in PacketRoot]: ReadonlyArray<string> } = {
   goals: ["ops/manifest.json", "README.md", "history/reflections/**", "research/OPPORTUNITIES.md"],
-  explorations: ["ops/manifest.json", "README.md", "DECISIONS.md", "BRIEF.md"],
+  explorations: ["ops/manifest.json", "README.md", "DECISIONS.md", "BRIEF.md", "research/harvest/**"],
 };
 
 const SUBTREE_SUFFIX = "/**";
