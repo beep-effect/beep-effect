@@ -11,7 +11,9 @@
  *   frontmatter `findings[].instruction` (with category and confidence) and `todos[]`;
  * - `friction-receipt`: every tracked `OPPORTUNITIES.md`, one row per `## `
  *   section (heading plus its `**Prevention:**` line);
- * - `plan-unchecked`: `- [ ]` items in `goals/<slug>/PLAN.md` and `SPEC.md`;
+ * - `plan-unchecked`: `- [ ]` items in `goals/<slug>/PLAN.md` and `SPEC.md`, minus any
+ *   item whose normalized text equals a checkbox line under `goals/_template/**` or
+ *   `explorations/_template/**` (inherited boilerplate);
  * - `status-note` / `stop-condition`: goal manifest `statusNote` and `stopConditions[]`;
  * - `decision-file`: `goals/<slug>/decisions/*.md` titles;
  * - `open-question`: exploration manifest `exploration.openQuestions[]`.
@@ -28,6 +30,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -65,6 +68,9 @@ const $I = $RepoCliId.create("commands/Goals/Harvest.service");
 const EXPLORATIONS_DIR = "explorations";
 const LINE_BREAK = /\r\n?|\n/;
 const UNCHECKED_ITEM = /^\s*[-*] \[ \] (.+)$/;
+const CHECKBOX_ITEM = /^\s*[-*] \[[ xX]\] (.+)$/;
+const WHITESPACE_RUN = /\s+/g;
+const TEMPLATE_ROOTS: ReadonlyArray<string> = [`${GOALS_DIR}/${TEMPLATE_SLUG}`, `explorations/${TEMPLATE_SLUG}`];
 const SECTION_HEADING = /^## /;
 const PREVENTION_LINE = /^(?:[-*]\s+)?\*\*Prevention\b/;
 const INSTRUCTION_KEY = /^\s*(?:-\s+)?instruction:/;
@@ -463,11 +469,68 @@ const decisionDraft = Effect.fnUntraced(function* (file: string, name: string, r
   return HarvestRowDraft.make({ source: "decision-file", file, line, text: parsed.success.frontmatter.title });
 });
 
+const normalizeCheckboxText = flow(Str.trim, Str.replace(WHITESPACE_RUN, " "));
+
+/**
+ * Normalized text of every checkbox item (`- [ ]` or `- [x]`) in a Markdown document.
+ *
+ * **Details**
+ *
+ * Text is trimmed and inner whitespace runs collapse to one space, so a
+ * packet line copied from a template compares equal to the template line.
+ *
+ * **Example** (Collect checkbox texts)
+ *
+ * ```ts
+ * import { checkboxItemTexts } from "@beep/repo-cli/commands/Goals/Harvest.service"
+ *
+ * console.log(checkboxItemTexts("- [ ] No  churn.\n- [x] Done\ntext\n")) // ["No churn.", "Done"]
+ * ```
+ *
+ * @param text - Document text.
+ * @returns The normalized item texts in document order.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const checkboxItemTexts = (text: string): ReadonlyArray<string> =>
+  A.filterMap(splitLines(text), (line) =>
+    pipe(
+      Str.match(CHECKBOX_ITEM)(line),
+      O.flatMap((match) => O.fromUndefinedOr(match[1])),
+      O.map(normalizeCheckboxText),
+      Result.fromOption(() => undefined)
+    )
+  );
+
+// Checkbox texts of every Markdown file under the goal and exploration templates: boilerplate
+// that each scaffolded packet inherits, so a copied line is not harvested as packet alpha.
+const templateRootCheckboxTexts = Effect.fnUntraced(function* (repoRoot: string, templateRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const absolute = path.join(repoRoot, templateRoot);
+  const entries = yield* fs.readDirectory(absolute, { recursive: true }).pipe(Effect.orElseSucceed(A.empty<string>));
+  const markdown = A.sort(A.filter(entries, Str.endsWith(".md")), Order.String);
+  const texts = yield* Effect.forEach(markdown, (entry) =>
+    Effect.map(readOptionalText(path.join(absolute, entry), `${templateRoot}/${entry}`), (content) =>
+      O.match(content, { onNone: A.empty<string>, onSome: checkboxItemTexts })
+    )
+  );
+  return A.flatten(texts);
+});
+
+const templateCheckboxTexts = Effect.fnUntraced(function* (repoRoot: string) {
+  const lists = yield* Effect.forEach(TEMPLATE_ROOTS, (templateRoot) =>
+    templateRootCheckboxTexts(repoRoot, templateRoot)
+  );
+  return HashSet.fromIterable(A.flatten(lists));
+});
+
 const goalPacketRows = Effect.fnUntraced(function* (
   repoRoot: string,
   slug: string,
   manifestText: O.Option<string>,
-  commit: string
+  commit: string,
+  boilerplate: HashSet.HashSet<string>
 ) {
   const path = yield* Path.Path;
   const relative = `${GOALS_DIR}/${slug}`;
@@ -519,7 +582,11 @@ const goalPacketRows = Effect.fnUntraced(function* (
     Effect.map(readOptionalText(path.join(absolute, name), `${relative}/${name}`), (content) =>
       O.match(content, {
         onNone: A.empty<HarvestRowDraft>,
-        onSome: (value) => uncheckedPlanItems(`${relative}/${name}`, value),
+        onSome: (value) =>
+          A.filter(
+            uncheckedPlanItems(`${relative}/${name}`, value),
+            (draft) => !HashSet.has(boilerplate, normalizeCheckboxText(draft.text))
+          ),
       })
     )
   );
@@ -610,10 +677,11 @@ const collectLedger = Effect.fn("Harvest.collect")(function* (options: HarvestCo
   const wantsGoals = A.contains(options.kinds, "goals");
   const wantsExplorations = A.contains(options.kinds, "explorations");
 
+  const boilerplate = yield* templateCheckboxTexts(repoRoot);
   const goalRecords = wantsGoals ? yield* listGoalPackets(repoRoot) : A.empty<GoalPacketRecord>();
   const goalPackets = yield* Effect.forEach(
     goalRecords,
-    (record) => goalPacketRows(repoRoot, record.slug, O.fromUndefinedOr(record.manifestText), commit),
+    (record) => goalPacketRows(repoRoot, record.slug, O.fromUndefinedOr(record.manifestText), commit, boilerplate),
     { concurrency: 8 }
   );
 

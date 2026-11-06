@@ -1,6 +1,7 @@
 import { runGoalsHarvest } from "@beep/repo-cli/commands/Goals/Harvest";
 import { HarvestLedger } from "@beep/repo-cli/commands/Goals/Harvest.schemas";
 import {
+  checkboxItemTexts,
   frictionReceipts,
   HarvestProjector,
   HarvestProjectorLive,
@@ -108,7 +109,9 @@ const LEDGER = A.join(
 );
 
 const PLAN = A.join(["# Plan", "", "- [x] Done", "- [ ] Ship the harvester", ""], "\n");
-const SPEC = A.join(["# Spec", "", "## Acceptance", "", "- [ ] Ledger is committed", ""], "\n");
+const BOILERPLATE = "- [ ] No unrelated refactors or formatting churn.";
+const SPEC = A.join(["# Spec", "", "## Acceptance", "", "- [ ] Ledger is committed", `${BOILERPLATE}  `, ""], "\n");
+const TEMPLATE_SPEC = A.join(["# Spec", "", "## Acceptance", "", "- [ ] <criterion>", BOILERPLATE, ""], "\n");
 
 const run = Effect.fn("HarvestTest.run")(function* (root: string, args: ReadonlyArray<string>) {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
@@ -162,6 +165,7 @@ const makeFixtureRepo = Effect.fn("HarvestTest.makeFixtureRepo")(function* () {
       ["goals/demo/history/reflections/2026-11-06-codex.md", REFLECTION],
       ["goals/demo/research/OPPORTUNITIES.md", LEDGER],
       ["goals/_template/research/OPPORTUNITIES.md", LEDGER],
+      ["goals/_template/SPEC.md", TEMPLATE_SPEC],
       ["explorations/probe/ops/manifest.json", EXPLORATION_MANIFEST],
       ["explorations/probe/research/OPPORTUNITIES.md", LEDGER],
       ["infra/cache/research/OPPORTUNITIES.md", LEDGER],
@@ -291,6 +295,21 @@ describe("goals harvest", () => {
         const goalsOnly = yield* projector.collect({ kinds: ["goals"], repoRoot: root });
         assertTrue(A.every(goalsOnly.rows, (row) => row.packet?.root === "goals"));
         assert.strictEqual(A.length(bySource(goalsOnly.rows, "open-question")), 0);
+      })
+    );
+
+    it.effect("skips plan items whose text matches a template checkbox line", () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(checkboxItemTexts(TEMPLATE_SPEC), [
+          "<criterion>",
+          "No unrelated refactors or formatting churn.",
+        ]);
+        const root = yield* makeFixtureRepo();
+        const projector = yield* HarvestProjector;
+        const ledger = yield* projector.collect({ kinds: ["goals"], repoRoot: root });
+        const planTexts = A.map(bySource(ledger.rows, "plan-unchecked"), (row) => row.text);
+        assert.deepStrictEqual(planTexts, ["Ship the harvester", "Ledger is committed"]);
+        assertFalse(A.some(ledger.rows, (row) => Str.startsWith("goals/_template/")(row.file)));
       })
     );
 
