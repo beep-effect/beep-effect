@@ -13,7 +13,7 @@ deployments (AI metrics on dankserver, OpenClaw), each a canonical `@beep/*` pac
 Graduated 2026-11-06 from [`explorations/pulumi-to-alchemy`](../../explorations/pulumi-to-alchemy/README.md);
 decisions D1–D16 in its `DECISIONS.md` (2026-11-06 session) are binding and are restated here as
 constraints. Sibling packets: [`scripts-to-beep-cli`](../scripts-to-beep-cli/README.md) (owns
-`beep github app mint`, the compiled `beep` binary and `./scripts` retirement) and
+`beep github app mint`, the compiled `beep` binary and `scripts/` retirement) and
 [`python-free-repo`](../python-free-repo/README.md) (owns the Python ban; this packet deletes
 `infra/r2-cache/*.py` as part of its own cleanup).
 
@@ -25,7 +25,7 @@ constraints. Sibling packets: [`scripts-to-beep-cli`](../scripts-to-beep-cli/REA
   D20 lists (repository, rulesets, existing DNS records, oip.law Vercel domains, `BeepEffectWeb`
   into the shared store), each adopted per object and named in a decision file.
 - Minting GitHub Apps from IaC (D10); app creation is a beep command in `scripts-to-beep-cli`.
-- Porting `./scripts` or the historical Python outside `infra/` (sibling packets).
+- Porting `scripts/` or the historical Python outside `infra/` (sibling packets).
 - Upstreaming providers before they are stable here (D14 says in-repo first).
 - The `@alchemy.run/domain` work in `goals/alchemy-vault-sync-slice` (application domain, not IaC).
 
@@ -46,30 +46,30 @@ Higher sources outrank lower sources when they conflict.
 New (every package via `bun run beep create-package`; new tooling kind `infra`, doctrine
 amendment in `standards/architecture/07-non-slice-families.md` and `DECISIONS.md`):
 
-- `packages/tooling/infra/ci-runners` (`@beep/infra-ci-runners`): VPC, security groups, flow logs,
+- `@beep/infra-ci-runners` (tooling kind `infra`): VPC, security groups, flow logs,
   the runner composite, reaper Lambda, fleet controller SSM/IAM/KMS.
-- `packages/tooling/infra/turbo-cache` (`@beep/infra-turbo-cache`): the Cloudflare Worker + R2
+- `@beep/infra-turbo-cache` (tooling kind `infra`): the Cloudflare Worker + R2
   cache moved from `scratchpad/turbo-cache-r2` (moved, then the scratchpad module is deleted).
-- `packages/tooling/infra/cost-controls` (`@beep/infra-cost-controls`): budget, anomaly monitor
+- `@beep/infra-cost-controls` (tooling kind `infra`): budget, anomaly monitor
   and subscription, cost-allocation tags, Compute Optimizer and Cost Optimization Hub enrollment.
-- `packages/tooling/infra/github` (`@beep/infra-github`): repository settings, rulesets
+- `@beep/infra-github` (tooling kind `infra`): repository settings, rulesets
   (including the beep-reviewer advisory switch), Actions secrets and variables, environments,
   labels, webhooks for `beep-effect/beep-effect`.
-- `packages/tooling/infra/hosts` (`@beep/infra-hosts`): AI metrics on dankserver via
+- `@beep/infra-hosts` (tooling kind `infra`): AI metrics on dankserver via
   `Docker.Context` over SSH plus `Docker.Container`/`Network`/`Volume` (`Docker.Service` is
   swarm-only); OpenClaw via `Command.Exec` (delete is a no-op, stdout is not an output).
-- `packages/tooling/library/alchemy-vercel` (`@beep/alchemy-vercel`): `Project`, `EnvVar`,
+- `@beep/alchemy-vercel` (tooling library): `Project`, `EnvVar`,
   `Domain` resources over `@distilled.cloud/vercel`.
-- `packages/tooling/library/alchemy-aws-extras` (`@beep/alchemy-aws-extras`):
+- `@beep/alchemy-aws-extras` (tooling library):
   `CostAllocationTag`, `ComputeOptimizerEnrollment`, `CostOptimizationHubEnrollment`,
   `RunnerLaunchTemplate` (gp3 root volume, EBS-optimised, Spot options Alchemy's
   `LaunchTemplate` lacks); `KmsGrant` only if the P2 key-policy check shows an IAM condition
   cannot replace the six grants (D19).
-- `packages/tooling/library/alchemy-github-runners` (`@beep/alchemy-github-runners`): the
+- `@beep/alchemy-github-runners` (tooling library): the
   runner composite (webhook, SQS, scale-up via EC2 `CreateFleet` Spot launches, scale-down,
   launch template, SSM, syncer, termination watcher; Lambdas ported to Effect and bundled by
   Alchemy, D19) with MIT attribution to `github-aws-runners/terraform-aws-github-runner`.
-- `apps/oip-web/alchemy.run.ts`, `apps/storybook/alchemy.run.ts`.
+- an `alchemy.run.ts` beside `apps/oip-web` and beside `apps/storybook`.
 - `apps/beep-effect-web/alchemy.run.ts`: state store switched to the shared S3 store.
 - `.github/workflows/*`: Alchemy deploy jobs per stack (prod only from `main`, concurrency group
   per stack), fleet and cache re-enrollment.
@@ -89,8 +89,8 @@ group, `infra:prepare-gha-runners` in root `postinstall`, `infra` in root `works
 - No Python, no shell scripts, no Markdown other than the package README and the runbook.
 - Alchemy pins are npm catalog entries (`alchemy`, `@alchemy.run/*`, `@distilled.cloud/*`), bumped
   in their own PR with `alchemy plan` no-op on every stack (D13). No frozen tool clones, no git-ref
-  pins. The reference checkouts under `$HOME/YeeBois/references/effect/{alchemy,distilled}` are for
-  research and for proving an unreleased fix before a bump. A fix already merged upstream but
+  pins. The Alchemy and distilled reference checkouts provisioned by `bun run beep refs provision`
+  are for research and for proving an unreleased fix before a bump. A fix already merged upstream but
   not yet released may ride as a bun `patchedDependencies` patch on the pinned version, recorded
   in `research/t3code-alchemy-patches.md`-style notes and removed in the bump that ships it.
 - Use what Alchemy and distilled ship before writing anything: the P0 "use this, never roll
