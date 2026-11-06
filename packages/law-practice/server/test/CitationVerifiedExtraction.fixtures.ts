@@ -1,13 +1,11 @@
 /** Authenticated input artifact through the complete live extraction path.
  * @internal @packageDocumentation @since 0.0.0
  */
-import { CitationDocumentStepContainers } from "@beep/law-practice-server/internal/Citation/DocumentCleanerProtocols";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { makeCitationVerifiedExtraction } from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
 import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -73,13 +71,12 @@ export const replayCitationVerifiedExtraction = Effect.fn("VerifiedExtractionTes
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
-  const { corpus, setup, defaultConfiguration, engineArtifact, translated, provided, adapter } =
+  const { corpus, setup, defaultConfiguration, engineArtifact, translated, provided } =
     yield* installCitationDefaultConfigurationFixture(kind);
   const rows = A.filter(corpus.cases, (row) => full || A.contains([4, 26, 32], row.id));
   const config = { engineArtifact, extraction: defaultConfiguration };
-  const context = Context.add(provided, CitationDocumentStepContainers, { create: adapter.create });
   const stage = yield* makeCitationVerifiedExtraction(setup.limits, setup.runtime, config).pipe(
-    Effect.provideContext(context),
+    Effect.provideContext(provided),
     DateTime.withCurrentZoneOffset(0)
   );
   const input = yield* citationFixtureSourceProof("eyecite");

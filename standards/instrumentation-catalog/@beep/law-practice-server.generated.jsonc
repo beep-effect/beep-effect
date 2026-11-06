@@ -353,6 +353,7 @@
     {"name":"Citation.makeDiffKernel","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.makeDiffWorker","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.makeDocumentCleanerProtocols","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.makeDocumentServices","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.makeEditionInference","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.makeEngineArtifact","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.makeExtractionLoop","owner":"@beep/law-practice-server","family":"slice","conforms":true},

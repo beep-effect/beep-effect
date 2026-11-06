@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "26126eb0e517102043dc651e0a593a51ad9753cab4a4b064856f30c243355f28",
+  "planSha256": "846de8725ad1fabf52957dfd165c63891c520c7be6e37cb92a187745f30cd74d",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1000,7 +1000,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationDocumentExtraction.fixtures.ts",
-          "sha256": "4c10d8162fc7b7f12ab70289f633845597d19794e87747ad9e6b161e93611e5c"
+          "sha256": "954e441a1beba66a5ada33247a574f82884c969943da80f194507f8905e6dfdd"
         },
         {
           "path": "packages/law-practice/server/test/CitationDocumentExtraction.test.ts",
@@ -1084,7 +1084,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
-          "sha256": "30eb58ab2d32cace66874eedddc5b53562b1843691f4fdc82d0969ccc9beed36"
+          "sha256": "eec2463a6c30acb24f80ba18e3b97549f9de6e3a3ff3b33c1a1b7736fa550bc5"
         },
         {
           "path": "packages/law-practice/server/test/CitationSemanticExtraction.test.ts",
@@ -1136,7 +1136,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationVerifiedExtraction.fixtures.ts",
-          "sha256": "aa92ed8af3d6aa2e1af0f391fea0d559ed2153ae0ad98b7e041613b84475c128"
+          "sha256": "847f4916297a03f1823162195d6778fe654f2331f65abebb069e9bd008dfbc12"
         },
         {
           "path": "packages/law-practice/server/test/CitationVerifiedExtraction.test.ts",
@@ -1172,7 +1172,11 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-engine-artifact.md",
-          "sha256": "3b7f4566905d5a185c0d2188bd74081e4818281f70e83e19f295af8894b4fa50"
+          "sha256": "48b7fb559d85cc6eb78d214fd1bc512d84d6663ea1f418f734fca1887cf4f2cb"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-document-services.md",
+          "sha256": "d2b3e8ce2ae2e9bdd6712d5a0dbc4be7862d1981fa2bbafa2d951732fc18ae23"
         }
       ],
       "workflowState": "audit",

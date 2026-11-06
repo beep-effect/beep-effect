@@ -2,12 +2,10 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { Citation } from "@beep/law-practice-domain/values";
-import { CitationDocumentStepContainers } from "@beep/law-practice-server/internal/Citation/DocumentCleanerProtocols";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { makeCitationSemanticExtraction } from "@beep/law-practice-server/internal/Citation/SemanticExtraction";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -84,13 +82,11 @@ export const replayCitationSemanticExtraction = Effect.fn("SemanticExtractionTes
     defaultConfiguration: config,
     translated,
     provided,
-    adapter,
   } = yield* installCitationDefaultConfigurationFixture(kind);
   const rows = A.filter(corpus.cases, (row) => full || A.contains([4, 14, 18, 20, 22, 26, 32], row.id));
-  const context = Context.add(provided, CitationDocumentStepContainers, { create: adapter.create });
   const install = (limits: typeof setup.limits, input = config) =>
     makeCitationSemanticExtraction(limits, setup.runtime, input).pipe(
-      Effect.provideContext(context),
+      Effect.provideContext(provided),
       DateTime.withCurrentZoneOffset(0)
     );
   const stage = yield* install(setup.limits);

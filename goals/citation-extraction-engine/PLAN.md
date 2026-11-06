@@ -1277,6 +1277,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the default constructor and fixture wiring; retain all source assets and full acceptance duties.
 
+### Compose caller-scoped production document services, 2026-11-06
+
+Existing value/builtin/container/registry/pipeline owners now compose through a production constructor and Context. It captures one policy/runtime and requires injected host protocols; no production fake host or duplicate worker/registry framework is added. Caller Scope controls cohort lifetime, preserving explicit retained-state ownership rather than resetting custom registries per request. Document/semantic/verified replay uses the production context, including named steps. Public ports/Layer and complete lifecycle/exhaustive acceptance remain open. See history/evidence/2026-11-06-document-services.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the production constructor and connected fixture wiring; retain all original source evidence and acceptance obligations.
+
 ### Install production helper configurations with captured calendar, 2026-11-06
 
 Thirteen sealed oracle sources now project into a production-only helper asset. Existing runtime schemas derive the static codec and Effect Clock/CurrentTimeZone captures one calendar cutoff for all five temporal helpers. Production tokenizer/document replay uses both catalog and helper assets. Existing bounded native asset loading is shared with schema-driven JSON authentication. Complete engine artifact/public Layer and all broader acceptance remain open. See history/evidence/2026-11-06-production-helpers.md. Base-pinned Secret Scanning requires separately reviewed exact provenance exception in PR #2786.

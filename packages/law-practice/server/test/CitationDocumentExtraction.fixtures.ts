@@ -1,27 +1,20 @@
 /** Actual owned Document initialization through the complete native extraction path.
  * @internal @packageDocumentation @since 0.0.0
  */
-import { CitationBuiltinCleaners } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
-import { CitationCleanerRuntime } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
-import {
-  CitationCleanerProtocols,
-  makeCitationCleanerRegistry,
-} from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
-import { CitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
-import { makeCitationDocumentCleanerProtocols } from "@beep/law-practice-server/internal/Citation/DocumentCleanerProtocols";
+import { CitationCleanerProtocols } from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
 import {
   CitationDocumentExtractionConfiguration,
   makeCitationDocumentExtraction,
 } from "@beep/law-practice-server/internal/Citation/DocumentExtraction";
-import { CitationDocumentInputProtocols } from "@beep/law-practice-server/internal/Citation/InputDocument";
+import { makeCitationDocumentServices } from "@beep/law-practice-server/internal/Citation/DocumentServices";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
 import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
+import { citationPrimitiveCleanerProtocols } from "./CitationDocumentServices.fixtures.ts";
 import { makeCitationHtmlTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import {
@@ -32,8 +25,8 @@ import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/intern
 
 type Installed = Effect.Success<ReturnType<typeof installCitationTokenizedExtractionFixture>>;
 const documentRequest = Effect.fn("DocumentExtractionTest.request")(function* (
-  values: CitationCleanerValues["Service"],
-  adapter: Effect.Success<ReturnType<typeof makeCitationDocumentCleanerProtocols>>,
+  values: Effect.Success<ReturnType<typeof makeCitationDocumentServices>>["values"],
+  adapter: Effect.Success<ReturnType<typeof makeCitationDocumentServices>>["adapter"],
   row: Installed["corpus"]["cases"][number]
 ) {
   const hasMarkup = row.markup.bytes.length > 0;
@@ -53,27 +46,12 @@ export const installCitationDocumentExtractionFixture = Effect.fn("DocumentExtra
   const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
   const htmlDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-extract-document-html-" });
   const htmlRuntime = yield* makeCitationHtmlTestRuntime(kind, htmlDirectory);
-  const h = yield* makeCitationCleanerRegistryHarness(
-    undefined,
-    undefined,
-    setup.observed.spawner,
-    undefined,
-    htmlRuntime
-  ).pipe(Effect.provideContext(setup.provided));
-  const adapter = yield* makeCitationDocumentCleanerProtocols(setup.limits).pipe(
-    Effect.provideService(CitationCleanerValues, h.values),
-    Effect.provideService(CitationCleanerProtocols, h.protocols)
+  const services = yield* makeCitationDocumentServices(setup.limits, htmlRuntime).pipe(
+    Effect.provideContext(setup.provided),
+    Effect.provideService(CitationCleanerProtocols, citationPrimitiveCleanerProtocols)
   );
-  const registry = yield* makeCitationCleanerRegistry(setup.limits).pipe(
-    Effect.provideService(CitationCleanerValues, h.values),
-    Effect.provideService(CitationCleanerProtocols, adapter.cleaner),
-    Effect.provideService(CitationBuiltinCleaners, h.builtins)
-  );
-  const provided = setup.provided.pipe(
-    Context.add(CitationCleanerValues, h.values),
-    Context.add(CitationDocumentInputProtocols, adapter.document),
-    Context.add(CitationCleanerRuntime, registry.runtime)
-  );
+  const adapter = services.adapter;
+  const provided = Context.merge(setup.provided, services.context);
   const documentConfiguration = CitationDocumentExtractionConfiguration.make({
     document: { discovery, diffRuntime },
     extraction: configuration,
@@ -89,7 +67,7 @@ export const installCitationDocumentExtractionFixture = Effect.fn("DocumentExtra
     translated,
     provided,
     adapter,
-    values: h.values,
+    values: services.values,
     stage,
   };
 });

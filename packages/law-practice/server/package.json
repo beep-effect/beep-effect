@@ -57,6 +57,7 @@
   },
   "files": [
     "assets/citation-html/**",
+    "assets/citation-diff/**",
     "assets/citation/**",
     "src/**/*.ts",
     "dist/**/*.js",
