@@ -210,9 +210,10 @@ These were found while building the reference machine. Re-check them on each alp
    `StatelyInspector.attach` forwards the v6 inspection events by hand instead.
 9. `join(actor)` types its failure as `unknown`. Wait for `snapshot.status === "done"` and read
    `snapshot.output` where the repo's lint forbids an untyped error channel.
-10. Effect actions are branded with an unexported unique symbol, so declaration emit fails with
-    TS4023 for any exported machine that declares `actions`. The same patch replaces the symbol key
-    with a string key in the two typings that use it. The brand is type-only; no runtime changes.
+10. In alpha.9, Effect actions used an unexported unique-symbol brand, causing TS4023 during
+    declaration emit for exported machines with `actions`. The historical declaration-only patch
+    replaced that key at both declaration sites. Alpha.10 ships the public key as described in
+    item 1, so that retired patch is not a current installation step.
     The declaration guard in
     [DeclarationEmit.test.ts](../../packages/drivers/xstate/test/DeclarationEmit.test.ts) checks an
     exported machine with Effect actions without adding an annotation that hides its inferred type.

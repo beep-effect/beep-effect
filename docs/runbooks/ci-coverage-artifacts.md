@@ -13,7 +13,7 @@ census knows both layouts). Each unit partition runs its packages two at a
 time with buffered output. They run each package's canonical coverage
 commands, preserving environment assignments, configuration and test selection.
 Node invocations use V8; Bun invocations use Istanbul. The CLI's six partitions
-use its existing Node/V8 coverage command. The Labs job supplies a fifth
+use its existing Node/V8 coverage command. The Labs job supplies its own additional
 artifact. Providers are recorded per invocation, and a package's canonical
 coverage shards must use the same provider before their raw counters can be merged.
 The coverage scope planner supplies required owners in addition to ordinary
@@ -62,8 +62,10 @@ ordinary cached logs are insufficient evidence of a coverage report.
 
 ## Comparison
 
-The workflow downloads the five expected partition artifacts into separate
-directories and runs:
+The workflow downloads the expected unit-partition artifacts plus the Labs
+artifact into separate directories and runs the comparator below. The current
+layout has ten unit partitions plus Labs; the expected identities are derived
+from `CiLanePartitions.ts` and `CiCoverage.ts`.
 
 ```sh
 bun run beep ci lane coverage --compare-only \

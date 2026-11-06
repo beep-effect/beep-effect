@@ -253,7 +253,7 @@ const BeepMarkdownDocumentCheck = S.makeFilter<Document>(
  * @category validation
  * @since 0.0.0
  */
-export const CommonMarkDocument = Document.pipe(
+export const CommonMarkDocument = S.make<S.Codec<Document, Document.Encoded>>(Document.ast).pipe(
   S.check(CommonMarkDocumentCheck),
   S.brand("CommonMarkDocument"),
   Conformance.annotateConformance(CommonMarkConformanceAnnotation),
@@ -303,7 +303,7 @@ export type CommonMarkDocument = typeof CommonMarkDocument.Type;
  * @category validation
  * @since 0.0.0
  */
-export const GfmDocument = Document.pipe(
+export const GfmDocument = S.make<S.Codec<Document, Document.Encoded>>(Document.ast).pipe(
   S.check(GfmDocumentCheck),
   S.brand("GfmDocument"),
   Conformance.annotateConformance(GfmConformanceAnnotation),
@@ -349,7 +349,7 @@ export type GfmDocument = typeof GfmDocument.Type;
  * @category validation
  * @since 0.0.0
  */
-export const BeepMarkdownDocument = Document.pipe(
+export const BeepMarkdownDocument = S.make<S.Codec<Document, Document.Encoded>>(Document.ast).pipe(
   S.check(BeepMarkdownDocumentCheck),
   S.brand("BeepMarkdownDocument"),
   Conformance.annotateConformance(BeepMarkdownConformanceAnnotation),

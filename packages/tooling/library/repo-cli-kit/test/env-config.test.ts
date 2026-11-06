@@ -229,6 +229,16 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
       ...turboArgs,
     ];
 
+    it.effect("preserves the reference compiler opt-out for direct and wrapped Turbo", () =>
+      Effect.gen(function* () {
+        const environment = { TSRS_FAST: "0" };
+        const direct = yield* overridesFor(environment, "bunx", ["turbo", "run", "check"]);
+        const wrapped = yield* overridesFor(environment, "op", opRunArgs(["run", "check"]));
+        expect(direct).toHaveProperty("TSRS_FAST", "0");
+        expect(wrapped).toHaveProperty("TSRS_FAST", "0");
+      })
+    );
+
     it.effect("returns nothing for a non-turbo command", () =>
       Effect.gen(function* () {
         const resolved5 = yield* overridesFor({}, "git", ["status"]);
@@ -258,7 +268,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           "bunx",
           ["turbo", "run", "check"]
         );
-        expect(resolved8).toEqual({ TURBO_UI: "false" });
+        expect(resolved8).toEqual({ TSRS_FAST: "1", TURBO_UI: "false" });
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
@@ -270,6 +280,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           ["turbo", "run", "check"]
         );
         expect(resolved9).toStrictEqual({
+          TSRS_FAST: "1",
           TURBO_UI: "false",
           TURBO_API: undefined,
           TURBO_TOKEN: undefined,
@@ -297,6 +308,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         expect(resolved10).toStrictEqual({
           UNRELATED_SECRET: undefined,
           UNRELATED_DATABASE_URL: undefined,
+          TSRS_FAST: "1",
           TURBO_UI: "false",
         });
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -326,7 +338,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
 
         expect(turboCacheSecretSessionEnvironment(environment)).toStrictEqual(sanitized);
         const resolved11 = yield* overridesFor(environment, "op", args);
-        expect(resolved11).toStrictEqual({ ...sanitized, TURBO_UI: "false" });
+        expect(resolved11).toStrictEqual({ ...sanitized, TSRS_FAST: "1", TURBO_UI: "false" });
         expect(turboEnvExtendsAmbient("op", args)).toBe(false);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -336,7 +348,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         const args = opRunArgs(["run", "coverage", "--", "--maxWorkers=1"]);
 
         const resolved12 = yield* overridesFor({}, "op", args);
-        expect(resolved12).toEqual({ TURBO_UI: "false" });
+        expect(resolved12).toEqual({ TSRS_FAST: "1", TURBO_UI: "false" });
         expect(turboEnvExtendsAmbient("op", args)).toBe(false);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

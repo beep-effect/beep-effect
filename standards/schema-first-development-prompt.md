@@ -283,10 +283,12 @@ complete. Report the exact commands and outcomes.
 
 ### Documentation explains semantics
 
-- Give exported APIs meaningful JSDoc with a useful fenced `@example`, a
-  canonical `@category`, and `@since`.
-- Use `@param`, `@returns`, `@throws`, `@remarks`, and singular `@invariant`
-  only when they add information not already present in the signature.
+- Give exported APIs meaningful JSDoc with a titled `**Example** (Title)`
+  section containing a useful code fence, a canonical `@category`, and `@since`.
+- Use `@param`, `@returns`, `@throws`, and singular `@invariant` only when
+  they add information not already present in the signature. Use `**Details**`
+  or `**Gotchas**` sections for supporting prose; never use the retired
+  `@example` or `@remarks` tags.
 - `@throws` documents synchronous throws or defects, not typed Effect errors.
 - Describe invariants, units, normalization, ordering, lossy behavior,
   ownership, and wire semantics where applicable.
@@ -335,7 +337,8 @@ const $I = $PackageNameId.create("relative/path/from/package/src");
 /**
  * Validated input for creating one task.
  *
- * @example
+ * **Example** (Validate task input)
+ *
  * ```ts
  * const input = TaskInput.make({ id: "task-1", title: "Review evidence" })
  * console.log(TaskInput.is(input)) // true
@@ -721,7 +724,8 @@ ledger, and every accepted capability has an executable local proof.
 Review every touched export after implementation:
 
 - the summary says what the symbol is for;
-- `@example` demonstrates meaningful input and an observable result;
+- a titled `**Example** (Title)` section demonstrates meaningful input and
+  an observable result;
 - `@category` uses a canonical repository category;
 - `@since` is present;
 - conditional tags add semantics rather than restating types;
@@ -746,8 +750,10 @@ At minimum:
 5. run schema-first and relevant Effect law checks;
 6. run docgen for changed public exports or examples;
 7. perform the scaled adversarial review and close its findings;
-8. run `bun run beep yeet verify` as the final local gate unless an explicit
-   task fence forbids that command.
+8. before calling a head final, obtain its passing `bun run beep yeet final-check`
+   receipt, recording any explicitly skipped gates and their reasons as required
+   by the current Yeet workflow. `bun run beep yeet verify` is an on-demand full
+   proof; it does not replace the content-final receipt.
 
 Do not run formatters in write mode outside the authorized file fence. Do not
 regenerate whole-repository standards snapshots on a feature change.

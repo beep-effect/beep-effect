@@ -58,12 +58,12 @@ import {
   unescapeBackslashes,
   youtubeVideoId,
 } from "./internal/syntax/recognizers.ts";
+import * as Model from "./Md.model.ts";
 import { CodeFenceLanguage, Document } from "./Md.model.ts";
 import { DocumentSafetyPathSegment, DocumentSafetyViolation, refineSafeDocument } from "./Md.safe.ts";
 import type { FrontmatterCodec } from "@beep/markdown/Frontmatter";
 import type { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
 import type { MathSegment } from "./internal/syntax/recognizers.ts";
-import type * as Model from "./Md.model.ts";
 import type { SafeDocument } from "./Md.safe.ts";
 
 const $I = $MdId.create("Md.syntax");
@@ -1207,7 +1207,7 @@ const softBreak = (state: BridgeState, value: string, raw: string): string => {
   return replaceWith(value, /\n/g, () => (newlines[index++] === false ? "\n" : " "));
 };
 
-const textNode = (value: string): Model.Text => ({ _tag: "text", value });
+const textNode = (value: string): Model.Text => Model.Text.make({ _tag: "text", value });
 
 // Segments come from the raw slice, so a backslash-escaped `$` never
 // delimits; a math piece keeps its raw TeX, and a text piece drops its
@@ -1221,10 +1221,15 @@ const recognizeInlineMath = (
   A.map(segments, (segment): Model.Inline => {
     const piece = Str.slice(segment.from, segment.to)(raw);
     return segment.math
-      ? leaf(state, subPosition(position, raw, segment.from - 1, segment.to + 1), MdSourceOrigin.Enum.recognized, {
-          _tag: "inlineMath",
-          value: piece,
-        })
+      ? leaf(
+          state,
+          subPosition(position, raw, segment.from - 1, segment.to + 1),
+          MdSourceOrigin.Enum.recognized,
+          Model.InlineMath.make({
+            _tag: "inlineMath",
+            value: piece,
+          })
+        )
       : leaf(
           state,
           subPosition(position, raw, segment.from, segment.to),
@@ -1376,7 +1381,7 @@ const htmlInline =
   (node: Kit.Html): PhrasingStep =>
   (state, path) => {
     if (state.options.breakTag && isBreakTag(node.value)) {
-      return [leaf(state, node.position, MdSourceOrigin.Enum.recognized, { _tag: "br" })];
+      return [leaf(state, node.position, MdSourceOrigin.Enum.recognized, Model.Br.make({ _tag: "br" }))];
     }
     if (state.options.htmlComments === MdHtmlCommentPolicy.Enum.drop && isHtmlComment(node.value)) {
       recordLoss(state, "htmlDropped", node, O.none(), "comment");
@@ -1388,7 +1393,12 @@ const htmlInline =
         return [leaf(state, node.position, MdSourceOrigin.Enum.parsed, textNode(node.value))];
       },
       rawHtml: (): ReadonlyArray<Model.Inline> => [
-        leaf(state, node.position, MdSourceOrigin.Enum.parsed, { _tag: "rawHtml", value: node.value }),
+        leaf(
+          state,
+          node.position,
+          MdSourceOrigin.Enum.parsed,
+          Model.RawHtml.make({ _tag: "rawHtml", value: node.value })
+        ),
       ],
       drop: (): ReadonlyArray<Model.Inline> => {
         recordLoss(state, "htmlDropped", node, O.none(), node.value);
@@ -1409,12 +1419,14 @@ const linkInline =
       return [leaf(state, node.position, MdSourceOrigin.Enum.parsed, textNode(raw))];
     }
     return [
-      branch(state, node.position, MdSourceOrigin.Enum.parsed, () => ({
-        _tag: "a",
-        href: node.url,
-        title: O.fromUndefinedOr(node.title),
-        children: phrasingChildren(state, node.children, path),
-      })),
+      branch(state, node.position, MdSourceOrigin.Enum.parsed, () =>
+        Model.A.make({
+          _tag: "a",
+          href: node.url,
+          title: O.fromUndefinedOr(node.title),
+          children: phrasingChildren(state, node.children, path),
+        })
+      ),
     ];
   };
 
@@ -1433,24 +1445,31 @@ const linkReferenceInline =
   (node: Kit.LinkReference): PhrasingStep =>
   (state, path) =>
     referenceInline(state, node, path, (definition) =>
-      branch(state, node.position, MdSourceOrigin.Enum.parsed, () => ({
-        _tag: "a",
-        href: definition.url,
-        title: O.fromUndefinedOr(definition.title),
-        children: phrasingChildren(state, node.children, path),
-      }))
+      branch(state, node.position, MdSourceOrigin.Enum.parsed, () =>
+        Model.A.make({
+          _tag: "a",
+          href: definition.url,
+          title: O.fromUndefinedOr(definition.title),
+          children: phrasingChildren(state, node.children, path),
+        })
+      )
     );
 
 const imageReferenceInline =
   (node: Kit.ImageReference): PhrasingStep =>
   (state, path) =>
     referenceInline(state, node, path, (definition) =>
-      leaf(state, node.position, MdSourceOrigin.Enum.parsed, {
-        _tag: "img",
-        src: definition.url,
-        alt: node.alt ?? "",
-        title: O.fromUndefinedOr(definition.title),
-      })
+      leaf(
+        state,
+        node.position,
+        MdSourceOrigin.Enum.parsed,
+        Model.Img.make({
+          _tag: "img",
+          src: definition.url,
+          alt: node.alt ?? "",
+          title: O.fromUndefinedOr(definition.title),
+        })
+      )
     );
 
 const rewriteFootnote = (
@@ -1474,52 +1493,72 @@ const phrasingStep: (node: Kit.PhrasingContent) => PhrasingStep = Match.type<Kit
     emphasis:
       (node): PhrasingStep =>
       (state, path) => [
-        branch(state, node.position, MdSourceOrigin.Enum.parsed, () => ({
-          _tag: "em",
-          children: phrasingChildren(state, node.children, path),
-        })),
+        branch(state, node.position, MdSourceOrigin.Enum.parsed, () =>
+          Model.Em.make({
+            _tag: "em",
+            children: phrasingChildren(state, node.children, path),
+          })
+        ),
       ],
     strong:
       (node): PhrasingStep =>
       (state, path) => [
-        branch(state, node.position, MdSourceOrigin.Enum.parsed, () => ({
-          _tag: "strong",
-          children: phrasingChildren(state, node.children, path),
-        })),
+        branch(state, node.position, MdSourceOrigin.Enum.parsed, () =>
+          Model.Strong.make({
+            _tag: "strong",
+            children: phrasingChildren(state, node.children, path),
+          })
+        ),
       ],
     delete:
       (node): PhrasingStep =>
       (state, path) => [
-        branch(state, node.position, MdSourceOrigin.Enum.parsed, () => ({
-          _tag: "del",
-          children: phrasingChildren(state, node.children, path),
-        })),
+        branch(state, node.position, MdSourceOrigin.Enum.parsed, () =>
+          Model.Del.make({
+            _tag: "del",
+            children: phrasingChildren(state, node.children, path),
+          })
+        ),
       ],
     inlineCode:
       (node): PhrasingStep =>
-      (state) => [leaf(state, node.position, MdSourceOrigin.Enum.parsed, { _tag: "code", value: node.value })],
+      (state) => [
+        leaf(state, node.position, MdSourceOrigin.Enum.parsed, Model.Code.make({ _tag: "code", value: node.value })),
+      ],
     break:
       (node): PhrasingStep =>
-      (state) => [leaf(state, node.position, MdSourceOrigin.Enum.parsed, { _tag: "br" })],
+      (state) => [leaf(state, node.position, MdSourceOrigin.Enum.parsed, Model.Br.make({ _tag: "br" }))],
     html: htmlInline,
     link: linkInline,
     linkReference: linkReferenceInline,
     image:
       (node): PhrasingStep =>
       (state) => [
-        leaf(state, node.position, MdSourceOrigin.Enum.parsed, {
-          _tag: "img",
-          src: node.url,
-          alt: node.alt ?? "",
-          title: O.fromUndefinedOr(node.title),
-        }),
+        leaf(
+          state,
+          node.position,
+          MdSourceOrigin.Enum.parsed,
+          Model.Img.make({
+            _tag: "img",
+            src: node.url,
+            alt: node.alt ?? "",
+            title: O.fromUndefinedOr(node.title),
+          })
+        ),
       ],
     imageReference: imageReferenceInline,
     footnoteReference:
       (node): PhrasingStep =>
       (state, path) => {
         const identifier = rewriteFootnote(state, node, path);
-        return [leaf(state, node.position, MdSourceOrigin.Enum.parsed, { _tag: "footnoteReference", identifier })];
+        return [
+          leaf(
+            state,
+            node.position,
+            MdSourceOrigin.Enum.parsed,
+            Model.FootnoteReference.make({ _tag: "footnoteReference", identifier })
+          ),
+        ];
       },
     mdxJsxTextElement:
       (node): PhrasingStep =>
@@ -1570,7 +1609,7 @@ const paragraphBlock = (
     return [];
   }
   close(state, at);
-  return [{ _tag: "p", children }];
+  return [Model.P.make({ _tag: "p", children })];
 };
 
 const mathParagraph = (state: BridgeState, node: Kit.Paragraph, path: SlotPath): O.Option<ReadonlyArray<Model.Block>> =>
@@ -1581,7 +1620,9 @@ const mathParagraph = (state: BridgeState, node: Kit.Paragraph, path: SlotPath):
         recordLoss(state, "recognizerSkipped", node, landed(path), "display math inside a container");
         return O.none();
       }
-      return O.some([leaf(state, node.position, MdSourceOrigin.Enum.recognized, { _tag: "mathBlock", value })]);
+      return O.some([
+        leaf(state, node.position, MdSourceOrigin.Enum.recognized, Model.MathBlock.make({ _tag: "mathBlock", value })),
+      ]);
     })
   );
 
@@ -1598,7 +1639,7 @@ const youtubeParagraph = (node: Kit.Paragraph, state: BridgeState): O.Option<Rea
   const only = node.children.length === 1 ? node.children[0] : undefined;
   return only?.type === "link" && isBareLink(only)
     ? O.map(youtubeVideoId(only.url), (videoId) => [
-        leaf(state, node.position, MdSourceOrigin.Enum.recognized, { _tag: "youtube", videoId }),
+        leaf(state, node.position, MdSourceOrigin.Enum.recognized, Model.YouTube.make({ _tag: "youtube", videoId })),
       ])
     : O.none();
 };
@@ -1747,7 +1788,12 @@ const admonitionFlow = (
           for (const block of mapFlowChildren(state, A.drop(node.children, 1), path, children.length)) {
             children.push(block);
           }
-          return { _tag: "admonition", kind, title: Str.isEmpty(title) ? O.none() : O.some(title), children };
+          return Model.Admonition.make({
+            _tag: "admonition",
+            kind,
+            title: Str.isEmpty(title) ? O.none() : O.some(title),
+            children,
+          });
         }),
       ];
     })
@@ -1761,10 +1807,12 @@ const blockquoteFlow =
       state.options.admonitions ? admonitionFlow(state, node, path) : O.none(),
       O.getOrElse(
         (): ReadonlyArray<Model.Block> => [
-          branch(state, node.position, MdSourceOrigin.Enum.parsed, () => ({
-            _tag: "blockquote",
-            children: mapFlowChildren(state, node.children, path, 0),
-          })),
+          branch(state, node.position, MdSourceOrigin.Enum.parsed, () =>
+            Model.BlockQuote.make({
+              _tag: "blockquote",
+              children: mapFlowChildren(state, node.children, path, 0),
+            })
+          ),
         ]
       )
     );
@@ -1781,14 +1829,18 @@ const codeFlow =
       recordLoss(state, "codeMetaDropped", node, landed(path), node.meta);
     }
     if (state.options.math && node.lang === "math") {
-      return [leaf(state, node.position, MdSourceOrigin.Enum.recognized, { _tag: "mathBlock", value })];
+      return [
+        leaf(state, node.position, MdSourceOrigin.Enum.recognized, Model.MathBlock.make({ _tag: "mathBlock", value })),
+      ];
     }
     const language = O.fromUndefinedOr(node.lang);
     const valid = O.filter(language, S.is(CodeFenceLanguage));
     if (O.isSome(language) && O.isNone(valid)) {
       recordLoss(state, "codeLanguageDropped", node, landed(path), language.value);
     }
-    return [leaf(state, node.position, MdSourceOrigin.Enum.parsed, { _tag: "pre", language: valid, value })];
+    return [
+      leaf(state, node.position, MdSourceOrigin.Enum.parsed, Model.Pre.make({ _tag: "pre", language: valid, value })),
+    ];
   };
 
 const htmlFlow =
@@ -1801,15 +1853,17 @@ const htmlFlow =
     const wrapped = (reason: MdLossReason, inline: Model.Inline): ReadonlyArray<Model.Block> => {
       recordLoss(state, reason, node, landed(path), node.value);
       return [
-        branch(state, node.position, MdSourceOrigin.Enum.synthesized, () => ({
-          _tag: "p",
-          children: [leaf(state, node.position, MdSourceOrigin.Enum.parsed, inline)],
-        })),
+        branch(state, node.position, MdSourceOrigin.Enum.synthesized, () =>
+          Model.P.make({
+            _tag: "p",
+            children: [leaf(state, node.position, MdSourceOrigin.Enum.parsed, inline)],
+          })
+        ),
       ];
     };
     return MdHtmlPolicy.match(state.options.html, {
       escapeAsText: () => wrapped("htmlEscapedAsText", textNode(node.value)),
-      rawHtml: () => wrapped("htmlInlinedBlock", { _tag: "rawHtml", value: node.value }),
+      rawHtml: () => wrapped("htmlInlinedBlock", Model.RawHtml.make({ _tag: "rawHtml", value: node.value })),
       drop: (): ReadonlyArray<Model.Block> => {
         recordLoss(state, "htmlDropped", node, O.none(), node.value);
         return [];
@@ -1839,17 +1893,21 @@ const listItemChildren = (
 const isTight = (list: Kit.List, item: Kit.ListItem): boolean => list.spread !== true && item.spread !== true;
 
 const taskListFlow = (state: BridgeState, node: Kit.List, path: SlotPath): Model.TaskList =>
-  branch(state, node.position, MdSourceOrigin.Enum.parsed, () => ({
-    _tag: "taskList",
-    children: A.map(node.children, (item, index) => {
-      const itemPath = new SlotPath(path, index);
-      return branch(state, item.position, MdSourceOrigin.Enum.parsed, () => ({
-        _tag: "taskItem",
-        checked: item.checked === true,
-        children: listItemChildren(state, item, isTight(node, item), itemPath),
-      }));
-    }),
-  }));
+  branch(state, node.position, MdSourceOrigin.Enum.parsed, () =>
+    Model.TaskList.make({
+      _tag: "taskList",
+      children: A.map(node.children, (item, index) => {
+        const itemPath = new SlotPath(path, index);
+        return branch(state, item.position, MdSourceOrigin.Enum.parsed, () =>
+          Model.TaskItem.make({
+            _tag: "taskItem",
+            checked: item.checked === true,
+            children: listItemChildren(state, item, isTight(node, item), itemPath),
+          })
+        );
+      }),
+    })
+  );
 
 const listItems = (state: BridgeState, node: Kit.List, path: SlotPath): ReadonlyArray<Model.Li> =>
   A.map(node.children, (item, index) => {
@@ -1857,10 +1915,12 @@ const listItems = (state: BridgeState, node: Kit.List, path: SlotPath): Readonly
     if (item.checked !== undefined) {
       recordLoss(state, "taskCheckboxDropped", item, landed(itemPath), item.checked ? "checked" : "unchecked");
     }
-    return branch(state, item.position, MdSourceOrigin.Enum.parsed, () => ({
-      _tag: "li",
-      children: listItemChildren(state, item, isTight(node, item), itemPath),
-    }));
+    return branch(state, item.position, MdSourceOrigin.Enum.parsed, () =>
+      Model.Li.make({
+        _tag: "li",
+        children: listItemChildren(state, item, isTight(node, item), itemPath),
+      })
+    );
   });
 
 const listFlow =
@@ -1876,22 +1936,26 @@ const listFlow =
         MdSourceOrigin.Enum.parsed,
         (): Model.Block =>
           node.ordered === true
-            ? { _tag: "ol", start: node.start ?? 1, children: listItems(state, node, path) }
-            : { _tag: "ul", children: listItems(state, node, path) }
+            ? Model.Ol.make({ _tag: "ol", start: node.start ?? 1, children: listItems(state, node, path) })
+            : Model.Ul.make({ _tag: "ul", children: listItems(state, node, path) })
       ),
     ];
   };
 
 const tableRow = (state: BridgeState, row: Kit.TableRow, path: SlotPath): Model.TableRow =>
-  branch(state, row.position, MdSourceOrigin.Enum.parsed, () => ({
-    _tag: "tableRow",
-    children: A.map(row.children, (cell, index) =>
-      branch(state, cell.position, MdSourceOrigin.Enum.parsed, () => ({
-        _tag: "tableCell",
-        children: phrasingChildren(state, cell.children, new SlotPath(path, index)),
-      }))
-    ),
-  }));
+  branch(state, row.position, MdSourceOrigin.Enum.parsed, () =>
+    Model.TableRow.make({
+      _tag: "tableRow",
+      children: A.map(row.children, (cell, index) =>
+        branch(state, cell.position, MdSourceOrigin.Enum.parsed, () =>
+          Model.TableCell.make({
+            _tag: "tableCell",
+            children: phrasingChildren(state, cell.children, new SlotPath(path, index)),
+          })
+        )
+      ),
+    })
+  );
 
 const isEmptyRow = (row: Kit.TableRow): boolean =>
   A.every(row.children, (cell) => A.isReadonlyArrayEmpty(cell.children));
@@ -1903,12 +1967,14 @@ const tableFlow =
     const absorb = state.options.absorbEmptyTableHeader && head !== undefined && isEmptyRow(head);
     const rows = absorb ? A.drop(node.children, 1) : node.children;
     return [
-      branch(state, node.position, MdSourceOrigin.Enum.parsed, () => ({
-        _tag: "table",
-        align: A.map(node.align ?? [], (align) => align ?? "none"),
-        headerRow: !absorb,
-        children: A.map(rows, (row, index) => tableRow(state, row, new SlotPath(path, index))),
-      })),
+      branch(state, node.position, MdSourceOrigin.Enum.parsed, () =>
+        Model.Table.make({
+          _tag: "table",
+          align: A.map(node.align ?? [], (align) => align ?? "none"),
+          headerRow: !absorb,
+          children: A.map(rows, (row, index) => tableRow(state, row, new SlotPath(path, index))),
+        })
+      ),
     ];
   };
 
@@ -1923,11 +1989,13 @@ const footnoteDefinitionFlow =
     MutableHashSet.add(state.seenFootnoteDefinitions, identifier);
     rewriteFootnote(state, node, path);
     return [
-      branch(state, node.position, MdSourceOrigin.Enum.parsed, () => ({
-        _tag: "footnoteDefinition",
-        identifier,
-        children: mapFlowChildren(state, node.children, path, 0),
-      })),
+      branch(state, node.position, MdSourceOrigin.Enum.parsed, () =>
+        Model.FootnoteDefinition.make({
+          _tag: "footnoteDefinition",
+          identifier,
+          children: mapFlowChildren(state, node.children, path, 0),
+        })
+      ),
     ];
   };
 
@@ -1937,15 +2005,17 @@ const flowStep: (node: Kit.FlowContent) => FlowStep = Match.type<Kit.FlowContent
     heading:
       (node): FlowStep =>
       (state, path) => [
-        branch(state, node.position, MdSourceOrigin.Enum.parsed, () => ({
-          _tag: "heading",
-          level: node.depth,
-          children: phrasingChildren(state, node.children, path),
-        })),
+        branch(state, node.position, MdSourceOrigin.Enum.parsed, () =>
+          Model.Heading.make({
+            _tag: "heading",
+            level: node.depth,
+            children: phrasingChildren(state, node.children, path),
+          })
+        ),
       ],
     thematicBreak:
       (node): FlowStep =>
-      (state) => [leaf(state, node.position, MdSourceOrigin.Enum.parsed, { _tag: "hr" })],
+      (state) => [leaf(state, node.position, MdSourceOrigin.Enum.parsed, Model.Hr.make({ _tag: "hr" }))],
     blockquote: blockquoteFlow,
     code: codeFlow,
     html: htmlFlow,
@@ -2079,11 +2149,11 @@ const sourceEntries = (state: BridgeState, document: unknown): ReadonlyArray<MdS
 
 const finish = (state: BridgeState, frontmatter: O.Option<S.JsonObject>, children: ReadonlyArray<Model.Block>) =>
   MdFromSyntax.make({
-    document: { _tag: "document", frontmatter, children },
+    document: Model.Document.make({ _tag: "document", frontmatter, children }),
     losses: A.sortWith(state.losses, byPosition, N.Order),
     sourceMap: state.options.sourceMap
       ? MdSourceMap.make({
-          entries: sourceEntries(state, { _tag: "document", frontmatter, children }),
+          entries: sourceEntries(state, Model.Document.make({ _tag: "document", frontmatter, children })),
         })
       : MdSourceMap.empty,
   });

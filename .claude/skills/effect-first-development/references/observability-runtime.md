@@ -18,25 +18,32 @@ Loaded on demand from `effect-first-development/SKILL.md`. Repository laws win o
 
 ### 10) Observability and metrics
 
+These names are illustrative. Declare the metrics in the owning package's
+`*.instruments.ts` catalog with UCUM units `ms` for duration and `1` for
+outcomes, plus the `example.operation.id` trace attribute and bounded
+`beep.outcome` metric attribute. This fence shows instrumentation; it does
+not create those catalog declarations or authorize a rename of existing metrics.
+
 ```ts
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Metric from "effect/Metric"
 
-const latency = Metric.histogram("operation_duration_ms", {
+const latency = Metric.histogram("beep.operation.duration", {
   boundaries: Metric.boundariesFromIterable([10, 50, 100, 250, 500, 1000])
 })
-const errors = Metric.counter("operation_errors_total")
+const failedOutcomes = Metric.counter("beep.operation.outcomes", {
+  attributes: { "beep.outcome": "failed" }
+})
 
 const runOperation = Effect.fn("Operation.run")(function* (id: string) {
-  yield* Effect.annotateCurrentSpan("operationId", id)
-  yield* Effect.logInfo("operation started")
+  yield* Effect.annotateCurrentSpan("example.operation.id", id)
   return "ok"
 },
   Effect.withLogSpan("operation.run"),
   Effect.annotateLogs({ service: "beep-effect" }),
   Effect.trackDuration(latency, Duration.toMillis),
-  Effect.trackErrors(errors, () => 1)
+  Effect.trackErrors(failedOutcomes, () => 1)
 )
 ```
 
@@ -195,14 +202,20 @@ export const generateReport = Effect.fn("Report.generate")(function* () {
 
 ### 16) Promise boundaries with `Effect.tryPromise`
 
+Use this at a promise-only SDK boundary. HTTP requests use Effect's
+`HttpClient`; do not wrap native `fetch` as the repository HTTP adapter.
+
 ```ts
 import * as S from "effect/Schema";
 import * as Effect from "effect/Effect";
-class HttpRequestError extends S.TaggedError<HttpRequestError, { readonly brand: unique symbol }>()("HttpRequestError", { url: S.String, message: S.String }) {}
-const fetchBody = (url: string) =>
+class LegacyReadError extends S.TaggedError<LegacyReadError, { readonly brand: unique symbol }>()("LegacyReadError", { key: S.String, message: S.String }) {}
+// Promise-only SDK and error translator supplied by the owning adapter.
+declare const readLegacyText: (key: string) => Promise<string>;
+declare const translateLegacyFailure: (key: string, cause: unknown) => LegacyReadError;
+const readText = (key: string) =>
   Effect.tryPromise({
-    try: () => fetch(url).then((response) => response.text()),
-    catch: (cause) => new HttpRequestError({ url, message: String(cause) })
+    try: () => readLegacyText(key),
+    catch: (cause) => translateLegacyFailure(key, cause)
   })
 ```
 
