@@ -469,16 +469,16 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       for (const mode of ["managed-origin", "managed-session", "tokens"]) {
         yield* Ref.set(f.mode, mode);
         const mismatch = yield* f.reconcile();
-        expect(mismatch).toMatchObject({ _tag: "Mismatch" });
         const unverified = yield* f.sender.ledger.state(f.event.eventId);
+        expect(mismatch).toMatchObject({ _tag: "Mismatch" });
         expect(unverified).toMatchObject({
           value: { state: "accepted-unverified" },
         });
       }
       yield* Ref.set(f.mode, "valid");
       const visible = yield* f.reconcile();
-      expect(visible).toMatchObject({ _tag: "Visible" });
       const verified = yield* f.sender.ledger.state(f.event.eventId);
+      expect(visible).toMatchObject({ _tag: "Visible" });
       expect(verified).toMatchObject({ value: { state: "visible" } });
     })
   )

@@ -9,6 +9,7 @@ import { GoalPacketRecord } from "@beep/repo-cli/commands/Goals/Inventory";
 import {
   biomeManifestFormatter,
   collectManifestProjectionRows,
+  goalsManifestCommand,
   runGoalsManifest,
 } from "@beep/repo-cli/commands/Goals/Manifest";
 import { GoalManifestFormatter } from "@beep/repo-cli/commands/Goals/Manifest.service";
@@ -26,7 +27,9 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe } from "@effect/vitest";
 import { assertFalse, assertInstanceOf, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -38,10 +41,11 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { GoalPacketReader } from "@beep/repo-cli/commands/Goals/Doctor";
 
-const decodeResearchReports = S.decodeUnknownResult(S.fromJsonString(S.Struct({ researchReports: S.Array(S.String) })));
+const decodeResearchReports = S.decodeUnknownEffect(S.fromJsonString(S.Struct({ researchReports: S.Array(S.String) })));
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const decodeJson = flow(S.decodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
@@ -165,6 +169,12 @@ describe("goal manifest researchReports projection", () => {
     assert.strictEqual(
       line,
       "researchReports drifts from research/: +4 unlisted (research/a.md, research/b.md, research/c.md, +1 more); -1 missing (research/z.md); 1 outside research/ (history/p1.md)"
+    );
+    assert.strictEqual(
+      renderResearchReportsDrift(
+        ResearchReportsDrift.make({ missing: [], unlisted: [], references: [], reordered: true })
+      ),
+      "researchReports drifts from research/: unsorted or duplicated entries"
     );
   });
 
@@ -310,7 +320,7 @@ describe("goal manifest researchReports projection", () => {
         assert.strictEqual(calls.length, 1);
         assert.deepStrictEqual(O.getOrThrow(A.head(calls)).args, ["biome", "format", "--write", manifest]);
         const rewritten = yield* fs.readFileString(manifest);
-        const parsed = Result.getOrThrow(decodeResearchReports(rewritten));
+        const parsed = yield* decodeResearchReports(rewritten);
         assert.deepStrictEqual(parsed.researchReports, ["research/SOURCES.md"]);
       })
     );
@@ -377,6 +387,50 @@ describe("goal manifest researchReports projection", () => {
         yield* runGoalsManifest({ write: false, check: false }, root);
         const after = yield* collectManifestProjectionRows(root);
         assert.deepStrictEqual(after, []);
+      })
+    );
+
+    it.effect("the biome formatter reports a failed format as a reported exit", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-goals-manifest-biome-" });
+        // Biome resolves from the repository the test runs in; the missing manifest fails the format.
+        const failed = yield* biomeManifestFormatter
+          .format(process.cwd(), [path.join(root, "missing", "manifest.json")])
+          .pipe(Effect.flip);
+        assertInstanceOf(failed, CliReportedExit);
+        const missingCwd = yield* biomeManifestFormatter
+          .format(path.join(root, "missing"), ["manifest.json"])
+          .pipe(Effect.flip);
+        assertInstanceOf(missingCwd, CliReportedExit);
+        const manifest = path.join(root, "manifest.json");
+        yield* fs.writeFileString(manifest, manifestText({}));
+        yield* biomeManifestFormatter.format(root, ["manifest.json"]);
+      })
+    );
+
+    it.effect("goals manifest runs as a command against the working directory", () =>
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+        const handle = yield* spawner.spawn(ChildProcess.make("git", ["init", "-q"]));
+        const exitCode = yield* handle.exitCode;
+        assert.strictEqual(exitCode, 0);
+        yield* writeProjectFile("goals/demo/research/SOURCES.md", "");
+        yield* writeProjectFile(
+          "goals/demo/ops/manifest.json",
+          manifestText({ researchReports: ["research/SOURCES.md", "research/gone.md"] })
+        );
+        const run = Command.runWith(goalsManifestCommand, { version: "0.0.0" });
+        const exclusive = yield* Effect.exit(run(["--write", "--check"]));
+        exclusive.pipe(Exit.isFailure, assertTrue);
+        const checked = yield* Effect.exit(run(["--check"]));
+        checked.pipe(Exit.isFailure, assertTrue);
+        const rows = yield* collectManifestProjectionRows();
+        assert.strictEqual(rows.length, 1);
+        yield* run(["--write"]);
+        yield* run(["--check"]);
       })
     );
   });

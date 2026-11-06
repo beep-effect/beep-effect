@@ -239,7 +239,11 @@ export const makeOwnerCheckpointStore = Effect.fn("OwnerCheckpoint.makeStore")(f
           )
             return yield* conflict();
           yield* replaceDelivery(entry, OwnerCheckpointDelivery.cases.Dispatched.make({}));
-          return current;
+          const prepared: OwnerCheckpointRecord & { readonly state: typeof OwnerCheckpointState.cases.Claimed.Type } = {
+            ...current,
+            state: current.state,
+          };
+          return prepared;
         })
       )
       .pipe(Effect.mapError((error) => (S.is(OwnerCheckpointError)(error) ? error : storage())));

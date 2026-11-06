@@ -109,7 +109,7 @@ const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
 // U+0100 avoids regex syntax and never reaches the surrogate range.
 const symbol = (cell: number) => String.fromCodePoint(0x100 + cell);
 /** Locate a validated point in sorted boundaries with a terminal upper sentinel.
- * The caller proves nonempty boundaries and point is less than the sentinel. Points below
+ * The caller proves nonempty boundaries and `point < sentinel`. Points below
  * the first boundary map to zero; interval users must still check their start.
  * @internal @category operations @since 0.0.0
  */

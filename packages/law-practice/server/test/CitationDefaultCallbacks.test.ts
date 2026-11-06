@@ -10,7 +10,9 @@ import {
 import {
   CitationCallbackDictionary,
   CitationCallbackFailure,
+  CitationCallbackResource,
   CitationFullsCallbackInput,
+  CitationIdCallbackInput,
   CitationResolutionCallbacks,
   CitationResolutionWork,
   makeCitationCallbackDictionary,
@@ -93,6 +95,47 @@ const selected = Effect.gen(function* () {
 });
 
 it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production default callback sessions", (it) => {
+  it.effect("rejects mismatched callback dispatch and a foreign work counter before resolving", () =>
+    Effect.gen(function* () {
+      const row = yield* selected;
+      const input = yield* prepare(row);
+      const prepared = yield* prepareCitationResolution(input);
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const foreignWork = yield* makeCitationResolutionWork(prepared.limits);
+      const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      const mismatched = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, foreignWork),
+        Effect.provideService(CitationCallbackDictionary, owner),
+        Effect.flip
+      );
+      expect(mismatched.reason).toBe("invalid-input");
+      const callbacks = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackDictionary, owner)
+      );
+      yield* owner.start;
+      const mention = A.getUnsafe(prepared.mentions, 0);
+      const fulls = CitationFullsCallbackInput.make({ mention, fulls: [] });
+      yield* Effect.forEach(
+        [callbacks.shortCase(fulls), callbacks.supra(fulls), callbacks.reference(fulls)],
+        Effect.fnUntraced(function* (attempt) {
+          const failure = yield* attempt.pipe(Effect.flip);
+          expect(failure.reason).toBe("invalid-input");
+        }),
+        { concurrency: 1, discard: true }
+      );
+      const idFailure = yield* callbacks
+        .id(CitationIdCallbackInput.make({ mention, last: CitationCallbackResource.cases.None.make({}), groups: [] }))
+        .pipe(Effect.flip);
+      expect(idFailure.reason).toBe("invalid-input");
+      const groups = yield* owner.read;
+      expect(groups).toEqual([]);
+      yield* owner.close;
+    })
+  );
+
   it.effect(
     "runs all 76 source contexts through the registered resolver and restores exact group memberships",
     () =>
