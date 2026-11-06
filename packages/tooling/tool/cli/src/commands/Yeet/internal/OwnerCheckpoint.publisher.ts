@@ -11,6 +11,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -260,18 +261,21 @@ export const makeOwnerCheckpointPublisher = Effect.fn("OwnerCheckpoint.makePubli
       )
       .pipe(Effect.mapError((error) => (S.is(OwnerCheckpointError)(error) ? error : storage())));
   });
-  const acknowledgeRelease = Effect.fnUntraced(function* (
-    entry: OwnerCheckpointOutbox,
-    externalId: string,
-    id: number
-  ) {
-    // Recovery of a lost response still needs fresh exact native prerequisites.
-    const snapshot = yield* readOwnerCheckpointSnapshot(context, entry.binding, id, policy, externalId);
-    if (!releaseBaseMatches(entry, snapshot)) return false;
+  const acknowledgeRelease = Effect.fnUntraced(function* (entry: OwnerCheckpointOutbox, id: number) {
     const latest = yield* owner.outbox(entry.binding, entry.revision).pipe(Effect.flatMap(required));
     if (latest.delivery._tag !== "Published") yield* owner.acknowledgePublication(entry.binding, entry.revision, id);
     else if (latest.delivery.checkRunId !== id) return yield* refuse("conflict");
-    return true;
+  });
+  const recordObserved = Effect.fnUntraced(function* (entry: OwnerCheckpointOutbox, externalId: string, id: number) {
+    // Receipt, settled publication fence and release ACK commit together. A
+    // failed anchor write must never leave a newly Published release behind.
+    yield* sql.withTransaction(
+      Effect.gen(function* () {
+        yield* current(entry.binding, entry.revision);
+        yield* remember(entry, externalId, id);
+        if (entry.intent._tag === "CheckReleased") yield* acknowledgeRelease(entry, id);
+      })
+    );
   });
   const observe = Effect.fnUntraced(function* (entry: OwnerCheckpointOutbox, externalId: string, id: number) {
     const observed = yield* native.get(id).pipe(Effect.result);
@@ -280,9 +284,11 @@ export const makeOwnerCheckpointPublisher = Effect.fn("OwnerCheckpoint.makePubli
     if (!observedIdentityMatches(row, entry, id, externalId, policy)) return hold("native-identity");
     const released = entry.intent._tag === "CheckReleased";
     if (!observedStatusMatches(row, released)) return hold("native-status");
-    yield* current(entry.binding, entry.revision);
-    if (released && !(yield* acknowledgeRelease(entry, externalId, id))) return hold("native-identity");
-    const recorded = yield* remember(entry, externalId, id).pipe(Effect.result);
+    if (released) {
+      const snapshot = yield* readOwnerCheckpointSnapshot(context, entry.binding, id, policy, externalId);
+      if (!releaseBaseMatches(entry, snapshot)) return hold("native-identity");
+    }
+    const recorded = yield* recordObserved(entry, externalId, id).pipe(Effect.result);
     if (Result.isFailure(recorded)) return unknown();
     return OwnerCheckpointPublishOutcome.cases.Published.make({
       checkRunId: id,
@@ -324,6 +330,63 @@ export const makeOwnerCheckpointPublisher = Effect.fn("OwnerCheckpoint.makePubli
     if (entry.intent._tag !== "CheckReleased") return undefined;
     return yield* readOwnerCheckpointSnapshot(context, entry.binding, id, policy, row.nativeIdentity?.externalId ?? "");
   });
+  const invalidateUnsettledRelease = Effect.fnUntraced(function* (
+    entry: OwnerCheckpointOutbox,
+    externalId: string,
+    id: number
+  ) {
+    if (entry.intent._tag !== "CheckReleased") return;
+    // This transaction serializes local authority mutations with compensation.
+    // REST has no correlation CAS; the unresolved fence remains even after a
+    // failure PATCH, since an earlier uncertain request could still finish late.
+    yield* sql.withTransaction(
+      Effect.gen(function* () {
+        const authority = yield* owner.read(entry.binding).pipe(Effect.flatMap(required));
+        if (authority.revision < entry.revision) return;
+        const rows = yield* sql<{
+          payload: string;
+          settled: number;
+        }>`SELECT payload,settled FROM yeet_owner_checkpoint_publication
+        WHERE repository=${entry.binding.repository} AND pr=${entry.binding.prNumber} AND revision=${entry.revision}`;
+        const row = yield* required(A.head(rows));
+        // A historical settled release retry does not issue another success
+        // write. Requalification failure there needs owner Revoke, not reopening.
+        if (row.settled !== 0) return;
+        const pending = yield* decode(row.payload);
+        if (
+          !sameOwnerCheckpointBinding(pending.binding, entry.binding) ||
+          pending.revision !== entry.revision ||
+          pending.applicationId !== policy.applicationId ||
+          pending.externalId !== externalId
+        )
+          return;
+        // Defensive authority-DB consistency: the pending fence has no native
+        // ID until settlement; the durable prior anchor must still own this ID.
+        const durable = yield* anchor(entry.binding);
+        if (!O.exists(durable, (value) => O.contains(value.nativeId, id))) return;
+        const observed = yield* native.get(id);
+        if (!observedIdentityMatches(observed, entry, id, externalId, policy)) return;
+        yield* native.complete(id, "failure", undefined, CheckRunCorrelationOptions.make({ externalId }));
+      })
+    );
+  });
+  const compensateRelease = <E, R>(
+    operation: Effect.Effect<OwnerCheckpointPublishOutcome, E, R>,
+    entry: OwnerCheckpointOutbox,
+    externalId: string,
+    id: number
+  ) =>
+    operation.pipe(
+      Effect.onExit((exit) => {
+        if (Exit.isSuccess(exit) && exit.value._tag === "Published") return Effect.void;
+        return invalidateUnsettledRelease(entry, externalId, id).pipe(
+          Effect.interruptible,
+          Effect.timeoutOrElse({ duration: "3 seconds", orElse: () => Effect.void }),
+          Effect.exit,
+          Effect.asVoid
+        );
+      })
+    );
   const updateAnchor = Effect.fnUntraced(function* (
     entry: OwnerCheckpointOutbox,
     externalId: string,
@@ -338,13 +401,21 @@ export const makeOwnerCheckpointPublisher = Effect.fn("OwnerCheckpoint.makePubli
     const before = O.fromUndefinedOr(beforeSnapshot);
     if (beforeSnapshot !== undefined && !releaseBaseMatches(entry, beforeSnapshot)) return hold("native-identity");
     yield* current(entry.binding, entry.revision);
-    const written = yield* native
-      .complete(id, entry.intent._tag === "CheckReleased" ? "success" : "failure", undefined, options)
-      .pipe(Effect.result);
-    if (Result.isFailure(written)) return yield* recover(entry, externalId, O.some(id));
-    if (!(yield* releaseBaseUnchanged(before, entry, id, externalId))) return hold("native-identity");
-    return yield* observe(entry, externalId, id);
+    return yield* compensateRelease(
+      Effect.gen(function* () {
+        const written = yield* native
+          .complete(id, entry.intent._tag === "CheckReleased" ? "success" : "failure", undefined, options)
+          .pipe(Effect.result);
+        if (Result.isFailure(written)) return yield* recover(entry, externalId, O.some(id));
+        if (!(yield* releaseBaseUnchanged(before, entry, id, externalId))) return hold("native-identity");
+        return yield* observe(entry, externalId, id);
+      }),
+      entry,
+      externalId,
+      id
+    );
   });
+
   const publish = Effect.fn("OwnerCheckpoint.publish")(
     function* (binding: OwnerCheckpointBinding, revision: number) {
       const state = yield* current(binding, revision);
@@ -352,7 +423,12 @@ export const makeOwnerCheckpointPublisher = Effect.fn("OwnerCheckpoint.makePubli
       const hash = yield* sha256Hex(text);
       const externalId = `owner-checkpoint/v1:${hash}`;
       const attempt = yield* fence(state.entry, externalId);
-      if (!attempt.first) return yield* recover(state.entry, externalId, attempt.anchor);
+      if (!attempt.first) {
+        const recovery = recover(state.entry, externalId, attempt.anchor);
+        return yield* O.isSome(attempt.anchor)
+          ? compensateRelease(recovery, state.entry, externalId, attempt.anchor.value)
+          : recovery;
+      }
       const options = CheckRunCorrelationOptions.make({ externalId });
       if (attempt.creates) {
         const created = yield* native.create(policy.context, binding.head, options).pipe(Effect.result);

@@ -1534,6 +1534,72 @@ const createPublicationFixture = (fault: string, own: ReturnType<typeof nativeOw
   fault === "lost-response" || fault === "zero" || fault === "duplicates"
     ? { unreachable: "PRIVATE_LOST_RESPONSE" }
     : { body: own };
+const releaseCompensationFixture = (fault: string) => {
+  let own = nativeOwn();
+  let released = false;
+  let observedAfterWrite = false;
+  const started = Promise.withResolvers<void>();
+  const resume = Promise.withResolvers<GithubAnswer | undefined>();
+  const movedBase = A.contains(
+    ["base-moved", "lost-success-response", "lost-failure-response", "compensation-timeout"],
+    fault
+  );
+  const patch = (call: GithubCall): GithubAnswer => {
+    const data = Result.getOrThrow(decodeCompletedCheckBody(call.body));
+    own = { ...own, external_id: data.external_id, status: "completed", conclusion: data.conclusion };
+    released = data.conclusion === "success";
+    const ambiguous =
+      data.conclusion === "success" ? fault === "lost-success-response" : fault === "lost-failure-response";
+    return ambiguous ? { unreachable: "PRIVATE_PATCH_RESPONSE" } : { body: own };
+  };
+  const readOwn = (): GithubAnswer | Promise<GithubAnswer | undefined> => {
+    if (released && !observedAfterWrite && (fault === "observe-timeout" || fault === "compensation-timeout")) {
+      observedAfterWrite = true;
+      started.resolve();
+      return resume.promise;
+    }
+    if (released && !observedAfterWrite && fault === "observe-failed") {
+      observedAfterWrite = true;
+      return { unreachable: "PRIVATE_POST_WRITE_GET" };
+    }
+    return { body: own };
+  };
+  const readBase = (call: GithubCall): GithubAnswer | Promise<GithubAnswer | undefined> | undefined => {
+    if (fault === "snapshot-timeout") {
+      started.resolve();
+      return resume.promise;
+    }
+    if (fault === "snapshot-failed") return { unreachable: "PRIVATE_POST_WRITE_BASE" };
+    if (movedBase) return { body: { object: { type: "commit", sha: head } } };
+    return upstreamRoute(call, own);
+  };
+  const github = recordedGithub((call) => {
+    if (call.method === "POST" && call.path === "{repo}/check-runs") {
+      own = nativeOwn(Result.getOrThrow(decodeExternalCheckBody(call.body)).external_id);
+      return { body: own };
+    }
+    if (call.method === "PATCH") return patch(call);
+    if (call.path === "{repo}/check-runs/2") return readOwn();
+    if (released && call.path === "{repo}/git/ref/heads/main") return readBase(call);
+    return upstreamRoute(call, own);
+  });
+  return {
+    github,
+    native: () => own,
+    started: started.promise,
+    changeNative: (next: typeof own) => {
+      own = next;
+    },
+    resume: (answer: GithubAnswer = { body: { object: { type: "commit", sha: merge } } }) => resume.resolve(answer),
+  };
+};
+const failReleaseDurability = Effect.fnUntraced(function* (fault: string) {
+  const sql = yield* SqlClient.SqlClient;
+  if (fault === "remember-failed")
+    yield* sql`CREATE TRIGGER refuse_release_anchor BEFORE INSERT ON yeet_owner_checkpoint_anchor BEGIN SELECT RAISE(ABORT, 'PRIVATE_REMEMBER'); END`;
+  if (fault === "ack-failed")
+    yield* sql`CREATE TRIGGER refuse_release_ack BEFORE UPDATE ON yeet_owner_checkpoint_outbox BEGIN SELECT RAISE(ABORT, 'PRIVATE_ACK'); END`;
+});
 describe("inert owner publication fence", () => {
   for (const fault of ["lost-response", "failed-remember", "duplicates", "zero", "wrong-identity"]) {
     it.effect(`reconciles ${fault} without a second create`, () => {
@@ -1570,6 +1636,167 @@ describe("inert owner publication fence", () => {
         expect(output).not.toContain("PRIVATE_");
         expect(output).not.toContain(binding.owner);
       }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+    });
+  }
+  for (const fault of [
+    "base-moved",
+    "observe-failed",
+    "snapshot-failed",
+    "remember-failed",
+    "ack-failed",
+    "lost-success-response",
+    "lost-failure-response",
+  ]) {
+    it.effect(`invalidates an unsettled successful release after ${fault}`, () => {
+      const fixture = releaseCompensationFixture(fault);
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+        yield* publisher.owner.register(binding);
+        expect((yield* publisher.publish(binding, 0))._tag).toBe("Published");
+        yield* publisher.owner.apply(release(), policy, now);
+        yield* failReleaseDurability(fault);
+        const outcome = yield* publisher.publish(binding, 1).pipe(Effect.result);
+        if (Result.isSuccess(outcome)) expect(outcome.success._tag).not.toBe("Published");
+        expect(fixture.native().conclusion).toBe("failure");
+        const outbox = yield* publisher.owner.outbox(binding, 1);
+        expect(O.getOrThrow(outbox).delivery._tag).toBe("Pending");
+        const sql = yield* SqlClient.SqlClient;
+        const fence = yield* sql<{
+          settled: number;
+        }>`SELECT settled FROM yeet_owner_checkpoint_publication WHERE revision=1`;
+        expect(fence).toEqual([{ settled: 0 }]);
+        yield* publisher.owner.apply(request(1, OwnerCheckpointCommand.cases.Revoke.make({})), policy, now);
+        expect((yield* Effect.flip(publisher.publish(binding, 2))).reason).toBe("uncertain");
+        const patches = A.filter(fixture.github.calls, (call) => call.method === "PATCH");
+        expect(A.map(patches, (call) => Result.getOrThrow(decodeCompletedCheckBody(call.body)).conclusion)).toEqual([
+          "success",
+          "failure",
+        ]);
+        expect(
+          A.filter(fixture.github.calls, (call) => call.method === "POST" && call.path === "{repo}/check-runs")
+        ).toHaveLength(1);
+      }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, fixture.github.provide);
+    });
+  }
+  for (const stop of ["snapshot-timeout", "outer-timeout", "interruption"]) {
+    it.effect(`invalidates a successful release during post-write ${stop}`, () => {
+      const fixture = releaseCompensationFixture(stop === "outer-timeout" ? "observe-timeout" : "snapshot-timeout");
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+        yield* publisher.owner.register(binding);
+        yield* publisher.publish(binding, 0);
+        yield* publisher.owner.apply(release(), policy, now);
+        const fiber = yield* publisher.publish(binding, 1).pipe(Effect.forkChild);
+        yield* Effect.promise(() => fixture.started);
+        if (stop === "interruption") yield* Fiber.interrupt(fiber);
+        else {
+          yield* TestClock.adjust("31 seconds");
+          const outcome = yield* Fiber.join(fiber).pipe(Effect.result);
+          if (Result.isSuccess(outcome)) expect(outcome.success._tag).toBe("Unknown");
+          else expect(outcome.failure.reason).toBe("evidence");
+        }
+        expect(fixture.native().conclusion).toBe("failure");
+        const outbox = yield* publisher.owner.outbox(binding, 1);
+        expect(O.getOrThrow(outbox).delivery._tag).toBe("Pending");
+        const conclusions = A.map(
+          A.filter(fixture.github.calls, (call) => call.method === "PATCH"),
+          (call) => Result.getOrThrow(decodeCompletedCheckBody(call.body)).conclusion
+        );
+        expect(conclusions).toEqual(["success", "failure"]);
+      }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, fixture.github.provide);
+    });
+  }
+  it.effect("bounds uncertain compensation without claiming a red check or settling the fence", () => {
+    const fixture = releaseCompensationFixture("compensation-timeout");
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+      yield* publisher.owner.register(binding);
+      yield* publisher.publish(binding, 0);
+      yield* publisher.owner.apply(release(), policy, now);
+      const fiber = yield* publisher.publish(binding, 1).pipe(Effect.forkChild);
+      yield* Effect.promise(() => fixture.started);
+      yield* TestClock.adjust("4 seconds");
+      const outcome = yield* Fiber.join(fiber).pipe(Effect.result);
+      expect(Result.isFailure(outcome)).toBe(true);
+      if (Result.isFailure(outcome)) expect(outcome.failure.reason).toBe("binding");
+      expect(fixture.native().conclusion).toBe("success");
+      const outbox = yield* publisher.owner.outbox(binding, 1);
+      expect(O.getOrThrow(outbox).delivery._tag).toBe("Pending");
+      const sql = yield* SqlClient.SqlClient;
+      const fence = yield* sql<{
+        settled: number;
+      }>`SELECT settled FROM yeet_owner_checkpoint_publication WHERE revision=1`;
+      expect(fence).toEqual([{ settled: 0 }]);
+      yield* publisher.owner.apply(request(1, OwnerCheckpointCommand.cases.Revoke.make({})), policy, now);
+      expect((yield* Effect.flip(publisher.publish(binding, 2))).reason).toBe("uncertain");
+    }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, fixture.github.provide);
+  });
+  for (const move of ["correlation", "application", "head", "generation", "revoke"]) {
+    it.effect(`guards compensating a release after concurrent ${move}`, () => {
+      const fixture = releaseCompensationFixture("snapshot-timeout");
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+        yield* publisher.owner.register(binding);
+        yield* publisher.publish(binding, 0);
+        yield* publisher.owner.apply(release(), policy, now);
+        const fiber = yield* publisher.publish(binding, 1).pipe(Effect.result, Effect.forkChild);
+        yield* Effect.promise(() => fixture.started);
+        const native = fixture.native();
+        if (move === "correlation") fixture.changeNative({ ...native, external_id: "newer-publication" });
+        if (move === "application") fixture.changeNative({ ...native, app: { id: 999 } });
+        if (move === "head") fixture.changeNative({ ...native, head_sha: merge });
+        if (move === "generation")
+          yield* publisher.owner.apply(
+            request(1, OwnerCheckpointCommand.cases.Synchronize.make({ head: merge })),
+            policy,
+            now
+          );
+        if (move === "revoke")
+          yield* publisher.owner.apply(request(1, OwnerCheckpointCommand.cases.Revoke.make({})), policy, now);
+        fixture.resume();
+        const outcome = yield* Fiber.join(fiber);
+        if (Result.isSuccess(outcome)) expect(outcome.success._tag).not.toBe("Published");
+        expect(fixture.native().conclusion).toBe(move === "revoke" ? "failure" : "success");
+        const patches = A.filter(fixture.github.calls, (call) => call.method === "PATCH");
+        expect(patches).toHaveLength(move === "revoke" ? 2 : 1);
+        expect(
+          A.filter(fixture.github.calls, (call) => call.method === "POST" && call.path === "{repo}/check-runs")
+        ).toHaveLength(1);
+      }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, fixture.github.provide);
+    });
+  }
+  for (const corruption of ["deleted", "native-id", "binding"]) {
+    it.effect(`refuses compensation after defensive authority-anchor ${corruption} corruption`, () => {
+      const fixture = releaseCompensationFixture("snapshot-timeout");
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+        yield* publisher.owner.register(binding);
+        yield* publisher.publish(binding, 0);
+        yield* publisher.owner.apply(release(), policy, now);
+        const fiber = yield* publisher.publish(binding, 1).pipe(Effect.result, Effect.forkChild);
+        yield* Effect.promise(() => fixture.started);
+        const sql = yield* SqlClient.SqlClient;
+        if (corruption === "deleted") yield* sql`DELETE FROM yeet_owner_checkpoint_anchor`;
+        else if (corruption === "native-id")
+          yield* sql`UPDATE yeet_owner_checkpoint_anchor SET payload=json_set(payload, '$.nativeId', 3)`;
+        else yield* sql`UPDATE yeet_owner_checkpoint_anchor SET payload=json_set(payload, '$.binding.generation', 1)`;
+        fixture.resume({ body: { object: { type: "commit", sha: head } } });
+        const outcome = yield* Fiber.join(fiber);
+        expect(Result.isFailure(outcome)).toBe(true);
+        expect(fixture.native().conclusion).toBe("success");
+        const outbox = yield* publisher.owner.outbox(binding, 1);
+        expect(O.getOrThrow(outbox).delivery._tag).toBe("Pending");
+        const fence = yield* sql<{
+          settled: number;
+        }>`SELECT settled FROM yeet_owner_checkpoint_publication WHERE revision=1`;
+        expect(fence).toEqual([{ settled: 0 }]);
+        expect(A.filter(fixture.github.calls, (call) => call.method === "PATCH")).toHaveLength(1);
+      }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, fixture.github.provide);
     });
   }
   it.effect("updates one native identity across release and revoke and rejects stale revisions", () => {
