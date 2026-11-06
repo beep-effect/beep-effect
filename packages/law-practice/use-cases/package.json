@@ -78,6 +78,7 @@
     "@beep/law-practice-domain": "workspace:^",
     "@beep/mcp-kit": "workspace:^",
     "@beep/nlp": "workspace:^",
+    "@beep/nlp-processing": "workspace:^",
     "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",

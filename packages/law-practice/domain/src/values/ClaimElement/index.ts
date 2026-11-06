@@ -8,6 +8,8 @@
 
 export * from "./Antecedent.policy.ts";
 export * from "./AntecedentFinding.model.ts";
+export * from "./ClaimClauseRole.behavior.ts";
+export * from "./ClaimClauseRole.model.ts";
 export * from "./ClaimElement.behavior.ts";
 export * from "./ClaimElement.edge.model.ts";
 export * from "./ClaimElement.errors.ts";
@@ -15,3 +17,5 @@ export * from "./ClaimElement.input.model.ts";
 export * from "./ClaimElement.inspection.model.ts";
 export * from "./ClaimElement.model.ts";
 export * from "./ClaimElement.tree.model.ts";
+export * from "./ClaimInspection.prepare.ts";
+export * from "./ClaimLexicalEvidence.model.ts";

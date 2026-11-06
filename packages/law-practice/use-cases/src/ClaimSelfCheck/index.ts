@@ -11,6 +11,7 @@
  * @since 0.0.0
  */
 export * from "./ClaimInspection.errors.ts";
+export * from "./ClaimInspection.lexical.ts";
 /**
  * Stateless inspection page contracts.
  * @category models

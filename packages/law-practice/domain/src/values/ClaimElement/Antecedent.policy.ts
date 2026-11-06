@@ -31,6 +31,7 @@ import {
   ClaimTermIntroducingDeterminer,
   ClaimTermReferringDeterminer,
   decomposeClaimInput,
+  decomposePreparedClaimRoles,
 } from "./ClaimElement.behavior.ts";
 import { ClaimInputQualification } from "./ClaimElement.input.model.ts";
 import {
@@ -44,12 +45,15 @@ import {
   isCountedHead,
   isExplicitAbbreviatedHead,
   isSingleModifiedHead as isSingleModifiedOf,
+  isSourcePrefixAbbreviatedHead,
   pluralityReferenceContent,
 } from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
+import type { ClaimBoundRolePlan, ClaimNominalPolicyRole, ClaimNominalSpan } from "./ClaimClauseRole.model.ts";
 import type { ClaimInputCollection } from "./ClaimElement.input.model.ts";
 import type { ClaimTerm } from "./ClaimElement.model.ts";
 import type { ClaimElementTree } from "./ClaimElement.tree.model.ts";
+import type { ClaimLexicalEvidence, PreparedClaimInspection } from "./ClaimLexicalEvidence.model.ts";
 
 /**
  * Pure antecedent-basis decision over one document's claim-element trees.
@@ -135,6 +139,7 @@ const rule = {
   chainThroughUndecomposed: AntecedentRuleId.make("chain-through-undecomposed"),
   chainUnresolvable: AntecedentRuleId.make("chain-unresolvable"),
   chainWorkLimit: AntecedentRuleId.make("chain-work-limit"),
+  sourceRoleUnresolved: AntecedentRuleId.make("source-role-unresolved"),
 };
 
 /** One term of one tree, with the claim it belongs to and its reference. */
@@ -143,6 +148,7 @@ type LocatedTerm = {
   readonly ref: ClaimTermRef;
   readonly term: ClaimTerm;
   readonly inheritedSubject: boolean;
+  readonly sourceRole: ClaimNominalPolicyRole;
 };
 
 /** A dependency chain from the checked claim towards its root, and whether every step could be followed. */
@@ -161,22 +167,32 @@ type Verdict = O.Option<AntecedentFinding>;
 
 const isIntroducingDeterminer = S.is(ClaimTermIntroducingDeterminer);
 const isReferringDeterminer = S.is(ClaimTermReferringDeterminer);
-const isIntroducing = ({ term, inheritedSubject }: LocatedTerm): boolean =>
-  isIntroducingDeterminer(term.determiner) && !inheritedSubject;
-const isReferring = ({ term }: LocatedTerm): boolean =>
-  isReferringDeterminer(term.determiner) || ClaimTermDeterminer.is.bare(term.determiner);
+const nonReferringRole = (role: ClaimNominalPolicyRole): boolean =>
+  role === "generic-plural" ||
+  role === "quantified-introduction" ||
+  role === "preamble-introduction" ||
+  role === "explicit-name";
+const isIntroducing = ({ term, inheritedSubject, sourceRole }: LocatedTerm): boolean =>
+  (isIntroducingDeterminer(term.determiner) || nonReferringRole(sourceRole)) && !inheritedSubject;
+const isReferring = ({ term, sourceRole }: LocatedTerm): boolean =>
+  !nonReferringRole(sourceRole) &&
+  (isReferringDeterminer(term.determiner) || ClaimTermDeterminer.is.bare(term.determiner));
 
 // Rule `non-referential-idiom`: "the same", "the art", ... carry no antecedent.
 const idiomWords = HashSet.make("same", "like", "art", "other", "following", "case");
 const isIdiom = ({ term }: LocatedTerm): boolean =>
   ClaimTermDeterminer.is.the(term.determiner) && HashSet.has(idiomWords, A.headNonEmpty(Str.split(term.head, " ")));
 
-const locatedTerms = (tree: ClaimElementTree): ReadonlyArray<LocatedTerm> =>
+type RoleFor = (claimNumber: number, term: ClaimTerm) => ClaimNominalPolicyRole;
+const legacyRole: RoleFor = () => "legacy";
+const unknownBareRole: RoleFor = (_, term) => (ClaimTermDeterminer.is.bare(term.determiner) ? "unknown" : "legacy");
+const locatedTerms = (tree: ClaimElementTree, roleFor: RoleFor = legacyRole): ReadonlyArray<LocatedTerm> =>
   A.flatMap(tree.elements, (element) =>
     A.map(element.terms, (term) => ({
       claimNumber: tree.claimNumber,
       ref: ClaimTermRef.make({ path: element.path, anchor: term.anchor }),
       term,
+      sourceRole: roleFor(tree.claimNumber, term),
       inheritedSubject:
         element.path === `${tree.claimNumber}` &&
         O.exists(A.head(element.terms), (first) => first.anchor.startChar === term.anchor.startChar) &&
@@ -301,8 +317,15 @@ const uncovered = (referring: LocatedTerm, ruleId: AntecedentRuleId): Antecedent
   AntecedentFinding.cases["pattern-not-covered"].make({ rule: ruleId, referring: referring.ref });
 
 // In-chain resolution: `O.none()` when no step applies, else the step's verdict.
+const sourceReferenceHead = (referring: LocatedTerm): string => {
+  const head =
+    referring.sourceRole === "demonstrative-reference"
+      ? Str.replace(/^(?:this|these|those|such|that)\s+/u, "")(referring.term.head)
+      : referring.term.head;
+  return O.getOrElse(pluralityReferenceContent(head), () => head);
+};
 const resolveInChain = (introductions: ReadonlyArray<LocatedTerm>, referring: LocatedTerm, chain: Chain) => {
-  const head = O.getOrElse(pluralityReferenceContent(referring.term.head), () => referring.term.head);
+  const head = sourceReferenceHead(referring);
   const resolved = (): Verdict => O.none();
   const ambiguous =
     (ruleId: AntecedentRuleId) =>
@@ -338,7 +361,12 @@ const resolveInChain = (introductions: ReadonlyArray<LocatedTerm>, referring: Lo
     ),
     O.orElse(() =>
       byCount(
-        A.filter(introductions, ({ term }) => isExplicitAbbreviatedHead(head)(term.head)),
+        A.filter(
+          introductions,
+          ({ term }) =>
+            isExplicitAbbreviatedHead(head)(term.head) ||
+            (referring.sourceRole !== "legacy" && isSourcePrefixAbbreviatedHead(head)(term.head))
+        ),
         resolved,
         ambiguous(rule.multipleIntroductions)
       )
@@ -414,10 +442,41 @@ const fullVerdict =
       )
     );
 
+const unknownCandidateHead = (referring: LocatedTerm, candidate: LocatedTerm): boolean => {
+  const head = sourceReferenceHead(referring);
+  const before =
+    candidate.claimNumber !== referring.claimNumber ||
+    candidate.term.anchor.startChar < referring.term.anchor.startChar;
+  if (!before || candidate.sourceRole !== "unknown" || !ClaimTermDeterminer.is.bare(candidate.term.determiner))
+    return false;
+  return compatibleUnknownHead(head, candidate.term.head);
+};
+const compatibleUnknownHead = (head: string, candidate: string): boolean =>
+  head === candidate ||
+  singularHead(head) === singularHead(candidate) ||
+  isExplicitAbbreviatedHead(head)(candidate) ||
+  isSourcePrefixAbbreviatedHead(head)(candidate) ||
+  isCountedHead(head)(candidate) ||
+  isSingleModifiedOf(head)(candidate);
+const roleAwareVerdict = (
+  terms: ReadonlyArray<LocatedTerm>,
+  referring: LocatedTerm,
+  verdict: Verdict,
+  remaining: MutableRef.MutableRef<number>
+): Verdict => {
+  if (O.exists(verdict, (finding) => finding.kind === "ambiguous-antecedent" || finding.kind === "pattern-not-covered"))
+    return verdict;
+  if (!spendChainWork(remaining, (terms.length + 1) * 6)) return O.some(uncovered(referring, rule.chainWorkLimit));
+  return A.some(terms, (candidate) => unknownCandidateHead(referring, candidate))
+    ? O.some(uncovered(referring, rule.sourceRoleUnresolved))
+    : verdict;
+};
+
 const readableVerdict =
   (
     introductionsByHead: R.ReadonlyRecord<string, ReadonlyArray<LocatedTerm>>,
-    remaining: MutableRef.MutableRef<number>
+    remaining: MutableRef.MutableRef<number>,
+    enhanced: boolean
   ) =>
   (
     terms: ReadonlyArray<LocatedTerm>,
@@ -432,39 +491,89 @@ const readableVerdict =
         (candidate.claimNumber !== referring.claimNumber ||
           candidate.term.anchor.startChar < referring.term.anchor.startChar)
     );
-    return A.every(chain.claims, (claimNumber) => HashSet.has(decomposed, claimNumber))
+    const verdict = A.every(chain.claims, (claimNumber) => HashSet.has(decomposed, claimNumber))
       ? fullVerdict(introductionsByHead, remaining)(introductions, referring, chain)
       : partialVerdict(introductions, referring, chain);
+    return enhanced ? roleAwareVerdict(terms, referring, verdict, remaining) : verdict;
   };
 
-const verdictFor =
+// These coverage outcomes do not inspect chain term candidates. Keeping them
+// before preparation avoids charging or allocating work that is never used.
+const chainIndependentVerdict = (referring: LocatedTerm, chain: Chain): Verdict => {
+  if (
+    ClaimTermDeterminer.is.bare(referring.term.determiner) &&
+    referring.sourceRole !== "alias-reference" &&
+    referring.sourceRole !== "demonstrative-reference"
+  )
+    return O.some(uncovered(referring, rule.unsupportedDeterminer));
+  return chain.resolvable ? O.none() : O.some(uncovered(referring, rule.chainUnresolvable));
+};
+const prepareChainTerms = (
+  termsByClaim: R.ReadonlyRecord<string, ReadonlyArray<LocatedTerm>>,
+  chain: Chain,
+  remaining: MutableRef.MutableRef<number>
+): O.Option<ReadonlyArray<LocatedTerm>> => {
+  // Count bucket lengths only after reserving that lookup pass. The retained
+  // copy and canonical sort/de-duplication are charged before allocation.
+  if (!spendChainWork(remaining, chain.claims.length)) return O.none();
+  const termCount = A.reduce(
+    chain.claims,
+    0,
+    (count, claimNumber) => count + O.getOrElse(R.get(termsByClaim, `${claimNumber}`), () => []).length
+  );
+  if (!spendChainWork(remaining, termCount + 1 + chain.claims.length ** 2)) return O.none();
+  return O.some(
+    A.flatMap(A.dedupe(A.sort(chain.claims, Num.Order)), (claimNumber) =>
+      O.getOrElse(R.get(termsByClaim, `${claimNumber}`), () => [])
+    )
+  );
+};
+
+const cachedChainTerms =
   (
-    introductionsByHead: R.ReadonlyRecord<string, ReadonlyArray<LocatedTerm>>,
+    termsByClaim: R.ReadonlyRecord<string, ReadonlyArray<LocatedTerm>>,
+    remaining: MutableRef.MutableRef<number>,
+    prepared: Array<O.Option<ReadonlyArray<LocatedTerm>>>
+  ) =>
+  (chain: Chain, index: number): O.Option<ReadonlyArray<LocatedTerm>> => {
+    if (!spendChainWork(remaining, 1)) return O.none();
+    const cached = O.flatten(A.get(prepared, index));
+    if (O.isSome(cached)) return cached;
+    const terms = prepareChainTerms(termsByClaim, chain, remaining);
+    if (O.isSome(terms)) prepared[index] = terms;
+    return terms;
+  };
+const boundedChainVerdict =
+  (
+    lookup: (chain: Chain, index: number) => O.Option<ReadonlyArray<LocatedTerm>>,
+    read: (terms: ReadonlyArray<LocatedTerm>, referring: LocatedTerm, chain: Chain) => Verdict,
     remaining: MutableRef.MutableRef<number>
   ) =>
-  (
-    terms: ReadonlyArray<LocatedTerm>,
-    decomposed: HashSet.HashSet<number>,
-    referring: LocatedTerm,
-    chain: Chain
-  ): Verdict => {
-    if (ClaimTermDeterminer.is.bare(referring.term.determiner)) {
-      return O.some(uncovered(referring, rule.unsupportedDeterminer));
-    }
-    return chain.resolvable
-      ? readableVerdict(introductionsByHead, remaining)(terms, decomposed, referring, chain)
-      : O.some(uncovered(referring, rule.chainUnresolvable));
+  (referring: LocatedTerm, chain: Chain, index: number): O.Option<Verdict> => {
+    const independent = chainIndependentVerdict(referring, chain);
+    if (O.isSome(independent)) return O.some(independent);
+    return O.flatMap(lookup(chain, index), (terms) => {
+      // The introduction filter and up to five matching passes still happen
+      // for each reference; caching does not waive those scans or the
+      // decomposed-claim completeness scan performed by readableVerdict.
+      if (!spendChainWork(remaining, (terms.length + 1) * 6 + chain.claims.length)) return O.none();
+      return O.some(read(terms, referring, chain));
+    });
   };
 
 const policyInContext = (
   trees: ReadonlyArray<ClaimElementTree>,
-  claims: ReadonlyArray<PatentClaim>
+  claims: ReadonlyArray<PatentClaim>,
+  roleFor: RoleFor = legacyRole
 ): ReadonlyArray<AntecedentFinding> => {
   const claimIndex = HashMap.fromIterable(
     A.map(claims, (claim): readonly [number, PatentClaim] => [claim.claimNumber, claim])
   );
   const decomposed = HashSet.fromIterable(A.map(trees, ({ claimNumber }) => claimNumber));
-  const terms = A.sort(A.flatMap(trees, locatedTerms), locatedOrder);
+  const terms = A.sort(
+    A.flatMap(trees, (tree) => locatedTerms(tree, roleFor)),
+    locatedOrder
+  );
   // Both indexes are built once in the existing global term order. A verdict
   // reads only its chain's term buckets; outside-chain lookup retains global
   // first-candidate semantics through the head bucket.
@@ -476,7 +585,7 @@ const policyInContext = (
   const termsByClaim = indexesComplete ? A.groupBy(terms, ({ claimNumber }) => `${claimNumber}`) : {};
   const introductionsByHead = indexesComplete ? A.groupBy(A.filter(terms, isIntroducing), ({ term }) => term.head) : {};
   const ranked = A.flatMap(trees, (tree): ReadonlyArray<Ranked> => {
-    const referringTerms = A.filter(locatedTerms(tree), (term) => isReferring(term) && !isIdiom(term));
+    const referringTerms = A.filter(locatedTerms(tree, roleFor), (term) => isReferring(term) && !isIdiom(term));
     if (referringTerms.length === 0) return [];
     const rank = (referring: LocatedTerm, chain: ReadonlyArray<number>, finding: AntecedentFinding): Ranked => ({
       claimNumber: tree.claimNumber,
@@ -496,26 +605,25 @@ const policyInContext = (
           if (O.isNone(enumerated))
             return A.map(referringTerms, (referring) => rank(referring, [], uncovered(referring, rule.chainWorkLimit)));
           const chains = A.sort(enumerated.value, chainOrder);
+          // One slot per already-enumerated chain, with no cross-tree or
+          // cross-invocation retention. Every cached term is separately charged.
+          if (!spendChainWork(termWork, chains.length))
+            return A.map(referringTerms, (referring) => rank(referring, [], uncovered(referring, rule.chainWorkLimit)));
+          const prepared = A.replicate(O.none<ReadonlyArray<LocatedTerm>>(), chains.length);
+          const lookup = cachedChainTerms(termsByClaim, termWork, prepared);
+          const read = readableVerdict(introductionsByHead, termWork, roleFor !== legacyRole);
+          const evaluate = boundedChainVerdict(
+            lookup,
+            (terms, referring, chain) => read(terms, decomposed, referring, chain),
+            termWork
+          );
           return A.flatMap(referringTerms, (referring) => {
             let findings: ReadonlyArray<Ranked> = [];
-            for (const chain of chains) {
-              const termCount = A.reduce(
-                chain.claims,
-                0,
-                (count, claimNumber) => count + O.getOrElse(R.get(termsByClaim, `${claimNumber}`), () => []).length
-              );
-              // Reserve bucket copying, introduction filtering, the three
-              // matching passes and candidate output copying before allocation.
-              // Membership is already guaranteed by the selected buckets.
-              // The depth-squared allowance covers sorting and de-duplication
-              // while preserving global claim/anchor candidate order.
-              const work = (termCount + 1) * 6 + chain.claims.length ** 2;
-              if (!spendChainWork(termWork, work))
-                return [rank(referring, [], uncovered(referring, rule.chainWorkLimit))];
-              const chainTerms = A.flatMap(A.dedupe(A.sort(chain.claims, Num.Order)), (claimNumber) =>
-                O.getOrElse(R.get(termsByClaim, `${claimNumber}`), () => [])
-              );
-              const finding = verdictFor(introductionsByHead, termWork)(chainTerms, decomposed, referring, chain);
+            for (let index = 0; index < chains.length; index++) {
+              const chain = O.getOrThrow(A.get(chains, index));
+              const evaluated = evaluate(referring, chain, index);
+              if (O.isNone(evaluated)) return [rank(referring, [], uncovered(referring, rule.chainWorkLimit))];
+              const finding = evaluated.value;
               if (O.isSome(finding)) {
                 if (!spendChainWork(remaining, findings.length + 1))
                   return [rank(referring, [], uncovered(referring, rule.chainWorkLimit))];
@@ -661,6 +769,14 @@ export const inspectClaimInput = Effect.fn("ClaimElement.inspectClaimInput")(fun
   input: ClaimInputCollection
 ): Effect.fn.Return<ClaimInputInspectionReport> {
   const decompositions = yield* decomposeClaimInput(input);
+  return inspectionReport(input, decompositions);
+});
+
+const inspectionReport = (
+  input: ClaimInputCollection,
+  decompositions: ReadonlyArray<ClaimInputDecomposition>,
+  roleFor: RoleFor = legacyRole
+): ClaimInputInspectionReport => {
   const unavailable = unavailableAncestors(decompositions);
   const eligible = A.filter(
     decompositions,
@@ -673,7 +789,8 @@ export const inspectClaimInput = Effect.fn("ClaimElement.inspectClaimInput")(fun
   const findings = inspectionFindings(
     policyInContext(
       A.map(usable, ({ tree }) => tree),
-      A.map(usable, ({ qualification }) => qualification.claim)
+      A.map(usable, ({ qualification }) => qualification.claim),
+      roleFor
     ),
     indexComplete
   );
@@ -703,4 +820,113 @@ export const inspectClaimInput = Effect.fn("ClaimElement.inspectClaimInput")(fun
       : ClaimInputInspection.cases.complete.make({ decomposition, findings: ownFindings });
   });
   return ClaimInputInspectionReport.make({ input, indexStatus: indexComplete ? "complete" : "incomplete", records });
+};
+
+const lexicalCoverage = (
+  report: ClaimInputInspectionReport,
+  accepted: HashSet.HashSet<number>
+): ClaimInputInspectionReport =>
+  ClaimInputInspectionReport.make({
+    ...report,
+    records: A.map(report.records, (record) => {
+      if (record.status === "unchecked" || HashSet.has(accepted, record.decomposition.tree.claimNumber)) return record;
+      const coverage = record.status === "partial" ? record.coverage : [];
+      return ClaimInputInspection.cases.partial.make({
+        decomposition: record.decomposition,
+        findings: record.findings,
+        coverage: A.prepend(
+          A.filter(coverage, (issue) => issue.kind !== "policy-uncovered"),
+          ClaimInputCoverageIssue.cases["policy-uncovered"].make({})
+        ),
+      });
+    }),
+  });
+
+const roleInputBudget = (plans: ReadonlyArray<ClaimBoundRolePlan>): O.Option<number> => {
+  let remaining = 262_144;
+  for (const { plan } of plans) {
+    // Reserve scans, entry/key allocation and persistent map storage before
+    // preparing them. Merely reading quote lengths is charged by this pass.
+    remaining -= plan.nominals.length * 64 + 1;
+    if (remaining < 0) return O.none();
+    remaining -= A.reduce(plan.nominals, 0, (sum, nominal) => sum + nominal.anchor.quote.length * 4);
+    if (remaining < 0) return O.none();
+  }
+  return O.some(remaining);
+};
+const aliasNominalRole = (
+  nominal: ClaimNominalSpan,
+  donors: ReadonlyArray<ClaimNominalSpan>,
+  donorCharacters: number,
+  charge: (amount: number) => boolean
+): ClaimNominalPolicyRole => {
+  if (nominal.role !== "unknown" || nominal.determiner !== "bare") return nominal.role;
+  if (O.isNone(Str.match(/^[A-Z][A-Z0-9-]+(?:\s+[\p{L}\p{N}-]+)*$/u)(nominal.anchor.quote))) return "unknown";
+  // Only actual alias candidates perform these donor parses. A source with no
+  // explicit parenthetical declarations does no fictitious quadratic work.
+  if (!charge(donorCharacters * 12 + donors.length * (nominal.head.quote.length * 2 + 32))) return "unknown";
+  const head = Str.toLowerCase(nominal.head.quote);
+  return A.some(
+    donors,
+    (donor) =>
+      isExplicitAbbreviatedHead(head)(Str.toLowerCase(donor.head.quote)) ||
+      isSourcePrefixAbbreviatedHead(head)(Str.toLowerCase(donor.head.quote))
+  )
+    ? "alias-reference"
+    : "unknown";
+};
+const sourceRoleIndex = (
+  plans: ReadonlyArray<ClaimBoundRolePlan>
+): O.Option<HashMap.HashMap<string, ClaimNominalPolicyRole>> => {
+  const budget = roleInputBudget(plans);
+  if (O.isNone(budget)) return O.none();
+  let remaining = budget.value;
+  const charge = (amount: number): boolean => {
+    remaining -= amount;
+    return remaining >= 0;
+  };
+  // Parentheses are a necessary condition of BOTH existing alias matchers;
+  // removing other donors preserves every unexhausted semantic match.
+  const donors = A.filter(
+    A.flatMap(plans, ({ plan }) => plan.nominals),
+    (nominal) => Str.includes("(")(nominal.head.quote) && Str.includes(")")(nominal.head.quote)
+  );
+  const characters = A.reduce(donors, 0, (sum, donor) => sum + donor.head.quote.length);
+  let roles = HashMap.empty<string, ClaimNominalPolicyRole>();
+  for (const { claimNumber, plan } of plans) {
+    for (const nominal of plan.nominals) {
+      const role = aliasNominalRole(nominal, donors, characters, charge);
+      if (remaining < 0) return O.none();
+      roles = HashMap.set(
+        roles,
+        `${claimNumber}:${nominal.anchor.startChar}:${nominal.anchor.endChar}:${nominal.anchor.quote}`,
+        role
+      );
+    }
+  }
+  return O.some(roles);
+};
+/**
+ * Inspect prepared source roles through the same coverage/report policy.
+ *
+ * @category domain-logic
+ * @since 0.0.0
+ */
+export const inspectPreparedClaimRoles = Effect.fn("ClaimElement.inspectPreparedRoles")(function* (
+  prepared: PreparedClaimInspection,
+  evidence: ReadonlyArray<ClaimLexicalEvidence>
+) {
+  const result = yield* decomposePreparedClaimRoles(prepared, evidence);
+  const indexed = sourceRoleIndex(result.plans);
+  if (O.isNone(indexed))
+    return lexicalCoverage(inspectionReport(prepared.input, result.decompositions, unknownBareRole), HashSet.empty());
+  const roleFor: RoleFor = (claimNumber, term) =>
+    O.getOrElse(
+      HashMap.get(indexed.value, `${claimNumber}:${term.anchor.startChar}:${term.anchor.endChar}:${term.anchor.quote}`),
+      () => unknownBareRole(claimNumber, term)
+    );
+  return lexicalCoverage(
+    inspectionReport(prepared.input, result.decompositions, roleFor),
+    HashSet.fromIterable(A.map(result.plans, ({ claimNumber }) => claimNumber))
+  );
 });

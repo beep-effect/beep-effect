@@ -130,6 +130,28 @@ class SmokeCallResponse extends S.Opaque<SmokeCallResponse, { readonly brand: un
   )
 ) {}
 
+// This projection checks the actual encoded tool page, not an internal adapter.
+// A complete record plus the refined object head proves the optional fixed
+// lexical provider ran inside the executable rather than availability fallback.
+class SmokeInspectionPage extends S.Opaque<SmokeInspectionPage, { readonly brand: unique symbol }>()(
+  S.Struct({
+    records: S.NonEmptyArray(
+      S.Struct({
+        status: S.String,
+        findings: S.Array(S.Struct({ kind: S.String, rule: S.String })),
+        decomposition: S.Struct({
+          tree: S.Struct({ elements: S.Array(S.Struct({ terms: S.Array(S.Struct({ head: S.String })) })) }),
+        }),
+      })
+    ),
+  }).pipe(
+    $I.annoteSchema("SmokeInspectionPage", {
+      description:
+        "Minimal compiled inspection-page projection proving source-role execution and honest complete coverage.",
+    })
+  )
+) {}
+const decodeInspection = S.decodeUnknownEffect(S.fromJsonString(SmokeInspectionPage));
 const decodeDiscover = S.decodeUnknownEffect(S.fromJsonString(SmokeDiscoverResponse));
 const decodeTools = S.decodeUnknownEffect(S.fromJsonString(SmokeToolsResponse));
 const decodeCall = S.decodeUnknownEffect(S.fromJsonString(SmokeCallResponse));
@@ -237,6 +259,47 @@ const compiledHostEnv = (): Record<string, string | undefined> => {
   return R.remove(R.remove(R.remove(ambientEnv, "PRACTICE_KG_BUNDLE_DIR"), "PRACTICE_KG_CORPUS_ROOT"), "NODE_PATH");
 };
 
+/**
+ * Verify the actual encoded inspection response from the fixed compiled-host smoke source.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const verifyCompiledClaimInspection = Effect.fn("PracticeKgSmoke.verifyCompiledClaimInspection")(function* (
+  line: string
+) {
+  const inspectionCall = yield* decodeCall(line).pipe(
+    Effect.mapError((cause) => SmokeFailure.make({ cause, message: "Compiled inspection tool response was invalid." }))
+  );
+  const pageText = O.map(A.head(inspectionCall.result.content), (item) => item.text);
+  const page = yield* decodeInspection(O.getOrElse(pageText, () => "")).pipe(
+    Effect.mapError((cause) =>
+      SmokeFailure.make({
+        cause,
+        message: "Compiled lexical inspection was unavailable or did not return a complete encoded source page.",
+      })
+    )
+  );
+  const objectHeads = A.flatMap(page.records, (record) =>
+    A.flatMap(record.decomposition.tree.elements, (element) => A.map(element.terms, (term) => term.head))
+  );
+  if (!A.makeEquivalence(Str.Equivalence)(objectHeads, ["system", "sensor", "signal", "controller", "signals"]))
+    return yield* SmokeFailure.make({
+      message: "Compiled inspection did not apply source-aligned predicate and nominal roles.",
+    });
+  if (!A.every(page.records, (record) => record.status === "complete"))
+    return yield* SmokeFailure.make({
+      message: `Compiled inspection coverage is ${A.join(
+        A.map(page.records, (record) => record.status),
+        ","
+      )}; rules=${A.join(
+        A.flatMap(page.records, (record) => A.map(record.findings, (finding) => finding.rule)),
+        ","
+      )}; heads=${A.join(objectHeads, ",")}`,
+    });
+  yield* Effect.logInfo("COMPILED_CLAUSE_INSPECTION_OK", { records: page.records.length, terms: objectHeads.length });
+});
+
 const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
   executable: string,
   bundleOut: string,
@@ -264,10 +327,14 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
   const requestMeta = `{"${PROTOCOL_VERSION_META_KEY}":"${MCP_PROTOCOL_VERSION}","${CLIENT_CAPABILITIES_META_KEY}":{},"${CLIENT_INFO_META_KEY}":{"name":"compiled-smoke","version":"0.0.0"}}`;
   const frame = (id: number, method: string, params: string): string =>
     `{"jsonrpc":"2.0","id":${id},"method":"${method}","params":${params}}`;
+  const inspectionText =
+    "A system comprising a sensor that detects a signal; a controller configured to process signals.";
+  const inspectionArguments = `{ "input": { "sourceKey": "compiled-clause-smoke", "records": [{ "kind": "text", "sourceOrdinal": 1, "numberText": "1", "sourceText": "${inspectionText}", "canonicalText": "${inspectionText}" }] } }`;
   const pipeScript =
     `{ printf '%s\\n' '${frame(1, "server/discover", `{"_meta":${requestMeta}}`)}'; sleep 2; ` +
     `printf '%s\\n' '${frame(2, "tools/list", `{"_meta":${requestMeta}}`)}'; sleep 1; ` +
-    `printf '%s\\n' '${frame(3, "tools/call", `{"name":"corpus_search_text","arguments":{"query":"fixture"},"_meta":${requestMeta}}`)}'; sleep 3; } ` +
+    `printf '%s\\n' '${frame(3, "tools/call", `{"name":"corpus_search_text","arguments":{"query":"fixture"},"_meta":${requestMeta}}`)}'; sleep 1; ` +
+    `printf '%s\\n' '${frame(4, "tools/call", `{"name":"claim_inspect_input","arguments":${inspectionArguments},"_meta":${requestMeta}}`)}'; sleep 3; } ` +
     `| "$1"`;
   const child = yield* Effect.try({
     try: () =>
@@ -338,6 +405,8 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
   if (!Str.includes("bundle_version")(callText)) {
     return yield* SmokeFailure.make({ message: "corpus_search_text result did not include bundle_version." });
   }
+  const inspectionLine = yield* responseLine(3, "claim_inspect_input");
+  yield* verifyCompiledClaimInspection(inspectionLine);
   yield* Effect.logInfo("COMPILED_SMOKE_OK", {
     discover: discover.result._meta[SERVER_INFO_META_KEY].name,
     toolCount: names.length,

@@ -52,6 +52,9 @@
     },
     {
       "path": "../../tooling/test-kit/test-utils/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/capability/nlp-processing/tsconfig.json"
     }
   ]
 }

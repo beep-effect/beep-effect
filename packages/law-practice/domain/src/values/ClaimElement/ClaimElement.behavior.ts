@@ -28,6 +28,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import { qualifyClaimInput } from "../PatentDocument/PatentDocument.normalizer.ts";
+import { compileClaimClauseRoles } from "./ClaimClauseRole.behavior.ts";
+import { ClaimBoundRolePlan, ClaimRoleDecomposition } from "./ClaimClauseRole.model.ts";
+import { projectClaimRoleTerms } from "./ClaimClauseRole.projection.ts";
 import { ClaimDecompositionError } from "./ClaimElement.errors.ts";
 import { ClaimInputQualification } from "./ClaimElement.input.model.ts";
 import { ClaimInputDecomposition } from "./ClaimElement.inspection.model.ts";
@@ -39,12 +42,15 @@ import {
   isExplicitAbbreviatedHead,
   isPluralityReferenceHead,
   isSingleModifiedHead,
+  isSourcePrefixAbbreviatedHead,
   pluralityReferenceContent,
 } from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
+import type { ClaimClauseRolePlan } from "./ClaimClauseRole.model.ts";
 import type { ClaimElementEdge, ClaimFunctionalPart } from "./ClaimElement.edge.model.ts";
 import type { ClaimInputCollection } from "./ClaimElement.input.model.ts";
 import type { ClaimElement, ClaimElementKind, ClaimTerm } from "./ClaimElement.model.ts";
+import type { ClaimLexicalEvidence, PreparedClaimInspection } from "./ClaimLexicalEvidence.model.ts";
 
 const $I = $LawPracticeDomainId.create("values/ClaimElement/ClaimElement.behavior");
 
@@ -986,14 +992,23 @@ const relationalNominalPlan = (
 };
 type LexicalGrammar = {
   readonly plan: NominalPlanner;
+  readonly functionalAt: (span: Span) => boolean;
+  readonly refineTerms: (span: Span, terms: ReadonlyArray<EncodedTerm>) => ReadonlyArray<EncodedTerm>;
   readonly ignoreAt: (
     tokens: ReadonlyArray<Span>,
     index: number,
     quotations: ReadonlyArray<Span>
   ) => O.Option<InspectionSourceRole>;
 };
-const strictLexicalGrammar: LexicalGrammar = { plan: legacyNominalPlan, ignoreAt: () => O.none() };
+const strictLexicalGrammar: LexicalGrammar = {
+  plan: legacyNominalPlan,
+  functionalAt: () => false,
+  ignoreAt: () => O.none(),
+  refineTerms: (_span, terms) => terms,
+};
 const inspectionLexicalGrammar: LexicalGrammar = {
+  functionalAt: () => false,
+  refineTerms: (_span, terms) => terms,
   plan: (tokens, index, headStart, quotations) =>
     O.getOrElse(possessiveNominalPlan(tokens, index, headStart, quotations), () =>
       O.getOrElse(relationalNominalPlan(tokens, headStart, quotations), () =>
@@ -1118,7 +1133,10 @@ const termsIn =
     });
     const tokens = matchesIn(tokenPattern)(entitySpan);
     const step = scanStep(claimText, tokens, matchesIn(quotedPhrasePattern)(entitySpan), grammar);
-    return A.getSomes(A.unfold(0, (index) => (index < A.length(tokens) ? O.some(step(index)) : O.none())));
+    return grammar.refineTerms(
+      entitySpan,
+      A.getSomes(A.unfold(0, (index) => (index < A.length(tokens) ? O.some(step(index)) : O.none())))
+    );
   };
 
 const elementOf =
@@ -1130,7 +1148,8 @@ const elementOf =
       anchor: anchorOf(span),
       kind:
         kind !== "preamble-subject" &&
-        (A.some(tokens, (_, index) => isPredicateToken(tokens, index)) ||
+        (grammar.functionalAt(span) ||
+          A.some(tokens, (_, index) => isPredicateToken(tokens, index)) ||
           O.isSome(
             Str.match(
               /\b(?:that|which|wherein|configured|adapted|coupled|connected|mounted|attached|wired|facing|having|includes|comprises|is|are|extends|extending|for)\b/iu
@@ -1159,7 +1178,8 @@ const elementOf =
 
 const antecedentEdges = (
   elements: ReadonlyArray<EncodedElement>,
-  ancestors: ReadonlyArray<EncodedElement> = []
+  ancestors: ReadonlyArray<EncodedElement> = [],
+  abbreviation: typeof isExplicitAbbreviatedHead = isExplicitAbbreviatedHead
 ): ReadonlyArray<EncodedEdge> => {
   const located = A.flatMap(A.appendAll(elements, ancestors), (element: EncodedElement) =>
     A.map(element.terms, (term) => ({
@@ -1215,7 +1235,7 @@ const antecedentEdges = (
               )
           );
       const exact = A.filter(eligible, ({ term }) => term.head === referring.term.head);
-      const abbreviated = A.filter(eligible, ({ term }) => isExplicitAbbreviatedHead(referring.term.head)(term.head));
+      const abbreviated = A.filter(eligible, ({ term }) => abbreviation(referring.term.head)(term.head));
       const counted = A.filter(eligible, ({ term }) => isCountedHead(referring.term.head)(term.head));
       const modified = A.filter(eligible, ({ term }) => isSingleModifiedHead(referring.term.head)(term.head));
       // A unique exact earlier mention is a structural back-reference, even if its
@@ -1496,12 +1516,12 @@ const colonNodesOf = (root: string, segments: ReadonlyArray<Span>): ReadonlyArra
     return ColonScopeState.make({ nodes, stack: endsWithColon(header) ? A.append(stack, nodes.length - 1) : stack });
   }).nodes;
 const scopedElementOf =
-  (claimText: string, root: string) =>
+  (claimText: string, root: string, grammar: LexicalGrammar = inspectionLexicalGrammar) =>
   (node: ColonScopeNode): EncodedElement => {
     const element = elementOf(
       claimText,
       node.parent === root ? "limitation" : "sub-limitation",
-      inspectionLexicalGrammar
+      grammar
     )(node.path, node.header);
     return node.group
       ? {
@@ -1511,34 +1531,42 @@ const scopedElementOf =
         }
       : element;
   };
-const inspectionTreeInput: typeof treeInput = (claim, parts) => {
-  const root = `${claim.claimNumber}`;
-  const segments = A.filter(
-    bodySegments(claim, parts.body, splitInspectionBody),
-    (span) => !transparentColonFrame(span)
-  );
-  const nodes = colonNodesOf(root, segments);
-  const elements = A.prepend(
-    A.map(nodes, scopedElementOf(claim.claimText, root)),
-    elementOf(
-      claim.claimText,
-      "preamble-subject",
-      inspectionLexicalGrammar
-    )(root, pipe(parts.preamble, trimSpan, dropSuffix([","]), trimSpan))
-  );
-  return assembleTree(
-    claim,
-    elements,
-    A.map(nodes, ({ path, parent }): EncodedEdge => ({ kind: "part-of", child: path, parent }))
-  );
-};
+const inspectionTreeInputFor =
+  (grammar: LexicalGrammar): typeof treeInput =>
+  (claim, parts) => {
+    const root = `${claim.claimNumber}`;
+    const segments = A.filter(
+      bodySegments(claim, parts.body, splitInspectionBody),
+      (span) => !transparentColonFrame(span)
+    );
+    const nodes = colonNodesOf(root, segments);
+    const elements = A.prepend(
+      A.map(nodes, scopedElementOf(claim.claimText, root, grammar)),
+      elementOf(
+        claim.claimText,
+        "preamble-subject",
+        grammar
+      )(root, pipe(parts.preamble, trimSpan, dropSuffix([","]), trimSpan))
+    );
+    return assembleTree(
+      claim,
+      elements,
+      A.map(nodes, ({ path, parent }): EncodedEdge => ({ kind: "part-of", child: path, parent }))
+    );
+  };
+
+const inspectionTreeInput = inspectionTreeInputFor(inspectionLexicalGrammar);
 
 const decodeTree = S.decodeEffect(ClaimElementTree);
 
 const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
   claim: PatentClaim,
   claims: ReadonlyArray<PatentClaim>,
-  constructTree: typeof treeInput
+  constructTree: typeof treeInput,
+  resolveReferences: (
+    elements: ReadonlyArray<EncodedElement>,
+    ancestors: ReadonlyArray<EncodedElement>
+  ) => ReadonlyArray<EncodedEdge> = antecedentEdges
 ): Effect.fn.Return<ClaimElementTree, ClaimDecompositionError> {
   const claimNumber = claim.claimNumber;
   const parts = yield* Effect.fromOption(locateParts(claim), () =>
@@ -1585,7 +1613,7 @@ const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
         onSome: (located) => constructTree(candidate, located).elements,
       })
   );
-  const antecedents = antecedentEdges(input.elements, ancestors);
+  const antecedents = resolveReferences(input.elements, ancestors);
   const bodyDependencies = A.flatMap(antecedents, (edge): ReadonlyArray<EncodedEdge> => {
     if (
       edge.kind !== "antecedent" ||
@@ -1772,6 +1800,26 @@ export const decomposeClaim: {
   ) satisfies ClaimElementDecomposer
 );
 
+const inputDecomposition =
+  (
+    claims: ReadonlyArray<PatentClaim>,
+    construct: typeof inspectionTreeInput,
+    resolve: (
+      elements: ReadonlyArray<EncodedElement>,
+      ancestors: ReadonlyArray<EncodedElement>
+    ) => ReadonlyArray<EncodedEdge> = antecedentEdges
+  ) =>
+  (qualification: ClaimInputQualification): Effect.Effect<ClaimInputDecomposition> => {
+    if (!ClaimInputQualification.guards["context-ready"](qualification))
+      return Effect.succeed(ClaimInputDecomposition.cases.unchecked.make({ qualification }));
+    return decomposeInContext(qualification.claim, claims, construct, resolve).pipe(
+      Effect.map((tree) => ClaimInputDecomposition.cases.decomposed.make({ qualification, tree })),
+      Effect.catchTag("ClaimDecompositionError", (cause) =>
+        Effect.succeed(ClaimInputDecomposition.cases["decomposition-failed"].make({ qualification, cause }))
+      )
+    );
+  };
+
 /**
  * Decompose every eligible source record while retaining every unchecked record.
  *
@@ -1798,15 +1846,91 @@ export const decomposeClaimInput = Effect.fn("ClaimElement.decomposeClaimInput")
 ): Effect.fn.Return<ReadonlyArray<ClaimInputDecomposition>> {
   const qualifications = yield* qualifyClaimInput(input);
   const claims = A.map(A.filter(qualifications, ClaimInputQualification.guards["context-ready"]), ({ claim }) => claim);
-  return yield* Effect.forEach(qualifications, (qualification): Effect.Effect<ClaimInputDecomposition> => {
-    if (!ClaimInputQualification.guards["context-ready"](qualification)) {
-      return Effect.succeed(ClaimInputDecomposition.cases.unchecked.make({ qualification }));
-    }
-    return decomposeInContext(qualification.claim, claims, inspectionTreeInput).pipe(
-      Effect.map((tree) => ClaimInputDecomposition.cases.decomposed.make({ qualification, tree })),
-      Effect.catchTag("ClaimDecompositionError", (cause) =>
-        Effect.succeed(ClaimInputDecomposition.cases["decomposition-failed"].make({ qualification, cause }))
-      )
+  return yield* Effect.forEach(qualifications, inputDecomposition(claims, inspectionTreeInput));
+});
+
+const projectedClaimInput = (
+  claim: PatentClaim,
+  plan: ClaimClauseRolePlan
+): O.Option<ReturnType<typeof inspectionTreeInput>> => {
+  const parts = locateParts(claim);
+  if (O.isNone(parts)) return O.none();
+  let remaining = 262_144;
+  const charge = (amount: number): boolean => {
+    remaining -= amount;
+    return remaining >= 0;
+  };
+  const grammar: LexicalGrammar = {
+    ...inspectionLexicalGrammar,
+    functionalAt: (span) =>
+      charge(plan.predicates.length) &&
+      A.some(
+        plan.predicates,
+        (predicate) =>
+          predicate.kind !== "adjunct" &&
+          predicate.kind !== "auxiliary-head" &&
+          predicate.kind !== "possession" &&
+          predicate.anchor.startChar >= span.start &&
+          predicate.anchor.endChar <= span.start + span.text.length
+      ),
+    refineTerms: (span, terms) => O.getOrElse(projectClaimRoleTerms(plan, anchorOf(span), terms, charge), () => terms),
+  };
+  const candidate = inspectionTreeInputFor(grammar)(claim, parts.value);
+  return remaining >= 0 ? O.some(candidate) : O.none();
+};
+const boundedSourceEvidence = (
+  prepared: PreparedClaimInspection,
+  evidence: ReadonlyArray<ClaimLexicalEvidence>
+): ReadonlyArray<ClaimLexicalEvidence> => (evidence.length * prepared.qualifications.length <= 262_144 ? evidence : []);
+
+/**
+ * Decompose prepared records with atomic source roles, preserving unavailable records.
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const decomposePreparedClaimRoles = Effect.fn("ClaimElement.decomposePreparedRoles")(function* (
+  prepared: PreparedClaimInspection,
+  evidence: ReadonlyArray<ClaimLexicalEvidence>
+) {
+  const claims = A.map(
+    A.filter(prepared.qualifications, ClaimInputQualification.guards["context-ready"]),
+    ({ claim }) => claim
+  );
+  let inputs = HashMap.empty<number, ReturnType<typeof inspectionTreeInput>>();
+  const plans = A.empty<ClaimBoundRolePlan>();
+  const boundedEvidence = boundedSourceEvidence(prepared, evidence);
+  for (const qualification of prepared.qualifications) {
+    if (!ClaimInputQualification.guards["context-ready"](qualification)) continue;
+    const claim = qualification.claim;
+    const facts = A.filter(
+      boundedEvidence,
+      (fact) =>
+        fact.sourceKey === prepared.input.sourceKey &&
+        fact.sourceOrdinal === qualification.record.sourceOrdinal &&
+        fact.qualifiedText === claim.claimText
     );
-  });
+    const plan = O.flatMap(facts.length === 1 ? A.head(facts) : O.none(), (fact) =>
+      compileClaimClauseRoles(claim, fact)
+    );
+    const candidate = O.flatMap(plan, (value) => projectedClaimInput(claim, value));
+    if (O.isNone(plan) || O.isNone(candidate)) continue;
+    inputs = HashMap.set(inputs, claim.claimNumber, candidate.value);
+    plans.push(ClaimBoundRolePlan.make({ claimNumber: claim.claimNumber, plan: plan.value }));
+  }
+  const construct: typeof inspectionTreeInput = (claim, parts) =>
+    O.getOrElse(HashMap.get(inputs, claim.claimNumber), () => inspectionTreeInput(claim, parts));
+  const enhancedRoots = HashSet.fromIterable(A.map(plans, ({ claimNumber }) => `${claimNumber}`));
+  const sourceAbbreviation: typeof isExplicitAbbreviatedHead = (head) => (candidate) =>
+    isExplicitAbbreviatedHead(head)(candidate) || isSourcePrefixAbbreviatedHead(head)(candidate);
+  const resolve = (elements: ReadonlyArray<EncodedElement>, ancestors: ReadonlyArray<EncodedElement>) =>
+    antecedentEdges(
+      elements,
+      ancestors,
+      O.exists(A.head(elements), ({ path }) => HashSet.has(enhancedRoots, path))
+        ? sourceAbbreviation
+        : isExplicitAbbreviatedHead
+    );
+  const decompositions = yield* Effect.forEach(prepared.qualifications, inputDecomposition(claims, construct, resolve));
+  return ClaimRoleDecomposition.make({ decompositions, plans });
 });

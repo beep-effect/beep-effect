@@ -5,10 +5,10 @@ import {
   ClaimInputInspection,
 } from "@beep/law-practice-domain/values/ClaimElement";
 import { PatentNumber } from "@beep/law-practice-domain/values/PatentNumber";
+import { ClaimInspectionWithLexicalEvidenceLive } from "@beep/law-practice-server/ClaimInspection";
 import { UsptoClaimInputsLive } from "@beep/law-practice-server/UsptoClaims";
 import {
   ClaimInspection,
-  ClaimInspectionLive,
   ClaimInspectionPage,
   ClaimInspectionPageRequest,
   PublishedClaimInspectionReport,
@@ -368,12 +368,12 @@ const program = Effect.gen(function* () {
           ],
         });
         const transport = replayTransport(metadata, alias, xml);
-        const live = ClaimInspectionLive.pipe(
-          Layer.provide(UsptoClaimInputsLive),
+        const replayInputs = UsptoClaimInputsLive.pipe(
           Layer.provide(BunCrypto.layer),
           Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({}))),
           Layer.provide(transport)
         );
+        const live = ClaimInspectionWithLexicalEvidenceLive.pipe(Layer.provide(replayInputs));
         const bundle = yield* Effect.gen(function* () {
           const context = yield* Layer.build(live);
           const acquired = yield* ClaimInspection.use((service) =>

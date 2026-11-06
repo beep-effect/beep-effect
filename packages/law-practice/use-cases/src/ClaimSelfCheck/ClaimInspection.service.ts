@@ -12,6 +12,7 @@ import { ClaimInspectionError } from "./ClaimInspection.errors.ts";
 import { PublishedClaimInspectionReport } from "./ClaimInspection.schemas.ts";
 import { UsptoClaimInputs } from "./ClaimSelfCheck.ports.ts";
 import type { ClaimInputCollection, ClaimInputInspectionReport } from "@beep/law-practice-domain/values/ClaimElement";
+import type { UsptoClaimInputsShape } from "./ClaimSelfCheck.ports.ts";
 import type { UsptoClaimSource } from "./ClaimSelfCheck.schemas.ts";
 
 const $I = $LawPracticeUseCasesId.create("ClaimSelfCheck/ClaimInspection.service");
@@ -66,8 +67,25 @@ export const ClaimInspectionLive: Layer.Layer<ClaimInspection, never, UsptoClaim
   ClaimInspection,
   Effect.gen(function* () {
     const acquisition = yield* UsptoClaimInputs;
-    return ClaimInspection.of({
-      inspect: Effect.fn("ClaimInspection.inspect")(inspectClaimInput),
+    return claimInspectionService(Effect.fn("ClaimInspection.inspect")(inspectClaimInput))(acquisition);
+  })
+);
+
+/**
+ * Bind one supplied inspection operation to the same failure-preserving published acquisition path.
+ * @example
+ * ```ts
+ * import { claimInspectionService } from "@beep/law-practice-use-cases/ClaimSelfCheck"
+ * console.log(typeof claimInspectionService) // function
+ * ```
+ * @category services
+ * @since 0.0.0
+ */
+export const claimInspectionService =
+  (inspect: ClaimInspectionShape["inspect"]) =>
+  (acquisition: UsptoClaimInputsShape): ClaimInspectionShape =>
+    ClaimInspection.of({
+      inspect,
       inspectPublished: Effect.fn("ClaimInspection.inspectPublished")(function* (source: UsptoClaimSource) {
         const acquired = yield* acquisition.inputs(source).pipe(
           Effect.mapError((cause) =>
@@ -78,9 +96,7 @@ export const ClaimInspectionLive: Layer.Layer<ClaimInspection, never, UsptoClaim
             })
           )
         );
-        const report = yield* inspectClaimInput(acquired.input);
+        const report = yield* inspect(acquired.input);
         return PublishedClaimInspectionReport.make({ source: acquired, report });
       }),
     });
-  })
-);

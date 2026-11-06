@@ -9,7 +9,6 @@ import { DuckDb } from "@beep/duckdb";
 import { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import {
   ClaimInspection,
-  ClaimInspectionLive,
   ClaimInspectionPageRequest,
   ClaimSelfCheck,
   ClaimSelfCheckLive,
@@ -50,6 +49,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { SqlClient as SqlClientService } from "effect/sql/SqlClient";
+import { ClaimInspectionWithLexicalEvidenceLive } from "./ClaimInspection/ClaimInspection.layer.ts";
 import { lookupPracticeKgCorrespondents } from "./PracticeKg.correspondents.ts";
 import { PracticeKgBundle } from "./PracticeKg.host.ts";
 import { lookupPracticeKgMatters } from "./PracticeKg.matters.ts";
@@ -618,7 +618,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
     )
   ),
   Layer.provide(
-    ClaimInspectionLive.pipe(
+    ClaimInspectionWithLexicalEvidenceLive.pipe(
       Layer.provide(
         Layer.succeed(UsptoClaimInputs, {
           inputs: Effect.fn("ClaimInspectionLocal.publicInputsUnavailable")(() =>

@@ -38,6 +38,7 @@
     "./layer": "./src/Layer.ts",
     "./CandorPromotionGate": "./src/CandorPromotionGate/index.ts",
     "./CandorRecord": "./src/CandorRecord/index.ts",
+    "./ClaimInspection": "./src/ClaimInspection/index.ts",
     "./DocketIntake": "./src/DocketIntake/index.ts",
     "./LegalPositionRecord": "./src/LegalPositionRecord/index.ts",
     "./DocumentIdentification": "./src/DocumentIdentification/index.ts",
@@ -85,6 +86,7 @@
     "@beep/tika": "workspace:^",
     "@beep/uspto": "workspace:^",
     "@beep/utils": "workspace:^",
+    "@beep/wink": "workspace:^",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },

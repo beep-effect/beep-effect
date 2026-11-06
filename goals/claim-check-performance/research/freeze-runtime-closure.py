@@ -119,6 +119,33 @@ def resolution_metadata(root, paths):
     return result
 
 
+LEXICAL_ASSETS = "packages/law-practice/server/src/ClaimInspection/lexical-assets.json"
+
+
+def pinned_lexical_assets(root):
+    """Bind fixed installed POS/lemma assets that a JS static closure cannot infer."""
+    manifest_bytes = (root / LEXICAL_ASSETS).read_bytes()
+    manifest = json.loads(manifest_bytes)
+    paths = {LEXICAL_ASSETS}
+    inventory = []
+    for package, binding in sorted(manifest.items()):
+        package_file = pathlib.Path(run(root, "bun", "--eval",
+            "console.log(require.resolve(process.argv[1]+'/package.json'))", package).decode().strip())
+        package_root = package_file.parent
+        metadata = json.loads(package_file.read_bytes())
+        if metadata["version"] != binding["version"]:
+            raise ValueError(f"Pinned lexical package version differs: {package}")
+        for asset in sorted(binding["runtimeFiles"], key=lambda item: item["path"]):
+            relative, expected = asset["path"], asset["sha256"]
+            path = package_root / relative
+            if sha(path.read_bytes()) != expected:
+                raise ValueError(f"Pinned lexical asset hash mismatch: {package}/{relative}")
+            key = path_key(root, path)
+            paths.add(key)
+            inventory.append({"package": package, "path": key, "relativePath": relative, "sha256": expected})
+    return paths, {"manifest": LEXICAL_ASSETS, "manifestSha256": sha(manifest_bytes), "files": inventory}
+
+
 def immutable_binding(path):
     return (path in ("bun.lock", ".bun-version") or path.endswith("/Structural.ts")
             or path.startswith(f"{PACKET}/") and path.endswith("freeze.json")
@@ -139,6 +166,10 @@ def verify(root, freeze, archive=None):
             or str(bun_path) != runtime["bunExecutablePath"]
             or sha(bun_path.read_bytes()) != runtime["bunExecutableSha256"]):
         raise ValueError("Installed Bun identity differs from the captured runtime")
+    if "lexicalAssets" in runtime:
+        _, actual_assets = pinned_lexical_assets(root)
+        if actual_assets != runtime["lexicalAssets"]:
+            raise ValueError("Pinned lexical asset inventory differs from captured activation")
     for row in document["files"]:
         data = file_at(root, row["path"]).read_bytes()
         if sha(data) != row["sha256"]:
@@ -157,7 +188,8 @@ def capture(root, baseline_path, output):
     if XML not in inputs or RUNNER not in inputs:
         raise ValueError("Runtime closure omitted its entrypoint or XML decoder")
     inherited = {row["path"]: row["sha256"] for row in baseline["files"]}
-    paths = inputs | set(inherited) | resolution_metadata(root, inputs)
+    asset_paths, lexical_assets = pinned_lexical_assets(root)
+    paths = inputs | set(inherited) | resolution_metadata(root, inputs) | asset_paths
     captured = {p: file_at(root, p).read_bytes() for p in sorted(paths)}
     for path, expected in inherited.items():
         if immutable_binding(path) and sha(captured[path]) != expected:
@@ -185,6 +217,7 @@ def capture(root, baseline_path, output):
         "inheritedMetadata": bindings,
         "originalPreservation": preservation,
         "runtimeClosure": {
+            "lexicalAssets": lexical_assets,
             "entrypoint": RUNNER, "bunVersion": actual_version,
             "bunExecutablePath": str(bun_path),
             "bunExecutableSha256": sha(bun_path.read_bytes()),

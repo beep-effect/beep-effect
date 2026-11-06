@@ -5,7 +5,6 @@
  * @packageDocumentation
  */
 
-import * as NodeModule from "node:module";
 import { $WinkId } from "@beep/identity";
 import { A } from "@beep/utils";
 import * as Clock from "effect/Clock";
@@ -19,10 +18,9 @@ import * as S from "effect/Schema";
 import { WinkEngineError, WinkEntityError, WinkTokenizationError } from "./Wink.errors.ts";
 import { WinkEngineCustomEntities } from "./Wink.models.ts";
 import { observeWinkWorkflow, textLengthAttribute } from "./WinkObservability.ts";
-import type { AsHelpers, ItemToken, ItsHelpers, Model, Document as WinkDocument, WinkMethods } from "wink-nlp";
+import type { AsHelpers, ItemToken, ItsHelpers, Document as WinkDocument, WinkMethods } from "wink-nlp";
 
 const $I = $WinkId.create("Wink/WinkEngine");
-const require = NodeModule.createRequire(import.meta.url);
 
 type WinkEngineShape = {
   readonly as: Effect.Effect<AsHelpers, WinkEngineError>;
@@ -151,11 +149,24 @@ export type WinkEngineRuntimeState = {
   readonly nlp: WinkMethods;
 };
 
-const loadWinkRuntime = (): WinkMethods => {
-  const winkNlp: typeof import("wink-nlp").default = require("wink-nlp");
-  const model: Model = require("wink-eng-lite-web-model");
-  return winkNlp(model);
-};
+// Literal imports keep the fixed assets discoverable to native bundlers while
+// loading only when this effect is initialized. Expected import/model failures
+// retain the existing typed engine error boundary.
+const initializationError = (cause: unknown): WinkEngineError => WinkEngineError.fromCause(cause, "initialize");
+const loadWinkRuntime = Effect.all(
+  [
+    Effect.tryPromise({ try: () => import("wink-nlp"), catch: initializationError }),
+    Effect.tryPromise({ try: () => import("wink-eng-lite-web-model"), catch: initializationError }),
+  ],
+  { concurrency: 2 }
+).pipe(
+  Effect.flatMap(([engine, model]) =>
+    Effect.try({
+      try: () => engine.default(model.default),
+      catch: initializationError,
+    })
+  )
+);
 
 const nextInstanceId = (nowMs: number, counter: number): InstanceId =>
   InstanceId.make(`wink-engine-${nowMs}-${counter}`);
@@ -200,10 +211,7 @@ const collectTokens = (state: WinkEngineRuntimeState, text: string): Array<ItemT
 };
 
 const makeWinkEngine = Effect.gen(function* () {
-  const nlp = yield* Effect.try({
-    try: loadWinkRuntime,
-    catch: (cause) => WinkEngineError.fromCause(cause, "initialize"),
-  });
+  const nlp = yield* loadWinkRuntime;
   const instanceCounterRef = yield* Ref.make(0);
   const initialTimeMs = yield* Clock.currentTimeMillis;
   const stateRef = yield* Ref.make<WinkEngineRuntimeState>({
