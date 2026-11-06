@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "claim-performance-runtime-replay/v1",
+  "implementationDigest": "5ea2d963e81726d5496afb20515365578fce24a3d62937ef13ba7a5d295403fd",
+  "resultSha256": "1305e9531be4c385589d3405293cb1e7b162ba74ecd7876b4c8bb9e5f9748bff",
+  "referenceSelectionDigest": "ffcffd914a33dbabbe6f878e375bf6d9d41f9f30487e835d7061760b1593b8ff",
+  "sourceSelectionDigest": "75c4dc3e3d4accf873b90f5fb2c757941a1d57ea97ad530a8700a4e19668388a",
+  "claims": 538,
+  "strict": 41,
+  "parsed": 537,
+  "abstained": 455,
+  "all538RowsEqualProductNominal003": true,
+  "all60ServiceReportsByteIdentical": true,
+  "preservation": {
+    "filesChecked": 1213,
+    "originalPathFilesChecked": 1210,
+    "historicalRunnerArtifactsChecked": 3,
+    "activeRunners": [
+      {
+        "path": "packages/law-practice/server/test/evaluation/allowed.main.ts",
+        "sha256": "d774701ac7e444ce165d79d28535a9a556388c515f5859809abf2359fa1b0094"
+      },
+      {
+        "path": "packages/law-practice/server/test/evaluation/iprally-smoke.main.ts",
+        "sha256": "041e4c9ed71c372cc91951d6707c61640958ab490672efbf7d02c3e96bec0813"
+      },
+      {
+        "path": "packages/law-practice/server/test/evaluation/positive.main.ts",
+        "sha256": "061c8a578fca133ca7da71595271568906b2ff474664f6c2e31b60920a607d03"
+      }
+    ],
+    "changed": [],
+    "passingClaimsProtected": 37,
+    "lost": [],
+    "strictMatches": 41,
+    "retentionEvaluated": true,
+    "preserved": true
+  },
+  "privateOutput": "product-runtime-nominal-001",
+  "independentCorrectnessEstablished": false
+}

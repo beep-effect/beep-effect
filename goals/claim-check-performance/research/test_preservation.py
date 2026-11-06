@@ -69,5 +69,65 @@ class PreservationTests(unittest.TestCase):
         self.assertIn(row["originalPath"], report["changed"])
 
 
+class GeneratedMetadataTests(PreservationTests):
+    def setUp(self):
+        super().setUp()
+        self.metadata_path = pathlib.Path("goals/claim-check-performance/research/preservation-generated-metadata-addendum.json")
+        self.metadata_bytes = (REPO / self.metadata_path).read_bytes()
+        self.metadata = json.loads(self.metadata_bytes)
+        self.write(self.metadata_path, self.metadata_bytes)
+        row = self.metadata["mappings"][0]
+        for key in ("originalPath", "archivePath"):
+            self.write(row[key], (REPO / row[key]).read_bytes())
+        self.freeze["files"].append({"path": row["originalPath"], "sha256": row["historicalSha256"]})
+        active = json.loads((REPO / row["originalPath"]).read_text())
+        for report in active["researchReports"]:
+            self.write(pathlib.Path("goals/claim-element-antecedent-check") / report, b"")
+
+    def test_exact_generated_metadata_and_historical_archive_pass(self):
+        report = verifier.verify(self.root, self.freeze)
+        self.assertTrue(report["preserved"])
+        self.assertEqual(report["historicalGeneratedMetadataArtifactsChecked"], 1)
+
+    def test_active_generated_metadata_tamper_fails(self):
+        row = self.metadata["mappings"][0]
+        self.write(row["originalPath"], b"changed active manifest")
+        with self.assertRaisesRegex(ValueError, "metadata digest"):
+            verifier.verify(self.root, self.freeze)
+
+    def test_original_metadata_archive_tamper_fails(self):
+        self.write(self.metadata["mappings"][0]["archivePath"], b"changed original")
+        with self.assertRaisesRegex(ValueError, "metadata digest"):
+            verifier.verify(self.root, self.freeze)
+
+    def test_self_updated_active_digest_cannot_change_a_status_field(self):
+        row = self.metadata["mappings"][0]
+        active = json.loads((self.root / row["originalPath"]).read_text())
+        active["status"] = "completed-retained"
+        raw = json.dumps(active).encode()
+        self.write(row["originalPath"], raw)
+        row["activeSha256"] = hashlib.sha256(raw).hexdigest()
+        self.write(self.metadata_path, json.dumps(self.metadata).encode())
+        with self.assertRaisesRegex(ValueError, "addendum.*digest"):
+            verifier.verify(self.root, self.freeze)
+
+    def test_extra_mapping_or_archive_traversal_cannot_self_authorize(self):
+        for change in ("duplicate", "traversal"):
+            with self.subTest(change=change):
+                altered = json.loads(self.metadata_bytes)
+                if change == "duplicate":
+                    altered["mappings"].append(copy.deepcopy(altered["mappings"][0]))
+                else:
+                    altered["mappings"][0]["archivePath"] = "../outside"
+                self.write(self.metadata_path, json.dumps(altered).encode())
+                with self.assertRaisesRegex(ValueError, "addendum.*digest"):
+                    verifier.verify(self.root, self.freeze)
+
+    def test_new_directory_entry_requires_new_reviewed_projection(self):
+        self.write("goals/claim-element-antecedent-check/research/new-unreviewed.json", b"{}")
+        with self.assertRaisesRegex(ValueError, "directory projection"):
+            verifier.verify(self.root, self.freeze)
+
+
 if __name__ == "__main__":
     unittest.main()
