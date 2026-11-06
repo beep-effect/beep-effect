@@ -6,6 +6,8 @@
       "inputs": [
         "$TURBO_EXTENDS$",
         "$TURBO_ROOT$/turbo.json",
+        "$TURBO_ROOT$/goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
+        "$TURBO_ROOT$/goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
         "$TURBO_ROOT$/goals/time-to-certainty/research/economics.json",
         "$TURBO_ROOT$/goals/time-to-certainty/research/gate-order-handoff.json",
         "$TURBO_ROOT$/packages/architecture-lab/**",
@@ -29,8 +31,50 @@
       "inputs": [
         "$TURBO_EXTENDS$",
         "$TURBO_ROOT$/turbo.json",
+        "$TURBO_ROOT$/goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
+        "$TURBO_ROOT$/goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
         "$TURBO_ROOT$/goals/time-to-certainty/research/economics.json",
-        "$TURBO_ROOT$/goals/time-to-certainty/research/gate-order-handoff.json"
+        "$TURBO_ROOT$/goals/time-to-certainty/research/gate-order-handoff.json",
+        "$TURBO_ROOT$/packages/architecture-lab/**",
+        "$TURBO_ROOT$/apps/architecture-lab-proof/**",
+        "$TURBO_ROOT$/packages/_internal/db-admin/**",
+        "!$TURBO_ROOT$/packages/architecture-lab/**/dist/**",
+        "!$TURBO_ROOT$/packages/architecture-lab/**/docs/**",
+        "!$TURBO_ROOT$/packages/architecture-lab/**/.turbo/**",
+        "!$TURBO_ROOT$/packages/architecture-lab/**/node_modules/**",
+        "!$TURBO_ROOT$/apps/architecture-lab-proof/**/dist/**",
+        "!$TURBO_ROOT$/apps/architecture-lab-proof/**/docs/**",
+        "!$TURBO_ROOT$/apps/architecture-lab-proof/**/.turbo/**",
+        "!$TURBO_ROOT$/apps/architecture-lab-proof/**/node_modules/**",
+        "!$TURBO_ROOT$/packages/_internal/db-admin/**/dist/**",
+        "!$TURBO_ROOT$/packages/_internal/db-admin/**/docs/**",
+        "!$TURBO_ROOT$/packages/_internal/db-admin/**/.turbo/**",
+        "!$TURBO_ROOT$/packages/_internal/db-admin/**/node_modules/**"
+      ]
+    },
+    "coverage": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/turbo.json",
+        "$TURBO_ROOT$/goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
+        "$TURBO_ROOT$/goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
+        "$TURBO_ROOT$/goals/time-to-certainty/research/economics.json",
+        "$TURBO_ROOT$/goals/time-to-certainty/research/gate-order-handoff.json",
+        "$TURBO_ROOT$/packages/architecture-lab/**",
+        "$TURBO_ROOT$/apps/architecture-lab-proof/**",
+        "$TURBO_ROOT$/packages/_internal/db-admin/**",
+        "!$TURBO_ROOT$/packages/architecture-lab/**/dist/**",
+        "!$TURBO_ROOT$/packages/architecture-lab/**/docs/**",
+        "!$TURBO_ROOT$/packages/architecture-lab/**/.turbo/**",
+        "!$TURBO_ROOT$/packages/architecture-lab/**/node_modules/**",
+        "!$TURBO_ROOT$/apps/architecture-lab-proof/**/dist/**",
+        "!$TURBO_ROOT$/apps/architecture-lab-proof/**/docs/**",
+        "!$TURBO_ROOT$/apps/architecture-lab-proof/**/.turbo/**",
+        "!$TURBO_ROOT$/apps/architecture-lab-proof/**/node_modules/**",
+        "!$TURBO_ROOT$/packages/_internal/db-admin/**/dist/**",
+        "!$TURBO_ROOT$/packages/_internal/db-admin/**/docs/**",
+        "!$TURBO_ROOT$/packages/_internal/db-admin/**/.turbo/**",
+        "!$TURBO_ROOT$/packages/_internal/db-admin/**/node_modules/**"
       ]
     }
   }
