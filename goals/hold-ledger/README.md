@@ -41,7 +41,7 @@ ledger, `beep holds lint` in the cheap gate) merged in #2450; slice 3
 [hold ledger runbook](../../docs/runbooks/hold-ledger.md)) merged in #2453. The
 first two ledger-driven unpins (#2462 statelyai, #2465 jsdom) proved the loop
 end to end. #2453 was pushed without a Yeet publish verdict, so this docs-only
-final PR carries the `completed-retained` proposal and the gating verdict; the
+final PR (#2755) carries the `completed-retained` proposal and the gating verdict; the
 closeout reflection is `history/reflections/2026-11-01-claude.md`.
 
 ## Latest Evidence
