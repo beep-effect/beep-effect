@@ -10,7 +10,7 @@ Status: `pending`
 | --- | --- | --- | --- |
 | P0 Schema | pending | Verdict row and merge-output schemas; confirm the ledger is on `main`. | Schemas merged or staged; ledger SHA recorded. |
 | P1 Panel | pending | Three separate sessions judge every row; argv recorded as a decision file. | Three complete verdict files committed. |
-| P2 Merge and seed | pending | Deterministic merge, disagreement list, scaffold `explorations/harvested-alpha-2026-11` at `shape`. | Atlas regenerates and the seeded manifest reports stage `shape`. |
+| P2 Merge and seed | pending | Deterministic merge, disagreement list, scaffold a new exploration packet `harvested-alpha-2026-11` at `shape`. | Atlas regenerates and the seeded manifest reports stage `shape`. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 

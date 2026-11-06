@@ -2,7 +2,7 @@
 
 ## Objective
 
-Judge the harvest ledger with three separate provider sessions (Opus 5.5 high, Grok 4.7 xhigh, GPT-6.1 Sol medium) into row-keyed verdict JSONL, merge deterministically, and seed `explorations/harvested-alpha-2026-11` at stage `shape` so its MAP graduates the still-open alpha into concrete goals.
+Judge the harvest ledger with three separate provider sessions (Opus 5.5 high, Grok 4.7 xhigh, GPT-6.1 Sol medium) into row-keyed verdict JSONL, merge deterministically, and seed a new exploration packet `harvested-alpha-2026-11` at stage `shape` so its MAP graduates the still-open alpha into concrete goals.
 
 ## Non-Goals
 
@@ -26,8 +26,8 @@ Higher sources outrank lower sources when they conflict.
 ## Target Surfaces
 
 - `packages/tooling/tool/cli/src/commands/Goals/**`: verdict schema and `beep goals harvest merge` (or equivalent) if the merge is tooling, else a packet-local script under `research/`.
-- `explorations/packet-archive-and-alpha-harvest/research/harvest/` (verdict files, merge output).
-- New `explorations/harvested-alpha-2026-11/` scaffolded from `_template`.
+- the exploration's `research/harvest/` directory (verdict files, merge output).
+- New a new exploration packet `harvested-alpha-2026-11` scaffolded from `_template`.
 - `docs/runbooks/agent-pools.md` only if a route recipe is missing.
 
 ## Constraints
@@ -42,7 +42,7 @@ Higher sources outrank lower sources when they conflict.
 
 - [ ] Three schema-valid verdict JSONL files, one per model, each covering every ledger row.
 - [ ] A merge output with agreement counts, a disagreement list, and clusters ranked by leverage, committed beside the ledger.
-- [ ] `explorations/harvested-alpha-2026-11` exists at stage `shape`, passes the atlas regeneration and stage check below, and lists the clusters as candidate work.
+- [ ] a new exploration packet `harvested-alpha-2026-11` exists at stage `shape`, passes the atlas regeneration and stage check below, and lists the clusters as candidate work.
 - [ ] Decision file with the three launch argv lines and the Opus `high` ruling.
 - [ ] No unrelated refactors or formatting churn.
 
@@ -54,7 +54,7 @@ Higher sources outrank lower sources when they conflict.
 | Manifest JSON | `jq . goals/harvested-alpha-triage/ops/manifest.json` | Passes |
 | Whitespace | `git diff --check -- goals/harvested-alpha-triage` | Passes |
 | Verdict coverage | every ledger `id` appears once per model's verdict file | 3 × ledger row count |
-| Seeded packet | `bun run beep explore atlas --write && jq -e '.exploration.stage == "shape"' explorations/harvested-alpha-2026-11/ops/manifest.json` | Passes |
+| Seeded packet | `bun run beep explore atlas --write && jq -e '.exploration.stage == "shape"' the harvested-alpha-2026-11 exploration/ops/manifest.json` | Passes |
 
 ## Stop Conditions
 
@@ -75,7 +75,17 @@ generated from that directory and never edited by hand.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug harvested-alpha-triage`; add a `kind: decision` file there, never edit this block._
 
-_No decision files yet._
+### Panel pins: Opus 5.5 high, Grok 4.7 xhigh, GPT-6.1 Sol medium for ledger judging, 2026-11-06
+
+Operator ruling from the 2026-11-06 `/grill-with-docs` session (exploration
+`packet-archive-and-alpha-harvest`, DECISIONS.md "panel pins"): the three verdict
+sessions run as Opus 5.5 `high` (Agent tool child), Grok 4.7 `xhigh` (proxy route)
+and GPT-6.1 Sol `medium` (Codex). The Opus pin is lifted from the doctrine `medium`
+to `high` for this judging task only; launch argv is retained as effort evidence
+when P1 runs. Reviewer separation holds: no session sees another's verdicts before
+the deterministic merge.
+
+Reverse: Drop the Opus child back to the doctrine medium pin by rerunning the Opus verdict session at medium and re-merging; no other artifact depends on the effort
 
 <!-- beep:decisions:end -->
 
