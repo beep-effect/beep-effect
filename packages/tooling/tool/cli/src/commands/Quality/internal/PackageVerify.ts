@@ -403,6 +403,7 @@ const packageVerifyStepSpecs = (quick: boolean): ReadonlyArray<PackageVerifyStep
         PackageVerifyStepSpec.make({ step: "check", script: "beep:check" }),
       ]
     : [
+        PackageVerifyStepSpec.make({ step: "lint", script: "beep:lint" }),
         PackageVerifyStepSpec.make({ step: "audit", script: "audit" }),
         PackageVerifyStepSpec.make({ step: "docgen", script: "docgen" }),
       ];
@@ -753,9 +754,26 @@ const runPackageVerifyAtRoot = Effect.fn("PackageVerify.runPackageVerifyAtRoot")
   const workspaces = yield* collectWorkspaces(repoRoot);
   const changedFiles = O.isSome(packageName) ? A.empty<string>() : yield* collectPackageVerifyChangedFiles(repoRoot);
   const workspace = yield* selectPackageVerifyTargetForTesting({ changedFiles, packageName, repoRoot, workspaces });
+  // Only the serial full plan stops here; quick lint/check retain their pool.
+  let preflightFailed = false;
   const results = yield* Effect.forEach(
     packageVerifyStepSpecs(quick),
-    (spec) => runPackageVerifyStep(repoRoot, workspace, spec),
+    Effect.fnUntraced(function* (spec) {
+      if (preflightFailed) {
+        return PackageVerifyStepResult.make({
+          step: spec.step,
+          script: spec.script,
+          skipped: true,
+          ok: true,
+          durationMillis: 0,
+          exitCode: O.none(),
+          output: "(not run: package lint preflight failed)",
+        });
+      }
+      const result = yield* runPackageVerifyStep(repoRoot, workspace, spec);
+      if (!quick && spec.step === "lint" && !result.skipped && !result.ok) preflightFailed = true;
+      return result;
+    }),
     {
       concurrency: quick ? PACKAGE_VERIFY_STEP_CONCURRENCY : 1,
     }
@@ -777,6 +795,13 @@ const runPackageVerifyAtRoot = Effect.fn("PackageVerify.runPackageVerifyAtRoot")
 
 /**
  * Run package-local verification for a workspace package.
+ *
+ * **Details**
+ *
+ * Full verification first runs the package's existing `beep:lint` when available.
+ * A failed preflight skips audit and docgen; a passing or unavailable preflight
+ * retains the complete audit, including its final lint, followed by docgen.
+ * Quick mode keeps its concurrent lint and check plan.
  *
  * **Example** (Run quick package verify)
  *
@@ -858,7 +883,9 @@ export const recordPackageVerifyInboxForTesting = Effect.fn("PackageVerify.recor
       })
     );
   yield* Effect.forEach(
-    A.filter(report.results, (result) => !result.skipped),
+    // A successful full-mode preflight is early feedback, not proof that the
+    // encompassing audit (including its final lint) has succeeded.
+    A.filter(report.results, (result) => !result.skipped && (report.quick || result.step !== "lint" || !result.ok)),
     (result) => recordStep(result),
     { concurrency: 1, discard: true }
   );
