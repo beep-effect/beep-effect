@@ -39,13 +39,13 @@
       },
       {
         "number": 2755,
-        "role": "final"
+        "role": "supporting"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_hold-ledger-closeout-6db2731d5742/verdict.json",
+        "ref": ".beep/yeet/runs/docs_hold-ledger-refinal-PLACEHOLDER/verdict.json",
         "gating": true
       }
     ]
