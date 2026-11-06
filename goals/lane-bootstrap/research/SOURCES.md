@@ -31,6 +31,7 @@ None. No code is ported; patterns only.
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
 | none | — | reference-only | bare-repo worktree layout cited from docs and posts, nothing vendored |
+| max-sixty/worktrunk (`~/YeeBois/dev/worktrunk`, `6fdb42ab3`, 0.81.0) | MIT OR Apache-2.0 | patterns only, nothing vendored (see `research/worktrunk-evaluation.md`) | harness worktree hooks, local integration/conflict predicates, reflink seeding, prune min-age guard, branch shortcuts |
 
 ## 3. External research sources
 
@@ -42,6 +43,7 @@ None. No code is ported; patterns only.
 | pnpm, git worktrees | https://pnpm.io/git-worktrees | bare store + worktree layout |
 | noqta, git worktrees for parallel AI agents (2026) | https://noqta.tn/en/blog/git-worktrees-parallel-ai-coding-agents-guide-2026 | bare-repo pattern |
 | Augment Code, worktrees for parallel agent execution | https://www.augmentcode.com/guides/git-worktrees-parallel-ai-agent-execution | conflicts move to merge time |
+| Worktrunk docs (hooks, step, list, agent integration) | https://worktrunk.dev/llms.txt | evaluated 2026-11-06; verdict and harvested patterns in `research/worktrunk-evaluation.md` |
 
 All other claims are workstation measurements recorded in `RESEARCH.md`
 "Workstation Census" and "Deferred Items Resolved".

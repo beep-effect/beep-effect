@@ -38,7 +38,7 @@ P0 Research. Read `SPEC.md`, the exploration brief and map, then confirm scope a
 
 ## Latest Evidence
 
-Not started
+P0 research: `research/worktrunk-evaluation.md` (2026-11-06) evaluates Worktrunk, records the do-not-adopt verdict, and lands two decision files under `decisions/`.
 
 ## Notes
 

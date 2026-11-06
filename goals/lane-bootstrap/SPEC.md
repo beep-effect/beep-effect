@@ -73,6 +73,27 @@ Seeded from the exploration; entries here cover only decisions taken inside this
 | --- | --- | --- |
 | 2026-10-05 | Scope, non-goals and constraints inherited from the exploration brief, rabbit holes and no-gos. | `explorations/agent-fleet-layout/DECISIONS.md` |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug lane-bootstrap`; add a `kind: decision` file there, never edit this block._
+
+### Add local integration and would-conflict predicates to the fleet view, 2026-11-06
+
+Worktrunk computes two predicates per branch with no network: integrated (content already in the default branch via different history, checked with git merge-tree, cherry and patch-id) and would_conflict (a dry git merge-tree against the default branch); see research/worktrunk-evaluation.md, pattern 2. beep squash-merges every PR, so ancestry checks lie and the existing mergedAtHead verdict needs the forge. lane-bootstrap adds both predicates to beep worktree fleet rows; legacy-drain consumes integrated as an offline fallback for the drainable class and the base-conflict P0 inbox consumes would_conflict as an early signal. The forge check stays authoritative where it is available; the local predicates never alone authorize a deletion.
+
+Lane `lane-bootstrap-worktrunk`
+
+Reverse: Drop the two columns from worktree fleet and the drainable class falls back to the forge-backed mergedAtHead check alone.
+
+### Route harness-created worktrees through beep worktree add and remove, 2026-11-06
+
+Amends the exploration decision desktop-app-lanes (2026-10-05, adopt, never fight). Claude Code exposes WorktreeCreate and WorktreeRemove hook events, which Worktrunk's plugin uses to make isolation: worktree lanes through its own command (research/worktrunk-evaluation.md, pattern 1). lane-bootstrap wires the same events to beep worktree add and beep worktree remove so harness-created lanes land under the fleet lanes dir with a registry row from birth. Adoption on sight remains for lanes the hooks cannot reach: Codex worktrees, ad hoc siblings and lanes created before the hooks existed. Gate: confirm the installed Claude Code emits both events (a dry hook that logs its payload) before the wiring lands; if it does not, the original decision stands unchanged.
+
+Lane `lane-bootstrap-worktrunk`
+
+Reverse: Remove the WorktreeCreate and WorktreeRemove hooks from .claude/settings.json; the adoption pass keeps registering such lanes as adopted, so nothing else changes.
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

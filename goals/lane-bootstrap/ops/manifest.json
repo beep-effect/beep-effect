@@ -36,7 +36,10 @@
     "explorations/agent-fleet-layout/DECISIONS.md",
     "explorations/agent-fleet-layout/MAP.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/worktrunk-evaluation.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
