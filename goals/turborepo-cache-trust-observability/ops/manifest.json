@@ -85,6 +85,8 @@
     "research/docgen-launch-repair-checkpoint.json",
     "research/file-level-dependency-drift-2026-11-06.json",
     "research/fs-guards-directory-coverage-checkpoint.json",
+    "research/guarded-dependency-repeatability-2026-11-06.json",
+    "research/guarded-dependency-repeatability-2026-11-06.md",
     "research/hosted-producer-verifier-checkpoint.json",
     "research/inspection-governance-checkpoint.json",
     "research/inspection-routing-checkpoint-2026-11-02.json",

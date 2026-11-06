@@ -1,0 +1,200 @@
+{
+  "schemaVersion": "cache-dependency-file-detail-pair/v1",
+  "at": "2026-11-06T18:26:28.337380+00:00",
+  "comparablePairPassed": true,
+  "observations": [
+    {
+      "runId": 42269287143,
+      "sourceRevision": "df3ccd1b77aba565a72abd63c910ef3edde23929",
+      "dependencySha256": "165cc66fc16d1983c5148490b5b7cb9c5227045057d85690d2a19232e37c7499",
+      "receiptSha256": "5e63e6b6662dcaae4d0d5e26d2f4b1b63cb07dd140390a36ac46846c0268ed9c",
+      "diagnosticSeconds": 49.343,
+      "aggregateReportBytes": 3479551,
+      "runUrl": "https://github.com/beep-effect/beep-effect/actions/runs/42269287143",
+      "jobId": 128069343025,
+      "fileDetailsSummary": {
+        "group": "node-gyp",
+        "files": 330,
+        "kindCounts": {
+          "other": 272,
+          "python-source": 58
+        },
+        "encodedRowBytesBounded": 49617,
+        "entryLimit": 512,
+        "encodedBytesLimit": 131072
+      },
+      "artifacts": [
+        {
+          "id": 13529076573,
+          "name": "cache-producer-inspection-42269287143-1",
+          "archiveBytes": 2744611,
+          "archiveSha256": "5308c477c8bffa9b9d14b7688b5ef95dd01f557d749726c41d879fd010322035",
+          "reportBytes": 2744475,
+          "reportSha256": "e009dfc9ac2f0e8e539cbfeb69959ffeb9c35fb00f1246239676ad74d75a92ef",
+          "expiresAt": "2026-11-07T18:21:39Z"
+        },
+        {
+          "id": 13528513371,
+          "name": "cache-producer-dependencies-42269287143-1",
+          "archiveBytes": 735224,
+          "archiveSha256": "d2687b4546c47766a8237fce2c626f1324cf3b5828e7ac122f9fa98906726294",
+          "reportBytes": 735076,
+          "reportSha256": "0f0af65f25311ec97730ce9c1124349bf35b6d377aa98df22273768ab0271c1b",
+          "expiresAt": "2026-11-07T18:21:40Z"
+        }
+      ]
+    },
+    {
+      "runId": 42270163848,
+      "sourceRevision": "df3ccd1b77aba565a72abd63c910ef3edde23929",
+      "dependencySha256": "165cc66fc16d1983c5148490b5b7cb9c5227045057d85690d2a19232e37c7499",
+      "receiptSha256": "80cdc1d9b77fc6ee2c64727dcb93484b6e00e311547bb6392f8abe8592c151ec",
+      "diagnosticSeconds": 42.107,
+      "aggregateReportBytes": 3479551,
+      "runUrl": "https://github.com/beep-effect/beep-effect/actions/runs/42270163848",
+      "jobId": 128072352830,
+      "fileDetailsSummary": {
+        "group": "node-gyp",
+        "files": 330,
+        "kindCounts": {
+          "other": 272,
+          "python-source": 58
+        },
+        "encodedRowBytesBounded": 49617,
+        "entryLimit": 512,
+        "encodedBytesLimit": 131072
+      },
+      "artifacts": [
+        {
+          "id": 13529640063,
+          "name": "cache-producer-inspection-42270163848-1",
+          "archiveBytes": 2744611,
+          "archiveSha256": "12228ea2b549cc4c7cb522b1917818492e11f60224cbde08b01d2b183a51c9f9",
+          "reportBytes": 2744475,
+          "reportSha256": "e009dfc9ac2f0e8e539cbfeb69959ffeb9c35fb00f1246239676ad74d75a92ef",
+          "expiresAt": "2026-11-07T18:25:50Z"
+        },
+        {
+          "id": 13528259688,
+          "name": "cache-producer-dependencies-42270163848-1",
+          "archiveBytes": 735224,
+          "archiveSha256": "8251bc33d54130c0aa28c67a4a7bf1da10293b012bd5d78f5c065b7800e258c9",
+          "reportBytes": 735076,
+          "reportSha256": "522276b8aa366243ce54963f3297db1ba296377d2e922fbefa6ef351f809ec13",
+          "expiresAt": "2026-11-07T18:25:51Z"
+        }
+      ]
+    }
+  ],
+  "sourceDifferencePaths": [],
+  "all13ControlsAndResourceBoundsEqual": true,
+  "rawCanonicalDigestEqual": true,
+  "changedGroups": [],
+  "changedFiles": [],
+  "changedFileKindCounts": {},
+  "driftConfinedToFilesClassifiedPythonBytecode": false,
+  "bytecodeGenerationMechanismProven": false,
+  "digestsNormalizedOrFilesExcluded": false,
+  "scope": "Actual same-source dependency repeatability diagnosis only. A failed raw comparison remains failed. No producer approval, task qualification, signing, production/window or whole-goal acceptance.",
+  "guardPolicy": {
+    "job": "producer-inspect",
+    "name": "PYTHONDONTWRITEBYTECODE",
+    "value": "1"
+  },
+  "controls": [
+    {
+      "path": ".github/workflows/cache-producer-inspect.yml",
+      "sha256": "9b0fdc6777c67d070db99758b31002b0674437fbd0b5247ea6763535e783ca92",
+      "matchesHostedCandidate": true
+    },
+    {
+      "path": ".github/workflows/heavy.yml",
+      "sha256": "7a0194c225b15794abfc52684ed0e2baa7213bb35d6ac74b7237353b2b69a970",
+      "matchesHostedCandidate": true
+    },
+    {
+      "path": ".github/actions/setup-monorepo-ci/action.yml",
+      "sha256": "44262ad3cd003a8674568cc8a252ec28ccf9e4c9a5c8543f2126ef0c820fe22b",
+      "matchesHostedCandidate": true
+    },
+    {
+      "path": "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
+      "sha256": "5934f0861d1d908584706773c72514c100e28e1039a1b076f2b00b95af243c99",
+      "matchesHostedCandidate": true
+    },
+    {
+      "path": "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
+      "sha256": "c22565b6fdd9bfe8aeac4f88742e19546706e49f0fe1308dcf707fa8c5c0e6e1",
+      "matchesHostedCandidate": true
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+      "sha256": "6d11ef5065110bd491965ed92792037125edd3900cb7db268b3359a044be31a9",
+      "matchesHostedCandidate": true
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-workflow.test.ts",
+      "sha256": "926ec6c25270f04daed508236155c96696e0f0ceaaa846e1d22e4d7885f0b203",
+      "matchesHostedCandidate": true
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
+      "sha256": "9c66effc682e8d3e05de2c7c1af885497342e7230d9c7ce91fdc2c9441b5000b",
+      "matchesHostedCandidate": true
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.errors.ts",
+      "sha256": "c1a235549333a9dbe34e6a56830e4cb7e26b31b9f6436c49fe244f4eb4bdca03",
+      "matchesHostedCandidate": true
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts",
+      "sha256": "ee8a5dae274fb99d67837bdc1d63593a7d72eeac13c59f89e453d45d06f27c9e",
+      "matchesHostedCandidate": true
+    },
+    {
+      "path": "bun.lock",
+      "sha256": "740c3d10b7c1a6c93112852e49ab0f574ec836a077108b4138416110e56af268",
+      "matchesHostedCandidate": true
+    },
+    {
+      "path": "package.json",
+      "sha256": "738764eb820b7d9e2b532ce180420d2988196c9cede4e81c5c6de6a6388bd02f",
+      "matchesHostedCandidate": true
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-dependencies.test.ts",
+      "sha256": "a043702f07bf24d9579e1d75e50dbd4739f67488f4aef529c426ae0e814fa164",
+      "matchesHostedCandidate": true
+    }
+  ],
+  "bounds": {
+    "runnerJobsAtOnce": 1,
+    "jobMinutes": 10,
+    "diagnosticSeconds": 300,
+    "archivePasses": 2,
+    "archiveBytesPerPass": 6442450944,
+    "processMemoryMiB": 256,
+    "entriesPerPass": 600000,
+    "groupsPerPass": 4096,
+    "aggregateReportBytes": 4194304,
+    "retentionDays": 1
+  },
+  "sourceReaderBounds": {
+    "perFileBytes": 67108864,
+    "aggregateBytes": 1073741824,
+    "readers": 4,
+    "paths": 20000
+  },
+  "fileDetailBounds": {
+    "group": "node-gyp",
+    "regularFiles": 512,
+    "encodedBytes": 131072
+  },
+  "acceptedPreparationPr": 2782,
+  "acceptedPreparationMerge": "146e9b2847176bfcf00e1b7fd6517b8d1dd57274",
+  "originalFailedPair": "file-level-dependency-drift-2026-11-06.json",
+  "originalFailedPairRemainsFailed": true,
+  "authority": "Two actual serial same-source credential-free inspection observations only. No protected producer approval, task qualification, deployed signed reuse, observation-window or whole-goal acceptance.",
+  "privatePairReceiptSha256": "cffbceccca058bb7b08036cc918b4931a0106339855fc35c101d56e764fceff5"
+}
