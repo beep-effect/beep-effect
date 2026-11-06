@@ -1285,6 +1285,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the fixed-capture template adapter and shared reservation extraction together, retaining original corpora and every unfinished acceptance requirement.
 
+### Connect original wrap annotations through shared native workers, 2026-11-06
+
+Wrap now composes the original tag pattern through existing regex/XML workers, templates and assembly; skip/wrap share one span preparer. Captured regex timing selects annotation across preparation/compiler/binding/native ownership while extraction remains default. Twenty-seven regression tests pass in 43.01s, with actual Bun/Node exact outputs/refusals, XML traces, physical exits and released admission. Controlled Clock replacement/default deadline tests pass. Server checks, declarations, blocking laws and scoped Fallow pass with zero introduced findings. Full hosted replay is registered and pending. Warm-cache warning fidelity, custom annotators, final boundary translation/public engine and all eleven laws/four questions/fifteen proof rows remain open. See history/evidence/2026-11-06-annotation-wrap.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert wrap composition and the captured operation selector together, retaining all original corpora and every unfinished acceptance obligation.
+
 ### Qualify the pinned XML annotation balance kernel, 2026-11-06
 
 A small authored query links unchanged authenticated libxml2/converter/runtime archives and uses the shared restricted WASI host. All 300 original outcomes compare, including 57 no-angle fast paths and width-dependent surrogate pairs. Two builds are identical. Twenty XML/HTML kernel tests, package/declaration checks, blocking laws and scoped Fallow pass. This component is not installed in the live engine: typed worker/RPC framing and physical retirement remain required before production use. No new parser/process manager, divergence or completed accounting row is claimed. See history/evidence/2026-11-06-annotation-xml-kernel.md.

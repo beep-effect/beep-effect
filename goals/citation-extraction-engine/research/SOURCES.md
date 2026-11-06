@@ -270,3 +270,9 @@ the unchanged eyecite helper with an explicitly cold template cache per case.
 See [replacement-template evidence](../history/evidence/2026-11-06-annotation-template.md).
 This component proof does not establish native match execution, warm-cache
 warning behavior, full wrap dispatch, custom annotators or engine completion.
+
+The [native wrap evidence](../history/evidence/2026-11-06-annotation-wrap.md)
+uses the same original helper/pattern with actual Bun/Node regex and XML workers.
+Its separate 162-case original annotation corpus retains actual parser/helper
+observations and invalid-template results. Existing BSD-2-Clause/PSF notices
+apply; warm-cache warning and final engine qualification remain open.

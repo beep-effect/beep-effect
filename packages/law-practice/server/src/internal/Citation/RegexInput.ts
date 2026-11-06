@@ -180,8 +180,6 @@ export interface CitationPreparedRegexInput {
   readonly value: CitationPythonUnicodeValue;
 }
 const fail = (reason: CitationRegexInputFailure["reason"]) => CitationRegexInputFailure.make({ reason });
-const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
-  CitationSafetyLimitExceeded.make({ operation: "extract", limit });
 const unitsOf = (point: number) => (point > 0xffff ? 2 : 1);
 const widthOf = (largest: number): 1 | 2 | 4 => (largest > 0xffff ? 4 : largest > 255 ? 2 : 1);
 const readPoint = (storage: typeof NativeInput.Type, index: number) => {
@@ -214,13 +212,17 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
   const producedMaximum = role === "pattern" ? limits.patternUtf16 : limits.producedTextUtf16;
   const sourceLimit = role === "pattern" ? "patternUtf16" : "sourceUtf16";
   const producedLimit = role === "pattern" ? "patternUtf16" : "producedTextUtf16";
-  const { deadline, deadlineLimit, timed } = yield* makeCitationRegexTiming(limits, true);
-  // The shared Unicode helper's timer is parameterized for this extract stage.
-  const unicode = yield* makeCitationPythonUnicode({
-    ...limits,
-    producedTextUtf16: producedMaximum,
-    cleanDeadline: deadline,
-  }).pipe(Effect.mapError(() => fail("invalid-policy")));
+  const { operation, deadlineLimit, timed } = yield* makeCitationRegexTiming(limits, true);
+  const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
+    CitationSafetyLimitExceeded.make({ operation, limit });
+  // Unicode and all preparation timers capture the same selected operation.
+  const unicode = yield* makeCitationPythonUnicode(
+    {
+      ...limits,
+      producedTextUtf16: producedMaximum,
+    },
+    operation
+  ).pipe(Effect.mapError(() => fail("invalid-policy")));
   const finish = Effect.fn("Citation.finishRegexInput")(function* (
     value: CitationPythonUnicodeValue,
     expected: CitationRegexInputLayout

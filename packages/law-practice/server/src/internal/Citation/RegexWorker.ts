@@ -29,8 +29,6 @@ import {
 
 const failure = (reason: CitationRegexWorkerFailure["reason"]) => CitationRegexWorkerFailure.make({ reason });
 const invalidRuntime = () => failure("invalid-runtime");
-const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
-  CitationSafetyLimitExceeded.make({ operation: "extract", limit });
 /** Capture trusted descriptors, runtime, policy, Digest, Clock, admission and
  * Scope. Calls have R = never. Full job preflight precedes payload/map allocation
  * and native acquisition. A native timer includes spawn/startup/traffic/matching;
@@ -45,11 +43,13 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
   engineInput: unknown = "python-re"
 ) {
   const { limits, runtime } = yield* prepareCitationNativeRuntime(policy, runtimeInput, invalidRuntime);
+  const { operation: engineOperation, timed } = yield* makeCitationRegexTiming(limits, false);
+  const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
+    CitationSafetyLimitExceeded.make({ operation: engineOperation, limit });
   const admission = yield* captureCitationNativeAdmission(limits, invalidRuntime);
-  const owner = yield* makeCitationNativeProcessOwner(limits, "extract", failure);
+  const owner = yield* makeCitationNativeProcessOwner(limits, engineOperation, failure);
   const registry = yield* makeCitationRegexDescriptorRegistry(limits, bindings, engineInput);
   const preparation = yield* makeCitationRegexJobPreparation(limits);
-  const { timed } = yield* makeCitationRegexTiming(limits, false);
   const regexDeadline = limits.regexDeadline.pipe(Duration.toMillis, Duration.millis);
   yield* preflightCitationRegexControlFrames(limits.processMessageBytes);
   const evaluate = Effect.fn("Citation.evaluateRegexProcess")(
@@ -62,7 +62,7 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
     ) =>
       withCitationNativeProcess(
         owner,
-        acquireCitationNativeLease(admission, "extract", true, failure),
+        acquireCitationNativeLease(admission, engineOperation, true, failure),
         () => failure("invalid-runtime"),
         Effect.fnUntraced(function* (operation) {
           const quota = yield* S.decodeUnknownEffect(CitationRegexWorkerJob.fields.maxMatches)(maximumMatches).pipe(
@@ -91,7 +91,10 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
             Effect.timeoutOrElse({ duration: regexDeadline, orElse: () => Effect.fail(safety("regexDeadline")) })
           );
         })
-      ).pipe(timed)
+      ).pipe(
+        timed,
+        Effect.catchTag("CitationSafetyLimitExceeded", (error) => Effect.fail(safety(error.limit)))
+      )
   );
   return { evaluate, snapshot: owner.snapshot, reap: owner.reap };
 });

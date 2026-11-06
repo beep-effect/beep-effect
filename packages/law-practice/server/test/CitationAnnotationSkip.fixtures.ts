@@ -2,39 +2,29 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import {
-  CitationAnnotationReplacement,
-  makeCitationAnnotationAssembly,
-} from "@beep/law-practice-server/internal/Citation/AnnotationAssembly";
-import { prepareCitationAnnotations } from "@beep/law-practice-server/internal/Citation/AnnotationPreparation";
 import { makeCitationSkipAnnotationSpans } from "@beep/law-practice-server/internal/Citation/AnnotationSkip";
 import {
   CitationAnnotationSpanDecision,
   CitationAnnotationSpanProcessor,
 } from "@beep/law-practice-server/internal/Citation/AnnotationSpan";
-import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { CitationXmlBalance } from "@beep/law-practice-server/internal/Citation/XmlWorker";
-import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import {
+  CitationAnnotationReplayReplacement,
+  makeCitationAnnotationReplay,
+  makeCitationAnnotationXmlTrace,
+} from "./CitationAnnotationReplay.fixtures.ts";
 import { assertCitationWorkerCompositionReleased, readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import { installCitationXmlWorker } from "./CitationXmlWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationAnnotationSkip");
-const Replacement = S.Struct({
-  ...CitationAnnotationReplacement.fields,
-  before: CitationNativeUnicodeHex,
-  after: CitationNativeUnicodeHex,
-}).pipe(
-  $I.annoteSchema("Replacement", {
-    description: "Original primitive annotation tuple before sorting and overlap handling.",
-  })
-);
 const Check = S.Struct({ text: CitationNativeUnicodeHex, fast: S.Boolean, value: S.Boolean }).pipe(
   $I.annoteSchema("Check", {
     description: "Original XML/helper check in execution order, without parser instrumentation side effects.",
@@ -49,7 +39,7 @@ const Corpus = S.fromJsonString(
       S.Struct({
         id: S.Natural,
         source: CitationNativeUnicodeHex,
-        input: S.Array(Replacement),
+        input: S.Array(CitationAnnotationReplayReplacement),
         checks: S.Array(Check),
         warnings: S.Array(S.Literal("WARNING")),
         result: CitationNativeUnicodeHex,
@@ -71,19 +61,11 @@ export const replayCitationSkipAnnotations = Effect.fn("AnnotationSkipTest.repla
     "b36159a80d90ef8ad8daeb58ee65b02728f262f12f98f33ef978e25429660e1a"
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   const setup = yield* installCitationXmlWorker(kind);
-  const unicode = yield* makeCitationPythonUnicode(setup.limits, "annotate");
-  const trace = yield* Ref.make<ReadonlyArray<typeof Check.Type>>([]);
   const skipped = yield* Ref.make(0);
-  const xml = CitationXmlBalance.of({
-    balance: Effect.fn("AnnotationSkipTest.observeXml")(function* (source) {
-      const value = yield* setup.worker.balance(source);
-      yield* Ref.update(trace, A.append(Check.make({ text: source, fast: false, value })));
-      return value;
-    }),
-  });
+  const observedXml = yield* makeCitationAnnotationXmlTrace(setup.worker);
   const processor = yield* makeCitationSkipAnnotationSpans().pipe(
     Effect.provideService(CitationTextBudget, setup.budget),
-    Effect.provideService(CitationXmlBalance, xml)
+    Effect.provideService(CitationXmlBalance, observedXml.xml)
   );
   const observed = CitationAnnotationSpanProcessor.of({
     prepare: Effect.fn("AnnotationSkipTest.observeDecision")(function* (source, replacement) {
@@ -92,28 +74,16 @@ export const replayCitationSkipAnnotations = Effect.fn("AnnotationSkipTest.repla
       return decision;
     }),
   });
-  const assembly = yield* makeCitationAnnotationAssembly(setup.limits).pipe(
-    Effect.provideService(CitationTextBudget, setup.budget),
-    Effect.provideService(CitationAnnotationSpanProcessor, observed)
-  );
+  const assembly = yield* makeCitationAnnotationReplay(setup.limits, setup.budget, observed);
   const rows = full ? corpus.cases : A.filter(corpus.cases, (row) => row.id % 7 === 2 || row.id % 7 === 5);
   let children = 0;
   for (const row of rows) {
-    yield* Ref.set(trace, []);
+    yield* observedXml.reset;
     yield* Ref.set(skipped, 0);
-    const source = yield* unicode.fromStorage(row.source);
-    const replacements = A.map(row.input, (value) =>
-      CitationAnnotationReplacement.make({
-        ...value,
-        before: CitationPythonUnicodeStorage.make(value.before),
-        after: CitationPythonUnicodeStorage.make(value.after),
-      })
-    );
-    const ordered = yield* prepareCitationAnnotations(setup.limits, replacements);
-    const result = yield* assembly.assemble(source, ordered);
+    const result = yield* assembly.assemble(row.source, row.input);
     expect(result, `${kind}:${row.id}`).toEqual(row.result);
     const expected = A.filter(row.checks, (check) => !check.fast);
-    const actual = yield* Ref.get(trace);
+    const actual = yield* observedXml.snapshot;
     expect(actual, `${kind}:${row.id}:checks`).toEqual(expected);
     const warnings = yield* Ref.get(skipped);
     expect(warnings).toBe(row.warnings.length);
