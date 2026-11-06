@@ -11,7 +11,7 @@ import { foundationId, tokenId, workerId } from "./config.js";
 
 const TokenRecord = S.Struct({
   attr: S.Struct({ text: S.Redacted(S.NonEmptyString) }),
-  resourceType: S.Literal("Alchemy.Random"),
+  resourceType: S.tag("Alchemy.Random"),
   status: S.Literals(["created", "updated"]),
 });
 

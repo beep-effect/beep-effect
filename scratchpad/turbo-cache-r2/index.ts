@@ -3,7 +3,7 @@ import { Random } from "alchemy";
 import * as Namespace from "alchemy/Namespace";
 import { retain } from "alchemy/RemovalPolicy";
 import { Stage } from "alchemy/Stage";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
