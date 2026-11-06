@@ -1,10 +1,27 @@
 {
   "$schema": "https://v2-11-10.turborepo.dev/schema.json",
-  "extends": ["//"],
+  "extends": [
+    "//"
+  ],
   "tasks": {
     "lint": {
       "cache": false,
-      "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/biome.jsonc",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/rules/**",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/configs/**",
+        "$TURBO_ROOT$/.gitignore",
+        "$TURBO_ROOT$/packages/.gitignore",
+        "$TURBO_ROOT$/packages/foundation/.gitignore",
+        "$TURBO_ROOT$/packages/foundation/primitive/.gitignore",
+        "$TURBO_ROOT$/tsconfig*.json",
+        "!.beep/**",
+        "!.fallow/**"
+      ],
+      "env": [
+        "BEEP_CACHE_TOOLCHAIN_DIGEST"
+      ]
     }
   }
 }

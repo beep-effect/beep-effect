@@ -1,5 +1,9 @@
 # Friction and opportunities
 
+## Types lint ignore-policy input gap, 2026-11-06
+
+While preparing the next reviewed pilot, source inspection found `biome check .` reads Git ignore files but inherited types lint inputs omit the root ignore policy. Twelve bounded stable/canary native `run lint --filter=@beep/types --dry=json` plans confirm that adding a types source exclusion to that policy leaves the original task hash unchanged, while the explicit candidate invalidates. Caching remains disabled, so this is a pre-adoption input gap, not evidence of a stale artifact served in production. The input-profile correction and source-bound reports are prepared in the local types pilot lane. Include ignore-policy perturbation in computation qualification before enabling reuse; metadata coverage alone does not establish semantic correctness.
+
 ## Captured output lost at timeout, 2026-11-03
 
 Heavy / Lint Policy on #2686 timed out in `knowledge doctor ci` after its

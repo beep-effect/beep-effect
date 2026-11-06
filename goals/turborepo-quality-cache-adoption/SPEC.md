@@ -1110,6 +1110,10 @@ Lane `codex/cache-pilot-recipes-20261106`
 
 Reverse: Revert the recipe refactor; no task cache setting or qualification state changes.
 
+### Prepare explicit types lint policy inputs from native invalidation evidence, 2026-11-06
+
+Reverse: Revert the types input override and retain cache false; no qualification or rollout state changes.
+
 ### Preserve external suite inputs across all CLI test consumers, 2026-11-06
 
 All three CLI test consumers execute the architecture proof suite, which reads
