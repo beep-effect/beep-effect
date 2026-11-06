@@ -2448,3 +2448,17 @@ artifact hashes. A fixed module family, line and Python version can locate the
 next refusal without publishing exception messages, file paths or frame locals.
 The 256 MiB process cap, archive digest and every other numeric bound remain
 unchanged. This attempt is a refusal and grants no producer approval.
+
+
+### 2026-11-06 — Inherited coverage failures consume unrelated cache qualification runs
+
+The diagnostic PR #2757 passed every unit shard, but hosted Coverage Regression
+job 127893464505 failed on two lint production files unchanged from accepted
+main. The existing consolidated repair #2758 adds failure-path and worker tests
+without lowering floors. The repair is merged into main and present in this
+branch. Its earlier head has a successful hosted coverage receipt; current-head
+coverage proof remains required. Reuse the repair rather than copying its tests
+into both Turbo lanes. The obsolete owned #2760 Check run was cancelled to
+release runners.
+Expose known main coverage dependencies before admitting downstream coverage
+work, and preserve introduced, inherited and intentional cancellation causes.
