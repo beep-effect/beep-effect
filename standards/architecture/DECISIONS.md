@@ -2476,6 +2476,65 @@ Rejected:
 - Bare `@beep/<group>` names. They collide with product vocabulary such as
   knowledge, harness, files, and media.
 
+## 2026-11-06: Infrastructure Stacks Are A Tooling Kind; Platform Stacks Live In `tooling/infra`
+
+- **Status:** Active
+- **Amends:** 2026-10-28 "One beep App Composes beep-Prefixed Command Tools" (kind catalog)
+
+Decision:
+
+Infrastructure-as-code written as Effect programs over Alchemy is a tooling
+concern with its own kind. The tooling kind catalog becomes `library`, `tool`,
+`policy-pack`, `test-kit`, `infra`.
+
+- `packages/tooling/infra/<name>` (`@beep/infra-<name>`) holds one Alchemy
+  stack per repo-platform concern: CI runner fleet, turbo cache, cost controls,
+  GitHub repository settings, host deployments. Each is created with
+  `beep create-package`, follows the canonical package shape (`src/`, `test/`,
+  generated scripts, tsgo diagnostics, docgen) and exposes its stack through
+  `alchemy.run.ts` at the package root.
+- An application's own deployment stack lives beside the application
+  (`apps/<app>/alchemy.run.ts`), as `apps/beep-effect-web` already does. It is
+  not an `infra` package.
+- Repo-owned Alchemy resources and providers (a Vercel provider over
+  `@distilled.cloud/vercel`, AWS resources Alchemy lacks, the GitHub runner
+  composite) are `tooling/library` packages named `@beep/alchemy-<provider>`,
+  written to Alchemy's provider conventions and test harness so the generic ones
+  can be upstreamed unchanged.
+- `infra` packages may depend on `tooling/library` packages, `drivers`, and
+  `foundation`; nothing depends on an `infra` package. They may not import
+  product slices.
+- Infrastructure code is subject to every repo law a `@beep/*` package is
+  subject to. No Python, no shell, no Pulumi, no separate toolchain pin.
+
+The root workspace member `infra/` (the Pulumi workspace) is transitional until
+`goals/infra-alchemy-rebuild` deletes it; new Pulumi programs are forbidden.
+
+Rationale:
+
+The Pulumi workspace sat outside every package law: its own TypeScript 6 pin
+loaded by a preload, Python and shell labs beside the programs, nested
+sub-packages with their own lockfiles, no tsgo diagnostics, and `node:crypto`
+and async/await in a Lambda the repo's Effect laws would never accept elsewhere.
+A kind puts stacks under the same `create-package`, lint, check and docgen gates
+as everything else and gives the dependency table one row. Alchemy's own
+guidance (per-package stacks for different deploy cadences) already placed the
+first stack beside its app; the two placements are complementary, not
+competing. Operator decisions D5, D13 and D14 of the 2026-11-06 grill session in
+`explorations/pulumi-to-alchemy/DECISIONS.md`.
+
+Rejected:
+
+- One `@beep/infra` package under `tooling/tool` holding every stack. One
+  package would carry every cloud credential and every deploy cadence, and a
+  CLI `tool` is not what a stack is.
+- Stacks as `tooling/library` packages. A stack is deployed, not imported.
+- Every stack beside whatever it serves, with no platform packages. The runner
+  fleet and the turbo cache serve the repository, not one app; they would have
+  landed under `.github/` or inside the CLI.
+- Keeping `infra/` as a root workspace exception. That is the situation this
+  entry ends.
+
 ## 2026-11-06: Slices Adopt `@alchemy.run/domain`; The Entity Kit Is Frozen
 
 - **Status:** Active

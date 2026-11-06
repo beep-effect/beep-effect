@@ -243,6 +243,10 @@ Tooling has many jobs, but it does not need many architectural kinds.
 - `tool` covers CLIs, pipeline tools, and orchestrators
 - `policy-pack` covers config presets and governance data
 - `test-kit` covers reusable testing helpers
+- `infra` covers Alchemy stacks for repo-platform infrastructure (CI runner
+  fleet, turbo cache, cost controls, GitHub settings, host deployments); an
+  application's own stack lives beside the application instead
+  (`DECISIONS.md`, 2026-11-06)
 
 This keeps the family legible while still making dependency rules visible.
 Repo-wide orchestration is behavior inside `tool`, not a separate one-off
