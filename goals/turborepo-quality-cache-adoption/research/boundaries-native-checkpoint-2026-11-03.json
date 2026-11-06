@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "boundaries-native-checkpoint/v1",
+  "recordedAt": "2026-11-03T20:53:39.656518+00:00",
+  "authority": "Actual pinned synthetic boundary checks only. No Beep repository scan, quality suite, feature activation or computation/profile qualification.",
+  "executionBaseHead": "f92e090e024ed312e47407568cb382531e9cbf2e",
+  "newDriverWasCommittedAtExecution": false,
+  "sourceBindingExplanation": "The new driver was an uncommitted file during execution. Its captured SHA256 binds the exact executed bytes, published with this checkpoint; executionBaseHead does not assert that the new file existed in that earlier Git tree.",
+  "driver": "native-boundaries-controls.py",
+  "driverSha256": "340cae9ba91c5e01d7360386afd01cdd44183ac37421281a81afdcafdeac1ba9",
+  "report": "native-boundaries-controls-2026-11-03.json",
+  "sourceReportSha256": "7275d30f820016c7011a814451c99028a381ce621452b848e1b1a5fe35682505",
+  "sourceReportBytes": 30239,
+  "publicReportDecodedJsonEqualsNativeReport": true,
+  "clients": {
+    "stable": {
+      "version": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "version": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+    }
+  },
+  "caseKinds": 12,
+  "nativeBoundaryChecks": 24,
+  "positiveControls": 10,
+  "expectedNegativeControls": 14,
+  "fixtureTaskExecutions": 0,
+  "nativeVersionProbes": 24,
+  "offlineLockPrerequisites": 12,
+  "networkIsolated": true,
+  "sourceAndToolsUnchanged": true,
+  "ownedFixturesRemoved": true,
+  "rawValidation": {
+    "streamFiles": 120,
+    "bytes": 13808,
+    "allRetainedStreamDigestsChecked": true,
+    "sourceBindingsChecked": 5
+  },
+  "admission": {
+    "existingTokens": 1,
+    "waitMs": 28,
+    "runtimeMs": 5860,
+    "peakMemoryBytes": 189784064,
+    "released": true,
+    "wrapperElapsedSeconds": 6.251
+  },
+  "publishedPairRecheck": {
+    "at": "2026-11-03T20:48:45Z",
+    "stable": "2.11.10",
+    "canary": "2.11.11-canary.1",
+    "beforeFinalSourceReplay": true
+  },
+  "cases": [
+    {
+      "id": "declared-import",
+      "expectedExitCode": 0
+    },
+    {
+      "id": "undeclared-import",
+      "expectedExitCode": 1
+    },
+    {
+      "id": "relative-package-escape",
+      "expectedExitCode": 1
+    },
+    {
+      "id": "relative-in-package",
+      "expectedExitCode": 0
+    },
+    {
+      "id": "dependency-tag-deny",
+      "expectedExitCode": 1
+    },
+    {
+      "id": "dependency-tag-allow",
+      "expectedExitCode": 0
+    },
+    {
+      "id": "dependency-tag-allow-mismatch",
+      "expectedExitCode": 1
+    },
+    {
+      "id": "dependent-tag-deny",
+      "expectedExitCode": 1
+    },
+    {
+      "id": "dependent-tag-allow",
+      "expectedExitCode": 0
+    },
+    {
+      "id": "dependency-name-deny",
+      "expectedExitCode": 1
+    },
+    {
+      "id": "transitive-dependency-deny",
+      "expectedExitCode": 1
+    },
+    {
+      "id": "unrelated-denial",
+      "expectedExitCode": 0
+    }
+  ],
+  "limits": {
+    "wrapperSeconds": 60,
+    "perNativeSeconds": 20,
+    "perCommandRetainedBytes": 262144,
+    "aggregateRetainedBytes": 4194304,
+    "compactReportBytes": 2097152,
+    "noNetworkOrSecretDelivery": true
+  },
+  "scopeLimits": [
+    "Initial exit-code/package-witness observation and stricter intermediate observation remain private and bound to their original driver bytes.",
+    "The published replay uses final diagnostic-class, source/tool and cleanup assertions.",
+    "Native deprecation warnings for the isolated TURBO_DAEMON setting are retained, not counted as checker failures.",
+    "No real Beep boundary census, named CI consumer, benefit measurement, cross-platform or task/profile qualification is supplied.",
+    "Feature acceptance remains pending; the 11 scoped and 25 pending feature counts remain unchanged."
+  ]
+}

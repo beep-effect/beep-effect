@@ -34,7 +34,13 @@
     "goals/palantiri-parcels/GOAL.md",
     "goals/palantiri-parcels/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/cache-baseline-request-palantiri-p1.json",
+    "research/cache-baseline-review-palantiri-p1.md",
+    "research/parcels-design.md",
+    "research/source-survey.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

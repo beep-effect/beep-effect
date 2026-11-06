@@ -1901,6 +1901,7 @@ const citationSkip = Effect.fnUntraced(function* (checkout: string, candidatePat
   if (O.isNone(realRoot) || O.isNone(realTarget)) return O.some<ResidueReapSkipReason>("path-changed");
   const relative = path.relative(realRoot.value, realTarget.value);
   const excluded = Str.isEmpty(authority) ? A.empty<string>() : [`:(exclude,literal)${authority}`];
+  // KEEP (D-20): single-consumer plumbing (D-03, P0 §5); the kit has no `grep` member.
   const search = yield* runRepoCommandCapture(
     "git",
     [
@@ -2172,6 +2173,7 @@ const checkoutAuthoritySkip = Effect.fnUntraced(function* (
     (yield* Effect.map(fs.readLink(path.join(checkout, ruling.evidence)).pipe(Effect.option), O.isSome))
   )
     return O.some<ResidueReapSkipReason>("owner-ruling-required");
+  // KEEP (D-20): single-consumer plumbing (D-03, P0 §5): `--literal-pathspecs` plus `--error-unmatch`'s exit.
   const proof = yield* runRepoCommandCapture(
     "git",
     ["--literal-pathspecs", "ls-files", "--error-unmatch", "--", ruling.evidence],
@@ -2195,6 +2197,7 @@ const nestedCheckoutSkip = Effect.fnUntraced(function* (checkout: string, marker
   if (O.isNone(registered)) return O.some<ResidueReapSkipReason>("git-probe-failed");
   if (O.exists(dotgit, (stat) => Str.Equivalence(stat.type, "File")) || registered.value)
     return O.some<ResidueReapSkipReason>("protected-name");
+  // KEEP (D-20): single-consumer plumbing (D-03, P0 §5); `worktreeList` has no `noOptionalLocks`.
   const linked = yield* runRepoCommandCapture(
     "git",
     ["--no-optional-locks", "worktree", "list", "--porcelain"],

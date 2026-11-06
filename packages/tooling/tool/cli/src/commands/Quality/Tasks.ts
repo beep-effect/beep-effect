@@ -225,6 +225,7 @@ const COVERAGE_FULL_VITEST_WORKER_CAP = 11;
 const COVERAGE_SELECTED_SINGLE_RUN_MAX_WEIGHT_SECONDS = 300;
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const COVERAGE_REPLACE_ALL_ARG = "--replace-all";
+const COVERAGE_ADD_MISSING_FILES_ONLY_ARG = "--add-missing-files-only";
 // A single lost child-exit signal must fail with the command name while the
 // workflow still has time to report and clean up. The longest healthy policy
 // child is under eight minutes on the hosted heavy runner.
@@ -282,6 +283,7 @@ type RootAuditSelectionState = {
 };
 
 type CoverageTaskOptions = {
+  readonly addMissingFilesOnly?: boolean;
   readonly topologyPackageNames?: ReadonlyArray<string>;
   readonly args: ReadonlyArray<string>;
   readonly expectedPackageNames: ReadonlyArray<string>;
@@ -714,7 +716,11 @@ const isCoverageReplaceAllArg = (arg: string): boolean => arg === COVERAGE_REPLA
 const isCoveragePassthroughDelimiter = (arg: string): boolean => arg === "--";
 
 const stripCoverageControlArgs: (args: ReadonlyArray<string>) => ReadonlyArray<string> = A.filter(
-  (arg) => !isCoverageWriteBaselineArg(arg) && !isCoverageReplaceAllArg(arg) && !isCoveragePassthroughDelimiter(arg)
+  (arg) =>
+    !isCoverageWriteBaselineArg(arg) &&
+    !isCoverageReplaceAllArg(arg) &&
+    arg !== COVERAGE_ADD_MISSING_FILES_ONLY_ARG &&
+    !isCoveragePassthroughDelimiter(arg)
 );
 
 const coverageTurboArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> => {
@@ -730,6 +736,7 @@ const parseCoverageTaskOptions = (args: ReadonlyArray<string>): CoverageTaskOpti
   const stripped = stripPassthroughDelimiter(args);
   return {
     args: coverageTurboArgs(stripped),
+    ...(A.contains(stripped, COVERAGE_ADD_MISSING_FILES_ONLY_ARG) ? { addMissingFilesOnly: true } : {}),
     expectedPackageNames: A.empty<string>(),
     replaceAll: A.some(stripped, isCoverageReplaceAllArg),
     scoped: A.some(stripped, isExplicitTurboAffectedOrScopeArg),
@@ -916,6 +923,7 @@ const withoutCoverageAffectedArg: (args: ReadonlyArray<string>) => ReadonlyArray
 const isCoverageFullOwnedBooleanArg = (arg: string): boolean =>
   arg === COVERAGE_WRITE_BASELINE_ARG ||
   arg === COVERAGE_REPLACE_ALL_ARG ||
+  arg === COVERAGE_ADD_MISSING_FILES_ONLY_ARG ||
   arg === "--only" ||
   Str.startsWith("--only=")(arg) ||
   arg === "--summarize" ||
@@ -953,12 +961,26 @@ const coverageFullPassthroughArgs = (args: ReadonlyArray<string>): ReadonlyArray
   return passthrough;
 };
 
+const validateCoverageFileIdentityTaskOptions = Effect.fn("QualityTasks.validateFileIdentityTaskOptions")(function* (
+  parsed: CoverageTaskOptions,
+  args: ReadonlyArray<string>
+) {
+  if (
+    parsed.addMissingFilesOnly === true &&
+    (!parsed.writeBaseline || !parsed.scoped || parsed.replaceAll || A.some(args, isCoverageAffectedArg))
+  )
+    return yield* QualityTaskConfigurationError.new(
+      "--add-missing-files-only requires --write-baseline with exact --filter package selectors; --replace-all and --affected are unsupported."
+    );
+});
+
 const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOptions")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>,
   baseOverride?: string
 ): Effect.fn.Return<CoverageTaskOptions, QualityTaskConfigurationError, QualityTaskEnvironment> {
   const parsed = parseCoverageTaskOptions(args);
+  yield* validateCoverageFileIdentityTaskOptions(parsed, args);
   // A scoped `--replace-all` is the deliberate re-measure path: it adopts every
   // package this run measured, and the hosted pull-request run judges every row
   // it raises.
@@ -4278,6 +4300,7 @@ const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(functi
   if (options.writeBaseline) {
     yield* writeCoverageRegressionBaseline(repoRoot, options.scoped, options.expectedPackageNames, {
       replaceAll: options.replaceAll,
+      addMissingFilesOnly: options.addMissingFilesOnly === true,
     });
     return;
   }

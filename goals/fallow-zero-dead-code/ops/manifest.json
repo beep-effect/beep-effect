@@ -92,5 +92,6 @@
     "Zero cannot be reached without an inline suppression or an apps/** blanket ignore.",
     "Lane promotion breaks pre-push for unrelated consumers.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval."
-  ]
+  ],
+  "researchReports": ["research/triage.md"]
 }

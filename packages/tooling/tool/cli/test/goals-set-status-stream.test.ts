@@ -29,7 +29,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import { NodeTestLayer, temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const decodePacketTransitionRequest = S.decodeEffect(PacketTransitionRequest);
 
@@ -38,7 +38,7 @@ const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeManifestJson = S.decodeUnknownEffect(S.fromJsonString(GoalManifest));
 
 const testLayer = Layer.mergeAll(
-  NodeServices.layer,
+  NodeTestLayer,
   NodeCrypto.layer,
   PacketCoreLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );

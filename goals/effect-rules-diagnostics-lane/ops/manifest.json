@@ -31,15 +31,22 @@
     "goals/effect-rules-diagnostics-lane/research/SOURCES.md"
   ],
   "researchReports": [
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
-    "research/rule-delta.md",
-    "research/new-findings.json",
-    "research/import-style-census.md",
     "research/additional-project-findings.md",
-    "research/effect-vitest-inventory-review.md",
-    "research/cache-baseline-review-performance.md",
+    "research/cache-baseline-request-1b-final.json",
+    "research/cache-baseline-request-1b.json",
     "research/cache-baseline-request-performance.json",
-    "research/performance-wave.md"
+    "research/cache-baseline-review-1b-final.md",
+    "research/cache-baseline-review-1b.md",
+    "research/cache-baseline-review-performance.md",
+    "research/effect-vitest-inventory-review.md",
+    "research/import-style-census.md",
+    "research/new-findings.json",
+    "research/performance-wave.md",
+    "research/review-wave-1.md",
+    "research/review-wave-1b.md",
+    "research/rule-delta.md"
   ],
   "agentLaunchers": [
     {

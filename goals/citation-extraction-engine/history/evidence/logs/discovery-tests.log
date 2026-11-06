@@ -1,0 +1,11 @@
+$ bun run beep:test test/CitationOracleDiscovery.test.ts test/CitationPrerequisites.test.ts
+$ bunx --bun vitest run --passWithNoTests test/CitationOracleDiscovery.test.ts test/CitationPrerequisites.test.ts
+
+ RUN  v5.0.5 ~/YeeBois/projects/beep-effect-worktrees/citation-extraction-engine/packages/law-practice/use-cases
+
+
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
+   Start at  03:42:27
+   Duration  9.74s (transform 77%, import 20%, setup 3%)
+

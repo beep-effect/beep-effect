@@ -1,0 +1,563 @@
+import * as NodeURL from "node:url";
+import { citationAuthorityMentionIds, citationGroupMembers } from "@beep/law-practice-domain/values";
+import { readCitationDefaultObservation } from "@beep/law-practice-server/internal/Citation/CallbackObservations";
+import {
+  CitationCallbackRuntimeIndexFactory,
+  CitationMissingPageIdentities,
+  CitationMissingPageIdentityFactory,
+  makeCitationCallbackRuntimeIndexFactory,
+} from "@beep/law-practice-server/internal/Citation/CallbackRuntimeIndex";
+import {
+  CitationCallbackDictionary,
+  CitationCallbackFailure,
+  CitationCallbackResource,
+  CitationFullsCallbackInput,
+  CitationIdCallbackInput,
+  CitationResolutionCallbacks,
+  CitationResolutionWork,
+  makeCitationCallbackDictionary,
+  makeCitationResolutionWork,
+  runPreparedCitationCallbackSession,
+} from "@beep/law-practice-server/internal/Citation/CallbackSession";
+import {
+  makeDefaultCitationResolutionCallbacks,
+  runDefaultCitationCallbackSession,
+  runPreparedDefaultCitationCallbackSession,
+} from "@beep/law-practice-server/internal/Citation/DefaultCallbacks";
+import { restoreCitationDocument } from "@beep/law-practice-server/internal/Citation/Document";
+import {
+  CitationFrozenEditions,
+  makeCitationFrozenEditions,
+} from "@beep/law-practice-server/internal/Citation/FrozenEditions";
+import { makeCitationRegisteredResolver } from "@beep/law-practice-server/internal/Citation/RegisteredResolver";
+import { prepareCitationResolution } from "@beep/law-practice-server/internal/Citation/ResolutionInput";
+import { resolveCitationMentions } from "@beep/law-practice-server/internal/Citation/Resolve";
+import { CitationResourceIdentity } from "@beep/law-practice-server/internal/Citation/ResourceIdentity";
+import { makeCitationRegisteredSessionDescriptors } from "@beep/law-practice-server/internal/Citation/SessionDescriptors";
+import {
+  CitationSessionResourceDescriptors,
+  makeCitationSessionDocumentProjector,
+} from "@beep/law-practice-server/internal/Citation/SessionDocument";
+import { Sha256HexFromBytes } from "@beep/schema";
+import { it } from "@beep/test-runner";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+import { expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
+import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
+import { CitationResolutionContext, prepareCitationResolutionContext as prepare } from "./CitationResolve.fixtures.ts";
+import { loadResolutionOperationContexts } from "./CitationResolve.operations.ts";
+
+const CorpusJson = S.fromJsonString(S.Struct({ cases: S.Array(CitationResolutionContext) }));
+const DefaultCallbackObservationsJson = S.fromJsonString(
+  S.Struct({
+    cases: S.Array(
+      S.Struct({
+        name: S.String,
+        decisions: S.Array(
+          S.Struct({
+            index: S.Natural,
+            status: S.Literals(["Resolved", "Unresolved", "Ambiguous"]),
+            reason: S.optionalKey(S.String),
+            distinctCount: S.optionalKey(S.Natural),
+            candidateIndices: S.Natural.pipe(S.Array, S.optionalKey),
+          })
+        ),
+      })
+    ),
+  })
+);
+
+const cases = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const raw = yield* fs.readFileString(
+    NodeURL.fileURLToPath(
+      new URL("../../use-cases/test/fixtures/eyecite/default-resolution-cases.json", import.meta.url)
+    )
+  );
+  const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+  expect(citationResult1).toBe("89d86c6aefecc02a30e6d719af9277050d8023949d4fba69912e2b9295d20e05");
+  return yield* S.decodeEffect(CorpusJson)(raw);
+});
+const selected = Effect.gen(function* () {
+  const citationResult2 = yield* cases;
+  return yield* Effect.fromOption(A.findFirst(citationResult2.cases, (row) => row.name === "short-unique"));
+});
+
+it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production default callback sessions", (it) => {
+  it.effect("rejects mismatched callback dispatch and a foreign work counter before resolving", () =>
+    Effect.gen(function* () {
+      const row = yield* selected;
+      const input = yield* prepare(row);
+      const prepared = yield* prepareCitationResolution(input);
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const foreignWork = yield* makeCitationResolutionWork(prepared.limits);
+      const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      const mismatched = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, foreignWork),
+        Effect.provideService(CitationCallbackDictionary, owner),
+        Effect.flip
+      );
+      expect(mismatched.reason).toBe("invalid-input");
+      const callbacks = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackDictionary, owner)
+      );
+      yield* owner.start;
+      const mention = A.getUnsafe(prepared.mentions, 0);
+      const fulls = CitationFullsCallbackInput.make({ mention, fulls: [] });
+      yield* Effect.forEach(
+        [callbacks.shortCase(fulls), callbacks.supra(fulls), callbacks.reference(fulls)],
+        Effect.fnUntraced(function* (attempt) {
+          const failure = yield* attempt.pipe(Effect.flip);
+          expect(failure.reason).toBe("invalid-input");
+        }),
+        { concurrency: 1, discard: true }
+      );
+      const idFailure = yield* callbacks
+        .id(CitationIdCallbackInput.make({ mention, last: CitationCallbackResource.cases.None.make({}), groups: [] }))
+        .pipe(Effect.flip);
+      expect(idFailure.reason).toBe("invalid-input");
+      const groups = yield* owner.read;
+      expect(groups).toEqual([]);
+      yield* owner.close;
+    })
+  );
+
+  it.effect(
+    "runs all 76 source contexts through the registered resolver and restores exact group memberships",
+    () =>
+      Effect.gen(function* () {
+        const citationResult3 = yield* loadCitationFrozenEditionFixtures();
+        const frozen = yield* makeCitationFrozenEditions(citationResult3.bundle);
+        let builds = 0;
+        const identityFactory = CitationMissingPageIdentityFactory.of({
+          build: Effect.sync(() => {
+            builds++;
+            let hashes = HashMap.empty<string, bigint>();
+            return CitationMissingPageIdentities.of({
+              read: Effect.fn("RegisteredResolverTest.controlledIdentity")(function* (reference) {
+                const key =
+                  reference._tag === "Mention" ? `Mention:${reference.mentionId}` : `Detached:${reference.detachedId}`;
+                const existing = HashMap.get(hashes, key);
+                if (O.isSome(existing)) return existing.value;
+                const hash = BigInt("4294967296") + BigInt(HashMap.size(hashes)) * BigInt("16");
+                hashes = HashMap.set(hashes, key, hash);
+                return hash;
+              }),
+            });
+          }),
+        });
+        const resolver = yield* makeCitationRegisteredResolver().pipe(
+          Effect.provideService(CitationFrozenEditions, frozen),
+          Effect.provideService(CitationMissingPageIdentityFactory, identityFactory)
+        );
+        const citationResult4 = yield* loadResolutionOperationContexts;
+        const contexts = [...(yield* cases).cases, ...A.map(citationResult4.contexts, (row) => row.context)];
+        expect(contexts).toHaveLength(76);
+        const citationResult5 = yield* FileSystem.FileSystem;
+        const observationsText = yield* citationResult5.readFileString(
+          NodeURL.fileURLToPath(
+            new URL("../../use-cases/test/fixtures/eyecite/default-observations.json", import.meta.url)
+          )
+        );
+        const citationResult6 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(observationsText));
+        expect(citationResult6).toBe("34bf392659ed8699115311a9f04377b7366b691e91e5171145b7cafdec6d1592");
+        const observed = yield* S.decodeEffect(DefaultCallbackObservationsJson)(observationsText);
+        const branches = HashMap.fromIterable(A.map(observed.cases, (row) => [row.name, row.decisions] as const));
+        let checked = 0;
+        yield* Effect.forEach(
+          contexts,
+          Effect.fnUntraced(function* (row) {
+            const input = yield* prepare(row);
+            if (row.outcome.status === "error") {
+              const failure = yield* Effect.flip(resolver.resolve(input));
+              expect(["invalid-input", "identity-failed", "callback-failed"], row.name).toContain(failure.reason);
+            } else {
+              const captured = resolver.resolve(input) satisfies Effect.Effect<unknown, CitationCallbackFailure>;
+              const result = yield* captured;
+              const indices = HashMap.fromIterable(
+                A.map(input.mentions, (mention, index) => [mention.id, index] as const)
+              );
+              const members = A.map(result.document.groups, (group) =>
+                A.map(citationGroupMembers(result.document, group.id), (reference) =>
+                  reference._tag === "Mention" ? O.getOrElse(HashMap.get(indices, reference.mentionId), () => -1) : -1
+                )
+              );
+              expect(members, row.name).toEqual(row.outcome.groups);
+              const expectations = HashMap.get(branches, row.name);
+              if (O.isSome(expectations)) {
+                expect(result.document.resolutions, row.name).toHaveLength(A.length(expectations.value));
+                yield* Effect.forEach(
+                  expectations.value,
+                  Effect.fnUntraced(function* (expected) {
+                    checked++;
+                    const resolution = A.getUnsafe(result.document.resolutions, expected.index);
+                    expect(resolution.status, row.name).toBe(expected.status);
+                    if (resolution.status === "Unresolved") expect(resolution.reason, row.name).toBe(expected.reason);
+                    if (resolution.status === "Ambiguous") {
+                      expect(resolution.candidateAuthorityIds, row.name).toHaveLength(
+                        O.getOrElse(O.fromUndefinedOr(expected.distinctCount), () => 0)
+                      );
+                      const indices = expected.candidateIndices;
+                      if (indices === undefined) return yield* Effect.die("source candidate indices missing");
+                      const authorities = yield* Effect.forEach(indices, (index) =>
+                        Effect.gen(function* () {
+                          const prior = A.getUnsafe(result.document.resolutions, index);
+                          if (prior.status !== "Resolved")
+                            return yield* Effect.die("source candidate is not a resolved full");
+                          return prior.authorityId;
+                        })
+                      );
+                      expect(resolution.candidateAuthorityIds, row.name).toEqual(expect.arrayContaining(authorities));
+                    }
+                  }),
+                  { concurrency: 1, discard: true }
+                );
+              }
+              const restored = yield* restoreCitationDocument({
+                receipt: result.receipt,
+                editions: [],
+                resourceBindings: result.resourceBindings,
+                expectedSource: input.verifiedSource.source,
+                expectedEngineArtifact: input.engineArtifact,
+                sourceText: row.text,
+              });
+              expect(restored.groups, row.name).toEqual(result.document.groups);
+              expect(restored.memberLists, row.name).toEqual(result.document.memberLists);
+              if (row.name === "short-ambiguous") {
+                const tampered = {
+                  ...result.receipt,
+                  resolutions: A.map(result.receipt.resolutions, (resolution) =>
+                    resolution.status === "Ambiguous"
+                      ? { ...resolution, candidateAuthorityIds: A.reverse(resolution.candidateAuthorityIds) }
+                      : resolution
+                  ),
+                };
+                const citationResult7 = yield* Effect.flip(
+                  restoreCitationDocument({
+                    receipt: tampered,
+                    editions: [],
+                    resourceBindings: result.resourceBindings,
+                    expectedSource: input.verifiedSource.source,
+                    expectedEngineArtifact: input.engineArtifact,
+                    sourceText: row.text,
+                  })
+                );
+                expect(citationResult7.reason).toBe("stale-authority");
+                const missing = A.map(result.resourceBindings, (binding) => ({ ...binding, candidates: [] }));
+                const citationResult8 = yield* Effect.flip(
+                  restoreCitationDocument({
+                    receipt: result.receipt,
+                    editions: [],
+                    resourceBindings: missing,
+                    expectedSource: input.verifiedSource.source,
+                    expectedEngineArtifact: input.engineArtifact,
+                    sourceText: row.text,
+                  })
+                );
+                expect(citationResult8.reason).toBe("stale-authority");
+              }
+            }
+          }),
+          { concurrency: 1, discard: true }
+        );
+        expect(checked).toBe(108);
+        expect(builds).toBe(76);
+        const citationResult9 = yield* selected;
+        const input = yield* prepare(citationResult9);
+        const [left, right] = yield* Effect.all([resolver.resolve(input), resolver.resolve(input)], { concurrency: 2 });
+        expect(left.receipt).toEqual(right.receipt);
+        expect(left.resourceBindings).toEqual(right.resourceBindings);
+        expect(builds).toBe(78);
+        const limited = yield* Effect.flip(
+          resolver.resolve({ ...input, limits: { ...input.limits, resolutionIterations: 1 } })
+        );
+        expect(limited.reason).toBe("limit-exceeded");
+        const citationResult10 = yield* resolver.resolve(input);
+        expect(citationResult10.receipt).toEqual(left.receipt);
+        const absent = yield* makeCitationRegisteredResolver().pipe(
+          Effect.provideService(CitationFrozenEditions, frozen)
+        );
+        const ambiguousCase = yield* Effect.fromOption(A.findFirst(contexts, (row) => row.name === "short-ambiguous"));
+        const ambiguousInput = yield* prepare(ambiguousCase);
+        const citationResult11 = yield* Effect.flip(
+          absent.resolve({ ...ambiguousInput, limits: { ...ambiguousInput.limits, resolutionEdges: 3 } })
+        );
+        expect(citationResult11.reason).toBe("limit-exceeded");
+        const citationResult12 = yield* absent.resolve({
+          ...ambiguousInput,
+          limits: { ...ambiguousInput.limits, resolutionEdges: 4 },
+        });
+        expect(A.getUnsafe(citationResult12.document.resolutions, 2).status).toBe("Ambiguous");
+        const nullCase = yield* Effect.fromOption(
+          A.findFirst(contexts, (row) => row.name === "missing-page"),
+          () => CitationCallbackFailure.make({ reason: "invalid-input" })
+        );
+        const citationResult13 = yield* prepare(nullCase);
+        const citationResult14 = yield* Effect.flip(absent.resolve(citationResult13));
+        expect(citationResult14.reason).toBe("identity-failed");
+      }),
+    { timeout: 30_000 }
+  );
+
+  it.effect("spends one shared operation budget across dispatch and descriptor hashing", () =>
+    Effect.gen(function* () {
+      const citationResult15 = yield* selected;
+      const original = yield* prepare(citationResult15);
+      const input = { ...original, mentions: A.take(original.mentions, 1) };
+      const prepared = yield* prepareCitationResolution(input);
+      const citationResult16 = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(citationResult16.bundle);
+      const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+        Effect.provideService(CitationFrozenEditions, frozen)
+      );
+      const counter = yield* makeCitationResolutionWork(prepared.limits);
+      let spent = 0;
+      const measured = CitationResolutionWork.of({
+        ...counter,
+        step: counter.step.pipe(
+          Effect.tap(() =>
+            Effect.sync(() => {
+              spent++;
+            })
+          )
+        ),
+      });
+      const session = yield* runPreparedDefaultCitationCallbackSession(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, measured),
+        Effect.provideService(CitationCallbackRuntimeIndexFactory, factory)
+      );
+      const dispatchSpent = spent;
+      expect(dispatchSpent).toBeGreaterThan(0);
+      const descriptors = yield* makeCitationRegisteredSessionDescriptors(session).pipe(
+        Effect.provideService(CitationFrozenEditions, frozen),
+        Effect.provideService(CitationResolutionWork, measured)
+      );
+      yield* descriptors.describe(A.getUnsafe(session.groups, 0).resource);
+      expect(spent).toBeGreaterThan(dispatchSpent);
+      const resolver = yield* makeCitationRegisteredResolver().pipe(
+        Effect.provideService(CitationFrozenEditions, frozen)
+      );
+      const citationResult17 = yield* Effect.flip(
+        resolver.resolve({ ...input, limits: { ...input.limits, resolutionIterations: dispatchSpent } })
+      );
+      expect(citationResult17.reason).toBe("limit-exceeded");
+      const citationResult18 = yield* resolver.resolve(input);
+      expect(citationResult18.document.groups).toHaveLength(1);
+    })
+  );
+
+  it.effect("keeps branch evidence on the issued callback result and occurrence only", () =>
+    Effect.gen(function* () {
+      const citationResult19 = yield* selected;
+      const citationResult20 = yield* prepare(citationResult19);
+      const prepared = yield* prepareCitationResolution(citationResult20);
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      const callbacks = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackDictionary, owner)
+      );
+      yield* owner.start;
+      const mention = A.getUnsafe(prepared.mentions, 1);
+      const result = yield* callbacks.shortCase(CitationFullsCallbackInput.make({ mention, fulls: [] }));
+      const evidence = yield* readCitationDefaultObservation(result, mention.id);
+      evidence.pipe(O.isSome, assertTrue);
+      if (O.isSome(evidence))
+        expect(evidence.value).toEqual({ _tag: "Unresolved", mentionId: mention.id, reason: "no-matching-authority" });
+      const citationResult21 = yield* readCitationDefaultObservation({ ...result }, mention.id);
+      assertNone(citationResult21);
+      const citationResult22 = yield* readCitationDefaultObservation(result, A.getUnsafe(prepared.mentions, 0).id);
+      assertNone(citationResult22);
+      yield* owner.close;
+    })
+  );
+
+  it.effect("rejects an ambiguity projection when trusted descriptors collapse all candidate labels", () =>
+    Effect.gen(function* () {
+      const citationResult23 = yield* cases;
+      const row = yield* Effect.fromOption(
+        A.findFirst(citationResult23.cases, (row) => row.name === "short-ambiguous")
+      );
+      const input = yield* prepare(row);
+      const session = yield* runDefaultCitationCallbackSession(input);
+      const identity = CitationResourceIdentity.cases.External.make({
+        scope: input.engineArtifact,
+        key: input.engineArtifact,
+      });
+      const projector = yield* makeCitationSessionDocumentProjector().pipe(
+        Effect.provideService(
+          CitationSessionResourceDescriptors,
+          CitationSessionResourceDescriptors.of({
+            describe: Effect.fn("BranchTest.collapsedLabels")(() => Effect.succeed(identity)),
+          })
+        )
+      );
+      const citationResult24 = yield* Effect.flip(projector.project(session));
+      expect(citationResult24.reason).toBe("identity-failed");
+    })
+  );
+
+  it.effect("matches all 46 focused source scenes and the existing default document memberships", () =>
+    Effect.gen(function* () {
+      const data = yield* cases;
+      expect(A.length(data.cases)).toBe(46);
+      yield* Effect.forEach(
+        data.cases,
+        Effect.fnUntraced(function* (row) {
+          const input = yield* prepare(row);
+          if (row.outcome.status === "error") {
+            const failed = yield* Effect.flip(runDefaultCitationCallbackSession(input));
+            expect(["invalid-input", "identity-failed", "callback-failed"]).toContain(failed.reason);
+            expect("cause" in failed).toBe(false);
+          } else {
+            const result = yield* runDefaultCitationCallbackSession(input);
+            const indices = HashMap.fromIterable(
+              A.map(result.mentions, (mention, index) => Tuple.make(mention.id, index))
+            );
+            const groups = A.map(result.groups, (group) =>
+              A.map(group.members, (reference) =>
+                reference._tag === "Mention" ? O.getOrElse(HashMap.get(indices, reference.mentionId), () => -1) : -1
+              )
+            );
+            expect(groups, row.name).toEqual(row.outcome.groups);
+            const document = yield* resolveCitationMentions(input);
+            expect(
+              A.map(document.authorities, (authority) =>
+                A.map(citationAuthorityMentionIds(document, authority.id), (id) =>
+                  O.getOrElse(HashMap.get(indices, id), () => -1)
+                )
+              ),
+              row.name
+            ).toEqual(groups);
+          }
+        }),
+        { concurrency: 1, discard: true }
+      );
+    })
+  );
+
+  it.effect(
+    "matches every committed default operation observation through production callbacks",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* loadResolutionOperationContexts;
+        expect(data.corpusSha256).toBe("ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1");
+        expect(A.length(data.contexts)).toBe(30);
+        expect(A.reduce(data.contexts, 0, (count, row) => count + A.length(row.context.mentions))).toBe(94);
+        yield* Effect.forEach(
+          data.contexts,
+          Effect.fnUntraced(function* (row) {
+            const citationResult25 = yield* prepare(row.context);
+            const result = yield* runDefaultCitationCallbackSession(citationResult25);
+            const indices = HashMap.fromIterable(
+              A.map(result.mentions, (mention, index) => Tuple.make(mention.id, index))
+            );
+            const groups = A.map(result.groups, (group) =>
+              A.map(group.members, (reference) =>
+                reference._tag === "Mention" ? O.getOrElse(HashMap.get(indices, reference.mentionId), () => -1) : -1
+              )
+            );
+            if (row.context.outcome.status !== "value") return yield* Effect.die("Expected source groups");
+            expect(groups, row.context.name).toEqual(row.context.outcome.groups);
+          }),
+          { concurrency: 1, discard: true }
+        );
+      }),
+    { timeout: 30_000 }
+  );
+
+  it.effect("shares the work budget between dispatch and matching while isolating concurrent operations", () =>
+    Effect.gen(function* () {
+      const citationResult26 = yield* selected;
+      const input = yield* prepare(citationResult26);
+      const two = {
+        ...input,
+        mentions: A.take(input.mentions, 2),
+        limits: { ...input.limits, resolutionIterations: 6 },
+      };
+      const results = yield* Effect.all(
+        [runDefaultCitationCallbackSession(two), runDefaultCitationCallbackSession(two)],
+        { concurrency: 2 }
+      );
+      expect(A.map(results, (result) => A.length(A.getUnsafe(result.groups, 0).members))).toEqual([2, 2]);
+      const failed = yield* Effect.flip(
+        runDefaultCitationCallbackSession({ ...two, limits: { ...two.limits, resolutionIterations: 4 } })
+      );
+      expect(failed.reason).toBe("limit-exceeded");
+    })
+  );
+
+  it.effect("captures the budget ceiling and rejects a counter from a different operation policy", () =>
+    Effect.gen(function* () {
+      const citationResult27 = yield* selected;
+      const input = yield* prepare(citationResult27);
+      const limits = { ...input.limits, resolutionIterations: 2 };
+      const work = yield* makeCitationResolutionWork(limits);
+      Reflect.set(limits, "resolutionIterations", 99);
+      yield* work.step;
+      yield* work.step;
+      const citationResult28 = yield* Effect.flip(work.step);
+      expect(citationResult28.reason).toBe("limit-exceeded");
+      expect(work.maximum).toBe(2);
+      const prepared = yield* prepareCitationResolution(input);
+      const mismatch = yield* makeCitationResolutionWork({
+        ...prepared.limits,
+        resolutionIterations: prepared.limits.resolutionIterations - 1,
+      });
+      const goodWork = yield* makeCitationResolutionWork(prepared.limits);
+      const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, goodWork)
+      );
+      const callbacks = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+        Effect.provideService(CitationCallbackDictionary, dictionary),
+        Effect.provideService(CitationResolutionWork, goodWork)
+      );
+      const failed = yield* Effect.flip(
+        runPreparedCitationCallbackSession(prepared).pipe(
+          Effect.provideService(CitationResolutionWork, mismatch),
+          Effect.provideService(CitationCallbackDictionary, dictionary),
+          Effect.provideService(CitationResolutionCallbacks, callbacks)
+        )
+      );
+      expect(failed.reason).toBe("invalid-input");
+    })
+  );
+
+  it.effect("prepares each occurrence once before constructing its default resource", () =>
+    Effect.gen(function* () {
+      const citationResult29 = yield* selected;
+      const input = yield* prepare(citationResult29);
+      const crypto = yield* Digest.Digest;
+      let hashes = 0;
+      const result = yield* runDefaultCitationCallbackSession({ ...input, mentions: A.take(input.mentions, 1) }).pipe(
+        Effect.provideService(
+          Digest.Digest,
+          makeTestCitationDigest((algorithm, bytes) =>
+            Effect.suspend(() => {
+              hashes += 1;
+              return crypto.digest(algorithm, bytes);
+            })
+          )
+        )
+      );
+      expect(A.length(result.groups)).toBe(1);
+      expect(hashes).toBe(2);
+    })
+  );
+});

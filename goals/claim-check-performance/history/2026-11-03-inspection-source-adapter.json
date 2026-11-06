@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "claim-performance-source-adapter/v1",
+  "sourceFreeze": "research/implementation-inspection-adapter-004.json",
+  "resultSha256": "577d4a19b94c6bfa227b6d5cd9a2af6425b982c60f121f8faa979ebe56d7cb42",
+  "legacyStrictMatches": 37,
+  "selectedClaims": 538,
+  "previousPredictionReportsByteIdentical": 56,
+  "lostOriginalPasses": [],
+  "protectedFilesExact": 1213,
+  "focusedAdapterTests": 23,
+  "serverPackageAudit": "passed",
+  "serverDocgen": "passed",
+  "useCasePackageAudit": "passed",
+  "useCaseDocgen": "passed",
+  "independentReviewRequiredFindings": 0,
+  "closedFindings": [
+    "ADAPTER-001",
+    "ADAPTER-002",
+    "ADAPTER-003",
+    "ADAPTER-004"
+  ],
+  "priorExperimentalFreezesRetained": [
+    "implementation-inspection-adapter-001.json",
+    "implementation-inspection-adapter-002.json",
+    "implementation-inspection-adapter-003.json"
+  ],
+  "newSourcePortImplemented": true,
+  "substantivePolicyIntegrated": false,
+  "inspectionServiceToolIntegrated": false,
+  "productPathCoverageMeasured": false,
+  "usefulnessEstablished": false,
+  "goalComplete": false
+}

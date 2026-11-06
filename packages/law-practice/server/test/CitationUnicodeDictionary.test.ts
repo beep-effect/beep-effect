@@ -1,0 +1,303 @@
+import * as NodeURL from "node:url";
+import { $LawPracticeServerId } from "@beep/identity/packages";
+import {
+  CitationRuntimeDictionaryComparison,
+  CitationRuntimeDictionaryFailure,
+  CitationRuntimeDictionaryKey,
+  makeCitationRuntimeDictionary,
+} from "@beep/law-practice-server/internal/Citation/RuntimeDictionary";
+import { Sha256HexFromBytes } from "@beep/schema";
+import { it } from "@beep/test-runner";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+import { expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import type { CitationRuntimeDictionary } from "@beep/law-practice-server/internal/Citation/RuntimeDictionary";
+
+const $I = $LawPracticeServerId.create("test/CitationUnicodeDictionary");
+const Operation = S.Union([
+  S.Struct({ kind: S.tag("get"), key: S.Natural }),
+  S.Struct({ kind: S.tag("set"), key: S.Natural, value: S.Natural }),
+  S.Struct({ kind: S.tag("clear") }),
+]).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("Operation", { description: "Captured dictionary invocation; key hashing is separately observed." })
+);
+const Corpus = S.Struct({
+  cases: S.Array(
+    S.Struct({
+      name: S.String,
+      initial: S.Array(S.Natural),
+      keys: S.Array(
+        S.Struct({
+          objectId: S.Natural,
+          kind: S.Literals(["text", "host", "subclass"]),
+          text: S.String,
+          hash: S.BigIntFromString,
+          token: S.String,
+        })
+      ),
+      events: S.Array(
+        S.Struct({
+          operation: Operation,
+          outcome: S.Union([
+            S.Struct({ status: S.tag("value"), result: S.NullOr(S.Natural) }),
+            S.Struct({ status: S.tag("error"), kind: S.tag("ValueError") }),
+          ]).pipe(S.toTaggedUnion("status")),
+          trace: S.Array(S.Json),
+          entries: S.Array(S.Struct({ objectId: S.Natural, value: S.Natural })),
+        })
+      ),
+    })
+  ),
+}).pipe(
+  $I.annoteSchema("Corpus", {
+    description: "Thirteen combined Unicode/general histories with complete hook calls and ordered outcomes.",
+  })
+);
+const CorpusJson = S.fromJsonString(Corpus);
+
+const invalid = () => CitationRuntimeDictionaryFailure.make({ reason: "invalid-input" });
+it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode dictionary", (it) => {
+  it.effect("keeps equal-hash exact Unicode keys distinct without dispatching rich comparison", () =>
+    Effect.gen(function* () {
+      const strings = ["a😀", "a😁"];
+      const comparison = CitationRuntimeDictionaryComparison.of({
+        step: Effect.void,
+        exactUnicode: Effect.fn("UnicodeCollisionTest.text")((id) => Effect.succeed(A.get(strings, id))),
+        equal: Effect.fn("UnicodeCollisionTest.noRichCompare")(() =>
+          Effect.die("Exact Unicode collisions must compare native text without rich hooks")
+        ),
+      });
+      const table = yield* makeCitationRuntimeDictionary({ entries: 4, iterations: 100 }).pipe(
+        Effect.provideService(CitationRuntimeDictionaryComparison, comparison)
+      );
+      const left = CitationRuntimeDictionaryKey.make({ objectId: 0, hash: BigInt(7) });
+      const right = CitationRuntimeDictionaryKey.make({ objectId: 1, hash: BigInt(7) });
+      yield* table.set(left, 10);
+      yield* table.set(right, 20);
+      const leftValue = yield* table.get(left);
+      const rightValue = yield* table.get(right);
+      assertSome(
+        O.map(leftValue, (entry) => entry.value),
+        10
+      );
+      assertSome(
+        O.map(rightValue, (entry) => entry.value),
+        20
+      );
+      const entries = yield* table.read;
+      expect(A.map(entries, (entry) => entry.value)).toEqual([10, 20]);
+    })
+  );
+
+  it.effect("matches all pinned transitions, reflected host calls and equality mutation restarts", () =>
+    Effect.gen(function* () {
+      const citationResult1 = yield* FileSystem.FileSystem;
+      const raw = yield* citationResult1.readFileString(
+        NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/unicode-dictionary.json", import.meta.url))
+      );
+      const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+      expect(citationResult2).toBe("2c8625cb9c7cd72a3a3c030a8606b5d9cada4e14b45e6ffa77065a79162dc22b");
+      const corpus = yield* S.decodeEffect(CorpusJson)(raw);
+      expect(corpus.cases).toHaveLength(13);
+      expect(A.reduce(corpus.cases, 0, (n, row) => n + row.events.length)).toBe(40);
+      yield* Effect.forEach(
+        corpus.cases,
+        Effect.fnUntraced(function* (row) {
+          let table = O.none<ReturnType<typeof CitationRuntimeDictionary.of>>();
+          let changed = false;
+          let trace: ReadonlyArray<S.Json> = [];
+          const state = Effect.fn("UnicodeDictionaryTest.state")((id: number) =>
+            Effect.fromOption(A.get(row.keys, id), invalid)
+          );
+          const key = Effect.fn("UnicodeDictionaryTest.key")(function* (id: number) {
+            const value = yield* state(id);
+            if (value.kind !== "text") {
+              trace = A.append(trace, { kind: "hash", key: id });
+            }
+            return CitationRuntimeDictionaryKey.make({ objectId: id, hash: value.hash });
+          });
+          const action = Effect.fn("UnicodeDictionaryTest.action")(function* () {
+            if (changed) {
+              return;
+            }
+            changed = true;
+            const current = yield* Effect.fromOption(table, invalid);
+            if (row.name === "delete-in-equality" || row.name === "delete-raise") {
+              const citationResult3 = yield* key(0);
+              const removed = yield* current.remove(citationResult3);
+              trace = A.append(trace, {
+                kind: "remove",
+                key: 0,
+                result: O.getOrNull(O.map(removed, (entry) => entry.value)),
+              });
+              if (row.name === "delete-raise") {
+                return yield* CitationRuntimeDictionaryFailure.make({ reason: "comparison-failed" });
+              }
+            } else if (row.name === "update-in-equality") {
+              const citationResult4 = yield* key(0);
+              yield* current.set(citationResult4, 99);
+              trace = A.append(trace, { kind: "set", key: 0, value: 99 });
+            } else if (row.name === "clear-refill") {
+              yield* current.clear;
+              trace = A.append(trace, { kind: "clear" });
+              yield* Effect.forEach(
+                row.initial,
+                Effect.fnUntraced(function* (id) {
+                  const citationResult5 = yield* key(id);
+                  yield* current.set(citationResult5, 200 + id);
+                  trace = A.append(trace, { kind: "set", key: id, value: 200 + id });
+                }),
+                { concurrency: 1, discard: true }
+              );
+            } else if (row.name === "convert-in-equality") {
+              const citationResult6 = yield* key(6);
+              yield* current.set(citationResult6, 106);
+              trace = A.append(trace, { kind: "set", key: 6, value: 106 });
+            }
+          });
+          const comparison = CitationRuntimeDictionaryComparison.of({
+            step: Effect.void,
+            exactUnicode: Effect.fn("UnicodeDictionaryTest.exact")((id) =>
+              state(id).pipe(Effect.map((value) => (value.kind === "text" ? O.some(value.text) : O.none())))
+            ),
+            equal: Effect.fn("UnicodeDictionaryTest.equal")(function* (left, right) {
+              const l = yield* state(left);
+              const r = yield* state(right);
+              // This controlled rich-compare adapter models Python's reflected
+              // host/subclass dispatch. The table supplies stored/query order.
+              if (l.kind === "text" && r.kind === "text") {
+                return l.text === r.text;
+              }
+              const first = l.kind === "text" ? right : left;
+              const second = l.kind === "text" ? left : right;
+              trace = A.append(trace, { kind: "compare", left: first, right: second });
+              if (first === 5) {
+                yield* action();
+              }
+              return l.token === r.token;
+            }),
+          });
+          const current = yield* makeCitationRuntimeDictionary({ entries: 64, iterations: 20_000 }).pipe(
+            Effect.provideService(CitationRuntimeDictionaryComparison, comparison)
+          );
+          table = O.some(current);
+          yield* Effect.forEach(
+            row.initial,
+            Effect.fnUntraced(function* (id) {
+              const citationResult7 = yield* key(id);
+              yield* current.set(citationResult7, 100 + id);
+            }),
+            { concurrency: 1, discard: true }
+          );
+          expect(trace).toEqual([]);
+          yield* Effect.forEach(
+            row.events,
+            Effect.fnUntraced(function* (event) {
+              trace = [];
+              const op = event.operation;
+              const input = op.kind === "clear" ? O.none() : yield* key(op.key).pipe(Effect.asSome);
+              const run = O.isNone(input)
+                ? current.clear.pipe(Effect.as(O.none()))
+                : op.kind === "set"
+                  ? current.set(input.value, op.value).pipe(Effect.as(O.none()))
+                  : current.get(input.value);
+              if (event.outcome.status === "error") {
+                const failure = yield* Effect.flip(run);
+                expect(failure.reason, row.name).toBe("comparison-failed");
+              } else {
+                const value = yield* run;
+                expect(O.getOrNull(O.map(value, (entry) => entry.value)), row.name).toBe(event.outcome.result);
+              }
+              expect(trace, row.name).toEqual(event.trace);
+              const citationResult8 = yield* current.read;
+              expect(
+                A.map(citationResult8, (entry) => ({ objectId: entry.objectId, value: entry.value })),
+                row.name
+              ).toEqual(event.entries);
+            }),
+            { concurrency: 1, discard: true }
+          );
+        }),
+        { concurrency: 1, discard: true }
+      );
+    })
+  );
+  it.effect("bypasses rich comparison for exact Unicode queries and preserves it after conversion", () =>
+    Effect.gen(function* () {
+      let calls = 0;
+      const comparison = CitationRuntimeDictionaryComparison.of({
+        step: Effect.void,
+        exactUnicode: Effect.fn("UnicodeDictionaryTest.exactKinds")((id) =>
+          Effect.succeed(id === 2 ? O.none() : O.some("html"))
+        ),
+        equal: Effect.fn("UnicodeDictionaryTest.observe")(() =>
+          Effect.sync(() => {
+            calls++;
+            return true;
+          })
+        ),
+      });
+      const table = yield* makeCitationRuntimeDictionary({ entries: 8, iterations: 100 }).pipe(
+        Effect.provideService(CitationRuntimeDictionaryComparison, comparison)
+      );
+      const key = (objectId: number) => CitationRuntimeDictionaryKey.make({ objectId, hash: BigInt(7) });
+      yield* table.set(key(0), 10);
+      const citationResult9 = yield* table.get(key(1));
+      assertSome(
+        O.map(citationResult9, (entry) => entry.value),
+        10
+      );
+      expect(calls).toBe(0);
+      yield* table.set(key(2), 11);
+      expect(calls).toBe(1);
+      yield* table.get(key(1));
+      expect(calls).toBe(2);
+      yield* table.clear;
+      yield* table.set(key(0), 12);
+      yield* table.get(key(1));
+      expect(calls).toBe(2);
+    })
+  );
+  it.effect("retains a registry across operations while preserving captured aggregate work limits", () =>
+    Effect.gen(function* () {
+      let remaining = 2000;
+      const comparison = CitationRuntimeDictionaryComparison.of({
+        exactUnicode: Effect.fn("UnicodeDictionaryTest.retainedText")(() => Effect.succeedSome("html")),
+        equal: Effect.fn("UnicodeDictionaryTest.retainedEqual")(() => Effect.succeed(true)),
+        step: Effect.suspend(() => {
+          if (remaining === 0) {
+            return Effect.fail(CitationRuntimeDictionaryFailure.make({ reason: "limit-exceeded" }));
+          }
+          remaining--;
+          return Effect.void;
+        }),
+      });
+      const table = yield* makeCitationRuntimeDictionary({ entries: 2, iterations: 12 }).pipe(
+        Effect.provideService(CitationRuntimeDictionaryComparison, comparison)
+      );
+      const key = CitationRuntimeDictionaryKey.make({ objectId: 0, hash: BigInt(7) });
+      for (let run = 0; run < 100; run++) {
+        yield* table.set(key, run);
+        const citationResult10 = yield* table.remove(key);
+        assertSome(
+          O.map(citationResult10, (entry) => entry.value),
+          run
+        );
+      }
+      yield* table.set(key, 100);
+      remaining = 0;
+      const citationResult11 = yield* Effect.flip(table.get(key));
+      expect(citationResult11).toMatchObject({ reason: "limit-exceeded" });
+      const citationResult12 = yield* table.read;
+      expect(A.map(citationResult12, (entry) => entry.value)).toEqual([100]);
+    })
+  );
+});

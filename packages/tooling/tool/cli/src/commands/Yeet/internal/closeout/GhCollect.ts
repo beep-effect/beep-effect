@@ -140,6 +140,7 @@ const ghGraphqlPage = Effect.fn("YeetCloseout.ghGraphqlPage")(function* (
   cursor: O.Option<string>,
   label: string
 ): Effect.fn.Return<string, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+  // KEEP (D-13): the closeout comment and review pages have no kit resource.
   return yield* closeoutGhOutput(
     context,
     [
@@ -385,6 +386,7 @@ export const collectPrCloseoutPayload = Effect.fn("YeetCloseout.collectPrCloseou
   YeetCommandError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | ReviewThread
 > {
+  // KEEP (D-13): `gh pr view` resolves the pull request from the checked-out branch.
   const pr = yield* closeoutGhOutput(
     context,
     ["pr", "view", "--json", "number,headRefName,state,url,headRefOid,isDraft,author"],
@@ -394,6 +396,7 @@ export const collectPrCloseoutPayload = Effect.fn("YeetCloseout.collectPrCloseou
       decodeGhPrView(output).pipe(Effect.mapError(YeetCommandError.new("Failed to decode gh pr view JSON.")))
     )
   );
+  // KEEP (D-13): gh's base-repository resolution has no kit member.
   const repo = yield* closeoutGhOutput(context, ["repo", "view", "--json", "owner,name"], "gh repo view").pipe(
     Effect.flatMap((output) =>
       decodeGhRepoView(output).pipe(Effect.mapError(YeetCommandError.new("Failed to decode gh repo view JSON.")))

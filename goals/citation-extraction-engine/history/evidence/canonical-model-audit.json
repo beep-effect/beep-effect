@@ -1,0 +1,488 @@
+{
+  "schemaVersion": "citation-canonical-model-audit/v1",
+  "scope": "Model field ownership and focused oracle observations; no target parser/formatter/resolution proof.",
+  "commit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "producerSha256": "86f4ca7d0321e7dc9392056aa015c6365ee6d7ee66caa0818bd539827cfa1bd1",
+  "python": "3.11.15",
+  "hashSeed": "0",
+  "clockDate": "2026-10-28",
+  "dependencies": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22"
+  },
+  "sources": [
+    {
+      "path": "eyecite/models.py",
+      "sha256": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a"
+    },
+    {
+      "path": "eyecite/helpers.py",
+      "sha256": "3d3431db232be2f3d7320125528975d57797372a9c4c21d524927fc1ccf0a297"
+    },
+    {
+      "path": "eyecite/find.py",
+      "sha256": "64415ffe6a5fc39713a1ad1d6585ae673fb175b32c53820185237a174416dd3d"
+    },
+    {
+      "path": "eyecite/resolve.py",
+      "sha256": "651ede8c2a2d5df9ec9c9f1145530a6de7fca15304d1816b7f620a81ab3f2044"
+    }
+  ],
+  "models": [
+    {
+      "name": "FullCaseCitation",
+      "fields": [
+        "token",
+        "index",
+        "span_start",
+        "span_end",
+        "full_span_start",
+        "full_span_end",
+        "groups",
+        "metadata",
+        "document",
+        "exact_editions",
+        "variation_editions",
+        "all_editions",
+        "edition_guess",
+        "year"
+      ],
+      "metadataFields": [
+        "parenthetical",
+        "pin_cite",
+        "pin_cite_span_start",
+        "pin_cite_span_end",
+        "year",
+        "month",
+        "day",
+        "court",
+        "plaintiff",
+        "defendant",
+        "extra",
+        "antecedent_guess",
+        "resolved_case_name_short",
+        "resolved_case_name"
+      ],
+      "sourceSha256": "875fdc751af376ea8cf83c9d50c82b501217dc83ffbda6105d776da07fc22f69"
+    },
+    {
+      "name": "ShortCaseCitation",
+      "fields": [
+        "token",
+        "index",
+        "span_start",
+        "span_end",
+        "full_span_start",
+        "full_span_end",
+        "groups",
+        "metadata",
+        "document",
+        "exact_editions",
+        "variation_editions",
+        "all_editions",
+        "edition_guess",
+        "year"
+      ],
+      "metadataFields": [
+        "parenthetical",
+        "pin_cite",
+        "pin_cite_span_start",
+        "pin_cite_span_end",
+        "year",
+        "month",
+        "day",
+        "court",
+        "antecedent_guess"
+      ],
+      "sourceSha256": "ca8c2fc19e088526116074389a5757c5f5bc49cd55af0de3c84ca5edf952a926"
+    },
+    {
+      "name": "FullLawCitation",
+      "fields": [
+        "token",
+        "index",
+        "span_start",
+        "span_end",
+        "full_span_start",
+        "full_span_end",
+        "groups",
+        "metadata",
+        "document",
+        "exact_editions",
+        "variation_editions",
+        "all_editions",
+        "edition_guess",
+        "year"
+      ],
+      "metadataFields": [
+        "parenthetical",
+        "pin_cite",
+        "pin_cite_span_start",
+        "pin_cite_span_end",
+        "year",
+        "month",
+        "day",
+        "publisher"
+      ],
+      "sourceSha256": "6284df7463b2fc30e36fa41f28490579b011ab9f537e896fb985d8d393c3c324"
+    },
+    {
+      "name": "FullJournalCitation",
+      "fields": [
+        "token",
+        "index",
+        "span_start",
+        "span_end",
+        "full_span_start",
+        "full_span_end",
+        "groups",
+        "metadata",
+        "document",
+        "exact_editions",
+        "variation_editions",
+        "all_editions",
+        "edition_guess",
+        "year"
+      ],
+      "metadataFields": [
+        "parenthetical",
+        "pin_cite",
+        "pin_cite_span_start",
+        "pin_cite_span_end",
+        "year",
+        "month",
+        "day"
+      ],
+      "sourceSha256": "66e737221fbdf2b37f54e6770fdb97ff3060784924e8d541309993636813750b"
+    },
+    {
+      "name": "IdCitation",
+      "fields": [
+        "token",
+        "index",
+        "span_start",
+        "span_end",
+        "full_span_start",
+        "full_span_end",
+        "groups",
+        "metadata",
+        "document"
+      ],
+      "metadataFields": [
+        "parenthetical",
+        "pin_cite",
+        "pin_cite_span_start",
+        "pin_cite_span_end"
+      ],
+      "sourceSha256": "a4e88dcf801ba6538f748126bcf9502257827c65412298c864809ebf51058f60"
+    },
+    {
+      "name": "SupraCitation",
+      "fields": [
+        "token",
+        "index",
+        "span_start",
+        "span_end",
+        "full_span_start",
+        "full_span_end",
+        "groups",
+        "metadata",
+        "document"
+      ],
+      "metadataFields": [
+        "parenthetical",
+        "pin_cite",
+        "pin_cite_span_start",
+        "pin_cite_span_end",
+        "antecedent_guess",
+        "volume"
+      ],
+      "sourceSha256": "1310d3599a3ceda13954d1251bcf3a75f4e74387f1bfdbc38eacf50c2d873dff"
+    },
+    {
+      "name": "ReferenceCitation",
+      "fields": [
+        "token",
+        "index",
+        "span_start",
+        "span_end",
+        "full_span_start",
+        "full_span_end",
+        "groups",
+        "metadata",
+        "document"
+      ],
+      "metadataFields": [
+        "parenthetical",
+        "pin_cite",
+        "pin_cite_span_start",
+        "pin_cite_span_end",
+        "plaintiff",
+        "defendant",
+        "resolved_case_name_short",
+        "resolved_case_name"
+      ],
+      "sourceSha256": "ecd875a59beab8ccb460634e08eee6dbb25fcacf54e4100fe8c7e4761414399f"
+    },
+    {
+      "name": "UnknownCitation",
+      "fields": [
+        "token",
+        "index",
+        "span_start",
+        "span_end",
+        "full_span_start",
+        "full_span_end",
+        "groups",
+        "metadata",
+        "document"
+      ],
+      "metadataFields": [
+        "parenthetical",
+        "pin_cite",
+        "pin_cite_span_start",
+        "pin_cite_span_end"
+      ],
+      "sourceSha256": "cabddda3252bd055685bb4cf9c5d84044c3f54ccedafdf4228268f177beda75f"
+    }
+  ],
+  "observations": [
+    {
+      "id": "named-reference",
+      "text": "Roe v. Wade, 410 U.S. 113 (1973). Roe at 120.",
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "groups": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113"
+          },
+          "metadata": {
+            "parenthetical": null,
+            "pin_cite": null,
+            "pin_cite_span_start": null,
+            "pin_cite_span_end": null,
+            "year": "1973",
+            "month": null,
+            "day": null,
+            "court": "scotus",
+            "plaintiff": "Roe",
+            "defendant": "Wade",
+            "extra": null,
+            "antecedent_guess": null,
+            "resolved_case_name_short": null,
+            "resolved_case_name": null
+          },
+          "span": [13, 25],
+          "fullSpan": [0, 32],
+          "correctedCitation": "410 U.S. 113",
+          "correctedFullCitation": "Roe v. Wade, 410 U.S. 113 (scotus 1973)"
+        },
+        {
+          "kind": "ReferenceCitation",
+          "groups": {},
+          "metadata": {
+            "parenthetical": null,
+            "pin_cite": "at 120",
+            "pin_cite_span_start": null,
+            "pin_cite_span_end": null,
+            "plaintiff": "Roe",
+            "defendant": null,
+            "resolved_case_name_short": null,
+            "resolved_case_name": null
+          },
+          "span": [34, 44],
+          "fullSpan": [34, 44],
+          "correctedCitation": "Roe at 120",
+          "correctedFullCitation": "Roe at 120"
+        }
+      ]
+    },
+    {
+      "id": "short-case",
+      "text": "Adarand, 515 U.S. at 241",
+      "citations": [
+        {
+          "kind": "ShortCaseCitation",
+          "groups": {
+            "volume": "515",
+            "reporter": "U.S.",
+            "page": "241"
+          },
+          "metadata": {
+            "parenthetical": null,
+            "pin_cite": "241",
+            "pin_cite_span_start": null,
+            "pin_cite_span_end": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": "scotus",
+            "antecedent_guess": "Adarand"
+          },
+          "span": [9, 24],
+          "fullSpan": [0, 24],
+          "correctedCitation": "515 U.S. at 241",
+          "correctedFullCitation": "Adarand, 515 U.S. at 241"
+        }
+      ]
+    },
+    {
+      "id": "supra",
+      "text": "Smith, supra, at 240.",
+      "citations": [
+        {
+          "kind": "SupraCitation",
+          "groups": {},
+          "metadata": {
+            "parenthetical": null,
+            "pin_cite": "at 240",
+            "pin_cite_span_start": null,
+            "pin_cite_span_end": null,
+            "antecedent_guess": "Smith",
+            "volume": null
+          },
+          "span": [7, 20],
+          "fullSpan": [0, 20],
+          "correctedCitation": "supra,",
+          "correctedFullCitation": "supra,"
+        }
+      ]
+    },
+    {
+      "id": "id",
+      "text": "Id. at 240.",
+      "citations": [
+        {
+          "kind": "IdCitation",
+          "groups": {},
+          "metadata": {
+            "parenthetical": null,
+            "pin_cite": "at 240",
+            "pin_cite_span_start": null,
+            "pin_cite_span_end": null
+          },
+          "span": [0, 10],
+          "fullSpan": [0, 10],
+          "correctedCitation": "Id.",
+          "correctedFullCitation": "Id."
+        }
+      ]
+    },
+    {
+      "id": "unknown",
+      "text": "§ 2",
+      "citations": [
+        {
+          "kind": "UnknownCitation",
+          "groups": {},
+          "metadata": {
+            "parenthetical": null,
+            "pin_cite": null,
+            "pin_cite_span_start": null,
+            "pin_cite_span_end": null
+          },
+          "span": [0, 1],
+          "fullSpan": [0, 1],
+          "correctedCitation": "§",
+          "correctedFullCitation": "§"
+        }
+      ]
+    },
+    {
+      "id": "journal",
+      "text": "93 Harv. L. Rev. 518, 520 (1980)",
+      "citations": [
+        {
+          "kind": "FullJournalCitation",
+          "groups": {
+            "volume": "93",
+            "reporter": "Harv. L. Rev.",
+            "page": "518"
+          },
+          "metadata": {
+            "parenthetical": null,
+            "pin_cite": "520",
+            "pin_cite_span_start": null,
+            "pin_cite_span_end": null,
+            "year": "1980",
+            "month": null,
+            "day": null
+          },
+          "span": [0, 20],
+          "fullSpan": [0, 32],
+          "correctedCitation": "93 Harv. L. Rev. 518",
+          "correctedFullCitation": "93 Harv. L. Rev. 518, 520 (1980)"
+        }
+      ]
+    },
+    {
+      "id": "law",
+      "text": "35 U.S.C. § 101 (2018)",
+      "citations": [
+        {
+          "kind": "FullLawCitation",
+          "groups": {
+            "title": "35",
+            "reporter": "U.S.C.",
+            "section": "101"
+          },
+          "metadata": {
+            "parenthetical": null,
+            "pin_cite": null,
+            "pin_cite_span_start": null,
+            "pin_cite_span_end": null,
+            "year": "2018",
+            "month": null,
+            "day": null,
+            "publisher": null
+          },
+          "span": [0, 15],
+          "fullSpan": [0, 22],
+          "correctedCitation": "35 U.S.C. § 101",
+          "correctedFullCitation": "35 U.S.C. § 101 (2018)"
+        }
+      ]
+    },
+    {
+      "id": "case-missing-page",
+      "text": "1 U.S. ___",
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "groups": {
+            "volume": "1",
+            "reporter": "U.S.",
+            "page": null
+          },
+          "metadata": {
+            "parenthetical": null,
+            "pin_cite": null,
+            "pin_cite_span_start": null,
+            "pin_cite_span_end": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": "scotus",
+            "plaintiff": null,
+            "defendant": null,
+            "extra": null,
+            "antecedent_guess": null,
+            "resolved_case_name_short": null,
+            "resolved_case_name": null
+          },
+          "span": [0, 10],
+          "fullSpan": [0, 10],
+          "correctedCitation": "1 U.S. ___",
+          "correctedFullCitation": "1 U.S. ___ (scotus)"
+        }
+      ]
+    }
+  ]
+}

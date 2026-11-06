@@ -1,0 +1,3048 @@
+{
+  "schemaVersion": "citation-consumer-scan/v2",
+  "surfaceSha256": "7b177ea724edd8f8f7e50610d5c905bed28eb8c0de6998078f299a2c04b19b93",
+  "baselineHead": "a8c5a38d20a8b80d7e325f34bfe215bbaa444b09",
+  "compilerVersion": "5.9.3",
+  "compilerSha256": "3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675",
+  "scannerSha256": "dde0e63dbd83f6cd4b27662123aa69ad4559446e3e62f9d1331315f71a2f4ca6",
+  "searchedFiles": 7753,
+  "legacySymbols": [
+    "AnnotationCitation",
+    "AnnotationComponentSpan",
+    "CanonCitation",
+    "CaseComponentSpan",
+    "CaseGroup",
+    "Citation",
+    "CitationBase",
+    "CitationId",
+    "CitationSignal",
+    "CitationType",
+    "CitationWarning",
+    "ConstitutionalCitation",
+    "ConstitutionalComponentSpan",
+    "ContextOptions",
+    "CourtInference",
+    "CourtJurisdiction",
+    "CourtLevel",
+    "DocketCitation",
+    "DurableLocator",
+    "DurableLocatorOptions",
+    "FederalRegisterCitation",
+    "FederalRegisterComponentSpan",
+    "FederalRuleCitation",
+    "FederalRuleComponentSpan",
+    "FootnoteMap",
+    "FullCaseCitation",
+    "FullCitation",
+    "FullCitationType",
+    "HistoryChain",
+    "HistoryLink",
+    "HistorySignal",
+    "IdCitation",
+    "IdComponentSpan",
+    "JournalCitation",
+    "JournalComponentSpan",
+    "LegislativeMaterialCitation",
+    "LocalOrdinanceCitation",
+    "NeutralCitation",
+    "NeutralComponentSpan",
+    "ParallelGroup",
+    "Parenthetical",
+    "ParentheticalType",
+    "PinciteInfo",
+    "PublicLawCitation",
+    "PublicLawComponentSpan",
+    "RegulationCitation",
+    "ResolutionResult",
+    "RestatementCitation",
+    "RestatementComponentSpan",
+    "Segment",
+    "SegmentMap",
+    "SessionLawCitation",
+    "ShortFormCaseCitation",
+    "ShortFormCaseComponentSpan",
+    "ShortFormCitation",
+    "ShortFormCitationType",
+    "Span",
+    "StateRuleCitation",
+    "StatuteCitation",
+    "StatuteComponentSpan",
+    "StatutesAtLargeCitation",
+    "StatutesAtLargeComponentSpan",
+    "StringCitationGroup",
+    "SubsequentHistoryEntry",
+    "SupraCitation",
+    "SupraComponentSpan",
+    "SurroundingContext",
+    "TextQuote",
+    "TransformationMap",
+    "TreatiseCitation",
+    "TreatiseComponentSpan",
+    "TreatyCitation",
+    "WarningLevel",
+    "WarningPosition",
+    "Zone",
+    "detectTextFootnotes"
+  ],
+  "examined": [
+    {
+      "path": "apps/docket-intake/src/Backfill.ts",
+      "sourceSha256": "8335ecd7aa2fa9c3f2e86470e6888dd65c4c40eb367973c334e9d6f9d3ca0c30"
+    },
+    {
+      "path": "apps/practice-claude-mod/src/PracticeMod.hooks.ts",
+      "sourceSha256": "5fb723f5c25241830fd9f59e697b5e33d7be49d0ffe4c356bcc1714b81db2aea"
+    },
+    {
+      "path": "apps/practice-claude-mod/src/PracticeMod.values.ts",
+      "sourceSha256": "64ebcfcb2423d607573c5280e1d4c7cf7e4a93d3ea90ca6f6f64d32f054ce564"
+    },
+    {
+      "path": "apps/practice-claude-mod/src/PracticeMod.verdicts.ts",
+      "sourceSha256": "817025e6ff0a5087d458e10a04ea5e6dd43c4a9c38a08858f13679089e6daf7b"
+    },
+    {
+      "path": "apps/practice-claude-mod/test/PracticeMod.hooks.test.ts",
+      "sourceSha256": "0c4075d31342154faf605407b553f0055c48f1d8a509de6d6f77ae354fa93452"
+    },
+    {
+      "path": "apps/practice-claude-mod/test/PracticeMod.verdicts.test.ts",
+      "sourceSha256": "4a2bf6d398223fee15274eba0a32e71c843147f05ff62cd67799ebeea4ff136e"
+    },
+    {
+      "path": "apps/practice-gateway/src/Approvals.ts",
+      "sourceSha256": "dade748bdbfc9a825215f1e92ba0359d987754cd78418989a3391f0014d4fe11"
+    },
+    {
+      "path": "apps/practice-gateway/src/PracticeGateway.errors.ts",
+      "sourceSha256": "1c8a7ac24a39c7e9a4a6c119095d3324b6de7e167be4890ace340e38ab84f00f"
+    },
+    {
+      "path": "apps/practice-gateway/src/Probes.ts",
+      "sourceSha256": "26ad348568ab7d139831481910f5290e7e236bf0dd037785631cd9db811966a6"
+    },
+    {
+      "path": "apps/practice-gateway/src/ProfileStore.ts",
+      "sourceSha256": "c3a7c42bfb12d1c3cd511f4e3d9e91cafa5dbf4a21150a93abcf4187662beacf"
+    },
+    {
+      "path": "apps/practice-gateway/src/Requirements.ts",
+      "sourceSha256": "405b11820478f483eb74f7a8fc9a6ba124ee87bf20494632385c647c660abe71"
+    },
+    {
+      "path": "apps/practice-gateway/src/SelfCheck.ts",
+      "sourceSha256": "c9ea00d12cdbfa0018f65a5f361bfb5db173fd0d3dfdcfcf6f1bcbde2b2b4444"
+    },
+    {
+      "path": "apps/practice-gateway/src/SetupTools.ts",
+      "sourceSha256": "932ffca1f6d3dc295fa756b3ad52c5108644700e8fe48b182eca2388c5ff3a6d"
+    },
+    {
+      "path": "apps/practice-gateway/test/Approvals.test.ts",
+      "sourceSha256": "5c23651fb90073aae5bf674e05454a135c523d3f518708cdc7ba70755764b884"
+    },
+    {
+      "path": "apps/practice-gateway/test/BoxDriveTools.test.ts",
+      "sourceSha256": "ef328303f526372d115e13075b89381c208ae566a07529aad75812c09e6e8e22"
+    },
+    {
+      "path": "apps/practice-gateway/test/LazyPracticeKg.test.ts",
+      "sourceSha256": "7aee9ee1fda0aa0bc5c0c93a7f72c8db373ccdf526d5414cd1dc2666540ab63d"
+    },
+    {
+      "path": "apps/practice-gateway/test/OnboardingSkill.test.ts",
+      "sourceSha256": "4e16487a9386d86d289ddac4b971dde1566d58362bac2c30ab48432f4b970c67"
+    },
+    {
+      "path": "apps/practice-gateway/test/Probes.test.ts",
+      "sourceSha256": "e55040eba739e29b6782ce9f0e2e3e26d00536f845acc101fcabe3567ae879a9"
+    },
+    {
+      "path": "apps/practice-gateway/test/Requirements.test.ts",
+      "sourceSha256": "0de07adeea5b55c443a68e6e82bca4667dd1d3c97d8ac54b8b2ade735ae2b095"
+    },
+    {
+      "path": "apps/practice-gateway/test/SetupTools.test.ts",
+      "sourceSha256": "e66bb21dbc10fa69fd0cb14b679322121c11660cffe9aceddf5235fff894f287"
+    },
+    {
+      "path": "apps/practice-gateway/test/fixtures.ts",
+      "sourceSha256": "6955aad8371cea53ef7904a2e6098c54d1efe04a8b9b27ac1139e28fa40e74cf"
+    },
+    {
+      "path": "apps/practice-review-hub/src/Notice.ts",
+      "sourceSha256": "399dfc074b026700d66dae6010089a923acad88438acec68640fb702cba5c26a"
+    },
+    {
+      "path": "packages/_internal/db-admin/test/integration/LawPracticeCandorGateMigration.pglite.test.ts",
+      "sourceSha256": "612987edf6da00f68ef58c09af83921e17b8b62a946802c38d7c926b2f1ca19e"
+    },
+    {
+      "path": "packages/_internal/db-admin/test/integration/LawPracticeLegalPositionMigration.pglite.test.ts",
+      "sourceSha256": "604c3a874b91f63a57e088340039b6bbaab4636e4ed7199856633c2ec3fc4205"
+    },
+    {
+      "path": "packages/foundation/modeling/identity/src/packages.ts",
+      "sourceSha256": "e2b6e5c41cdcd466d7bf6b13c9526208488a63e99a181b66e4737a313499bde7"
+    },
+    {
+      "path": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+      "sourceSha256": "913d401691bad26367fbd9783e80cf803d86c0cf4b3cde6768f8e1b119379ddc"
+    },
+    {
+      "path": "packages/law-practice/domain/src/index.ts",
+      "sourceSha256": "872bfc0852da9303cb94348c2a958558c4a0798963ea78d05092acc0155ee082"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/AnnotationCitation/AnnotationCitation.model.ts",
+      "sourceSha256": "fb91f5c02356da42decfeecfe2c94a7c6d2e4b2071f8ed140a9735bcbb863591"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/AnnotationCitation/index.ts",
+      "sourceSha256": "922b9543fca368d847cfef6f5955fa1f384f591c1c3b0c1f2b213d03e25330c8"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CanonCitation/CanonCitation.model.ts",
+      "sourceSha256": "6dee471878402aaeac0e2e107ffde0d82eb587b502db8c16ecb9b92e56773587"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CanonCitation/index.ts",
+      "sourceSha256": "d621f7902732fe3d3689e1c17e66d14369acf898f7c1418727816dcdf2debedc"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CaseGroup/CaseGroup.model.ts",
+      "sourceSha256": "00d8f7a51fe01230cdcffb66f9511eb10ff1a5d3346b11336c5fe9fa82455cdb"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CaseGroup/index.ts",
+      "sourceSha256": "e21c2fb392b5832356b10908e0ba9af3f49c26a9f530e527fbac5491f5b4d9b9"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/index.ts",
+      "sourceSha256": "3869df298c18da4a4ee0240c2ef46c3bbc40449337ba88b869accf8c3d74bcaa"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationBase/CitationBase.model.ts",
+      "sourceSha256": "c1db2fc3ae1589919d1a2359c95285b38b6c407e2d297492be8c4ef530c1e050"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationBase/index.ts",
+      "sourceSha256": "598f421cd5c481f9c4bd5bd44d766ba84256237eaec84b2ce4d1ee028ffc6e5a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationId/index.ts",
+      "sourceSha256": "5895b273ffb32ece60d9c46c35f5059b8904b04ba2bc27dcb5b7c32e562094b6"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationSignal/index.ts",
+      "sourceSha256": "abe5c76bb33f478b02e48d491f3ea31fc218e5fdf0531b97890d8d80502a9a04"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationType/index.ts",
+      "sourceSha256": "218edb097ec79160d6474c7be4bbbfd4d48f92ba9eb2cc7335a45faad9ca7811"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationWarning/index.ts",
+      "sourceSha256": "220a3df23c0d562ba40a39470dbd6a9671a970af88584f75aedcc900e6db972a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "sourceSha256": "48df9d2f378da8cbabcf95a6690586ad7759c109ab31117149cfac4cea0ed709"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ComponentSpan/index.ts",
+      "sourceSha256": "0391b9d0c13d9533c762685caed709a0d1cd9eee504d8b440927bcdd27ffb8c3"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ConstitutionalCitation/ConstitutionalCitation.model.ts",
+      "sourceSha256": "0b2bd73e10ca69d8209d9592ca6d512f69f4bb0bc735b5d6c275443f21f9a04a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ConstitutionalCitation/index.ts",
+      "sourceSha256": "f45613c11e75ee48b0c768365e19e1b4e903b2b3314c868b9b366a687f1212f8"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ContextOptions/index.ts",
+      "sourceSha256": "55ee028072b06a01471d26c9da37ecbe031044e4f2748de04f1f326249cf215c"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CourtInference/index.ts",
+      "sourceSha256": "f4b4631c5c7ebd32da6a6a7604e12b8297d0a1b78c8fac1b3a82508d624f7052"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/DocketCitation/DocketCitation.model.ts",
+      "sourceSha256": "d0af9c6957ba577e3972c1d2c9c09bb7daa5cd855dbd259ecd5dd85bb803048a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/DocketCitation/index.ts",
+      "sourceSha256": "fbac88309f353d1509091068ca4dac5d22f4eb44d2abd5942d194f6752ff4c8b"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/DurableLocator/index.ts",
+      "sourceSha256": "3d62ffbd14c7e08856cb1b575e12366111411c4f900d1037e3b8aca578f4d171"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/DurableLocatorOptions/index.ts",
+      "sourceSha256": "419fe54a539d234b228b09521a7b4c5787bccba3ca9c0b2d7660a5e3379e1fab"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/FederalRegisterCitation/FederalRegisterCitation.model.ts",
+      "sourceSha256": "8619efcaffdc89f486891202b20baabd571ddb5fdd12c05a3e5ad58f23dc7d7e"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/FederalRegisterCitation/index.ts",
+      "sourceSha256": "45a8550fc9e6b81a0f379b17a5a83eab9557670fdc5bf1135aedfd48a852a794"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/FederalRuleCitation/FederalRuleCitation.model.ts",
+      "sourceSha256": "5e9cfea037100945c50a340c8a4ec3302d2136a7fdc0bfbf83c63a7f406e9572"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/FederalRuleCitation/index.ts",
+      "sourceSha256": "392abc220319a5131e5d8d6e8a41b88f9dfcc6d2256decd36c0b40c422ae584c"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Footnote/index.ts",
+      "sourceSha256": "fb0f577cc55622a6fbb9f1b87af7cdb0199aeddc66687facaeb1eebdaa930289"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/FullCitationType/index.ts",
+      "sourceSha256": "386ae0f6921eb48da196e2d298eaef628d7e8fdd8772505eb94dd4630ce56e63"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/HistoryChain/HistoryChain.model.ts",
+      "sourceSha256": "749cd11dc8419d2771ef4f6efcdd5622ea3df62b4668b1d93f0a56e232465c75"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/HistoryChain/index.ts",
+      "sourceSha256": "48cd71364fc43fc21a0df9ec065fe979b6ad24283af5fd7546d1bc2b260dc204"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/HistoryLink/HistoryLink.model.ts",
+      "sourceSha256": "dab07550f6bbeeac8d4ebe7533cc91d781950bbe54e7e6c4ec61619d50510754"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/HistoryLink/index.ts",
+      "sourceSha256": "71d29e8bf63347d29f669168794470e8b14587dd9b5e296a97d02642ba16e510"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/HistorySignal/index.ts",
+      "sourceSha256": "3511ab1f25a6f2c2aefd1d5fb148d109369e1810cf162a1470471bf904142106"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/JournalCitation/JournalCitation.model.ts",
+      "sourceSha256": "a1a1e2b7da4c6a1a24f727f3ed54ea19a8261eb35b1afa04b5509122915ea75f"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/JournalCitation/index.ts",
+      "sourceSha256": "cf057a14e2416085bcb5442c56c12db5078e6d6197f1b98bef0ef2b76fe81320"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/LegislativeMaterialCitation/LegislativeMaterialCitation.model.ts",
+      "sourceSha256": "e958daf0069af3ae170929978da9488eff78b1b5f6ebfc07bc9d270a2f8edbe3"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/LegislativeMaterialCitation/index.ts",
+      "sourceSha256": "e156d2e93cc2e6d1dbffbb214da10651cb9bb70bc76bf87d39b1cbd92badc0f7"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/LocalOrdinanceCitation/LocalOrdinanceCitation.model.ts",
+      "sourceSha256": "3ff4eb33a8ffe35879879a25fc15949d41e5335d400482b735e46f03323796d6"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/LocalOrdinanceCitation/index.ts",
+      "sourceSha256": "6bfaa04828ce054546f86bd7808c4a3fad4033c4e73b345aa80a42ce464b23b8"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/NeutralCitation/NeutralCitation.model.ts",
+      "sourceSha256": "8c4c1f0a4003cf5ccee62da6a0bfed20d7fedb28e320ec36696b3a89cdc64939"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/NeutralCitation/index.ts",
+      "sourceSha256": "7c04bfad3c73482161d2a191d1c46f92d4947f8f62d3fc46643651272edd670d"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ParallelGroup/ParallelGroup.model.ts",
+      "sourceSha256": "3c8afa09811d5d6049fb5138eeddf266d06766889c95a5219754d862ef7a9450"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ParallelGroup/index.ts",
+      "sourceSha256": "89215d3e6aed98a617675f07e309425666341b0805e643a5f2aa231db1988610"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ParentheticalType/index.ts",
+      "sourceSha256": "2fe284cf52541f4c345bd89672c830a279d978799bb11a1cbab50fbbb61861eb"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/PinciteInfo/index.ts",
+      "sourceSha256": "965e156e341c943f63550fdc84e406604cf08a6c0b945996cad233f0805b5acf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/PublicLawCitation/PublicLawCitation.model.ts",
+      "sourceSha256": "bebb8e7ae50a1fcad75b6cd97ef86572f9acc623163f102ee6ab6bc92912dbf3"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/PublicLawCitation/index.ts",
+      "sourceSha256": "539f27a5b38e5ca2f9bd6c496e2398863014e1360e100b8d336bcfdec0b6f434"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/RegulationCitation/RegulationCitation.model.ts",
+      "sourceSha256": "5b4d8e4fbe969c98503432418797f494448ec26bfe201e6f20ee7ad55ad6e97e"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/RegulationCitation/index.ts",
+      "sourceSha256": "6d19c38d16e9ea82b08541ab558bf0763cf001b599517acef184570e79d65b98"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ResolutionResult/ResolutionResult.model.ts",
+      "sourceSha256": "2bdc4d55369e9eee37f4cce89fda2bedc2b1d4030edd17aa83901dcb57445c18"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ResolutionResult/index.ts",
+      "sourceSha256": "e134c804ad8010e403c230108265fd7483c356c3c9b0d0074c73db05e808a84d"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/RestatementCitation/RestatementCitation.model.ts",
+      "sourceSha256": "5c084daaaf4576c0440f81ea871f222731ab4f569be8cfcc8de10dfd2bb6cad3"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/RestatementCitation/index.ts",
+      "sourceSha256": "43339251642931dea2eb0745a5fe45a4530e5c658ede69f3c4fdad8f5772277a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Segment/index.ts",
+      "sourceSha256": "abdb5e6ee8e7bbb589cfdd8e47bb0bd5642a1a1c21729c0028523dca7afd0f4f"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SegmentMap/SegmentMap.model.ts",
+      "sourceSha256": "dcb1c3666aa4476fc6395f84e0d223080bff93cf32b41de343104b425abc974b"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SegmentMap/index.ts",
+      "sourceSha256": "6b03bcf8ea4ce03359d8e0b80429f1173fd47b52bb571ab305732cff90180e19"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SessionLawCitation/SessionLawCitation.model.ts",
+      "sourceSha256": "7379a6218f75e25f0d9adb428b3eb99afbb810758fe39022f9271c62d48a1bda"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SessionLawCitation/index.ts",
+      "sourceSha256": "0dc1ffa70c8825e96ed6f105f8c59e1ed1ab071f92b3a8a493d3c1501ff52fc2"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ShortFormCitationType/index.ts",
+      "sourceSha256": "58d5d49c32dc8ae39b33056d9450fd7d86e901c5596a167b7b921952b6fd6c1c"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SourceRef/SourceRef.model.ts",
+      "sourceSha256": "082b211d84cb3bfdfbf7de6bae483bf74f0626478e7754396e70b93ed1741cdb"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Span/Span.model.ts",
+      "sourceSha256": "96de128639b75723585e85166293d5abb89b0fa9dbbb4de1fa5639b872e79cbc"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Span/index.ts",
+      "sourceSha256": "837c70b89f3cb1198466e7b5dbc8c3d308f511544b072404ae57e526e2a1dd76"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StateRuleCitation/StateRuleCitation.model.ts",
+      "sourceSha256": "9ff79494eda958b3749368abc2df15f5ac1780a47016bb6e0190b359ed5538b3"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StateRuleCitation/index.ts",
+      "sourceSha256": "3d28c46c036b4a8a3540890c3740632cd39a921e03cbf8c4aba265fdd08924e1"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StatuteCitation/StatuteCitation.model.ts",
+      "sourceSha256": "d7acdc2f24300b820b9866796b53cf067771cedbfc67c8a75cea203f6c96bb65"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StatuteCitation/index.ts",
+      "sourceSha256": "c04f7426cb5401ef93f84e63bf5098c90d30737c106aa79e4c84dfd3a8f462a6"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StatutesAtLargeCitation/StatutesAtLargeCitation.model.ts",
+      "sourceSha256": "7f8a2b750df141d7232b2ee951f9520985eee166035f99f720180074cdc43a36"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StatutesAtLargeCitation/index.ts",
+      "sourceSha256": "87d937da6ca0520e0b8ea01783632a2b83fc96a7d53fe7a21df9e3d62f4e2f6f"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StringCitationGroup/StringCitationGroup.model.ts",
+      "sourceSha256": "a52365c02c6d2ff2fad2f4a8609a85bf2dd17c345f9ffc7000775b2c9b206c7f"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StringCitationGroup/index.ts",
+      "sourceSha256": "052084de24689989a6066cedc8f8ed09d260f4ee9ebb983c576f4908de84c456"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SubsequentHistoryEntry/SubsequentHistoryEntry.model.ts",
+      "sourceSha256": "fadbd4b9363f88fbc78e6b05199571d80455db744ef9f3d86948bd3da5c544bd"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SubsequentHistoryEntry/index.ts",
+      "sourceSha256": "6b9a86a61933f280acb89d9afc2a94524b11811ff84626ce81cc6c2ea4474015"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SurroundingContext/index.ts",
+      "sourceSha256": "68fcd548f7e552838fdac3ff02a382a57a17c24ec0459b70aa121fbf601817ef"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/TreatiseCitation/TreatiseCitation.model.ts",
+      "sourceSha256": "403814ab0f75f32c362966b2c2ea31d056d7199514f3ff2688df27898cedb00a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/TreatiseCitation/index.ts",
+      "sourceSha256": "8aeeeea4dac72dcc9222298de6de52fa80340ee450bd97a52f5f7f0609c4c4ef"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/TreatyCitation/TreatyCitation.model.ts",
+      "sourceSha256": "7284ea939d138aee32132da9bd9f09b554a744f1f33852dc2d72d58a8e5995e8"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/TreatyCitation/index.ts",
+      "sourceSha256": "8c86d2e0da07634f22a5ff9ee69b87670dac8b19db8be71f4caf0c86ab33d96d"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/test/CitationIdentity.test.ts",
+      "sourceSha256": "8fdbe17fde35089f9460c899af0157475ff0be2c935ed7b1a8154c9c20da82e8"
+    },
+    {
+      "path": "packages/law-practice/domain/test/DocStructure.test.ts",
+      "sourceSha256": "eb56ecc8e255314c6708b59a7c1eca2adec9db53765b0db877161d79ebf8266f"
+    },
+    {
+      "path": "packages/law-practice/domain/test/Footnote.test.ts",
+      "sourceSha256": "8928726f0103badd558853a835265bc4701891689d92d7193d2347f19e7dd155"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LegalPositionTransitions.test.ts",
+      "sourceSha256": "c27a3cb7ecab97cbefca8854f5b3b796c6c70b62d46eaa8db71ba3ab03b4a2b7"
+    },
+    {
+      "path": "packages/law-practice/domain/test/SegmentMap.test.ts",
+      "sourceSha256": "4965a36bcf6592f63721b3aafb0e0d43d6fee3bc85b7a381d34a726354c46d96"
+    },
+    {
+      "path": "packages/law-practice/server/src/CandorRecord/CandorRecord.repo.ts",
+      "sourceSha256": "34172c9779b8f74d07e1f2e6c7ed12fef7e9427b654273e74821867300948dfc"
+    },
+    {
+      "path": "packages/law-practice/server/src/DocketIntake/DocketIntake.matters.ts",
+      "sourceSha256": "1710fcc7dedde020b00366d6d68907d1782c58b8d59e9d453487b7637a8761c6"
+    },
+    {
+      "path": "packages/law-practice/server/src/LegalPositionRecord/LegalPositionRecord.repo.ts",
+      "sourceSha256": "a85aafda386e10a70144be53d37b5c27876b2dfb5c360ca29c0b5e1629bdf8d9"
+    },
+    {
+      "path": "packages/law-practice/server/src/MailTagging/MailTagging.matters.ts",
+      "sourceSha256": "295e002de8763f78a55ca187dea040b3c5632d3d1fcc3665d8ff0f86b1551f8f"
+    },
+    {
+      "path": "packages/law-practice/server/src/OfficeActionStructure/OfficeActionStructure.layer.ts",
+      "sourceSha256": "853990a451b10238e4fa6d82310227caf68c5b3726d5389651d1d817b6cab654"
+    },
+    {
+      "path": "packages/law-practice/server/src/OfficeActionStructure/OfficeActionStructure.repo.ts",
+      "sourceSha256": "defe7250fbe05bcde9f83cf456b3117e42c7c91df85016b40e2011f556cc6a65"
+    },
+    {
+      "path": "packages/law-practice/server/src/PracticeKg.correspondents.ts",
+      "sourceSha256": "18c483d31616f98da8d2658ddba4d6d0d17d0283b8dfd6e3b9af812aaafce9e3"
+    },
+    {
+      "path": "packages/law-practice/server/src/PracticeKg.families.ts",
+      "sourceSha256": "b47196a9f63d0f06950817399fdd7322ead03d544168a30af75d97fb89945a0e"
+    },
+    {
+      "path": "packages/law-practice/server/src/PracticeKg.matters.ts",
+      "sourceSha256": "000fe9d188a56f14ba09cc9a191e94d012795864ee1d026ec1b3b2ca903a3183"
+    },
+    {
+      "path": "packages/law-practice/server/src/PracticeKg.projections.ts",
+      "sourceSha256": "37627dcdc01bcd7c4cc189d759fae01c44a5653b5577dbdd7a7b2927b67ad99c"
+    },
+    {
+      "path": "packages/law-practice/server/src/PracticeKg.schemas.ts",
+      "sourceSha256": "23542291a2d98e358b2d787e3035055857d126b4d16fb8b57ff10e50921cf576"
+    },
+    {
+      "path": "packages/law-practice/server/src/PracticeKg.tool-handlers.ts",
+      "sourceSha256": "4deacb121efb94e76e163109e85bf4dc1bf83dc4b390183c5717361b5787b159"
+    },
+    {
+      "path": "packages/law-practice/server/src/QuestionCalendar/QuestionCalendar.layer.ts",
+      "sourceSha256": "e7158359ff79d1010f74fcc5f954790a529b67a826d14d8c042c27a665212699"
+    },
+    {
+      "path": "packages/law-practice/server/src/ReviewFiles/ReviewFiles.layer.ts",
+      "sourceSha256": "a3a7c696a12b6c82d24e45ab70a1fd2f4e5835dc2179e4c71164e12a6a351d2e"
+    },
+    {
+      "path": "packages/law-practice/server/test/CandorPromotionGate.test.ts",
+      "sourceSha256": "42f791744d956523f28248b474af6f84efc7dc4f1e2fa76ddd2342fe2c5c1a06"
+    },
+    {
+      "path": "packages/law-practice/server/test/CandorRecord.pglite.test.ts",
+      "sourceSha256": "2aca1d515529edd65d0fc942674eb43a6f28d0fb22f3ba1e39e4344a5cd0a0cd"
+    },
+    {
+      "path": "packages/law-practice/server/test/CandorRecord.test.ts",
+      "sourceSha256": "bbb4db4850b3d32a618662fd3655c168bc7bfe710b3d8ac323384118c5c4930f"
+    },
+    {
+      "path": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
+      "sourceSha256": "a7a948d06b8a6d854739650eae986897f2d282c8f15b60c8ee6b250f0c8ea0a1"
+    },
+    {
+      "path": "packages/law-practice/server/test/DocketIntake.matters.test.ts",
+      "sourceSha256": "44fb947cdf635f93366c7580119c7428b3c1f09a578808a172f98c6d6958e256"
+    },
+    {
+      "path": "packages/law-practice/server/test/LawPracticeServer.test.ts",
+      "sourceSha256": "84383d96f94de359f5364dbed30a5b3760171e1a088ec4e7881e5c4787f1f6cd"
+    },
+    {
+      "path": "packages/law-practice/server/test/LegalPositionRecord.pglite.test.ts",
+      "sourceSha256": "cbf3af6c9fd4f5ef29e8162a7561f6b73eba082ca83d28d1a0dbf3afd56874ff"
+    },
+    {
+      "path": "packages/law-practice/server/test/LegalPositionRecord.test.ts",
+      "sourceSha256": "e61b9fe30cf1038c4a91056fbada20a4fe04f48a621e9c4ad0e65c077e2dfc87"
+    },
+    {
+      "path": "packages/law-practice/server/test/MailTagging.layers.test.ts",
+      "sourceSha256": "8e1b8720268d7147e157ef1971646d5b01e332664511816f7706f64da13e5f0a"
+    },
+    {
+      "path": "packages/law-practice/server/test/MailTagging.matters.test.ts",
+      "sourceSha256": "403278280fbe47518c64f3f388d4473b7de1ec22b9808567274058d6e0091612"
+    },
+    {
+      "path": "packages/law-practice/server/test/OfficeActionStructure.test.ts",
+      "sourceSha256": "31ccadbcabbd3f5b195c5e847429eadc59f56bb8c21b7152f9c55daa6a099247"
+    },
+    {
+      "path": "packages/law-practice/server/test/QuestionCalendar.test.ts",
+      "sourceSha256": "31aab59e097aebbc37e6bc8bb5f6e996ce0a3225404fe3b2c22d79d38b881020"
+    },
+    {
+      "path": "packages/law-practice/server/test/ReviewFiles.test.ts",
+      "sourceSha256": "a5d362c2e86ab8c880e902c2464cdc49097475f87caae0e685c788aaca7b20df"
+    },
+    {
+      "path": "packages/law-practice/tables/src/entities/KgEdge/KgEdge.read-model-table.ts",
+      "sourceSha256": "a370b7e78724a7584055420fab72b57d1399fc6adb4ec966ee0cc3a01b8d3592"
+    },
+    {
+      "path": "packages/law-practice/tables/src/entities/KgNode/KgNode.read-model-table.ts",
+      "sourceSha256": "89de40d8a3f8e3440db1a1a231ada29c43eede5d1e1c5633d3dbdf2a66af07ed"
+    },
+    {
+      "path": "packages/law-practice/tables/test/CandorConverters.test.ts",
+      "sourceSha256": "25611284d42660efe23476027c3e7925978a5e7d78756e43d6dbffc87b5c2dae"
+    },
+    {
+      "path": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "sourceSha256": "59a5c2f00c700fe67784d05cbaeab3312f01fa1fd74bf510772523d2c36a2832"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.ports.ts",
+      "sourceSha256": "807a0c2bc89c918e14e726a4a7475c67401fd9f6b955669c2e374d88d784623f"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.service.ts",
+      "sourceSha256": "350cd72d6155a1a15957a8fffbc8d52dde698a695899213d25f4369cca53fb43"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.values.ts",
+      "sourceSha256": "eb5afcc1066f36e33aedf42676ff2add95f3bf7ce0492452704ba057a55c0e51"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/CandorRecord/CandorRecord.ports.ts",
+      "sourceSha256": "50c0fd84d6021162e18d67f8b47c7615f7457b73b93f2d4088237df6c5393fa5"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/DocketIntake/DocketIntake.schemas.ts",
+      "sourceSha256": "d9f0c28f3933152f8f1969fab655221e10b19f15dc7c5952693cc609b37a5c92"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/DocketIntake/DocketQuestions.schemas.ts",
+      "sourceSha256": "45be6f81b6a8ac453d9b9ee938b1762333a1b5852de3bbf437b0b553b08ee50c"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/DocketIntake/DocketQuestions.service.ts",
+      "sourceSha256": "ba1438f71ba028135ebf38cc8b82a0975e6e4102c8ee9cc36e4a5bb849c449a1"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts",
+      "sourceSha256": "5d33e5ebda42e37695997fa4045283b8b27fab412e37efc72e7adea9f0b446e0"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.service.ts",
+      "sourceSha256": "6e838d23460573983704b232744db5d7b4ab2b1ee9121cf0467dfecdf022df51"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/LegalPositionRecord/LegalPositionRecord.ports.ts",
+      "sourceSha256": "38a9e61bebafb8b654757b1787c378a5e438742413bdec646369dfa80567bdb6"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/LegalPositionRelatorPolicy.ports.ts",
+      "sourceSha256": "cbf0ffff560af395d1d2343614df485de9c0c680d38d4f1b9cc72880f3bd8032"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/LegalPositionRelatorPolicy.service.ts",
+      "sourceSha256": "d4f1c14f0f021b09420ade2855baf386f656cc8e58fde2b23da02cc515109a55"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/LegalPositionRelatorPolicy.values.ts",
+      "sourceSha256": "8174ab03f0763ebdb3e93346d3523eebe8b5643af6a1ee6790856c2848071d11"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/MailTagging/MailTagging.filer.ts",
+      "sourceSha256": "e07f53187dccec631928104365463c069ae847b607cd4bd2ed6ced7f8dd06f66"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/OfficeActionStructure/OfficeActionStructure.ports.ts",
+      "sourceSha256": "eb4a5791bf3c0a391f56d3ecef699a009a230495490996073eaa40ff007d9ee4"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/OfficeActionStructure/OfficeActionStructure.service.ts",
+      "sourceSha256": "9c55be4a2fd2362edb309d1457f1a004a217ce672c7c25c80708a856a25b7fcd"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/PracticeKg.matter-lookup.ts",
+      "sourceSha256": "5020ca8761f6d4b24d9d80fab1f9e3b07c1520815ac0447ac090a571c13543bd"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/PracticeKg.tools.ts",
+      "sourceSha256": "2455ffbaa992f80514fcd1c8159d56e69f72454c19adc7af360b1a22ad8c48d9"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/PracticeSetup/PracticeSetup.policy.ts",
+      "sourceSha256": "fcb9f65dc94e8d129b7f88c81690ddf0c09b1fee38f7e5600a0f7dceb3e22a84"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/PracticeSetup/PracticeSetup.ports.ts",
+      "sourceSha256": "934dea1d6a00230e16e1acfc39dccf2957dc4ba58b16ea1a52951fc08ab81fd4"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/PracticeSetup/PracticeSetup.service.ts",
+      "sourceSha256": "a6a1b05da705c0293a01333827ffcb7a79464709af8b9d8c9e966cb6327a78df"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/QuestionQueue/QuestionQueue.errors.ts",
+      "sourceSha256": "f9ee0e1874699b0f91307be3af91988e976fec942153dfb7ce02eaaa7446dc72"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/QuestionQueue/QuestionQueue.ports.ts",
+      "sourceSha256": "6270c246730e23be32290cb629d1542be5203c25fbf85453f83a78feb6c6eb38"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/QuestionQueue/QuestionQueue.schemas.ts",
+      "sourceSha256": "27c48761059d36be636bc02a751996bf19bfb4e8c84d0890715b9b1fe78de592"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/QuestionQueue/QuestionQueue.service.ts",
+      "sourceSha256": "803e695c4775a302f6b060877d8cb9d844deab9bee039eb016e12f6c58e85c10"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/QuestionWrites/QuestionWrites.errors.ts",
+      "sourceSha256": "14b8888c8c9a86490470e7ea0413fc130a5138f7d1a420e213f860486cd64311"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/QuestionWrites/QuestionWrites.ports.ts",
+      "sourceSha256": "38f8740f2d105d1460b54a10ab809de12650c5fc78c601d7a99e8fc1a35e5658"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/QuestionWrites/QuestionWrites.schemas.ts",
+      "sourceSha256": "e1717d4852f129f13f99ca766313aaf1dd0c7685395d8f098f69ebce61e51c0e"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/QuestionWrites/QuestionWrites.service.ts",
+      "sourceSha256": "62057d22b14a8334e2a44d89558502887b75ae4e3211eb2a8fc9973dffcc4b88"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ReviewHub/ReviewHub.ports.ts",
+      "sourceSha256": "6fb7f896922983cce4cc39ce325bca4a226c2796e48c4d7e71345b5460feb96a"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ReviewHub/ReviewHub.schemas.ts",
+      "sourceSha256": "d65f105830845f11ca4f48dcf09bab2ce5e544310c41b4468dd486e6ec4170f2"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ReviewHub/ReviewHub.service.ts",
+      "sourceSha256": "49e3744764c9c8e062f809fa948e149eb3a5862cfecf4d430c7126a12b70a48a"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ReviewHub/ReviewHub.tools.ts",
+      "sourceSha256": "3da292f6f1ba4528e9623462db2e79907835546ba0cf96d9a413ea01723e2ce0"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ReviewItemStore/ReviewItemStore.ports.ts",
+      "sourceSha256": "df2446912cc94033e1ff77930053113dafd0e70be8e015a5ac9c6d2d2b1691d4"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ReviewQueue/ReviewQueue.errors.ts",
+      "sourceSha256": "894db0d209301d5123b346cc5f2c19fe20d8e71b5548c9f511ea2d87e02ed774"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ReviewQueue/ReviewQueue.ports.ts",
+      "sourceSha256": "7c12b5e12d0f069cd2cc91bd16b635b7b6d69f3e3f735fe722047ef884aee8bd"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ReviewQueue/ReviewQueue.service.ts",
+      "sourceSha256": "36531f4f3a0c5b4d59a25bfb74c3d4e08e5cf3669a2e9faa8072a96e65c57b51"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/VerdictProjector/VerdictProjector.ports.ts",
+      "sourceSha256": "345097284f87231d6dbd100e8a14c3b377e36229ab8d5699cf479140b25e237f"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/VerdictProjector/VerdictProjector.service.ts",
+      "sourceSha256": "cc4a210f672ec8064bcb0e83f0ef0a95ad94ebb3fe3a1707744e84b62e32c962"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/internal/latestVerdict.ts",
+      "sourceSha256": "854bb5c61e9a0ce6ec795ba25188429586946f35c9db6317da7a491b229e4217"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/internal/logMemory.ts",
+      "sourceSha256": "869c5b7dcfca70ccdacfcf76e552fa05ebb92d09386fa304202540ddf15c0411"
+    },
+    {
+      "path": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "sourceSha256": "eda0eebc09d733d38967175f10f738147aeb4c5401c86267d68c0d5972c50307"
+    },
+    {
+      "path": "packages/law-practice/use-cases/test/LegalPositionRelatorPolicy.test.ts",
+      "sourceSha256": "14d1237a5037e84da31e28a3b256dca3415cc00d64da240b9426c33a012bc348"
+    },
+    {
+      "path": "packages/law-practice/use-cases/test/MailTagging.fixture.ts",
+      "sourceSha256": "c77a092d129a6ea505df4ddf532481e4d90c45fe545b4367a741202149fe95cc"
+    },
+    {
+      "path": "packages/law-practice/use-cases/test/OfficeActionStructure.test.ts",
+      "sourceSha256": "61455db2e35b80b97f35f87c96cc2e3ca6d7890b2f65b6a128d2dbc93a77b7e9"
+    },
+    {
+      "path": "packages/law-practice/use-cases/test/PracticeSetup.test.ts",
+      "sourceSha256": "20b86fedd6e9d5f86061fd066af62c9ceca9e7aa4bf6805b43b210df6275b665"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
+      "sourceSha256": "759598c6bcf4db3704d609d580731815ed6263534a548298af9d85f8d0decb40"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
+      "sourceSha256": "2ef842de9c776c5e3aa66946bc78824500012b3d313cd464da74e7581aaedf21"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+      "sourceSha256": "e8ce539344462935da1a8fe46739435a162b55f0bf4ed8c2a077cddd4c34a565"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/check-census-gate.test.ts",
+      "sourceSha256": "63d4f899812bf5e91c677d638715a5351b7be093a10630a37222c063b72a191c"
+    }
+  ],
+  "findings": [
+    {
+      "path": "packages/foundation/modeling/identity/src/packages.ts",
+      "line": 977,
+      "kind": "module-string-review",
+      "symbol": "*",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "external",
+      "production": true,
+      "sourceSha256": "e2b6e5c41cdcd466d7bf6b13c9526208488a63e99a181b66e4737a313499bde7"
+    },
+    {
+      "path": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+      "line": 175,
+      "kind": "module-string-review",
+      "symbol": "*",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "external",
+      "production": false,
+      "sourceSha256": "913d401691bad26367fbd9783e80cf803d86c0cf4b3cde6768f8e1b119379ddc"
+    },
+    {
+      "path": "packages/law-practice/domain/src/index.ts",
+      "line": 16,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./values/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "872bfc0852da9303cb94348c2a958558c4a0798963ea78d05092acc0155ee082"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/AnnotationCitation/AnnotationCitation.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "fb91f5c02356da42decfeecfe2c94a7c6d2e4b2071f8ed140a9735bcbb863591"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/AnnotationCitation/AnnotationCitation.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "AnnotationComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "fb91f5c02356da42decfeecfe2c94a7c6d2e4b2071f8ed140a9735bcbb863591"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/AnnotationCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./AnnotationCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "922b9543fca368d847cfef6f5955fa1f384f591c1c3b0c1f2b213d03e25330c8"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CanonCitation/CanonCitation.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "6dee471878402aaeac0e2e107ffde0d82eb587b502db8c16ecb9b92e56773587"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CanonCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CanonCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "d621f7902732fe3d3689e1c17e66d14369acf898f7c1418727816dcdf2debedc"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CaseGroup/CaseGroup.model.ts",
+      "line": 10,
+      "kind": "named-import",
+      "symbol": "Citation",
+      "specifier": "../Citation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "00d8f7a51fe01230cdcffb66f9511eb10ff1a5d3346b11336c5fe9fa82455cdb"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CaseGroup/CaseGroup.model.ts",
+      "line": 10,
+      "kind": "named-import",
+      "symbol": "FullCaseCitation",
+      "specifier": "../Citation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "00d8f7a51fe01230cdcffb66f9511eb10ff1a5d3346b11336c5fe9fa82455cdb"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CaseGroup/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CaseGroup.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "e21c2fb392b5832356b10908e0ba9af3f49c26a9f530e527fbac5491f5b4d9b9"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 22,
+      "kind": "named-import",
+      "symbol": "AnnotationCitation",
+      "specifier": "../AnnotationCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 23,
+      "kind": "named-import",
+      "symbol": "CanonCitation",
+      "specifier": "../CanonCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 24,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 25,
+      "kind": "named-import",
+      "symbol": "CitationId",
+      "specifier": "../CitationId/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 27,
+      "kind": "named-import",
+      "symbol": "CaseComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 28,
+      "kind": "named-import",
+      "symbol": "IdComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 29,
+      "kind": "named-import",
+      "symbol": "ShortFormCaseComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 30,
+      "kind": "named-import",
+      "symbol": "SupraComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 32,
+      "kind": "named-import",
+      "symbol": "ConstitutionalCitation",
+      "specifier": "../ConstitutionalCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 33,
+      "kind": "named-import",
+      "symbol": "CourtInference",
+      "specifier": "../CourtInference/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 34,
+      "kind": "named-import",
+      "symbol": "DocketCitation",
+      "specifier": "../DocketCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 35,
+      "kind": "named-import",
+      "symbol": "FederalRegisterCitation",
+      "specifier": "../FederalRegisterCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 36,
+      "kind": "named-import",
+      "symbol": "FederalRuleCitation",
+      "specifier": "../FederalRuleCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 37,
+      "kind": "named-import",
+      "symbol": "HistoryChain",
+      "specifier": "../HistoryChain/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 38,
+      "kind": "named-import",
+      "symbol": "HistorySignal",
+      "specifier": "../HistorySignal/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 39,
+      "kind": "named-import",
+      "symbol": "JournalCitation",
+      "specifier": "../JournalCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 40,
+      "kind": "named-import",
+      "symbol": "LegislativeMaterialCitation",
+      "specifier": "../LegislativeMaterialCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 41,
+      "kind": "named-import",
+      "symbol": "LocalOrdinanceCitation",
+      "specifier": "../LocalOrdinanceCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 42,
+      "kind": "named-import",
+      "symbol": "NeutralCitation",
+      "specifier": "../NeutralCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 43,
+      "kind": "named-import",
+      "symbol": "ParallelGroup",
+      "specifier": "../ParallelGroup/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 44,
+      "kind": "named-import",
+      "symbol": "ParentheticalType",
+      "specifier": "../ParentheticalType/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 45,
+      "kind": "named-import",
+      "symbol": "PinciteInfo",
+      "specifier": "../PinciteInfo/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 46,
+      "kind": "named-import",
+      "symbol": "PublicLawCitation",
+      "specifier": "../PublicLawCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 47,
+      "kind": "named-import",
+      "symbol": "RegulationCitation",
+      "specifier": "../RegulationCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 48,
+      "kind": "named-import",
+      "symbol": "RestatementCitation",
+      "specifier": "../RestatementCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 49,
+      "kind": "named-import",
+      "symbol": "SessionLawCitation",
+      "specifier": "../SessionLawCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 50,
+      "kind": "named-import",
+      "symbol": "Span",
+      "specifier": "../Span/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 51,
+      "kind": "named-import",
+      "symbol": "StateRuleCitation",
+      "specifier": "../StateRuleCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 52,
+      "kind": "named-import",
+      "symbol": "StatuteCitation",
+      "specifier": "../StatuteCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 53,
+      "kind": "named-import",
+      "symbol": "StatutesAtLargeCitation",
+      "specifier": "../StatutesAtLargeCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 54,
+      "kind": "named-import",
+      "symbol": "SubsequentHistoryEntry",
+      "specifier": "../SubsequentHistoryEntry/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 55,
+      "kind": "named-import",
+      "symbol": "TreatiseCitation",
+      "specifier": "../TreatiseCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 56,
+      "kind": "named-import",
+      "symbol": "TreatyCitation",
+      "specifier": "../TreatyCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "166d9b55d1849040cf9c2b03c84d4fb454c4c23a422e70b6eb935634fa2eeabf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/index.ts",
+      "line": 15,
+      "kind": "named-export",
+      "symbol": "CitationAuthorityId",
+      "specifier": "./Citation.identity.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "3869df298c18da4a4ee0240c2ef46c3bbc40449337ba88b869accf8c3d74bcaa"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/index.ts",
+      "line": 15,
+      "kind": "named-export",
+      "symbol": "CitationMentionId",
+      "specifier": "./Citation.identity.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "3869df298c18da4a4ee0240c2ef46c3bbc40449337ba88b869accf8c3d74bcaa"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Citation/index.ts",
+      "line": 28,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./Citation.models.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "3869df298c18da4a4ee0240c2ef46c3bbc40449337ba88b869accf8c3d74bcaa"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationBase/CitationBase.model.ts",
+      "line": 16,
+      "kind": "named-import",
+      "symbol": "CitationId",
+      "specifier": "../CitationId/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "c1db2fc3ae1589919d1a2359c95285b38b6c407e2d297492be8c4ef530c1e050"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationBase/CitationBase.model.ts",
+      "line": 17,
+      "kind": "named-import",
+      "symbol": "CitationSignal",
+      "specifier": "../CitationSignal/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "c1db2fc3ae1589919d1a2359c95285b38b6c407e2d297492be8c4ef530c1e050"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationBase/CitationBase.model.ts",
+      "line": 18,
+      "kind": "named-import",
+      "symbol": "CitationWarning",
+      "specifier": "../CitationWarning/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "c1db2fc3ae1589919d1a2359c95285b38b6c407e2d297492be8c4ef530c1e050"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationBase/CitationBase.model.ts",
+      "line": 19,
+      "kind": "named-import",
+      "symbol": "Span",
+      "specifier": "../Span/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "c1db2fc3ae1589919d1a2359c95285b38b6c407e2d297492be8c4ef530c1e050"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationBase/CitationBase.model.ts",
+      "line": 20,
+      "kind": "named-import",
+      "symbol": "StringCitationGroup",
+      "specifier": "../StringCitationGroup/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "c1db2fc3ae1589919d1a2359c95285b38b6c407e2d297492be8c4ef530c1e050"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationBase/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CitationBase.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "598f421cd5c481f9c4bd5bd44d766ba84256237eaec84b2ce4d1ee028ffc6e5a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationId/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CitationId.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "5895b273ffb32ece60d9c46c35f5059b8904b04ba2bc27dcb5b7c32e562094b6"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationSignal/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CitationSignal.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "abe5c76bb33f478b02e48d491f3ea31fc218e5fdf0531b97890d8d80502a9a04"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationType/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CitationType.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "218edb097ec79160d6474c7be4bbbfd4d48f92ba9eb2cc7335a45faad9ca7811"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CitationWarning/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CitationWarning.models.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "220a3df23c0d562ba40a39470dbd6a9671a970af88584f75aedcc900e6db972a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "line": 17,
+      "kind": "named-import",
+      "symbol": "Span",
+      "specifier": "../Span/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "48df9d2f378da8cbabcf95a6690586ad7759c109ab31117149cfac4cea0ed709"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ComponentSpan/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./ComponentSpan.models.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "0391b9d0c13d9533c762685caed709a0d1cd9eee504d8b440927bcdd27ffb8c3"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ConstitutionalCitation/ConstitutionalCitation.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "0b2bd73e10ca69d8209d9592ca6d512f69f4bb0bc735b5d6c275443f21f9a04a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ConstitutionalCitation/ConstitutionalCitation.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "ConstitutionalComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "0b2bd73e10ca69d8209d9592ca6d512f69f4bb0bc735b5d6c275443f21f9a04a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ConstitutionalCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./ConstitutionalCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "f45613c11e75ee48b0c768365e19e1b4e903b2b3314c868b9b366a687f1212f8"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ContextOptions/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./ContextOptions.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "55ee028072b06a01471d26c9da37ecbe031044e4f2748de04f1f326249cf215c"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/CourtInference/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CourtInference.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "f4b4631c5c7ebd32da6a6a7604e12b8297d0a1b78c8fac1b3a82508d624f7052"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/DocketCitation/DocketCitation.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "d0af9c6957ba577e3972c1d2c9c09bb7daa5cd855dbd259ecd5dd85bb803048a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/DocketCitation/DocketCitation.model.ts",
+      "line": 13,
+      "kind": "named-import",
+      "symbol": "Span",
+      "specifier": "../Span/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "d0af9c6957ba577e3972c1d2c9c09bb7daa5cd855dbd259ecd5dd85bb803048a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/DocketCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./DocketCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "fbac88309f353d1509091068ca4dac5d22f4eb44d2abd5942d194f6752ff4c8b"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/DurableLocator/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./DurableLocator.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "3d62ffbd14c7e08856cb1b575e12366111411c4f900d1037e3b8aca578f4d171"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/DurableLocatorOptions/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./DurableLocatorOptions.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "419fe54a539d234b228b09521a7b4c5787bccba3ca9c0b2d7660a5e3379e1fab"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/FederalRegisterCitation/FederalRegisterCitation.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "8619efcaffdc89f486891202b20baabd571ddb5fdd12c05a3e5ad58f23dc7d7e"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/FederalRegisterCitation/FederalRegisterCitation.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "FederalRegisterComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "8619efcaffdc89f486891202b20baabd571ddb5fdd12c05a3e5ad58f23dc7d7e"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/FederalRegisterCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./FederalRegisterCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "45a8550fc9e6b81a0f379b17a5a83eab9557670fdc5bf1135aedfd48a852a794"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/FederalRuleCitation/FederalRuleCitation.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "5e9cfea037100945c50a340c8a4ec3302d2136a7fdc0bfbf83c63a7f406e9572"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/FederalRuleCitation/FederalRuleCitation.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "FederalRuleComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "5e9cfea037100945c50a340c8a4ec3302d2136a7fdc0bfbf83c63a7f406e9572"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/FederalRuleCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./FederalRuleCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "392abc220319a5131e5d8d6e8a41b88f9dfcc6d2256decd36c0b40c422ae584c"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Footnote/index.ts",
+      "line": 24,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./Footnote.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "fb0f577cc55622a6fbb9f1b87af7cdb0199aeddc66687facaeb1eebdaa930289"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/FullCitationType/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./FullCitationType.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "386ae0f6921eb48da196e2d298eaef628d7e8fdd8772505eb94dd4630ce56e63"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/HistoryChain/HistoryChain.model.ts",
+      "line": 10,
+      "kind": "named-import",
+      "symbol": "HistoryLink",
+      "specifier": "../HistoryLink/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "749cd11dc8419d2771ef4f6efcdd5622ea3df62b4668b1d93f0a56e232465c75"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/HistoryChain/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./HistoryChain.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "48cd71364fc43fc21a0df9ec065fe979b6ad24283af5fd7546d1bc2b260dc204"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/HistoryLink/HistoryLink.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "CitationId",
+      "specifier": "../CitationId/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "dab07550f6bbeeac8d4ebe7533cc91d781950bbe54e7e6c4ec61619d50510754"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/HistoryLink/HistoryLink.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "HistorySignal",
+      "specifier": "../HistorySignal/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "dab07550f6bbeeac8d4ebe7533cc91d781950bbe54e7e6c4ec61619d50510754"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/HistoryLink/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./HistoryLink.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "71d29e8bf63347d29f669168794470e8b14587dd9b5e296a97d02642ba16e510"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/HistorySignal/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./HistorySignal.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "3511ab1f25a6f2c2aefd1d5fb148d109369e1810cf162a1470471bf904142106"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/JournalCitation/JournalCitation.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "a1a1e2b7da4c6a1a24f727f3ed54ea19a8261eb35b1afa04b5509122915ea75f"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/JournalCitation/JournalCitation.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "JournalComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "a1a1e2b7da4c6a1a24f727f3ed54ea19a8261eb35b1afa04b5509122915ea75f"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/JournalCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./JournalCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "cf057a14e2416085bcb5442c56c12db5078e6d6197f1b98bef0ef2b76fe81320"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/LegislativeMaterialCitation/LegislativeMaterialCitation.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "e958daf0069af3ae170929978da9488eff78b1b5f6ebfc07bc9d270a2f8edbe3"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/LegislativeMaterialCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./LegislativeMaterialCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "e156d2e93cc2e6d1dbffbb214da10651cb9bb70bc76bf87d39b1cbd92badc0f7"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/LocalOrdinanceCitation/LocalOrdinanceCitation.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "3ff4eb33a8ffe35879879a25fc15949d41e5335d400482b735e46f03323796d6"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/LocalOrdinanceCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./LocalOrdinanceCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "6bfaa04828ce054546f86bd7808c4a3fad4033c4e73b345aa80a42ce464b23b8"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/NeutralCitation/NeutralCitation.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "8c4c1f0a4003cf5ccee62da6a0bfed20d7fedb28e320ec36696b3a89cdc64939"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/NeutralCitation/NeutralCitation.model.ts",
+      "line": 13,
+      "kind": "named-import",
+      "symbol": "NeutralComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "8c4c1f0a4003cf5ccee62da6a0bfed20d7fedb28e320ec36696b3a89cdc64939"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/NeutralCitation/NeutralCitation.model.ts",
+      "line": 14,
+      "kind": "named-import",
+      "symbol": "PinciteInfo",
+      "specifier": "../PinciteInfo/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "8c4c1f0a4003cf5ccee62da6a0bfed20d7fedb28e320ec36696b3a89cdc64939"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/NeutralCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./NeutralCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "7c04bfad3c73482161d2a191d1c46f92d4947f8f62d3fc46643651272edd670d"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ParallelGroup/ParallelGroup.model.ts",
+      "line": 10,
+      "kind": "named-import",
+      "symbol": "CitationId",
+      "specifier": "../CitationId/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "3c8afa09811d5d6049fb5138eeddf266d06766889c95a5219754d862ef7a9450"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ParallelGroup/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./ParallelGroup.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "89215d3e6aed98a617675f07e309425666341b0805e643a5f2aa231db1988610"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ParentheticalType/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./ParentheticalType.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "2fe284cf52541f4c345bd89672c830a279d978799bb11a1cbab50fbbb61861eb"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/PinciteInfo/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./PinciteInfo.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "965e156e341c943f63550fdc84e406604cf08a6c0b945996cad233f0805b5acf"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/PublicLawCitation/PublicLawCitation.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "bebb8e7ae50a1fcad75b6cd97ef86572f9acc623163f102ee6ab6bc92912dbf3"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/PublicLawCitation/PublicLawCitation.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "PublicLawComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "bebb8e7ae50a1fcad75b6cd97ef86572f9acc623163f102ee6ab6bc92912dbf3"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/PublicLawCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./PublicLawCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "539f27a5b38e5ca2f9bd6c496e2398863014e1360e100b8d336bcfdec0b6f434"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/RegulationCitation/RegulationCitation.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "5b4d8e4fbe969c98503432418797f494448ec26bfe201e6f20ee7ad55ad6e97e"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/RegulationCitation/RegulationCitation.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "StatuteComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "5b4d8e4fbe969c98503432418797f494448ec26bfe201e6f20ee7ad55ad6e97e"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/RegulationCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./RegulationCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "6d19c38d16e9ea82b08541ab558bf0763cf001b599517acef184570e79d65b98"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ResolutionResult/ResolutionResult.model.ts",
+      "line": 13,
+      "kind": "named-import",
+      "symbol": "CitationId",
+      "specifier": "../CitationId/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "2bdc4d55369e9eee37f4cce89fda2bedc2b1d4030edd17aa83901dcb57445c18"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ResolutionResult/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./ResolutionResult.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "e134c804ad8010e403c230108265fd7483c356c3c9b0d0074c73db05e808a84d"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/RestatementCitation/RestatementCitation.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "5c084daaaf4576c0440f81ea871f222731ab4f569be8cfcc8de10dfd2bb6cad3"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/RestatementCitation/RestatementCitation.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "RestatementComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "5c084daaaf4576c0440f81ea871f222731ab4f569be8cfcc8de10dfd2bb6cad3"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/RestatementCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./RestatementCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "43339251642931dea2eb0745a5fe45a4530e5c658ede69f3c4fdad8f5772277a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Segment/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./Segment.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "abdb5e6ee8e7bbb589cfdd8e47bb0bd5642a1a1c21729c0028523dca7afd0f4f"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SegmentMap/SegmentMap.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "Segment",
+      "specifier": "../Segment/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "dcb1c3666aa4476fc6395f84e0d223080bff93cf32b41de343104b425abc974b"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SegmentMap/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./SegmentMap.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "6b03bcf8ea4ce03359d8e0b80429f1173fd47b52bb571ab305732cff90180e19"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SessionLawCitation/SessionLawCitation.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "7379a6218f75e25f0d9adb428b3eb99afbb810758fe39022f9271c62d48a1bda"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SessionLawCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./SessionLawCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "0dc1ffa70c8825e96ed6f105f8c59e1ed1ab071f92b3a8a493d3c1501ff52fc2"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ShortFormCitationType/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./ShortFormCitationType.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "58d5d49c32dc8ae39b33056d9450fd7d86e901c5596a167b7b921952b6fd6c1c"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SourceRef/SourceRef.model.ts",
+      "line": 16,
+      "kind": "named-import",
+      "symbol": "TextQuote",
+      "specifier": "../DurableLocator/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "082b211d84cb3bfdfbf7de6bae483bf74f0626478e7754396e70b93ed1741cdb"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Span/Span.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "SegmentMap",
+      "specifier": "../SegmentMap/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "96de128639b75723585e85166293d5abb89b0fa9dbbb4de1fa5639b872e79cbc"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/Span/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./Span.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "837c70b89f3cb1198466e7b5dbc8c3d308f511544b072404ae57e526e2a1dd76"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StateRuleCitation/StateRuleCitation.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "9ff79494eda958b3749368abc2df15f5ac1780a47016bb6e0190b359ed5538b3"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StateRuleCitation/StateRuleCitation.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "FederalRuleComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "9ff79494eda958b3749368abc2df15f5ac1780a47016bb6e0190b359ed5538b3"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StateRuleCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./StateRuleCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "3d28c46c036b4a8a3540890c3740632cd39a921e03cbf8c4aba265fdd08924e1"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StatuteCitation/StatuteCitation.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "d7acdc2f24300b820b9866796b53cf067771cedbfc67c8a75cea203f6c96bb65"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StatuteCitation/StatuteCitation.model.ts",
+      "line": 13,
+      "kind": "named-import",
+      "symbol": "StatuteComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "d7acdc2f24300b820b9866796b53cf067771cedbfc67c8a75cea203f6c96bb65"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StatuteCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./StatuteCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "c04f7426cb5401ef93f84e63bf5098c90d30737c106aa79e4c84dfd3a8f462a6"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StatutesAtLargeCitation/StatutesAtLargeCitation.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "7f8a2b750df141d7232b2ee951f9520985eee166035f99f720180074cdc43a36"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StatutesAtLargeCitation/StatutesAtLargeCitation.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "StatutesAtLargeComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "7f8a2b750df141d7232b2ee951f9520985eee166035f99f720180074cdc43a36"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StatutesAtLargeCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./StatutesAtLargeCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "87d937da6ca0520e0b8ea01783632a2b83fc96a7d53fe7a21df9e3d62f4e2f6f"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StringCitationGroup/StringCitationGroup.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "CitationId",
+      "specifier": "../CitationId/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "a52365c02c6d2ff2fad2f4a8609a85bf2dd17c345f9ffc7000775b2c9b206c7f"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StringCitationGroup/StringCitationGroup.model.ts",
+      "line": 13,
+      "kind": "named-import",
+      "symbol": "CitationSignal",
+      "specifier": "../CitationSignal/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "a52365c02c6d2ff2fad2f4a8609a85bf2dd17c345f9ffc7000775b2c9b206c7f"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/StringCitationGroup/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./StringCitationGroup.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "052084de24689989a6066cedc8f8ed09d260f4ee9ebb983c576f4908de84c456"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SubsequentHistoryEntry/SubsequentHistoryEntry.model.ts",
+      "line": 10,
+      "kind": "named-import",
+      "symbol": "HistorySignal",
+      "specifier": "../HistorySignal/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "fadbd4b9363f88fbc78e6b05199571d80455db744ef9f3d86948bd3da5c544bd"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SubsequentHistoryEntry/SubsequentHistoryEntry.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "Span",
+      "specifier": "../Span/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "fadbd4b9363f88fbc78e6b05199571d80455db744ef9f3d86948bd3da5c544bd"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SubsequentHistoryEntry/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./SubsequentHistoryEntry.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "6b9a86a61933f280acb89d9afc2a94524b11811ff84626ce81cc6c2ea4474015"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/SurroundingContext/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./SurroundingContext.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "68fcd548f7e552838fdac3ff02a382a57a17c24ec0459b70aa121fbf601817ef"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/TreatiseCitation/TreatiseCitation.model.ts",
+      "line": 12,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "403814ab0f75f32c362966b2c2ea31d056d7199514f3ff2688df27898cedb00a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/TreatiseCitation/TreatiseCitation.model.ts",
+      "line": 13,
+      "kind": "named-import",
+      "symbol": "TreatiseComponentSpan",
+      "specifier": "../ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "403814ab0f75f32c362966b2c2ea31d056d7199514f3ff2688df27898cedb00a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/TreatiseCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./TreatiseCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "8aeeeea4dac72dcc9222298de6de52fa80340ee450bd97a52f5f7f0609c4c4ef"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/TreatyCitation/TreatyCitation.model.ts",
+      "line": 11,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "../CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "7284ea939d138aee32132da9bd9f09b554a744f1f33852dc2d72d58a8e5995e8"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/TreatyCitation/index.ts",
+      "line": 21,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./TreatyCitation.model.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "8c86d2e0da07634f22a5ff9ee69b87670dac8b19db8be71f4caf0c86ab33d96d"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 28,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./AnnotationCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 74,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CanonCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 87,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CaseGroup/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 101,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./Citation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 114,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CitationBase/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 127,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CitationId/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 140,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CitationSignal/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 153,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CitationType/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 166,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CitationWarning/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 193,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./ComponentSpan/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 206,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./ConstitutionalCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 232,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./ContextOptions/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 245,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./CourtInference/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 258,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./DocketCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 286,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./DurableLocator/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 299,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./DurableLocatorOptions/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 312,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./FederalRegisterCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 325,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./FederalRuleCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 341,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./Footnote/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 354,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./FullCitationType/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 367,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./HistoryChain/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 380,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./HistoryLink/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 393,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./HistorySignal/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 432,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./JournalCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 526,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./LegislativeMaterialCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 539,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./LocalOrdinanceCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 559,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./NeutralCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 593,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./ParallelGroup/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 606,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./ParentheticalType/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 680,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./PinciteInfo/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 721,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./PublicLawCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 747,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./RegulationCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 760,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./ResolutionResult/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 773,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./RestatementCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 799,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./Segment/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 812,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./SegmentMap/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 832,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./SessionLawCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 852,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./ShortFormCitationType/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 891,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./Span/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 904,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./StateRuleCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 917,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./StatuteCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 930,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./StatutesAtLargeCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 943,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./StringCitationGroup/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 969,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./SubsequentHistoryEntry/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 982,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./SurroundingContext/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 995,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./TreatiseCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/index.ts",
+      "line": 1008,
+      "kind": "wildcard-export-review",
+      "symbol": "*",
+      "specifier": "./TreatyCitation/index.ts",
+      "ownership": "owner",
+      "production": true,
+      "sourceSha256": "12d51d1daa6082d9baada8e06b1b9adb7cacbcd41f9fe59321a07794c059850a"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 4,
+      "kind": "named-import",
+      "symbol": "Citation",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 5,
+      "kind": "named-import",
+      "symbol": "CitationBase",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 6,
+      "kind": "named-import",
+      "symbol": "CitationWarning",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 10,
+      "kind": "named-import",
+      "symbol": "ContextOptions",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 13,
+      "kind": "named-import",
+      "symbol": "DocketCitation",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 14,
+      "kind": "named-import",
+      "symbol": "DurableLocatorOptions",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 17,
+      "kind": "named-import",
+      "symbol": "FullCaseCitation",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 18,
+      "kind": "named-import",
+      "symbol": "FullCitation",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 22,
+      "kind": "named-import",
+      "symbol": "IdCitation",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 33,
+      "kind": "named-import",
+      "symbol": "NeutralCitation",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 36,
+      "kind": "named-import",
+      "symbol": "Parenthetical",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 42,
+      "kind": "named-import",
+      "symbol": "PinciteInfo",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 45,
+      "kind": "named-import",
+      "symbol": "RegulationCitation",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 48,
+      "kind": "named-import",
+      "symbol": "ResolutionResult",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 49,
+      "kind": "named-import",
+      "symbol": "ShortFormCaseCitation",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 50,
+      "kind": "named-import",
+      "symbol": "ShortFormCitation",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 51,
+      "kind": "named-import",
+      "symbol": "Span",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 52,
+      "kind": "named-import",
+      "symbol": "StatuteCitation",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 53,
+      "kind": "named-import",
+      "symbol": "StatutesAtLargeCitation",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 54,
+      "kind": "named-import",
+      "symbol": "SubsequentHistoryEntry",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 55,
+      "kind": "named-import",
+      "symbol": "SupraCitation",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 56,
+      "kind": "named-import",
+      "symbol": "TransformationMap",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 57,
+      "kind": "named-import",
+      "symbol": "WarningPosition",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "line": 176,
+      "kind": "module-string-review",
+      "symbol": "*",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "631f9c653581b23a611bc8baed891cec7592d731555670d00843752016a7bc95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/SegmentMap.test.ts",
+      "line": 1,
+      "kind": "named-import",
+      "symbol": "SegmentMap",
+      "specifier": "@beep/law-practice-domain/values",
+      "ownership": "owner",
+      "production": false,
+      "sourceSha256": "4965a36bcf6592f63721b3aafb0e0d43d6fee3bc85b7a381d34a726354c46d96"
+    },
+    {
+      "path": "packages/law-practice/use-cases/test/LegalPositionRelatorPolicy.test.ts",
+      "line": 292,
+      "kind": "namespace-escape-review",
+      "symbol": "LawPracticeDomain",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "external",
+      "production": false,
+      "sourceSha256": "14d1237a5037e84da31e28a3b256dca3415cc00d64da240b9426c33a012bc348"
+    },
+    {
+      "path": "packages/law-practice/use-cases/test/LegalPositionRelatorPolicy.test.ts",
+      "line": 297,
+      "kind": "namespace-escape-review",
+      "symbol": "LawPracticeDomain",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "external",
+      "production": false,
+      "sourceSha256": "14d1237a5037e84da31e28a3b256dca3415cc00d64da240b9426c33a012bc348"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
+      "line": 342,
+      "kind": "module-string-review",
+      "symbol": "*",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "external",
+      "production": true,
+      "sourceSha256": "759598c6bcf4db3704d609d580731815ed6263534a548298af9d85f8d0decb40"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
+      "line": 413,
+      "kind": "module-string-review",
+      "symbol": "*",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "external",
+      "production": true,
+      "sourceSha256": "759598c6bcf4db3704d609d580731815ed6263534a548298af9d85f8d0decb40"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
+      "line": 1038,
+      "kind": "module-string-review",
+      "symbol": "*",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "external",
+      "production": true,
+      "sourceSha256": "2ef842de9c776c5e3aa66946bc78824500012b3d313cd464da74e7581aaedf21"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+      "line": 198,
+      "kind": "module-string-review",
+      "symbol": "*",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "external",
+      "production": true,
+      "sourceSha256": "e8ce539344462935da1a8fe46739435a162b55f0bf4ed8c2a077cddd4c34a565"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/check-census-gate.test.ts",
+      "line": 288,
+      "kind": "module-string-review",
+      "symbol": "*",
+      "specifier": "@beep/law-practice-domain",
+      "ownership": "external",
+      "production": false,
+      "sourceSha256": "63d4f899812bf5e91c677d638715a5351b7be093a10630a37222c063b72a191c"
+    }
+  ],
+  "diagnostics": []
+}

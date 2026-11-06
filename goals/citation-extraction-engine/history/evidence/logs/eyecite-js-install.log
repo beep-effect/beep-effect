@@ -1,0 +1,14 @@
+bun install v1.4.4 (38afee6c8)
+
++ @biomejs/biome@2.1.1
++ @types/bun@1.2.18
++ @types/diff-match-patch@1.0.36
++ git-cliff@2.10.0
++ typescript@5.8.3
++ css-select@6.0.0
++ diff-match-patch@1.0.5
++ domhandler@5.0.3
++ domutils@3.2.2
++ htmlparser2@10.0.0
+
+42 packages installed [3.79s]

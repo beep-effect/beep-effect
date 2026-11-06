@@ -236,13 +236,38 @@ def observe(source_path, revision):
     return result, 0 if report["status"] == "stable-match" else 1
 
 
+def publication_plan(source_path, diagnostic_path):
+    """Select only readable regular reports whose retained bytes fit the cap."""
+    sizes = []
+    for path in [source_path, diagnostic_path]:
+        try:
+            fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+            with os.fdopen(fd, "rb") as handle:
+                info = os.fstat(handle.fileno())
+                sizes.append(info.st_size if stat.S_ISREG(info.st_mode) and info.st_size > 0 else None)
+        except OSError:
+            sizes.append(None)
+    source_size, diagnostic_size = sizes
+    diagnostic = diagnostic_size is not None and diagnostic_size <= ARTIFACT_LIMIT
+    source = source_size is not None and source_size <= ARTIFACT_LIMIT and (
+        not diagnostic or source_size + diagnostic_size <= ARTIFACT_LIMIT
+    )
+    return {"source": source, "diagnostic": diagnostic}
+
+
 def main():
     resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024, 256 * 1024 * 1024))
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-report", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--revision", required=True)
+    parser.add_argument("--publication-only", action="store_true")
     args = parser.parse_args()
+    if args.publication_only:
+        plan = publication_plan(args.source_report, args.output)
+        for key, enabled in plan.items():
+            print(f"{key}={'true' if enabled else 'false'}")
+        return 0 if all(plan.values()) else 1
     # Refuse an existing output before any expensive read. Never replace evidence.
     try:
         output_fd = os.open(args.output, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
@@ -250,12 +275,25 @@ def main():
         print("Refusing existing or unavailable diagnostic output.")
         return 1
     with os.fdopen(output_fd, "wb") as output:
+        code = None
         try:
             data, exit_code = observe(Path(args.source_report), args.revision)
         except Refusal as error:
-            data, exit_code = encoded({"schemaVersion": "cache-dependency-diagnostics/v1", "status": "refused", "code": error.args[0]}) + b"\n", 1
-        except (OSError, ValueError, KeyError, TypeError, MemoryError, tarfile.TarError, subprocess.SubprocessError):
-            data, exit_code = encoded({"schemaVersion": "cache-dependency-diagnostics/v1", "status": "refused", "code": "invalid-input-or-stream"}) + b"\n", 1
+            code = error.args[0]
+        except MemoryError:
+            code = "memory-limit"
+        except subprocess.TimeoutExpired:
+            code = "subprocess-deadline"
+        except subprocess.SubprocessError:
+            code = "subprocess-failed"
+        except tarfile.TarError:
+            code = "archive-read-failed"
+        except OSError:
+            code = "filesystem-or-process-failed"
+        except (ValueError, KeyError, TypeError):
+            code = "invalid-value-or-shape"
+        if code is not None:
+            data, exit_code = encoded({"schemaVersion": "cache-dependency-diagnostics/v1", "status": "refused", "code": code}) + b"\n", 1
         output.write(data)
     print("Dependency diagnostic saved." if exit_code == 0 else "Dependency diagnostic refused; no approval granted.")
     return exit_code

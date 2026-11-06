@@ -548,7 +548,7 @@ it.layer(
       const verified = O.getOrThrow(goalCloseoutView2);
       expect(verified.operativeStatus).toBe("completed-retained");
       expect(verified.verification).toBe("verified");
-      expect(renderGoalCloseoutView(verified)).toBe("completed-retained (verified via #1429)");
+      expect(renderGoalCloseoutView(verified)).toBe("completed-retained (verified via #1429, adoption pending)");
       expect(goalCloseoutVerification(proposal, "completed-retained")).toBe("verified");
       expect(goalCloseoutVerification(proposal, "paused")).toBe("unverified");
       // The manifest itself never moves: completion stays derived.

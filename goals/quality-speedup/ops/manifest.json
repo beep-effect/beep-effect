@@ -31,9 +31,17 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
-    "research/tstyche-inventory.md",
+    "research/data/census-perfile.tsv",
+    "research/data/census-results.tsv",
+    "research/data/ci-lane-timings.tsv",
+    "research/data/fleet-lane-observations.tsv",
+    "research/data/fleet-turbo-task-timings.tsv",
+    "research/data/fleet-yeet-runs.tsv",
+    "research/data/tst-coverage-assessment.tsv",
+    "research/data/tstyche-surface-inventory-full.md",
+    "research/instantiation-census.md",
     "research/quality-time-inventory.md",
-    "research/instantiation-census.md"
+    "research/tstyche-inventory.md"
   ],
   "agentLaunchers": [
     {

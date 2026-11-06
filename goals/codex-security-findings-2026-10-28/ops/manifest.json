@@ -66,14 +66,19 @@
     "goals/codex-security-findings-2026-10-28/research/2026-11-01-final-closeout.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
-    "research/qualification.md",
+    "research/2026-10-31-accepted-closeout.md",
+    "research/2026-10-31-cache-baseline-main-merge-request.json",
+    "research/2026-10-31-cache-baseline-main-merge-review.md",
+    "research/2026-10-31-cache-baseline-request.json",
+    "research/2026-10-31-cache-baseline-review.md",
     "research/2026-10-31-closeout.md",
     "research/2026-10-31-dependencies.md",
     "research/2026-10-31-review.md",
     "research/2026-10-31-scanning.md",
-    "research/2026-10-31-accepted-closeout.md",
-    "research/2026-11-01-final-closeout.md"
+    "research/2026-11-01-final-closeout.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/qualification.md"
   ],
   "agentLaunchers": [
     {

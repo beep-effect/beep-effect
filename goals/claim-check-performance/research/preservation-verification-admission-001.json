@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "reviewed-preservation-verification-admission/v1",
+  "priorBaseline": {
+    "path": "goals/claim-check-performance/research/implementation-accepted-main-metadata-002.json",
+    "sha256": "24522c09cf7d439b1158057e67935c10a3a3089c0dac5b63ee1af20a93b2de1e"
+  },
+  "sourceChanges": [
+    {
+      "path": "goals/claim-check-performance/research/test_preservation.py",
+      "historicalSha256": "83b6e54250b41f486599dec5b620ad71323218a4d493bda079a48b1f725d3c51",
+      "activeSha256": "a5e48608d9fda81303f073c8ee50708fa07339b7d34fdab25e4d3c6521167f22"
+    },
+    {
+      "path": "goals/claim-check-performance/research/verify-preservation.py",
+      "historicalSha256": "0bd53e065f1ebf38e9c603465ee64f5b7516a88f6582b6f947253182fe39fefc",
+      "activeSha256": "bc54bb6d6c96c203070dec21d49178ecc3a8c494047dba268c69618e2b5aa17c"
+    }
+  ],
+  "archive": {
+    "path": "goals/claim-check-performance/research/legacy-protocol/preservation-verification-source-001.json",
+    "sha256": "f1e40e62675bf126b2b9ccca28d9ca3c93c61e05e16ff86f3946175bd0fb5e5e"
+  },
+  "independentReviewReceiptSha256": "732e39b2da00a574a1e08ae86245b275490522bbd56c132433dd307e5b30ea7a",
+  "reason": "Bind independently reviewed generated-manifest preservation implementation and adversarial tests; retain previous verifier/test bytes. Original three-runner pin, preservation freeze, labels/scorer/results/gates unchanged.",
+  "failedCaptureRetained": "runtime-owner-integrated-002",
+  "captureImmutableChecksChanged": false
+}

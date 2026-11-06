@@ -1,0 +1,3746 @@
+{
+  "schemaVersion": "citation-runtime-dictionary-observations/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "pythonVersion": "3.11.15",
+  "pythonHashSeed": "0",
+  "versions": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22"
+  },
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "cpythonVersion": "3.11.15",
+  "hashWidth": 64,
+  "hashModulus": "2305843009213693951",
+  "dictionaryKind": "combined-general",
+  "dictionarySourceSha256": "474b899187e73c5ec416b82e17346d2c17616b1b662e1c2fd1c7e53bb2bf19d8",
+  "cpythonLicenseSha256": "3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf",
+  "canonicalResourceHashes": {
+    "1": "1986750081022884797",
+    "2": "1465210507262904853",
+    "20": "1226098292844416122"
+  },
+  "exporterSha256": "22efbe7cc4219bb0d9504d5c8b6d163b197787cd2620e28e2515da91a2cb160b",
+  "sources": {
+    "models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a",
+    "utils.py": "8e27eb1207f6c0fdb695530e3677a3e9f039986b2baf68461ba680ee2bff902e"
+  },
+  "cases": [
+    {
+      "name": "same-bucket-pointer",
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 0
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1986750081022884797",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "hash",
+            "key": 0,
+            "value": "1465210507262904853"
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1465210507262904853",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1465210507262904853",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 1
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1465210507262904853",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "changed-bucket-duplicate",
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 0
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1986750081022884797",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "hash",
+            "key": 0,
+            "value": "1226098292844416122"
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1226098292844416122",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1226098292844416122",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 1
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1226098292844416122",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 0,
+              "value": 1
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1226098292844416122",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 0,
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "cached-hash-current-equality",
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 0
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "7",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "7",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "hash",
+            "key": 0,
+            "value": "15"
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "15",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "7",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "15",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "7",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [[0, 1]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 1,
+            "value": 1
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "15",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "7",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [[0, 1]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "15",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "7",
+              "token": "same",
+              "mode": "hash",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "collision-perturb-growth",
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 0
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "17",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "17",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "17",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "17",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "17",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "17",
+              "token": "5",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 6,
+              "hash": "17",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 7,
+              "hash": "17",
+              "token": "7",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 8,
+              "hash": "17",
+              "token": "8",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 1,
+            "value": 1
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "17",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "17",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "17",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "17",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "17",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "17",
+              "token": "5",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 6,
+              "hash": "17",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 7,
+              "hash": "17",
+              "token": "7",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 8,
+              "hash": "17",
+              "token": "8",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [[0, 1]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 2,
+            "value": 2
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "17",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "17",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "17",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "17",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "17",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "17",
+              "token": "5",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 6,
+              "hash": "17",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 7,
+              "hash": "17",
+              "token": "7",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 8,
+              "hash": "17",
+              "token": "8",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [[0, 2], [1, 2]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 3,
+            "value": 3
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "17",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "17",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "17",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "17",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "17",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "17",
+              "token": "5",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 6,
+              "hash": "17",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 7,
+              "hash": "17",
+              "token": "7",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 8,
+              "hash": "17",
+              "token": "8",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [[0, 3], [1, 3], [2, 3]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 4,
+            "value": 4
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "17",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "17",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "17",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "17",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "17",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "17",
+              "token": "5",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 6,
+              "hash": "17",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 7,
+              "hash": "17",
+              "token": "7",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 8,
+              "hash": "17",
+              "token": "8",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [[0, 4], [1, 4], [2, 4], [3, 4]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 5,
+            "value": 5
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "17",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "17",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "17",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "17",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "17",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "17",
+              "token": "5",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 6,
+              "hash": "17",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 7,
+              "hash": "17",
+              "token": "7",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 8,
+              "hash": "17",
+              "token": "8",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [[0, 5], [1, 5], [2, 5], [3, 5], [4, 5]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            },
+            {
+              "objectId": 5,
+              "value": 5
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "remove",
+            "key": 2
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "17",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "17",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "17",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "17",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "17",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "17",
+              "token": "5",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 6,
+              "hash": "17",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 7,
+              "hash": "17",
+              "token": "7",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 8,
+              "hash": "17",
+              "token": "8",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": 2
+          },
+          "comparisons": [[0, 2], [1, 2]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            },
+            {
+              "objectId": 5,
+              "value": 5
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 6,
+            "value": 6
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "17",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "17",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "17",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "17",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "17",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "17",
+              "token": "5",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 6,
+              "hash": "17",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 7,
+              "hash": "17",
+              "token": "7",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 8,
+              "hash": "17",
+              "token": "8",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [[0, 6], [1, 6], [3, 6], [4, 6], [5, 6]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            },
+            {
+              "objectId": 5,
+              "value": 5
+            },
+            {
+              "objectId": 6,
+              "value": 6
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 4
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "17",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "17",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "17",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "17",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "17",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "17",
+              "token": "5",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 6,
+              "hash": "17",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 7,
+              "hash": "17",
+              "token": "7",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 8,
+              "hash": "17",
+              "token": "8",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": 4
+          },
+          "comparisons": [[0, 4], [1, 4], [6, 4], [3, 4]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            },
+            {
+              "objectId": 5,
+              "value": 5
+            },
+            {
+              "objectId": 6,
+              "value": 6
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 2
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "17",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "17",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "17",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "17",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "17",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "17",
+              "token": "5",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 6,
+              "hash": "17",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 7,
+              "hash": "17",
+              "token": "7",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 8,
+              "hash": "17",
+              "token": "8",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [[0, 2], [1, 2], [6, 2], [3, 2], [4, 2], [5, 2]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            },
+            {
+              "objectId": 5,
+              "value": 5
+            },
+            {
+              "objectId": 6,
+              "value": 6
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 7,
+            "value": 7
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "17",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "17",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "17",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "17",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "17",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "17",
+              "token": "5",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 6,
+              "hash": "17",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 7,
+              "hash": "17",
+              "token": "7",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 8,
+              "hash": "17",
+              "token": "8",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [[0, 7], [1, 7], [6, 7], [3, 7], [4, 7], [5, 7]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            },
+            {
+              "objectId": 5,
+              "value": 5
+            },
+            {
+              "objectId": 6,
+              "value": 6
+            },
+            {
+              "objectId": 7,
+              "value": 7
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 8,
+            "value": 8
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "17",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "17",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "17",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "17",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "17",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "17",
+              "token": "5",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 6,
+              "hash": "17",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 7,
+              "hash": "17",
+              "token": "7",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 8,
+              "hash": "17",
+              "token": "8",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [
+            [0, 8],
+            [1, 8],
+            [6, 8],
+            [3, 8],
+            [4, 8],
+            [5, 8],
+            [7, 8]
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            },
+            {
+              "objectId": 5,
+              "value": 5
+            },
+            {
+              "objectId": 6,
+              "value": 6
+            },
+            {
+              "objectId": 7,
+              "value": 7
+            },
+            {
+              "objectId": 8,
+              "value": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "resize-retains-cached-hash",
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 0
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "5",
+              "token": "zero",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "2",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "3",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "4",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "6",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "hash",
+            "key": 0,
+            "value": "10"
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "10",
+              "token": "zero",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "2",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "3",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "4",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "6",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 1,
+            "value": 1
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "10",
+              "token": "zero",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "2",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "3",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "4",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "6",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 2,
+            "value": 2
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "10",
+              "token": "zero",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "2",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "3",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "4",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "6",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 3,
+            "value": 3
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "10",
+              "token": "zero",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "2",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "3",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "4",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "6",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 4,
+            "value": 4
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "10",
+              "token": "zero",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "2",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "3",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "4",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "6",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 5,
+            "value": 5
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "10",
+              "token": "zero",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "2",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "3",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "4",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "6",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            },
+            {
+              "objectId": 5,
+              "value": 5
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "10",
+              "token": "zero",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "2",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "3",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "4",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "6",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            },
+            {
+              "objectId": 5,
+              "value": 5
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 9
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "10",
+              "token": "zero",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "2",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "3",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "4",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 5,
+              "hash": "6",
+              "token": "6",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            },
+            {
+              "objectId": 5,
+              "value": 5
+            },
+            {
+              "objectId": 0,
+              "value": 9
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "delete-dummy-order-clear",
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 0
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "1",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 1,
+            "value": 1
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "1",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [[0, 1]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "remove",
+            "key": 0
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "1",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "1",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 2,
+            "value": 2
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "1",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [[1, 2]],
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 3
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "1",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [[2, 0], [1, 0]],
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 0,
+              "value": 3
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "clear"
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "1",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": []
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 1,
+            "value": 4
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "1",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 1,
+              "value": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "comparison-error-atomic",
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 0
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1",
+              "token": "left",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "right",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "error",
+            "key": 0,
+            "value": true
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1",
+              "token": "left",
+              "mode": "token",
+              "error": true
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "right",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1",
+              "token": "left",
+              "mode": "token",
+              "error": true
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "right",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "error",
+            "kind": "ValueError"
+          },
+          "comparisons": [[0, 1]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 1,
+            "value": 1
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1",
+              "token": "left",
+              "mode": "token",
+              "error": true
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "right",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "error",
+            "kind": "ValueError"
+          },
+          "comparisons": [[0, 1]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "error",
+            "key": 0,
+            "value": false
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1",
+              "token": "left",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "right",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1",
+              "token": "left",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "right",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [[0, 1]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 1,
+            "value": 1
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "1",
+              "token": "left",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "1",
+              "token": "right",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [[0, 1]],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "signed-wide-hashes",
+      "events": [
+        {
+          "operation": {
+            "kind": "set",
+            "key": 0,
+            "value": 0
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "-2",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "-2",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "-9223372036854775808",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "9223372036854775807",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "0",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 1,
+            "value": 1
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "-2",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "-2",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "-9223372036854775808",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "9223372036854775807",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "0",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1]
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 2,
+            "value": 2
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "-2",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "-2",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "-9223372036854775808",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "9223372036854775807",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "0",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 3,
+            "value": 3
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "-2",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "-2",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "-9223372036854775808",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "9223372036854775807",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "0",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "key": 4,
+            "value": 4
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "-2",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "-2",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "-9223372036854775808",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "9223372036854775807",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "0",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 0
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "-2",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "-2",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "-9223372036854775808",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "9223372036854775807",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "0",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 1
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "-2",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "-2",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "-9223372036854775808",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "9223372036854775807",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "0",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "comparisons": [
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1]
+          ],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 2
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "-2",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "-2",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "-9223372036854775808",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "9223372036854775807",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "0",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": 2
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 3
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "-2",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "-2",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "-9223372036854775808",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "9223372036854775807",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "0",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": 3
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 4
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "-2",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "-2",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "-9223372036854775808",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "9223372036854775807",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "0",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": 4
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 2,
+              "value": 2
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "remove",
+            "key": 2
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "-2",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "-2",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "-9223372036854775808",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "9223372036854775807",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "0",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": 2
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            }
+          ]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "key": 2
+          },
+          "keys": [
+            {
+              "objectId": 0,
+              "hash": "-2",
+              "token": "0",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 1,
+              "hash": "-2",
+              "token": "1",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 2,
+              "hash": "-9223372036854775808",
+              "token": "2",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 3,
+              "hash": "9223372036854775807",
+              "token": "3",
+              "mode": "token",
+              "error": false
+            },
+            {
+              "objectId": 4,
+              "hash": "0",
+              "token": "4",
+              "mode": "token",
+              "error": false
+            }
+          ],
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "comparisons": [],
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            },
+            {
+              "objectId": 3,
+              "value": 3
+            },
+            {
+              "objectId": 4,
+              "value": 4
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

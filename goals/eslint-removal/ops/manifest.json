@@ -30,7 +30,12 @@
     "goals/eslint-removal/GOAL.md",
     "goals/eslint-removal/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/cache-baseline-basis.md",
+    "research/cache-baseline-request.json"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

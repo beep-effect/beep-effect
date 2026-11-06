@@ -773,3 +773,333 @@ read. Keep its query arguments, fallback, cache, report and gate rules. All
 fourteen fixed labels and their 564-byte bound remain; no per-document output
 or new quality operation is introduced. Reverse by moving this cached read
 back while retaining the review finding and unresolved timeout evidence.
+
+### Refresh the accepted population without carrying stale grants, 2026-11-03
+
+Use Cache's source-bound census at accepted main `31e2ac20f3`. Retain the prior
+population byte-identically before replacing the current review queue. Check
+every prior literal keep-fresh operation against its current manifest and
+effective configuration; review the three new package fixers explicitly. Keep
+all pure counterparts and other computations pending, preserve the original
+qualification records and leave every runtime flag unchanged.
+
+Consume the CI lane economics owner's preview with its source and measurement
+limits. The window-4 preview used the old layout before the listed repairs and
+measures no speed-up from those repairs or Turbo. The missing final full-week
+verdict is not an implied pass. Reverse this
+registration through Git to the retained population and reports. Historical
+receipts and qualification evidence keep their original source and authority.
+
+
+### Explicit service, fixer and live-audit boundaries, 2026-11-03
+
+- Keep `@beep/beep-effect-web#dev` fresh: its portless Vite process is a
+  persistent service. Cached completion cannot restore the running server.
+- Keep `@beep/beep-effect-web#lint:fix` fresh: its literal alias reaches
+  `biome check . --write`, whose source mutation must execute.
+- Keep `//#repo-sanity:bun-audit` fresh: its existing owner reads current time
+  for ignore expiry and invokes the live vulnerability audit. Source identity
+  cannot establish that the external advisory set is unchanged. The lane-proof
+  owner already explicitly excludes this lane from reuse.
+- Existing effective caching is disabled for all three. Review and qualify
+  their named pure prerequisites independently; these whole-task decisions
+  confer no prerequisite or hosted-status authority. The source-bound review
+  records the six-file accepted-Git comparison and unchanged qualification ledger.
+- Reverse only these three population decisions using the report's prior Git
+  revision. No runtime setting or trust boundary needs reversal.
+
+
+### Refresh the installed fleet scanner, 2026-11-03
+
+- The workstation scanner still used the original enrollment source after
+  accepted #2669 moved policy code to `@beep/repo-cli-kit`. Its read-only plan
+  incorrectly classified four current checkouts as legacy. Apply the existing
+  accepted scanner source, preserving compatibility with both policy locations.
+- Bound this maintenance to one installed source file on this workstation,
+  under 64 KiB combined source bytes, with zero service restarts, cloud or
+  artifact requests. Retain and verify the original source backup before the
+  atomic replacement. Client/backend configuration and the ordinary adapter
+  remain unchanged; no enrollment, signing or qualification is activated.
+- Actual read-only discovery changes 5 legacy / 33 planned checkouts to
+  1 legacy / 37 planned. Source-capable read-write entries increase from 22
+  to 26. These counts establish recognition, not an artifact read/write result.
+- Reverse only the installed scanner using the verified backup or named prior
+  accepted Git source, with mode 0700. The receipt retains numeric bounds,
+  source identities, current local adapter observations and remote evidence gaps.
+
+
+### Enumerate nested script entrypoints without inventing executions, 2026-11-03
+
+The configured dry-run graph is not the whole manifest-script population.
+Keep its 2,436 executable rows and 2,092 graph-only nodes unchanged, and join
+both pinned clients' complete query catalogue to all 4,235 manifest scripts.
+Explicitly retain the additional 1,799 script-only entrypoints for semantic,
+caller and pure-boundary review. A literal `bun run <script>` invocation edge
+does not grant semantic equivalence, execution, qualification or cache reuse.
+
+Bound this metadata observation to one process at a time, twelve seconds and
+one MiB stdout per query, sixty-four KiB stderr, thirty seconds aggregate and
+zero repository task bodies. Verify the 458 census source bindings before and
+after capture. Keep raw bounded captures private, preserve refusals and publish
+only source identities and the complete normalized inventory. Reversal removes
+this supplementary inventory projection; runtime and qualification are unchanged.
+
+### Bind signature-key observations to captured inputs, 2026-11-03
+
+Extend the existing selection/permission source-binding rule to the signature-key
+driver. Parse the captured pins and bounded-collector bytes, hash those same
+bytes, include the captured Bun version pin, and refuse source movement before
+native client selection. Reject an external pin manifest before reading it.
+Keep the final source guard and existing native experiment budgets unchanged.
+
+Thirteen metadata-only prefix controls reproduce four legacy false bindings,
+prove six current source-movement refusals and the external-pin refusal, and
+preserve two unchanged-input controls. Version probes are stubs; no real child
+process, native client or task body runs. The original 168 native cases retain
+their original source binding; current-driver semantic replay stays pending.
+The feature and all qualification/rollout gates remain pending. Reversal is a
+reviewed Git revert of the driver and registrations, retaining both evidence
+envelopes. See `research/signature-key-source-binding-repair.json`.
+
+Use one existing admission token to replay the same 168 offline synthetic cases
+after the source repair is pushed. Keep the existing 600-second whole-run,
+20-second per-case, 1-MiB stdout and 64-KiB stderr bounds. Expose no production
+credentials or network, execute no repository quality task, and write exclusive
+private captures. Fresh observations retain their new source envelope; the
+historical report stays immutable. Reversal removes only the new observation
+references while retaining both reports. Feature and tuple acceptance remain
+separate from this replay.
+
+
+### Actual source-bound signature replay, 2026-11-03
+
+The admitted replay completed all 168 cases in 3.809 seconds: 162 isolated
+fixture tasks executed and six supplied-key length cases refused before their
+task. This is separate from the thirteen prefix controls, which execute no
+native client or task. Both pinned clients reproduce the historical semantic
+rows. Source digests still match; all 336 raw stdout/stderr capture digests and
+bounds were checked, totaling 46,878 bytes. One existing admission token was
+admitted and released; recorded peak memory was 278,233,088 bytes.
+
+Register `research/signature-key-sourcebound-native-replay.json` and its new
+native report without replacing historical bytes. The isolated endpoint was
+unavailable and no production credentials or cache traffic were used. Missing
+keys still permit task execution with a signature warning, so role-policy
+qualification remains necessary. Signed transport, protected producer proof,
+feature adoption and every whole-goal acceptance criterion remain pending.
+
+
+### Complete the related native source-capture repair, 2026-11-03
+
+Audit the related native experiment drivers as one wave. Bind parsed pin, helper
+and Bun-version bytes to the same captured bytes and reject movement before
+version probes. Preserve each experiment's collector function, bounds, task
+semantics and historical reports. Confine optional pin manifests before reads.
+Use disposable metadata-prefix controls with version queries stubbed and real
+subprocesses refused; they grant no native replay or feature qualification.
+Keep historical observations bound to their original drivers until a separately
+admitted replay records new evidence. Reverse through Git while retaining both
+source envelopes and reports; no production setting or credential changes.
+
+
+### Opened-descriptor containment, 2026-11-03
+
+The review identified a valid replacement race after a pathname containment
+check. Reuse the existing bounded-reader owner for a source reader that opens
+with no-follow and nonblocking flags, checks the kernel-reported descriptor
+path inside the checkout and regular-file status, then reads at most one MiB.
+Hash and parse those captured bytes. Revalidation also verifies its opened
+descriptor; never read an external redirect merely to compare its digest.
+Twenty controlled legacy replacements read synthetic external bytes, while
+twenty repaired leaf/parent replacements refuse before external reads. Record
+the 208-case actual-reader and 13-case stubbed binding controls separately.
+
+This change invalidates current-driver semantic replay claims for its affected
+source envelopes. Preserve the earlier 168-case signature replay as historical,
+with its exact original digests. Fresh native evidence remains pending. No
+qualification, key, signed epoch, cache setting or production cohort changes.
+
+
+Containment applies to pin manifests. Fixed dependency metadata can resolve
+through the approved shared install outside the lane; preserve its captured
+bytes and digest checks without imposing pin-manifest containment on it. The
+actual dependency schema/docs resolve outside this worktree. Include that
+shared-doc symlink in the metadata fixture alongside all pin replacement
+negatives. Reversal preserves the pin fence and restores only the overbroad
+dependency read restriction.
+
+
+### Bounded repaired-driver native replay, 2026-11-03
+
+Replay all thirteen affected native experiment drivers after the source repair
+is pushed. Use one existing admission token and sequential execution, at most
+ten minutes total and one minute per experiment, retaining each driver's
+existing per-case/stream limits. Use fresh private output paths, isolated
+synthetic fixtures and credentials, no repository quality suite and no real
+cache traffic. Retain at most 16 MiB of compact publication evidence; preserve
+raw captures privately under their existing bounds. Stop on the first failure
+and retain partial evidence rather than repeating or overwriting it. This is
+native semantic evidence only; feature and tuple qualification remain separate.
+
+
+### Isolated native boundary-checker controls, 2026-11-03
+
+Use twelve disposable workspace shapes on both existing exact client pins to
+exercise declared/undeclared imports, relative package escapes, dependency and
+dependent tag rules, package-name rules and transitive denials. Reuse the
+captured availability driver's bounded collector and contained pin reader.
+Retain the one existing token, 60-second wrapper, 20-second subprocess,
+256-KiB per-command retained output, four-MiB aggregate raw and two-MiB compact
+report bounds. Isolate the network; provide no host secrets. Fixture-only
+offline lock generation ignores lifecycle scripts. Beep task bodies, quality
+suites and live configuration remain outside this experiment.
+
+Require the expected diagnostic class for negative outcomes, unchanged fixture
+inputs, source/tool hashes before and after execution, and removal of owned
+fixtures. Preserve earlier observations under their original driver bytes.
+This supplies synthetic semantics, not a real-repository adoption decision or
+a task/profile qualification. Reverse the registration through Git while
+retaining the observations; production settings need no rollback.
+
+
+### Isolated native Git worktree sharing controls, 2026-11-03
+
+Use disposable main/linked Git worktrees on both frozen native clients. Exercise
+implicit local sharing in both directions, changed-input misses, explicit
+cache-directory isolation, same-worktree replay, and an absolute-output-path
+counterexample against a fresh consumer execution. Run only tiny fixture task
+bodies; do not use Beep tasks, real checkout caches, remote transport or secrets.
+
+Reuse the captured availability collector and contained pin reader. Use one
+existing admission token, a 60-second wrapper, 20-second native subprocess
+deadlines, 256-KiB command streams, four-MiB total retained raw evidence and a
+two-MiB compact report. Isolate the network. Fixture-only offline lock generation
+ignores lifecycle scripts; Git uses a private fixture identity and no hooks.
+Require unchanged inputs and source/tool digests, actual HIT/MISS and task-body
+markers, complete output-file/mode and task-log comparisons, raw-summary joins
+and owned fixture removal. Stop on the first failure and retain partial output.
+
+This supplies synthetic local semantics, not independent-clone/remote-box proof,
+real computation/profile qualification, a feature adoption decision or measured
+production savings. Reverse the registration through Git; no live setting or
+cache activation requires rollback.
+
+
+The worktree fixture also includes an observed permission counterexample:
+under private umask 0077, an explicitly chmodded 0755 output is restored as
+0700. Require that exact mismatch and a fresh consumer control returning 0755
+on both pinned clients. Separate it from the positive owner-only 0700 output
+controls; never accept bytes-only equality as full metadata equivalence. This
+extends the bounded matrix to 36 tiny invocations, without changing its token,
+time, retention or isolation limits. Both counterexample families keep real
+portability and permission-sensitive computation qualification open.
+
+
+### Unconditional native-driver startup refusal, 2026-11-03
+
+Before parser, fixture, source, tool or report work, both new boundary/worktree
+drivers must unconditionally reject disabled assertions or a non-Linux platform.
+An assertion cannot guard assertion-dependent evidence because optimized Python
+removes it. Preserve the refusal message and apply the same existing experiment
+bounds. Optimized flags/environment and simulated platform branches must create
+no output parents. Normal guarded replays retain their exact source envelopes;
+old reports remain historical and no feature/task qualification is promoted.
+
+### Prepare the signed native minimum-key safeguard, 2026-11-04 UTC
+
+The trust-owned signed overlay must include `longerSignatureKey: true` and
+its projected identity must bind that exact flag. Consume the source review at
+`../turborepo-cache-trust-observability/research/signed-key-floor-review-2026-11-04.json`.
+This prepares the named signed pilot consumer using the recorded native
+32-byte-boundary behavior; it changes no root flag or live cache setting.
+Keep the feature pending until current hosted, signed remote and rollout
+evidence satisfy its remaining gates. Missing-key roles and protected producer
+authority remain independent. Suspend affected candidate tuples before a
+reviewed revert; do not relabel historical qualification for the new overlay.
+
+### Preserve source during generator checks, 2026-11-03
+
+The HTML and label-glyph `generate:check` entrypoints must compare freshly
+rendered, project-formatted content without writing a target or creating its
+parent directory. Reuse CodegenKit drift reporting and add a project-format
+path while preserving the OpenAPI formatter's existing defaults. Treat a
+nonzero formatter exit as a typed failure. Keep ordinary generation unchanged.
+The isolated CI regressions preserve dirty bytes, reject missing outputs and
+formatter failure, and forbid writes through the check's filesystem service.
+No cache or qualification transition is included. If this repair must be
+withdrawn, suspend the affected checks until repaired rather than restoring
+the destructive generate-then-diff wrappers.
+
+### Freeze the Storybook deployment install, 2026-11-04 UTC
+
+Require `bun install --frozen-lockfile` in Storybook's existing Vercel installer.
+Keep its full-monorepo working directory, build command and output directory.
+This prevents deployment-time lockfile changes; it does not establish the
+actual Vercel Bun version, deployment success or a qualified cache profile.
+Reverse with a reviewed revert while retaining the source finding.
+
+The source review names the actual Vercel, Alchemy and desktop build callers.
+Keep pruning pending until a real app install/build and missing-input comparison
+passes. Keep native boundaries pending until their package semantics are mapped
+to the existing manifest/doctrine owner and aliases. A text scan proves neither
+policy equivalence nor that a new tool has no useful application. Feature counts
+and all whole-goal gates remain unchanged. See
+`research/deployment-boundary-source-review-2026-11-04.json`.
+
+### Align scoped proof comparisons, 2026-11-04
+
+The existing Turbo config proof query supplies the requested base/head, but its
+--affected dry runs inherited ambient/default SCM refs. Bind both query and dry
+children to TurboConfigProofOptions.base/head through the existing runCaptured
+environment, extending the tool environment. Reuse the existing schema/helper
+and retain both selector modes. Add one hosted regression covering both modes
+and all three captured commands per mode; do not run local quality suites.
+
+This source repair grants no qualification or feature acceptance. Immutable
+comparisons still require caller-supplied commit SHAs. Reverse the binding, test
+and packet entries together; prior affected reports need independent actual-ref
+evidence before reuse. Hosted proof remains pending.
+
+The same proof reader also defaulted absent/malformed task arrays to empty
+selections. Decode required query/dry envelopes through private schema-first
+models, retain valid empty arrays, and return generic typed failures without
+retaining native payload values. Four further authored regressions cover ten
+malformed rows, explicit empty selections and three synthetic payload values.
+No local unit suite runs; current hosted proof remains required.
+
+A separately captured current-root observation uses direct pinned native
+commands on accepted source31e2ac20, without invoking the proof wrapper. Eight
+dry plans agree across both clients and selector forms: unchanged refs select
+zero nodes; the actual accepted domain change selects the same28-node closure
+containing @beep/law-practice-domain#check. This does not execute tasks or prove
+semantic input completeness, safe outputs, cache reuse or qualification.
+
+### Isolate the enabled selector flags, 2026-11-04
+
+Extend the existing bounded, network-isolated filter driver with an optional
+two-by-two selector-flag mode. Compare each flag false/true while holding the
+other flag false and then true; keep globalConfiguration fixed. Both pinned
+clients pass 320 explicit selection cases and 320 one-flag comparisons.
+
+The controls falsify a simple independence assumption: either enabled flag
+narrows --affected against declared task inputs, while a bare Git-range filter
+follows filterUsingTasks and does not automatically include dependents. Keep
+these measured distinctions in any later current-root or caller change.
+
+This is feature evidence, without task execution, current-root qualification,
+performance claims or activation. Preserve all 25 pending feature decisions and
+all whole-goal gates. Revert the optional driver mode, its reports and evidence
+links together to reverse this component; runtime configuration is unchanged.
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-quality-cache-adoption`; add a `kind: decision` file there, never edit this block._
+
+### Count native query packages and bind prepared-source history, 2026-11-06
+
+After accepted PR #2695, nonempty affected-query summaries still reported zero packages. Count distinct valid package.name identities with existing Effect helpers; retain the accepted optional-array codec fix. Extend the three-task/two-package and explicit-empty assertions for hosted CI without running local quality suites. Bind the initial SCM report explicitly to f48bf842, whose two recorded hashes match, and preserve every historical hash and native capture. Record the current repair source separately. This changes diagnostic metadata only and grants no qualification, signing, capacity or whole-goal completion.
+
+Lane `codex/turbo-query-package-counts`
+
+Reverse: Revert the package counter and its assertions while preserving historical source and native evidence.
+
+<!-- beep:decisions:end -->

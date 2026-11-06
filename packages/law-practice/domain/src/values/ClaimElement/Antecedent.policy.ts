@@ -13,6 +13,7 @@
  */
 
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -26,14 +27,27 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import { AntecedentFinding, AntecedentRuleId } from "./AntecedentFinding.model.ts";
-import { ClaimTermIntroducingDeterminer, ClaimTermReferringDeterminer } from "./ClaimElement.behavior.ts";
-import { ClaimTermDeterminer, ClaimTermRef } from "./ClaimElement.model.ts";
+import {
+  ClaimTermIntroducingDeterminer,
+  ClaimTermReferringDeterminer,
+  decomposeClaimInput,
+} from "./ClaimElement.behavior.ts";
+import { ClaimInputQualification } from "./ClaimElement.input.model.ts";
+import {
+  ClaimInputCoverageIssue,
+  ClaimInputDecomposition,
+  ClaimInputInspection,
+  ClaimInputInspectionReport,
+} from "./ClaimElement.inspection.model.ts";
+import { ClaimTermDeterminer, ClaimTermRef, claimNumberOfPath } from "./ClaimElement.model.ts";
 import {
   isCountedHead,
   isExplicitAbbreviatedHead,
   isSingleModifiedHead as isSingleModifiedOf,
+  pluralityReferenceContent,
 } from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
+import type { ClaimInputCollection } from "./ClaimElement.input.model.ts";
 import type { ClaimTerm } from "./ClaimElement.model.ts";
 import type { ClaimElementTree } from "./ClaimElement.tree.model.ts";
 
@@ -288,7 +302,7 @@ const uncovered = (referring: LocatedTerm, ruleId: AntecedentRuleId): Antecedent
 
 // In-chain resolution: `O.none()` when no step applies, else the step's verdict.
 const resolveInChain = (introductions: ReadonlyArray<LocatedTerm>, referring: LocatedTerm, chain: Chain) => {
-  const head = referring.term.head;
+  const head = O.getOrElse(pluralityReferenceContent(referring.term.head), () => referring.term.head);
   const resolved = (): Verdict => O.none();
   const ambiguous =
     (ruleId: AntecedentRuleId) =>
@@ -364,7 +378,13 @@ const fullVerdict =
     pipe(
       resolveInChain(introductions, referring, chain),
       O.orElse(() => {
-        const candidates = O.getOrElse(R.get(introductionsByHead, referring.term.head), () => []);
+        const candidates = O.getOrElse(
+          R.get(
+            introductionsByHead,
+            O.getOrElse(pluralityReferenceContent(referring.term.head), () => referring.term.head)
+          ),
+          () => []
+        );
         // Preserve the original first global introduction outside the chain,
         // charging its actual candidate scan before inspecting membership.
         if (!spendChainWork(remaining, (candidates.length + 1) * (chain.claims.length + 1)))
@@ -417,24 +437,139 @@ const readableVerdict =
       : partialVerdict(introductions, referring, chain);
   };
 
-const verdictFor =
+// These coverage outcomes do not inspect chain term candidates. Keeping them
+// before preparation avoids charging or allocating work that is never used.
+const chainIndependentVerdict = (referring: LocatedTerm, chain: Chain): Verdict => {
+  if (ClaimTermDeterminer.is.bare(referring.term.determiner))
+    return O.some(uncovered(referring, rule.unsupportedDeterminer));
+  return chain.resolvable ? O.none() : O.some(uncovered(referring, rule.chainUnresolvable));
+};
+const prepareChainTerms = (
+  termsByClaim: R.ReadonlyRecord<string, ReadonlyArray<LocatedTerm>>,
+  chain: Chain,
+  remaining: MutableRef.MutableRef<number>
+): O.Option<ReadonlyArray<LocatedTerm>> => {
+  // Count bucket lengths only after reserving that lookup pass. The retained
+  // copy and canonical sort/de-duplication are charged before allocation.
+  if (!spendChainWork(remaining, chain.claims.length)) return O.none();
+  const termCount = A.reduce(
+    chain.claims,
+    0,
+    (count, claimNumber) => count + O.getOrElse(R.get(termsByClaim, `${claimNumber}`), () => []).length
+  );
+  if (!spendChainWork(remaining, termCount + 1 + chain.claims.length ** 2)) return O.none();
+  return O.some(
+    A.flatMap(A.dedupe(A.sort(chain.claims, Num.Order)), (claimNumber) =>
+      O.getOrElse(R.get(termsByClaim, `${claimNumber}`), () => [])
+    )
+  );
+};
+
+const cachedChainTerms =
   (
-    introductionsByHead: R.ReadonlyRecord<string, ReadonlyArray<LocatedTerm>>,
+    termsByClaim: R.ReadonlyRecord<string, ReadonlyArray<LocatedTerm>>,
+    remaining: MutableRef.MutableRef<number>,
+    prepared: Array<O.Option<ReadonlyArray<LocatedTerm>>>
+  ) =>
+  (chain: Chain, index: number): O.Option<ReadonlyArray<LocatedTerm>> => {
+    if (!spendChainWork(remaining, 1)) return O.none();
+    const cached = O.flatten(A.get(prepared, index));
+    if (O.isSome(cached)) return cached;
+    const terms = prepareChainTerms(termsByClaim, chain, remaining);
+    if (O.isSome(terms)) prepared[index] = terms;
+    return terms;
+  };
+const boundedChainVerdict =
+  (
+    lookup: (chain: Chain, index: number) => O.Option<ReadonlyArray<LocatedTerm>>,
+    read: (terms: ReadonlyArray<LocatedTerm>, referring: LocatedTerm, chain: Chain) => Verdict,
     remaining: MutableRef.MutableRef<number>
   ) =>
-  (
-    terms: ReadonlyArray<LocatedTerm>,
-    decomposed: HashSet.HashSet<number>,
-    referring: LocatedTerm,
-    chain: Chain
-  ): Verdict => {
-    if (ClaimTermDeterminer.is.bare(referring.term.determiner)) {
-      return O.some(uncovered(referring, rule.unsupportedDeterminer));
-    }
-    return chain.resolvable
-      ? readableVerdict(introductionsByHead, remaining)(terms, decomposed, referring, chain)
-      : O.some(uncovered(referring, rule.chainUnresolvable));
+  (referring: LocatedTerm, chain: Chain, index: number): O.Option<Verdict> => {
+    const independent = chainIndependentVerdict(referring, chain);
+    if (O.isSome(independent)) return O.some(independent);
+    return O.flatMap(lookup(chain, index), (terms) => {
+      // The introduction filter and up to five matching passes still happen
+      // for each reference; caching does not waive those scans or the
+      // decomposed-claim completeness scan performed by readableVerdict.
+      if (!spendChainWork(remaining, (terms.length + 1) * 6 + chain.claims.length)) return O.none();
+      return O.some(read(terms, referring, chain));
+    });
   };
+
+const policyInContext = (
+  trees: ReadonlyArray<ClaimElementTree>,
+  claims: ReadonlyArray<PatentClaim>
+): ReadonlyArray<AntecedentFinding> => {
+  const claimIndex = HashMap.fromIterable(
+    A.map(claims, (claim): readonly [number, PatentClaim] => [claim.claimNumber, claim])
+  );
+  const decomposed = HashSet.fromIterable(A.map(trees, ({ claimNumber }) => claimNumber));
+  const terms = A.sort(A.flatMap(trees, locatedTerms), locatedOrder);
+  // Both indexes are built once in the existing global term order. A verdict
+  // reads only its chain's term buckets; outside-chain lookup retains global
+  // first-candidate semantics through the head bucket.
+  const remaining = MutableRef.make(MAX_CHAIN_WORK);
+  const termWork = MutableRef.make(Num.min(MAX_TERM_WORK, MAX_CHAIN_WORK + terms.length * TERM_WORK_PER_TERM));
+  // Reserve the filter and both complete linear index passes before allocating any buckets.
+  // Effect Array.groupBy mutates local buckets in place, without growing copies.
+  const indexesComplete = spendChainWork(termWork, terms.length * 3);
+  const termsByClaim = indexesComplete ? A.groupBy(terms, ({ claimNumber }) => `${claimNumber}`) : {};
+  const introductionsByHead = indexesComplete ? A.groupBy(A.filter(terms, isIntroducing), ({ term }) => term.head) : {};
+  const ranked = A.flatMap(trees, (tree): ReadonlyArray<Ranked> => {
+    const referringTerms = A.filter(locatedTerms(tree), (term) => isReferring(term) && !isIdiom(term));
+    if (referringTerms.length === 0) return [];
+    const rank = (referring: LocatedTerm, chain: ReadonlyArray<number>, finding: AntecedentFinding): Ranked => ({
+      claimNumber: tree.claimNumber,
+      start: referring.term.anchor.startChar,
+      chain,
+      finding,
+    });
+    if (!indexesComplete)
+      return A.map(referringTerms, (referring) => rank(referring, [], uncovered(referring, rule.chainWorkLimit)));
+    return pipe(
+      HashMap.get(claimIndex, tree.claimNumber),
+      O.match({
+        onNone: () =>
+          A.map(referringTerms, (referring) => rank(referring, [], uncovered(referring, rule.treeWithoutClaim))),
+        onSome: (claim) => {
+          const enumerated = chainsOf(claimIndex, remaining)(claim);
+          if (O.isNone(enumerated))
+            return A.map(referringTerms, (referring) => rank(referring, [], uncovered(referring, rule.chainWorkLimit)));
+          const chains = A.sort(enumerated.value, chainOrder);
+          // One slot per already-enumerated chain, with no cross-tree or
+          // cross-invocation retention. Every cached term is separately charged.
+          if (!spendChainWork(termWork, chains.length))
+            return A.map(referringTerms, (referring) => rank(referring, [], uncovered(referring, rule.chainWorkLimit)));
+          const prepared = A.replicate(O.none<ReadonlyArray<LocatedTerm>>(), chains.length);
+          const lookup = cachedChainTerms(termsByClaim, termWork, prepared);
+          const read = readableVerdict(introductionsByHead, termWork);
+          const evaluate = boundedChainVerdict(
+            lookup,
+            (terms, referring, chain) => read(terms, decomposed, referring, chain),
+            termWork
+          );
+          return A.flatMap(referringTerms, (referring) => {
+            let findings: ReadonlyArray<Ranked> = [];
+            for (let index = 0; index < chains.length; index++) {
+              const chain = O.getOrThrow(A.get(chains, index));
+              const evaluated = evaluate(referring, chain, index);
+              if (O.isNone(evaluated)) return [rank(referring, [], uncovered(referring, rule.chainWorkLimit))];
+              const finding = evaluated.value;
+              if (O.isSome(finding)) {
+                if (!spendChainWork(remaining, findings.length + 1))
+                  return [rank(referring, [], uncovered(referring, rule.chainWorkLimit))];
+                findings = A.append(findings, rank(referring, chain.claims, finding.value));
+              }
+            }
+            return findings;
+          });
+        },
+      })
+    );
+  });
+  return A.dedupe(A.map(A.sort(ranked, rankedOrder), ({ finding }) => finding));
+};
 
 /**
  * Deterministic rule policy: resolves every referring term along each dependency chain of its claim.
@@ -499,74 +634,113 @@ const verdictFor =
 export const antecedentPolicy: {
   (claims: Parameters<AntecedentPolicy>[1]): (trees: Parameters<AntecedentPolicy>[0]) => ReturnType<AntecedentPolicy>;
   (...args: Parameters<AntecedentPolicy>): ReturnType<AntecedentPolicy>;
-} = dual(2, ((trees: ReadonlyArray<ClaimElementTree>, claims: PatentClaims): ReadonlyArray<AntecedentFinding> => {
-  const claimIndex = HashMap.fromIterable(
-    A.map(claims, (claim): readonly [number, PatentClaim] => [claim.claimNumber, claim])
+} = dual(2, policyInContext satisfies AntecedentPolicy);
+
+// Qualification establishes strictly prior, unique parent numbers. This
+// ordered pass therefore propagates structural failure without enumerating
+// dependency paths, including claims that contain no referring terms.
+const unavailableAncestors = (decompositions: ReadonlyArray<ClaimInputDecomposition>) => {
+  const numbered = A.flatMap(decompositions, (decomposition) =>
+    ClaimInputQualification.guards["context-ready"](decomposition.qualification)
+      ? [{ decomposition, claim: decomposition.qualification.claim }]
+      : []
   );
-  const decomposed = HashSet.fromIterable(A.map(trees, ({ claimNumber }) => claimNumber));
-  const terms = A.sort(A.flatMap(trees, locatedTerms), locatedOrder);
-  // Both indexes are built once in the existing global term order. A verdict
-  // reads only its chain's term buckets; outside-chain lookup retains global
-  // first-candidate semantics through the head bucket.
-  const remaining = MutableRef.make(MAX_CHAIN_WORK);
-  const termWork = MutableRef.make(Num.min(MAX_TERM_WORK, MAX_CHAIN_WORK + terms.length * TERM_WORK_PER_TERM));
-  // Reserve the filter and both complete linear index passes before allocating any buckets.
-  // Effect Array.groupBy mutates local buckets in place, without growing copies.
-  const indexesComplete = spendChainWork(termWork, terms.length * 3);
-  const termsByClaim = indexesComplete ? A.groupBy(terms, ({ claimNumber }) => `${claimNumber}`) : {};
-  const introductionsByHead = indexesComplete ? A.groupBy(A.filter(terms, isIntroducing), ({ term }) => term.head) : {};
-  const ranked = A.flatMap(trees, (tree): ReadonlyArray<Ranked> => {
-    const referringTerms = A.filter(locatedTerms(tree), (term) => isReferring(term) && !isIdiom(term));
-    if (referringTerms.length === 0) return [];
-    const rank = (referring: LocatedTerm, chain: ReadonlyArray<number>, finding: AntecedentFinding): Ranked => ({
-      claimNumber: tree.claimNumber,
-      start: referring.term.anchor.startChar,
-      chain,
-      finding,
+  let ready = HashSet.empty<number>();
+  let unavailable = HashMap.empty<number, ReadonlyArray<ClaimInputCoverageIssue>>();
+  for (const { decomposition, claim } of A.sort(
+    numbered,
+    Order.mapInput(Num.Order, (entry: (typeof numbered)[number]) => entry.claim.claimNumber)
+  )) {
+    if (decomposition.status !== "decomposed") continue;
+    const issues = PatentClaim.match(claim, {
+      independent: A.empty<ClaimInputCoverageIssue>,
+      dependent: ({ claimReferences }) =>
+        A.map(
+          A.filter(claimReferences, (parent) => !HashSet.has(ready, parent)),
+          (parentClaimNumber) => ClaimInputCoverageIssue.cases["ancestor-unavailable"].make({ parentClaimNumber })
+        ),
     });
-    if (!indexesComplete)
-      return A.map(referringTerms, (referring) => rank(referring, [], uncovered(referring, rule.chainWorkLimit)));
-    return pipe(
-      HashMap.get(claimIndex, tree.claimNumber),
-      O.match({
-        onNone: () =>
-          A.map(referringTerms, (referring) => rank(referring, [], uncovered(referring, rule.treeWithoutClaim))),
-        onSome: (claim) => {
-          const enumerated = chainsOf(claimIndex, remaining)(claim);
-          if (O.isNone(enumerated))
-            return A.map(referringTerms, (referring) => rank(referring, [], uncovered(referring, rule.chainWorkLimit)));
-          const chains = A.sort(enumerated.value, chainOrder);
-          return A.flatMap(referringTerms, (referring) => {
-            let findings: ReadonlyArray<Ranked> = [];
-            for (const chain of chains) {
-              const termCount = A.reduce(
-                chain.claims,
-                0,
-                (count, claimNumber) => count + O.getOrElse(R.get(termsByClaim, `${claimNumber}`), () => []).length
-              );
-              // Reserve bucket copying, introduction filtering, the three
-              // matching passes and candidate output copying before allocation.
-              // Membership is already guaranteed by the selected buckets.
-              // The depth-squared allowance covers sorting and de-duplication
-              // while preserving global claim/anchor candidate order.
-              const work = (termCount + 1) * 6 + chain.claims.length ** 2;
-              if (!spendChainWork(termWork, work))
-                return [rank(referring, [], uncovered(referring, rule.chainWorkLimit))];
-              const chainTerms = A.flatMap(A.dedupe(A.sort(chain.claims, Num.Order)), (claimNumber) =>
-                O.getOrElse(R.get(termsByClaim, `${claimNumber}`), () => [])
-              );
-              const finding = verdictFor(introductionsByHead, termWork)(chainTerms, decomposed, referring, chain);
-              if (O.isSome(finding)) {
-                if (!spendChainWork(remaining, findings.length + 1))
-                  return [rank(referring, [], uncovered(referring, rule.chainWorkLimit))];
-                findings = A.append(findings, rank(referring, chain.claims, finding.value));
-              }
-            }
-            return findings;
-          });
-        },
-      })
+    unavailable = HashMap.set(unavailable, decomposition.qualification.record.sourceOrdinal, issues);
+    if (A.isReadonlyArrayEmpty(issues)) ready = HashSet.add(ready, claim.claimNumber);
+  }
+  return unavailable;
+};
+
+const inspectionFindings = (findings: ReadonlyArray<AntecedentFinding>, indexComplete: boolean) =>
+  A.dedupe(
+    A.map(findings, (finding) =>
+      !indexComplete && (finding.kind === "missing-antecedent" || finding.kind === "antecedent-outside-chain")
+        ? AntecedentFinding.cases["pattern-not-covered"].make({
+            referring: finding.referring,
+            rule: AntecedentRuleId.make("source-index-incomplete"),
+          })
+        : finding
+    )
+  );
+
+/**
+ * Inspect preserved source records with explicit coverage and ancestry uncertainty.
+ *
+ * **Details**
+ * Normalization and decomposition run here, so callers cannot invent a sparse
+ * PatentClaims set. Every source record survives. Any unavailable ancestor
+ * prevents checking that descendant, even without referring terms. An
+ * incomplete document index turns missing/outside-chain verdicts into explicit
+ * uncovered findings; supported in-chain ambiguity and number mismatch remain
+ * advisory findings. Partial and unchecked records never establish a clean result.
+ *
+ * **Example** (Inspect the source-ledger operation)
+ * ```ts
+ * import { inspectClaimInput } from "@beep/law-practice-domain/values/ClaimElement"
+ * console.log(typeof inspectClaimInput) // function
+ * ```
+ * @category policies
+ * @since 0.0.0
+ */
+export const inspectClaimInput = Effect.fn("ClaimElement.inspectClaimInput")(function* (
+  input: ClaimInputCollection
+): Effect.fn.Return<ClaimInputInspectionReport> {
+  const decompositions = yield* decomposeClaimInput(input);
+  const unavailable = unavailableAncestors(decompositions);
+  const eligible = A.filter(
+    decompositions,
+    (decomposition) =>
+      decomposition.status === "decomposed" &&
+      O.exists(HashMap.get(unavailable, decomposition.qualification.record.sourceOrdinal), A.isReadonlyArrayEmpty)
+  );
+  const usable = A.filter(eligible, ClaimInputDecomposition.guards.decomposed);
+  const indexComplete = usable.length === input.records.length;
+  const findings = inspectionFindings(
+    policyInContext(
+      A.map(usable, ({ tree }) => tree),
+      A.map(usable, ({ qualification }) => qualification.claim)
+    ),
+    indexComplete
+  );
+  const records = A.map(input.records, (_, index): ClaimInputInspection => {
+    const decomposition = O.getOrThrow(A.get(decompositions, index));
+    if (decomposition.status !== "decomposed") {
+      return ClaimInputInspection.cases.unchecked.make({
+        decomposition,
+        coverage: [ClaimInputCoverageIssue.cases["record-unavailable"].make({})],
+      });
+    }
+    const ancestry = O.getOrThrow(HashMap.get(unavailable, decomposition.qualification.record.sourceOrdinal));
+    if (A.isReadonlyArrayNonEmpty(ancestry)) {
+      return ClaimInputInspection.cases.unchecked.make({ decomposition, coverage: ancestry });
+    }
+    const ownFindings = A.filter(findings, (finding) =>
+      Num.Equivalence(claimNumberOfPath(finding.referring.path), decomposition.tree.claimNumber)
     );
+    const coverage = A.appendAll(
+      indexComplete ? [] : [ClaimInputCoverageIssue.cases["global-index-incomplete"].make({})],
+      A.some(ownFindings, AntecedentFinding.guards["pattern-not-covered"])
+        ? [ClaimInputCoverageIssue.cases["policy-uncovered"].make({})]
+        : []
+    );
+    return A.isReadonlyArrayNonEmpty(coverage)
+      ? ClaimInputInspection.cases.partial.make({ decomposition, findings: ownFindings, coverage })
+      : ClaimInputInspection.cases.complete.make({ decomposition, findings: ownFindings });
   });
-  return A.dedupe(A.map(A.sort(ranked, rankedOrder), ({ finding }) => finding));
-}) satisfies AntecedentPolicy);
+  return ClaimInputInspectionReport.make({ input, indexStatus: indexComplete ? "complete" : "incomplete", records });
+});

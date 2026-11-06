@@ -1,0 +1,763 @@
+{
+  "tool": "goals/repo-cli-gh-git-consolidation/ops/worktree-differential-w7.ts",
+  "commit": "8602b24203414765675e1bd85e3401dc9fe68444",
+  "git": "git version 2.56.0",
+  "scenarios": 107,
+  "same": 106,
+  "classified": 1,
+  "unclassified": 0,
+  "gates": {
+    "unclassified": true
+  },
+  "rows": [
+    {
+      "site": "countCommits (W2)",
+      "scenario": "unpushed range",
+      "verdict": "same",
+      "old": "{\"ok\":2}",
+      "new": "{\"ok\":2}"
+    },
+    {
+      "site": "countCommits (W2)",
+      "scenario": "whole history",
+      "verdict": "same",
+      "old": "{\"ok\":3}",
+      "new": "{\"ok\":3}"
+    },
+    {
+      "site": "countCommits (W2)",
+      "scenario": "upstream range",
+      "verdict": "same",
+      "old": "{\"ok\":2}",
+      "new": "{\"ok\":2}"
+    },
+    {
+      "site": "countCommits (W2)",
+      "scenario": "unknown revision",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-origin-main\",\"path\":\"<tmp>/lane\",\"message\":\"Preservation step inspect-origin-main failed: Failed to count commits in refs/remotes/origin/nope..HEAD.\"}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-origin-main\",\"path\":\"<tmp>/lane\",\"message\":\"Preservation step inspect-origin-main failed: Failed to count commits in refs/remotes/origin/nope..HEAD.\"}}"
+    },
+    {
+      "site": "countCommits (W2)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-origin-main\",\"path\":\"<tmp>/plain\",\"message\":\"Preservation step inspect-origin-main failed: Failed to count commits in HEAD.\"}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-origin-main\",\"path\":\"<tmp>/plain\",\"message\":\"Preservation step inspect-origin-main failed: Failed to count commits in HEAD.\"}}"
+    },
+    {
+      "site": "refExists (W3)",
+      "scenario": "existing remote-tracking ref",
+      "verdict": "same",
+      "old": "{\"ok\":true}",
+      "new": "{\"ok\":true}"
+    },
+    {
+      "site": "refExists (W3)",
+      "scenario": "prefix of a nested ref only",
+      "verdict": "same",
+      "old": "{\"ok\":false}",
+      "new": "{\"ok\":false}"
+    },
+    {
+      "site": "refExists (W3)",
+      "scenario": "missing ref",
+      "verdict": "same",
+      "old": "{\"ok\":false}",
+      "new": "{\"ok\":false}"
+    },
+    {
+      "site": "refExists (W3)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-upstream\",\"path\":\"<tmp>/plain\",\"message\":\"Preservation step inspect-upstream failed: Failed to resolve the upstream.\"}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-upstream\",\"path\":\"<tmp>/plain\",\"message\":\"Preservation step inspect-upstream failed: Failed to resolve the upstream.\"}}"
+    },
+    {
+      "site": "resolveOriginDefaultBranch (W4)",
+      "scenario": "origin/HEAD names main",
+      "verdict": "same",
+      "old": "{\"ok\":\"main\"}",
+      "new": "{\"ok\":\"main\"}"
+    },
+    {
+      "site": "resolveOriginDefaultBranch (W4)",
+      "scenario": "origin/HEAD names develop",
+      "verdict": "same",
+      "old": "{\"ok\":\"develop\"}",
+      "new": "{\"ok\":\"develop\"}"
+    },
+    {
+      "site": "resolveOriginDefaultBranch (W4)",
+      "scenario": "dangling origin/HEAD",
+      "verdict": "same",
+      "old": "{\"ok\":\"main\"}",
+      "new": "{\"ok\":\"main\"}"
+    },
+    {
+      "site": "resolveOriginDefaultBranch (W4)",
+      "scenario": "no origin/HEAD",
+      "verdict": "same",
+      "old": "{\"ok\":\"main\"}",
+      "new": "{\"ok\":\"main\"}"
+    },
+    {
+      "site": "resolveOriginDefaultBranch (W4)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-origin-main\",\"path\":\"<tmp>/plain\",\"message\":\"Preservation step inspect-origin-main failed: Failed to inspect origin/HEAD.\"}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-origin-main\",\"path\":\"<tmp>/plain\",\"message\":\"Preservation step inspect-origin-main failed: Failed to inspect origin/HEAD.\"}}"
+    },
+    {
+      "site": "upstream (W5)",
+      "scenario": "live upstream",
+      "verdict": "same",
+      "old": "{\"ok\":\"refs/remotes/origin/feat/lane\"}",
+      "new": "{\"ok\":\"refs/remotes/origin/feat/lane\"}"
+    },
+    {
+      "site": "upstream (W5)",
+      "scenario": "pruned upstream",
+      "verdict": "same",
+      "old": "{\"ok\":\"refs/remotes/origin/feat/pruned\"}",
+      "new": "{\"ok\":\"refs/remotes/origin/feat/pruned\"}"
+    },
+    {
+      "site": "upstream (W5)",
+      "scenario": "no upstream",
+      "verdict": "same",
+      "old": "{\"ok\":\"\"}",
+      "new": "{\"ok\":\"\"}"
+    },
+    {
+      "site": "upstream (W5)",
+      "scenario": "branch that does not exist",
+      "verdict": "same",
+      "old": "{\"ok\":\"\"}",
+      "new": "{\"ok\":\"\"}"
+    },
+    {
+      "site": "upstream (W5)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-upstream\",\"path\":\"<tmp>/plain\",\"message\":\"Preservation step inspect-upstream failed: Failed to inspect the upstream for feat/lane.\"}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-upstream\",\"path\":\"<tmp>/plain\",\"message\":\"Preservation step inspect-upstream failed: Failed to inspect the upstream for feat/lane.\"}}"
+    },
+    {
+      "site": "createArchiveRef (W6, W7)",
+      "scenario": "fresh archive ref",
+      "verdict": "same",
+      "old": "{\"points\":\"d513c61cfa4358f5dafdf8d67f396542fd7d392d\"}",
+      "new": "{\"points\":\"d513c61cfa4358f5dafdf8d67f396542fd7d392d\"}"
+    },
+    {
+      "site": "createArchiveRef (W6, W7)",
+      "scenario": "archive ref already exists",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"create-archive-ref\",\"message\":\"Preservation step create-archive-ref failed: Could not create archive ref refs/archive/worktrees/fresh/old.\"}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"create-archive-ref\",\"message\":\"Preservation step create-archive-ref failed: Could not create archive ref refs/archive/worktrees/fresh/new.\"}}"
+    },
+    {
+      "site": "createArchiveRef (W6, W7)",
+      "scenario": "refname check-ref-format rejects",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"create-archive-ref\",\"message\":\"Preservation step create-archive-ref failed: Archive ref refs/archive/worktrees/bad..name/x was not accepted by git check-ref-format.\"}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"create-archive-ref\",\"message\":\"Preservation step create-archive-ref failed: Archive ref refs/archive/worktrees/bad..name/x was not accepted by git check-ref-format.\"}}"
+    },
+    {
+      "site": "commonDir (W8, W9)",
+      "scenario": "main checkout",
+      "verdict": "same",
+      "old": "{\"ok\":\"<tmp>/repo/.git\"}",
+      "new": "{\"ok\":\"<tmp>/repo/.git\"}"
+    },
+    {
+      "site": "commonDir (W8, W9)",
+      "scenario": "linked worktree",
+      "verdict": "same",
+      "old": "{\"ok\":\"<tmp>/repo/.git\"}",
+      "new": "{\"ok\":\"<tmp>/repo/.git\"}"
+    },
+    {
+      "site": "commonDir (W8, W9)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Could not resolve the target Git directory. (exit 128).\",\"exitCode\":128}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Could not resolve the target Git directory. (exit 128).\",\"exitCode\":128}}"
+    },
+    {
+      "site": "inspectRemovalChanges count (W10)",
+      "scenario": "clean lane",
+      "verdict": "same",
+      "old": "{\"ok\":0}",
+      "new": "{\"ok\":0}"
+    },
+    {
+      "site": "inspectRemovalChanges lines (W10)",
+      "scenario": "clean lane",
+      "verdict": "same",
+      "old": "{\"ok\":[]}",
+      "new": "{\"ok\":[]}"
+    },
+    {
+      "site": "inspectRemovalChanges count (W10)",
+      "scenario": "dirty lane",
+      "verdict": "same",
+      "old": "{\"ok\":4}",
+      "new": "{\"ok\":4}"
+    },
+    {
+      "site": "inspectRemovalChanges lines (W10)",
+      "scenario": "dirty lane",
+      "verdict": "D-20: the lines are the kit's StatusEntry.toLine (raw, unquoted paths), and the first line keeps its leading status column, which the old merged, trimmed capture cut; every caller reads only the count, which is equal",
+      "old": "{\"ok\":[\"M README.md\",\" M blob.bin\",\"R  kept.txt -> moved.txt\",\"?? \\\"with space.txt\\\"\"]}",
+      "new": "{\"ok\":[\" M README.md\",\" M blob.bin\",\"R  kept.txt -> moved.txt\",\"?? with space.txt\"]}"
+    },
+    {
+      "site": "inspectRemovalChanges count (W10)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to inspect <tmp>/plain. (exit 128).\",\"exitCode\":128}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to inspect <tmp>/plain. (exit 128).\",\"exitCode\":128}}"
+    },
+    {
+      "site": "inspectRemovalChanges lines (W10)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to inspect <tmp>/plain. (exit 128).\",\"exitCode\":128}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to inspect <tmp>/plain. (exit 128).\",\"exitCode\":128}}"
+    },
+    {
+      "site": "assertNoDirtySubmodules (W11, W12)",
+      "scenario": "no submodules",
+      "verdict": "same",
+      "old": "{}",
+      "new": "{}"
+    },
+    {
+      "site": "assertNoDirtySubmodules (W11, W12)",
+      "scenario": "clean submodule",
+      "verdict": "same",
+      "old": "{}",
+      "new": "{}"
+    },
+    {
+      "site": "assertNoDirtySubmodules (W11, W12)",
+      "scenario": "dirty submodule",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-submodules\",\"path\":\"<tmp>/sub-lane/vendor/lib\",\"message\":\"Preservation step inspect-submodules failed: Submodule vendor/lib has uncommitted work; commit or clean it before retrying archive retirement.\"}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-submodules\",\"path\":\"<tmp>/sub-lane/vendor/lib\",\"message\":\"Preservation step inspect-submodules failed: Submodule vendor/lib has uncommitted work; commit or clean it before retrying archive retirement.\"}}"
+    },
+    {
+      "site": "assertNoDirtySubmodules (W11, W12)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-submodules\",\"path\":\"<tmp>/plain\",\"message\":\"Preservation step inspect-submodules failed: Failed to inspect recursive submodule state.\"}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-submodules\",\"path\":\"<tmp>/plain\",\"message\":\"Preservation step inspect-submodules failed: Failed to inspect recursive submodule state.\"}}"
+    },
+    {
+      "site": "trackedPatch (W13)",
+      "scenario": "clean lane",
+      "verdict": "same",
+      "old": "{\"ok\":\"\"}",
+      "new": "{\"ok\":\"\"}"
+    },
+    {
+      "site": "trackedPatch (W13)",
+      "scenario": "dirty lane with a binary change",
+      "verdict": "same",
+      "old": "{\"ok\":\"diff --git a/README.md b/README.md\\nindex a8d0c0c..df97349 100644\\n--- a/README.md\\n+++ b/README.md\\n@@ -1 +1 @@\\n-# w7c\\n+# changed\\ndiff --git a/blob.bin b/blob.bin\\nindex f971a5e28b6c4cb237ca3c7349e33bb600dbc907..395aa84d4b86671564633708069eafeda95f2854 100644\\nGIT binary patch\\nliteral 5\\nMcmd<&U}yLb00CwJ7ytkO\\n\\nliteral 4\\nLcmZQzWcm*P0SW;F\\n\\ndiff --git a/kept.txt b/moved.txt\\nsimilarity index 100%\\nrename from kept.txt\\nrename to moved.txt\\n\"}",
+      "new": "{\"ok\":\"diff --git a/README.md b/README.md\\nindex a8d0c0c..df97349 100644\\n--- a/README.md\\n+++ b/README.md\\n@@ -1 +1 @@\\n-# w7c\\n+# changed\\ndiff --git a/blob.bin b/blob.bin\\nindex f971a5e28b6c4cb237ca3c7349e33bb600dbc907..395aa84d4b86671564633708069eafeda95f2854 100644\\nGIT binary patch\\nliteral 5\\nMcmd<&U}yLb00CwJ7ytkO\\n\\nliteral 4\\nLcmZQzWcm*P0SW;F\\n\\ndiff --git a/kept.txt b/moved.txt\\nsimilarity index 100%\\nrename from kept.txt\\nrename to moved.txt\\n\"}"
+    },
+    {
+      "site": "trackedPatch (W13)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-residue\",\"path\":\"<tmp>/plain\",\"message\":\"Preservation step inspect-residue failed: Failed to capture tracked worktree residue.\"}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreePreservationError\",\"step\":\"inspect-residue\",\"path\":\"<tmp>/plain\",\"message\":\"Preservation step inspect-residue failed: Failed to capture tracked worktree residue.\"}}"
+    },
+    {
+      "site": "removeWorktree (W14)",
+      "scenario": "clean worktree",
+      "verdict": "same",
+      "old": "{\"ok\":\"removed\",\"exists\":false}",
+      "new": "{\"ok\":\"removed\",\"exists\":false}"
+    },
+    {
+      "site": "removeWorktree (W14)",
+      "scenario": "dirty worktree without force",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to remove the git worktree. (exit 128).\",\"exitCode\":128},\"exists\":true}",
+      "new": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to remove the git worktree. (exit 128).\",\"exitCode\":128},\"exists\":true}"
+    },
+    {
+      "site": "removeWorktree (W14)",
+      "scenario": "dirty worktree with force",
+      "verdict": "same",
+      "old": "{\"ok\":\"removed\",\"exists\":false}",
+      "new": "{\"ok\":\"removed\",\"exists\":false}"
+    },
+    {
+      "site": "removeWorktree (W14)",
+      "scenario": "path that is not a worktree",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to remove the git worktree. (exit 128).\",\"exitCode\":128}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to remove the git worktree. (exit 128).\",\"exitCode\":128}}"
+    },
+    {
+      "site": "pruneWorktreeMetadata (W15)",
+      "scenario": "registration whose directory is gone",
+      "verdict": "same",
+      "old": "{\"ok\":\"pruned\",\"stillListed\":false}",
+      "new": "{\"ok\":\"pruned\",\"stillListed\":false}"
+    },
+    {
+      "site": "pruneWorktreeMetadata (W15)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to prune git worktree metadata. (exit 128).\",\"exitCode\":128}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to prune git worktree metadata. (exit 128).\",\"exitCode\":128}}"
+    },
+    {
+      "site": "deleteArchivedBranch (W16)",
+      "scenario": "branch still at the archived head",
+      "verdict": "same",
+      "old": "{\"ok\":true,\"branchLeft\":false}",
+      "new": "{\"ok\":true,\"branchLeft\":false}"
+    },
+    {
+      "site": "deleteArchivedBranch (W16)",
+      "scenario": "branch advanced past the archived head",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to delete archived branch feat/cas-old-true: it no longer points at the archived head 606f66863b9d150bff9ce14cf523ceb174f29ed3. (exit 1).\",\"exitCode\":1},\"branchLeft\":true}",
+      "new": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to delete archived branch feat/cas-new-true: it no longer points at the archived head 606f66863b9d150bff9ce14cf523ceb174f29ed3. (exit 1).\",\"exitCode\":1},\"branchLeft\":true}"
+    },
+    {
+      "site": "writeMergeDriverConfig (W17)",
+      "scenario": "linked worktree",
+      "verdict": "same",
+      "old": "{\"driver\":\"bash scripts/regenerate-merge-driver.sh %O %A %B %P\",\"recursive\":\"binary\"}",
+      "new": "{\"driver\":\"bash scripts/regenerate-merge-driver.sh %O %A %B %P\",\"recursive\":\"binary\"}"
+    },
+    {
+      "site": "writeMergeDriverConfig (W17)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Cannot install projection merge driver. (exit 128).\",\"exitCode\":128}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Cannot install projection merge driver. (exit 128).\",\"exitCode\":128}}"
+    },
+    {
+      "site": "refreshOriginMain (W18, W19)",
+      "scenario": "fetch succeeds",
+      "verdict": "same",
+      "old": "{\"ok\":\"fetched\"}",
+      "new": "{\"ok\":\"fetched\"}"
+    },
+    {
+      "site": "refreshOriginMain (W18, W19)",
+      "scenario": "fetch fails, tracking commit exists",
+      "verdict": "same",
+      "old": "{\"ok\":\"stale-tracking\"}",
+      "new": "{\"ok\":\"stale-tracking\"}"
+    },
+    {
+      "site": "refreshOriginMain (W18, W19)",
+      "scenario": "fetch fails, no tracking commit",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to fetch origin/main and no usable tracking base exists. (exit 128).\",\"exitCode\":128}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to fetch origin/main and no usable tracking base exists. (exit 128).\",\"exitCode\":128}}"
+    },
+    {
+      "site": "resolveBase (W20)",
+      "scenario": "origin/main",
+      "verdict": "same",
+      "old": "{\"ok\":\"606f66863b9d150bff9ce14cf523ceb174f29ed3\"}",
+      "new": "{\"ok\":\"606f66863b9d150bff9ce14cf523ceb174f29ed3\"}"
+    },
+    {
+      "site": "resolveBase (W20)",
+      "scenario": "a tag-less sha",
+      "verdict": "same",
+      "old": "{\"ok\":\"606f66863b9d150bff9ce14cf523ceb174f29ed3\"}",
+      "new": "{\"ok\":\"606f66863b9d150bff9ce14cf523ceb174f29ed3\"}"
+    },
+    {
+      "site": "resolveBase (W20)",
+      "scenario": "unknown base",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to resolve the worktree base. (exit 128).\",\"exitCode\":128}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to resolve the worktree base. (exit 128).\",\"exitCode\":128}}"
+    },
+    {
+      "site": "addAtBase (W21)",
+      "scenario": "new branch at the base",
+      "verdict": "same",
+      "old": "{\"head\":\"606f66863b9d150bff9ce14cf523ceb174f29ed3\",\"branch\":\"feat/added-old\"}",
+      "new": "{\"head\":\"606f66863b9d150bff9ce14cf523ceb174f29ed3\",\"branch\":\"feat/added-new\"}"
+    },
+    {
+      "site": "addAtBase (W21)",
+      "scenario": "branch already exists",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to add the git worktree. (exit 255).\",\"exitCode\":255}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to add the git worktree. (exit 255).\",\"exitCode\":255}}"
+    },
+    {
+      "site": "doctorChangeCount (W22)",
+      "scenario": "clean lane",
+      "verdict": "same",
+      "old": "{\"ok\":0}",
+      "new": "{\"ok\":0}"
+    },
+    {
+      "site": "doctorChangeCount (W22)",
+      "scenario": "dirty lane",
+      "verdict": "same",
+      "old": "{\"ok\":4}",
+      "new": "{\"ok\":4}"
+    },
+    {
+      "site": "doctorChangeCount (W22)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to inspect <tmp>/plain. (exit 128).\",\"exitCode\":128}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Failed to inspect <tmp>/plain. (exit 128).\",\"exitCode\":128}}"
+    },
+    {
+      "site": "pruneDryRun (W23 KEEP)",
+      "scenario": "one prunable registration",
+      "verdict": "same",
+      "old": "{\"ok\":[\"Removing worktrees/gone-dry: gitdir file points to non-existent location\"]}",
+      "new": "{\"ok\":[\"Removing worktrees/gone-dry: gitdir file points to non-existent location\"]}"
+    },
+    {
+      "site": "pruneDryRun (W23 KEEP)",
+      "scenario": "nothing to prune",
+      "verdict": "same",
+      "old": "{\"ok\":[]}",
+      "new": "{\"ok\":[]}"
+    },
+    {
+      "site": "updateSubmodules (W24)",
+      "scenario": "no .gitmodules",
+      "verdict": "same",
+      "old": "{}",
+      "new": "{}"
+    },
+    {
+      "site": "updateSubmodules (W24)",
+      "scenario": "local submodule",
+      "verdict": "same",
+      "old": "{}",
+      "new": "{}"
+    },
+    {
+      "site": "mergeDriverLine (W25)",
+      "scenario": "driver absent",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    },
+    {
+      "site": "mergeDriverLine (W25)",
+      "scenario": "driver installed",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"merge.regenerate.driver=bash scripts/regenerate-merge-driver.sh %O %A %B %P\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"merge.regenerate.driver=bash scripts/regenerate-merge-driver.sh %O %A %B %P\"}}"
+    },
+    {
+      "site": "mergeDriverLine (W25)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Cannot inspect local merge-driver config. (exit 128).\",\"exitCode\":128}}",
+      "new": "{\"err\":{\"_tag\":\"WorktreeCommandError\",\"message\":\"Cannot inspect local merge-driver config. (exit 128).\",\"exitCode\":128}}"
+    },
+    {
+      "site": "reap head probe (W27)",
+      "scenario": "linked lane",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"d513c61cfa4358f5dafdf8d67f396542fd7d392d\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"d513c61cfa4358f5dafdf8d67f396542fd7d392d\"}}"
+    },
+    {
+      "site": "reap idle facts (W28, W29)",
+      "scenario": "linked lane",
+      "verdict": "same",
+      "old": "{\"ok\":{\"commitMillis\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":1793697377000},\"headPath\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"<tmp>/repo/.git/worktrees/lane/HEAD\"}}}",
+      "new": "{\"ok\":{\"commitMillis\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":1793697377000},\"headPath\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"<tmp>/repo/.git/worktrees/lane/HEAD\"}}}"
+    },
+    {
+      "site": "reap dirty probe (W30)",
+      "scenario": "linked lane",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":false}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":false}}"
+    },
+    {
+      "site": "lane layout facts (W31)",
+      "scenario": "linked lane",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"toplevel\":\"<tmp>/lane\",\"gitDir\":\"<tmp>/repo/.git/worktrees/lane\",\"commonDir\":\"<tmp>/repo/.git\"}}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"toplevel\":\"<tmp>/lane\",\"gitDir\":\"<tmp>/repo/.git/worktrees/lane\",\"commonDir\":\"<tmp>/repo/.git\"}}}"
+    },
+    {
+      "site": "lane branch/head/clean facts (W32-W34)",
+      "scenario": "linked lane",
+      "verdict": "same",
+      "old": "{\"ok\":{\"branch\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"feat/lane\"},\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"d513c61cfa4358f5dafdf8d67f396542fd7d392d\"},\"clean\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}}}",
+      "new": "{\"ok\":{\"branch\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"feat/lane\"},\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"d513c61cfa4358f5dafdf8d67f396542fd7d392d\"},\"clean\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}}}"
+    },
+    {
+      "site": "reap head probe (W27)",
+      "scenario": "detached checkout",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"606f66863b9d150bff9ce14cf523ceb174f29ed3\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"606f66863b9d150bff9ce14cf523ceb174f29ed3\"}}"
+    },
+    {
+      "site": "reap idle facts (W28, W29)",
+      "scenario": "detached checkout",
+      "verdict": "same",
+      "old": "{\"ok\":{\"commitMillis\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":1793697377000},\"headPath\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"<tmp>/repo/.git/worktrees/detached/HEAD\"}}}",
+      "new": "{\"ok\":{\"commitMillis\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":1793697377000},\"headPath\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"<tmp>/repo/.git/worktrees/detached/HEAD\"}}}"
+    },
+    {
+      "site": "reap dirty probe (W30)",
+      "scenario": "detached checkout",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":false}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":false}}"
+    },
+    {
+      "site": "lane layout facts (W31)",
+      "scenario": "detached checkout",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"toplevel\":\"<tmp>/detached\",\"gitDir\":\"<tmp>/repo/.git/worktrees/detached\",\"commonDir\":\"<tmp>/repo/.git\"}}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"toplevel\":\"<tmp>/detached\",\"gitDir\":\"<tmp>/repo/.git/worktrees/detached\",\"commonDir\":\"<tmp>/repo/.git\"}}}"
+    },
+    {
+      "site": "lane branch/head/clean facts (W32-W34)",
+      "scenario": "detached checkout",
+      "verdict": "same",
+      "old": "{\"ok\":{\"branch\":{\"_id\":\"Option\",\"_tag\":\"None\"},\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"606f66863b9d150bff9ce14cf523ceb174f29ed3\"},\"clean\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}}}",
+      "new": "{\"ok\":{\"branch\":{\"_id\":\"Option\",\"_tag\":\"None\"},\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"606f66863b9d150bff9ce14cf523ceb174f29ed3\"},\"clean\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}}}"
+    },
+    {
+      "site": "reap head probe (W27)",
+      "scenario": "dirty lane",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"d8efe552bc43fe76a3a68c8a1b33fbd56fa4a638\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"d8efe552bc43fe76a3a68c8a1b33fbd56fa4a638\"}}"
+    },
+    {
+      "site": "reap idle facts (W28, W29)",
+      "scenario": "dirty lane",
+      "verdict": "same",
+      "old": "{\"ok\":{\"commitMillis\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":1793697377000},\"headPath\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"<tmp>/repo/.git/worktrees/dirty/HEAD\"}}}",
+      "new": "{\"ok\":{\"commitMillis\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":1793697377000},\"headPath\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"<tmp>/repo/.git/worktrees/dirty/HEAD\"}}}"
+    },
+    {
+      "site": "reap dirty probe (W30)",
+      "scenario": "dirty lane",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}}"
+    },
+    {
+      "site": "lane layout facts (W31)",
+      "scenario": "dirty lane",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"toplevel\":\"<tmp>/dirty\",\"gitDir\":\"<tmp>/repo/.git/worktrees/dirty\",\"commonDir\":\"<tmp>/repo/.git\"}}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"toplevel\":\"<tmp>/dirty\",\"gitDir\":\"<tmp>/repo/.git/worktrees/dirty\",\"commonDir\":\"<tmp>/repo/.git\"}}}"
+    },
+    {
+      "site": "lane branch/head/clean facts (W32-W34)",
+      "scenario": "dirty lane",
+      "verdict": "same",
+      "old": "{\"ok\":{\"branch\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"feat/dirty\"},\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"d8efe552bc43fe76a3a68c8a1b33fbd56fa4a638\"},\"clean\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":false}}}",
+      "new": "{\"ok\":{\"branch\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"feat/dirty\"},\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"d8efe552bc43fe76a3a68c8a1b33fbd56fa4a638\"},\"clean\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":false}}}"
+    },
+    {
+      "site": "reap head probe (W27)",
+      "scenario": "main checkout",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"606f66863b9d150bff9ce14cf523ceb174f29ed3\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"606f66863b9d150bff9ce14cf523ceb174f29ed3\"}}"
+    },
+    {
+      "site": "reap idle facts (W28, W29)",
+      "scenario": "main checkout",
+      "verdict": "same",
+      "old": "{\"ok\":{\"commitMillis\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":1793697377000},\"headPath\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"<tmp>/repo/.git/HEAD\"}}}",
+      "new": "{\"ok\":{\"commitMillis\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":1793697377000},\"headPath\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"<tmp>/repo/.git/HEAD\"}}}"
+    },
+    {
+      "site": "reap dirty probe (W30)",
+      "scenario": "main checkout",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":false}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":false}}"
+    },
+    {
+      "site": "lane layout facts (W31)",
+      "scenario": "main checkout",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"toplevel\":\"<tmp>/repo\",\"gitDir\":\"<tmp>/repo/.git\",\"commonDir\":\"<tmp>/repo/.git\"}}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"toplevel\":\"<tmp>/repo\",\"gitDir\":\"<tmp>/repo/.git\",\"commonDir\":\"<tmp>/repo/.git\"}}}"
+    },
+    {
+      "site": "lane branch/head/clean facts (W32-W34)",
+      "scenario": "main checkout",
+      "verdict": "same",
+      "old": "{\"ok\":{\"branch\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"main\"},\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"606f66863b9d150bff9ce14cf523ceb174f29ed3\"},\"clean\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}}}",
+      "new": "{\"ok\":{\"branch\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"main\"},\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"606f66863b9d150bff9ce14cf523ceb174f29ed3\"},\"clean\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}}}"
+    },
+    {
+      "site": "reap head probe (W27)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    },
+    {
+      "site": "reap idle facts (W28, W29)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"ok\":{\"commitMillis\":{\"_id\":\"Option\",\"_tag\":\"None\"},\"headPath\":{\"_id\":\"Option\",\"_tag\":\"None\"}}}",
+      "new": "{\"ok\":{\"commitMillis\":{\"_id\":\"Option\",\"_tag\":\"None\"},\"headPath\":{\"_id\":\"Option\",\"_tag\":\"None\"}}}"
+    },
+    {
+      "site": "reap dirty probe (W30)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    },
+    {
+      "site": "lane layout facts (W31)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    },
+    {
+      "site": "lane branch/head/clean facts (W32-W34)",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"ok\":{\"branch\":{\"_id\":\"Option\",\"_tag\":\"None\"},\"head\":{\"_id\":\"Option\",\"_tag\":\"None\"},\"clean\":{\"_id\":\"Option\",\"_tag\":\"None\"}}}",
+      "new": "{\"ok\":{\"branch\":{\"_id\":\"Option\",\"_tag\":\"None\"},\"head\":{\"_id\":\"Option\",\"_tag\":\"None\"},\"clean\":{\"_id\":\"Option\",\"_tag\":\"None\"}}}"
+    },
+    {
+      "site": "reap readIdleHours (W28, W29)",
+      "scenario": "linked lane",
+      "verdict": "same",
+      "old": "{\"ok\":{\"hours\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":57306.28397305556},\"failed\":false}}",
+      "new": "{\"ok\":{\"hours\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":57306.28397305556},\"failed\":false}}"
+    },
+    {
+      "site": "mergedPullRequestsForBranch (W1)",
+      "scenario": "reused branch: two merged and a newer closed",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"number\":8,\"headRefOid\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},{\"number\":7,\"headRefOid\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}]}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"number\":8,\"headRefOid\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},{\"number\":7,\"headRefOid\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}]}}"
+    },
+    {
+      "site": "reap pull-request rows, open (W26)",
+      "scenario": "reused branch: two merged and a newer closed",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[]}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[]}}"
+    },
+    {
+      "site": "reap pull-request rows, merged (W26)",
+      "scenario": "reused branch: two merged and a newer closed",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"number\":8,\"headRefOid\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}]}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"number\":8,\"headRefOid\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}]}}"
+    },
+    {
+      "site": "mergedPullRequestsForBranch (W1)",
+      "scenario": "open and merged",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"number\":5,\"headRefOid\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"}]}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"number\":5,\"headRefOid\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"}]}}"
+    },
+    {
+      "site": "reap pull-request rows, open (W26)",
+      "scenario": "open and merged",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"number\":6,\"headRefOid\":\"dddddddddddddddddddddddddddddddddddddddd\"}]}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"number\":6,\"headRefOid\":\"dddddddddddddddddddddddddddddddddddddddd\"}]}}"
+    },
+    {
+      "site": "reap pull-request rows, merged (W26)",
+      "scenario": "open and merged",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"number\":5,\"headRefOid\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"}]}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"number\":5,\"headRefOid\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"}]}}"
+    },
+    {
+      "site": "mergedPullRequestsForBranch (W1)",
+      "scenario": "no pull requests",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[]}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[]}}"
+    },
+    {
+      "site": "reap pull-request rows, open (W26)",
+      "scenario": "no pull requests",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[]}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[]}}"
+    },
+    {
+      "site": "reap pull-request rows, merged (W26)",
+      "scenario": "no pull requests",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[]}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[]}}"
+    },
+    {
+      "site": "mergedPullRequestsForBranch (W1)",
+      "scenario": "undecodable row",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"number\":4,\"headRefOid\":\"not-a-sha\"}]}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"number\":4,\"headRefOid\":\"not-a-sha\"}]}}"
+    },
+    {
+      "site": "reap pull-request rows, open (W26)",
+      "scenario": "undecodable row",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[]}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[]}}"
+    },
+    {
+      "site": "reap pull-request rows, merged (W26)",
+      "scenario": "undecodable row",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    },
+    {
+      "site": "mergedPullRequestsForBranch (W1)",
+      "scenario": "GitHub unavailable",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    },
+    {
+      "site": "reap pull-request rows, open (W26)",
+      "scenario": "GitHub unavailable",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    },
+    {
+      "site": "reap pull-request rows, merged (W26)",
+      "scenario": "GitHub unavailable",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    }
+  ]
+}

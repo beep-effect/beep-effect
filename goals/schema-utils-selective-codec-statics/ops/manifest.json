@@ -37,7 +37,22 @@
     "goals/schema-utils-selective-codec-statics/research/SOURCES.md",
     "goals/schema-utils-selective-codec-statics/research/OPPORTUNITIES.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/closing-attachment-inventory.json",
+    "research/closing-census.json",
+    "research/full-consumer-attachment-inventory.json",
+    "research/migration-inventory.json",
+    "research/scratchpad-closing-attachment-inventory.json",
+    "research/scratchpad-migration-inventory.json",
+    "research/scripts/closing-census.ts",
+    "research/scripts/inventory.ts",
+    "research/scripts/migrate-legacy-static-reads.ts",
+    "research/scripts/migrate-unknown-json.ts",
+    "research/scripts/migrate.ts",
+    "research/scripts/remove-unused-migration-imports.ts"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

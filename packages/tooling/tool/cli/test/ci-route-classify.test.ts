@@ -1,25 +1,27 @@
 import { fcRuns } from "@beep/fc-runs";
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError, NameStatusEntry } from "@beep/git/Git";
 import { ChangeClassifier, ClassifyInput, RouteError } from "@beep/repo-cli/commands/Ci";
 import {
   ChangeClassifierLive,
   ChangedPathEntry,
   ChangedPathStatus,
   ClassifyDiff,
-  changedPathEntriesFromNameStatus,
+  changedPathEntriesFromKit,
   classifyChangedPaths,
   pathAtomKind,
 } from "@beep/repo-cli/commands/Ci/RouteClassify";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -28,6 +30,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import type { GitStubs } from "@beep/git/Git";
 import type { ChangeAtomKind, ChangeSet } from "@beep/repo-cli/commands/Ci";
 import type { RouteReadAt } from "@beep/repo-cli/commands/Ci/RouteClassify";
 
@@ -150,6 +153,20 @@ const TestLayer = Layer.provideMerge(
 
 it.layer(TestLayer, { timeout: "60 seconds" })("verification route classify", (it) => {
   describe("totality", () => {
+    it.effect("reads the object form of root workspaces the way it reads the array form", () =>
+      Effect.gen(function* () {
+        const objectForm = '{ "name": "@fixture/root", "workspaces": { "packages": ["packages/*"] } }';
+        const classify = (manifest: string) =>
+          classifyChangedPaths(
+            diffOf([["packages/app/src/index.ts", "M"]]),
+            memoryReadAt({ "base:package.json": manifest, "head:package.json": manifest })
+          ).pipe(Effect.map(rows));
+        const fromObject = yield* classify(objectForm);
+        const fromString = yield* classify(ROOT_MANIFEST);
+        expect(fromObject).toEqual(fromString);
+      })
+    );
+
     it.effect.prop(
       "yields one atom per changed path plus one commits atom when the head adds commits",
       { entries: entriesArbitrary, commits: CommitCount },
@@ -386,16 +403,30 @@ it.layer(TestLayer, { timeout: "60 seconds" })("verification route classify", (i
       );
     });
 
-    it("parses NUL-delimited name-status output and splits renames", () => {
-      const render = flowEntries;
-      assertSome(render(""), []);
-      assertSome(render("M\0bun.lock\0A\0docs/a b.md\0"), ["M bun.lock", "A docs/a b.md"]);
-      assertSome(render("R087\0old.md\0new.md\0"), ["D old.md", "A new.md"]);
-      assertSome(render("C075\0src.md\0copy.md\0"), ["A copy.md"]);
-      assertNone(render("M\0bun.lock"));
-      assertNone(render("Q\0bun.lock\0"));
-      assertNone(render("M\0"));
-      assertNone(render("M\0\0"));
+    it("maps the kit's name-status entries and splits renames", () => {
+      const render = flow(
+        changedPathEntriesFromKit,
+        A.map((entry) => `${entry.status} ${entry.path}`)
+      );
+      expect(render([])).toEqual([]);
+      expect(
+        render([
+          NameStatusEntry.make({ status: "modified", path: "bun.lock" }),
+          NameStatusEntry.make({ status: "added", path: "docs/a b.md" }),
+          NameStatusEntry.make({ status: "deleted", path: "gone.md" }),
+          NameStatusEntry.make({ status: "typeChanged", path: "link" }),
+          NameStatusEntry.make({ status: "unmerged", path: "conflict.md" }),
+          NameStatusEntry.make({ status: "unknown", path: "odd" }),
+          NameStatusEntry.make({ status: "broken", path: "pair" }),
+        ])
+      ).toEqual(["M bun.lock", "A docs/a b.md", "D gone.md", "T link", "U conflict.md", "X odd", "B pair"]);
+      expect(
+        render([NameStatusEntry.make({ status: "renamed", oldPath: "old.md", path: "new.md", score: 87 })])
+      ).toEqual(["D old.md", "A new.md"]);
+      expect(render([NameStatusEntry.make({ status: "renamed", path: "new.md" })])).toEqual(["A new.md"]);
+      expect(
+        render([NameStatusEntry.make({ status: "copied", oldPath: "src.md", path: "copy.md", score: 75 })])
+      ).toEqual(["A copy.md"]);
     });
   });
 
@@ -482,12 +513,53 @@ it.layer(TestLayer, { timeout: "60 seconds" })("verification route classify", (i
         expect(failure.reason).toBe("git");
       })
     );
+
+    // A kit parser refusal (`unparseable ...`) keeps the classifier's own "does not parse" wording (W7b, SPEC D-19).
+    it.effect("folds an unparseable listing or count into the parse wording", () =>
+      Effect.gen(function* () {
+        const sha = Str.repeat(40)("a");
+        const unparseable = (what: string) =>
+          GitCommandError.make({
+            kind: "failed",
+            args: [what],
+            cwd: "/repo",
+            stderr: "",
+            detail: `unparseable ${what} output: x`,
+          });
+        const classifyWith = (stubs: Partial<GitStubs>) =>
+          ChangeClassifierLive.pipe(
+            Layer.fresh,
+            Layer.build,
+            Effect.map(Context.get(ChangeClassifier)),
+            Effect.flatMap((classifier) =>
+              classifier.classify(ClassifyInput.make({ repoRoot: "/repo", base: sha, head: sha }))
+            ),
+            Effect.provideService(Git, Git.makeTest({ revParse: () => Effect.succeed(sha), ...stubs })),
+            Effect.flip
+          );
+        const listing = yield* classifyWith({ nameStatus: () => Effect.fail(unparseable("name-status")) });
+        expect(listing.message).toContain("printed output that does not parse");
+        const count = yield* classifyWith({
+          nameStatus: () => Effect.succeed([]),
+          revListCount: () => Effect.fail(unparseable("rev-list")),
+        });
+        expect(count.message).toContain("printed a count that does not parse");
+        // git's exit code and a git that never ran keep the route's two wordings.
+        const exited = yield* classifyWith({
+          nameStatus: () =>
+            Effect.fail(
+              GitCommandError.make({ kind: "failed", args: ["diff"], cwd: "/repo", exitCode: 128, stderr: "fatal" })
+            ),
+        });
+        expect(exited.message).toContain("exited 128: fatal");
+        const unspawned = yield* classifyWith({
+          nameStatus: () =>
+            Effect.fail(
+              GitCommandError.make({ kind: "failed", args: ["diff"], cwd: "/repo", stderr: "", detail: "spawn ENOENT" })
+            ),
+        });
+        expect(unspawned.message).toContain("Failed to run git diff");
+      })
+    );
   });
 });
-
-function flowEntries(output: string): O.Option<ReadonlyArray<string>> {
-  return O.map(
-    changedPathEntriesFromNameStatus(output),
-    A.map((entry) => `${entry.status} ${entry.path}`)
-  );
-}

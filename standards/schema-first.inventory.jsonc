@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-03",
+  "generatedOn": "2026-11-06",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -1360,14 +1360,6 @@
       "reason": "Mixed React render configuration: id is data, while each Step carries ReactNode content and Popover component-prop values consumed directly by TourProvider."
     },
     {
-      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
-      "symbol": "Parenthetical",
-      "kind": "unbranded-schema-class",
-      "status": "exception",
-      "owner": "@beep/law-practice-domain",
-      "reason": "D4 structural-brand exception (goals/schema-opaque-default/ops/codemod/keep-class.jsonc): Recursive citation union: members are typed by hand-written namespace Types used in S.suspend, which must stay structurally equal to the classes. Follow-up: brand nominally once the blocker above is removed."
-    },
-    {
       "file": "packages/law-practice/domain/src/values/PatentMetadata/PatentMetadata.model.ts",
       "symbol": "extractPatentFigures",
       "kind": "schema-policy-advisory",
@@ -1428,12 +1420,12 @@
       "reason": "Pure parser over in-memory content plus schema-backed PatentSectionKind values; it returns the schema-backed PatentSections model and the transient option bag is never decoded or persisted."
     },
     {
-      "file": "packages/law-practice/domain/src/values/PinciteInfo/PinciteInfo.model.ts",
-      "symbol": "PinciteInfo",
-      "kind": "unbranded-schema-class",
+      "file": "packages/law-practice/server/src/internal/Citation/RegexInput.ts",
+      "symbol": "CitationPreparedRegexInput",
+      "kind": "exported-interface",
       "status": "exception",
-      "owner": "@beep/law-practice-domain",
-      "reason": "D4 structural-brand exception (goals/schema-opaque-default/ops/codemod/keep-class.jsonc): Self-recursive pincite: S.suspend is typed by the hand-written PinciteInfo.Type, which must stay structurally equal to the class. Follow-up: brand nominally once the blocker above is removed."
+      "owner": "@beep/law-practice-server",
+      "reason": "Private live capability combines schema-owned layout and Python Unicode value with a closure over the owned point-boundary map. Data halves already use annotated schemas; decoding data must not manufacture the project operation. This interface never crosses the worker wire, whose job is a separate closed schema."
     },
     {
       "file": "packages/law-practice/server/test/CandorRecord.test.ts",
@@ -1444,6 +1436,266 @@
       "line": 42,
       "owner": "@beep/law-practice-server",
       "reason": "In-memory repository proof decodes fixed fixture wires to assert append/read-back, filing scope isolation and id ordering; schema-derived Arbitrary round-trips for PatentCitationEvent, CandorDisposition and IdsSubmissionFact live in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationAuthorityIdentity.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 28,
+      "owner": "@beep/law-practice-server",
+      "reason": "Fixed independently captured resource-equality/hash observations, including source spellings sharing a public reporter ID. Generated token codec laws live in CitationIdentity.test.ts; random JSON cannot replace the independent hash/equality oracle. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationCallbackMutations.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 141,
+      "owner": "@beep/law-practice-server",
+      "reason": "Replays fixed dictionary/list/detached mutation scenes with complete callback event traces and actual object identities. Fixture codecs authenticate those histories; generating independent JSON would not preserve their causal runtime identities. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 111,
+      "owner": "@beep/law-practice-server",
+      "reason": "Replays three source-controlled mutable default-key scenes with exact events and final groups. Runtime key mutation and owned identity are the subject; fixture codecs are evidence loading, not a generative wire-contract test. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationCallbackSession.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 168,
+      "owner": "@beep/law-practice-server",
+      "reason": "Exercises verified-evidence admission, real callback invocation, dispatch budgets and frozen custom-resolution observations. Random schema data cannot mint trusted evidence or reproduce the source callback trace; all fixed controls are retained. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationCaseResourceHash.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 45,
+      "owner": "@beep/law-practice-server",
+      "reason": "Binds complete recorded hashes and source field-access failures from case-resource-hashes.json. The independent oracle vectors and missing-field directions are intentional golden evidence, not a target-generated arbitrary oracle. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationCleanerPipeline.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 327,
+      "owner": "@beep/law-practice-server",
+      "reason": "Exercises a live registry cursor, membership-before-lookup and fixed source cleaner observations. The fixture codec only authenticates recorded input; stateful runtime callback ordering is tested explicitly. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationCleanerValues.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 60,
+      "owner": "@beep/law-practice-server",
+      "reason": "Replays source text/subclass/identity relations through actual builtin implementations. Those host identities and provenance relations cannot be manufactured by arbitrary JSON fixture values. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationDefaultCallbacks.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 88,
+      "owner": "@beep/law-practice-server",
+      "reason": "Replays 76 fixed source contexts through registered resolvers with exact resource/group identities and memberships. Fixture decoding authenticates independent observations; arbitrary fixture regeneration would remove that proof. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationDocumentPersistence.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 99,
+      "owner": "@beep/law-practice-server",
+      "reason": "Persists actual verified receipts with trusted out-of-band resource bindings and checks forged or cross-context rejection. Arbitrary data cannot create the runtime verification/binding capability; this is a deterministic persistence/provenance regression suite. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationHostResources.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 220,
+      "owner": "@beep/law-practice-server",
+      "reason": "Replays owned host-origin and deceptive-presentation scenes through real host ports, preserving identity, dispatch and source events. Host capabilities are not schema-generatable fixture data. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationHtmlBytes.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 57,
+      "owner": "@beep/law-practice-server",
+      "reason": "Authenticates and replays every frozen byte-classification/native outcome, including exact errors and independently observed worker exits. Source bytes and outcomes are independent golden observations, not target-generated arbitrary fixtures. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationHtmlCompletion.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 57,
+      "owner": "@beep/law-practice-server",
+      "reason": "Checks the exact three approved native-depth exhaustion differences against the complete frozen audit corpus and withholds partial output. Randomizing the source audit would weaken the scoped safety exception evidence. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationHtmlInput.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 65,
+      "owner": "@beep/law-practice-server",
+      "reason": "Compares every frozen source encoding byte and wrapper decision with pre-allocation controls. Fixture codecs load independent source observations; native transport/input properties are covered in the focused input and protocol suites. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationLiteralCleaners.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 50,
+      "owner": "@beep/law-practice-server",
+      "reason": "Replays all 440 frozen source vectors and exhaustive Unicode classifier facts. The authenticated corpus is intentionally fixed; random fixture values would not carry independent source expectations. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationMentionIdentity.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 37,
+      "owner": "@beep/law-practice-server",
+      "reason": "Checks an independently computed cm1 digest vector, source identity and verified-anchor admission, including property-order and cross-context controls. Arbitrary token codec laws live in CitationIdentity.test.ts; this suite tests the actual digest producer and evidence binding. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationMixedResourceObjects.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 88,
+      "owner": "@beep/law-practice-server",
+      "reason": "Replays 89 source events in one owned table with authenticated editions and actual semantic identities. Arbitrary JSON cannot replace the stateful independent event/identity observations. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationModelMutation.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 99,
+      "owner": "@beep/law-practice-server",
+      "reason": "Replays fixed stable-resource source mutation scenes through the adapter with complete reflected events. The fixture schema authenticates observations; the causal runtime mutation history is the subject. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationPriorFulls.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 79,
+      "owner": "@beep/law-practice-server",
+      "reason": "Checks all eight source list/pair identity traces and final grouping state. Random fixture generation cannot establish the recorded alias/identity relationships independently of the implementation. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationPythonHash.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 42,
+      "owner": "@beep/law-practice-server",
+      "reason": "Checks complete independently captured byte/Unicode hash vectors, explicit surrogate storage and seed behavior. Fixture decoding authenticates the source oracle; arbitrary target-produced hashes would not be independent evidence. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationRegexCharacters.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 86,
+      "owner": "@beep/law-practice-server",
+      "reason": "Authenticates exhaustive source character facts and the complete parsed-feature/descriptor vectors, including producer hashes. These pinned oracle receipts must remain fixed; generated native-point membership is covered in CitationRegexAlphabet.test.ts. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationRegexEngine.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 70,
+      "owner": "@beep/law-practice-server",
+      "reason": "Authenticates fixed source character/range observations and exhaustively checks both source-engine startup identities, including missing/unknown rejection. Randomly generating the same two literals adds no codec coverage; the source corpus must remain pinned. Owner: @beep/law-practice-server. Exit: detector recognizes exhaustive finite-domain consumer codec laws or the startup codec gains a larger generated input domain. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-source-regex-engine-identity.md. No parity or source-proof obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationResolve.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 36,
+      "owner": "@beep/law-practice-server",
+      "reason": "Compares recorded extracted and synthetic resource groups with the independent source resolver results. Fixture codecs are golden evidence loading; no source expectation is generated from target behavior. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationResolverText.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 42,
+      "owner": "@beep/law-practice-server",
+      "reason": "Replays all canonical punctuation/whitespace and pin-validation source observations. The fixed expected classifications are independent oracle data, with explicit negative controls preserved. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationResourceObjects.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 107,
+      "owner": "@beep/law-practice-server",
+      "reason": "Checks all 38 source events through current semantic fields, owned runtime objects and exact native hashes. The fixture codec does not manufacture the actual identity-bearing owner/table capabilities. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationRuntimeSet.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 58,
+      "owner": "@beep/law-practice-server",
+      "reason": "Independent pinned-source golden replay and corruption/resource controls, not a target schema law suite. Fixture schemas authenticate exact oracle versions, hashes, counts and source observations; generated random fixture records would lose that source authority. Native representation properties are separately covered in CitationRegexInput.test.ts. Owner: @beep/law-practice-server. Exit: revisit if this file gains target schema laws beyond fixture authentication. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-native-capture-binding.md."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationSessionDescriptors.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 68,
+      "owner": "@beep/law-practice-server",
+      "reason": "Replays source null-page identities through dispatch and sealed projection with real resource bindings. Schema-generated JSON cannot mint those owned/sealed runtime relationships. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
     {
       "file": "packages/law-practice/server/test/ClaimElement.reference.test.ts",
@@ -1496,6 +1748,16 @@
       "reason": "PGlite-backed drizzle repository proof decodes fixed fixture rows through the real migration bundle to prove read-back with database-assigned ids, tenant isolation, id-ascending order, and typed driver failures; schema-derived arbitrary coverage for these entities lives with the law-practice domain model tests (same posture as the candor sibling and the migration proof entries above)."
     },
     {
+      "file": "packages/law-practice/server/test/integration/CitationExtractorSelection.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 64,
+      "owner": "@beep/law-practice-server",
+      "reason": "Independent pinned-source golden replay and corruption/resource controls, not a target schema law suite. Fixture schemas authenticate exact oracle versions, hashes, counts and source observations; generated random fixture records would lose that source authority. Native representation properties are separately covered in CitationRegexInput.test.ts. Owner: @beep/law-practice-server. Exit: revisit if this file gains target schema laws beyond fixture authentication. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-native-capture-binding.md."
+    },
+    {
       "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts",
       "symbol": "OfficeActionReviewDeps",
       "kind": "exported-interface",
@@ -1514,6 +1776,26 @@
       "reason": "Deterministic policy fixtures decode exact anchored event and disposition wires so lineage, source-resolution, supersession, and fail-closed semantics remain observable; schema-derived round-trip coverage for these law-practice domain schemas lives in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
     },
     {
+      "file": "packages/law-practice/use-cases/test/CitationOracleAssertions.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 57,
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Deterministic protocol/version/source-binding and corrupted-accounting controls for source assertion evidence. Arbitrary JSON artifact byte-preservation is covered in CitationOracleArtifact.test.ts; this suite preserves the fixed metadata and graph-coherence rejection directions. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CitationOracleOperations.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 51,
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Golden typed operation payload and exact original-byte preservation controls. Schema-derived arbitrary JSON preservation is covered in CitationOracleArtifact.test.ts; operation rows remain tied to the independent source observation protocol. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
       "file": "packages/law-practice/use-cases/test/ClaimSelfCheck.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -1522,6 +1804,106 @@
       "line": 344,
       "owner": "@beep/law-practice-use-cases",
       "reason": "Service integration regression checks exact source-bound advisory items and their ReviewItem wire round-trip, alongside runtime errors and verdict projection. It does not define a new ReviewItem codec; the schema belongs to domain. Owner: @beep/law-practice-use-cases. Exit: retire when the detector excludes consumer integration round-trips or shared ReviewItem property coverage is directly recognized."
+    },
+    {
+      "file": "packages/party/domain/src/values/Admission/Admission.model.ts",
+      "symbol": "depositionOutlineEntry",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 572,
+      "owner": "@beep/party-domain",
+      "reason": "Exported function \"depositionOutlineEntry\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+    },
+    {
+      "file": "packages/party/domain/src/values/Hierarchy/Hierarchy.model.ts",
+      "symbol": "assessOperational",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 218,
+      "owner": "@beep/party-domain",
+      "reason": "Exported function \"assessOperational\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+    },
+    {
+      "file": "packages/party/domain/src/values/Hierarchy/Hierarchy.model.ts",
+      "symbol": "divergences",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 373,
+      "owner": "@beep/party-domain",
+      "reason": "Exported function \"divergences\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+    },
+    {
+      "file": "packages/party/domain/src/values/Projection/Projection.behavior.ts",
+      "symbol": "attributeEvents",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 154,
+      "owner": "@beep/party-domain",
+      "reason": "Exported function \"attributeEvents\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+    },
+    {
+      "file": "packages/party/domain/src/values/Projection/Projection.behavior.ts",
+      "symbol": "chainOfCommand",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 324,
+      "owner": "@beep/party-domain",
+      "reason": "Exported function \"chainOfCommand\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+    },
+    {
+      "file": "packages/party/domain/src/values/Projection/Projection.behavior.ts",
+      "symbol": "declaredLines",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 190,
+      "owner": "@beep/party-domain",
+      "reason": "Exported function \"declaredLines\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+    },
+    {
+      "file": "packages/party/domain/src/values/Projection/Projection.behavior.ts",
+      "symbol": "identityView",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 96,
+      "owner": "@beep/party-domain",
+      "reason": "Exported function \"identityView\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+    },
+    {
+      "file": "packages/party/domain/src/values/Projection/Projection.behavior.ts",
+      "symbol": "orgGraph",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 256,
+      "owner": "@beep/party-domain",
+      "reason": "Exported function \"orgGraph\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+    },
+    {
+      "file": "packages/party/domain/src/values/Projection/Projection.behavior.ts",
+      "symbol": "orgMermaid",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 376,
+      "owner": "@beep/party-domain",
+      "reason": "Exported function \"orgMermaid\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+    },
+    {
+      "file": "packages/party/domain/src/values/Projection/Projection.behavior.ts",
+      "symbol": "selectorReach",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 479,
+      "owner": "@beep/party-domain",
+      "reason": "Exported function \"selectorReach\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
     {
       "file": "packages/shared/domain/src/entity/Principal.ts",
@@ -1555,7 +1937,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 81,
+      "line": 104,
       "owner": "@beep/repo-ai-metrics",
       "reason": "Real-socket regressions qualify exact JSON/protobuf acknowledgments, gzip/streaming limits, malformed input, concurrent admission, commit failure and expired-event rejection. Codecs construct controlled wire fixtures and inspect receipt identity. Exit: reusable codec laws move here; generated transport testing must retain the malformed/incomplete-body and controlled fault cases. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
     },

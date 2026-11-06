@@ -1,3 +1,4 @@
+import { Git, GitCommandError } from "@beep/git/Git";
 import { QualityScriptCommandError, qualityCommand } from "@beep/repo-cli/commands/Quality";
 import {
   CATALOG_USAGE_TEMPLATE_SOURCES,
@@ -21,6 +22,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -51,7 +53,9 @@ const failingTemplateListHandle = ChildProcessSpawner.makeHandle({
   stdout: Stream.empty,
   unref: Effect.succeed(Effect.void),
 });
+// `Git` is built over the failing spawner, so the kit's template listing reaches the failing handle (W7b).
 const TemplateListFailureLayer = CatalogUsageSourceLive.pipe(
+  Layer.provide(Layer.fresh(Git.layer)),
   Layer.provide(
     Layer.effect(
       ChildProcessSpawner.ChildProcessSpawner,
@@ -65,6 +69,25 @@ const TemplateListFailureLayer = CatalogUsageSourceLive.pipe(
             : real.spawn(command)
         );
       })
+    )
+  ),
+  Layer.provideMerge(NodeCommandTestLayer)
+);
+// A `Git` whose template listing never spawns (a kit failure without an exit code), every other listing real.
+const TemplateSpawnFailureLayer = CatalogUsageSourceLive.pipe(
+  Layer.provide(
+    Layer.effect(
+      Git,
+      Effect.map(Git.make, (real) =>
+        Git.makeTest({
+          lsFiles: (cwd, options = {}) =>
+            O.exists(O.fromUndefinedOr(options.pathspec), A.contains<string>(createPackageTemplateRoot))
+              ? Effect.fail(
+                  GitCommandError.make({ kind: "failed", args: ["ls-files"], cwd, stderr: "", detail: "spawn ENOENT" })
+                )
+              : real.lsFiles(cwd, options),
+        })
+      )
     )
   ),
   Layer.provideMerge(NodeCommandTestLayer)
@@ -373,6 +396,19 @@ describe("catalog usage", () => {
         }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
       );
     }
+  );
+});
+
+it.layer(TemplateSpawnFailureLayer, { timeout: "30 seconds" })("catalog usage template spawn", (it) => {
+  it.effect("names the template listing when git never ran", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "catalog-usage-test-" });
+      yield* writeFixtureRepo(tmpDir, { catalog: { effect: "4.0.4" } }, fixtureLockfile);
+      const error = yield* runCatalogUsageCheck(tmpDir).pipe(Effect.flip);
+      expect(error).toBeInstanceOf(CatalogUsageError);
+      expect(error.message).toBe("Failed to list generator template sources.");
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 });
 

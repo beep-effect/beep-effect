@@ -1038,6 +1038,7 @@ const replyPreflight = Effect.fn("Yeet.replyPreflight")(function* (
   YeetCommandError,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | ReviewThread
 > {
+  // KEEP (D-13): gh's base-repository resolution has no kit member.
   const repo = yield* replyGhOutput(context, ["repo", "view", "--json", "owner,name"], "gh repo view").pipe(
     Effect.flatMap((output) =>
       decodeGhRepoView(output).pipe(Effect.mapError(YeetCommandError.new("Failed to decode gh repo view JSON.")))

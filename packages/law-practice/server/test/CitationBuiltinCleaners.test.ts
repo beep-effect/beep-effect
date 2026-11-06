@@ -1,0 +1,283 @@
+import * as NodeURL from "node:url";
+import { makeCitationBuiltinCleaners } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
+import {
+  CitationCleanerFailure,
+  CitationCleanerProduced,
+  CitationCleanerRuntime,
+  makeCitationCleanerPipeline,
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { CitationCleanerTextDescriptor } from "@beep/law-practice-server/internal/Citation/CleanerTextIdentity";
+import {
+  CitationCleanerValues,
+  makeCitationCleanerValues,
+} from "@beep/law-practice-server/internal/Citation/CleanerValues";
+import { CitationLiteralCleaner } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
+import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
+import { Sha256HexFromBytes } from "@beep/schema";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import * as BunServices from "@effect/platform-bun/BunServices";
+import { expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as O from "effect/Option";
+import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
+import { makeCitationUnicodePipelineHarness } from "./CitationUnicodePipeline.fixtures.ts";
+import type { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+
+const Row = S.Struct({
+  name: S.String,
+  cleaner: S.Literals(["html", "inline_whitespace", "all_whitespace", "underscores", "xml"]),
+  valueKind: S.Literals([
+    "none",
+    "zero",
+    "integer",
+    "list",
+    "bytes",
+    "bytearray",
+    "memoryview",
+    "host",
+    "text-subclass",
+  ]),
+  hooks: S.Array(S.String),
+  outcome: S.Union([
+    S.Struct({ kind: S.tag("success"), text: S.String, type: S.tag("builtins.str") }),
+    S.Struct({ kind: S.tag("error"), type: S.tag("builtins.TypeError"), message: S.String }),
+  ]).pipe(S.toTaggedUnion("kind")),
+});
+const CorpusJson = S.fromJsonString(
+  S.Struct({
+    artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })),
+    nonTextCases: S.Array(Row),
+  })
+);
+
+const fail = () => CitationCleanerFailure.make({ reason: "callback-failed" });
+const TestRuntime = Layer.merge(BunServices.layer, BunCrypto.layer);
+
+it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner invocation", (it) => {
+  it.effect.prop(
+    "charges every repeated idempotent builtin invocation on schema-derived text",
+    {
+      cleaner: Arbitrary.schema(CitationLiteralCleaner).pipe(Arbitrary.filter((name) => name !== "xml")),
+      text: Arbitrary.schema(CitationCleanerTextDescriptor.fields.text.check(S.isMaxLength(128))),
+    },
+    ({ cleaner, text }) =>
+      Effect.gen(function* () {
+        const owned = yield* makeCitationUnicodePipelineHarness(false);
+        owned.selectText([cleaner]);
+        const first = yield* owned.pipeline.run({ text, plan: "generated-idempotent-builtin" });
+        const firstText = yield* owned.values.getText(first.value).pipe(Effect.flatMap(Effect.fromOption));
+        owned.selectText([cleaner, cleaner]);
+        const repeated = yield* owned.pipeline.run({ text, plan: "generated-repeated-builtin" });
+        const repeatedText = yield* owned.values.getText(repeated.value).pipe(Effect.flatMap(Effect.fromOption));
+        expect(repeatedText.text).toBe(firstText.text);
+        expect(first.producedTextUtf16).toBe(Str.length(firstText.text));
+        expect(repeated.producedTextUtf16).toBe(2 * Str.length(firstText.text));
+        const native = yield* owned.nativeCounts;
+        expect(native).toEqual({ spawned: 0, confirmed: 0 });
+      }),
+    { arbitrary: fcRuns(20) }
+  );
+
+  it.effect(
+    "replays all pinned input kinds without coercion and retires every native child",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const raw = yield* fs.readFileString(
+          NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-bytes.json", import.meta.url))
+        );
+        const citationResult1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
+        expect(citationResult1).toBe("179fc43e44d8d6048b0d4eea38a8a8667d505ce60ee23ded6aa43138cd265201");
+        const corpus = yield* S.decodeEffect(CorpusJson)(raw);
+        expect(corpus.nonTextCases).toHaveLength(45);
+        const strings = HashMap.fromIterable(A.map(corpus.artifacts, (row) => [row.sha256, row.value] as const));
+        const policy = {
+          ...(yield* defaultCitationEnginePolicy).limits,
+          cleanDeadline: Duration.seconds(30),
+          operationDeadline: Duration.seconds(60),
+        };
+        const values = yield* makeCitationCleanerValues(policy);
+        const real = yield* ChildProcessSpawner;
+        let spawned = 0;
+        let retired = 0;
+        const citationResult2 = yield* fs.makeTempDirectoryScoped({ prefix: "citation-builtins-" });
+        const workerRuntime = yield* citationHtmlWorkerTestRuntime();
+        const builtins = yield* makeCitationBuiltinCleaners(policy, {
+          ...workerRuntime,
+          cwd: citationResult2,
+        }).pipe(
+          Effect.provideService(CitationCleanerValues, values),
+          Effect.provideService(ChildProcessSpawner, {
+            ...real,
+            spawn: (command) =>
+              real.spawn(command).pipe(
+                Effect.map((handle) => {
+                  spawned++;
+                  let seen = false;
+                  return {
+                    ...handle,
+                    isRunning: handle.isRunning.pipe(
+                      Effect.tap((running) =>
+                        Effect.sync(() => {
+                          if (!running && !seen) {
+                            expect(() => process.kill(handle.pid, 0)).toThrow();
+                            seen = true;
+                            retired++;
+                          }
+                        })
+                      )
+                    ),
+                  };
+                })
+              ),
+          })
+        );
+        let hooks = 0;
+        const poison = new Proxy(
+          {},
+          {
+            get: () => {
+              hooks++;
+              throw new Error("host coercion");
+            },
+            ownKeys: () => {
+              hooks++;
+              throw new Error("host keys");
+            },
+          }
+        );
+        const emit = yield* values.retainHost({ function: "emit" });
+        const builtin = yield* values.retainHost({ function: "builtin" });
+        const makePipeline = (value: CitationCleanerObject, name: unknown, repeat = false) =>
+          makeCitationCleanerPipeline(policy).pipe(
+            Effect.provideService(
+              CitationCleanerRuntime,
+              CitationCleanerRuntime.of({
+                fromText: values.text,
+                assertOwned: values.assertOwned,
+                textUnits: Effect.fn("BuiltinTest.textUnits")((ref) =>
+                  values.getText(ref).pipe(Effect.map(O.map((text) => Str.length(text.text))))
+                ),
+                open: Effect.fn("BuiltinTest.open")(() =>
+                  Effect.sync(() => {
+                    const steps = repeat ? [emit, builtin, builtin] : [emit, builtin];
+                    let index = 0;
+                    return { next: Effect.sync(() => O.fromUndefinedOr(steps[index++])) };
+                  })
+                ),
+                contains: Effect.fn("BuiltinTest.contains")(() => Effect.succeed(false)),
+                get: Effect.fn("BuiltinTest.get")(() => Effect.fail(fail())),
+                callable: Effect.fn("BuiltinTest.callable")((step) =>
+                  Effect.succeed(step === emit || step === builtin)
+                ),
+                invoke: Effect.fn("BuiltinTest.invoke")((step, ref, work) =>
+                  step === emit
+                    ? Effect.gen(function* () {
+                        const text = yield* values.getText(value);
+                        const units = O.isSome(text) ? Str.length(text.value.text) : 0;
+                        return CitationCleanerProduced.make({
+                          value,
+                          charges: units === 0 ? [] : [yield* work.reserveText(units)],
+                        });
+                      })
+                    : builtins.invoke(name, ref, work)
+                ),
+              })
+            )
+          );
+        let successes = 0;
+        let failures = 0;
+        yield* Effect.forEach(
+          corpus.nonTextCases,
+          Effect.fnUntraced(function* (row) {
+            const bytes = new TextEncoder().encode("<div>A</div>");
+            const hostValue = Match.value(row.valueKind).pipe(
+              Match.when("none", () => null),
+              Match.when("zero", () => 0),
+              Match.when("integer", () => 42),
+              Match.when("list", () => ["A"]),
+              Match.when("host", () => poison),
+              Match.orElse(() => bytes)
+            );
+            const value = yield* Match.value(row.valueKind).pipe(
+              Match.when("bytes", () => values.bytes(bytes)),
+              Match.when("text-subclass", () => values.subclass("<div>A</div>", poison)),
+              Match.orElse(() => values.retainHost(hostValue))
+            );
+            const pipeline = yield* makePipeline(value, row.cleaner);
+            expect(row.hooks).toEqual([]);
+            if (row.outcome.kind === "error") {
+              const citationResult3 = yield* Effect.flip(pipeline.run({ text: "x", plan: "captured-input-kind" }));
+              expect(citationResult3, row.name).toMatchObject({
+                _tag: "CitationCleanerFailure",
+                reason: "builtin-input-type",
+              });
+              failures++;
+            } else {
+              const result = yield* pipeline.run({ text: "x", plan: "captured-input-kind" });
+              const text = yield* values.getText(result.value).pipe(Effect.flatMap(Effect.fromOption));
+              const citationResult4 = yield* Effect.fromOption(HashMap.get(strings, row.outcome.text));
+              expect(text, row.name).toEqual({
+                text: citationResult4,
+                subtype: "plain",
+              });
+              expect(result.producedTextUtf16, row.name).toBe(
+                Str.length(text.text) + (row.valueKind === "text-subclass" ? 12 : 0)
+              );
+              successes++;
+            }
+          }),
+          { concurrency: 1, discard: true }
+        );
+        expect({ successes, failures, hooks, spawned, retired }).toEqual({
+          successes: 6,
+          failures: 39,
+          hooks: 0,
+          spawned: 2,
+          retired: 2,
+        });
+        const invalidBytes = yield* S.decodeEffect(S.Uint8ArrayFromHex)(
+          "3c6d65746120636861727365743d227574662d38223e3c6469763effc0afeda0803c2f6469763e"
+        );
+        const refusalCases = [
+          { name: "not-installed", value: yield* values.text("x"), reason: "unknown-step" },
+          { name: "html", value: yield* values.text(""), reason: "html-parse-error" },
+          {
+            name: "html",
+            value: yield* values.text('<?xml version="1.0" encoding="UTF-8"?><p>x</p>'),
+            reason: "html-unicode-encoding-declaration",
+          },
+          { name: "html", value: yield* values.bytes(invalidBytes), reason: "html-unicode-decode-error" },
+        ];
+        yield* Effect.forEach(
+          refusalCases,
+          Effect.fnUntraced(function* (row) {
+            const pipeline = yield* makePipeline(row.value, row.name);
+            const failure = yield* pipeline.run({ text: "x", plan: "closed-builtin-failure" }).pipe(Effect.flip);
+            expect(failure).toMatchObject({ reason: row.reason });
+            expect("cause" in failure).toBe(false);
+          }),
+          { concurrency: 1, discard: true }
+        );
+        const unchanged = yield* values.text("A");
+        const repeated = yield* makePipeline(unchanged, "underscores", true);
+        const result = yield* repeated.run({ text: "x", plan: "same-reference-still-charges" });
+        const citationResult5 = yield* values.same(result.value, unchanged);
+        expect(citationResult5).toBe(true);
+        expect(result.producedTextUtf16).toBe(3);
+      }),
+    { timeout: 60_000 }
+  );
+});

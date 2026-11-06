@@ -202,7 +202,7 @@ encode(decode(fullCitation)) ≈ fullCitation
 ```
 
 The equivalence is the production semantic citation equivalence. Unsupported
-decode fails through `SchemaTransformation.transformOrFail` with a typed schema
+decode fails through `SchemaTransformation.transformEffect` with a typed schema
 issue. The encode branch may not invent legal fields.
 
 ### `BluebookTextFromBluebookCitation`

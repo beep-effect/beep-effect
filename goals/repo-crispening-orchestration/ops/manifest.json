@@ -34,7 +34,11 @@
     "goals/repo-crispening-orchestration/research/decisions-locked.md",
     "goals/repo-crispening-orchestration/research/prompt-2026-07-05.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/decisions-locked.md",
+    "research/prompt-2026-07-05.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

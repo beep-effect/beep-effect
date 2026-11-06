@@ -1,5 +1,5 @@
 /**
- * Live terminal-lane probe for residue reap: git, `gh`, `/proc` and the session ledger.
+ * Live terminal-lane probe for residue reap: git, GitHub, `/proc` and the session ledger.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -20,12 +20,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  invokerAncestryPids,
-  isRegisteredWorktree,
-  runRepoCommandCapture,
-  scanProcessAttachments,
-} from "../../../internal/repo-run/index.ts";
+import { invokerAncestryPids, isRegisteredWorktree, scanProcessAttachments } from "../../../internal/repo-run/index.ts";
 import { openSessionRows } from "../../Session/Session.schemas.ts";
 import { layerSessionLedgerLive, SessionLedger } from "../../Session/SessionLedger.service.ts";
 import { detectPrRepository } from "../../Yeet/internal/ProvenanceFooter.ts";
@@ -75,34 +70,20 @@ type ProbeRequirements =
   | Git
   | SessionLedger;
 
-// Trimmed stdout of a clean, untruncated zero-exit git run; a NoSuchElementError otherwise.
-const gitOutput = Effect.fnUntraced(function* (cwd: string, args: ReadonlyArray<string>) {
-  const capture = yield* runRepoCommandCapture("git", args, cwd);
-  return yield* Effect.fromOption(
-    O.liftPredicate(capture, (result) => N.Equivalence(result.exitCode, 0) && !result.truncated)
-  ).pipe(Effect.map((result) => Str.trim(result.output)));
-});
-
 // A failed check ends the proof the way a missing fact does.
 const holds = (condition: boolean) => (condition ? Effect.void : Effect.fromOption(O.none()));
 
 // The checkout's toplevel, git dir and common dir; only a registered linked worktree passes.
 const linkedLayout = Effect.fnUntraced(function* (checkout: string) {
   const fs = yield* FileSystem.FileSystem;
-  const gitOutput1 = yield* gitOutput(checkout, [
-    "rev-parse",
-    "--path-format=absolute",
-    "--show-toplevel",
-    "--git-dir",
-    "--git-common-dir",
-  ]);
-  const lines = Str.split(gitOutput1, "\n");
-  const fromOption2 = yield* Effect.fromOption(A.get(lines, 0));
-  const toplevel = yield* fs.realPath(fromOption2);
-  const fromOption3 = yield* Effect.fromOption(A.get(lines, 1));
-  const gitDir = yield* fs.realPath(fromOption3);
-  const fromOption4 = yield* Effect.fromOption(A.get(lines, 2));
-  const commonDir = yield* fs.realPath(fromOption4);
+  const git = yield* Git;
+  // Any git failure ends the proof, as a missing fact does.
+  const repoRoot = yield* git.repoRoot(checkout);
+  const toplevel = yield* fs.realPath(repoRoot);
+  const gitDirPath = yield* git.gitDir(checkout);
+  const gitDir = yield* fs.realPath(gitDirPath);
+  const commonDirPath = yield* git.commonDir(checkout);
+  const commonDir = yield* fs.realPath(commonDirPath);
   yield* holds(Str.Equivalence(toplevel, checkout) && !Str.Equivalence(gitDir, commonDir));
   const isRegisteredWorktree5 = yield* isRegisteredWorktree(checkout, checkout);
   yield* holds(O.getOrElse(isRegisteredWorktree5, thunkFalse));
@@ -146,23 +127,24 @@ const proveTerminalLane = Effect.fnUntraced(function* (
   const fs = yield* FileSystem.FileSystem;
   const checkout = yield* fs.realPath(checkoutRoot);
   const commonDir = yield* linkedLayout(checkout);
-  const branch = yield* gitOutput(checkout, ["symbolic-ref", "--quiet", "--short", "HEAD"]);
-  const gitOutput8 = yield* gitOutput(checkout, ["rev-parse", "--verify", "HEAD"]);
-  const head = yield* decodeGitObjectId(gitOutput8);
-  const gitOutput9 = yield* gitOutput(checkout, [
-    "--no-optional-locks",
-    "status",
-    "--porcelain",
-    "--untracked-files=all",
-    "--ignore-submodules=none",
-  ]);
-  yield* holds(Str.isEmpty(gitOutput9));
-  const liveProcessCount10 = yield* liveProcessCount(checkout);
-  yield* holds(N.Equivalence(liveProcessCount10, 0));
-  const liveSessionRowCount11 = yield* liveSessionRowCount(checkout);
-  yield* holds(N.Equivalence(liveSessionRowCount11, 0));
-  const pullRequests12 = yield* pullRequests(checkout, branch);
-  const merged = yield* Effect.fromOption(pullRequests12);
+  // A detached HEAD has no branch: `None` ends the proof as symbolic-ref's failure did.
+  const git = yield* Git;
+  const currentBranch = yield* git.currentBranch(checkout);
+  const branch = yield* Effect.fromOption(currentBranch);
+  const headSha = yield* git.revParse(checkout, "HEAD");
+  const head = yield* decodeGitObjectId(headSha);
+  const status = yield* git.status(checkout, {
+    noOptionalLocks: true,
+    untrackedFiles: "all",
+    ignoreSubmodules: "none",
+  });
+  yield* holds(A.isReadonlyArrayEmpty(status));
+  const processes = yield* liveProcessCount(checkout);
+  yield* holds(N.Equivalence(processes, 0));
+  const sessionRows = yield* liveSessionRowCount(checkout);
+  yield* holds(N.Equivalence(sessionRows, 0));
+  const pulls = yield* pullRequests(checkout, branch);
+  const merged = yield* Effect.fromOption(pulls);
   const equal = A.findFirst(merged, (pullRequest) => Str.Equivalence(pullRequest.headRefOid, head));
   const proof = O.isSome(equal)
     ? O.some({ pullRequest: equal.value, headRelation: "equal" as const })
@@ -194,9 +176,10 @@ const proveTerminalLane = Effect.fnUntraced(function* (
  * the primary clone) on a branch, its tree is clean, no process outside the
  * invoking CLI's ancestry has its cwd inside it, no open session-ledger row
  * names it, and its branch has a merged pull request whose head equals HEAD
- * or descends from it. Every git, `/proc`, ledger or `gh` failure answers
- * `None`. `pullRequests` defaults to
- * `gh pr list --head <branch> --state merged`; tests substitute a fixture source.
+ * or descends from it. Every git, `/proc`, ledger or GitHub failure answers
+ * `None`. `pullRequests` defaults to {@link mergedPullRequestsForBranch} (the
+ * branch's merged pull requests through the GitHub REST API); tests substitute
+ * a fixture source.
  *
  * **Example** (Build the probe effect)
  *
@@ -224,7 +207,7 @@ export const makeResidueTerminalLaneProbe = Effect.fnUntraced(function* (
 });
 
 /**
- * Live terminal-lane probe layer over git, `gh`, `/proc` and the live session ledger.
+ * Live terminal-lane probe layer over git, GitHub, `/proc` and the live session ledger.
  *
  * **Details**
  *

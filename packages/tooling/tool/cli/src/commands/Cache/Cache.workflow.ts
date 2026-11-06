@@ -13,6 +13,7 @@ import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
+import * as ByteSize from "effect/ByteSize";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -71,6 +72,8 @@ const encodeWorkflow = S.encodeEffect(S.fromJsonString(CacheProducerWorkflow));
 const approvalCodec = JsonStringCodec(CacheProducerApproval);
 const executionProfileCodec = JsonStringCodec(CacheProducerExecutionProfile);
 const pathsEquivalent = S.toEquivalence(S.Array(S.String));
+const sourceFileByteLimit = ByteSize.mebibytes(64);
+const sourceInventoryByteLimit = ByteSize.gibibytes(1);
 const directoryEntry = S.Tuple([S.String, S.Natural]).pipe(
   $I.annoteSchema("WorkflowDirectoryEntry", {
     description: "Canonical checkout-relative entry and complete POSIX mode, including its filesystem type.",
@@ -129,6 +132,7 @@ const hashDirectoryAlias = Effect.fn("CacheWorkflow.directoryAlias")(function* (
   return yield* digest(new TextEncoder().encode(`beep/cache-producer-directory/v1\0${manifest}`));
 });
 const bound = OutputBound.make({ maxChars: 4 * 1024 * 1024, truncatedNotice: "workflow inventory exceeded bound" });
+// KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
 const captureGit = Effect.fn("CacheWorkflow.git")(function* (root: string, args: ReadonlyArray<string>) {
   const captured = yield* runCapturedStreams({
     command: "/usr/bin/git",
@@ -157,6 +161,7 @@ const declaredSourcePaths = [
   ".nvmrc",
 ];
 const listSources = Effect.fn("CacheWorkflow.listSources")(function* (root: string) {
+  // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
   const output = yield* captureGit(root, [
     "ls-files",
     "--cached",
@@ -209,6 +214,7 @@ const isAmbientEnvironmentFile = S.is(AmbientEnvironmentFile);
  */
 export const assertCacheProducerWorkflowProfile = Effect.fn("CacheWorkflow.profile")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
+  // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
   const status = yield* captureGit(root, [
     "status",
     "--porcelain=v1",
@@ -277,9 +283,9 @@ export const collectCacheProducerWorkflowFiles = Effect.fn("CacheWorkflow.files"
   const canonicalRoot = yield* fs.realPath(root);
   const paths = yield* listSources(root);
   const declared = HashSet.fromIterable(paths);
-  const files = yield* Effect.forEach(
+  const sources = yield* Effect.forEach(
     paths,
-    Effect.fn("CacheWorkflow.file")(function* (relative) {
+    Effect.fn("CacheWorkflow.fileMetadata")(function* (relative) {
       const file = path.resolve(canonicalRoot, relative);
       const linkTarget = yield* fs.readLink(file).pipe(Effect.option);
       if (O.exists(linkTarget, path.isAbsolute)) {
@@ -293,12 +299,38 @@ export const collectCacheProducerWorkflowFiles = Effect.fn("CacheWorkflow.files"
       if (info.type === "Directory" && O.isNone(linkTarget)) {
         return yield* CacheCommandError.new("Workflow source directory requires a declared relative alias.");
       }
+      if (info.type !== "Directory" && ByteSize.isGreaterThan(info.size, sourceFileByteLimit)) {
+        return yield* CacheCommandError.new("Workflow source file exceeded its byte bound.");
+      }
+      return { relative, target, info, linkTarget };
+    }),
+    { concurrency: 4 }
+  );
+  const sourceBytes = A.reduce(sources, ByteSize.bytes(0), (total, { info }) =>
+    info.type === "Directory" ? total : ByteSize.sum(total, info.size)
+  );
+  if (ByteSize.isGreaterThan(sourceBytes, sourceInventoryByteLimit)) {
+    return yield* CacheCommandError.new("Workflow source inventory exceeded its byte bound.");
+  }
+  const files = yield* Effect.forEach(
+    sources,
+    Effect.fn("CacheWorkflow.file")(function* ({ relative, target, info, linkTarget }) {
+      const sha256 = yield* Match.value(info.type).pipe(
+        Match.when("Directory", () => hashDirectoryAlias(canonicalRoot, target, declared)),
+        Match.orElse(() =>
+          // Metadata preflight limits every read to an exactly representable size.
+          readCacheExperimentBytes(root, target, ByteSize.toNumberUnsafe(info.size)).pipe(
+            Effect.filterOrFail(
+              (bytes) => ByteSize.equals(ByteSize.bytes(bytes.byteLength), info.size),
+              () => CacheCommandError.new("Workflow source size changed during inspection.")
+            ),
+            Effect.flatMap(digest)
+          )
+        )
+      );
       return CacheProducerWorkflowFile.make({
         path: relative,
-        sha256:
-          info.type === "Directory"
-            ? yield* hashDirectoryAlias(canonicalRoot, target, declared)
-            : yield* readCacheExperimentBytes(root, target, 8 * 1024 * 1024).pipe(Effect.flatMap(digest)),
+        sha256,
         mode: S.Natural.make(info.mode),
         linkTarget,
       });
@@ -331,6 +363,7 @@ export const collectCacheProducerWorkflowFiles = Effect.fn("CacheWorkflow.files"
  * @since 0.0.0
  */
 export const inspectCacheProducerWorkflow = Effect.fn("CacheWorkflow.inspect")(function* (root: string) {
+  // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
   const before = yield* captureGit(root, ["rev-parse", "HEAD"]).pipe(
     Effect.map(Str.trim),
     Effect.flatMap(decodeRevision)
@@ -351,8 +384,9 @@ export const inspectCacheProducerWorkflow = Effect.fn("CacheWorkflow.inspect")(f
     inspectCacheLinkedFile,
     { concurrency: 2 }
   );
-  const captureGit4 = yield* captureGit(root, ["rev-parse", "HEAD"]);
-  if (Str.trim(captureGit4) !== before) {
+  // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
+  const after = yield* captureGit(root, ["rev-parse", "HEAD"]);
+  if (Str.trim(after) !== before) {
     return yield* CacheCommandError.new("Workflow revision changed during inspection.");
   }
   yield* assertCacheProducerWorkflowProfile(root);
@@ -786,6 +820,7 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
     Effect.gen(function* () {
       const workflow = yield* inspectCacheProducerWorkflow(root);
       yield* assertCacheProducerWorkflowProfile(ownedRequest.sourceRoot);
+      // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
       const sourceRevision = yield* captureGit(ownedRequest.sourceRoot, ["rev-parse", "HEAD"]).pipe(
         Effect.map(Str.trim),
         Effect.flatMap(decodeRevision)

@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "alchemy-vault-sync-slice",
+    "packetId": "goal-packet/v1:7260f02a4a51e6a2876bfcccb27f819c38ef71e86cea8f3ccb4b89fe18aab42c",
+    "title": "Alchemy Vault-Sync Slice",
+    "status": "active",
+    "created": "2026-11-05",
+    "updated": "2026-11-05",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/alchemy-vault-sync-slice",
+  "lifecycle": "active",
+  "mission": "Migrate the `documents` vault-sync bounded context onto `@alchemy.run/domain` end to end: a Postgres Platform driver with the Effect Cluster workflow engine, aggregates/sagas/policies/views for destinations, sync operations and conflicts with Box as External System, one Api (HTTP + OpenAPI, CLI, MCP limited to Views) behind Session middleware, an optimistic + offline-intents client, legacy tables rebuilt as Projections after a single-writer cutover, and the doctrine amendments that let every later slice follow.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/alchemy-domain-adoption",
+    "graduated": "2026-11-05"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/alchemy-vault-sync-slice/README.md",
+    "goals/alchemy-vault-sync-slice/SPEC.md",
+    "goals/alchemy-vault-sync-slice/PLAN.md",
+    "goals/alchemy-vault-sync-slice/GOAL.md",
+    "goals/alchemy-vault-sync-slice/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/alchemy-vault-sync-slice/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/alchemy-vault-sync-slice/GOAL.md)\" -le 4000",
+    "jq . goals/alchemy-vault-sync-slice/ops/manifest.json",
+    "rg -n \"alchemy-vault-sync-slice|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/alchemy-vault-sync-slice",
+    "git diff --check -- goals/alchemy-vault-sync-slice",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "researchReferences": [
+    "../../explorations/alchemy-domain-adoption/research/01-astra-source-analysis.md",
+    "../../explorations/alchemy-domain-adoption/research/02-muse-deep-research.md",
+    "../../explorations/alchemy-domain-adoption/research/03-grok-deep-research.md"
+  ]
+}

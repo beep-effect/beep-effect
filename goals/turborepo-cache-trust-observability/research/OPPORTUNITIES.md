@@ -7,6 +7,26 @@ command/error/file evidence, impact, prevention and owner/disposition.
 Redact secrets, use portable paths, omit machine/session IDs and keep raw logs
 in bounded artifacts.
 
+## 2026-11-03: hosted policy must cover the new mask tests
+
+PR #2691's current hosted policy log found one introduced Effect Vitest
+outcome-assertion finding in `cache-census.test.ts` and two deprecated
+parent-process `process.umask()` reads in `cache-runtime.test.ts`. Build,
+Check and the four new runtime/identity regressions had passed; those results
+did not prove the separate policy gate. Preserve the Boolean rejection
+assertion with `Effect.isFailure`. Compare actual parent-created directory
+permissions before and after the child observations, avoiding the deprecated
+getter's process-wide write race. The isolated child remains the only native
+mask observer. Owner: this PR; current hosted policy must run again.
+
+The same log includes the inherited ClaimElement finding owned by #2682.
+The current coverage log has the existing 94-row shared episode: 92 metric
+rows match the earlier episode exactly, and the two fingerprint metrics
+improved while remaining below their base floors. All 46 other reported
+source objects match accepted main; #2682 already owns the fingerprint
+repair too. Retain these failures and consume that accepted repair once;
+neither lower a baseline nor copy another owner's unlanded changes.
+
 Historical leads remain in the [exploration ledger](../../../explorations/turborepo-quality-cache/research/OPPORTUNITIES.md)
 and [opportunity disposition](../../../explorations/turborepo-quality-cache/research/opportunity-disposition.md).
 Refresh historical claims before treating them as current.
@@ -2254,7 +2274,89 @@ RPM systems, `perl` on Debian), keep the existing bounds and retain an actual
 accepted-source build as the gate. Do not convert a source regression check into
 compiled-artifact proof.
 
+## 2026-11-04 UTC: signed overlays omitted native key-length enforcement
 
+### Creation-mask drift was absent from runtime identity, 2026-11-03
+
+- Evidence: Cache.schemas.ts listed runtime binaries, kernel, libraries and
+  dependencies without a process creation mask; collectCacheToolchain therefore
+  could not distinguish identical tools under umask 022 and 077. The native
+  worktree mode counterexample under review in #2689 led to this source audit.
+- Repair: observe and validate the inherited mask through the existing bounded
+  subprocess, bind it to new fingerprints, and preserve historical receipt
+  decoding without inheriting qualification. Require actual hosted regressions.
+- Prevention: include filesystem creation context in runtime-profile review and
+  compare complete output metadata before qualifying permission-sensitive work.
+
+The shared version-capture mapper preserves an existing typed error, so an
+empty mask observation initially retained its tool-version message. Normalize
+this boundary to the mask-specific typed error and discard raw native output
+from its cause. The authored empty-output regression covers that distinction;
+no local regression execution is claimed.
+
+Hosted Check and Build at revision 662bb066 identified two introduced Effect
+diagnostics in the mask helper: schemaNumber and preferTypedSchemaDecoder.
+Use FiniteFromString and decodeEffect for the already numeric value, retaining
+the bounded mask schema. Add NaN and both infinities to the native-output
+rejection controls. Do not disable diagnostics, relabel this as inherited, or
+treat the older static review as functional proof. Current hosted jobs
+126267896866 and 126267896900 retain the failures; fresh proof is required.
+
+The corrected production module built successfully at 4bc2f73f, but hosted Check
+126272654422 then reached two test-context errors: the new process-observation
+test group omitted SecureRandom. Merge the existing NodeCrypto layer with
+NodeServices, matching the neighboring real-command tests. This is introduced
+test wiring, not an inherited failure or a production signing dependency.
+Preserve its failed log and require fresh current-head hosted results.
+While reviewing the pending feature matrix, source inspection of
+`projectCacheSignedRoot` found signatures enabled without the native
+`longerSignatureKey` safeguard. The already recorded 168-case native experiment
+shows short supplied keys still execute in that default configuration.
+Prepare the safeguard in the existing shared projector rather than another
+key-policy helper. Preserve independent missing-key roles and exact overlay
+verification. Owner: trust goal; hosted regressions and signed rollout remain
+pending. No credential was read and no live setting was changed.
+
+The first hosted Fallow run on PR #2692 found one introduced cognitive-complexity
+finding in the new four-row key-floor test: two nested Boolean loops plus two
+layout branches scored 9. The retained audit and health raw reports name the
+same test. Enumerate the same four input pairs in one loop instead, preserving
+every assertion and avoiding helper extraction or a raised threshold. Owner:
+this PR; current hosted Fallow proof remains required after the repair.
+
+### 2026-11-03 — hold readiness after an unread check census
+
+- Read-first closeout for #2680 printed `merge-ready: yes` after a transient
+  GitHub API failure. A direct exact-head read still showed Lint Policy and
+  Coverage Regression failures. The successful required-only capture could
+  conceal the unread complete check list because absent counts defaulted to zero.
+- Reuse the remote summary's existing typed `readFailure` in the shared readiness
+  policy. An unread capture holds the checks criterion; a later complete read
+  can recover. Author regressions for the real partition shape and zero-count
+  masking without running local verification or repository tests.
+- The live snapshot stays held. Retain the failed read and contradictory output;
+  no cache result, old report or zero exit proves current hosted readiness.
+
+### 2026-11-03 — preserve the same read failure in historical recovery
+
+- Hosted Repo Sanity on #2684 found that the narrowed completion-recovery
+  decoder omitted the new required readiness input. Its schema must retain the
+  existing typed `readFailure`, including when other counters claim green.
+- Add the optional encoded field to that decoder. A legacy absent failure
+  decodes to None; a recorded failure survives and refuses recovery. Extend the
+  existing recovery matrix with an exact refusal-message assertion so a decode
+  error cannot stand in for the intended readiness hold. No local suite ran.
+### 2026-11-03 — include directory metadata in pilot source guards
+
+While following the native permission counterexample, inspection of
+`Cache.pilot.ts` found that its internal snapshot recorded files and symlink
+targets but omitted directory/root metadata and empty directories. Its file
+limit was checked only at directory entry. Add those entries to the existing
+annotated snapshot model and enforce the ceiling before each append. Hosted
+orchestration regressions must reject metadata-only changes for selected and
+dependency packages, refuse overflow and prove cleanup without issuing a
+receipt. No new scanner, state store, runtime policy or qualification grant is
+needed. No local verify/publish or package proof is run.
 ### Installed dependency digest differs across protected inspections, 2026-11-03
 
 - Work: independently freeze the actual protected source/toolchain profile.
@@ -2305,3 +2407,31 @@ five state-policy tasks passed. Hoist the schema and its encoder to module scope
 to reuse the parser cache while preserving the fixture bytes and assertions.
 Keep the failed job receipt and require fresh hosted proof after the repair.
 No local verify, publish or repository test suite was run.
+
+### 2026-11-05: Keep successful inspection evidence after diagnostic refusal
+
+Accepted-main workflow run42126399874 / job127591603870 failed with `invalid-input-or-stream`; its source inspection passed but the following source upload was skipped. The retained104-byte refusal cannot distinguish memory, archive, process, filesystem or input failures. Gate the source upload on successful inspection plus its report output, independently of later diagnostic success. Retain only fixed categorical failure codes, with no exception messages, paths, payloads or environment values. The actual cause remains unknown; an unchanged retry cannot repair the missing evidence.
+
+### 2026-11-05: Treat review API exhaustion as unknown state
+
+PR #2707 closeout could not read review state because GitHub GraphQL reported its API limit exhausted. A minimal quota query confirmed zero remaining and reset at 23:31:05Z; the REST quota snapshot had shown a different GraphQL allowance, so it was insufficient evidence to resume reads. Preserve the failed receipt and hold review/merge readiness until an actual post-reset read succeeds. Share and respect the authenticated API reset across metadata consumers to prevent repeated failed polls; this is an environment wait, not an empty review inventory. No credential or subscription change.
+
+### 2026-11-05: Avoid repeated packet tail collisions
+
+PR #2707 conflicted at the SPEC and PLAN append points after sibling #2690 landed, then again with #2692 and its manifest report row. Preserve both independent histories, place this repair's checkpoint in the existing Status section and decision near the start of the existing Decision log, and insert its report row away from the manifest tail. This reduces shared append edits without a new merge policy or an unaccepted tooling dependency. Reverse the placement through Git; keep every evidence entry.
+
+The next base merge adopted #2704's generated manifest format. The source and plan decisions merged cleanly; resolve the manifest using the accepted pure projection core for this packet only, preserving the new report and upstream references. This is metadata conflict resolution; no quality suite or source-generator entrypoint is run.
+
+### 2026-11-06: Count refusal bytes in the publication budget
+
+Source inspection permits a report up to four MiB. Adding even the observed 104-byte refusal can exceed the existing combined report cap near that boundary. Before publishing either artifact, inspect only regular-file sizes and select a pair only when its total fits. On overflow, retain only the individually safe report selected by the documented policy, and fail the complete-pair gate. Reject missing, symlink and special-file candidates without reading payloads or repeating archive work. Boundary and fixed-output controls are authored for hosted CI; no local test or quality suite was run.
+
+### 2026-11-06: Budget complete source reads against the actual declared tree
+
+Accepted-source inspection run42142818104 failed source binding before diagnostics and produced no artifacts. Immutable source metadata shows three newly declared fixtures of 13,448,401, 17,014,736 and 34,855,569 bytes, each exceeding the eight-MiB reader bound. The failed message does not identify its first path; the limit violation itself is a definite blocker. Keep full-byte hashing and the existing digest algorithm. Check metadata before payload reads, cap each source at64MiB and the aggregate at1GiB, and refuse returned lengths that differ from preflight. Preserve four-reader concurrency,20,000paths,ten-minute job and four-MiB report bounds. Record the failed run; do not repeat its unchanged source. Boundary and no-read controls are authored for hosted CI, with no local suite run.
+
+The native open guard refused this repair when accepted W7b touched the same workflow and test layer. Merge main and preserve its pinned-Git comments and NodeTestLayer alongside the byte-budget change, then refresh both source bindings. A fresh source overlap check before opening prevents silently regressing an accepted refactor; no local quality replay is needed under the hosted-first instruction.
+
+### 2026-11-06: Preserve both Effect error channels in the size guard
+
+PR #2726 hosted Repo Sanity job127660626632 reported TS2322 in the new source size-drift callback. The callback returned a digest Effect or a typed error with different error channels. Use the existing filterOrFail guard before flatMap(digest), retaining size refusal and full hashing. This is an introduced defect repaired through a focused follow-up; no manual local quality run or unchanged inspection retry. Hosted acceptance remains the test gate.

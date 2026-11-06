@@ -84,5 +84,9 @@
   },
   "statusNote": "Historical migration complete: 5 phases, 7 symbol inventories, and 75 package entries are done in ops/progress.json. Packet bookkeeping reconciled on 2026-07-14; initiative status remains externally managed.",
   "lifecycle": "completed-retained",
-  "packetPath": "goals/effect-native-migration"
+  "packetPath": "goals/effect-native-migration",
+  "researchReports": [
+    "research/grill-with-docs-findings.md",
+    "research/grilling-notes.md"
+  ]
 }
