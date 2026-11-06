@@ -25,6 +25,8 @@
  * @since 0.0.0
  */
 
+import { Git, GitOptions } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
 import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
@@ -40,11 +42,10 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { readGitRenames, runGitOutput as runSharedGitOutput } from "../../../internal/repo-run/index.ts";
+import { adaptGitKitError, patientGit, readGitRenames } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { ExpectationRewrite, ExpectationRewriteVerdict } from "./FinalCheck.schemas.ts";
-import { runGitPathList } from "./GitExec.ts";
-import type { Git } from "@beep/git/Git";
+import { captureGitKitExit, changedYeetPaths, YeetChangedPathsQuery } from "./GitExec.ts";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -456,6 +457,11 @@ const fileDiffAdapter: GitCommandErrorAdapter<YeetCommandError | ExpectationDiff
   onTruncated: O.some((commandLine) => ExpectationDiffOverflow.make({ commandLine })),
 };
 
+// The per-file diff keeps the 512 KiB bound the merged capture had, so the overflow arm still fires on
+// the same files: the kit's `truncated` failure is the overflow (W7a Y41, SPEC D-18).
+const EXPECTATION_DIFF_MAX_BYTES = 512 * 1024;
+const expectationDiffGit = Git.makeWith(GitOptions.make({ maxOutputBytes: EXPECTATION_DIFF_MAX_BYTES }));
+
 // The merge-base path of a renamed file, mapped through the snapshot rule;
 // a file diffed in place has none.
 const renamedFrom = (basePath: string, headPath: string): O.Option<string> =>
@@ -495,12 +501,13 @@ const diffTestFile = Effect.fn("Yeet.ExpectationRewrite.diffTestFile")(function*
 ) {
   const baseFile = renamedFrom(basePath, headPath);
   const paths = O.isNone(baseFile) ? [headPath] : [basePath, headPath];
-  return yield* runSharedGitOutput(
-    repoRoot,
-    ["diff", "--unified=0", "--no-color", "--find-renames=50%", mergeBase, "HEAD", "--", ...paths],
-    fileDiffAdapter
-  ).pipe(
-    Effect.map((diff) => A.map(findExpectationRewrites(diff), withBaseFile(baseFile))),
+  const options = { base: mergeBase, head: "HEAD", unified: 0, findRenames: 50, pathspec: paths };
+  const git = yield* expectationDiffGit;
+  return yield* git.diffPatch(repoRoot, options).pipe(
+    Effect.mapBoth({
+      onFailure: adaptGitKitError(GitCommand.diffPatch(options), fileDiffAdapter),
+      onSuccess: (diff) => A.map(findExpectationRewrites(diff), withBaseFile(baseFile)),
+    }),
     Effect.catchTag("ExpectationDiffOverflow", () => Effect.succeed(overflowRewrite(headPath, baseFile)))
   );
 });
@@ -541,16 +548,10 @@ export const collectExpectationRewrites = Effect.fn("Yeet.collectExpectationRewr
   YeetCommandError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
-  const modified = yield* runGitPathList(repoRoot, [
-    "diff",
-    "--name-only",
-    "-z",
-    "--diff-filter=M",
-    mergeBase,
-    "HEAD",
-    "--",
-    ...EXPECTATION_TEST_PATHSPEC,
-  ]);
+  const modified = yield* changedYeetPaths(
+    repoRoot,
+    YeetChangedPathsQuery.make({ base: mergeBase, head: "HEAD", diffFilter: "M", pathspec: EXPECTATION_TEST_PATHSPEC })
+  );
   const renamed = yield* readGitRenames(repoRoot, mergeBase, "HEAD", EXPECTATION_TEST_PATHSPEC, listingAdapter, () =>
     YeetCommandError.make({ message: "git diff --name-status returned a malformed rename table.", exitCode: 1 })
   );
@@ -613,8 +614,13 @@ export const verifyExpectationRewrites = Effect.fn("Yeet.verifyExpectationRewrit
     A.map(files, ([testFile, count]) =>
       ExpectationRewriteVerdict.make({ testFile, classification: "unverified", rewrites: count, detail })
     );
+  // A materialization may outlive the edge instance's 30 s timeout (SPEC D-09).
+  const git = yield* patientGit;
   return yield* Effect.acquireUseRelease(
-    runInherited("git", ["worktree", "add", "--detach", baseRoot, mergeBase], repoRoot),
+    git.worktreeAdd(repoRoot, baseRoot, { ref: mergeBase, detach: true }).pipe(
+      captureGitKitExit(GitCommand.worktreeAdd(baseRoot, mergeBase, true), "Failed to run git worktree add."),
+      Effect.map((added) => added.exitCode)
+    ),
     Effect.fnUntraced(function* (addExit) {
       if (addExit !== 0) {
         return unverifiedAll(`git worktree add exited ${addExit}`);
@@ -627,6 +633,6 @@ export const verifyExpectationRewrites = Effect.fn("Yeet.verifyExpectationRewrit
         classifyOnBase(baseRoot, testFile, baseFileFor(rewrites, testFile), count)
       );
     }),
-    () => runInherited("git", ["worktree", "remove", "--force", baseRoot], repoRoot).pipe(Effect.ignore)
+    () => git.worktreeRemove(repoRoot, baseRoot, { force: true }).pipe(Effect.ignore)
   );
 });
