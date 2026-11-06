@@ -136,13 +136,29 @@ const verify = Command.make(
   Command.provide(ResearchLibraryLive),
   Command.withDescription("Verify immutable bytes, citation coverage, repository clones, and qualification evidence")
 );
-const render = Command.make(
-  "render",
-  { library },
-  Effect.fn("ResearchLibrary.renderCommand")(function* ({ library }) {
+const includePrivate = Flag.Boolean("include-private").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Include the private partition")
+);
+const migrate = Command.make(
+  "migrate",
+  { library, dryRun: Flag.Boolean("dry-run").pipe(Flag.withDefault(false)) },
+  Effect.fn("ResearchLibrary.migrateCommand")(function* ({ library, dryRun }) {
     const research = yield* ResearchLibrary;
     const root = yield* resolveLibraryRoot(library);
-    yield* research.render(root);
+    yield* research.migrate(root, dryRun);
+  })
+).pipe(
+  Command.provide(ResearchLibraryLive),
+  Command.withDescription("Migrate to catalog v2 after SHACL and hash-equal index checks")
+);
+const render = Command.make(
+  "render",
+  { library, includePrivate },
+  Effect.fn("ResearchLibrary.renderCommand")(function* ({ library, includePrivate }) {
+    const research = yield* ResearchLibrary;
+    const root = yield* resolveLibraryRoot(library);
+    yield* research.render(root, includePrivate);
     yield* Console.log(`Rendered Markdown and static HTML navigation in ${root}.`);
   })
 ).pipe(
@@ -164,11 +180,11 @@ const ontologyRender = Command.make(
 const ontology = Command.make("ontology").pipe(Command.withSubcommands([ontologyRender]));
 const status = Command.make(
   "status",
-  { library },
-  Effect.fn("ResearchLibrary.statusCommand")(function* ({ library }) {
+  { library, includePrivate },
+  Effect.fn("ResearchLibrary.statusCommand")(function* ({ library, includePrivate }) {
     const research = yield* ResearchLibrary;
     const root = yield* resolveLibraryRoot(library);
-    yield* research.status(root);
+    yield* research.status(root, includePrivate);
   })
 ).pipe(Command.provide(ResearchLibraryLive), Command.withDescription("Report coverage and provider health separately"));
 
@@ -185,5 +201,5 @@ const status = Command.make(
  */
 export const libraryCommand = Command.make("library").pipe(
   Command.withDescription("Reusable, evidence-backed research source library"),
-  Command.withSubcommands([inventory, qualify, acquire, importResult, verify, render, status, ontology])
+  Command.withSubcommands([inventory, qualify, acquire, importResult, verify, render, status, ontology, migrate])
 );

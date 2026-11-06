@@ -31,11 +31,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P1 Implement. P0 produced [research/DESIGN.md](./research/DESIGN.md) and the foundational audit ([research/FOUNDATIONAL-AUDIT.md](./research/FOUNDATIONAL-AUDIT.md), adversary review and r2 revision). Models, service, DCAT vocabulary, T-Box/SHACL fold and A-Box projection have landed; SPARQL views and the v2 migration are next.
 
 ## Latest Evidence
 
-Not started.
+Real-library `research library verify` (read-only) matches `main` failure-for-failure. It reports 10 inherited data-gap issues; the 104 introduced correction-hash failures were fixed (see [research/OPPORTUNITIES.md](./research/OPPORTUNITIES.md)).
 
 ## Notes
 

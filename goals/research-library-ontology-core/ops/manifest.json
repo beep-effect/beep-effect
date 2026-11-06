@@ -34,7 +34,13 @@
     "goals/research-library-ontology-core/GOAL.md",
     "goals/research-library-ontology-core/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/DESIGN.md",
+    "research/FOUNDATIONAL-AUDIT-REVIEW.md",
+    "research/FOUNDATIONAL-AUDIT.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,12 +56,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

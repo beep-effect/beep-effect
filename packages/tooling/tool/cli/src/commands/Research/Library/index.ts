@@ -52,6 +52,7 @@ export {
   LibraryIntakeRoot,
   LibraryInventoryOptions,
   LibraryManifest,
+  LibraryMigrationReceipt,
   LibraryModelRun,
   LibraryOccurrence,
   LibraryOwnership,

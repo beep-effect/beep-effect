@@ -10,17 +10,50 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LibraryError } from "./Library.errors.ts";
-import { libraryEffectiveCaptures, libraryEffectiveCategory } from "./Library.evidence.ts";
-import { LibraryDispositionImportPayload, libraryDispositionValid } from "./Library.import.ts";
-import { LibraryArtifact } from "./Library.schemas.ts";
+import {
+  LibraryArtifact,
+  LibraryCapture,
+  LibraryDocument,
+  LibraryOccurrence,
+  LibraryQualification,
+  LibrarySource,
+} from "./Library.schemas.ts";
 import { hashBytes, loadCatalog } from "./Library.store.ts";
+import {
+  captureArtifacts,
+  captureIndex,
+  indirectBacklinks,
+  LibraryViewRow,
+  libraryViewDataset,
+  occurrenceIndex,
+  orderedSourceCaptures,
+  qualificationIndex,
+  readableSourceCaptures,
+  relatedRepositories,
+  reportIndex,
+  reportOccurrences,
+  runView,
+  sourceBacklinks,
+  sourceCaptures,
+  sourceIndex,
+  viewRecords,
+} from "./Library.views.ts";
+import type * as Rdf from "@beep/rdf/Rdf";
 
-const LibraryDispositionImportPayloadJson = S.fromJsonString(LibraryDispositionImportPayload);
+const selectedCatalog = Effect.fn("Library.selectedCatalog")(function* (dataset: Rdf.Dataset, includePrivate: boolean) {
+  return {
+    documents: yield* viewRecords(dataset, reportIndex, LibraryDocument, includePrivate),
+    sources: yield* viewRecords(dataset, sourceIndex, LibrarySource, includePrivate),
+    occurrences: yield* viewRecords(dataset, occurrenceIndex, LibraryOccurrence, includePrivate),
+    captures: yield* viewRecords(dataset, captureIndex, LibraryCapture, includePrivate),
+    qualifications: yield* viewRecords(dataset, qualificationIndex, LibraryQualification, includePrivate),
+  };
+});
 
 const markdownText = flow(
   escape,
@@ -46,10 +79,15 @@ const navigationScript = `<script>const records=[...document.querySelectorAll('.
 // Only this static script becomes executable; callers supply already escaped projection markup.
 const indexPage = (body: string) => page("Research library", body, navigationScript);
 
-const renderProjection = Effect.fn("Research.Library.renderProjection")(function* (root: string) {
+const renderProjection = Effect.fn("Research.Library.renderProjection")(function* (
+  root: string,
+  includePrivate: boolean
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const catalog = yield* loadCatalog(root);
+  const loaded = yield* loadCatalog(root);
+  const dataset = yield* libraryViewDataset(root, loaded);
+  const catalog = yield* selectedCatalog(dataset, includePrivate);
   const relative = (from: string, target: string) =>
     linkPath(path.relative(path.resolve(root, from), path.resolve(root, target)));
   const write = Effect.fn("Research.Library.writeProjection")(function* (target: string, content: string) {
@@ -65,23 +103,22 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
     yield* fs
       .makeDirectory(path.dirname(absolute), { recursive: true })
       .pipe(Effect.mapError((cause) => LibraryError.make({ message: "Cannot create projection directory", cause })));
-    yield* Effect.scoped(
-      Effect.gen(function* () {
-        const temporary = yield* fs.makeTempFileScoped({
-          directory: path.dirname(absolute),
-          prefix: ".library-projection-",
-        });
-        yield* fs
-          .writeFileString(temporary, content)
-          .pipe(Effect.mapError((cause) => LibraryError.make({ message: "Cannot write projection", cause })));
-        yield* fs
-          .rename(temporary, absolute)
-          .pipe(Effect.mapError((cause) => LibraryError.make({ message: "Cannot publish projection", cause })));
-      })
-    );
+    const stage = Effect.fn("Library.stageProjection")(function* () {
+      const temporary = yield* fs.makeTempFileScoped({
+        directory: path.dirname(absolute),
+        prefix: ".library-projection-",
+      });
+      yield* fs
+        .writeFileString(temporary, content)
+        .pipe(Effect.mapError((cause) => LibraryError.make({ message: "Cannot write projection", cause })));
+      yield* fs
+        .rename(temporary, absolute)
+        .pipe(Effect.mapError((cause) => LibraryError.make({ message: "Cannot publish projection", cause })));
+    });
+    yield* Effect.scoped(stage());
   });
   const artifactText = Effect.fn("Research.Library.previewArtifact")(function* (artifact: LibraryArtifact) {
-    return yield* Effect.gen(function* () {
+    const preview = Effect.fn("Library.preview")(function* () {
       const target = path.resolve(root, artifact.path);
       const realRoot = yield* fs.realPath(root);
       const realTarget = yield* fs.realPath(target);
@@ -104,22 +141,20 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
         return escape(readFileString1);
       }
       return "Binary evidence: download the original artifact to inspect it.";
-    }).pipe(Effect.catchTag("PlatformError", () => Effect.succeed("Artifact unavailable: read failed.")));
-  });
-  const relatedRepository = (sourceId: string) =>
-    A.findFirst(
-      catalog.sources,
-      (repository) =>
-        repository.kind === "github-repository" &&
-        A.some(
-          catalog.sources,
-          (source) =>
-            source.id === sourceId &&
-            source.id !== repository.id &&
-            Str.isNonEmpty(source.repository) &&
-            source.repository === repository.repository
-        )
+    });
+    return yield* preview().pipe(
+      Effect.catchTag("PlatformError", () => Effect.succeed("Artifact unavailable: read failed."))
     );
+  });
+  const repositories = yield* Effect.forEach(
+    catalog.sources,
+    Effect.fnUntraced(function* (source) {
+      const related = yield* viewRecords(dataset, relatedRepositories(source.id), LibrarySource, includePrivate);
+      return [source.id, A.head(related)] satisfies readonly [string, O.Option<LibrarySource>];
+    })
+  );
+  const repositoryBySource = HashMap.fromIterable(repositories);
+  const relatedRepository = (sourceId: string) => O.flatten(HashMap.get(repositoryBySource, sourceId));
   const repositoryLink = (sourceId: string, directory: string, markdown = false) =>
     O.match(relatedRepository(sourceId), {
       onNone: () => "",
@@ -128,11 +163,19 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
           ? ` · [Related repository](${relative(directory, path.join(path.dirname(sourcePage(repository.id)), "SOURCE.md"))}) (indirect provenance)`
           : ` · <a href="${relative(directory, sourcePage(repository.id))}">Related repository</a> (indirect provenance)`,
     });
+  const documentsById = HashMap.fromIterable(
+    A.map(catalog.documents, (document) => [document.id, document] satisfies readonly [string, LibraryDocument])
+  );
   const reports = yield* Effect.forEach(
     catalog.documents,
     Effect.fnUntraced(function* (document) {
       const directory = path.dirname(reportPage(document.id));
-      const occurrences = A.filter(catalog.occurrences, (item) => item.documentId === document.id);
+      const occurrences = yield* viewRecords(
+        dataset,
+        reportOccurrences(document.id),
+        LibraryOccurrence,
+        includePrivate
+      );
       const provenance = `Report ${escape(document.id)} · date ${escape(document.reportDate || "unrecorded")} · heading date ${escape(document.headingDate || "unrecorded")} · filename date ${escape(document.filenameDate || "unrecorded")} · SHA-256 <code>${escape(document.sha256)}</code>`;
       const citations = A.join(
         A.map(
@@ -173,56 +216,38 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
     }),
     { concurrency: 4 }
   );
+  const sourceRows = yield* runView(dataset, sourceIndex, LibraryViewRow, includePrivate);
+  const sourceCategories = HashMap.fromIterable(
+    A.map(
+      catalog.sources,
+      (source, i) => [source.id, A.getUnsafe(sourceRows, i).category ?? "missing"] satisfies readonly [string, string]
+    )
+  );
   const sources = yield* Effect.forEach(
     catalog.sources,
     Effect.fnUntraced(function* (source) {
       const directory = path.dirname(sourcePage(source.id));
-      const captures = A.filter(catalog.captures, (item) => item.sourceId === source.id);
-      const captureCategories = yield* Effect.forEach(
-        captures,
+      const selectedCaptures = yield* viewRecords(dataset, sourceCaptures(source.id), LibraryCapture, includePrivate);
+      const captureRows = yield* runView(dataset, sourceCaptures(source.id), LibraryViewRow, includePrivate);
+      const captures = yield* Effect.forEach(
+        selectedCaptures,
         Effect.fnUntraced(function* (capture) {
-          if (
-            capture.status !== "blocked" ||
-            !(yield* libraryDispositionValid(root, catalog, source, capture).pipe(Effect.orElseSucceed(() => false)))
-          )
-            return { id: capture.id, category: capture.status };
-          const receipt = A.findFirst(capture.artifacts, (artifact) => artifact.role === "reviewed-disposition");
-          if (O.isNone(receipt)) return { id: capture.id, category: capture.status };
-          const review = yield* fs
-            .readFileString(path.resolve(root, receipt.value.path))
-            .pipe(Effect.flatMap(S.decodeEffect(LibraryDispositionImportPayloadJson)), Effect.option);
-          return {
-            id: capture.id,
-            category:
-              O.isSome(review) && A.contains(["ambiguous", "incomplete", "tool-blocked"], review.value.disposition)
-                ? review.value.disposition
-                : capture.status,
-          };
+          const artifacts = yield* viewRecords(dataset, captureArtifacts(capture.id), LibraryArtifact, includePrivate);
+          return LibraryCapture.make({ ...capture, artifacts });
         })
       );
-      const captureCategory = (id: string) =>
-        O.getOrElse(
-          A.findFirst(captureCategories, (item) => item.id === id).pipe(O.map((item) => item.category)),
-          () => "missing"
-        );
-      const backlinks = A.filter(catalog.occurrences, (item) => item.sourceId === source.id);
-      const indirect =
-        source.kind === "github-repository"
-          ? A.filter(
-              catalog.occurrences,
-              (item) =>
-                item.sourceId !== source.id &&
-                A.some(
-                  catalog.sources,
-                  (related) =>
-                    related.id === item.sourceId &&
-                    related.repository === source.repository &&
-                    Str.isNonEmpty(source.repository)
-                )
-            )
-          : [];
+      const categories = HashMap.fromIterable(
+        A.map(
+          captures,
+          (capture, i) =>
+            [capture.id, A.getUnsafe(captureRows, i).category ?? capture.status] satisfies readonly [string, string]
+        )
+      );
+      const captureCategory = (id: string) => O.getOrElse(HashMap.get(categories, id), () => "missing");
+      const backlinks = yield* viewRecords(dataset, sourceBacklinks(source.id), LibraryOccurrence, includePrivate);
+      const indirect = yield* viewRecords(dataset, indirectBacklinks(source.id), LibraryOccurrence, includePrivate);
       const reportLabel = (documentId: string) => {
-        const document = A.findFirst(catalog.documents, (item) => item.id === documentId);
+        const document = HashMap.get(documentsById, documentId);
         return O.match(document, {
           onNone: () => `Report ${documentId}`,
           onSome: (item) => `${path.basename(item.originalPath)} · ${item.reportDate || "date unrecorded"}`,
@@ -252,16 +277,13 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
         ),
         ""
       );
-      const current = yield* libraryEffectiveCaptures(root, catalog, source);
-      const readableIds = A.getSomes(
-        A.map(current, (item) =>
-          item.category === "readable" && item.capture !== null ? O.some(item.capture.id) : O.none()
-        )
+      const readable = yield* viewRecords(dataset, readableSourceCaptures(source.id), LibraryCapture, includePrivate);
+      const readableIds = A.map(readable, (capture) => capture.id);
+      const ordered = yield* viewRecords(dataset, orderedSourceCaptures(source.id), LibraryCapture, includePrivate);
+      const capturesById = HashMap.fromIterable(
+        A.map(captures, (capture) => [capture.id, capture] satisfies readonly [string, LibraryCapture])
       );
-      const orderedCaptures = [
-        ...A.filter(captures, (capture) => A.contains(readableIds, capture.id)),
-        ...A.filter(captures, (capture) => !A.contains(readableIds, capture.id)),
-      ];
+      const orderedCaptures = A.map(ordered, (capture) => O.getOrThrow(HashMap.get(capturesById, capture.id)));
       const captureViews = yield* Effect.forEach(
         orderedCaptures,
         Effect.fnUntraced(function* (capture) {
@@ -287,7 +309,7 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
         }),
         { concurrency: 2 }
       );
-      const status = libraryEffectiveCategory(A.map(current, (item) => item.category));
+      const status = O.getOrElse(HashMap.get(sourceCategories, source.id), () => "missing");
       const metadata = `${escape(source.kind)} · ${escape(status)}${A.contains(["ambiguous", "incomplete", "tool-blocked"], status) ? " (reviewed; not read)" : ""} · ${escape(source.ownership)} · revision ${escape(source.revision || "unrecorded")}`;
       const repository = Str.startsWith("github-")(source.kind)
         ? `repos/github/${source.repository}`
@@ -353,31 +375,50 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
   )}<p id="count" aria-live="polite"></p><a href="index.md">Markdown index</a></header>`;
 
   yield* write("index.html", indexPage(`${header}<main>${A.join(reports, "")}${A.join(sources, "")}</main>`));
-  yield* write(
-    "index.md",
-    `# Research library\n\n${catalog.documents.length} reports; ${catalog.sources.length} sources; ${catalog.occurrences.length} citation occurrences.\n\n[Portable HTML navigation](index.html)\n\n## Reports\n\n${A.join(
-      A.map(
-        catalog.documents,
-        (document) =>
-          `- [${markdownText(document.title)}](${linkPath(path.join(path.dirname(reportPage(document.id)), "REPORT.md"))}) — ${document.sha256}`
-      ),
-      "\n"
-    )}\n\n## Sources\n\n${A.join(
-      A.map(
-        catalog.sources,
-        (source) =>
-          `- [${markdownText(source.identity)}](${linkPath(path.join(path.dirname(sourcePage(source.id)), "SOURCE.md"))}) — ${source.kind}`
-      ),
-      "\n"
-    )}\n\n## Operational qualification\n\n${A.join(
-      A.map(
-        catalog.qualifications,
-        (receipt) =>
-          `- ${markdownText(receipt.adapter)}: ${receipt.status}; ${markdownText(receipt.recordedAt)}; ${markdownText(receipt.reason)}`
-      ),
-      "\n"
-    )}\n`
-  );
+  yield* write("index.md", indexMarkdown(catalog, path));
+});
+
+const indexMarkdown = (catalog: Effect.Success<ReturnType<typeof selectedCatalog>>, path: Path.Path) =>
+  `# Research library\n\n${catalog.documents.length} reports; ${catalog.sources.length} sources; ${catalog.occurrences.length} citation occurrences.\n\n[Portable HTML navigation](index.html)\n\n## Reports\n\n${A.join(
+    A.map(
+      catalog.documents,
+      (document) =>
+        `- [${markdownText(document.title)}](${linkPath(path.join(path.dirname(reportPage(document.id)), "REPORT.md"))}) — ${document.sha256}`
+    ),
+    "\n"
+  )}\n\n## Sources\n\n${A.join(
+    A.map(
+      catalog.sources,
+      (source) =>
+        `- [${markdownText(source.identity)}](${linkPath(path.join(path.dirname(sourcePage(source.id)), "SOURCE.md"))}) — ${source.kind}`
+    ),
+    "\n"
+  )}\n\n## Operational qualification\n\n${A.join(
+    A.map(
+      catalog.qualifications,
+      (receipt) =>
+        `- ${markdownText(receipt.adapter)}: ${receipt.status}; ${markdownText(receipt.recordedAt)}; ${markdownText(receipt.reason)}`
+    ),
+    "\n"
+  )}\n`;
+
+/**
+ * Render only the Markdown index in memory through the ordered SPARQL views.
+ * **Example** (Inspect the memory renderer)
+ * ```ts
+ * import { libraryIndexMarkdown } from "@beep/repo-cli/commands/Research/Library/Library.render"
+ * console.log(libraryIndexMarkdown !== undefined)
+ * ```
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const libraryIndexMarkdown = Effect.fn("Library.indexMarkdown")(function* (
+  dataset: Rdf.Dataset,
+  includePrivate = false
+) {
+  const path = yield* Path.Path;
+  const catalog = yield* selectedCatalog(dataset, includePrivate);
+  return indexMarkdown(catalog, path);
 });
 
 /**
@@ -391,7 +432,7 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
  * @category use-cases
  * @since 0.0.0
  */
-export const renderLibrary = Effect.fn("Research.Library.render")(function* (root: string) {
+export const renderLibrary = Effect.fn("Research.Library.render")(function* (root: string, includePrivate = false) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const lock = path.join(root, ".projection-lock");
@@ -404,7 +445,7 @@ export const renderLibrary = Effect.fn("Research.Library.render")(function* (roo
         })
       )
     ),
-    () => renderProjection(root),
+    () => renderProjection(root, includePrivate),
     () => fs.remove(lock, { recursive: true }).pipe(Effect.orDie)
   );
 });

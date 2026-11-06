@@ -1,7 +1,3 @@
-import { findRepoRoot } from "@beep/repo-utils";
-import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
-import { assembleLibraryOntology, libraryShapes, libraryShapesDataset } from "./Library.ontology.ts";
-import { catalogDataset, libraryTopics } from "./Library.projection.ts";
 /**
  * Read-only integrity and coverage gate.
  *
@@ -10,6 +6,8 @@ import { catalogDataset, libraryTopics } from "./Library.projection.ts";
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { findRepoRoot } from "@beep/repo-utils";
+import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -27,6 +25,8 @@ import { libraryEffectiveCaptures, libraryEffectiveCategory, librarySourceEviden
 import { LibraryDispositionImportPayload, libraryDispositionValid } from "./Library.import.ts";
 import { libraryArtifactIntegrity } from "./Library.integrity.ts";
 import { extractLibraryReferences } from "./Library.inventory.ts";
+import { assembleLibraryOntology, libraryShapes, libraryShapesDataset } from "./Library.ontology.ts";
+import { catalogDataset, libraryTopics } from "./Library.projection.ts";
 import { decodeProviderEvents, validateProviderQualification } from "./Library.provenance.ts";
 import { LibraryProbeEvidence } from "./Library.qualify.ts";
 import { LibraryArtifact, LibraryCapture, LibraryIntake } from "./Library.schemas.ts";
@@ -653,8 +653,6 @@ export const verifyLibrary = Effect.fn("Research.Library.verify")(function* (roo
       " "
     )}; historical attempt failures are reported separately`
   );
-  if (A.isReadonlyArrayNonEmpty(problems))
-    return yield* LibraryError.make({ message: A.join(problems, "\n"), cause: "Research library gate failed" });
   const ontology = yield* assembleLibraryOntology().pipe(
     Effect.mapError((cause) => LibraryError.make({ message: "Cannot assemble library ontology", cause }))
   );
@@ -675,6 +673,8 @@ export const verifyLibrary = Effect.fn("Research.Library.verify")(function* (roo
   yield* Console.log(`shacl: conforms=${result.conforms} violations=${result.violations.length}`);
   for (const violation of A.take(result.violations, 20))
     yield* Console.log(`${violation.focusNode} ${violation.path.value}: ${violation.message}`);
+  if (A.isReadonlyArrayNonEmpty(problems))
+    return yield* LibraryError.make({ message: A.join(problems, "\n"), cause: "Research library gate failed" });
   if (!result.conforms)
     return yield* LibraryError.make({ message: "Research library SHACL validation failed", cause: result.violations });
 });

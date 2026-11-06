@@ -903,3 +903,35 @@ export class LibraryAcquireOptions extends S.Class<LibraryAcquireOptions, { read
  * @since 0.0.0
  */
 export const LIBRARY_VALIDATOR_CONTRACT = "research-library-shapes/1";
+
+/**
+ * Hash-bound receipt for an index-preserving catalog contract migration.
+ * **Example** (Inspect receipt fields)
+ * ```ts
+ * import { LibraryMigrationReceipt } from "@beep/repo-cli/commands/Research/Library/Library.schemas"
+ * console.log(LibraryMigrationReceipt.fields.validatorContract)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class LibraryMigrationReceipt extends S.Class<LibraryMigrationReceipt, { readonly brand: unique symbol }>(
+  $I`LibraryMigrationReceipt`
+)(
+  {
+    validatorContract: S.tag(LIBRARY_VALIDATOR_CONTRACT),
+    fromSchema: LibraryCatalogSchemaVersion,
+    toSchema: S.tag("beep.research.library/v2"),
+    beforeCatalogSha256: LibraryArtifact.fields.sha256,
+    afterCatalogSha256: LibraryArtifact.fields.sha256,
+    indexMdSha256: LibraryArtifact.fields.sha256,
+    intakeIds: S.Array(S.String),
+    shaclViolations: S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(0)),
+    recordedAt: S.String,
+  },
+  {
+    ...$I.annote("LibraryMigrationReceipt", {
+      description: "Index-preserving v2 migration hashes and validator evidence.",
+    }),
+    ...$I.class("MigrationReceipt", { description: "Recorded catalog contract transition." }),
+  }
+) {}

@@ -70,7 +70,7 @@ export class LibraryTopic extends S.Class<LibraryTopic, { readonly brand: unique
  * @category use-cases
  * @since 0.0.0
  */
-export const libraryTopics = Effect.fn("Library.topics")(function* (repoRoot: string) {
+export const libraryTopics = Effect.fn("Library.topics")(function* (repoRoot: string, reportWarnings = true) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const topics: Array<LibraryTopic> = [];
@@ -95,7 +95,8 @@ export const libraryTopics = Effect.fn("Library.topics")(function* (repoRoot: st
       );
     }
   }
-  if (warnings > 0) yield* Effect.logWarning(`library topics: skipped=${warnings} unreadable manifests`);
+  if (warnings > 0 && reportWarnings === true)
+    yield* Effect.logWarning(`library topics: skipped=${warnings} unreadable manifests`);
   return topics;
 });
 
@@ -161,7 +162,7 @@ export const catalogDataset = Effect.fn("Library.catalogDataset")(function* (
       cls.name === "Artifact"
         ? `${fallback}/${text(record, "sha256")}`
         : cls.name === "SourceVersion"
-          ? `${owner}@${text(record, "revision")}`
+          ? `${owner}@${text(record, "revision")}/${encodeURIComponent(text(record, "canonicalUrl"))}`
           : Str.isNonEmpty(text(record, "id"))
             ? text(record, "id")
             : fallback;
@@ -197,7 +198,10 @@ export const catalogDataset = Effect.fn("Library.catalogDataset")(function* (
     }
     if (cls.name === "SourceVersion")
       quads.push(Rdf.makeQuad(subject, nn(`${Prov.PROV_NAMESPACE}specializationOf`), iri("Source", owner)));
-    const category = HashMap.get(evidence, cls.name === "SourceVersion" ? id : sourceId);
+    const category = HashMap.get(
+      evidence,
+      cls.name === "SourceVersion" ? `${owner}@${text(record, "revision")}` : sourceId
+    );
     if (A.contains(["Source", "SourceVersion"], cls.name) && O.isSome(category))
       quads.push(Rdf.makeQuad(subject, nn($I.create("effectiveCategory").iri), literal(category.value)));
     return subject;

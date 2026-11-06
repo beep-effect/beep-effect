@@ -1,3 +1,4 @@
+import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import {
   classifyLibraryReference,
   extractLibraryReferences,
@@ -58,7 +59,12 @@ const libraryArtifactEquivalent = S.toEquivalence(LibraryArtifact);
 const webSourceKinds: ReadonlyArray<LibrarySource["kind"]> = ["web", "docs", "registry", "endpoint"];
 const fixtureJson = S.Unknown.pipe(S.fromJsonString, S.encodeEffect);
 
-const services = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, ShaclValidationServiceLive);
+const services = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  OxigraphSparqlQueryServiceLive,
+  ShaclValidationServiceLive
+);
 const transcriptApiVariation = (scenario: string) => {
   const captionKind: Record<string, string> = { kind: "asr" };
   const base = {

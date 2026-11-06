@@ -6,6 +6,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { N3TurtleCodecLive } from "@beep/n3";
+import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { ShaclValidationServiceLive } from "@beep/shacl";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -13,6 +14,7 @@ import * as Layer from "effect/Layer";
 import { acquireLibrary } from "./Library.acquire.ts";
 import { importLibraryResult } from "./Library.import.ts";
 import { inventoryLibrary } from "./Library.inventory.ts";
+import { migrateLibrary } from "./Library.migrate.ts";
 import { renderLibraryOntology } from "./Library.ontology.ts";
 import { qualifyLibrary } from "./Library.qualify.ts";
 import { renderLibrary } from "./Library.render.ts";
@@ -36,7 +38,8 @@ export type ResearchLibraryRequirements =
   | Effect.Services<ReturnType<typeof verifyLibrary>>
   | Effect.Services<ReturnType<typeof renderLibrary>>
   | Effect.Services<ReturnType<typeof renderLibraryOntology>>
-  | Effect.Services<ReturnType<typeof libraryStatus>>;
+  | Effect.Services<ReturnType<typeof libraryStatus>>
+  | Effect.Services<ReturnType<typeof migrateLibrary>>;
 
 /**
  * Service contract for maintained library operations.
@@ -69,6 +72,7 @@ export class ResearchLibrary extends Context.Service<
     readonly renderOntology: (
       ...args: Parameters<typeof renderLibraryOntology>
     ) => Provided<ReturnType<typeof renderLibraryOntology>>;
+    readonly migrate: (...args: Parameters<typeof migrateLibrary>) => Provided<ReturnType<typeof migrateLibrary>>;
     readonly status: (...args: Parameters<typeof libraryStatus>) => Provided<ReturnType<typeof libraryStatus>>;
   }
 >()($I`ResearchLibrary`) {}
@@ -99,6 +103,9 @@ const makeResearchLibrary = Effect.fn("ResearchLibrary.make")(function* () {
     renderOntology: Effect.fn("ResearchLibrary.renderOntology")((...args) =>
       renderLibraryOntology(...args).pipe(Effect.provide(runtimeContext))
     ),
+    migrate: Effect.fn("ResearchLibrary.migrate")((...args) =>
+      migrateLibrary(...args).pipe(Effect.provide(runtimeContext))
+    ),
     status: Effect.fn("ResearchLibrary.status")((...args) =>
       libraryStatus(...args).pipe(Effect.provide(runtimeContext))
     ),
@@ -118,5 +125,5 @@ const makeResearchLibrary = Effect.fn("ResearchLibrary.make")(function* () {
  * @since 0.0.0
  */
 export const ResearchLibraryLive = Layer.effect(ResearchLibrary, makeResearchLibrary()).pipe(
-  Layer.provide([N3TurtleCodecLive, ShaclValidationServiceLive])
+  Layer.provide([N3TurtleCodecLive, ShaclValidationServiceLive, OxigraphSparqlQueryServiceLive])
 );

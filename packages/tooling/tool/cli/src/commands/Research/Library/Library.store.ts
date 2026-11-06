@@ -458,7 +458,8 @@ const migrateCatalogIdentities = Effect.fn("ResearchLibrary.migrateCatalogIdenti
  */
 export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E, R>(
   root: string,
-  update: (catalog: LibraryCatalog) => Effect.Effect<LibraryCatalog, E, R>
+  update: (catalog: LibraryCatalog) => Effect.Effect<LibraryCatalog, E, R>,
+  migrateLegacyIdentities = true
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -474,12 +475,14 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
       ),
     Effect.fnUntraced(function* () {
       const loadedCatalog = yield* loadCatalog(root);
-      const migrated = yield* migrateCatalogIdentities(loadedCatalog);
-      const artifacts = [
-        ...migrated.artifacts,
-        ...A.flatMap(migrated.captures, (capture) => capture.artifacts),
-        ...A.flatMap(migrated.qualifications, (qualification) => qualification.evidence),
-      ];
+      const migrated = migrateLegacyIdentities ? yield* migrateCatalogIdentities(loadedCatalog) : loadedCatalog;
+      const artifacts = migrateLegacyIdentities
+        ? [
+            ...migrated.artifacts,
+            ...A.flatMap(migrated.captures, (capture) => capture.artifacts),
+            ...A.flatMap(migrated.qualifications, (qualification) => qualification.evidence),
+          ]
+        : [];
       // Legacy aliases predate the object store. Admit their bytes only against the recorded digest.
       for (const artifact of artifacts) {
         if (yield* fs.exists(path.join(root, "objects/sha256", artifact.sha256))) continue;
@@ -495,6 +498,7 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
         yield* saveImmutable(root, artifact.path, bytes);
       }
       const catalog = yield* update(migrated);
+      if (migrateLegacyIdentities === false && catalog === migrated) return catalog;
       const encoded = yield* S.encodeEffect(codec)(catalog).pipe(mapFailure("Cannot encode library catalog."));
       const bytes = new TextEncoder().encode(encoded);
       const hash = yield* hashBytes(bytes);

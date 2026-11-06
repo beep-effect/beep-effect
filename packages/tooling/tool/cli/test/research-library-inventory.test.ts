@@ -19,11 +19,12 @@ import {
   withCatalog,
 } from "@beep/repo-cli/commands/Research";
 import { runLibraryVerificationCommand } from "@beep/repo-cli/test/ResearchLibrary";
-import { NodeCrypto, NodeHttpClient, NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -124,7 +125,7 @@ const resolutionFixture = Effect.fn("test.resolutionFixture")(function* () {
 });
 
 // `Git` rides over the platform spawner: an input root's commit is read through the kit (W2b).
-const InventoryPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NodeHttpClient.layerUndici);
+const InventoryPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FetchHttpClient.layer);
 const LibraryPlatform = Layer.provideMerge(Git.layer, InventoryPlatform);
 
 it.layer(Layer.provideMerge(ResearchLibraryLive, LibraryPlatform), { timeout: "30 seconds" })(

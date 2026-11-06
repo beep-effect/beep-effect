@@ -1,10 +1,12 @@
 import {
   LibraryArtifact,
+  LibraryCapture,
   LibraryCatalog,
   LibraryDerivation,
   LibrarySource,
   resolveLibraryRoot,
 } from "@beep/repo-cli/commands/Research";
+import { encodeLibraryCaptureJson } from "@beep/repo-cli/test/ResearchLibrary";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -42,6 +44,34 @@ const legacyCatalog = {
 };
 
 describe("research library models", () => {
+  it.effect(
+    "schema encoder preserves legacy capture bytes and private artifact keys",
+    Effect.fnUntraced(function* () {
+      const legacy = {
+        id: "capture",
+        sourceId: "source",
+        status: "blocked",
+        method: "fixture",
+        recordedAt: "2026-10-06",
+        capturedRevision: "",
+        requestedRevision: "",
+        complete: false,
+        artifacts: [artifact],
+        reason: "fixture",
+      };
+      const original = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(legacy);
+      const decoded = yield* S.decodeEffect(S.fromJsonString(LibraryCapture))(original);
+      const encoded = yield* encodeLibraryCaptureJson(decoded);
+      expect(encoded).toBe(original);
+      const privateText = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+        ...legacy,
+        artifacts: [{ accessClass: "private", ...artifact }],
+      });
+      const privateCapture = yield* S.decodeEffect(S.fromJsonString(LibraryCapture))(privateText);
+      const privateEncoded = yield* encodeLibraryCaptureJson(privateCapture);
+      expect(privateEncoded).toBe(privateText);
+    })
+  );
   it.effect(
     "decodes v1 catalog JSON with public visibility and empty provenance collections",
     Effect.fnUntraced(function* () {
