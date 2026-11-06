@@ -13,11 +13,10 @@ import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Tuple from "effect/Tuple";
 import { makeCitationCaseNamePredicates } from "./CaseNamePredicates.ts";
 import {
+  copyCitationMetadataPatterns,
   decodeCitationMetadataConfiguration,
-  fingerprintCitationMetadataPattern,
   makeCitationMetadataOperation,
 } from "./MetadataComposition.ts";
 import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
@@ -364,17 +363,10 @@ export const makeCitationCaseNameScan = Effect.fn("Citation.makeCaseNameScan")(f
     Effect.mapError(() => fail("invalid-configuration"))
   );
   const runtime = CitationNativeProcessRuntime.make({ ...rawRuntime });
-  const patterns = yield* makeCitationRegexInput(limits, "pattern");
-  const entries = yield* Effect.forEach(
-    R.toEntries(decoded.patterns),
-    Effect.fn("Citation.ownCaseNamePattern")(function* ([name, raw]) {
-      const pattern = (yield* patterns.prepareUnicode(raw, () => Effect.void)).value.storage;
-      const hash = yield* fingerprintCitationMetadataPattern(pattern, () => fail("invalid-configuration"));
-      if (hash !== fingerprints[name]) return yield* fail("invalid-configuration");
-      return Tuple.make(name, pattern);
-    })
+  const patterns = yield* copyCitationMetadataPatterns(limits, decoded.patterns, fingerprints, () =>
+    fail("invalid-configuration")
   );
-  const ownedPatterns = yield* S.decodeUnknownEffect(Patterns)(R.fromEntries(entries)).pipe(
+  const ownedPatterns = yield* S.decodeUnknownEffect(Patterns)(patterns).pipe(
     Effect.mapError(() => fail("invalid-configuration"))
   );
   const config = CitationCaseNameScanConfiguration.make({

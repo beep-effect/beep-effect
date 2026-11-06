@@ -56,6 +56,27 @@ export const fingerprintCitationMetadataPattern = Effect.fn("Citation.fingerprin
       Effect.catchDefect(() => Effect.fail(invalid()))
     )
 );
+/** Own and authenticate fixed native patterns before retaining configuration.
+ * @internal @category operations @since 0.0.0
+ */
+export const copyCitationMetadataPatterns = Effect.fn("Citation.copyMetadataPatterns")(function* <K extends string, E>(
+  limits: CitationEngineLimits,
+  raw: R.ReadonlyRecord<K, CitationPythonUnicodeStorage>,
+  fingerprints: R.ReadonlyRecord<K, string>,
+  invalid: () => E
+) {
+  const input = yield* makeCitationRegexInput(limits, "pattern");
+  const entries = yield* Effect.forEach(
+    R.toEntries(raw),
+    Effect.fn("Citation.ownMetadataPattern")(function* ([name, value]) {
+      const pattern = (yield* input.prepareUnicode(value, () => Effect.void)).value.storage;
+      const hash = yield* fingerprintCitationMetadataPattern(pattern, invalid);
+      if (hash !== fingerprints[name]) return yield* Effect.fail(invalid());
+      return Tuple.make(name, pattern);
+    })
+  );
+  return R.fromEntries(entries);
+});
 type Dependencies =
   | Digest.Digest
   | ChildProcessSpawner

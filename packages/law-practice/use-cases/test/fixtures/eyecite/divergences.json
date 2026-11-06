@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "e5fad4c9ff79718fa36bf90842c0220da5f2d483706bd7915d7546679bbcace7",
+  "planSha256": "8148eb32928eeff4aac66b86a0135f02928b8b945a6aa05efe47e471f543b32d",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -268,7 +268,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/CaseNameScan.ts",
-          "sha256": "6e8bd3bcd5bc623c9e07d54595aa1b42e591b826d1f0a9843ff61a7299aff500"
+          "sha256": "6a4bcd3004392a3624625184f9a8af3fdf9311630fd515e588612648ab3e8185"
         },
         {
           "path": "packages/law-practice/server/test/CitationCaseNameScan.fixtures.ts",
@@ -321,6 +321,34 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-regex-case-flags.md",
           "sha256": "9b188e0ac94f038c6df396f097061bd7d6b3c5d6f1cf15020703a14893bb1f3c"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-stop-word-patterns.py",
+          "sha256": "1de3bcee927496802de42a41449d2f03ca9f3c993d3387c963bc3f0824108c80"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/StopWords.ts",
+          "sha256": "31edbb99cc6e21d776b6440339f338cc4914aaa8af14f6dc874f4d1df52c87ec"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationStopWords.fixtures.ts",
+          "sha256": "5413ddda7d1a6501d4107fc2079666993c263d0e6d81515f26c85bef77b3e950"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationStopWords.test.ts",
+          "sha256": "43a3c860fcbb232a87047866fe48ad3268d2642ffe9f9eb9a7dccdf7f27e9f67"
+        },
+        {
+          "path": "packages/law-practice/server/test/integration/CitationStopWords.test.ts",
+          "sha256": "0c991c99c8b8be3903c359ac495f714ef591cbbe0e32bede12e1cd34e566e8da"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/stop-word-patterns.json",
+          "sha256": "98bdf393eb38077254b0a241767ef935ee4adaf04184c0d29b08565b1c5fa1ae"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-stop-word-cleanup.md",
+          "sha256": "3dbb810e7f055cadd6e921a148c8cfee9ad5c7eb1df4068e539bca7e06ba44f1"
         }
       ],
       "workflowState": "audit",
@@ -1313,7 +1341,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/CaseNameScan.ts",
-          "sha256": "6e8bd3bcd5bc623c9e07d54595aa1b42e591b826d1f0a9843ff61a7299aff500"
+          "sha256": "6a4bcd3004392a3624625184f9a8af3fdf9311630fd515e588612648ab3e8185"
         },
         {
           "path": "packages/law-practice/server/test/CitationCaseNameScan.fixtures.ts",
@@ -1366,6 +1394,34 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-regex-case-flags.md",
           "sha256": "9b188e0ac94f038c6df396f097061bd7d6b3c5d6f1cf15020703a14893bb1f3c"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-stop-word-patterns.py",
+          "sha256": "1de3bcee927496802de42a41449d2f03ca9f3c993d3387c963bc3f0824108c80"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/StopWords.ts",
+          "sha256": "31edbb99cc6e21d776b6440339f338cc4914aaa8af14f6dc874f4d1df52c87ec"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationStopWords.fixtures.ts",
+          "sha256": "5413ddda7d1a6501d4107fc2079666993c263d0e6d81515f26c85bef77b3e950"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationStopWords.test.ts",
+          "sha256": "43a3c860fcbb232a87047866fe48ad3268d2642ffe9f9eb9a7dccdf7f27e9f67"
+        },
+        {
+          "path": "packages/law-practice/server/test/integration/CitationStopWords.test.ts",
+          "sha256": "0c991c99c8b8be3903c359ac495f714ef591cbbe0e32bede12e1cd34e566e8da"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/stop-word-patterns.json",
+          "sha256": "98bdf393eb38077254b0a241767ef935ee4adaf04184c0d29b08565b1c5fa1ae"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-stop-word-cleanup.md",
+          "sha256": "3dbb810e7f055cadd6e921a148c8cfee9ad5c7eb1df4068e539bca7e06ba44f1"
         }
       ],
       "workflowState": "audit",

@@ -81,7 +81,14 @@
         "packages/law-practice/server/test/CitationRegexCaseFlags.test.ts",
         "packages/law-practice/server/test/integration/CitationRegexCaseFlags.test.ts",
         "packages/law-practice/use-cases/test/fixtures/eyecite/regex-case-flags.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-regex-case-flags.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-regex-case-flags.md",
+        "goals/citation-extraction-engine/ops/probe-stop-word-patterns.py",
+        "packages/law-practice/server/src/internal/Citation/StopWords.ts",
+        "packages/law-practice/server/test/CitationStopWords.fixtures.ts",
+        "packages/law-practice/server/test/CitationStopWords.test.ts",
+        "packages/law-practice/server/test/integration/CitationStopWords.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/stop-word-patterns.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-stop-word-cleanup.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -403,7 +410,14 @@
         "packages/law-practice/server/test/CitationRegexCaseFlags.test.ts",
         "packages/law-practice/server/test/integration/CitationRegexCaseFlags.test.ts",
         "packages/law-practice/use-cases/test/fixtures/eyecite/regex-case-flags.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-regex-case-flags.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-regex-case-flags.md",
+        "goals/citation-extraction-engine/ops/probe-stop-word-patterns.py",
+        "packages/law-practice/server/src/internal/Citation/StopWords.ts",
+        "packages/law-practice/server/test/CitationStopWords.fixtures.ts",
+        "packages/law-practice/server/test/CitationStopWords.test.ts",
+        "packages/law-practice/server/test/integration/CitationStopWords.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/stop-word-patterns.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-stop-word-cleanup.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

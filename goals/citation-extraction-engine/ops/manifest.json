@@ -437,6 +437,10 @@
     {
       "path": "ops/probe-regex-case-flags.py",
       "purpose": "Observe original positional/scoped case-flag grammar, profiles and capture modes in both pinned engines, preserving lexical scope and directive/quantifier order."
+    },
+    {
+      "path": "ops/probe-stop-word-patterns.py",
+      "purpose": "Independently bind the two original cleanup patterns and all three regex-V0 flag profiles to frozen source and parser identities."
     }
   ]
 }
