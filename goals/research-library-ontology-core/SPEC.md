@@ -203,6 +203,14 @@ Lane `feat/research-library-ontology-core`
 
 Reverse: Rename the exports to the bare names in one mechanical pass; the class IRIs do not change
 
+### Library models are branded S.Opaque classes, not S.Class, under schema-first D1, 2026-11-06
+
+The SPEC asked for named S.Class models. The repo's schema-first lint (rule schema-first-inventory, D1) requires plain-data models to be branded S.Opaque over S.Struct, and repo standards outrank packet prose (GOAL.md and the SPEC source hierarchy). The models stay named exported classes (class LibrarySource extends S.Opaque<...>()(S.Struct({...}))). Their ontology identity comes from .annotate($I.class("Source")), the same form packages/foundation/modeling/ontology/test/Fold.test.ts folds, so the T-Box, the SHACL shapes and the S.Class acceptance intent (named, annotated, no anonymous exported S.Struct) are unchanged.
+
+Lane `feat/research-library-ontology-core`
+
+Reverse: Convert back to S.Class if D1 adopts an exception for ontology-bearing models; the fold output stays identical
+
 ### Library models stay in tooling; epistemic promotion is gated, 2026-11-06
 
 The research library keeps its domain model inside commands/Research/Library; a versioned Turtle T-Box in the library root is the shareable artifact. Promotion to the epistemic slice fails the specific-home-first gate with one consumer. Build location stays in @beep/repo-cli; beep-cli-composition moves the group later.
