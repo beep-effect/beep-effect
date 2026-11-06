@@ -34,6 +34,7 @@ import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -653,6 +654,39 @@ export const runClaudeNativeCanary = Effect.fn("HarnessEnrollment.claudeNativeCa
       Effect.timeout("110 seconds"),
       Effect.catchTag("TimeoutError", () => failed("source-timeout")),
       Effect.mapError((error) => (S.is(ClaudeNativeCanaryError)(error) ? error : failed("source"))),
+      // Effect.result retains typed failures; interruption needs its own post-cleanup terminal fact.
+      Effect.onExit((exit) =>
+        Effect.gen(function* () {
+          if (!Exit.hasInterrupts(exit) || !O.getOrElse(nativeSpawned, () => false)) return;
+          const outcome = O.isSome(nativeExit) ? (nativeExit.value !== 0 ? "failed" : "unknown") : "cancelled";
+          const writeLifecycle = (stage: (typeof diagnostic.Type)["stage"], delivery: "pending" | "acknowledged") =>
+            writeNativeAttemptDiagnostic(
+              request.attemptDirectory,
+              diagnostic.make({
+                requestBinding,
+                purpose: "lifecycle",
+                stage,
+                nativeSpawned,
+                nativeExitStatus: nativeExit,
+                observedStdoutBytes: observedBytes,
+                outputComplete,
+                protocol: O.none(),
+                failurePhase: O.some("source"),
+                protocolFailure,
+                lifecycleOutcome: O.some(outcome),
+                lifecycleDelivery: O.some(delivery),
+              })
+            );
+          yield* writeLifecycle("dispatch-intent", "pending").pipe(Effect.ignoreCause);
+          const terminal = yield* postFact(
+            ObservationLaunchFact.cases.Finished.make({ launchId: request.launchId, outcome })
+          ).pipe(Effect.exit);
+          yield* writeLifecycle(
+            Exit.isSuccess(terminal) ? "validated" : "pending",
+            Exit.isSuccess(terminal) ? "acknowledged" : "pending"
+          ).pipe(Effect.ignoreCause);
+        })
+      ),
       Effect.result
     );
     const sourceDiagnostic = yield* saveSource(

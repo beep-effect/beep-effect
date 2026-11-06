@@ -8,6 +8,7 @@ import * as S from "effect/Schema";
 import {
   decodeGrokCanaryOutput,
   GrokCanarySource,
+  observeGrokNativeFailure,
   observeGrokNativeFailureClass,
   observeGrokReportedNotSignedIn,
 } from "./grok-exec-wire.ts";
@@ -233,3 +234,29 @@ it.layer(NodeCrypto.layer)((it) => {
     );
   }
 });
+
+for (const [input, exit, reason] of [
+  [stream([{ type: "error", message: "PRIVATE_UNMATCHED" }]), 1, "unmatched-literal"],
+  [stream([{ type: "error", error: { message: "PRIVATE_NESTED" }, code: "PRIVATE_CODE" }]), 1, "unsupported-envelope"],
+  ["{", 1, "malformed-stream"],
+  [
+    stream([
+      { type: "error", message: "Not signed in" },
+      { type: "error", message: "PRIVATE_OTHER" },
+    ]),
+    1,
+    "ambiguous-errors",
+  ],
+  ["x".repeat(1048577), 1, "bounds"],
+  [stream([{ type: "text", data: "PRIVATE_TEXT" }]), 1, "no-error"],
+  [stream([{ type: "error", message: "Not signed in" }]), 0, "unsupported-exit"],
+] as const) {
+  it.effect(`retains only a finite reason for Unknown: ${reason}`, () =>
+    Effect.gen(function* () {
+      const value = yield* observeGrokNativeFailure(input, exit);
+      expect(value.classification).toBe("Unknown");
+      expect(value.unknownReason).toEqual(O.some(reason));
+      expect(JSON.stringify(value)).not.toContain("PRIVATE_");
+    })
+  );
+}

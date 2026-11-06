@@ -190,3 +190,26 @@ output was discarded. Its cause remains Unknown. Only a fresh owner-admitted,
 independently reviewed single-use attempt can exercise this observer against
 new native output. Offline fixtures validate the closed projection and retained
 metadata; they do not establish real account, quota, model or network diagnosis.
+
+
+## Failure lifecycle receipts
+
+Once the owned native process is observed, source failure or interruption emits
+`Finished` after that process scope is released. An observed nonzero exit records
+`failed`; an observed zero exit rejected by collection records `unknown`; an
+interruption or deadline with no observed exit records `cancelled`. These facts
+identify an attempt outcome without inventing a session, native timestamp, usage,
+or successful response. They do not produce a normalized LLM span.
+
+The producer retains a private finite lifecycle intent before delivery and records
+an acknowledged or pending result. An uncertain or refused terminal acknowledgement
+never replaces the original source failure and never replays the native source.
+Successful source metadata replay continues to use the existing exact, idempotent
+lifecycle facts. Later trace transport failure is outside source terminalization.
+
+When failure classification is Unknown, an optional closed structural reason can
+report unsupported exit, bounds, missing error, malformed stream, unsupported
+envelope, ambiguous errors, or unmatched literal. It retains no arbitrary message,
+code, body, identifier, or fingerprint and cannot recover the discarded f5 error.
+The actual historical f5 journal contains Prepared and Started only; this change
+does not alter that journal or retroactively manufacture its missing Finished.

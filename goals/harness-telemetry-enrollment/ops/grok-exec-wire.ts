@@ -116,6 +116,31 @@ export const GrokNativeFailureClass = S.Literals([
   })
 );
 
+/** Closed reasons that a transient error stream cannot support a diagnosis.
+ * **Example** (Inspect the finite reason domain)
+ * ```ts
+ * console.log(GrokNativeFailureUnknownReason.literals.length)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const GrokNativeFailureUnknownReason = S.Literals([
+  "unsupported-exit",
+  "bounds",
+  "no-error",
+  "malformed-stream",
+  "unsupported-envelope",
+  "ambiguous-errors",
+  "unmatched-literal",
+]).pipe(
+  $I.annoteSchema("GrokNativeFailureUnknownReason", {
+    description: "Closed structural/qualification reasons only; no message, field names, code or body is retained.",
+  })
+);
+const unknown = (reason: typeof GrokNativeFailureUnknownReason.Type) => ({
+  classification: "Unknown" as const,
+  unknownReason: O.some(reason),
+});
 /** Classify bounded transient native error envelopes with a closed, case-sensitive literal allowlist.
  * **Details** Installed 1.0.77 public binary strings qualify `Not signed in`,
  * `SuperGrok subscription required`, `Model not found in config.toml [model.*]`,
@@ -125,7 +150,7 @@ export const GrokNativeFailureClass = S.Literals([
  * Multiple error rows, malformed rows and unsupported shapes remain Unknown.
  * **Example** (Inspect the bounded observer)
  * ```ts
- * console.log(typeof observeGrokNativeFailureClass)
+ * console.log(typeof observeGrokNativeFailure)
  * ```
  * @param stdout - Transient native NDJSON; never retained.
  * @param exitStatus - Known nonzero native exit.
@@ -133,30 +158,26 @@ export const GrokNativeFailureClass = S.Literals([
  * @category decoding
  * @since 0.0.0
  */
-export const observeGrokNativeFailureClass = Effect.fn("HarnessEnrollment.observeGrokNativeFailureClass")(function* (
+export const observeGrokNativeFailure = Effect.fn("HarnessEnrollment.observeGrokNativeFailure")(function* (
   stdout: string,
   exitStatus: number
 ) {
-  if (
-    !Number.isInteger(exitStatus) ||
-    exitStatus === 0 ||
-    Math.abs(exitStatus) > 4096 ||
-    Buffer.byteLength(stdout) > 1048576
-  )
-    return "Unknown" as const;
+  if (!Number.isInteger(exitStatus) || exitStatus === 0 || Math.abs(exitStatus) > 4096)
+    return unknown("unsupported-exit");
+  if (Buffer.byteLength(stdout) > 1048576) return unknown("bounds");
   const lines = A.filter(Str.split(stdout, "\n"), Str.isNonEmpty);
-  if (lines.length === 0 || lines.length > 2048 || A.some(lines, (line) => Buffer.byteLength(line) > 65536))
-    return "Unknown" as const;
+  if (lines.length === 0) return unknown("no-error");
+  if (lines.length > 2048 || A.some(lines, (line) => Buffer.byteLength(line) > 65536)) return unknown("bounds");
   let report: typeof GrokNativeFailureClass.Type = "Unknown";
   let errors = 0;
   for (const line of lines) {
     const envelope = yield* S.decodeEffect(S.fromJsonString(S.Struct({ type: S.String })))(line).pipe(Effect.option);
-    if (O.isNone(envelope)) return "Unknown" as const;
+    if (O.isNone(envelope)) return unknown("malformed-stream");
     if (envelope.value.type !== "error") continue;
     errors++;
-    if (errors > 1) return "Unknown" as const;
+    if (errors > 1) return unknown("ambiguous-errors");
     const event = yield* S.decodeEffect(S.fromJsonString(reportedError))(line).pipe(Effect.option);
-    if (O.isNone(event)) return "Unknown" as const;
+    if (O.isNone(event)) return unknown("unsupported-envelope");
     const message = event.value.message;
     if (
       message === "Not signed in" ||
@@ -171,8 +192,23 @@ export const observeGrokNativeFailureClass = Effect.fn("HarnessEnrollment.observ
     )
       report = "network";
   }
-  return report;
+  return report === "Unknown"
+    ? unknown(errors === 0 ? "no-error" : "unmatched-literal")
+    : { classification: report, unknownReason: O.none<typeof GrokNativeFailureUnknownReason.Type>() };
 });
+/** Read only the finite class from the bounded structural observer.
+ * **Example** (Inspect the class-only compatibility observer)
+ * ```ts
+ * console.log(typeof observeGrokNativeFailureClass)
+ * ```
+ * @param stdout - Bounded transient native NDJSON.
+ * @param exitStatus - Known native exit.
+ * @returns Finite class only; structural reasons remain in the richer observer.
+ * @category decoding
+ * @since 0.0.0
+ */
+export const observeGrokNativeFailureClass = (stdout: string, exitStatus: number) =>
+  observeGrokNativeFailure(stdout, exitStatus).pipe(Effect.map((value) => value.classification));
 const wire = S.Union([
   S.Struct({
     type: S.tag("available_commands"),

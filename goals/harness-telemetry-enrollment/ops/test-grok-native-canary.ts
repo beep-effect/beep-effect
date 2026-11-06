@@ -10,7 +10,11 @@ import * as Os from "node:os";
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- Only generated private fixture paths are manipulated.
 import * as Path from "node:path";
 import { promisify } from "node:util";
-import { ObservationLaunchIdentity, ObservationLaunchReceipt } from "@beep/repo-ai-metrics/observation-launch-facts";
+import {
+  ObservationLaunchFact,
+  ObservationLaunchIdentity,
+  ObservationLaunchReceipt,
+} from "@beep/repo-ai-metrics/observation-launch-facts";
 import { ObservationLaunchContext, ObservationLaunchSubmission } from "@beep/repo-ai-metrics/observation-launch-http";
 import { hashPrivateIdentifier } from "@beep/repo-ai-metrics/privacy";
 import { Sha256Hex } from "@beep/schema";
@@ -18,6 +22,8 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -39,6 +45,8 @@ vi.mock("node:fs/promises", async (importOriginal) => {
   const original = await importOriginal<typeof import("node:fs/promises")>();
   return { ...original, lstat: vi.fn(original.lstat), realpath: vi.fn(original.realpath) };
 });
+
+import { NativeAttemptDiagnostic } from "./native-attempt-diagnostic.ts";
 
 const id = (c: string) => Sha256Hex.make(Str.repeat(64)(c));
 const digest = (text: string | Uint8Array) => createHash("sha256").update(text).digest("hex");
@@ -72,7 +80,7 @@ int main(int argc,char **argv) {
  int model=0,effort=0,deny=0;
  for(int i=1;i+1<argc;i++){if(!strcmp(argv[i],"-m")&&!strcmp(argv[i+1],"grok-4.7"))model=1;if(!strcmp(argv[i],"--effort")&&!strcmp(argv[i+1],"medium"))effort=1;if(!strcmp(argv[i],"--disallowed-tools")){int commas=0;for(char *c=argv[i+1];*c;c++)if(*c==',')commas++;deny=commas==22&&strstr(argv[i+1],"read_file")&&strstr(argv[i+1],"use_tool")&&strstr(argv[i+1],"image_gen");}}
  if(!model||!effort||!deny)return 86;
- usleep(200000);
+ usleep(!strcmp(mode,"hang")?5000000:200000);
  fputs("PRIVATE_STDERR_SYNTHETIC_ONLY",stderr);
  if(!strcmp(mode,"source-fail"))return 7;
  if(!strcmp(mode,"reported-not-signed-in")){puts("{\"type\":\"error\",\"message\":\"PRIVATE_PREFIX Not signed in PRIVATE_SUFFIX\",\"cwd\":\"PRIVATE_CWD\",\"spend\":\"PRIVATE_SPEND\"}");return 1;}
@@ -93,6 +101,7 @@ int main(int argc,char **argv) {
 const fixture = async (
   options: {
     readonly rejectTraceOnce?: boolean;
+    readonly terminalAck?: "lost" | "refused";
     readonly mode?: string;
     readonly driftAuthAtPrepared?: boolean;
     readonly projectMcp?: string;
@@ -159,6 +168,13 @@ const fixture = async (
   let epoch = 2;
   let traces = 0;
   const facts: Array<string> = [];
+  const factData: Array<ObservationLaunchFact> = [];
+  const factAttempts: Array<string> = [];
+  let cleanupBeforeFinished = false;
+  let onStarted = () => {};
+  const started = new Promise<void>((resolve) => {
+    onStarted = resolve;
+  });
   const server = Http.createServer((incoming, response) => {
     const handle = async () => {
       let body = "";
@@ -179,7 +195,44 @@ const fixture = async (
         );
       } else if (incoming.url === "/v1/launch-facts") {
         const submission = await Effect.runPromise(S.decodeEffect(S.fromJsonString(ObservationLaunchSubmission))(body));
-        facts.push(submission.fact._tag);
+        factAttempts.push(submission.fact._tag);
+        if (submission.fact._tag === "Finished") {
+          try {
+            const identity = await Fs.readFile(Path.join(request.nativeHome, "fixture-identity"), "utf8");
+            const pid = identity.split(":")[0];
+            try {
+              await Fs.stat(`/proc/${pid}`);
+            } catch {
+              cleanupBeforeFinished = true;
+            }
+          } catch {
+            /* No native fixture identity was produced. */
+          }
+          if (options.terminalAck === "refused") {
+            response.statusCode = 503;
+            response.end();
+            return;
+          }
+        }
+        const existing = factData.find((fact) => fact._tag === submission.fact._tag);
+        if (
+          existing !== undefined &&
+          (await Effect.runPromise(S.encodeEffect(S.fromJsonString(ObservationLaunchFact))(existing))) !==
+            (await Effect.runPromise(S.encodeEffect(S.fromJsonString(ObservationLaunchFact))(submission.fact)))
+        ) {
+          response.statusCode = 409;
+          response.end();
+          return;
+        }
+        if (existing === undefined) {
+          facts.push(submission.fact._tag);
+          factData.push(submission.fact);
+        }
+        if (submission.fact._tag === "Started") onStarted();
+        if (submission.fact._tag === "Finished" && options.terminalAck === "lost") {
+          response.destroy();
+          return;
+        }
         if (submission.fact._tag === "Prepared" && options.driftAuthAtPrepared === true) await Fs.utimes(auth, 1, 1);
         response.end(
           await Effect.runPromise(
@@ -262,6 +315,10 @@ const fixture = async (
     request,
     run,
     facts,
+    factData,
+    factAttempts,
+    started,
+    cleanupBeforeFinished: () => cleanupBeforeFinished,
     count,
     traces: () => traces,
     setEpoch: (value: number) => {
@@ -375,6 +432,21 @@ nativeCase("one real synthetic native process binds process/session and replays 
       expect(await f.count("source-count")).toBe(1);
       expect(await f.count("inspect-count")).toBe(2);
       expect(f.traces()).toBe(2);
+      expect(f.facts).toEqual(["Prepared", "Started", "SessionBound", "Finished"]);
+      expect(f.factData.at(-1)).toMatchObject({ _tag: "Finished", outcome: "succeeded" });
+      expect(f.factAttempts).toEqual([
+        "Prepared",
+        "Started",
+        "Prepared",
+        "Started",
+        "SessionBound",
+        "Finished",
+        "Prepared",
+        "Started",
+        "SessionBound",
+        "Finished",
+      ]);
+      expect(await Fs.readdir(f.request.attemptDirectory)).not.toContain("diagnostic-lifecycle-dispatch-intent.json");
       expect(await Fs.readFile(Path.join(f.request.attemptDirectory, "source.json"), "utf8")).toBe(raw);
       const marker = await Fs.lstat(Path.join(f.request.attemptDirectory, "attempted"));
       expect(marker.mode & 0o777).toBe(0o600);
@@ -695,3 +767,88 @@ nativeCase("a changed retained session-context pin cannot replay metadata or rel
     }
   })
 );
+
+for (const [mode, outcome] of [
+  ["source-fail", "failed"],
+  ["wrong-reply", "unknown"],
+] as const) {
+  nativeCase(`terminalizes the closed native attempt without a trace: ${mode}`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ mode });
+      try {
+        const first = await Effect.runPromise(f.run.pipe(Effect.result));
+        expect(first._tag).toBe("Failure");
+        expect(f.facts).toEqual(["Prepared", "Started", "Finished"]);
+        expect(f.factData.at(-1)).toMatchObject({ _tag: "Finished", outcome });
+        expect(f.cleanupBeforeFinished()).toBe(true);
+        const raw = await Fs.readFile(
+          Path.join(f.request.attemptDirectory, "diagnostic-lifecycle-validated.json"),
+          "utf8"
+        );
+        const lifecycle = await Effect.runPromise(S.decodeEffect(S.fromJsonString(NativeAttemptDiagnostic))(raw));
+        expect(lifecycle.lifecycleOutcome).toEqual(O.some(outcome));
+        expect(lifecycle.lifecycleDelivery).toEqual(O.some("acknowledged"));
+        expect(raw).not.toContain("PRIVATE_");
+        expect(raw).not.toContain("synthetic-salt");
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(f.factAttempts).toEqual(["Prepared", "Started", "Finished"]);
+        expect(await f.count("source-count")).toBe(1);
+        expect(f.traces()).toBe(0);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+for (const terminalAck of ["lost", "refused"] as const) {
+  nativeCase(`uncertain terminal ACK preserves the original source failure: ${terminalAck}`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ mode: "source-fail", terminalAck });
+      try {
+        const first = await Effect.runPromise(f.run.pipe(Effect.result));
+        expect(first._tag).toBe("Failure");
+        if (first._tag === "Failure") expect(first.failure).toMatchObject({ phase: "source" });
+        expect(f.factData.filter((fact) => fact._tag === "Finished")).toHaveLength(terminalAck === "lost" ? 1 : 0);
+        expect(f.cleanupBeforeFinished()).toBe(true);
+        const filename = Path.join(f.request.attemptDirectory, "diagnostic-lifecycle-pending.json");
+        const raw = await Fs.readFile(filename, "utf8");
+        const lifecycle = await Effect.runPromise(S.decodeEffect(S.fromJsonString(NativeAttemptDiagnostic))(raw));
+        expect(lifecycle.lifecycleOutcome).toEqual(O.some("failed"));
+        expect(lifecycle.lifecycleDelivery).toEqual(O.some("pending"));
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(await Fs.readFile(filename, "utf8")).toBe(raw);
+        expect(await f.count("source-count")).toBe(1);
+        expect(f.traces()).toBe(0);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+for (const stop of ["interrupt", "deadline"] as const) {
+  nativeCase(`closes an interrupted native attempt after child cleanup: ${stop}`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ mode: "hang" });
+      try {
+        if (stop === "interrupt") {
+          const fiber = Effect.runFork(f.run);
+          await f.started;
+          await Effect.runPromise(Fiber.interrupt(fiber));
+          const exit = await Effect.runPromise(Fiber.await(fiber));
+          expect(Exit.hasInterrupts(exit)).toBe(true);
+        } else {
+          const result = await Effect.runPromise(f.run.pipe(Effect.timeout("800 millis"), Effect.result));
+          expect(result._tag).toBe("Failure");
+          if (result._tag === "Failure") expect(result.failure).toMatchObject({ _tag: "TimeoutError" });
+        }
+        expect(f.facts).toEqual(["Prepared", "Started", "Finished"]);
+        expect(f.factData.at(-1)).toMatchObject({ _tag: "Finished", outcome: "cancelled" });
+        expect(f.cleanupBeforeFinished()).toBe(true);
+        expect(await f.count("source-count")).toBe(1);
+        expect(f.traces()).toBe(0);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}

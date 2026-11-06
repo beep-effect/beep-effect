@@ -51,9 +51,11 @@ import {
   decodeGrokCanaryOutput,
   GrokCanarySource,
   GrokNativeFailureClass,
-  observeGrokNativeFailureClass,
+  GrokNativeFailureUnknownReason,
+  observeGrokNativeFailure,
   observeGrokReportedNotSignedIn,
 } from "./grok-exec-wire.ts";
+import { NativeAttemptDiagnostic, writeNativeAttemptDiagnostic } from "./native-attempt-diagnostic.ts";
 
 const $I = $RepoCliId.create("goals/harness-telemetry-enrollment/ops/grok-native-canary");
 const absolute = S.String.check(S.isPattern(/^\/[^\u0000-\u001f"\\]*$/), S.isMaxLength(4096)).pipe(
@@ -273,6 +275,9 @@ export class GrokNativeCanaryDiagnostic extends S.Opaque<
     nativeFailureClass: S.OptionFromOptionalKey(GrokNativeFailureClass).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
+    nativeFailureUnknownReason: S.OptionFromOptionalKey(GrokNativeFailureUnknownReason).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     nativeReportedNotSignedIn: S.OptionFromOptionalKey(S.Literal(true)).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
@@ -280,7 +285,9 @@ export class GrokNativeCanaryDiagnostic extends S.Opaque<
     .check(
       S.makeFilter(
         (value) =>
-          (O.isNone(value.nativeReportedNotSignedIn) && O.isNone(value.nativeFailureClass)) ||
+          (O.isNone(value.nativeReportedNotSignedIn) &&
+            O.isNone(value.nativeFailureClass) &&
+            O.isNone(value.nativeFailureUnknownReason)) ||
           (value.operation === "main" &&
             (value.stage === "native-exit" || value.stage === "outcome") &&
             value.producerDispatchAttempts === 1 &&
@@ -289,6 +296,14 @@ export class GrokNativeCanaryDiagnostic extends S.Opaque<
             O.isSome(value.nativeExitStatus) &&
             value.nativeExitStatus.value !== 0),
         { description: "A reported literal is retained only after a main native error stream and known nonzero exit." }
+      )
+    )
+    .check(
+      S.makeFilter(
+        (value) => O.isNone(value.nativeFailureUnknownReason) || O.contains("Unknown")(value.nativeFailureClass),
+        {
+          description: "Structural reason requires an explicitly Unknown native class.",
+        }
       )
     )
     .pipe(
@@ -1012,6 +1027,9 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
     let protocolTags = O.none<typeof protocolTagCounts.Type>();
     let nativeReportedNotSignedIn = O.none<true>();
     let nativeFailureClass = O.none<typeof GrokNativeFailureClass.Type>();
+    let nativeFailureUnknownReason = O.none<typeof GrokNativeFailureUnknownReason.Type>();
+    let sourceProcessId = O.none<Sha256Hex>();
+    let sourceTimedOut = false;
     const measure = (kind: "stdout" | "stderr", bytes: number) => {
       if (kind === "stdout") stdoutBytes = O.some(bytes);
       else stderrBytes = O.some(bytes);
@@ -1037,6 +1055,7 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
           protocolTags,
           nativeReportedNotSignedIn,
           nativeFailureClass,
+          nativeFailureUnknownReason,
         })
       );
     evidence = yield* Effect.gen(function* () {
@@ -1105,6 +1124,7 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
           );
           category = "process-binding-refused";
           const process = yield* observeProcess(request, Number(child.pid));
+          sourceProcessId = O.some(process.instanceId);
           category = "timeout-or-operational";
           yield* postFact(
             ObservationLaunchFact.cases.Started.make({
@@ -1116,8 +1136,11 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
           nativeExitStatus = O.some(captured.exitStatus);
           protocolTags = O.some(yield* countProtocolTags(captured.stdout));
           nativeReportedNotSignedIn = yield* observeGrokReportedNotSignedIn(captured.stdout, captured.exitStatus);
-          if (captured.exitStatus !== 0 && O.getOrThrow(protocolTags).error > 0)
-            nativeFailureClass = O.some(yield* observeGrokNativeFailureClass(captured.stdout, captured.exitStatus));
+          if (captured.exitStatus !== 0 && O.getOrThrow(protocolTags).error > 0) {
+            const observedFailure = yield* observeGrokNativeFailure(captured.stdout, captured.exitStatus);
+            nativeFailureClass = O.some(observedFailure.classification);
+            nativeFailureUnknownReason = observedFailure.unknownReason;
+          }
           yield* checkpoint(
             "diagnostic-040-native-exit.json",
             "native-exit",
@@ -1155,14 +1178,64 @@ export const runGrokNativeCanary = Effect.fn("HarnessEnrollment.grokNativeCanary
             process,
           });
         })
-      ).pipe(Effect.timeout("110 seconds"));
+      ).pipe(
+        Effect.timeout("110 seconds"),
+        Effect.catchTag("TimeoutError", () => {
+          sourceTimedOut = true;
+          return failed("source");
+        })
+      );
       category = "retention-refused";
       const encoded = yield* encodeEvidence(completed);
       yield* io(() => durableCreate(request.attemptDirectory, "source.json", encoded), "source");
       return completed;
     }).pipe(
       Effect.onExit((exit) =>
-        checkpoint("diagnostic-090-outcome.json", "outcome", Exit.isSuccess(exit) ? "accepted" : category)
+        Effect.gen(function* () {
+          // This hook runs after the owned process scope has released its child.
+          if (Exit.isFailure(exit)) {
+            if (O.isSome(sourceProcessId)) {
+              const outcome = O.isSome(nativeExitStatus)
+                ? nativeExitStatus.value !== 0
+                  ? "failed"
+                  : "unknown"
+                : Exit.hasInterrupts(exit) || sourceTimedOut
+                  ? "cancelled"
+                  : "unknown";
+              const lifecycle = (
+                stage: "dispatch-intent" | "validated" | "pending",
+                delivery: "pending" | "acknowledged"
+              ) =>
+                writeNativeAttemptDiagnostic(
+                  request.attemptDirectory,
+                  NativeAttemptDiagnostic.make({
+                    requestBinding,
+                    purpose: "lifecycle",
+                    stage,
+                    nativeSpawned: O.some(true),
+                    nativeExitStatus,
+                    observedStdoutBytes: O.getOrElse(stdoutBytes, () => 0),
+                    outputComplete: O.isSome(nativeExitStatus),
+                    protocol: O.none(),
+                    failurePhase: O.some(sourceTimedOut ? "source-timeout" : "source"),
+                    protocolFailure: O.none(),
+                    lifecycleOutcome: O.some(outcome),
+                    lifecycleDelivery: O.some(delivery),
+                  })
+                );
+              // Intent and uncertain ACKs survive privately; secondary failures never replace the source cause.
+              yield* lifecycle("dispatch-intent", "pending").pipe(Effect.ignoreCause);
+              const terminal = yield* postFact(
+                ObservationLaunchFact.cases.Finished.make({ launchId: request.launchId, outcome })
+              ).pipe(Effect.exit);
+              yield* lifecycle(
+                Exit.isSuccess(terminal) ? "validated" : "pending",
+                Exit.isSuccess(terminal) ? "acknowledged" : "pending"
+              ).pipe(Effect.ignoreCause);
+            }
+            yield* checkpoint("diagnostic-090-outcome.json", "outcome", category).pipe(Effect.ignoreCause);
+          } else yield* checkpoint("diagnostic-090-outcome.json", "outcome", "accepted");
+        })
       ),
       Effect.mapError(() => failed("source"))
     );
