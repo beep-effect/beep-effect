@@ -1721,6 +1721,49 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
       })
     );
 
+    // W7a Y14 caveat (SPEC D-18): `check-ignore --no-index` answers what `ls-files --cached --ignored
+    // --exclude-standard` asked for tracked inputs, a parent-directory rule included.
+    it.effect("forces a reviewed tracked path under an ignored directory when restaging the index", () =>
+      Effect.gen(function* () {
+        const { tempContext, tmpDir } = yield* trackedFileRepository;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const vendoredPath = path.join(tmpDir, "vendor", "lib.txt");
+
+        yield* fs.makeDirectory(path.join(tmpDir, "vendor"));
+        yield* fs.writeFileString(vendoredPath, "original\n");
+        yield* fs.writeFileString(path.join(tmpDir, ".gitignore"), "vendor/\n");
+        yield* runGit(tmpDir, ["add", ".gitignore"]);
+        yield* runGit(tmpDir, ["add", "--force", "vendor/lib.txt"]);
+        yield* runGit(tmpDir, ["commit", "-m", "vendor a tracked file under an ignored directory"]);
+        yield* fs.writeFileString(vendoredPath, "updated\n");
+        yield* runGit(tmpDir, ["add", "--force", "vendor/lib.txt"]);
+
+        yield* stageReviewedPublishIntent(
+          tempContext,
+          YeetStagedPublishIntent.make({ paths: ["vendor/lib.txt"] }),
+          false
+        );
+
+        const stagedStatus = yield* runGitStatus(tmpDir);
+        expect(stagedStatus).toBe("M  vendor/lib.txt");
+        const candidates = ["vendor/lib.txt", ".gitignore"];
+        const ignoredByKit = yield* Effect.flatMap(Git, (git) =>
+          git.checkIgnore(tmpDir, candidates, { noIndex: true })
+        );
+        const ignoredByGit = yield* runGitOutputLines(tmpDir, [
+          "ls-files",
+          "--cached",
+          "--ignored",
+          "--exclude-standard",
+          "--",
+          ...candidates,
+        ]);
+        expect(ignoredByKit).toEqual(ignoredByGit);
+        expect(ignoredByKit).toEqual(["vendor/lib.txt"]);
+      })
+    );
+
     it.effect("keeps a reviewed untrack staged when the file stays on disk", () =>
       Effect.gen(function* () {
         const { filePath, tempContext, tmpDir } = yield* trackedFileRepository;

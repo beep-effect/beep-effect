@@ -63,7 +63,13 @@ import {
   FinalCheckRefreshRefused,
   FinalCheckStatusDrift,
 } from "./FinalCheckRefresh.schemas.ts";
-import { runGitFoldedStdout, runGitOutput, runGitPathList } from "./GitExec.ts";
+import {
+  changedYeetPaths,
+  countYeetRevisions,
+  resolveYeetMergeBase,
+  runGitFoldedStdout,
+  YeetChangedPathsQuery,
+} from "./GitExec.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -210,11 +216,8 @@ export const decideFinalCheckRefresh = (facts: FinalCheckRefreshFacts): FinalChe
 
 type GitServices = Digest.Digest | ChildProcessSpawner.ChildProcessSpawner | Git;
 
-const gitLine = (repoRoot: string, args: ReadonlyArray<string>) =>
-  runGitOutput(repoRoot, args).pipe(Effect.map(Str.trim));
-
 const changedPaths = (repoRoot: string, from: string, to: string) =>
-  runGitPathList(repoRoot, ["diff", "--name-only", "--no-renames", "-z", from, to]).pipe(
+  changedYeetPaths(repoRoot, YeetChangedPathsQuery.make({ base: from, head: to, noRenames: true })).pipe(
     Effect.map(HashSet.fromIterable)
   );
 
@@ -380,6 +383,7 @@ export const finalCheckPatchIdentityDigest = <E, R>(
     );
   });
 
+// KEEP (D-18): a streamed byte fold; the patch identity keeps every byte, invalid UTF-8 included, and the kit buffers decoded text.
 const filePatch = (repoRoot: string, from: string, to: string, path: string) =>
   runGitFoldedStdout(
     repoRoot,
@@ -467,8 +471,8 @@ export const collectFinalCheckRefreshFacts = Effect.fn("Yeet.collectFinalCheckRe
   finalHead: string
 ): Effect.fn.Return<FinalCheckRefreshFacts, YeetCommandError, GitServices | SecureRandom.SecureRandom> {
   const r = receipt.headSha;
-  const mbr = yield* gitLine(repoRoot, ["merge-base", r, base]);
-  const mbf = yield* gitLine(repoRoot, ["merge-base", finalHead, base]);
+  const mbr = yield* resolveYeetMergeBase(repoRoot, r, base);
+  const mbf = yield* resolveYeetMergeBase(repoRoot, finalHead, base);
   const changed = yield* changedPaths(repoRoot, r, finalHead);
   const mainChanged = yield* changedPaths(repoRoot, mbr, mbf);
   const ownChanges = yield* Effect.filter(
@@ -545,8 +549,8 @@ export const findFinalCheckRefreshReceipt = Effect.fn("Yeet.findFinalCheckRefres
     (head) => isAncestor(repoRoot, head, finalHead)
   );
   const distances = yield* Effect.forEach(ancestors, (head) =>
-    gitLine(repoRoot, ["rev-list", "--count", `${head}..${finalHead}`]).pipe(
-      Effect.map((count) => [Number(count), head] as const),
+    countYeetRevisions(repoRoot, `${head}..${finalHead}`).pipe(
+      Effect.map((count) => [count, head] as const),
       Effect.option
     )
   );

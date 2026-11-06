@@ -485,7 +485,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })
         expect(A.some(ran, Str.includes("gone.test.ts"))).toBe(false);
         assertSome(
           A.findFirst(diffs, Str.includes("moved.test.ts")),
-          `git diff --unified=0 --no-color --find-renames=50% ${BASE} HEAD -- old/test/moved.test.ts new/test/moved.test.ts`
+          `git diff --no-color --no-ext-diff --unified=0 --find-renames=50% --end-of-options ${BASE} HEAD -- old/test/moved.test.ts new/test/moved.test.ts`
         );
       })
     );

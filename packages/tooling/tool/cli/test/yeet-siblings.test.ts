@@ -1,4 +1,5 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
+import { Git } from "@beep/git/Git";
 import {
   broadcastPacketSiblings,
   PacketSibling,
@@ -196,6 +197,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
         const github = recordedGithub(routes);
         const report = yield* readPacketSiblings(context, 7).pipe(
           github.provide,
+          Effect.provideServiceEffect(Git, Git.make),
           provideSpawner(scriptedGit(gitCalls))
         );
         expect(report.slugs).toEqual(["alpha"]);
@@ -221,6 +223,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
         const github = recordedGithub(routes);
         const report = yield* readPacketSiblings(context, 11).pipe(
           github.provide,
+          Effect.provideServiceEffect(Git, Git.make),
           provideSpawner(scriptedGit(gitCalls))
         );
         expect(report.slugs).toEqual([]);
@@ -237,6 +240,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
         const github = recordedGithub(routes);
         yield* broadcastPacketSiblings(context, 7, MERGE_SHA).pipe(
           github.provide,
+          Effect.provideServiceEffect(Git, Git.make),
           provideSpawner(scriptedGit(gitCalls))
         );
         const comments = A.filter(
@@ -268,7 +272,11 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
           if (A.contains(args, "rev-parse")) return { stdout: "not a sha", exit: 128 };
           return { stdout: "", exit: 0 };
         });
-        const report = yield* readPacketSiblings(context, 7).pipe(github.provide, provideSpawner(git));
+        const report = yield* readPacketSiblings(context, 7).pipe(
+          github.provide,
+          Effect.provideServiceEffect(Git, Git.make),
+          provideSpawner(git)
+        );
         assertNone(report.baseSha);
         expect(A.map(report.siblings, (s) => [s.prNumber, s.probe, s.conflicts])).toEqual([
           [8, "clean", []],
@@ -293,7 +301,11 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
             ? { stdout: "fatal: not something we can merge", exit: 128 }
             : { stdout: "", exit: 0 }
         );
-        const report = yield* readPacketSiblings(context, 7).pipe(github.provide, provideSpawner(git));
+        const report = yield* readPacketSiblings(context, 7).pipe(
+          github.provide,
+          Effect.provideServiceEffect(Git, Git.make),
+          provideSpawner(git)
+        );
         expect(report.siblings[0]?.probe).toBe("unavailable");
       })
     );
@@ -307,6 +319,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
         const github = recordedGithub(refusing);
         const report = yield* broadcastPacketSiblings(context, 7, MERGE_SHA).pipe(
           github.provide,
+          Effect.provideServiceEffect(Git, Git.make),
           provideSpawner(scriptedGit([]))
         );
         expect(A.map(report.siblings, (s) => s.prNumber)).toEqual([8]);
@@ -325,6 +338,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
         const github = recordedGithub(flaky);
         const report = yield* broadcastPacketSiblings(context, 7, MERGE_SHA).pipe(
           github.provide,
+          Effect.provideServiceEffect(Git, Git.make),
           provideSpawner(scriptedGit([]))
         );
         expect(A.map(report.siblings, (s) => s.prNumber)).toEqual([8]);
@@ -347,6 +361,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
         const github = recordedGithub(lonely);
         const report = yield* broadcastPacketSiblings(context, 7, MERGE_SHA).pipe(
           github.provide,
+          Effect.provideServiceEffect(Git, Git.make),
           provideSpawner(scriptedGit([]))
         );
         expect(report.siblings).toEqual([]);
