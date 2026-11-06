@@ -1717,7 +1717,6 @@
     {"name":"Goals.filesystemReflectionFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.filesystemResearchFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.gitAdvisories","owner":"@beep/repo-cli","family":"tooling","conforms":true},
-    {"name":"Goals.gitOutputOrNone","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.graphStatement","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.listGoalPackets","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.listGoalPacketsStrict","owner":"@beep/repo-cli","family":"tooling","conforms":true},

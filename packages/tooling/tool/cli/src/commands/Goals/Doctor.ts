@@ -19,6 +19,7 @@
  */
 
 import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { findRepoRoot } from "@beep/repo-utils";
@@ -1014,10 +1015,6 @@ const gitAdapter: GitCommandErrorAdapter<GoalsGitError> = {
   onTruncated: O.none(),
 };
 
-const gitOutputOrNone = Effect.fn("Goals.gitOutputOrNone")(function* (args: ReadonlyArray<string>) {
-  return yield* runGitOutput(".", args, gitAdapter).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
-});
-
 type DoctorPacket = {
   readonly record: GoalPacketRecord;
   readonly manifest: O.Option<GoalManifest>;
@@ -1190,14 +1187,15 @@ const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (packets: Reado
   let findings = A.empty<GoalDoctorFinding>();
   let notes = A.empty<string>();
 
-  const shallow = yield* gitOutputOrNone(["rev-parse", "--is-shallow-repository"]);
+  const git = yield* Git;
+  const shallow = yield* git.isShallow(".").pipe(Effect.asSome, Effect.orElseSucceed(O.none<boolean>));
   if (O.isNone(shallow)) {
     return {
       findings,
       notes: A.append(notes, "git history unavailable; staleness/completion-gate advisories skipped."),
     };
   }
-  if (Str.trim(shallow.value) === "true") {
+  if (shallow.value) {
     return {
       findings,
       notes: A.append(notes, "shallow git checkout; staleness/completion-gate advisories skipped."),
@@ -1205,17 +1203,28 @@ const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (packets: Reado
   }
 
   // Single-pass staleness walk: every path under goals/ touched in the window.
-  const recentPaths = yield* gitOutputOrNone([
-    "log",
-    `--since=${STALE_ACTIVE_DAYS}.days`,
-    "--name-only",
-    "--format=",
-    "--",
-    "goals/",
-  ]);
+  const recentPaths = yield* git.log(".", { since: `${STALE_ACTIVE_DAYS}.days`, paths: ["goals/"] }).pipe(
+    Effect.map(
+      flow(
+        A.flatMap((entry) => entry.paths),
+        A.join("\n"),
+        O.some
+      )
+    ),
+    Effect.orElseSucceed(O.none<string>)
+  );
   // Single-pass completion-gate heuristic: merge/squash subjects citing the
   // packet slug or the packet's recorded PR number.
-  const subjects = yield* gitOutputOrNone(["log", "--format=%s", "-n", "4000"]);
+  const subjects = yield* git.log(".", { limit: 4000, omitPaths: true }).pipe(
+    Effect.map(
+      flow(
+        A.map((entry) => entry.subject),
+        A.join("\n"),
+        O.some
+      )
+    ),
+    Effect.orElseSucceed(O.none<string>)
+  );
 
   // Shipped-but-open packets first: they take the slot the plain staleness
   // advisory would otherwise fill for the same slug.
