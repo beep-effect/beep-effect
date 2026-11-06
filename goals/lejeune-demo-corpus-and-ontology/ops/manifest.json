@@ -6,7 +6,7 @@
     "title": "LeJeune Demo Corpus and Ontology",
     "status": "active",
     "created": "2026-08-26",
-    "updated": "2026-08-27",
+    "updated": "2026-11-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/lejeune-demo-corpus-and-ontology",
@@ -23,7 +23,24 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 872,
+        "role": "supporting"
+      },
+      {
+        "number": 2756,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_lejeune-closeout-7b0d55794a03/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -81,5 +98,9 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P0-P2 complete on 2026-08-27: frozen fixtures, exact spans, ontology, cited rules, deterministic projections, live Anthropic recording, and offline replay are proven. P3 repository review and hosted merge-readiness are in progress."
+  "statusNote": "P0-P2 complete on 2026-08-27: frozen fixtures, exact spans, ontology, cited rules, deterministic projections, live Anthropic recording, and offline replay are proven. P3 repository review and hosted merge-readiness are in progress.",
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2756
+  }
 }
