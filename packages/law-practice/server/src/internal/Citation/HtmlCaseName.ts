@@ -3,7 +3,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Num from "effect/Number";
@@ -11,7 +11,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationCaseNameProcessPatch } from "./CaseNameProcess.ts";
 import { CitationHtmlTagGeometryInput, makeCitationHtmlTagGeometry } from "./HtmlTagGeometry.ts";
-import { copyCitationMetadataPatternConfiguration, makeCitationMetadataStage } from "./MetadataComposition.ts";
+import {
+  copyCitationMetadataPatternConfiguration,
+  decodeCitationMetadataWordRequest,
+  makeCitationMetadataStage,
+} from "./MetadataComposition.ts";
 import { citationMetadataWhitespaceBoundary, trimCitationMetadataBoundary } from "./MetadataStrings.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
@@ -130,11 +134,9 @@ const run = Effect.fn("Citation.extractHtmlCaseName")(function* (
   config: CitationHtmlCaseNameConfiguration,
   raw: unknown
 ) {
-  const request = yield* S.decodeUnknownEffect(S.toType(CitationHtmlCaseNameInput))(raw).pipe(
-    Effect.mapError(() => fail("invalid-input"))
+  const request = yield* decodeCitationMetadataWordRequest(limits, S.toType(CitationHtmlCaseNameInput), raw, () =>
+    fail("invalid-input")
   );
-  if (request.words.length > limits.tokens)
-    return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });
   if (request.index < 0 || request.index >= request.words.length) return yield* fail("invalid-index");
   const input = yield* makeCitationRegexInput(limits);
   const words = yield* Effect.forEach(

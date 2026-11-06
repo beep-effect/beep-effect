@@ -3,6 +3,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Bytes from "effect/Bytes";
@@ -141,6 +142,21 @@ type Dependencies =
   | CitationNativeProcessAdmission
   | CitationTextBudget
   | Scope.Scope;
+/** Decode a built-in word request before enforcing its captured token ceiling.
+ * Schema errors retain the caller's closed family error; oversize input uses
+ * the shared extraction safety failure before word preparation.
+ * @internal @category operations @since 0.0.0
+ */
+export const decodeCitationMetadataWordRequest = Effect.fn("Citation.decodeMetadataWordRequest")(function* <
+  C extends { readonly words: ReadonlyArray<unknown> },
+  I,
+  E,
+>(limits: CitationEngineLimits, schema: S.Codec<C, I>, raw: unknown, invalid: () => E) {
+  const request = yield* S.decodeUnknownEffect(schema)(raw).pipe(Effect.mapError(invalid));
+  if (request.words.length > limits.tokens)
+    return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });
+  return request;
+});
 const captureDependencies = Effect.fn("Citation.captureMetadataDependencies")(function* (limits: CitationEngineLimits) {
   const supplied = yield* Effect.serviceOption(CitationNativeProcessAdmission);
   const admission = O.isSome(supplied) ? supplied.value : yield* makeCitationNativeProcessAdmission(limits);

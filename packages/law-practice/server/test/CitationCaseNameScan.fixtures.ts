@@ -14,6 +14,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
   assertCitationMetadataEnclosingRefusal,
@@ -76,7 +77,10 @@ const Corpus = S.fromJsonString(
       "Complete initialized source states/errors and every real regex invocation, not reconstructed expected state.",
   })
 );
-const load = Effect.fn("CaseNameScanTest.load")(function* () {
+/** Read the complete byte-sealed original scan corpus and configuration.
+ * @internal @category testing @since 0.0.0
+ */
+export const readCitationCaseNameScanCorpus = Effect.fn("CaseNameScanTest.load")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const bytes = yield* fs.readFile(
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/case-name-scan.json", import.meta.url))
@@ -91,7 +95,7 @@ const install = Effect.fn("CaseNameScanTest.install")(function* (
   enclosing = false,
   controlled = false
 ) {
-  const corpus = yield* load();
+  const corpus = yield* readCitationCaseNameScanCorpus();
   const setup = yield* setupCitationMetadataRuntime(kind, maximum, enclosing, controlled, 8192);
   const configuration = { ...corpus.configuration, patterns: { ...corpus.configuration.patterns } };
   const scanner = yield* makeCitationCaseNameScan(setup.limits, setup.runtime, configuration).pipe(
@@ -99,7 +103,10 @@ const install = Effect.fn("CaseNameScanTest.install")(function* (
   );
   return { ...setup, corpus, configuration, stage: { apply: scanner.scan } };
 });
-const sourceError = (error: "IndexError" | "KeyError" | "TypeError", row: (typeof Corpus.Type.cases)[number]) =>
+/** Translate the original built-in scan failures for shared replay.
+ * @internal @category testing @since 0.0.0
+ */
+const sourceErrorReason = (error: "IndexError" | "KeyError" | "TypeError", row: (typeof Corpus.Type.cases)[number]) =>
   error === "KeyError"
     ? "missing-stop-word"
     : error === "TypeError"
@@ -107,6 +114,18 @@ const sourceError = (error: "IndexError" | "KeyError" | "TypeError", row: (typeo
       : row.request.index > row.request.words.length
         ? "index-out-of-range"
         : "empty-word";
+/** Original scan-error translation in data-first and pipeable forms.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationCaseNameScanErrorReason: {
+  (
+    error: Parameters<typeof sourceErrorReason>[0],
+    row: Parameters<typeof sourceErrorReason>[1]
+  ): ReturnType<typeof sourceErrorReason>;
+  (
+    row: Parameters<typeof sourceErrorReason>[1]
+  ): (error: Parameters<typeof sourceErrorReason>[0]) => ReturnType<typeof sourceErrorReason>;
+} = dual(2, sourceErrorReason);
 const assertScanRow = Effect.fn("CaseNameScanTest.row")(function* (
   stage: Effect.Success<ReturnType<typeof install>>["stage"],
   row: (typeof Corpus.Type.cases)[number]
@@ -114,7 +133,7 @@ const assertScanRow = Effect.fn("CaseNameScanTest.row")(function* (
   if (row.error !== null)
     return yield* assertCitationMetadataFailure(stage.apply(row.request), {
       _tag: "CitationCaseNameScanFailure",
-      reason: sourceError(row.error, row),
+      reason: citationCaseNameScanErrorReason(row.error, row),
     });
   const result = yield* stage.apply(row.request);
   expect(result.state, `source initialized scan ${row.id}`).toEqual(row.state);
@@ -179,7 +198,7 @@ export const assertCitationCaseNameScanLifetime = Effect.fn("CaseNameScanTest.li
 });
 /** The existing default ceiling still refuses expanded boundary patterns. */
 export const assertCitationCaseNameScanDefaultPolicy = Effect.fn("CaseNameScanTest.defaultPolicy")(function* () {
-  const corpus = yield* load();
+  const corpus = yield* readCitationCaseNameScanCorpus();
   const setup = yield* setupCitationMetadataRuntime("bun");
   for (const configuration of [
     null,

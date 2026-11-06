@@ -1,5 +1,14 @@
 # Citation Extraction Engine Plan
 
+Plain case-name composition checkpoint (2026-11-06): original default scanning
+and truthy-candidate processing now share one captured operation, Scope and text
+authority. A direct 256-call source corpus freezes the guard, all original scan
+failures and field/year preservation. Both runtime smokes pass with 72 confirmed
+children each; a near-complete allowance refuses during processing without a
+budget reset. Hosted full replay and final metadata ordering remain open.
+The HTML/plain word preflight duplication is shared in MetadataComposition.
+See [composition evidence](history/evidence/2026-11-06-plain-case-name-composition.md).
+
 HTML case-name target checkpoint (2026-11-06): all five source branches now
 connect prepared native HTML geometry to field-preserving metadata patches,
 using existing regex, cleanup and captured operation ownership. The eight-case

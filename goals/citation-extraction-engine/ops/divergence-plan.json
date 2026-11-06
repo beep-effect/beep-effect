@@ -170,7 +170,15 @@
         "packages/law-practice/server/src/internal/Citation/HtmlCaseName.ts",
         "packages/law-practice/server/test/CitationHtmlCaseName.fixtures.ts",
         "packages/law-practice/server/test/CitationHtmlCaseName.test.ts",
-        "packages/law-practice/server/test/integration/CitationHtmlCaseName.test.ts"
+        "packages/law-practice/server/test/integration/CitationHtmlCaseName.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-plain-case-name-composition.md",
+        "goals/citation-extraction-engine/ops/probe-plain-case-name.py",
+        "goals/citation-extraction-engine/ops/verify-plain-case-name.py",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/plain-case-name.json",
+        "packages/law-practice/server/src/internal/Citation/CaseName.ts",
+        "packages/law-practice/server/test/CitationCaseName.fixtures.ts",
+        "packages/law-practice/server/test/CitationCaseName.test.ts",
+        "packages/law-practice/server/test/integration/CitationCaseName.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

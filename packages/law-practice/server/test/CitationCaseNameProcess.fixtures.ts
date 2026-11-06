@@ -97,7 +97,10 @@ const CleanerCorpus = S.fromJsonString(
     description: "Independently sealed source cleanup patterns for composed name processing.",
   })
 );
-const load = Effect.fn("CaseNameProcessTest.load")(function* () {
+/** Read the original processing corpus and independently bound configuration.
+ * @internal @category testing @since 0.0.0
+ */
+export const readCitationCaseNameProcessCorpus = Effect.fn("CaseNameProcessTest.load")(function* () {
   const read = readCitationOracleFixture;
   const patterns = yield* read(
     "case-name-process-patterns",
@@ -113,7 +116,10 @@ const load = Effect.fn("CaseNameProcessTest.load")(function* () {
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   return { patterns, corpus, configuration: { ...patterns.configuration, cleaner: cleaner.configuration } };
 });
-const install = makeCitationMetadataFixture({ load, make: makeCitationCaseNameProcess });
+const install = makeCitationMetadataFixture({
+  load: readCitationCaseNameProcessCorpus,
+  make: makeCitationCaseNameProcess,
+});
 type Row = (typeof Corpus.Type.cases)[number];
 const request = (row: Row) => ({
   ...row.state,
@@ -161,7 +167,7 @@ export const replayCitationCaseNameProcess = Effect.fn("CaseNameProcessTest.repl
 });
 /** Exact source int conversion includes large values, parser spaces and digit ceilings. */
 export const assertCitationPythonIntegers = Effect.fn("CaseNameProcessTest.integers")(function* () {
-  const { patterns } = yield* load();
+  const { patterns } = yield* readCitationCaseNameProcessCorpus();
   const limits = (yield* defaultCitationEnginePolicy).limits;
   const input = yield* makeCitationRegexInput(limits);
   for (const row of patterns.integers) {

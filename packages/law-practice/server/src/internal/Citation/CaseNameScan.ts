@@ -3,7 +3,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -14,7 +14,11 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeCitationCaseNamePredicates } from "./CaseNamePredicates.ts";
-import { copyCitationMetadataPatternConfiguration, makeCitationMetadataStage } from "./MetadataComposition.ts";
+import {
+  copyCitationMetadataPatternConfiguration,
+  decodeCitationMetadataWordRequest,
+  makeCitationMetadataStage,
+} from "./MetadataComposition.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { citationPythonPointAt, concatCitationPythonRanges } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
@@ -137,15 +141,16 @@ const Input = S.toType(CitationCaseNameScanInput);
 const Config = S.toType(CitationCaseNameScanConfiguration);
 const Step = LiteralKit(["next", "continue", "stop"]);
 const bound = (index: number, length: number) => Num.max(0, Num.min(length, index < 0 ? length + index : index));
-const runScan = Effect.fn("Citation.runCaseNameScan")(function* (
+/** Execute default source scan inside an existing operation, Scope and text authority.
+ * @internal @category operations @since 0.0.0
+ */
+export const scanCitationCaseName = Effect.fn("Citation.runCaseNameScan")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
   config: CitationCaseNameScanConfiguration,
   raw: unknown
 ) {
-  const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-  if (request.words.length > limits.tokens)
-    return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });
+  const request = yield* decodeCitationMetadataWordRequest(limits, Input, raw, () => fail("invalid-input"));
   const input = yield* makeCitationRegexInput(limits);
   const budget = yield* CitationTextBudget;
   const predicates = yield* makeCitationCaseNamePredicates();
@@ -340,7 +345,10 @@ const runScan = Effect.fn("Citation.runCaseNameScan")(function* (
   }
   return yield* Ref.get(state);
 });
-const copyConfiguration = Effect.fn("Citation.copyCaseNameScanConfiguration")(function* (
+/** Copy the source-bound scan configuration for enclosing composition.
+ * @internal @category operations @since 0.0.0
+ */
+export const copyCitationCaseNameScanConfiguration = Effect.fn("Citation.copyCaseNameScanConfiguration")(function* (
   limits: CitationEngineLimits,
   decoded: CitationCaseNameScanConfiguration
 ) {
@@ -364,9 +372,9 @@ export const makeCitationCaseNameScan = makeCitationMetadataStage({
   method: "scan",
   schema: Config,
   invalid: invalidConfiguration,
-  own: copyConfiguration,
+  own: copyCitationCaseNameScanConfiguration,
   prepare: (limits, runtime, config, raw) =>
-    runScan(limits, runtime, config, raw).pipe(
+    scanCitationCaseName(limits, runtime, config, raw).pipe(
       Effect.catchTag("CitationCaseNamePredicateFailure", () => Effect.fail(fail("empty-word")))
     ),
   project: (state, reservedUnits) => CitationCaseNameScanResult.make({ state, reservedUnits }),
