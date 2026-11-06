@@ -53,8 +53,14 @@ const closingParen = Effect.fn("Citation.findUnbalancedParentheticalEnd")(functi
 });
 const spaces = HashSet.fromIterable(citationPythonTextData.whitespace);
 const pinBoundary = (point: number) => point === 44 || point === 32;
-const whitespaceBoundary = (point: number) => HashSet.has(spaces, String.fromCodePoint(point));
-const trimBoundary = Effect.fn("Citation.trimMetadataBoundary")(function* (
+/** Frozen Python whitespace membership for native source points.
+ * @internal @category predicates @since 0.0.0
+ */
+export const citationMetadataWhitespaceBoundary = (point: number) => HashSet.has(spaces, String.fromCodePoint(point));
+/** Visit a native boundary without projecting surrogate words or allocating text.
+ * @internal @category operations @since 0.0.0
+ */
+export const trimCitationMetadataBoundary = Effect.fn("Citation.trimMetadataBoundary")(function* (
   source: CitationPythonUnicodeValue,
   start: number,
   stop: number,
@@ -96,8 +102,14 @@ export const makeCitationPinCiteCleaner = Effect.fn("Citation.makePinCiteCleaner
   const inspectPinCite = Effect.fn("Citation.inspectPinCite")(function* (raw: unknown) {
     if (raw === null) return CitationPinCiteDetails.make({ pinCite: null, trailingEnd: 0 });
     const source = yield* input.prepareUnicode(raw, () => Effect.void);
-    const start = yield* trimBoundary(source.value, 0, source.value.pythonLength, 1, pinBoundary);
-    const last = yield* trimBoundary(source.value, source.value.pythonLength - 1, start - 1, -1, pinBoundary);
+    const start = yield* trimCitationMetadataBoundary(source.value, 0, source.value.pythonLength, 1, pinBoundary);
+    const last = yield* trimCitationMetadataBoundary(
+      source.value,
+      source.value.pythonLength - 1,
+      start - 1,
+      -1,
+      pinBoundary
+    );
     const pinCite = yield* source.slice({ start, end: last + 1 }, (layout) =>
       source.value.utf16Units + layout.utf16Units > limits.producedTextUtf16 ? Effect.fail(exhausted()) : Effect.void
     );
@@ -109,8 +121,20 @@ export const makeCitationPinCiteCleaner = Effect.fn("Citation.makePinCiteCleaner
   const stripWhitespace = Effect.fn("Citation.stripMetadataWhitespace")(function* (raw: unknown) {
     if (raw === null) return null;
     const source = yield* input.prepareUnicode(raw, () => Effect.void);
-    const start = yield* trimBoundary(source.value, 0, source.value.pythonLength, 1, whitespaceBoundary);
-    const last = yield* trimBoundary(source.value, source.value.pythonLength - 1, start - 1, -1, whitespaceBoundary);
+    const start = yield* trimCitationMetadataBoundary(
+      source.value,
+      0,
+      source.value.pythonLength,
+      1,
+      citationMetadataWhitespaceBoundary
+    );
+    const last = yield* trimCitationMetadataBoundary(
+      source.value,
+      source.value.pythonLength - 1,
+      start - 1,
+      -1,
+      citationMetadataWhitespaceBoundary
+    );
     if (start === source.value.pythonLength) return null;
     return yield* source.slice({ start, end: last + 1 }, (layout) =>
       source.value.utf16Units + layout.utf16Units > limits.producedTextUtf16 ? Effect.fail(exhausted()) : Effect.void

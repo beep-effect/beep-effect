@@ -437,23 +437,64 @@ const readableVerdict =
       : partialVerdict(introductions, referring, chain);
   };
 
-const verdictFor =
+// These coverage outcomes do not inspect chain term candidates. Keeping them
+// before preparation avoids charging or allocating work that is never used.
+const chainIndependentVerdict = (referring: LocatedTerm, chain: Chain): Verdict => {
+  if (ClaimTermDeterminer.is.bare(referring.term.determiner))
+    return O.some(uncovered(referring, rule.unsupportedDeterminer));
+  return chain.resolvable ? O.none() : O.some(uncovered(referring, rule.chainUnresolvable));
+};
+const prepareChainTerms = (
+  termsByClaim: R.ReadonlyRecord<string, ReadonlyArray<LocatedTerm>>,
+  chain: Chain,
+  remaining: MutableRef.MutableRef<number>
+): O.Option<ReadonlyArray<LocatedTerm>> => {
+  // Count bucket lengths only after reserving that lookup pass. The retained
+  // copy and canonical sort/de-duplication are charged before allocation.
+  if (!spendChainWork(remaining, chain.claims.length)) return O.none();
+  const termCount = A.reduce(
+    chain.claims,
+    0,
+    (count, claimNumber) => count + O.getOrElse(R.get(termsByClaim, `${claimNumber}`), () => []).length
+  );
+  if (!spendChainWork(remaining, termCount + 1 + chain.claims.length ** 2)) return O.none();
+  return O.some(
+    A.flatMap(A.dedupe(A.sort(chain.claims, Num.Order)), (claimNumber) =>
+      O.getOrElse(R.get(termsByClaim, `${claimNumber}`), () => [])
+    )
+  );
+};
+
+const cachedChainTerms =
   (
-    introductionsByHead: R.ReadonlyRecord<string, ReadonlyArray<LocatedTerm>>,
+    termsByClaim: R.ReadonlyRecord<string, ReadonlyArray<LocatedTerm>>,
+    remaining: MutableRef.MutableRef<number>,
+    prepared: Array<O.Option<ReadonlyArray<LocatedTerm>>>
+  ) =>
+  (chain: Chain, index: number): O.Option<ReadonlyArray<LocatedTerm>> => {
+    if (!spendChainWork(remaining, 1)) return O.none();
+    const cached = O.flatten(A.get(prepared, index));
+    if (O.isSome(cached)) return cached;
+    const terms = prepareChainTerms(termsByClaim, chain, remaining);
+    if (O.isSome(terms)) prepared[index] = terms;
+    return terms;
+  };
+const boundedChainVerdict =
+  (
+    lookup: (chain: Chain, index: number) => O.Option<ReadonlyArray<LocatedTerm>>,
+    read: (terms: ReadonlyArray<LocatedTerm>, referring: LocatedTerm, chain: Chain) => Verdict,
     remaining: MutableRef.MutableRef<number>
   ) =>
-  (
-    terms: ReadonlyArray<LocatedTerm>,
-    decomposed: HashSet.HashSet<number>,
-    referring: LocatedTerm,
-    chain: Chain
-  ): Verdict => {
-    if (ClaimTermDeterminer.is.bare(referring.term.determiner)) {
-      return O.some(uncovered(referring, rule.unsupportedDeterminer));
-    }
-    return chain.resolvable
-      ? readableVerdict(introductionsByHead, remaining)(terms, decomposed, referring, chain)
-      : O.some(uncovered(referring, rule.chainUnresolvable));
+  (referring: LocatedTerm, chain: Chain, index: number): O.Option<Verdict> => {
+    const independent = chainIndependentVerdict(referring, chain);
+    if (O.isSome(independent)) return O.some(independent);
+    return O.flatMap(lookup(chain, index), (terms) => {
+      // The introduction filter and up to five matching passes still happen
+      // for each reference; caching does not waive those scans or the
+      // decomposed-claim completeness scan performed by readableVerdict.
+      if (!spendChainWork(remaining, (terms.length + 1) * 6 + chain.claims.length)) return O.none();
+      return O.some(read(terms, referring, chain));
+    });
   };
 
 const policyInContext = (
@@ -496,26 +537,25 @@ const policyInContext = (
           if (O.isNone(enumerated))
             return A.map(referringTerms, (referring) => rank(referring, [], uncovered(referring, rule.chainWorkLimit)));
           const chains = A.sort(enumerated.value, chainOrder);
+          // One slot per already-enumerated chain, with no cross-tree or
+          // cross-invocation retention. Every cached term is separately charged.
+          if (!spendChainWork(termWork, chains.length))
+            return A.map(referringTerms, (referring) => rank(referring, [], uncovered(referring, rule.chainWorkLimit)));
+          const prepared = A.replicate(O.none<ReadonlyArray<LocatedTerm>>(), chains.length);
+          const lookup = cachedChainTerms(termsByClaim, termWork, prepared);
+          const read = readableVerdict(introductionsByHead, termWork);
+          const evaluate = boundedChainVerdict(
+            lookup,
+            (terms, referring, chain) => read(terms, decomposed, referring, chain),
+            termWork
+          );
           return A.flatMap(referringTerms, (referring) => {
             let findings: ReadonlyArray<Ranked> = [];
-            for (const chain of chains) {
-              const termCount = A.reduce(
-                chain.claims,
-                0,
-                (count, claimNumber) => count + O.getOrElse(R.get(termsByClaim, `${claimNumber}`), () => []).length
-              );
-              // Reserve bucket copying, introduction filtering, the three
-              // matching passes and candidate output copying before allocation.
-              // Membership is already guaranteed by the selected buckets.
-              // The depth-squared allowance covers sorting and de-duplication
-              // while preserving global claim/anchor candidate order.
-              const work = (termCount + 1) * 6 + chain.claims.length ** 2;
-              if (!spendChainWork(termWork, work))
-                return [rank(referring, [], uncovered(referring, rule.chainWorkLimit))];
-              const chainTerms = A.flatMap(A.dedupe(A.sort(chain.claims, Num.Order)), (claimNumber) =>
-                O.getOrElse(R.get(termsByClaim, `${claimNumber}`), () => [])
-              );
-              const finding = verdictFor(introductionsByHead, termWork)(chainTerms, decomposed, referring, chain);
+            for (let index = 0; index < chains.length; index++) {
+              const chain = O.getOrThrow(A.get(chains, index));
+              const evaluated = evaluate(referring, chain, index);
+              if (O.isNone(evaluated)) return [rank(referring, [], uncovered(referring, rule.chainWorkLimit))];
+              const finding = evaluated.value;
               if (O.isSome(finding)) {
                 if (!spendChainWork(remaining, findings.length + 1))
                   return [rank(referring, [], uncovered(referring, rule.chainWorkLimit))];

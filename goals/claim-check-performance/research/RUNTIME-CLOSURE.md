@@ -21,6 +21,18 @@ than silently updated. The independent preservation verifier must also pass.
 Use the actual latest accepted baseline for later candidates; the example is
 not an instruction to replace a newer accepted baseline.
 
+When accepted main changes dependency metadata, retain every historical freeze
+and lock. `implementation-accepted-main-metadata-001.json` is a separate
+prospective baseline for the accepted #2686/#2511 metadata changes. It inherits
+all file pins from the integrated-policy freeze, changes only its active lock
+pin, and adds exact pins for the archived previous lock, admission document and
+previous baseline. The admission binds accepted revisions and affected package
+manifests; independent metadata comparison verifies unchanged external package
+resolutions, versions, catalog, overrides and patches. The old closure is
+historical provenance, not a current execution claim. The capture tool's
+immutable-binding checks remain unchanged and a fresh installed capture,
+verification and actual cohort replay are still required before measurement.
+
 The build uses `target: bun`, bundled packages, an object metafile, disabled tree
 shaking, ignored DCE annotations, and `allowUnresolved: []`. It sets `write:false`
 and omits `outdir`, retaining build outputs in memory. In installed Bun 1.4.4,
@@ -108,3 +120,21 @@ historical live byte identity. Comparing Git-recorded decoder versions can show
 that those revisions agree; it cannot prove the absence of unrecorded working
 tree changes during past runs. Preserve those receipts and bind fresh
 measurements to a new closure rather than rewriting their provenance.
+
+Accepted main also retires 88 citation modules included by the previous static
+closure. The first new capture failed before prediction on their missing paths.
+`implementation-accepted-main-metadata-002.json` retains baseline001 and maps
+exactly those retired non-reference sources into a byte-preserving archive.
+Each archived base64 payload reconstructs its old source hash; deletion
+provenance is bound to accepted main. All remaining inherited pins and immutable
+checks stay unchanged. The new build must discover every current replacement
+module independently; historical archived sources are not executed or presented
+as current dependencies. Failed capture001 remains retained.
+
+Baseline003 additionally binds the independently reviewed preservation verifier
+and its adversarial tests, archiving their exact prior bytes. Capture002
+correctly refused their old immutable pins before prediction. The generated
+metadata addendum and both historical/active manifest versions are explicit new
+pins. Capture immutable checks remain unchanged; no stale historical source
+hash is silently replaced in an old manifest. All three prospective baseline
+versions and both pre-prediction failures are retained.

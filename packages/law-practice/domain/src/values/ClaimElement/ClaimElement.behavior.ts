@@ -15,6 +15,7 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { constant, dual, flow, identity, pipe } from "effect/Function";
@@ -581,6 +582,427 @@ const headAt = (tokens: ReadonlyArray<Span>, index: number, quotations: Readonly
     );
   });
 
+// Inspection grammar plans a source interval and scanner continuation without
+// changing the historical strict extractor or the element's syntactic role.
+class NominalBoundaryPlan extends S.Opaque<NominalBoundaryPlan, { readonly brand: unique symbol }>()(
+  S.Struct({
+    headEnd: S.Int,
+    resumeAt: S.Int,
+    reason: S.Literals([
+      "legacy",
+      "copular-subject",
+      "shared-participle",
+      "coordinated-action",
+      "relational-complement",
+      "possessive-singular-article",
+      "possessive-plural-quantity",
+      "possessive-regular-singular",
+      "possessive-known-plural",
+    ]),
+  }).pipe(
+    $I.annoteSchema("NominalBoundaryPlan", {
+      description: "Owned source token interval and continuation justified by an explicit nominal grammar frame.",
+    })
+  )
+) {}
+type NominalPlanner = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  headStart: number,
+  quotations: ReadonlyArray<Span>
+) => NominalBoundaryPlan;
+const tokenWordAt = (tokens: ReadonlyArray<Span>, index: number): string =>
+  O.getOrElse(
+    O.map(A.get(tokens, index), ({ text }) => Str.toLowerCase(text)),
+    () => ""
+  );
+const quotedTokenAt = (tokens: ReadonlyArray<Span>, index: number, quotations: ReadonlyArray<Span>): boolean =>
+  O.exists(A.get(tokens, index), ({ start }) =>
+    A.some(quotations, (quote) => start >= quote.start && start < quote.start + Str.length(quote.text))
+  );
+const legacyNominalPlan: NominalPlanner = (tokens, _index, headStart, quotations) => {
+  const end = headStart + headAt(tokens, headStart, quotations).length;
+  return NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "legacy" });
+};
+const copulas = HashSet.make("is", "are", "was", "were");
+const hardNominalBarrier = (tokens: ReadonlyArray<Span>, index: number, quotations: ReadonlyArray<Span>): boolean =>
+  !quotedTokenAt(tokens, index, quotations) && HashSet.has(boundaryWords, tokenWordAt(tokens, index));
+const finiteCompetes = (tokens: ReadonlyArray<Span>, index: number, headStart: number): boolean => {
+  const word = tokenWordAt(tokens, index);
+  const previous = tokenWordAt(tokens, index - 1);
+  const prefix = A.take(A.drop(tokens, headStart), index - headStart);
+  const plural = A.some(prefix, ({ text }) => Str.endsWith("s")(text) && !Str.endsWith("ss")(text));
+  const baseVerb = HashSet.has(predicateWords, word) && !Str.endsWith("ed")(word) && !Str.endsWith("ing")(word);
+  const singularVerb = Str.endsWith("s")(word) && HashSet.has(predicateWords, Str.slice(0, -1)(word));
+  return (baseVerb && (plural || Str.endsWith("ly")(previous))) || (!plural && singularVerb);
+};
+const copularNominalPlan = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  headStart: number,
+  quotations: ReadonlyArray<Span>
+): O.Option<NominalBoundaryPlan> => {
+  if (index !== 0) return O.none();
+  const boundary = A.findFirstIndex(A.drop(tokens, headStart), (_, offset) => {
+    const at = headStart + offset;
+    return (
+      !quotedTokenAt(tokens, at, quotations) &&
+      (HashSet.has(copulas, tokenWordAt(tokens, at)) ||
+        hardNominalBarrier(tokens, at, quotations) ||
+        HashSet.has(punctuation, tokenWordAt(tokens, at)))
+    );
+  });
+  return O.flatMap(boundary, (offset) => {
+    const end = headStart + offset;
+    if (end <= headStart || !HashSet.has(copulas, tokenWordAt(tokens, end))) return O.none();
+    if (isPredicateToken(tokens, end - 1) || Str.endsWith("ly")(tokenWordAt(tokens, end - 1))) return O.none();
+    if (
+      A.some(A.take(A.drop(tokens, headStart + 1), end - headStart - 1), (_, offset) => {
+        const at = headStart + 1 + offset;
+        return !quotedTokenAt(tokens, at, quotations) && finiteCompetes(tokens, at, headStart);
+      })
+    )
+      return O.none();
+    return O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "copular-subject" }));
+  });
+};
+const participleAt = (tokens: ReadonlyArray<Span>, at: number): boolean => {
+  const word = tokenWordAt(tokens, at);
+  return Str.length(word) > 4 && Str.endsWith("ing")(word);
+};
+const participialNominalPlan = (
+  tokens: ReadonlyArray<Span>,
+  headStart: number,
+  quotations: ReadonlyArray<Span>
+): O.Option<NominalBoundaryPlan> => {
+  const prefix = A.takeWhile(A.drop(tokens, headStart), (_, offset) => {
+    const at = headStart + offset;
+    const word = tokenWordAt(tokens, at);
+    return !HashSet.has(punctuation, word) && (!HashSet.has(boundaryWords, word) || word === "and" || word === "or");
+  });
+  const pair = A.findFirstIndex(prefix, (_, offset) => {
+    const at = headStart + offset;
+    return (
+      !quotedTokenAt(tokens, at, quotations) &&
+      participleAt(tokens, at) &&
+      HashSet.has(HashSet.make("and", "or"), tokenWordAt(tokens, at + 1)) &&
+      participleAt(tokens, at + 2)
+    );
+  });
+  return O.flatMap(pair, (offset) => {
+    const at = headStart + offset;
+    const prefix = A.take(A.drop(tokens, headStart), offset);
+    if (headAt(tokens, headStart, quotations).length < offset) return O.none();
+    if (
+      A.some(
+        prefix,
+        (_, before) =>
+          !quotedTokenAt(tokens, headStart + before, quotations) &&
+          HashSet.has(
+            HashSet.make("and", "or", "toward", "towards", "against", "among", "around"),
+            tokenWordAt(tokens, headStart + before)
+          )
+      )
+    )
+      return O.none();
+    const following = at + 3;
+    if (O.isSome(determinerAt(tokens, following))) {
+      if (at === headStart) return O.none();
+      return O.some(NominalBoundaryPlan.make({ headEnd: at, resumeAt: following, reason: "coordinated-action" }));
+    }
+    const noun = tokenWordAt(tokens, following);
+    if (!HashSet.has(nominalFollowers, noun) || Str.endsWith("s")(noun)) return O.none();
+    const end = following + headAt(tokens, following, quotations).length;
+    return end > following
+      ? O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "shared-participle" }))
+      : O.none();
+  });
+};
+const definitePossessivePlan = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  end: number
+): O.Option<NominalBoundaryPlan> => {
+  const article = tokenWordAt(tokens, index);
+  const auxiliary = tokenWordAt(tokens, end);
+  const head = tokenWordAt(tokens, end - 1);
+  if (!HashSet.has(HashSet.make("the", "said"), article)) return O.none();
+  // Definite s-final heads are ambiguous (regular plurals, mass nouns,
+  // irregular plurals and singular status-like forms). Only the existing
+  // count-head inventory supplies a plural fact; all other s-final heads fall back.
+  if (Str.endsWith("s")(head))
+    return auxiliary === "have" &&
+      HashSet.has(nominalFollowers, head) &&
+      HashSet.has(nominalFollowers, Str.slice(0, -1)(head)) &&
+      !Str.endsWith("ss")(head)
+      ? O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "possessive-known-plural" }))
+      : O.none();
+  return auxiliary === "has"
+    ? O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "possessive-regular-singular" }))
+    : O.none();
+};
+const possessiveAgreementPlan = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  end: number
+): O.Option<NominalBoundaryPlan> => {
+  const auxiliary = tokenWordAt(tokens, end);
+  const article = tokenWordAt(tokens, index);
+  const pluralQuantity =
+    surfaceAt(tokens, index)(["a", "plurality", "of"]) ||
+    surfaceAt(tokens, index)(["one", "or", "more"]) ||
+    surfaceAt(tokens, index + 1)(["one", "or", "more"]) ||
+    surfaceAt(tokens, index + 1)(["plurality", "of"]);
+  if (pluralQuantity)
+    return auxiliary === "have"
+      ? O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "possessive-plural-quantity" }))
+      : O.none();
+  if (HashSet.has(HashSet.make("a", "an"), article))
+    return auxiliary === "has"
+      ? O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "possessive-singular-article" }))
+      : O.none();
+  return definitePossessivePlan(tokens, index, end);
+};
+// A recognized singular finite form competes regardless of number-looking
+// modifiers earlier in the subject. The legacy copular guard stays unchanged.
+const possessiveFiniteCompetes = (tokens: ReadonlyArray<Span>, index: number, headStart: number): boolean => {
+  const word = tokenWordAt(tokens, index);
+  const singular =
+    Str.endsWith("s")(word) &&
+    A.some([word, Str.slice(0, -1)(word), Str.slice(0, -2)(word)], (form) => HashSet.has(predicateWords, form));
+  return singular || finiteCompetes(tokens, index, headStart);
+};
+// Agreement here is structural evidence, not an open-class noun dictionary.
+// In particular an internal plural-looking modifier never determines number.
+const possessiveNominalPlan = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  headStart: number,
+  quotations: ReadonlyArray<Span>
+): O.Option<NominalBoundaryPlan> => {
+  if (index !== 0 && !HashSet.has(HashSet.make("wherein", "whereby"), tokenWordAt(tokens, index - 1))) return O.none();
+  const boundary = A.findFirstIndex(A.drop(tokens, headStart), (_, offset) => {
+    const at = headStart + offset;
+    return hardNominalBarrier(tokens, at, quotations) || HashSet.has(punctuation, tokenWordAt(tokens, at));
+  });
+  return O.flatMap(boundary, (offset) => {
+    const end = headStart + offset;
+    const auxiliary = tokenWordAt(tokens, end);
+    if (offset === 0 || !HashSet.has(HashSet.make("has", "have"), auxiliary)) return O.none();
+    const prefix = A.take(A.drop(tokens, headStart), offset);
+    if (
+      A.some(
+        prefix,
+        ({ text }, before) =>
+          quotedTokenAt(tokens, headStart + before, quotations) ||
+          !O.isSome(Str.match(/^[a-z][a-z-]*$/u)(text)) ||
+          possessiveFiniteCompetes(tokens, headStart + before, headStart)
+      )
+    )
+      return O.none();
+    if (!explicitLexicalObjectAt(tokens, end + 1, quotations)) return O.none();
+    return possessiveAgreementPlan(tokens, index, end);
+  });
+};
+const inspectionNominalPlan: NominalPlanner = (tokens, index, headStart, quotations) =>
+  O.getOrElse(
+    O.orElse(participialNominalPlan(tokens, headStart, quotations), () =>
+      copularNominalPlan(tokens, index, headStart, quotations)
+    ),
+    () => legacyNominalPlan(tokens, index, headStart, quotations)
+  );
+
+class InspectionSourceRole extends S.Opaque<InspectionSourceRole, { readonly brand: unique symbol }>()(
+  S.Struct({
+    consumedStart: S.Int,
+    resumeAt: S.Int,
+    reason: S.Literals(["reciprocal-argument", "relational-link", "licensed-infinitive"]),
+  }).pipe(
+    $I.annoteSchema("InspectionSourceRole", {
+      description:
+        "A consumed source interval containing grammatical relation or predicate text, with its scanner continuation.",
+    })
+  )
+) {}
+const lexicalComplementAt = (tokens: ReadonlyArray<Span>, index: number, quotations: ReadonlyArray<Span>): boolean => {
+  const start = O.match(determinerAt(tokens, index), {
+    onNone: () => index,
+    onSome: ({ determiner, width }) =>
+      index + width + (isReferringDeterminer(determiner) ? quantifierWidthAt(tokens, index + width) : 0),
+  });
+  const head = headAt(tokens, start, quotations);
+  return (
+    A.isReadonlyArrayNonEmpty(head) &&
+    !isClaimReference(head) &&
+    A.some(head, ({ text }) => O.isSome(Str.match(/\p{L}/u)(text)))
+  );
+};
+const relationAt = (tokens: ReadonlyArray<Span>, index: number, quotations: ReadonlyArray<Span>): boolean =>
+  !quotedTokenAt(tokens, index, quotations) &&
+  surfaceAt(tokens, index + 1)(["to"]) &&
+  HashSet.has(HashSet.make("due", "opposite", "perpendicular", "relative"), tokenWordAt(tokens, index)) &&
+  lexicalComplementAt(tokens, index + 2, quotations);
+const reciprocalAt = (tokens: ReadonlyArray<Span>, index: number, quotations: ReadonlyArray<Span>): boolean => {
+  if (quotedTokenAt(tokens, index, quotations)) return false;
+  if (!surfaceAt(tokens, index)(["each", "other"]) && !surfaceAt(tokens, index)(["one", "another"])) return false;
+  const next = tokenWordAt(tokens, index + 2);
+  const complete =
+    next === "" ||
+    HashSet.has(
+      HashSet.make(
+        ".",
+        ",",
+        ";",
+        ":",
+        ")",
+        "]",
+        "in",
+        "on",
+        "at",
+        "by",
+        "with",
+        "from",
+        "to",
+        "than",
+        "when",
+        "wherein"
+      ),
+      next
+    );
+  return (
+    complete &&
+    HashSet.has(HashSet.make("to", "from", "with", "between", "against", "among", "of"), tokenWordAt(tokens, index - 1))
+  );
+};
+const InfinitiveSlotRole = LiteralKit([
+  "quantity",
+  "grammatical-function",
+  "ambiguous-multiplier",
+  "lexical-candidate",
+]).pipe(
+  $I.annoteSchema("InfinitiveSlotRole", {
+    description: "Closed quantity/function-slot exclusions checked before admitting an unknown infinitival verb.",
+  })
+);
+type InfinitiveSlotRole = typeof InfinitiveSlotRole.Type;
+// Closed grammatical classes, not open noun/verb entries. A token with both a
+// function/quantity reading and a possible lexical verb reading stays ambiguous.
+const quantitySlotWords = HashSet.fromIterable(
+  Str.split(
+    "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred thousand million billion trillion half quarter third few fewer many much little less more most least several some any enough all both either neither each every no another approximately roughly nearly almost exactly precisely",
+    " "
+  )
+);
+const multiplierSlotWords = HashSet.fromIterable(
+  Str.split(
+    "single double triple quadruple quintuple sextuple septuple octuple nonuple decuple multiple once twice thrice",
+    " "
+  )
+);
+const functionSlotWords = HashSet.fromIterable(
+  Str.split(
+    "aboard about above across after against along alongside amid amidst among amongst around as astride at atop before behind below beneath beside besides between beyond by concerning considering despite down during except excluding following for from in including inside into like minus near notwithstanding of off on onto opposite outside over past per plus regarding round save since than through throughout till to toward towards under underneath unlike until unto up upon versus via with within without only merely solely also even rather quite very too",
+    " "
+  )
+);
+const isQuantitySlot = (word: string): boolean =>
+  A.every(Str.split(word, "-"), (part) => HashSet.has(quantitySlotWords, part) || HashSet.has(ordinalWords, part));
+const infinitiveSlotRole = (word: string): InfinitiveSlotRole => {
+  if (isQuantitySlot(word)) return "quantity";
+  if (HashSet.has(multiplierSlotWords, word)) return "ambiguous-multiplier";
+  if (HashSet.has(boundaryWords, word) || HashSet.has(functionSlotWords, word)) return "grammatical-function";
+  return "lexical-candidate";
+};
+const licensedVerbAt = (tokens: ReadonlyArray<Span>, index: number): boolean =>
+  infinitiveSlotRole(tokenWordAt(tokens, index)) === "lexical-candidate" &&
+  O.exists(A.get(tokens, index), ({ text }) => O.isSome(Str.match(/^[a-z][a-z-]*$/u)(text)));
+const explicitLexicalObjectAt = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  quotations: ReadonlyArray<Span>
+): boolean =>
+  O.isSome(determinerAt(tokens, index)) &&
+  lexicalComplementAt(tokens, index, quotations) &&
+  !O.exists(A.get(tokens, index), ({ text }) => text === "A" || text === "AN");
+// Closed introducers establish a verbal slot independently of the verb's
+// spelling. The object is proved separately and remains available to scanning.
+const licensedInfinitiveAt = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  quotations: ReadonlyArray<Span>
+): O.Option<InspectionSourceRole> => {
+  const purpose = surfaceAt(tokens, index)(["so", "as", "to"]);
+  const licensed =
+    HashSet.has(HashSet.make("configured", "adapted", "operable", "arranged"), tokenWordAt(tokens, index)) &&
+    surfaceAt(tokens, index + 1)(["to"]);
+  if (!purpose && !licensed) return O.none();
+  if (
+    A.some(
+      A.take(tokens, index),
+      ({ text }, at) =>
+        HashSet.has(HashSet.make('"', "“", "”", "‘", "’"), text) && !quotedTokenAt(tokens, at, quotations)
+    )
+  )
+    return O.none();
+  const verbAt = index + (purpose ? 3 : 2);
+  const objectAt = verbAt + 1;
+  if (!licensedVerbAt(tokens, verbAt) || !explicitLexicalObjectAt(tokens, objectAt, quotations)) return O.none();
+  if (A.some(A.range(index, objectAt), (at) => quotedTokenAt(tokens, at, quotations))) return O.none();
+  return O.some(InspectionSourceRole.make({ consumedStart: index, resumeAt: objectAt, reason: "licensed-infinitive" }));
+};
+const inspectionRoleAt = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  quotations: ReadonlyArray<Span>
+): O.Option<InspectionSourceRole> => {
+  const infinitive = licensedInfinitiveAt(tokens, index, quotations);
+  if (O.isSome(infinitive)) return infinitive;
+  if (reciprocalAt(tokens, index, quotations))
+    return O.some(
+      InspectionSourceRole.make({ consumedStart: index, resumeAt: index + 2, reason: "reciprocal-argument" })
+    );
+  const previous = tokenWordAt(tokens, index - 1);
+  if (relationAt(tokens, index, quotations) && (HashSet.has(copulas, previous) || isPredicateToken(tokens, index - 1)))
+    return O.some(InspectionSourceRole.make({ consumedStart: index, resumeAt: index + 2, reason: "relational-link" }));
+  return O.none();
+};
+const relationalNominalPlan = (
+  tokens: ReadonlyArray<Span>,
+  headStart: number,
+  quotations: ReadonlyArray<Span>
+): O.Option<NominalBoundaryPlan> => {
+  const legacy = headAt(tokens, headStart, quotations);
+  const found = A.findFirstIndex(
+    legacy,
+    (_, offset) => offset > 0 && relationAt(tokens, headStart + offset, quotations)
+  );
+  return O.map(found, (offset) =>
+    NominalBoundaryPlan.make({
+      headEnd: headStart + offset,
+      resumeAt: headStart + offset + 2,
+      reason: "relational-complement",
+    })
+  );
+};
+type LexicalGrammar = {
+  readonly plan: NominalPlanner;
+  readonly ignoreAt: (
+    tokens: ReadonlyArray<Span>,
+    index: number,
+    quotations: ReadonlyArray<Span>
+  ) => O.Option<InspectionSourceRole>;
+};
+const strictLexicalGrammar: LexicalGrammar = { plan: legacyNominalPlan, ignoreAt: () => O.none() };
+const inspectionLexicalGrammar: LexicalGrammar = {
+  plan: (tokens, index, headStart, quotations) =>
+    O.getOrElse(possessiveNominalPlan(tokens, index, headStart, quotations), () =>
+      O.getOrElse(relationalNominalPlan(tokens, headStart, quotations), () =>
+        inspectionNominalPlan(tokens, index, headStart, quotations)
+      )
+    ),
+  ignoreAt: inspectionRoleAt,
+};
+
 // Rule `claim-reference`: "the claim 1" names a claim, not a claim term.
 const isClaimReference = (head: ReadonlyArray<Span>): boolean =>
   O.exists(A.get(head, 0), ({ text }) => Str.toLowerCase(text) === "claim") &&
@@ -612,8 +1034,10 @@ const scanStepOf = (term: O.Option<EncodedTerm>, resumeAt: number): ScanStep => 
 
 // One scan step from `index`: the term found there, if any, and where the scan resumes.
 const scanStep =
-  (claimText: string, tokens: ReadonlyArray<Span>, quotations: ReadonlyArray<Span>) =>
+  (claimText: string, tokens: ReadonlyArray<Span>, quotations: ReadonlyArray<Span>, grammar: LexicalGrammar) =>
   (index: number): ScanStep => {
+    const role = grammar.ignoreAt(tokens, index, quotations);
+    if (O.isSome(role)) return scanStepOf(O.none(), role.value.resumeAt);
     const idiom = A.findFirst(
       [
         ["by", "means", "of"],
@@ -653,7 +1077,8 @@ const scanStep =
         onSome: ({ determiner, start, width }) => {
           const headStart =
             index + width + (isReferringDeterminer(determiner) ? quantifierWidthAt(tokens, index + width) : 0);
-          const head = headAt(tokens, headStart, quotations);
+          const plan = grammar.plan(tokens, index, headStart, quotations);
+          const head = A.take(A.drop(tokens, headStart), plan.headEnd - headStart);
           if (!A.isReadonlyArrayNonEmpty(head) || isClaimReference(head)) return scanStepOf(O.none(), index + width);
           const term = termOf(claimText, start, determiner, head);
           const lexicalStart = O.getOrThrow(A.get(tokens, index + width)).start;
@@ -671,14 +1096,14 @@ const scanStep =
                 ),
               }
             : term;
-          return scanStepOf(O.some(lexical), headStart + A.length(head));
+          return scanStepOf(O.some(lexical), plan.resumeAt);
         },
       })
     );
   };
 
 const termsIn =
-  (claimText: string) =>
+  (claimText: string, grammar: LexicalGrammar = strictLexicalGrammar) =>
   (span: Span): ReadonlyArray<EncodedTerm> => {
     const material = Str.match(
       /\b(?:is|are|was|were)\s+(?:formed|made|composed)\s+(?:of|from)\s+(?!a\b|an\b|the\b|said\b)([^,;]+)$/iu
@@ -692,12 +1117,12 @@ const termsIn =
       onSome: (match) => sliceSpan(span, 0, O.getOrElse(O.fromUndefinedOr(match.index), constant(span.text.length))),
     });
     const tokens = matchesIn(tokenPattern)(entitySpan);
-    const step = scanStep(claimText, tokens, matchesIn(quotedPhrasePattern)(entitySpan));
+    const step = scanStep(claimText, tokens, matchesIn(quotedPhrasePattern)(entitySpan), grammar);
     return A.getSomes(A.unfold(0, (index) => (index < A.length(tokens) ? O.some(step(index)) : O.none())));
   };
 
 const elementOf =
-  (claimText: string, kind: ClaimElementKind) =>
+  (claimText: string, kind: ClaimElementKind, grammar: LexicalGrammar = strictLexicalGrammar) =>
   (path: string, span: Span): EncodedElement => {
     const tokens = matchesIn(tokenPattern)(span);
     return {
@@ -713,7 +1138,10 @@ const elementOf =
           ))
           ? "functional-relation"
           : kind,
-      terms: termsIn(claimText)(
+      terms: termsIn(
+        claimText,
+        grammar
+      )(
         kind === "preamble-subject"
           ? O.match(
               Str.match(
@@ -729,15 +1157,29 @@ const elementOf =
     };
   };
 
+type AntecedentStrategy = {
+  readonly headFor: (path: string, term: EncodedTerm) => string;
+  readonly allows: (path: string, term: EncodedTerm, candidatePath: string, candidate: EncodedTerm) => boolean;
+};
+const legacyAntecedentStrategy: AntecedentStrategy = {
+  headFor: (_path, term) => term.head,
+  allows: () => true,
+};
 const antecedentEdges = (
   elements: ReadonlyArray<EncodedElement>,
-  ancestors: ReadonlyArray<EncodedElement> = []
+  ancestors: ReadonlyArray<EncodedElement> = [],
+  strategy: AntecedentStrategy = legacyAntecedentStrategy
 ): ReadonlyArray<EncodedEdge> => {
   const located = A.flatMap(A.appendAll(elements, ancestors), (element: EncodedElement) =>
     A.map(element.terms, (term) => ({
       path: element.path,
       // Edge resolution uses the entity contents; emitted trees retain lexical heads.
-      term: { ...term, head: O.getOrElse(pluralityReferenceContent(term.head), () => term.head) },
+      term: {
+        ...term,
+        head: O.getOrElse(pluralityReferenceContent(strategy.headFor(element.path, term)), () =>
+          strategy.headFor(element.path, term)
+        ),
+      },
     }))
   );
   const local = (path: string) => A.some(elements, (element) => element.path === path);
@@ -755,7 +1197,9 @@ const antecedentEdges = (
     A.map(referringTerms, (referring) => {
       const before = A.filter(
         located,
-        ({ path, term }) => !local(path) || term.anchor.startChar < referring.term.anchor.startChar
+        ({ path, term }) =>
+          (!local(path) || term.anchor.startChar < referring.term.anchor.startChar) &&
+          strategy.allows(referring.path, referring.term, path, term)
       );
       const introductionsBefore = A.filter(
         before,
@@ -845,6 +1289,326 @@ const antecedentEdges = (
       );
     })
   );
+};
+
+// Ownership restricts structural identity only for inspection. Lexical matching
+// still proposes candidates; a modifier or source proximity is never owner proof.
+class SourceOwnership extends S.Opaque<SourceOwnership, { readonly brand: unique symbol }>()(
+  S.Struct({
+    part: S.NonEmptyString,
+    owner: S.NonEmptyString,
+    head: S.NonEmptyString,
+    reason: S.Literals(["of", "composition", "relative", "possessive", "part-location"]),
+  }).pipe(
+    $I.annoteSchema("SourceOwnership", {
+      description: "Explicit owned-source relationship between existing term mentions, before and after owner binding.",
+    })
+  )
+) {}
+const mentionKey = (path: string, term: EncodedTerm): string => `${path}:${term.anchor.startChar}`;
+const ownershipMentions = (elements: ReadonlyArray<EncodedElement>) =>
+  A.flatMap(elements, (element) => A.map(element.terms, (term) => ({ path: element.path, term })));
+const sameMention = (path: string, start: number, otherPath: string, otherStart: number): boolean =>
+  path === otherPath && start === otherStart;
+const ownerBridge = (element: EncodedElement, left: EncodedTerm, right: EncodedTerm): string =>
+  pipe(
+    Str.slice(
+      left.anchor.endChar - element.anchor.startChar,
+      right.anchor.startChar - element.anchor.startChar
+    )(element.anchor.quote),
+    Str.replace(/\(\s*\d+[a-z]?\s*\)|\[\s*\d+[a-z]?\s*\]/giu, " "),
+    Str.replace(/\s+/gu, " "),
+    Str.toLowerCase,
+    Str.trim
+  );
+const isSpatialPartHead = (head: string): boolean =>
+  O.isSome(Str.match(/\b(?:portions?|surfaces?|edges?|ends?|regions?|areas?|sections?|sides?|bases?)$/u)(head));
+const pairOwnership = (element: EncodedElement, left: EncodedTerm, right: EncodedTerm): O.Option<SourceOwnership> => {
+  const bridge = ownerBridge(element, left, right);
+  if (bridge === "of")
+    return O.some(
+      SourceOwnership.make({
+        part: mentionKey(element.path, left),
+        owner: mentionKey(element.path, right),
+        head: left.head,
+        reason: "of",
+      })
+    );
+  const reason = bridge === "of which" ? "relative" : "composition";
+  // "a signal of which the sensor is aware" is a relative predicate argument,
+  // not a possessive part relationship. The relative branch needs a part head.
+  if (reason === "relative" && !isSpatialPartHead(right.head)) return O.none();
+  const composition =
+    /^(?:with|having|including|containing|has|have|(?:further )?(?:comprises|includes)|(?:is|are) provided with)$/u;
+  if (reason === "composition" && O.isNone(Str.match(composition)(bridge))) return O.none();
+  return O.some(
+    SourceOwnership.make({
+      part: mentionKey(element.path, right),
+      owner: mentionKey(element.path, left),
+      head: right.head,
+      reason,
+    })
+  );
+};
+const claimOfMention = (path: string): O.Option<number> => Num.parse(A.headNonEmpty(Str.split(path, ".")));
+const mentionPrecedes = (path: string, term: EncodedTerm, otherPath: string, other: EncodedTerm): boolean =>
+  O.exists(O.all([claimOfMention(path), claimOfMention(otherPath)]), ([claim, otherClaim]) =>
+    claim === otherClaim ? term.anchor.startChar < other.anchor.startChar : claim < otherClaim
+  );
+const possessiveOwnership = (
+  path: string,
+  term: EncodedTerm,
+  mentions: ReturnType<typeof ownershipMentions>
+): O.Option<SourceOwnership> => {
+  if (!isReferringDeterminer(term.determiner)) return O.none();
+  return O.flatMap(Str.match(/^(.+?)[’']s (.+)$/u)(term.head), (parts) => {
+    const owners = A.filter(
+      mentions,
+      (candidate) =>
+        isIntroducingDeterminer(candidate.term.determiner) &&
+        O.contains(A.get(parts, 1), candidate.term.head) &&
+        mentionPrecedes(candidate.path, candidate.term, path, term)
+    );
+    return O.flatMap(owners.length === 1 ? A.head(owners) : O.none(), (owner) =>
+      O.map(A.get(parts, 2), (head) =>
+        SourceOwnership.make({
+          part: mentionKey(path, term),
+          owner: mentionKey(owner.path, owner.term),
+          head,
+          reason: "possessive",
+        })
+      )
+    );
+  });
+};
+const partLocationOwnership = (element: EncodedElement): O.Option<SourceOwnership> =>
+  O.flatMap(
+    O.all([A.get(element.terms, 0), A.get(element.terms, 1), A.get(element.terms, 2)]),
+    ([part, region, owner]) => {
+      if (isReferringDeterminer(part.determiner)) return O.none();
+      if (!HashSet.has(HashSet.make("in", "on", "at"), ownerBridge(element, part, region))) return O.none();
+      if (ownerBridge(element, region, owner) !== "of") return O.none();
+      if (!isSpatialPartHead(region.head)) return O.none();
+      return O.some(
+        SourceOwnership.make({
+          part: mentionKey(element.path, part),
+          owner: mentionKey(element.path, owner),
+          head: part.head,
+          reason: "part-location",
+        })
+      );
+    }
+  );
+const rawOwnership = (elements: ReadonlyArray<EncodedElement>): ReadonlyArray<SourceOwnership> => {
+  const mentions = ownershipMentions(elements);
+  return A.appendAll(
+    A.flatMap(elements, (element) =>
+      A.appendAll(
+        A.getSomes(
+          A.map(element.terms, (left, index) =>
+            O.flatMap(A.get(element.terms, index + 1), (right) => pairOwnership(element, left, right))
+          )
+        ),
+        O.toArray(partLocationOwnership(element))
+      )
+    ),
+    A.getSomes(A.map(mentions, ({ path, term }) => possessiveOwnership(path, term, mentions)))
+  );
+};
+const boundOwner = (
+  key: string,
+  raw: ReadonlyArray<SourceOwnership>,
+  mentions: ReturnType<typeof ownershipMentions>,
+  baseline: ReadonlyArray<EncodedEdge>
+): O.Option<string> =>
+  O.flatMap(
+    A.findFirst(mentions, ({ path, term }) => mentionKey(path, term) === key),
+    ({ path, term }) => {
+      if (isIntroducingDeterminer(term.determiner)) return O.some(key);
+      // An explicitly owned part cannot inherit a possibly conflicting old owner
+      // reference to bind further nested ownership. Decline that nested proof.
+      if (A.some(raw, (fact) => fact.part === key)) return O.none();
+      const links = A.filter(
+        baseline,
+        (edge) =>
+          edge.kind === "antecedent" &&
+          sameMention(path, term.anchor.startChar, edge.referring.path, edge.referring.anchor.startChar)
+      );
+      return O.flatMap(links.length === 1 ? A.head(links) : O.none(), (edge) =>
+        edge.kind === "antecedent" ? O.some(`${edge.introducing.path}:${edge.introducing.anchor.startChar}`) : O.none()
+      );
+    }
+  );
+const uniqueOwner = (facts: ReadonlyArray<SourceOwnership>, part: string): O.Option<string> => {
+  const owners = HashSet.fromIterable(
+    A.map(
+      A.filter(facts, (fact) => fact.part === part),
+      (fact) => fact.owner
+    )
+  );
+  return HashSet.size(owners) === 1 ? pipe(owners, A.fromIterable, A.head) : O.none();
+};
+const locativePartChain = (element: EncodedElement, partIndex: number, referring: EncodedTerm): boolean =>
+  O.exists(
+    O.all([A.get(element.terms, partIndex), A.get(element.terms, partIndex + 1), A.get(element.terms, partIndex + 2)]),
+    ([part, region, target]) =>
+      target.anchor.startChar === referring.anchor.startChar &&
+      isSpatialPartHead(region.head) &&
+      HashSet.has(HashSet.make("in", "on", "at"), ownerBridge(element, part, region)) &&
+      ownerBridge(element, region, target) === "of"
+  );
+const scopedPartRelationship = (element: EncodedElement, referring: EncodedTerm, fact: SourceOwnership): boolean =>
+  O.exists(
+    A.findFirstIndex(element.terms, (term) => mentionKey(element.path, term) === fact.part),
+    (index) =>
+      Match.value(fact.reason).pipe(
+        Match.when("relative", () =>
+          O.exists(
+            A.get(element.terms, index),
+            (part) => part.head === referring.head && part.anchor.startChar < referring.anchor.startChar
+          )
+        ),
+        Match.when("composition", () => locativePartChain(element, index, referring)),
+        Match.orElse(() => false)
+      )
+  );
+const compositionOwner = (
+  element: EncodedElement,
+  referring: EncodedTerm,
+  raw: ReadonlyArray<SourceOwnership>,
+  facts: ReadonlyArray<SourceOwnership>,
+  mentions: ReturnType<typeof ownershipMentions>,
+  baseline: ReadonlyArray<EncodedEdge>
+): O.Option<string> =>
+  O.flatMap(A.head(element.terms), (subject) =>
+    O.flatMap(boundOwner(mentionKey(element.path, subject), raw, mentions, baseline), (owner) => {
+      const scoped = A.some(facts, (fact) => fact.owner === owner && scopedPartRelationship(element, referring, fact));
+      if (!scoped) return O.none();
+      const competitors = A.filter(
+        element.terms,
+        (term) =>
+          term.anchor.startChar < referring.anchor.startChar && term.anchor.startChar !== subject.anchor.startChar
+      );
+      const competingOwner = A.some(competitors, (term) =>
+        O.exists(
+          boundOwner(mentionKey(element.path, term), raw, mentions, baseline),
+          (other) => other !== owner && A.some(facts, (fact) => fact.owner === other)
+        )
+      );
+      return competingOwner ? O.none() : O.some(owner);
+    })
+  );
+const ownershipStrategy = (
+  elements: ReadonlyArray<EncodedElement>,
+  ancestors: ReadonlyArray<EncodedElement>,
+  baseline: ReadonlyArray<EncodedEdge>
+) => {
+  const all = A.appendAll(elements, ancestors);
+  const mentions = ownershipMentions(all);
+  const raw = rawOwnership(all);
+  const facts = A.getSomes(
+    A.map(raw, (fact) =>
+      O.map(boundOwner(fact.owner, raw, mentions, baseline), (owner) => SourceOwnership.make({ ...fact, owner }))
+    )
+  );
+  const unresolvedParts = HashSet.fromIterable(
+    A.map(
+      A.filter(raw, (fact) => O.isNone(boundOwner(fact.owner, raw, mentions, baseline))),
+      (fact) => fact.part
+    )
+  );
+  const contextFor = (path: string, term: EncodedTerm) => {
+    const key = mentionKey(path, term);
+    // An explicit unknown/ambiguous owner cannot be replaced by a surrounding
+    // composition scope, such as "shaft of the sleeve" inside a nut clause.
+    if (A.some(raw, (fact) => fact.part === key))
+      return HashSet.has(unresolvedParts, key) ? O.none() : uniqueOwner(facts, key);
+    return O.flatMap(
+      A.findFirst(elements, (element) => element.path === path),
+      (element) => compositionOwner(element, term, raw, facts, mentions, baseline)
+    );
+  };
+  const contexts = A.reduce(
+    ownershipMentions(elements),
+    HashMap.empty<string, O.Option<string>>(),
+    (map, { path, term }) => HashMap.set(map, mentionKey(path, term), contextFor(path, term))
+  );
+  const ownersByPart = A.reduce(facts, HashMap.empty<string, HashSet.HashSet<string>>(), (map, fact) =>
+    HashMap.set(
+      map,
+      fact.part,
+      HashSet.add(O.getOrElse(HashMap.get(map, fact.part), HashSet.empty<string>), fact.owner)
+    )
+  );
+  const possessiveHeads = A.reduce(
+    A.filter(
+      facts,
+      (fact) =>
+        fact.reason === "possessive" &&
+        !HashSet.has(unresolvedParts, fact.part) &&
+        O.isSome(uniqueOwner(facts, fact.part))
+    ),
+    HashMap.empty<string, string>(),
+    (map, fact) => HashMap.set(map, fact.part, fact.head)
+  );
+  const strategy: AntecedentStrategy = {
+    headFor: (path, term) => O.getOrElse(HashMap.get(possessiveHeads, mentionKey(path, term)), () => term.head),
+    allows: (path, term, candidatePath, candidate) => {
+      const key = mentionKey(path, term);
+      const owner = O.flatten(HashMap.get(contexts, key));
+      return O.getOrElse(
+        O.flatMap(owner, (context) =>
+          O.map(HashMap.get(ownersByPart, mentionKey(candidatePath, candidate)), (owners) =>
+            HashSet.has(owners, context)
+          )
+        ),
+        // Unknown ownership retains legacy matching, except that a new
+        // possessive normalization needs a positive donor-owner match.
+        () => O.isNone(owner) || !HashMap.has(possessiveHeads, key)
+      );
+    },
+  };
+  return { strategy, facts };
+};
+type StructuralReferenceStrategy = (
+  elements: ReadonlyArray<EncodedElement>,
+  ancestors: ReadonlyArray<EncodedElement>,
+  parents: ReadonlyArray<number>,
+  ancestorBindings: () => ReadonlyArray<EncodedEdge>
+) => ReadonlyArray<EncodedEdge>;
+const legacyStructuralReferences: StructuralReferenceStrategy = (elements, ancestors) =>
+  antecedentEdges(elements, ancestors);
+const inspectionStructuralReferences: StructuralReferenceStrategy = (
+  elements,
+  ancestors,
+  parents,
+  ancestorBindings
+) => {
+  // Foreign referring edges are evidence for binding an ancestor's owner only.
+  // The returned reference list is still produced for current elements alone.
+  const baseline = A.appendAll(antecedentEdges(elements, ancestors), ancestorBindings());
+  const { strategy, facts } = ownershipStrategy(elements, ancestors, baseline);
+  const references = antecedentEdges(elements, ancestors, strategy);
+  const dependencies = A.getSomes(
+    A.map(
+      A.filter(facts, (fact) => fact.reason === "part-location"),
+      (fact): O.Option<EncodedEdge> => {
+        const introduced = A.findFirst(
+          ownershipMentions(ancestors),
+          ({ path, term }) => mentionKey(path, term) === fact.owner && isIntroducingDeterminer(term.determiner)
+        );
+        const dependent = A.findFirst(elements, (element) =>
+          O.exists(A.head(element.terms), (term) => mentionKey(element.path, term) === fact.part)
+        );
+        return O.flatMap(O.all([introduced, dependent]), ([owner, element]) =>
+          O.exists(claimOfMention(owner.path), (number) => A.contains(parents, number))
+            ? O.some({ kind: "depends-on-element", dependent: element.path, ancestor: owner.path })
+            : O.none()
+        );
+      }
+    )
+  );
+  return A.appendAll(references, dependencies);
 };
 
 const functionalEdges = (elements: ReadonlyArray<EncodedElement>): ReadonlyArray<EncodedEdge> =>
@@ -1070,10 +1834,11 @@ const colonNodesOf = (root: string, segments: ReadonlyArray<Span>): ReadonlyArra
 const scopedElementOf =
   (claimText: string, root: string) =>
   (node: ColonScopeNode): EncodedElement => {
-    const element = elementOf(claimText, node.parent === root ? "limitation" : "sub-limitation")(
-      node.path,
-      node.header
-    );
+    const element = elementOf(
+      claimText,
+      node.parent === root ? "limitation" : "sub-limitation",
+      inspectionLexicalGrammar
+    )(node.path, node.header);
     return node.group
       ? {
           ...element,
@@ -1091,7 +1856,11 @@ const inspectionTreeInput: typeof treeInput = (claim, parts) => {
   const nodes = colonNodesOf(root, segments);
   const elements = A.prepend(
     A.map(nodes, scopedElementOf(claim.claimText, root)),
-    elementOf(claim.claimText, "preamble-subject")(root, pipe(parts.preamble, trimSpan, dropSuffix([","]), trimSpan))
+    elementOf(
+      claim.claimText,
+      "preamble-subject",
+      inspectionLexicalGrammar
+    )(root, pipe(parts.preamble, trimSpan, dropSuffix([","]), trimSpan))
   );
   return assembleTree(
     claim,
@@ -1102,10 +1871,52 @@ const inspectionTreeInput: typeof treeInput = (claim, parts) => {
 
 const decodeTree = S.decodeEffect(ClaimElementTree);
 
+// Resolve each ancestor's owner references in that ancestor's own common natural
+// ancestry, never in the current claim's pooled earlier elements. The provider
+// is lazy: the historical strict strategy does not request this extra evidence.
+const ancestorReferenceProvider =
+  (
+    claim: PatentClaim,
+    claims: ReadonlyArray<PatentClaim>,
+    commonByClaim: HashMap.HashMap<number, HashSet.HashSet<number>>,
+    constructTree: typeof treeInput,
+    resolveReferences: StructuralReferenceStrategy
+  ): (() => ReadonlyArray<EncodedEdge>) =>
+  () => {
+    let prepared = HashMap.empty<number, ReadonlyArray<EncodedEdge>>();
+    const sourceAncestors = (number: number) => {
+      const allowed = O.getOrElse(HashMap.get(commonByClaim, number), HashSet.empty<number>);
+      return A.filter(
+        claims,
+        (candidate) => candidate.claimNumber < number && HashSet.has(allowed, candidate.claimNumber)
+      );
+    };
+    const elementsOf = (source: PatentClaim): ReadonlyArray<EncodedElement> =>
+      O.match(locateParts(source), {
+        onNone: A.empty<EncodedElement>,
+        onSome: (parts) => constructTree(source, parts).elements,
+      });
+    const referencesFor = (source: PatentClaim): ReadonlyArray<EncodedEdge> =>
+      O.getOrElse(HashMap.get(prepared, source.claimNumber), () => {
+        const context = sourceAncestors(source.claimNumber);
+        const resolved = resolveReferences(
+          elementsOf(source),
+          A.flatMap(context, elementsOf),
+          referencesOf(source),
+          () => A.flatMap(context, referencesFor)
+        );
+        const references = A.filter(resolved, (edge) => edge.kind === "antecedent");
+        prepared = HashMap.set(prepared, source.claimNumber, references);
+        return references;
+      });
+    return A.flatMap(sourceAncestors(claim.claimNumber), referencesFor);
+  };
+
 const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
   claim: PatentClaim,
   claims: ReadonlyArray<PatentClaim>,
-  constructTree: typeof treeInput
+  constructTree: typeof treeInput,
+  resolveReferences: StructuralReferenceStrategy = legacyStructuralReferences
 ): Effect.fn.Return<ClaimElementTree, ClaimDecompositionError> {
   const claimNumber = claim.claimNumber;
   const parts = yield* Effect.fromOption(locateParts(claim), () =>
@@ -1152,7 +1963,12 @@ const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
         onSome: (located) => constructTree(candidate, located).elements,
       })
   );
-  const antecedents = antecedentEdges(input.elements, ancestors);
+  const antecedents = resolveReferences(
+    input.elements,
+    ancestors,
+    referencesOf(claim),
+    ancestorReferenceProvider(claim, claims, commonByClaim, constructTree, resolveReferences)
+  );
   const bodyDependencies = A.flatMap(antecedents, (edge): ReadonlyArray<EncodedEdge> => {
     if (
       edge.kind !== "antecedent" ||
@@ -1369,7 +2185,7 @@ export const decomposeClaimInput = Effect.fn("ClaimElement.decomposeClaimInput")
     if (!ClaimInputQualification.guards["context-ready"](qualification)) {
       return Effect.succeed(ClaimInputDecomposition.cases.unchecked.make({ qualification }));
     }
-    return decomposeInContext(qualification.claim, claims, inspectionTreeInput).pipe(
+    return decomposeInContext(qualification.claim, claims, inspectionTreeInput, inspectionStructuralReferences).pipe(
       Effect.map((tree) => ClaimInputDecomposition.cases.decomposed.make({ qualification, tree })),
       Effect.catchTag("ClaimDecompositionError", (cause) =>
         Effect.succeed(ClaimInputDecomposition.cases["decomposition-failed"].make({ qualification, cause }))

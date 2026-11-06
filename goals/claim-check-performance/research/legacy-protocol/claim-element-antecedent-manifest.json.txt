@@ -1,0 +1,120 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "claim-element-antecedent-check",
+    "packetId": "goal-packet/v1:9fe9e77b7dd3034d3481d4847f740d689cd6fb1d49eefb41ab47958b09127263",
+    "title": "Claim Element Antecedent Check",
+    "status": "completed-retained",
+    "created": "2026-10-14",
+    "updated": "2026-11-03",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/claim-element-antecedent-check",
+  "lifecycle": "completed-retained",
+  "mission": "Give patent claims a span-anchored element tree and an advisory, deterministic \u00a7112(b) antecedent-basis and dependency self-check whose findings reach the attorney as claim-finding review items, measured on public USPTO claims with strict structural equality.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/claim-element-graph",
+    "graduated": "2026-10-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2656,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_claim-element-retained-final-1103-d521e6dca988/verdict.json",
+        "gating": true
+      },
+      {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      }
+    ]
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/claim-element-antecedent-check/README.md",
+    "goals/claim-element-antecedent-check/SPEC.md",
+    "goals/claim-element-antecedent-check/PLAN.md",
+    "goals/claim-element-antecedent-check/GOAL.md",
+    "goals/claim-element-antecedent-check/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/claim-element-antecedent-check/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Schema",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Service contract",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Deterministic implementation + USPTO adapter + labelled set",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Review items + evaluation",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/claim-element-antecedent-check/GOAL.md)\" -le 4000",
+    "jq . goals/claim-element-antecedent-check/ops/manifest.json",
+    "rg -n \"claim-element-antecedent-check|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/claim-element-antecedent-check",
+    "git diff --check -- goals/claim-element-antecedent-check",
+    "bun run beep goals doctor",
+    "bun run beep quality package-verify @beep/law-practice-domain",
+    "bun run beep quality package-verify @beep/law-practice-use-cases",
+    "bun run beep quality package-verify @beep/law-practice-server",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Completed-retained, canonically verified via final PR #2656 at accepted head 3788988864abaeb2d0b19fa04e27c45949e7ef65 and strict merge 470d609298c518814930fdbd84be16aa54e96e5a. Positive exact-head readiness was archived before merge; required hosted contexts and the declared Yeet verdict are verified. The guarded status writer adopts the verified proposal without changing its declaration digest. v27 remains 37/538 with all 34 protected/all 37 prior matches, original labels, previous results and uncertainty retained. Accuracy and alert noise remain poor; findings are advisory and no fresh benchmark or actual attorney review is claimed. Earlier failed/unknown/unsatisfied closeouts remain historical evidence.",
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2656
+  }
+}

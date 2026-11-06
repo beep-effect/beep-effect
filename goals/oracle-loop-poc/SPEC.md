@@ -11,11 +11,17 @@ pre-registered kill criteria. A generic profile proves the loop; a stacked paten
 proves that domain rules can be enforced over a primitive document model without the core
 learning the domain. The outcome is a go/no-go on promoting the core shapes, not a product.
 
+The November 5 amendment adds one deterministic, lab-local question-binding fixture
+after the first generic slice. It tests unresolved obligations, answer identity, replay,
+and revision invalidation without replacing any existing profile or acceptance gate.
+
 Graduated from [`explorations/doc-hub-spokes`](../../explorations/doc-hub-spokes/README.md)
 on 2026-10-28. Its [`BRIEF.md`](../../explorations/doc-hub-spokes/BRIEF.md),
 [`MAP.md`](../../explorations/doc-hub-spokes/MAP.md) and
 [`DECISIONS.md`](../../explorations/doc-hub-spokes/DECISIONS.md) (D-01..D-12) are the
 provenance; they are linked, not copied.
+The later D-13 amendment clarifies unresolved obligations and request identity for this
+POC only; it leaves the sibling inversion's scope unchanged.
 
 ## Non-Goals
 
@@ -29,19 +35,22 @@ provenance; they are linked, not copied.
   `rule-dsl-projections`).
 - Any tier 3 content judgment (novelty, obviousness); the POC gates process only, and only
   to red-team it.
-- Full bitemporality; the POC carries a rule version id on every finding and nothing more.
+- Full bitemporality; findings carry rule version ids, and the bounded fixture pins its
+  evaluation basis and preserves historical evaluations without a temporal database.
+- Production approval authority, live classifier integration, a general workflow or
+  Datalog engine, automatic precedent induction, or a policy-authoring product.
 - Streaming validation of partial output; CSS and script spokes; training on the ledger.
 - The hub inversion itself (`goals/doc-hub-spokes-inversion`); this POC imports `@beep/md`
   until the rename lands and then rewires imports in one commit.
 
 ## Source Hierarchy
 
-1. The operator rulings in `explorations/doc-hub-spokes/DECISIONS.md` (D-01..D-12).
+1. The operator rulings in `explorations/doc-hub-spokes/DECISIONS.md` (D-01..D-13).
 2. `AGENTS.md`, `CLAUDE.md`, and required skills (`effect-first-development`,
    `schema-first-development`, `yeet`, `closeout`, `reflect`).
 3. `standards/ARCHITECTURE.md`, `standards/architecture/07-non-slice-families.md`,
    `apps/labs/README.md`.
-4. This `SPEC.md`.
+4. This `SPEC.md`, including its normative [question-binding fixture](./QUESTION-BINDING.md).
 5. `PLAN.md`.
 6. `GOAL.md`.
 7. `research/SOURCES.md`, the exploration's `research/` (panel reviews, notes, prior-art
@@ -71,14 +80,39 @@ Higher sources outrank lower sources when they conflict.
   offsets (`@beep/markdown`, parse5) project through their source map; the Pandoc spoke
   projects to block/inline coordinates. A finding without a location is a defect.
 - **Every judge emits one `Finding` shape**: location, rule id with version, severity,
-  message, evidence, judge identity, confidence (deterministic judges report 1), repair
-  applicability (safe / suggestion / none), and optional fix edits. Routing, display and
-  ledgering never branch on judge kind; an `Obligation` declares which judge classes may
-  discharge it.
+  message, evidence, judge identity, uncertainty metadata, repair applicability
+  (safe / suggestion / none), and optional fix edits. A retained confidence scalar must
+  name its interpretation: deterministic `1` means the predicate evaluated as specified
+  over bound inputs, not certainty that those inputs describe the world. A signature
+  records approval under a policy, not confidence-one factual truth. Display and ledgering
+  use the common envelope; an `Obligation` declares which judge classes and evidence kinds
+  may discharge it. High confidence cannot override that policy. Forecasts and extracted
+  claims do not automatically become admitted facts. Reuse existing assurance/evidence
+  types where available rather than creating a parallel taxonomy.
+- **Unresolved obligations remain explicit.** Resolution distinguishes permitted source
+  edits from evidence collection, an authorized answer, or waiting for an external event.
+  The lab may model this beside the finding envelope until a shared shape is justified.
+  Conditional results identify open requests or evidence. No new finding does not mean
+  coverage or discharge; repair applicability `none` does not mean an obligation is moot.
+  Source edits cannot manufacture observations, signatures, or receipts. Deleting a
+  protected commitment or suppressing a finding cannot discharge its obligation.
+- **Location is separate from request identity.** The fixture binds question, response
+  shape, complete source revision, evidence basis, rule/policy versions, answerer policy,
+  and request occurrence, using immutable references where useful. A narrower source
+  dependency boundary needs evidence that edits outside it cannot change the question or
+  relevant evidence. Remapping a model path must not transfer an answer to a new request.
 - **Coverage is emitted beside findings**: which paths which rules examined, which are
   known-unchecked. `pattern-not-covered` from the antecedent checker maps to coverage.
 - **Witnesses are runtime-minted** (receipt-shaped like `TextAnchorVerificationReceipt`);
   an agent never writes its own provenance. Judge attempts per obligation are capped.
+- **Fixture receipts bind admitted answers to occurrences.** Record answerer identity,
+  authority basis, and policy version. Deterministic lab answerers prove the fixture
+  contract only, not production authentication or real human approval. Replay uses
+  recorded admitted observations without calling answerers. Late valid answers can
+  resolve pending occurrences; mismatched, superseded, or unauthorized answers cannot.
+  Duplicate observation identifiers are idempotent, conflicting answers after resolution
+  are refused, and a revision opens a new occurrence. Cross-run reuse requires an explicit
+  policy; content equality alone is insufficient.
 - **Precision bar before a rule enters the loop**: hand-labelled sample; under 10%
   effective false positives for advisory findings, essentially zero for blocking ones;
   scored at location level. A rule below the bar stays out, recorded in the Decision Log.
@@ -92,7 +126,7 @@ Higher sources outrank lower sources when they conflict.
   no-oracle arm; a narrowing that clears findings is recorded as a failure, not a success.
 - **`SafeDocument` keeps hub-native rules only (D-10)**; the html spoke proves heading order
   and other conformance at projection time.
-- **Public material only**: granted claims, published applications, PEDANTIC, USPTO Office
+- **Public or synthetic material only**: granted claims, published applications, PEDANTIC, USPTO Office
   Action datasets. Nothing from the out-of-repo corpus. Confirm PEDANTIC's license before
   use; if unavailable, the mutation corpus from public claim sets stands alone.
 - **Routing doctrine**: Opus 5.5 children; Codex `gpt-6.1-sol` medium as the fallback; the
@@ -107,6 +141,13 @@ Higher sources outrank lower sources when they conflict.
 - [ ] First vertical slice (MAP "days 1 to 5"): Markdown in, generic profile, findings with
       model path and derived span, splice repair, incremental re-validation, coverage map,
       one frame condition, harness metrics recorded; compared against the regenerate arm.
+- [ ] The [question-binding fixture](./QUESTION-BINDING.md) passes Q1–Q16 with zero
+      accepted safety/identity violations and records a separate verdict. It stays local
+      to the lab, uses synthetic inputs and deterministic answerers, and adds no shared
+      model, production service, engine, or dependency on the protocol substrate.
+- [ ] One synthetic feedback rule is evaluated against its original example and at least
+      two contrasting examples, including an overbroad rejection; a simulated adoption
+      decision is explicit and the proposal alone never changes the active rule revision.
 - [ ] HTML codec via parse5 with `sourceCodeLocationInfo` and `onParseError`, folded into
       the `@beep/html` model and the hub, with a loss ledger row per unsupported construct.
 - [ ] .docx codec via Pandoc and `@beep/pandoc-ast`, with path-addressed findings.
@@ -135,6 +176,8 @@ Higher sources outrank lower sources when they conflict.
 | Harness run | `history/<date>-harness-run.md` with the four-arm metrics table | Present, numbers stated |
 | Precision sample | `history/<date>-precision-sample.md` with hand labels | At or above the bar, or the rule excluded |
 | Red-team | `history/<date>-redteam.md` | Verdict recorded |
+| Question binding | `history/question-binding-fixture.md` plus machine-readable case receipts | Q1–Q16 pass; replay calls no answerer; failed cases retained |
+| Feedback rule | Candidate, contrasting cases, and simulated adoption decision in the fixture report | Overbroad rejection exposed; proposal does not mutate active policy |
 | Reflection | `bun run beep lint reflection-artifacts` | Passes |
 
 ## Stop Conditions
@@ -152,6 +195,7 @@ them and record each in the Decision Log.
 | Date | Decision | Reason | How to reverse |
 | --- | --- | --- | --- |
 | 2026-10-28 | Inherits exploration D-01..D-12 (agent output is the center; lab app POC with third-party deps; harness loop first; `@beep/doc`; parse5 in the lab; profile 2 consumes the antecedent checker; .docx is in scope; model-path-first findings; separate domain graph; spokes prove their projections; Pandoc intake; lab named `oracle-loop`). | Graduation seeds the contract from the exploration's rulings. | Reopen the exploration at decompose and amend. |
+| 2026-11-05 | Operator authorized D-13 and the bounded question-binding fixture: unresolved obligations, occurrence-bound answers, replay, authority, and feedback-rule counterexamples. Original profiles and numeric gates remain required; implementation remains pending. | An edit can silence a finding without resolving its obligation, and a source location does not identify an approval. | Remove the extra fixture through a dated scope decision, retain receipts, and withdraw promotion claims depending on it; keep original document-loop criteria. |
 
 ## Exception Ledger
 

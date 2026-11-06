@@ -62,8 +62,10 @@ export const setupCitationRegexRuntime = Effect.fn("RegexWorkerTest.runtime")(fu
   );
   return { limits, timer, admission, observed, runtime, context };
 });
-/** Shared actual runtime plus operation lifetime, invocation budget and optional captured deadline. */
-const setupCitationMetadataRuntime = Effect.fn("RegexWorkerTest.metadataRuntime")(function* (
+/** Shared actual runtime plus operation lifetime, invocation budget and optional captured deadline.
+ * @internal @category testing @since 0.0.0
+ */
+export const setupCitationMetadataRuntime = Effect.fn("RegexWorkerTest.metadataRuntime")(function* (
   kind: CitationNativeRuntimeKind,
   maximum?: number,
   enclosing = false,
@@ -111,6 +113,16 @@ export const citationMetadataDeadlineText = () =>
     kind: "Text",
     data: CitationPythonUnicodeStorage.make({ width: 1, bytes: new TextEncoder().encode(Str.repeat(65536)("x")) }),
   });
+/** Assert a closed source helper failure through the shared Effect error channel.
+ * @internal @category testing @since 0.0.0
+ */
+export const assertCitationMetadataFailure = Effect.fn("RegexWorkerTest.metadataFailure")(function* <A, E>(
+  body: Effect.Effect<A, E>,
+  expected: object
+) {
+  const failed = yield* body.pipe(Effect.flip);
+  expect(failed).toMatchObject(expected);
+});
 /** Actual worker using the shared runtime and independent source bindings. */
 export const setupCitationRegexWorker = Effect.fn("RegexWorkerTest.setup")(function* (
   bindings: unknown,

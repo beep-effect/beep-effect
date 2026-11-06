@@ -27,6 +27,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -37,10 +39,10 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
+import { patientGit } from "../../internal/repo-run/PatientGit.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import { ciOperationalPatterns } from "./CiOperational.schemas.ts";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Ci/HeavyAdmission");
@@ -503,9 +505,10 @@ const branchOfBase = (base: string): string => Str.replace(/^origin\//u, "")(bas
  * **Details**
  *
  * The fetch is best effort (a stale but present ref still yields a correct
- * merge-base diff); the diff itself must exit 0, since an unreadable diff
- * cannot be told apart from an empty one and the decision would silently
- * hold.
+ * merge-base diff) and runs on the patient (15-minute) `Git` instance; the
+ * diff itself must exit 0, since an unreadable diff cannot be told apart from
+ * an empty one and the decision would silently hold. Paths come back raw
+ * (`-z`), never C-quoted.
  *
  * **Example** (Reference the reader)
  *
@@ -517,35 +520,34 @@ const branchOfBase = (base: string): string => Str.replace(/^origin\//u, "")(bas
  *
  * @param branch - The base branch name without the `origin/` prefix.
  * @param cwd - The checkout to diff.
- * @param capture - The command capture to run `git` through; the repo capture by default.
- * @returns The changed paths, trimmed and non-empty.
+ * @returns The paths the checkout changed since its merge base with the branch.
  * @category services
  * @since 0.0.0
  */
 export const readHeavyAdmissionChangedPaths = Effect.fn("Ci.readHeavyAdmissionChangedPaths")(function* (
   branch: string,
-  cwd: string,
-  capture: typeof runRepoCommandCapture = runRepoCommandCapture
-): Effect.fn.Return<
-  ReadonlyArray<string>,
-  CiCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
+  cwd: string
+): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, ChildProcessSpawner.ChildProcessSpawner | Git> {
   const safe = yield* safeBranch(branch);
-  yield* capture(
-    "git",
-    ["fetch", "--quiet", "--no-tags", "origin", `+refs/heads/${safe}:refs/remotes/origin/${safe}`],
-    cwd
-  ).pipe(Effect.ignore);
-  const diff = yield* capture("git", ["diff", "--name-only", `origin/${safe}...HEAD`], cwd).pipe(
-    CiCommandError.mapError("Failed to run git diff for heavy admission.")
+  const refspec = `+refs/heads/${safe}:refs/remotes/origin/${safe}`;
+  yield* patientGit.pipe(
+    Effect.flatMap((patient) => patient.fetch(cwd, { ref: refspec, noTags: true })),
+    Effect.ignore
   );
-  if (diff.exitCode !== 0 || diff.truncated) {
-    return yield* CiCommandError.make({
-      message: `git diff --name-only origin/${safe}...HEAD exited ${diff.exitCode}${diff.truncated ? " (truncated)" : ""}.`,
-    });
-  }
-  return pipe(Str.split(diff.output, "\n"), A.map(Str.trim), A.filter(Str.isNonEmpty));
+  const git = yield* Git;
+  const base = `origin/${safe}`;
+  return yield* git.changedFiles(cwd, { base, head: "HEAD" }).pipe(
+    Effect.mapError(
+      adaptGitKitError(GitCommand.changedFiles(base, "HEAD"), {
+        onSpawnFailure: () => CiCommandError.new("Failed to run git diff for heavy admission."),
+        onNonZeroExit: ({ exitCode }) =>
+          CiCommandError.make({ message: `git diff --name-only ${base}...HEAD exited ${exitCode}.` }),
+        onTruncated: O.some(() =>
+          CiCommandError.make({ message: `git diff --name-only ${base}...HEAD overflowed the read bound (truncated).` })
+        ),
+      })
+    )
+  );
 });
 
 /**
@@ -568,18 +570,16 @@ export const readHeavyAdmissionChangedPaths = Effect.fn("Ci.readHeavyAdmissionCh
  * ```
  *
  * @param input - Resolved event name, optional payload path and base, and the checkout.
- * @param capture - The command capture to run `git` through; the repo capture by default.
  * @returns The typed event {@link decideHeavyAdmission} reads.
  * @category services
  * @since 0.0.0
  */
 export const readHeavyAdmissionEvent = Effect.fn("Ci.readHeavyAdmissionEvent")(function* (
-  input: HeavyAdmissionReadInput,
-  capture: typeof runRepoCommandCapture = runRepoCommandCapture
+  input: HeavyAdmissionReadInput
 ): Effect.fn.Return<
   HeavyAdmissionEvent,
   CiCommandError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   if (!HeavyAdmissionEventName.is.pull_request(input.eventName)) {
     return HeavyAdmissionEvent.make({ eventName: input.eventName });
@@ -599,7 +599,7 @@ export const readHeavyAdmissionEvent = Effect.fn("Ci.readHeavyAdmissionEvent")(f
     )
   );
   const branch = branchOfBase(O.getOrElse(input.base, () => payload.pull_request.base.ref));
-  const changedPaths = yield* readHeavyAdmissionChangedPaths(branch, input.cwd, capture);
+  const changedPaths = yield* readHeavyAdmissionChangedPaths(branch, input.cwd);
   return HeavyAdmissionEvent.make({
     eventName: input.eventName,
     headRepository: payload.pull_request.head?.repo?.full_name ?? "",

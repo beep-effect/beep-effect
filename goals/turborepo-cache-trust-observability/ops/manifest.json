@@ -86,6 +86,7 @@
     "research/inspection-governance-checkpoint.json",
     "research/inspection-routing-checkpoint-2026-11-02.json",
     "research/installed-dependency-diagnostic-preparation-2026-11-03.json",
+    "research/installed-dependency-refusal-retention-2026-11-05.json",
     "research/native-dependency-diagnostics.py",
     "research/native-dependency-diagnostics.test.py",
     "research/native-isolated-canary-probe.json",

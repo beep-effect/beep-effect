@@ -11,8 +11,9 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
-import { setupCitationRegexWorker } from "./CitationRegexWorker.fixtures.ts";
+import { assertCitationRegexRuntimeReleased, setupCitationRegexWorker } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import type * as R from "effect/Record";
 
 const $I = $LawPracticeServerId.create("test/CitationRegexVerbose");
 const Native = S.Struct({ width: S.Literals([1, 2, 4]), bytes: S.Uint8ArrayFromHex });
@@ -187,4 +188,56 @@ export const replayCitationRegexVerbose = Effect.fn("VerboseTest.replay")(functi
 ) {
   const corpus = yield* loadCitationRegexVerbose();
   yield* Effect.forEach(CitationRegexEngine.literals, (engine) => replayEngine(kind, full, corpus, engine));
+});
+
+/** Reuse one existing observed worker for source grammar families, including
+ * closed parser-only execution refusals and independently acknowledged exits.
+ * @internal @category testing @since 0.0.0
+ */
+export const replayCitationRegexProgramEngine = Effect.fn("RegexProgramTest.engine")(function* (
+  kind: CitationNativeRuntimeKind,
+  full: boolean,
+  patterns: ReadonlyArray<CitationRegexProbePattern>,
+  engine: typeof CitationRegexEngine.Type,
+  patternMaximum?: number
+) {
+  const known = A.filter(patterns, (row) => row.engines[engine].profile !== null);
+  const rows = A.filter(known, (row) => row.engines[engine].kind === "single-match" && (full || row.smoke));
+  const bindings = A.map(known, (row) => ({
+    patternSha256: row.patternSha256,
+    flags: row.flags,
+    profile: row.engines[engine].profile,
+  }));
+  const setup = yield* setupCitationRegexWorker(bindings, kind, engine, patternMaximum);
+  let admitted = 0;
+  for (const row of rows) admitted += yield* replayCitationRegexProgramRow(setup, row, row.engines[engine], full);
+  let refused = 0;
+  for (const row of A.filter(known, (row) => row.engines[engine].kind === "parser-only")) {
+    const source = yield* Effect.fromOption(A.head(row.engines[engine].cases));
+    const failure = yield* setup.worker.evaluate(row.pattern, source.source, row.flags, 1, "search").pipe(Effect.flip);
+    expect(failure).toMatchObject({ reason: "unsupported-profile" });
+    refused++;
+  }
+  yield* assertCitationRegexRuntimeReleased(setup.admission, setup.observed.snapshot, admitted + refused);
+  return { admitted, refused };
+});
+const ReplayCounts = S.Struct({ smoke: S.Natural, full: S.Natural, refused: S.Natural }).pipe(
+  $I.annoteSchema("ReplayCounts", {
+    description: "Expected source-family worker admissions and explicit profile refusals.",
+  })
+);
+/** Replay both source engines with the shared complete exit-accounting assertions. */
+export const replayCitationRegexProgramFamily = Effect.fn("RegexProgramTest.family")(function* (
+  kind: CitationNativeRuntimeKind,
+  full: boolean,
+  patterns: ReadonlyArray<CitationRegexProbePattern>,
+  expectedCounts: R.ReadonlyRecord<typeof CitationRegexEngine.Type, typeof ReplayCounts.Type>,
+  patternMaximum: number
+) {
+  for (const engine of CitationRegexEngine.literals) {
+    const counts = yield* replayCitationRegexProgramEngine(kind, full, patterns, engine, patternMaximum);
+    const expected = expectedCounts[engine];
+    expect(counts.admitted).toBe(full ? expected.full : expected.smoke);
+    expect(counts.refused).toBe(expected.refused);
+  }
 });
