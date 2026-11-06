@@ -395,14 +395,18 @@ export const readPacketSiblings = Effect.fn("Yeet.readPacketSiblings")(function*
   if (A.isReadonlyArrayEmpty(slugs)) return empty;
 
   const open = yield* rest.openPullRequests.pipe(Effect.mapError(yeetGithubFailure("gh api open pulls")));
+  // One candidate's files read failing (a 5xx, a rate limit, a PR closed mid-read) must not abort
+  // the discovery: that PR is reported as not sharing and the others still get their broadcast.
   const candidates = yield* Effect.forEach(
     A.filter(open, (pull) => pull.number !== prNumber),
     (pull) =>
       rest.pullRequestFiles(pull.number).pipe(
-        Effect.mapBoth({
-          onFailure: yeetGithubFailure(`gh api files #${pull.number}`),
-          onSuccess: (theirs) => ({ pull, shared: sharedSlugs(slugs, packetSlugsOf(theirs)) }),
-        })
+        Effect.map((theirs) => ({ pull, shared: sharedSlugs(slugs, packetSlugsOf(theirs)) })),
+        Effect.catch((error) =>
+          Console.error(
+            `[yeet] warning: could not read the files of #${pull.number}; treating it as not sharing a packet: ${error.message}`
+          ).pipe(Effect.as({ pull, shared: A.empty<string>() }))
+        )
       ),
     { concurrency: 4 }
   );

@@ -317,6 +317,27 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
       })
     );
 
+    it.effect("one sibling's files read failing is a warning; the other sibling is still told", () =>
+      Effect.gen(function* () {
+        // #8 shares the packet; #9's files read answers 502 every time.
+        const flaky = (call: GithubCall) =>
+          call.path === "{repo}/pulls/9/files" ? { status: 502, body: { message: "Bad Gateway" } } : routes(call);
+        const github = recordedGithub(flaky);
+        const report = yield* broadcastPacketSiblings(context, 7, MERGE_SHA).pipe(
+          github.provide,
+          provideSpawner(scriptedGit([]))
+        );
+        expect(A.map(report.siblings, (s) => s.prNumber)).toEqual([8]);
+        const comments = A.filter(
+          github.calls,
+          (call) => call.method === "POST" && Str.includes("/comments")(call.path)
+        );
+        expect(A.map(comments, (call) => call.path)).toEqual(["{repo}/issues/8/comments"]);
+        const errors = yield* TestConsole.errorLines;
+        expect(A.some(errors, (line) => Str.includes("could not read the files of #9")(String(line)))).toBe(true);
+      })
+    );
+
     it.effect("a packet PR with no open sibling broadcasts nothing", () =>
       Effect.gen(function* () {
         const lonely = (call: GithubCall) =>
