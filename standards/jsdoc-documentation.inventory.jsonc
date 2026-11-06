@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-06T00:08:34.290Z",
+  "generatedAt": "2026-11-06T00:31:44.139Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 170,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
-    "publicModules": 3651,
-    "publicExports": 26222,
+    "publicModules": 3655,
+    "publicExports": 26257,
     "openModules": 114,
     "openExports": 88,
     "missingExportExamples": 0,
@@ -466893,9 +466893,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 491,
-        "publicModuleCount": 488,
-        "publicExportCount": 4510
+        "sourceFileCount": 495,
+        "publicModuleCount": 492,
+        "publicExportCount": 4545
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -471128,6 +471128,94 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/commands/Goals/Decisions.projection.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 9,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Goals/Decisions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 14,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Goals/Decisions.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.service.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-service-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Goals/Decisions.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 6,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
           "line": 1,
@@ -471741,7 +471829,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 28,
+          "exportCount": 32,
           "remediationStatus": "resolved"
         },
         {
@@ -514210,8 +514298,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Bootstrap.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.schemas.ts",
-          "line": 817,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-schemas-ts-817-validationrequirementsforgoaldoctorfinding",
+          "line": 819,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-schemas-ts-819-validationrequirementsforgoaldoctorfinding",
           "currentTags": [
             "@param",
             "@returns",
@@ -514234,8 +514322,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Bootstrap.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.schemas.ts",
-          "line": 836,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-schemas-ts-836-materializedfile",
+          "line": 838,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-schemas-ts-838-materializedfile",
           "currentTags": [
             "@category",
             "@since"
@@ -514256,8 +514344,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Bootstrap.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.schemas.ts",
-          "line": 867,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-schemas-ts-867-materializationreceipt",
+          "line": 869,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-schemas-ts-869-materializationreceipt",
           "currentTags": [
             "@category",
             "@since"
@@ -514278,8 +514366,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Bootstrap.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts",
-          "line": 143,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-143-archetypephases",
+          "line": 144,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-144-archetypephases",
           "currentTags": [
             "@param",
             "@returns",
@@ -514302,8 +514390,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Goals/Bootstrap.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts",
-          "line": 495,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-495-planrow",
+          "line": 505,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-505-planrow",
           "currentTags": [
             "@category",
             "@since"
@@ -514324,8 +514412,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Goals/Bootstrap.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts",
-          "line": 531,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-531-preservationrow",
+          "line": 541,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-541-preservationrow",
           "currentTags": [
             "@category",
             "@since"
@@ -514346,8 +514434,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Goals/Bootstrap.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts",
-          "line": 544,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-544-conflictrow",
+          "line": 554,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-554-conflictrow",
           "currentTags": [
             "@category",
             "@since"
@@ -514368,8 +514456,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Bootstrap.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts",
-          "line": 579,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-579-sealmaterializationplan",
+          "line": 589,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-589-sealmaterializationplan",
           "currentTags": [
             "@param",
             "@returns",
@@ -514392,8 +514480,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Bootstrap.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts",
-          "line": 657,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-657-compilematerializationplan",
+          "line": 667,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-667-compilematerializationplan",
           "currentTags": [
             "@param",
             "@returns",
@@ -514416,8 +514504,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Bootstrap.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts",
-          "line": 774,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-774-rendermaterializationplanjson",
+          "line": 784,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-784-rendermaterializationplanjson",
           "currentTags": [
             "@param",
             "@returns",
@@ -514440,8 +514528,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Bootstrap.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts",
-          "line": 807,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-807-rendermaterializationplanhuman",
+          "line": 817,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-817-rendermaterializationplanhuman",
           "currentTags": [
             "@param",
             "@returns",
@@ -514464,8 +514552,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Bootstrap.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts",
-          "line": 869,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-869-plantodayflag",
+          "line": 879,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-879-plantodayflag",
           "currentTags": [
             "@category",
             "@since"
@@ -514486,8 +514574,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Bootstrap.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts",
-          "line": 919,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-919-resolvetoday",
+          "line": 929,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-929-resolvetoday",
           "currentTags": [
             "@param",
             "@returns",
@@ -514510,8 +514598,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Bootstrap.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts",
-          "line": 963,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-963-reportcompiledplan",
+          "line": 973,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-973-reportcompiledplan",
           "currentTags": [
             "@param",
             "@returns",
@@ -514534,8 +514622,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Bootstrap.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts",
-          "line": 1006,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-1006-reportmaterializationplan",
+          "line": 1016,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-1016-reportmaterializationplan",
           "currentTags": [
             "@param",
             "@returns",
@@ -514558,8 +514646,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Bootstrap.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts",
-          "line": 1082,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-1082-goalsbootstrapcommand",
+          "line": 1092,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-bootstrap-ts-1092-goalsbootstrapcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -515405,12 +515493,702 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "GOAL_DECISIONS_BEGIN_MARKER",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.projection.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
+          "line": 56,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-56-goal-decisions-begin-marker",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GOAL_DECISIONS_END_MARKER",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.projection.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
+          "line": 72,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-72-goal-decisions-end-marker",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GOAL_DECISION_TARGETS",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.projection.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
+          "line": 89,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-89-goal-decision-targets",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionDocument",
+          "exportKind": "type",
+          "filePath": "src/commands/Goals/Decisions.projection.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
+          "line": 100,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-100-goaldecisiondocument",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionReader",
+          "exportKind": "interface",
+          "filePath": "src/commands/Goals/Decisions.projection.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
+          "line": 116,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-116-goaldecisionreader",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "parseGoalDecision",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.projection.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
+          "line": 150,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-150-parsegoaldecision",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "renderGoalDecisionBlock",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.projection.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
+          "line": 224,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-224-rendergoaldecisionblock",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "spliceGoalDecisionBlock",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.projection.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
+          "line": 276,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-276-splicegoaldecisionblock",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "goalDecisionLogReport",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.projection.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
+          "line": 380,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-380-goaldecisionlogreport",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GOAL_DECISIONS_DIR",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
+          "line": 33,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-33-goal-decisions-dir",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionKind",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
+          "line": 55,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-55-goaldecisionkind",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionKind",
+          "exportKind": "type",
+          "filePath": "src/commands/Goals/Decisions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
+          "line": 67,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-67-goaldecisionkind",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionDate",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
+          "line": 85,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-85-goaldecisiondate",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionDate",
+          "exportKind": "type",
+          "filePath": "src/commands/Goals/Decisions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
+          "line": 106,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-106-goaldecisiondate",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionFileName",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
+          "line": 125,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-125-goaldecisionfilename",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionFileName",
+          "exportKind": "type",
+          "filePath": "src/commands/Goals/Decisions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
+          "line": 146,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-146-goaldecisionfilename",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionFrontmatter",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Decisions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
+          "line": 186,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-186-goaldecisionfrontmatter",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionFrontmatter",
+          "exportKind": "namespace",
+          "filePath": "src/commands/Goals/Decisions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
+          "line": 220,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-220-goaldecisionfrontmatter",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecision",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Decisions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
+          "line": 254,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-254-goaldecision",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionFileInvalid",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Decisions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
+          "line": 281,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-281-goaldecisionfileinvalid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionTarget",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Decisions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
+          "line": 308,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-308-goaldecisiontarget",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionProjection",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Decisions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
+          "line": 347,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-347-goaldecisionprojection",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionLogReport",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Decisions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
+          "line": 376,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-376-goaldecisionlogreport",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionLogShape",
+          "exportKind": "type",
+          "filePath": "src/commands/Goals/Decisions.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.service.ts",
+          "line": 30,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-service-ts-30-goaldecisionlogshape",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionLog",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Decisions.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.service.ts",
+          "line": 50,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-service-ts-50-goaldecisionlog",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionLogLive",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.ts",
+          "line": 93,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-ts-93-goaldecisionloglive",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "runGoalsDecisionsCheck",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.ts",
+          "line": 169,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-ts-169-rungoalsdecisionscheck",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "runGoalsDecisionsWrite",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.ts",
+          "line": 207,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-ts-207-rungoalsdecisionswrite",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDecisionAddInput",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Decisions.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.ts",
+          "line": 251,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-ts-251-goaldecisionaddinput",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "runGoalsDecisionsAdd",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.ts",
+          "line": 299,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-ts-299-rungoalsdecisionsadd",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "goalsDecisionsCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Decisions.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.ts",
+          "line": 420,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-ts-420-goalsdecisionscommand",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "GOALS_DOCTOR_BASELINE_PATH",
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 90,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-90-goals-doctor-baseline-path",
+          "line": 94,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-94-goals-doctor-baseline-path",
           "currentTags": [
             "@category",
             "@since"
@@ -515431,8 +516209,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 106,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-106-goal-md-max-chars",
+          "line": 110,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-110-goal-md-max-chars",
           "currentTags": [
             "@category",
             "@since"
@@ -515453,8 +516231,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 124,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-124-goaldoctorfindingkind",
+          "line": 128,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-128-goaldoctorfindingkind",
           "currentTags": [
             "@category",
             "@since"
@@ -515475,8 +516253,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 182,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-182-goaldoctorfindingkind",
+          "line": 188,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-188-goaldoctorfindingkind",
           "currentTags": [
             "@category",
             "@since"
@@ -515497,8 +516275,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 216,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-216-goaldoctorfinding",
+          "line": 222,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-222-goaldoctorfinding",
           "currentTags": [
             "@category",
             "@since"
@@ -515519,8 +516297,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 276,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-276-goaldoctorclassification",
+          "line": 282,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-282-goaldoctorclassification",
           "currentTags": [
             "@category",
             "@since"
@@ -515541,8 +516319,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 319,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-319-classifygoaldoctorfindings",
+          "line": 325,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-325-classifygoaldoctorfindings",
           "currentTags": [
             "@param",
             "@returns",
@@ -515565,8 +516343,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 366,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-366-goalexplorationpathstate",
+          "line": 372,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-372-goalexplorationpathstate",
           "currentTags": [
             "@category",
             "@since"
@@ -515587,8 +516365,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 378,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-378-goalexplorationpathstate",
+          "line": 384,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-384-goalexplorationpathstate",
           "currentTags": [
             "@category",
             "@since"
@@ -515609,8 +516387,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 398,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-398-goalpacketreader",
+          "line": 405,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-405-goalpacketreader",
           "currentTags": [
             "@category",
             "@since"
@@ -515631,8 +516409,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 500,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-500-makegoalpacketfilesystemreader",
+          "line": 543,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-543-makegoalpacketfilesystemreader",
           "currentTags": [
             "@returns",
             "@category",
@@ -515654,8 +516432,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 534,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-534-makegoalpacketworkingtreereader",
+          "line": 613,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-613-makegoalpacketworkingtreereader",
           "currentTags": [
             "@param",
             "@returns",
@@ -515678,8 +516456,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 864,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-864-goalpacketfindings",
+          "line": 943,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-943-goalpacketfindings",
           "currentTags": [
             "@param",
             "@returns",
@@ -515702,8 +516480,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 1195,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1195-capabilitydoctorfindings",
+          "line": 1276,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1276-capabilitydoctorfindings",
           "currentTags": [
             "@param",
             "@returns",
@@ -515726,8 +516504,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 1261,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1261-capabilitypacketfindings",
+          "line": 1342,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1342-capabilitypacketfindings",
           "currentTags": [
             "@param",
             "@returns",
@@ -515750,8 +516528,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 1503,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1503-rungoalsdoctor",
+          "line": 1584,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1584-rungoalsdoctor",
           "currentTags": [
             "@category",
             "@since"
@@ -515772,8 +516550,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 1589,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1589-goalsdoctorcommand",
+          "line": 1670,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1670-goalsdoctorcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -515794,8 +516572,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Goals.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.command.ts",
-          "line": 39,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-command-ts-39-goalscommand",
+          "line": 40,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-command-ts-40-goalscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -522135,12 +522913,100 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./Doctor.ts\";",
+          "symbolName": "export * from \"./Decisions.projection.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
           "line": 64,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-64-export-from-doctor-ts",
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-64-export-from-decisions-projection-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Decisions.schemas.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Goals/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+          "line": 71,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-71-export-from-decisions-schemas-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Decisions.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Goals/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+          "line": 78,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-78-export-from-decisions-service-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Decisions.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Goals/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+          "line": 85,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-85-export-from-decisions-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Doctor.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Goals/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+          "line": 92,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-92-export-from-doctor-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522161,8 +523027,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 71,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-71-export-from-goals-command-ts",
+          "line": 99,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-99-export-from-goals-command-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522183,8 +523049,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 78,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-78-export-from-goals-errors-ts",
+          "line": 106,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-106-export-from-goals-errors-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522205,8 +523071,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 85,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-85-export-from-goals-schemas-ts",
+          "line": 113,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-113-export-from-goals-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522227,8 +523093,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 92,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-92-export-from-graph-mermaid-ts",
+          "line": 120,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-120-export-from-graph-mermaid-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522249,8 +523115,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 99,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-99-export-from-graph-projection-ts",
+          "line": 127,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-127-export-from-graph-projection-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522271,8 +523137,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 106,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-106-export-from-graph-schemas-ts",
+          "line": 134,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-134-export-from-graph-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522293,8 +523159,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 113,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-113-export-from-graph-sqlite-ts",
+          "line": 141,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-141-export-from-graph-sqlite-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522315,8 +523181,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 120,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-120-export-from-graph-ts",
+          "line": 148,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-148-export-from-graph-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522337,8 +523203,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 127,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-127-export-from-inventory-ts",
+          "line": 155,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-155-export-from-inventory-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522359,8 +523225,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 134,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-134-export-from-manifest-service-ts",
+          "line": 162,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-162-export-from-manifest-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522381,8 +523247,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 140,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-140-export-from-manifest-ts",
+          "line": 168,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-168-export-from-manifest-ts",
           "currentTags": [
             "@since"
           ],
@@ -522402,8 +523268,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 146,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-146-export-from-manifestprojection-ts",
+          "line": 174,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-174-export-from-manifestprojection-ts",
           "currentTags": [
             "@since"
           ],
@@ -522423,8 +523289,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 153,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-153-export-from-materialize-ts",
+          "line": 181,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-181-export-from-materialize-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522445,8 +523311,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 160,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-160-export-from-migration-manifesttranslation-ts",
+          "line": 188,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-188-export-from-migration-manifesttranslation-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522467,8 +523333,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 167,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-167-export-from-migration-migration-schemas-ts",
+          "line": 195,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-195-export-from-migration-migration-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522489,8 +523355,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 174,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-174-export-from-migration-ts",
+          "line": 202,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-202-export-from-migration-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522511,8 +523377,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 181,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-181-export-from-portfolioindex-ts",
+          "line": 209,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-209-export-from-portfolioindex-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522533,8 +523399,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 188,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-188-export-from-setrisktier-ts",
+          "line": 216,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-216-export-from-setrisktier-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -522555,8 +523421,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Goals/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
-          "line": 195,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-195-export-from-setstatus-ts",
+          "line": 223,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-223-export-from-setstatus-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -530455,8 +531321,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.domain.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.domain.ts",
-          "line": 360,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-360-makeknowledgegoalpacketreader",
+          "line": 361,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-361-makeknowledgegoalpacketreader",
           "currentTags": [
             "@param",
             "@returns",
@@ -530479,8 +531345,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.domain.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.domain.ts",
-          "line": 433,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-433-readknowledgegoalsdoctorfindings",
+          "line": 434,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-434-readknowledgegoalsdoctorfindings",
           "currentTags": [
             "@param",
             "@returns",
@@ -530503,8 +531369,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.domain.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.domain.ts",
-          "line": 749,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-749-scanknowledgefileexports",
+          "line": 750,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-750-scanknowledgefileexports",
           "currentTags": [
             "@param",
             "@returns",
@@ -530527,8 +531393,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.domain.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.domain.ts",
-          "line": 901,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-901-deriveknowledgedoctordomain",
+          "line": 902,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-902-deriveknowledgedoctordomain",
           "currentTags": [
             "@param",
             "@returns",
@@ -530551,8 +531417,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.domain.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.domain.ts",
-          "line": 942,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-942-cacheknowledgedoctordomain",
+          "line": 943,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-943-cacheknowledgedoctordomain",
           "currentTags": [
             "@param",
             "@returns",
@@ -530575,8 +531441,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.domain.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.domain.ts",
-          "line": 969,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-969-knowledgedomainwitness",
+          "line": 970,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-970-knowledgedomainwitness",
           "currentTags": [
             "@category",
             "@since"
@@ -530597,8 +531463,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.domain.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.domain.ts",
-          "line": 1047,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-1047-knowledgedomainwithout",
+          "line": 1048,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-1048-knowledgedomainwithout",
           "currentTags": [
             "@param",
             "@returns",
@@ -530621,8 +531487,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.domain.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.domain.ts",
-          "line": 1131,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-1131-knowledgedomainwitnessholds",
+          "line": 1132,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-domain-ts-1132-knowledgedomainwitnessholds",
           "currentTags": [
             "@param",
             "@returns",
