@@ -1,3 +1,4 @@
+import { $LawPracticeDomainId } from "@beep/identity/packages";
 import {
   antecedentPolicy,
   ClaimElementTree,
@@ -10,7 +11,9 @@ import { fcRuns } from "@beep/test-utils";
 import { assert, describe } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { PatentClaims } from "@beep/law-practice-domain/values/PatentDocument";
@@ -59,25 +62,39 @@ const deepClaims = (referenceCount: number, depth = 64): PatentClaims =>
     independent(1, "a sensor1.")
   );
 
-describe("bounded antecedent policy preparation", () => {
-  it.effect.prop(
-    "preserves schema-derived term findings after another invocation exhausts its work budget",
-    { head: Arbitrary.schema(ClaimTermHead.check(S.isMaxLength(48))) },
-    Effect.fnUntraced(function* ({ head }) {
-      const claims: PatentClaims = [independent(1, `a ${head}; the ${head}.`)];
-      const trees = yield* treesOf(claims);
-      const before = antecedentPolicy(trees, claims);
-      assert.isFalse(A.some(before, ({ rule }) => rule === "chain-work-limit"));
-      const exhaustedClaims = deepClaims(100);
-      const exhaustedTrees = yield* treesOf(exhaustedClaims);
-      const exhausted = antecedentPolicy(exhaustedTrees, exhaustedClaims);
-      assert.isTrue(A.isReadonlyArrayNonEmpty(exhausted));
-      assert.isTrue(A.every(exhausted, ({ rule }) => rule === "chain-work-limit"));
-      assert.deepStrictEqual(antecedentPolicy(trees, claims), before);
-    }),
-    { arbitrary: fcRuns(20) }
-  );
+const $I = $LawPracticeDomainId.create("test/ClaimElement.policy-work");
+const exhaustedFixture = Effect.gen(function* () {
+  const claims = deepClaims(100);
+  const trees = yield* treesOf(claims);
+  return { claims, trees };
+});
+class ExhaustedFixture extends Context.Service<ExhaustedFixture, Effect.Success<typeof exhaustedFixture>>()(
+  $I`ExhaustedFixture`
+) {}
 
+it.layer(Layer.effect(ExhaustedFixture, exhaustedFixture), { timeout: "10 seconds" })(
+  "antecedent policy invocation isolation",
+  (it) => {
+    it.effect.prop(
+      "preserves schema-derived term findings after another invocation exhausts its work budget",
+      { head: Arbitrary.schema(ClaimTermHead.check(S.isMaxLength(48))) },
+      Effect.fnUntraced(function* ({ head }) {
+        const claims: PatentClaims = [independent(1, `a ${head}; the ${head}.`)];
+        const trees = yield* treesOf(claims);
+        const before = antecedentPolicy(trees, claims);
+        assert.isFalse(A.some(before, ({ rule }) => rule === "chain-work-limit"));
+        const fixture = yield* ExhaustedFixture;
+        const exhausted = antecedentPolicy(fixture.trees, fixture.claims);
+        assert.isTrue(A.isReadonlyArrayNonEmpty(exhausted));
+        assert.isTrue(A.every(exhausted, ({ rule }) => rule === "chain-work-limit"));
+        assert.deepStrictEqual(antecedentPolicy(trees, claims), before);
+      }),
+      { arbitrary: fcRuns(20) }
+    );
+  }
+);
+
+describe("bounded antecedent policy preparation", () => {
   it.effect("abstains when sparse chains exhaust preparation lookup and copy reservations", () =>
     Effect.gen(function* () {
       const claims: PatentClaims = A.prepend(
