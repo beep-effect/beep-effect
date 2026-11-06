@@ -20,9 +20,8 @@ import * as S from "effect/Schema";
 import {
   assertCitationRegexProgramProfiles,
   CitationRegexProbePattern,
-  replayCitationRegexProgramRow,
+  replayCitationRegexProgramEngine,
 } from "./CitationRegexVerbose.fixtures.ts";
-import { assertCitationRegexRuntimeReleased, setupCitationRegexWorker } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationRegexCaptureReuse");
@@ -84,24 +83,15 @@ const replayEngine = Effect.fn("CaptureReuseTest.engine")(function* (
   corpus: typeof Corpus.Type,
   engine: typeof CitationRegexEngine.Type
 ) {
-  const known = A.filter(corpus.patterns, (row) => row.engines[engine].profile !== null);
-  const rows = A.filter(known, (row) => row.engines[engine].kind === "single-match" && (full || row.smoke));
-  const bindings = A.map(known, (row) => ({
-    patternSha256: row.patternSha256,
-    flags: row.flags,
-    profile: row.engines[engine].profile,
-  }));
-  const setup = yield* setupCitationRegexWorker(bindings, kind, engine, CitationEngineAbsoluteMaxima.patternUtf16);
-  let calls = 0;
-  for (const row of rows) calls += yield* replayCitationRegexProgramRow(setup, row, row.engines[engine], full);
-  expect(calls).toBe(engine === "python-re" ? (full ? 90 : 6) : full ? 1020 : 65);
-  for (const row of A.filter(known, (row) => row.engines[engine].kind === "parser-only")) {
-    const source = yield* Effect.fromOption(A.head(row.engines[engine].cases));
-    const refused = yield* setup.worker.evaluate(row.pattern, source.source, row.flags, 1, "search").pipe(Effect.flip);
-    expect(refused).toMatchObject({ reason: "unsupported-profile" });
-    calls++;
-  }
-  yield* assertCitationRegexRuntimeReleased(setup.admission, setup.observed.snapshot, calls);
+  const counts = yield* replayCitationRegexProgramEngine(
+    kind,
+    full,
+    corpus.patterns,
+    engine,
+    CitationEngineAbsoluteMaxima.patternUtf16
+  );
+  expect(counts.admitted).toBe(engine === "python-re" ? (full ? 90 : 6) : full ? 1020 : 65);
+  expect(counts.refused).toBe(engine === "python-re" ? 0 : 2);
 });
 /** Compare all logical captures through existing independently retired workers. */
 export const replayCitationCaptureReuse = Effect.fn("CaptureReuseTest.replay")(function* (
