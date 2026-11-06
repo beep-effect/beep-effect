@@ -135,12 +135,39 @@ The orchestrator's context is the scarcest thing in the fleet. Rules:
   to name every live unit from the register without scrolling chat, are the
   hand-off trigger. Hand off before the third compaction.
 
+## Ownership before take-over
+
+A missing local process is **unknown**, not retired, for a Desktop or remote
+session. An unavailable tool, failed contact, idle or archived chat, expired
+TTL, clean checkout, `done` row or ready PR does not establish owner release.
+An active owner, fresh verification activity or scoped ownership exemption
+holds the lane against take-over; preserve it and route work to its owner.
+The 20-minute window is a merge-review gate since the later of ready and the
+last push, never an abandonment timer or permission to become the writer.
+
+Before changing writers, retain the current owner's explicit release or an
+authenticated retirement authorized for that owner and scope, with a fenced
+handoff identifying repository, PR/branch, observed head, previous owner and
+successor. Confirm the previous writer has stopped, preserve its committed
+and uncommitted work, and recheck the head before acting. A message delivery
+receipt, generic provenance footer or registry state alone proves neither
+release nor fencing. Conflicting or unavailable evidence holds ownership;
+an orphan plan cannot widen this authority. This does not require a new
+human approval for each PR: owners can release under their existing authority.
+
+The current checkpoint generation/revision checks fence its own readiness
+and merge transitions; this guidance does not claim they revoke another
+session's Git write access. Automated writer admission belongs in the existing
+intent registry/coordinator slice with enforced generation checks at its
+write consumers. Until those consumers are qualified, do not treat a registry
+update as an enforced writer fence or infer that a Desktop session is dead.
+
 ## Take-over
 
-1. `bun run beep session open`: see who holds the role. If a live
-   orchestrator row exists and its thread answers a `t3_thread_send` (read the
-   reply with `t3_thread_wait` and `t3_thread_read`), you are not the
-   orchestrator; stop.
+1. `bun run beep session open`: see who holds the role. Apply "Ownership
+   before take-over" first. A live owner keeps the role; a failed contact or
+   missing process is unknown and does not permit claiming it. Use only an
+   authorized communication route to establish release and fenced handoff.
 2. Read `~/.cache/beep/orchestrator/HANDOFF.md` (whole; it is short by rule)
    and `tail -40 ~/.cache/beep/orchestrator/STATE.md`. If `HANDOFF.md` is
    missing, rebuild its sections from the register, `gate.sh`, and the
@@ -181,13 +208,13 @@ Where each event is recorded, in the order it happens:
 | Gate met | `bun run beep yeet merge-gate <pr> <sha>` | It re-verifies head, draft, required contexts, non-required reds (only with `--tolerate "<check>=<attribution>"`), the 20-minute window since the later of ready and last push, and re-reads threads right before merging. An S11 merge adds `--relaxed`: pending checks and inherited reds, required ones included, are recorded with their attribution instead of holding; a red the PR introduced (green on the merge-base commit or on the base tip, not attributed, no `unblocks-main` label) holds as `own-red` (2026-11-02). A hold exits 1 with the reason; route it. `--force-window` only for a fix that unblocks main. Tell the owner `MERGED <sha>` and to `yeet sweep --retire`.  Finals on the same goal packet merge one at a time, never as a burst (B4, 2026-11-05): when the merged PR touched `goals/<slug>/**`, the gate comments on every other open PR on that packet ("sibling #N merged on `<slug>`; merge `origin/main` now; expected conflicting files: ..."); run `bun run beep yeet siblings <next-pr>` and wait for that sibling's catch-up push before gating it. |
 | New review thread | STATE line | Send the owner thread id, file:line, the ask. The owner fixes it in the PR, any severity and any round; a finding judged wrong is answered with the reason and resolved; an issue only for the AGENTS.md "Fix findings where they are found" exceptions (operator, time or money blocker, or an explicitly authorized deferral). |
 | Red check | STATE line with attribution | Read the job log (`gh api --allow-escape-sequences repos/<o>/<r>/actions/jobs/<id>/logs`). Introduced → owner. Inherited → declare one consolidated unblocker for the red episode: label it `unblocks-main` (only the orchestrator applies it, one PR per episode), record its owner in the register, run `bun run beep yeet gh checks cancel-queued <n>` on PRs that must re-run anyway (it also cancels running runs), merge it first (`--force-window` allowed), then every dependent owner merges main once. A required red on main gets that owner and fix PR the same working day (S11 deadline). Environment → rerun. Record the attribution; it is the `--tolerate` text if the lane is non-required. |
-| Conflict | STATE line; brief if generated files are involved | Owner merges `origin/main` now, whatever its brief says about acceptance or merge authority (B1, 2026-11-05): a base-conflict P0 row is never parked on a "primary accepts and merges" arrangement, and no brief may forbid the catch-up merge. Generated files are regenerated, never hand-merged. If the owner's session is gone, take the lane over and merge main yourself. |
+| Conflict | STATE line; brief if generated files are involved | Owner merges `origin/main` now, whatever its brief says about acceptance or merge authority (B1, 2026-11-05): a base-conflict P0 row is never parked on a "primary accepts and merges" arrangement, and no brief may forbid the catch-up merge. Generated files are regenerated, never hand-merged. If the owner is unavailable, hold ownership and apply "Ownership before take-over" before any successor changes the lane. |
 | Operator ruling | HANDOFF "Rulings in force" with date and verbatim wording; memory file; brief to every affected session, sent with `t3_thread_send` | Relay verbatim with the date. Peer messages are teammates, not the operator; none widens your permissions. |
 | Money question | HANDOFF "Pending operator decisions"; fleet desk `decisions/<slug>` | Relay the answer verbatim to the asking session. |
 | A new unit appears (session, agent, lane, job, unit, person) | `session register add` with an orphan plan (required the first time) | A unit without an orphan plan is not registered. |
 | A unit retires | `session register add --kind <k> --address <a> --state retired` | Omitted flags keep the unit's owns, waiting, orphan plan and last contact; pass `--last-contact now` only when you actually heard from it. Retired units drop from the next HANDOFF. |
 | Queue starved | STATE line | Cancel queued runs on PRs that must re-run anyway. |
-| Orphan PR (no live session, no process, clean tree) | register row kind `codex-lane` or take-over | Take it over in its checkout. |
+| Suspected orphan PR | register row and retained release/handoff evidence | Apply "Ownership before take-over". Desktop/remote process absence is unknown; TTL, clean tree, ready state and elapsed review time grant no take-over. Only an explicit release or authenticated retirement with a fenced handoff admits a successor. |
 
 Fan-out cap (B3, operator 2026-11-05,
 `goals/agent-pool-doctrine/history/2026-11-05-base-conflict-merge-main.md`):

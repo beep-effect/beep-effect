@@ -2450,6 +2450,27 @@ The 256 MiB process cap, archive digest and every other numeric bound remain
 unchanged. This attempt is a refusal and grants no producer approval.
 
 
+### 2026-11-06 — A bounded report reread still reserves the entire report cap
+
+Accepted-source observation 42220475249 passed source inspection but refused
+at the full-report read in the observer, on Python 3.9.25. Its retained 170-byte
+refusal identifies observer line 62; the phase is not explicitly recorded.
+Preserve source type, size and growth checks while comparing retained source
+bytes in bounded chunks instead of allocating another full report at final
+verification. Keep the 256 MiB limit and prove the repair with hosted pressure
+regressions and two real comparable observations. Narrow component/line
+metadata prevented further speculative tar-parser repairs.
+
+
+### 2026-11-06 — Publication stopped before push by GitHub connectivity
+
+The bounded-source comparison repair is committed, but canonical publication
+stopped while fetching main: both SSH and temporary HTTPS transport attempts
+returned exit 128. An independent bounded HTTPS probe resolved api.github.com
+but established no TCP connection. Preserve the local commit, failed transport
+receipts and observation artifacts; retry publication only after connectivity
+returns. A short connection deadline and explicit network attribution would
+avoid treating these waits as local proof or repeated code failures.
 ### 2026-11-06 — Inherited coverage failures consume unrelated cache qualification runs
 
 The diagnostic PR #2757 passed every unit shard, but hosted Coverage Regression
@@ -2463,6 +2484,16 @@ release runners.
 Expose known main coverage dependencies before admitting downstream coverage
 work, and preserve introduced, inherited and intentional cancellation causes.
 
+
+### 2026-11-06 — Preserve scalar bounds when releasing diagnostic buffers
+
+Hosted CLI shard job 127916075431 failed the Python diagnostic integration.
+Source review found that the memory-lifetime repair released source_bytes but
+still referenced its length at the final aggregate-size guard. Retain the byte
+count before release and keep the same aggregate cap. The TypeScript wrapper
+reported only the child exit code, hiding the Python assertion; include its
+bounded, credential-free fixture output in failure diagnostics. Existing
+positive digest and artifact-overflow tests remain the acceptance checks.
 ### Shared HTML corpus watchdog blocked dependency-reader acceptance, 2026-11-06
 
 While accepting the bounded dependency-reader repair (#2764), unit-d failed
