@@ -36,7 +36,23 @@
     "goals/ci-fleet-endgame/research/runner-endgame-decision-record.md",
     "goals/speed-loop/research/GRILL-DECISIONS.md"
   ],
-  "researchReports": ["research/runner-endgame-decision-record.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/build-mode-typecheck-census.md",
+    "research/ci-graph-check-baseline.md",
+    "research/data/build-mode-census-extension.tsv",
+    "research/data/build-mode-census-transcript.md",
+    "research/data/build-mode-census.tsv",
+    "research/data/ci-check-sweep-baseline.tsv",
+    "research/data/ci-graph-check-baseline.tsv",
+    "research/data/ci-graph-check-postflip.tsv",
+    "research/lane-reopen-relay.md",
+    "research/p1-acceptance-evidence.md",
+    "research/p3-cache-design.md",
+    "research/runner-endgame-decision-record.md",
+    "research/secrets.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

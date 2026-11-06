@@ -88,5 +88,6 @@
     "The same blocker repeats after reasonable investigation."
   ],
   "statusNote": "legacy status: complete",
-  "mission": "Move Storybook hosting out of `@beep/ui` into a single executable app workspace, `@beep/storybook` at `apps/storybook`, while keeping package-local stories in foundation UI-system packages."
+  "mission": "Move Storybook hosting out of `@beep/ui` into a single executable app workspace, `@beep/storybook` at `apps/storybook`, while keeping package-local stories in foundation UI-system packages.",
+  "researchReports": ["research/grill-with-docs-findings.md"]
 }

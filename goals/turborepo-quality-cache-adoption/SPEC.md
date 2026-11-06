@@ -1017,6 +1017,19 @@ evidence satisfy its remaining gates. Missing-key roles and protected producer
 authority remain independent. Suspend affected candidate tuples before a
 reviewed revert; do not relabel historical qualification for the new overlay.
 
+### Preserve source during generator checks, 2026-11-03
+
+The HTML and label-glyph `generate:check` entrypoints must compare freshly
+rendered, project-formatted content without writing a target or creating its
+parent directory. Reuse CodegenKit drift reporting and add a project-format
+path while preserving the OpenAPI formatter's existing defaults. Treat a
+nonzero formatter exit as a typed failure. Keep ordinary generation unchanged.
+The isolated CI regressions preserve dirty bytes, reject missing outputs and
+formatter failure, and forbid writes through the check's filesystem service.
+No cache or qualification transition is included. If this repair must be
+withdrawn, suspend the affected checks until repaired rather than restoring
+the destructive generate-then-diff wrappers.
+
 ### Freeze the Storybook deployment install, 2026-11-04 UTC
 
 Require `bun install --frozen-lockfile` in Storybook's existing Vercel installer.

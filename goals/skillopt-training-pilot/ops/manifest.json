@@ -68,10 +68,7 @@
     "goals/skillopt-training-pilot/GOAL.md",
     "goals/skillopt-training-pilot/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "explorations/skillopt-training-pilot/RESEARCH.md"
-  ],
+  "researchReports": ["research/SOURCES.md", "research/p23-contract.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -131,5 +128,6 @@
     "BenchmarkCase extension would fork rather than extend ai-metrics schemas.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "researchReferences": ["explorations/skillopt-training-pilot/RESEARCH.md"]
 }

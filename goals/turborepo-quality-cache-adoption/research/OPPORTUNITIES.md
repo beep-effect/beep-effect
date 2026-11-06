@@ -867,6 +867,55 @@ pruning candidates, so retain their app-specific comparison gates instead of
 calling pruning inapplicable from its current absence. No cloud call or deploy
 was made by this repair.
 
+### 2026-11-03 — Generator dependency changes need their generated configuration
+
+The first hosted run for #2686 rejected the new CodegenKit formatter for an
+unannotated boolean default and a non-pipeable stream expression. Its shared
+build failure stopped multiple downstream jobs. Repo Sanity separately reported
+five stale dependency configuration files. Apply `beep tsconfig-sync --write`
+when adding the workspace edge; repairing package scripts alone does not update
+references or generated boundaries. The canonical repair applied those five
+files in about nine seconds; no local verification suite was run.
+
+The formatter hook then removed the attempted default-parameter boolean
+annotation under `noInferrableTypes`. The committed diff exposed that loss
+before any proof claim: make the private formatter's boolean argument required
+and pass `false` explicitly from the existing OpenAPI caller. This preserves
+the annotation without a rule suppression or behavior change.
+
+Fallow's retained hosted artifact identified a further visibility problem:
+HTML's authored generator was globally excluded, hiding its real CodegenKit
+import. Restore that script to dependency analysis while retaining its existing
+clone and complexity scoring exclusions. Do not globally suppress CodegenKit's
+dependency findings. Hosted checks remain the proof for all three repairs.
+
+The next hosted unit shard passed 45 of 46 CodegenKit cases, including both
+new nonwriting comparisons, but disproved the negative fixture's assumption:
+the repository permits formatting syntax errors, so invalid TypeScript need
+not make Biome exit nonzero. Exercise the actual contract with an owned child
+that emits nonempty stdout and exits seven. Keep the expected format error,
+assert its exit status, and retain the original file. Do not alter the
+repository formatter policy or accept stdout from a failed formatter.
+
+The hosted HTML process test then exposed a fixture resolution mistake:
+linking only the package's `node_modules` loses workspace dependencies hoisted
+to the repository root when the copied fixture lives outside that repository.
+Link the existing root dependency tree instead. Keep the assertion for the
+specific drift error, edited target bytes and unchanged siblings so a module
+resolution failure cannot masquerade as the required nonwriting behavior.
+
+### 2026-11-03 — Two generator checks rewrote source before comparing it
+
+The entrypoint census found `@beep/html#generate:check` and
+`@beep/technical-drawing#generate:check` calling their writing `generate`
+commands before `git diff`. A check could replace dirty generated source and
+silently create an untracked output. Their scripts now select an explicit check branch
+before any target write, reusing CodegenKit drift reports and stdin formatting
+with the repository's Biome configuration. The formatter also checks its child
+exit status before accepting output. Regression cases for current, dirty,
+missing generated content and formatter failures are authored for hosted CI; no local
+quality suite or generator execution is claimed. The writing commands and
+generated source bytes are unchanged. Qualification remains a separate gate.
 ### 2026-11-03 — extend captured-byte joins to signature observations
 
 - While hosted CI was queued, source review found the signature-key driver

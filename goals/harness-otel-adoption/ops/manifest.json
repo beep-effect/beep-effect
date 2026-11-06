@@ -33,7 +33,11 @@
     "goals/harness-otel-adoption/GOAL.md",
     "goals/harness-otel-adoption/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/p0-attribute-contract.md",
+    "research/p0-config-surfaces.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

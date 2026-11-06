@@ -1680,6 +1680,63 @@ export class GoalOpsScript extends S.Opaque<GoalOpsScript, { readonly brand: uni
 ) {}
 
 /**
+ * Packet-relative path of one projected research report, always inside `research/`.
+ *
+ * **Details**
+ *
+ * `researchReports` on {@link GoalManifest} is a generated projection of the
+ * packet's `research/` directory: every regular file at any depth whose path
+ * has no dot-leading segment (`research/.scratch/x.md` and `.gitkeep` are
+ * hidden), sorted and deduplicated. The pattern mirrors
+ * {@link GoalOpsScriptPath}; entries that name anything outside `research/`
+ * belong in `researchReferences`, which stays hand-maintained.
+ *
+ * **Example** (Check a projected path)
+ *
+ * ```ts
+ * import { GoalResearchReportPath } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(GoalResearchReportPath)("research/SOURCES.md")) // true
+ * console.log(S.is(GoalResearchReportPath)("../../explorations/x/RESEARCH.md")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GoalResearchReportPath = S.String.check(
+  S.isPattern(
+    /^research(?:\/[A-Za-z0-9_-][A-Za-z0-9._-]*)+$/,
+    $I.annote("GoalResearchReportPathPatternCheck", {
+      title: "Goal Research Report Path Pattern",
+      description: "A packet-relative path under research/ whose segments never start with a dot.",
+      message: "Expected a packet-relative path under research/ with no dot-leading segment",
+    })
+  )
+).pipe(
+  $I.annoteSchema("GoalResearchReportPath", {
+    description: "Packet-relative path of one projected research report, always inside research/.",
+  })
+);
+
+/**
+ * Whether a string is a projected research report path.
+ *
+ * **Example** (Split manifest entries)
+ *
+ * ```ts
+ * import { isGoalResearchReportPath } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * console.log(isGoalResearchReportPath("research/evidence/run.json")) // true
+ * console.log(isGoalResearchReportPath("history/p1-report.md")) // false
+ * ```
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const isGoalResearchReportPath = S.is(GoalResearchReportPath);
+
+/**
  * Canonical goal-packet manifest (`initiative-manifest/v2`).
  *
  * **Details**
@@ -1689,6 +1746,10 @@ export class GoalOpsScript extends S.Opaque<GoalOpsScript, { readonly brand: uni
  * standard, while every typed optional field accepts the post-migration wire
  * shapes. Unknown top-level keys are accepted but stripped from decoded output,
  * so raw callers must retain the parsed JSON when they need bespoke fields.
+ * `researchReports` is a generated projection of `research/` (see
+ * {@link GoalResearchReportPath}; written by `beep goals manifest --write`),
+ * while `researchReferences` lists hand-maintained pointers to research that
+ * lives outside the packet.
  *
  * **Example** (Construct a minimal v2 manifest)
  *
@@ -1734,6 +1795,8 @@ export class GoalManifest extends S.Opaque<GoalManifest, { readonly brand: uniqu
     discoveredFrom: S.optionalKey(S.String),
     phases: S.Union([S.Array(GoalPhase), S.Record(S.String, GoalPhase)]).pipe(S.optionalKey),
     opsScripts: S.Array(GoalOpsScript).pipe(S.optionalKey),
+    researchReports: S.Array(S.String).pipe(S.optionalKey),
+    researchReferences: S.Array(S.String).pipe(S.optionalKey),
     provides: CapabilitySlugList,
     requires: CapabilitySlugList,
   })

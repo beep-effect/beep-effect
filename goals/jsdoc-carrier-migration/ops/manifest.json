@@ -38,9 +38,10 @@
     "goals/jsdoc-carrier-migration/research/corpus-census.md"
   ],
   "researchReports": [
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
-    "research/decisions-locked.md",
-    "research/corpus-census.md"
+    "research/corpus-census.md",
+    "research/decisions-locked.md"
   ],
   "agentLaunchers": [
     {

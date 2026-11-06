@@ -37,7 +37,7 @@
     "goals/packet-convention-migration/GOAL.md",
     "goals/packet-convention-migration/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

@@ -446,6 +446,7 @@ If you touch this, load or run this first. Do not hand-author around it.
 | --- | --- |
 | New workspace package or app | `bun run beep create-package` (the only bootstrap path; no `mkdir`, no copied sibling) |
 | New slice / concept / role file | `bun run beep architecture` |
+| Files under `goals/<slug>/research/` | `bun run beep goals manifest --write` (`researchReports` is a generated projection; never hand-edit it) |
 | `packages/*/domain` or schemas | schema-first-development skill |
 | Effect service / Layer | effect-first-development skill |
 | JSDoc on exports | `.patterns/jsdoc-documentation.md` |

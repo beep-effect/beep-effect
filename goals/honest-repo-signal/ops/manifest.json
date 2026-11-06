@@ -41,9 +41,9 @@
     "goals/honest-repo-signal/research/FOLLOW-UPS.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
     "research/FOLLOW-UPS.md",
-    "research/OPPORTUNITIES.md"
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {
