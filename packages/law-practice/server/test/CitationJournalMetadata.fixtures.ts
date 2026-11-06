@@ -183,6 +183,8 @@ export const assertCitationJournalMetadataBudget = Effect.fn("JournalMetadataTes
 export const assertCitationJournalMetadataLifetime = Effect.fn("JournalMetadataTest.lifetime")(function* () {
   const scope = yield* Scope.make();
   const closed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, scope));
+  const invalid = yield* closed.metadata.apply({}).pipe(Effect.flip);
+  expect(invalid).toMatchObject({ reason: "invalid-input" });
   const input = A.getUnsafe(closed.corpus.inputs, 11);
   const raw = { ...input.request, ...A.getUnsafe(closed.corpus.controls, 0) };
   yield* assertCitationWorkerClosedLifetime(scope, closed.metadata.apply(raw), closed.observed.snapshot);

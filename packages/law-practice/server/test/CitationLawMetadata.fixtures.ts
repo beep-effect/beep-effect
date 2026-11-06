@@ -165,6 +165,8 @@ export const assertCitationLawMetadataLifetime = Effect.fn("LawMetadataTest.life
   expect(invalid).toMatchObject({ reason: "invalid-configuration" });
   const scope = yield* Scope.make();
   const closed = yield* install("bun", corpus.configuration).pipe(Effect.provideService(Scope.Scope, scope));
+  const invalidInput = yield* closed.metadata.apply({}).pipe(Effect.flip);
+  expect(invalidInput).toMatchObject({ reason: "invalid-input" });
   yield* assertCitationWorkerClosedLifetime(scope, closed.metadata.apply(row.request), closed.observed.snapshot);
   const timed = yield* install("bun", corpus.configuration, undefined, false, true);
   yield* assertCitationWorkerCapturedDeadline(

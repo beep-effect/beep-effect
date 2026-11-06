@@ -203,6 +203,8 @@ export const assertCitationCaseNameProcessLifetime = Effect.fn("CaseNameProcessT
   const scope = yield* Scope.make();
   const closed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, scope));
   const row = A.getUnsafe(closed.corpus.cases, 13);
+  const invalid = yield* closed.stage.apply({}).pipe(Effect.flip);
+  expect(invalid).toMatchObject({ reason: "invalid-input" });
   yield* assertCitationWorkerClosedLifetime(scope, closed.stage.apply(request(row)), closed.observed.snapshot);
   const timed = yield* install("bun", undefined, false, true);
   yield* assertCitationWorkerCapturedDeadline(
