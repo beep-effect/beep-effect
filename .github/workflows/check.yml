@@ -927,7 +927,7 @@ jobs:
 
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             base_ref="origin/${GITHUB_BASE_REF:-main}"
-            changed_files="$(git diff --name-only "${base_ref}...HEAD")"
+            changed_files="$(git diff --name-only --no-renames "${base_ref}...HEAD")"
 
             if [[ -z "$changed_files" ]]; then
               should_run=false

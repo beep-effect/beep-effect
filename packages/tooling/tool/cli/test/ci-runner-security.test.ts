@@ -1053,10 +1053,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       git(["config", "user.name", "CI Profile Test"]);
       git(["config", "commit.gpgsign", "false"]);
       yield* writeAndCommit("README.md", "# baseline\n", "baseline");
+      const cratePath = "apps/professional-desktop/src-tauri/src/lib.rs";
+      yield* writeAndCommit(cratePath, "pub fn baseline() {}\n", "baseline crate");
       git(["update-ref", "refs/remotes/origin/main", git(["rev-parse", "HEAD"])]);
       const baseline = git(["rev-parse", "HEAD"]);
 
       yield* writeAndCommit("docs/notes.md", "# docs only\n", "docs only");
+      const docsHead = git(["rev-parse", "HEAD"]);
       assert.strictEqual(profile("pull_request").desktop_rust_relevant, "false");
       assert.strictEqual(profile("push").desktop_rust_relevant, "true");
 
@@ -1074,6 +1077,52 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
 
       const workflowJobs8 = yield* workflowJobs(workflow);
       const steps = jobSteps(workflowJobs8, "professional-desktop-ipc-stdio");
+      const gateScript = Str.replaceAll(
+        "scripts/ci-change-profile.sh",
+        '"$BEEP_CI_PROFILE_SCRIPT"'
+      )(stepRun(steps, "Determine lane execution"));
+      const gate = Effect.fnUntraced(function* (head: string, event = "pull_request") {
+        const outputPath = path.join(tempRoot, ".git/desktop-gate-output");
+        yield* fs.writeFileString(outputPath, "");
+        const result = Bun.spawnSync(["bash", "-c", gateScript], {
+          cwd: tempRoot,
+          env: {
+            ...process.env,
+            GITHUB_EVENT_NAME: event,
+            GITHUB_BASE_REF: "main",
+            GITHUB_OUTPUT: outputPath,
+            BEEP_CI_PR_BASE_SHA: baseline,
+            BEEP_CI_PR_HEAD_SHA: head,
+            BEEP_CI_PROFILE_SCRIPT: scriptPath,
+          },
+          stderr: "pipe",
+          stdout: "pipe",
+        });
+        assert.strictEqual(result.exitCode, 0, result.stderr.toString());
+        const output = yield* fs.readFileString(outputPath);
+        return parseProfileOutput(output);
+      });
+      git(["reset", "--hard", baseline]);
+      yield* fs.makeDirectory(path.join(tempRoot, "docs"), { recursive: true });
+      git(["mv", cratePath, "docs/moved.md"]);
+      git(["commit", "-m", "move crate source into docs"]);
+      const renameHead = git(["rev-parse", "HEAD"]);
+      git(["checkout", "--detach", baseline]);
+      yield* writeAndCommit("packages/foundation/example/src/index.ts", "export {};\n", "main advances");
+      const advancedMain = git(["rev-parse", "HEAD"]);
+      git(["update-ref", "refs/remotes/origin/main", advancedMain]);
+      git(["merge", "--no-ff", docsHead, "-m", "synthetic docs merge"]);
+      const docsGate = yield* gate(docsHead);
+      assert.strictEqual(docsGate.should_run, "false");
+      assert.strictEqual(docsGate.rust_should_run, "false");
+      git(["checkout", "--detach", advancedMain]);
+      git(["merge", "--no-ff", renameHead, "-m", "synthetic renamed crate merge"]);
+      const renameGate = yield* gate(renameHead);
+      assert.strictEqual(renameGate.should_run, "true");
+      assert.strictEqual(renameGate.rust_should_run, "true");
+      const pushGate = yield* gate(renameHead, "push");
+      assert.strictEqual(pushGate.should_run, "true");
+      assert.strictEqual(pushGate.rust_should_run, "true");
       const laneGate = "steps.lane-gate.outputs.should_run == 'true'";
       const rustGate = `${laneGate} && steps.lane-gate.outputs.rust_should_run == 'true'`;
       for (const name of ["Install Tauri Linux system dependencies", "Check Rust crate", "Lint Rust crate"]) {
