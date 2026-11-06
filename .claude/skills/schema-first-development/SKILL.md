@@ -88,7 +88,7 @@ Keep `Schema` as the source of truth for pure data models.
   statics. See `references/repo-laws.md` section 2.
 - Use named intermediate schemas for reused concepts.
 - Prefer `LiteralKit` for named literal domains: its keyed API (`.Enum`,
-  `.is`, `$match`, `.toTaggedUnion(...)`) plus the `S.Literals` members it
+  `.is`, `match`, `.toTaggedUnion(...)`) plus the `S.Literals` members it
   inherits (`.literals`, `.pick(...)`, `.mapMembers(...)`). Use `S.Literals`
   for anonymous inline unions never referenced by name.
 - Prefer `MappedLiteralKit` when a protocol/code mapping needs both encoded and

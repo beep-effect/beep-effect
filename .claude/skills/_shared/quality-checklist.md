@@ -329,8 +329,12 @@ sssom validate mappings/source-to-target.sssom.tsv
 
 ## Automation
 
-These checks should be integrated into pre-commit hooks. The Justfile
-provides `just check` for running all quality gates:
+Integrate the applicable checks through the host repository's verified quality
+workflow. Do not assume a Justfile or a `just check` task exists. In Beep, use
+the package-scoped quality and Yeet commands required by `AGENTS.md`.
+
+The following are examples for a Python host that configures these tools; they
+are not a claim that this checkout defines or runs all of these gates:
 
 ```bash
 uv run ruff check .              # Python linting

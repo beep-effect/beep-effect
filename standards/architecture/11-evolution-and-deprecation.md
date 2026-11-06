@@ -11,16 +11,18 @@ A slice that did not pan out should be removable. Removal is a five-step procedu
 1. **Mark the slice deprecated.** Add a `**Deprecated:** YYYY-MM-DD — <reason>` line to the slice's root README. List the planned removal date.
 2. **Sunset window.** Default: 2 minor releases or 1 quarter, whichever is longer. The slice continues to function during this window. New features against the slice are forbidden; only bug fixes for active dependents are accepted.
 3. **Dependent migration.** Any package depending on the slice's `shared/*` exports must migrate within the sunset window. The slice owner files migration PRs against dependents, or coordinates the work with their owners.
-4. **Removal PR.** Delete the slice's packages. Remove the entries from `pnpm-workspace.yaml`, `tsconfig`, and `turbo.json`. Drop any future `shared/use-cases` exports the slice contributed; update each affected promotion record to `**Retired:** YYYY-MM-DD — <reason>` per `02-shared-kernel.md`.
+4. **Removal PR.** Delete the slice's packages. Remove explicit workspace entries from the root `package.json` when present, and remove affected TypeScript references and Turbo configuration. Drop any `shared/use-cases` exports the slice contributed; update each affected promotion record to `**Retired:** YYYY-MM-DD — <reason>` per `02-shared-kernel.md`.
 5. **DECISIONS entry.** Add a new dated entry to `DECISIONS.md` recording the retirement with rationale. Mark the original adoption decision (if one exists) as `Superseded` with `Superseded-by:` pointing to the retirement entry.
 
 The slice's tests, fixtures, and lint exemptions are removed alongside the packages. Cross-slice events the slice was the sole producer of are removed in the same PR; events with other producers stay.
 
-## Future `shared/use-cases` versioning
+## `shared/use-cases` versioning
 
-There is no `shared/use-cases` package today; nothing has met the promotion bar
-for that durable contract-only surface. When such a package exists, it is the
-hardest case. A `shared/use-cases` export has multiple consumer slices, so a
+`packages/shared/use-cases` exists as a contract-only package. Its
+[PromotionGate promotion record](../../packages/shared/use-cases/README.md)
+records the accepted coupling; every additional promoted export still needs
+its own record under `02-shared-kernel.md`. A promoted export can have multiple
+consumer slices, so a
 breaking change breaks them all simultaneously. The discipline below preserves
 the contract that consumers should never be forced to redeploy because a
 producer made a non-additive change without coordination.
@@ -62,7 +64,7 @@ A port lives in `*.ports.ts`; its implementations live in `*.repo.ts` or similar
 
 **Deprecation window:** same default as shared exports — 2 minor releases or 1 quarter, whichever is longer.
 
-If the port is published from a future `shared/use-cases/*/ports.ts` (rare), the deprecation also updates the promotion record and follows the `V2` variant rule above. Slice-local ports skip the promotion record because there is no cross-slice contract to honor; they still observe the deprecation window so that consumers within the slice get a clean migration.
+If the port is published from `shared/use-cases/*/ports.ts` (rare), the deprecation also updates the promotion record and follows the `V2` variant rule above. Slice-local ports skip the promotion record because there is no cross-slice contract to honor; they still observe the deprecation window so that consumers within the slice get a clean migration.
 
 ## Feature-flag-gated experiments
 
@@ -176,7 +178,7 @@ in the retirement PR.
 
 ## Coordinating retirements across slices
 
-Slice retirements affecting future `shared/use-cases` exports require notice to the owners of every consuming slice. One PR per consumer migration is the minimum coordination — the retirement does not land until the migrations land.
+Slice retirements affecting `shared/use-cases` exports require notice to the owners of every consuming slice. One PR per consumer migration is the minimum coordination — the retirement does not land until the migrations land.
 
 - Track cross-slice deprecations in a single coordinating issue or PR, with checkboxes for each consumer migration.
 - The DECISIONS entry for the retirement records who was notified, who migrated, and any consumers who could not migrate (with their reasons).

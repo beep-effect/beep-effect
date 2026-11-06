@@ -95,7 +95,7 @@ of:
 
 - guards (`.is`)
 - enums (`.Enum`)
-- record-form matching (`$match`)
+- record-form matching (`match`)
 - direct annotation
 
 Inline array literals passed directly to `LiteralKit(...)` should omit
@@ -141,7 +141,7 @@ Use:
 - `S.toEquivalence(schema)` for comparisons
 - `Arbitrary.schema(schema)` (`effect/Arbitrary`) for schema-modeled property tests
 - schema tagged-union `.cases`, `.guards`, `.isAnyOf`, and `.match`
-- `LiteralKit.Enum`, `.is`, `.$match`, and `.toTaggedUnion`, plus the
+- `LiteralKit.Enum`, `.is`, `.match`, and `.toTaggedUnion`, plus the
   inherited `S.Literals` members `.literals`, `.pick(...)` and `.mapMembers(...)`
 - `S.decodeUnknownEffect` / `S.decodeEffect` for default decoders
 - `S.encodeUnknownEffect` / `S.encodeEffect` for default encoders
