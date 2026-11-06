@@ -42421,6 +42421,66 @@
             "branches": 1,
             "functions": 0
           }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/OwnerCheckpoint.adapter.ts": {
+          "lines": 96.07,
+          "statements": 93.18,
+          "branches": 86.04,
+          "functions": 100,
+          "uncovered": {
+            "lines": 4,
+            "statements": 9,
+            "branches": 12,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/OwnerCheckpoint.publisher.ts": {
+          "lines": 96.64,
+          "statements": 90.99,
+          "branches": 85.21,
+          "functions": 93.61,
+          "uncovered": {
+            "lines": 6,
+            "statements": 20,
+            "branches": 21,
+            "functions": 3
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/OwnerCheckpoint.receipts.ts": {
+          "lines": 98.24,
+          "statements": 90.9,
+          "branches": 84.21,
+          "functions": 95,
+          "uncovered": {
+            "lines": 1,
+            "statements": 7,
+            "branches": 6,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/OwnerCheckpoint.store.ts": {
+          "lines": 100,
+          "statements": 99.23,
+          "branches": 98.78,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/OwnerCheckpoint.ts": {
+          "lines": 98.85,
+          "statements": 98.09,
+          "branches": 97.91,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 2,
+            "functions": 0
+          }
         }
       }
     },
