@@ -2959,6 +2959,145 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       )
     );
 
+    describe("report-only cheap gate selection", () => {
+      const reportLane = (
+        root: string,
+        id: string,
+        source = "mkdir -p .beep; echo invoked >> .beep/invoked; exit 91"
+      ) => GithubCheckLaneSpec.make({ ...laneProofTestLane(root, id, "preflight", source), tier: "cheap-gates" });
+
+      for (const [name, changedPath, accepted] of [
+        ["ordinary report", "docs/reports/probe.md", true],
+        ["Unicode and newline report", "docs/reports/日本語\nreport.md", true],
+        ["executable docs source", "docs/run.ts", false],
+        ["package source", "packages/probe.ts", false],
+        ["root config", "turbo.json", false],
+        ["standard", "standards/policy.md", false],
+        ["root Markdown", "README.md", false],
+        ["policy docs", "docs/runbooks/policy.md", false],
+        ["hidden report tooling", "docs/reports/.tool/probe.md", false],
+        ["agent instructions", "docs/reports/AGENTS.md", false],
+        ["MDX", "docs/reports/probe.mdx", false],
+      ] as const) {
+        it.effect(`classifies ${name} without inventing proof evidence`, () =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const root = yield* fs.makeTempDirectoryScoped({ prefix: "report-only-gates-" });
+            yield* initializeLaneProofRepository(root);
+            yield* fs.makeDirectory(path.dirname(path.join(root, changedPath)), { recursive: true });
+            yield* fs.writeFileString(path.join(root, changedPath), "report\n");
+            yield* runGit(root, ["add", "."]);
+            yield* runGit(root, ["commit", "-m", "report fixture"]);
+            const lanes = [
+              reportLane(root, "lint:effect-vitest"),
+              reportLane(root, "quality:cache-policy", "exit 23"),
+              reportLane(root, "lint:effect-imports-markdown", "exit 24"),
+            ];
+            const run = collectGithubCheckLaneWavesForTesting(
+              "reports",
+              [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes })],
+              "collect-all",
+              undefined
+            );
+            const result = yield* withEnvVarEffect(
+              "BEEP_YEET_PROOF_BASE",
+              undefined,
+              withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "off", run)
+            );
+            expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual([
+              accepted ? "skipped" : "failed",
+              "failed",
+              "failed",
+            ]);
+            assertSome(result.report.firstRed, accepted ? "quality:cache-policy" : "lint:effect-vitest");
+            expect(result.report.skippedAfterRed).toBe(0);
+            const invoked = yield* fs.exists(path.join(root, ".beep/invoked"));
+            expect(invoked).toBe(!accepted);
+            if (accepted) {
+              const skipped = O.getOrThrow(A.head(result.laneReport.lanes));
+              assertSome(skipped.reason, "clean report-only diff; source-only lane inputs unchanged");
+              assertNone(skipped.startedAt);
+              assertNone(skipped.endedAt);
+              assertNone(skipped.durationMs);
+              assertNone(skipped.exitCode);
+              assertNone(skipped.inputDigest);
+              expect(skipped.inputPackages).toEqual([]);
+              expect(skipped.inputsCacheable).toBe(false);
+            }
+          }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+        );
+      }
+
+      for (const control of [
+        "empty",
+        "dirty source",
+        "staged source",
+        "untracked source",
+        "dirty report",
+        "deletion",
+        "source rename",
+        "symlink",
+        "executable",
+        "missing base",
+        "disabled",
+        "pinned base mismatch",
+      ] as const) {
+        it.effect(`runs full lanes for ${control}`, () =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const root = yield* fs.makeTempDirectoryScoped({ prefix: "report-only-control-" });
+            yield* initializeLaneProofRepository(root);
+            yield* fs.makeDirectory(path.join(root, "docs/reports"), { recursive: true });
+            yield* fs.writeFileString(path.join(root, "source.ts"), "baseline\n");
+            yield* fs.writeFileString(path.join(root, "docs/reports/existing.md"), "baseline\n");
+            yield* runGit(root, ["add", "."]);
+            yield* runGit(root, ["commit", "-m", "control base"]);
+            yield* runGit(root, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+            if (control !== "empty") {
+              yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "report\n");
+              if (control === "deletion") yield* fs.remove(path.join(root, "docs/reports/existing.md"));
+              if (control === "source rename") yield* runGit(root, ["mv", "source.ts", "docs/reports/renamed.md"]);
+              if (control === "symlink") {
+                yield* fs.remove(path.join(root, "docs/reports/probe.md"));
+                yield* fs.symlink("../../source.ts", path.join(root, "docs/reports/probe.md"));
+              }
+              if (control === "executable") yield* fs.chmod(path.join(root, "docs/reports/probe.md"), 0o755);
+              yield* runGit(root, ["add", "."]);
+              yield* runGit(root, ["commit", "-m", "control report"]);
+            }
+            if (control === "dirty source" || control === "staged source")
+              yield* fs.writeFileString(path.join(root, "source.ts"), "changed\n");
+            if (control === "staged source") yield* runGit(root, ["add", "source.ts"]);
+            if (control === "untracked source") yield* fs.writeFileString(path.join(root, "unknown.ts"), "changed\n");
+            if (control === "dirty report")
+              yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "dirty\n");
+            if (control === "missing base") yield* runGit(root, ["update-ref", "-d", "refs/remotes/origin/main"]);
+            const lanes = [reportLane(root, "lint:effect-vitest"), reportLane(root, "lint:schema-first")];
+            const run = collectGithubCheckLaneWavesForTesting(
+              "reports",
+              [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes })],
+              "fail-fast",
+              undefined
+            );
+            const result = yield* withEnvVarEffect(
+              "BEEP_QUALITY_REPORT_ONLY_SKIP",
+              control === "disabled" ? "0" : undefined,
+              withEnvVarEffect(
+                "BEEP_YEET_PROOF_BASE",
+                control === "pinned base mismatch" ? "0000000000000000000000000000000000000000" : undefined,
+                withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "off", run)
+              )
+            );
+            expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual(["failed", "not-run-early-stop"]);
+            assertSome(result.report.firstRed, "lint:effect-vitest");
+            expect(result.report.skippedAfterRed).toBe(1);
+          }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+        );
+      }
+    });
+
     it.effect("stops after a precise red and marks the unlaunched tail", () =>
       collectGithubCheckLaneWavesForTesting(
         "pre-push",

@@ -799,6 +799,7 @@ const observedOutcome = (lane: QualityTaskLaneRun): O.Option<ProofOutcome> =>
     passed: () => O.some<ProofOutcome>("passed"),
     failed: () => O.some<ProofOutcome>("failed"),
     reused: O.none<ProofOutcome>,
+    skipped: O.none<ProofOutcome>,
     "not-run-early-stop": O.none<ProofOutcome>,
   });
 

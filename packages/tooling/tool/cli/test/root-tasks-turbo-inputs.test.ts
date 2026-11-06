@@ -12,7 +12,9 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
+import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -379,7 +381,70 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
     { arbitrary: fcRuns(25) }
   );
 
+  it.layer(PlatformLayer, { timeout: "30 seconds" })("report-only source input contract", (it) => {
+    it.effect("locks the four source tasks and every dependency against prose input expansion", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repo = yield* findRepoRoot();
+        const text = yield* fs.readFileString(path.join(repo, "turbo.json"));
+        const configuration = yield* decodeConfiguration(text);
+        let pending: ReadonlyArray<string> = [
+          "//#lint:effect-vitest",
+          "//#lint:effect-imports",
+          "//#lint:schema-first",
+          "//#jsdoc:ratchet:check",
+        ];
+        let closure = A.empty<readonly [string, RootTask]>();
+        while (A.isReadonlyArrayNonEmpty(pending)) {
+          const id = pending[0];
+          pending = A.drop(pending, 1);
+          if (A.some(closure, ([seen]) => seen === id)) continue;
+          const task = yield* R.get(configuration.tasks, id).pipe(O.getOrThrow, decodeTask);
+          expect(task.cache, id).toBe(true);
+          expect(A.isReadonlyArrayNonEmpty(task.inputs), id).toBe(true);
+          expect(A.contains(task.inputs, "$TURBO_DEFAULT$"), id).toBe(false);
+          closure = A.append(closure, [id, task]);
+          pending = A.appendAll(pending, task.dependsOn);
+        }
+        // A declaration or dependency change requires renewed qualification,
+        // including specific new report inputs a handful of probes cannot see.
+        const encoded = yield* jsonStringifyPretty({ global: configuration.global, closure });
+        const digest = yield* Digest.Digest;
+        const bytes = yield* digest.digest(Digest.sha256, new TextEncoder().encode(encoded));
+        expect(Hex.encode(bytes)).toBe("55e7c23fc0b8f959e335dd7c58884fee6c30ab35f6eacf8f641f0ad15c5043d1");
+      })
+    );
+  });
+
   it.layer(PlatformLayer, { timeout: "30 seconds" })("native Turbo fixtures", (it) => {
+    it.effect("keeps all selected source hashes identical across five report-only edits", () =>
+      Effect.gen(function* () {
+        const { root, binary } = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const ids = [
+          "//#lint:effect-vitest",
+          "//#lint:effect-imports",
+          "//#lint:schema-first",
+          "//#jsdoc:ratchet:check",
+        ];
+        const baseline = yield* dryRun(root, binary, ids, false);
+        for (const file of [
+          "docs/reports/probe.md",
+          "docs/reports/nested/probe.md",
+          "docs/reports/日本語.md",
+          "docs/reports/new\nline.md",
+          "docs/reports/code-fence.md",
+        ]) {
+          yield* writeFile(root, file, '```ts\nimport { Effect } from "effect";\n```\n');
+          const changed = yield* dryRun(root, binary, ids, false);
+          for (const id of ids) expect(rowFor(changed, id).hash, `${id}: ${file}`).toBe(rowFor(baseline, id).hash);
+          yield* fs.remove(path.join(root, file));
+        }
+      })
+    );
+
     it.effect(
       "hashes declared inputs and excludes non-inputs for every registered root task",
       Effect.fnUntraced(function* () {

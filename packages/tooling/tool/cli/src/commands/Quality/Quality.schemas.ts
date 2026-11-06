@@ -2056,6 +2056,44 @@ export class GithubCheckLaneWaveSpec extends S.Opaque<GithubCheckLaneWaveSpec, {
 ) {}
 
 /**
+ * Source-only cheap lanes qualified for a clean report-only branch diff.
+ *
+ * **Details**
+ *
+ * The dependency-closure contract test must be reviewed before expanding this
+ * list or changing any selected task's Turbo inputs. Markdown lanes stay live.
+ *
+ * **Example** (Inspect the bounded opt-in)
+ *
+ * ```ts
+ * import { ReportOnlyInertLaneId } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(ReportOnlyInertLaneId.literals.length) // 4
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const ReportOnlyInertLaneId = LiteralKit([
+  "quality:jsdoc-ratchet:regenerated",
+  "lint:effect-vitest",
+  "lint:effect-imports",
+  "lint:schema-first",
+]).pipe(
+  $I.annoteSchema("ReportOnlyInertLaneId", {
+    description: "Source-only cheap lanes qualified for clean report-only branch diffs.",
+  })
+);
+
+/**
+ * Lane ids qualified for clean report-only diffs.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ReportOnlyInertLaneId = typeof ReportOnlyInertLaneId.Type;
+
+/**
  * Execution status recorded for one GitHub-check lane.
  *
  * **Example** (Identify an early stop)
@@ -2069,7 +2107,13 @@ export class GithubCheckLaneWaveSpec extends S.Opaque<GithubCheckLaneWaveSpec, {
  * @category models
  * @since 0.0.0
  */
-export const GithubCheckLaneRunStatus = LiteralKit(["passed", "reused", "failed", "not-run-early-stop"]).pipe(
+export const GithubCheckLaneRunStatus = LiteralKit([
+  "passed",
+  "reused",
+  "failed",
+  "skipped",
+  "not-run-early-stop",
+]).pipe(
   $I.annoteSchema("GithubCheckLaneRunStatus", {
     description: "Terminal status of one lane in a local GitHub-check wave run.",
   })
@@ -2169,6 +2213,7 @@ export class QualityTaskLaneRun extends S.Opaque<QualityTaskLaneRun, { readonly 
     id: S.String,
     label: S.String,
     status: GithubCheckLaneRunStatus,
+    reason: OptionalLaneRunString,
     startedAt: OptionalLaneRunString,
     endedAt: OptionalLaneRunString,
     durationMs: OptionalLaneRunFinite,
@@ -2240,6 +2285,7 @@ export class GithubCheckLaneRun extends S.Opaque<GithubCheckLaneRun, { readonly 
     id: S.String,
     stage: GithubCheckLaneStage,
     status: GithubCheckLaneRunStatus,
+    reason: OptionalLaneRunString,
     wave: GithubCheckLaneWave,
   }).pipe(
     $I.annoteSchema("GithubCheckLaneRun", {

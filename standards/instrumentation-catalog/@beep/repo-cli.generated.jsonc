@@ -2653,6 +2653,7 @@
     {"name":"QualityTasks.appendSkippedLaneRun","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.appendTurboLaneLedger","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.attemptFlakeQuarantine","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"QualityTasks.cleanReportOnlyDiff","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.closeTurboLaneLedger","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.collectExistingWorkingTreeChangedFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.collectGithubCheckLaneWaves","owner":"@beep/repo-cli","family":"tooling","conforms":true},

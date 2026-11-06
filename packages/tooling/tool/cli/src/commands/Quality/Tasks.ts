@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { GlobSet } from "@beep/glob/GlobSet";
 import { $RepoCliId } from "@beep/identity/packages";
@@ -59,7 +60,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
-import type { Git } from "@beep/git/Git";
 
 export { coverageProducerEnvironment } from "./internal/CoverageEnvironment.ts";
 
@@ -109,6 +109,7 @@ import {
   explainLaneProofRefusal,
   hasReusableLaneProof,
   persistLaneProofs,
+  pinnedLaneProofBaseSha,
   prepareLaneProofSession,
   renderLaneProofRefusal,
 } from "./internal/LaneProofReuse.ts";
@@ -151,6 +152,7 @@ import {
   QualityTaskLaneRun,
   QualityTaskLaneRunReport,
   QualityTaskName,
+  ReportOnlyInertLaneId,
   RootAuditMode,
 } from "./Quality.schemas.ts";
 import type { GlobPatternError } from "@beep/glob/GlobPattern";
@@ -2183,6 +2185,58 @@ const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLan
 
 type GithubCheckWaveLane = GithubCheckLaneWaveSpec["lanes"][number];
 
+// Deliberately narrower than hosted docs-only routing: these paths are prose
+// reports, never policy, package documentation, executable docs or tooling.
+const ReportOnlyPath = S.String.check(
+  S.isPattern(/^docs\/reports\/(?!\.|AGENTS\.md$|CLAUDE\.md$)(?!.*\/(?:\.|AGENTS\.md$|CLAUDE\.md$))[^\\\u0000]+\.md$/u)
+).pipe(
+  $RepoCliId.create("commands/Quality/Tasks").annoteSchema("ReportOnlyPath", {
+    description: "A Markdown report under docs/reports without hidden or agent-instruction segments.",
+  })
+);
+const isReportOnlyPath = S.is(ReportOnlyPath);
+const reportOnlySkipReason = "clean report-only diff; source-only lane inputs unchanged";
+
+// Every unknown axis fails closed. Git owns NUL parsing, including Unicode and
+// newline filenames. noRenames retains the source-side deletion of a move.
+const cleanReportOnlyDiff = Effect.fn("QualityTasks.cleanReportOnlyDiff")(function* (repoRoot: string) {
+  if (configStringEqualsSync("BEEP_QUALITY_REPORT_ONLY_SKIP", "0")) return false;
+  const available = yield* Effect.serviceOption(Git);
+  if (O.isNone(available)) return false;
+  const git = available.value;
+  return yield* Effect.gen(function* () {
+    const status = yield* git.status(repoRoot, { untrackedFiles: "all", noOptionalLocks: true });
+    if (A.isReadonlyArrayNonEmpty(status)) return false;
+    const base = yield* git.revParse(repoRoot, "origin/main", { peel: "commit" });
+    const pinned = pinnedLaneProofBaseSha();
+    if (O.isSome(pinned) && pinned.value !== base) return false;
+    const head = yield* git.revParse(repoRoot, "HEAD", { peel: "commit" });
+    const mergeBase = yield* git.mergeBase(repoRoot, base, head);
+    const entries = yield* git.nameStatus(repoRoot, { base: mergeBase, head, twoDot: true, noRenames: true });
+    if (A.isReadonlyArrayEmpty(entries)) return false;
+    if (
+      !A.every(
+        entries,
+        (entry) => (entry.status === "added" || entry.status === "modified") && isReportOnlyPath(entry.path)
+      )
+    )
+      return false;
+    const pathspec = A.map(entries, (entry) => `:(literal)${entry.path}`);
+    const before = yield* git.lsTree(repoRoot, mergeBase, { pathspec, fullTree: true });
+    const after = yield* git.lsTree(repoRoot, head, { pathspec, fullTree: true });
+    if (
+      A.length(after) !== A.length(entries) ||
+      !A.every([...before, ...after], (entry) => entry.mode === "100644" && entry.type === "blob")
+    )
+      return false;
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    return yield* Effect.forEach(entries, (entry) => fs.lstat(path.join(repoRoot, entry.path)), {
+      concurrency: 1,
+    }).pipe(Effect.map(A.every((info) => info.type === "File" && (info.mode & 0o111) === 0)));
+  }).pipe(Effect.orElseSucceed(thunkFalse));
+});
+
 // What one lane contributed to its wave. The journal append and the proof
 // persist are left to the wave runner so lanes that ran concurrently are
 // still recorded in wave order and never write the proof ledger at once.
@@ -2197,8 +2251,27 @@ type GithubCheckLaneOutcome = {
 const runGithubCheckLane = Effect.fn("QualityTasks.runGithubCheckLane")(function* (
   label: string,
   lane: GithubCheckWaveLane,
-  session: O.Option<LaneProofSession>
+  session: O.Option<LaneProofSession>,
+  reportOnly: boolean
 ) {
+  if (reportOnly && lane.tier === "cheap-gates" && S.is(ReportOnlyInertLaneId)(lane.id)) {
+    yield* Console.log(`[beep-cli] ${label}: skipped lane ${lane.id}: ${reportOnlySkipReason}`);
+    return {
+      lane,
+      laneRun: O.some(
+        QualityTaskLaneRun.make({
+          id: lane.id,
+          label: lane.step.label,
+          status: "skipped",
+          reason: O.some(reportOnlySkipReason),
+          inputDigest: O.none(),
+        })
+      ),
+      failures: A.empty<QualityTaskFailed>(),
+      reused: false,
+      stopAfterRed: false,
+    } satisfies GithubCheckLaneOutcome;
+  }
   const reusable = O.exists(session, (prepared) => hasReusableLaneProof(prepared, lane.id));
   const activeReuse = reusable && O.exists(session, (prepared) => prepared.mode === "active");
   if (reusable) {
@@ -2250,7 +2323,9 @@ const runGithubCheckLane = Effect.fn("QualityTasks.runGithubCheckLane")(function
 const githubCheckLaneProofSuccess = (
   outcome: GithubCheckLaneOutcome
 ): O.Option<readonly [lane: GithubCheckWaveLane, durationMs: number]> =>
-  outcome.reused || A.isReadonlyArrayNonEmpty(outcome.failures)
+  outcome.reused ||
+  O.exists(outcome.laneRun, (run) => run.status === "skipped") ||
+  A.isReadonlyArrayNonEmpty(outcome.failures)
     ? O.none()
     : O.some([
         outcome.lane,
@@ -2377,7 +2452,8 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
   wave: GithubCheckLaneWaveSpec,
   failurePolicy: GithubCheckFailurePolicy,
   concurrency: number,
-  session: O.Option<LaneProofSession>
+  session: O.Option<LaneProofSession>,
+  reportOnly: boolean
 ) {
   const failFast = GithubCheckFailurePolicy.is["fail-fast"](failurePolicy);
   const stopRequested = yield* Ref.make(false);
@@ -2417,7 +2493,7 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
       Effect.flatMap((stop) =>
         stop
           ? Effect.succeed(O.none<GithubCheckLaneOutcome>())
-          : runGithubCheckLane(label, lane, session).pipe(
+          : runGithubCheckLane(label, lane, session, reportOnly).pipe(
               Effect.tap((outcome) => (failFast && outcome.stopAfterRed ? Ref.set(stopRequested, true) : Effect.void)),
               Effect.asSome
             )
@@ -2523,6 +2599,12 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
   // One virtual-tree hash identifies every reusable lane up front; each wave
   // then refreshes it once (see advanceGithubCheckLaneProofs).
   const allLanes = A.flatMap(waves, (wave) => wave.lanes);
+  const repoRoot = O.map(A.head(allLanes), (lane) => lane.step.cwd);
+  const reportOnly =
+    O.isSome(repoRoot) &&
+    A.some(allLanes, (lane) => lane.tier === "cheap-gates" && S.is(ReportOnlyInertLaneId)(lane.id))
+      ? yield* cleanReportOnlyDiff(repoRoot.value)
+      : false;
   let session = yield* prepareLaneProofSession(allLanes, laneProofMode).pipe(
     QualityTaskConfigurationError.mapError("Failed to prepare the lane-proof session.")
   );
@@ -2547,7 +2629,7 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
       skippedLaneIds,
       stoppedAfterRed,
       successes,
-    } = yield* runGithubCheckWave(`${label}:${wave.wave}`, wave, failurePolicy, concurrency, session);
+    } = yield* runGithubCheckWave(`${label}:${wave.wave}`, wave, failurePolicy, concurrency, session, reportOnly);
     // The refresh is skipped only when nothing would read it: no proof to
     // persist and no later wave to identify.
     if (A.isReadonlyArrayNonEmpty(successes) || (!stoppedAfterRed && waveIndex < A.length(waves) - 1)) {
@@ -2560,7 +2642,14 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
         GithubCheckLaneRun.make({
           id: lane.id,
           stage: lane.stage,
-          status: githubCheckLaneRunStatus(lane, activeReusableIds, failedLabels, skippedLaneIds),
+          status: O.getOrElse(
+            A.findFirst(waveLaneRuns, (run) => run.id === lane.id),
+            () => ({ status: githubCheckLaneRunStatus(lane, activeReusableIds, failedLabels, skippedLaneIds) })
+          ).status,
+          reason: O.flatMap(
+            A.findFirst(waveLaneRuns, (run) => run.id === lane.id),
+            (run) => run.reason
+          ),
           wave: lane.wave,
         })
       )
