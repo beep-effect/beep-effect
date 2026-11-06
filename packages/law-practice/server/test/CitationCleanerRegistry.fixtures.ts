@@ -56,7 +56,8 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
     resolutionIterations: O.getOrElse(O.fromUndefinedOr(iterations), () => base.resolutionIterations),
   };
   const values = yield* makeCitationCleanerValues(limits);
-  const builtin = yield* makeCitationBuiltinCleaners(limits, citationHtmlWorkerTestRuntime()).pipe(
+  const htmlRuntime = yield* citationHtmlWorkerTestRuntime();
+  const builtin = yield* makeCitationBuiltinCleaners(limits, htmlRuntime).pipe(
     Effect.provideService(CitationCleanerValues, values),
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
   );

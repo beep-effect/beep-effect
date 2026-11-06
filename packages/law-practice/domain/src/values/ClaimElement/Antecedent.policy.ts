@@ -653,7 +653,7 @@ const unavailableAncestors = (decompositions: ReadonlyArray<ClaimInputDecomposit
   )) {
     if (decomposition.status !== "decomposed") continue;
     const issues = PatentClaim.match(claim, {
-      independent: () => A.empty<ClaimInputCoverageIssue>(),
+      independent: A.empty<ClaimInputCoverageIssue>,
       dependent: ({ claimReferences }) =>
         A.map(
           A.filter(claimReferences, (parent) => !HashSet.has(ready, parent)),

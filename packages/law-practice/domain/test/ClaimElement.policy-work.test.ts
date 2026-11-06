@@ -1,9 +1,19 @@
-import { antecedentPolicy, ClaimElementTree, decomposeClaim } from "@beep/law-practice-domain/values/ClaimElement";
+import { $LawPracticeDomainId } from "@beep/identity/packages";
+import {
+  antecedentPolicy,
+  ClaimElementTree,
+  ClaimTermHead,
+  decomposeClaim,
+} from "@beep/law-practice-domain/values/ClaimElement";
 import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { assert, describe } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { PatentClaims } from "@beep/law-practice-domain/values/PatentDocument";
@@ -52,7 +62,68 @@ const deepClaims = (referenceCount: number, depth = 64): PatentClaims =>
     independent(1, "a sensor1.")
   );
 
+const $I = $LawPracticeDomainId.create("test/ClaimElement.policy-work");
+const exhaustedFixture = Effect.gen(function* () {
+  const claims = deepClaims(100);
+  const trees = yield* treesOf(claims);
+  return { claims, trees };
+});
+class ExhaustedFixture extends Context.Service<ExhaustedFixture, Effect.Success<typeof exhaustedFixture>>()(
+  $I`ExhaustedFixture`
+) {}
+
+it.layer(Layer.effect(ExhaustedFixture, exhaustedFixture), { timeout: "10 seconds" })(
+  "antecedent policy invocation isolation",
+  (it) => {
+    it.effect.prop(
+      "preserves schema-derived term findings after another invocation exhausts its work budget",
+      { head: Arbitrary.schema(ClaimTermHead.check(S.isMaxLength(48))) },
+      Effect.fnUntraced(function* ({ head }) {
+        const claims: PatentClaims = [independent(1, `a ${head}; the ${head}.`)];
+        const trees = yield* treesOf(claims);
+        const before = antecedentPolicy(trees, claims);
+        assert.isFalse(A.some(before, ({ rule }) => rule === "chain-work-limit"));
+        const fixture = yield* ExhaustedFixture;
+        const exhausted = antecedentPolicy(fixture.trees, fixture.claims);
+        assert.isTrue(A.isReadonlyArrayNonEmpty(exhausted));
+        assert.isTrue(A.every(exhausted, ({ rule }) => rule === "chain-work-limit"));
+        assert.deepStrictEqual(antecedentPolicy(trees, claims), before);
+      }),
+      { arbitrary: fcRuns(20) }
+    );
+  }
+);
+
 describe("bounded antecedent policy preparation", () => {
+  it.effect("abstains when sparse chains exhaust preparation lookup and copy reservations", () =>
+    Effect.gen(function* () {
+      const claims: PatentClaims = A.prepend(
+        A.map(A.range(2, 120), (number) => dependent(number, [number - 1], "the sensor.")),
+        independent(1, "a sensor.")
+      );
+      const sparseTree = Effect.fn("PolicyWorkTest.sparseTree")(function* (number: number) {
+        const claim = O.getOrThrow(A.findFirst(claims, (candidate) => candidate.claimNumber === number));
+        const tree = yield* decomposeClaim(claim, claims);
+        return yield* S.decodeEffect(ClaimElementTree)({
+          ...tree,
+          edges: [],
+          elements: A.map(tree.elements, (element) => ({
+            ...element,
+            terms: A.filter(element.terms, (term) => term.determiner === "the" && term.head === "sensor"),
+          })),
+        });
+      });
+      // One sparse term cannot fund the quadratic copy reservation of a
+      // 120-claim chain. Earlier successful chains can instead leave less
+      // than the next chain's lookup reservation while enumeration still fits.
+      for (const depths of [[120], [20, 21, 95, 50]]) {
+        const trees = yield* Effect.forEach(depths, sparseTree);
+        const findings = antecedentPolicy(trees, claims);
+        assert.isTrue(A.some(findings, ({ rule }) => rule === "chain-work-limit"));
+        assert.deepStrictEqual(antecedentPolicy(trees, claims), findings);
+      }
+    })
+  );
   it.effect("retains every unsupported bare warning without wasting candidate scans", () =>
     Effect.gen(function* () {
       const body = `${A.join(

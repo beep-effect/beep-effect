@@ -1545,6 +1545,7 @@
         "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/cli/Labs/index.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/cli/OptionRecord.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/process/index.ts",
+        "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/tsmorph/ProjectFactory.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-utils/src/JSDoc/JSDocSections.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-workspaces/package.json",
         "$TURBO_ROOT$/packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",

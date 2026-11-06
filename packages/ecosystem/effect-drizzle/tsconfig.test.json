@@ -155,6 +155,7 @@
           "matchBooleanToIsSuccess": "error",
           "matchEffectToMapBoth": "error",
           "matchEffectToMatch": "error",
+          "matchToResultOrOption": "error",
           "missedPipeableOpportunity": "error",
           "missingEffectContext": "error",
           "missingEffectError": "error",

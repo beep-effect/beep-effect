@@ -20,7 +20,7 @@ export const visitCitationTextPoints = Effect.fn("Citation.visitTextPoints")(fun
       yield* Effect.yieldNow;
       nextYield = index + 4096;
     }
-    const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
+    const point = O.getOrThrow(Str.codePointAt(text, index));
     if (!visit(point)) return false;
     index += point > 0xffff ? 2 : 1;
   }

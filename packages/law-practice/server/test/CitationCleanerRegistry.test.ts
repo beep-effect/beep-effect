@@ -1,17 +1,52 @@
+import { CitationBuiltinCleaners } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
 import {
+  CitationCleanerFailure,
   CitationCleanerObject,
   CitationCleanerProduced,
 } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import {
+  CitationCleanerProtocols,
+  makeCitationCleanerRegistry,
+} from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
+import { CitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { CitationPythonUnicodeStorage } from "@beep/law-practice-server/internal/Citation/PythonHash";
+import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
+import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import { constant } from "effect/Function";
 import * as O from "effect/Option";
+import * as TestClock from "effect/testing/TestClock";
 import { makeCitationCleanerRegistryHarness as setup } from "./CitationCleanerRegistry.fixtures.ts";
 
 describe("live cleaner registry", () => {
+  it.effect("rejects out-of-range host hashes and bounds stalled callbacks", () =>
+    Effect.gen(function* () {
+      const h = yield* setup();
+      const key = yield* h.values.retainHost("host-key");
+      const value = yield* h.values.retainHost("host-value");
+      h.hooks({ hash: () => Effect.succeed(BigInt(2) ** BigInt(100)) });
+      const malformed = yield* h.registry.set(key, value).pipe(Effect.flip);
+      expect(malformed).toMatchObject({ reason: "callback-failed" });
+      const entered = yield* Deferred.make<void>();
+      h.hooks({ hash: () => Deferred.succeed(entered, undefined).pipe(Effect.andThen(Effect.never)) });
+      const pending = yield* h.registry.set(key, value).pipe(Effect.forkChild);
+      yield* Deferred.await(entered);
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      yield* TestClock.adjust(limits.cleanDeadline);
+      const timedOut = yield* Fiber.join(pending).pipe(Effect.flip);
+      expect(timedOut).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "cleanDeadline" });
+      h.hooks({ hash: () => Effect.succeed(BigInt(17)) });
+      yield* h.registry.set(key, value);
+      const entries = yield* h.registry.read;
+      expect(entries).toHaveLength(6);
+    })
+  );
   it.effect("dispatches native hashed names through real builtins without host hooks", () =>
     Effect.gen(function* () {
       const h = yield* setup();
@@ -258,3 +293,86 @@ describe("live cleaner registry", () => {
     })
   );
 });
+
+it.effect("rejects malformed registry policy before invoking captured capabilities", () =>
+  Effect.gen(function* () {
+    const h = yield* setup();
+    const unavailable = constant(Effect.die("invalid registry policy reached a capability"));
+    const protocols = CitationCleanerProtocols.of({
+      hash: unavailable,
+      equal: unavailable,
+      callable: unavailable,
+      invoke: unavailable,
+      open: unavailable,
+    });
+    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
+      const failure = yield* makeCitationCleanerRegistry(policy).pipe(
+        Effect.provideService(CitationCleanerValues, h.values),
+        Effect.provideService(CitationBuiltinCleaners, { invoke: unavailable }),
+        Effect.provideService(CitationCleanerProtocols, protocols),
+        Effect.flip
+      );
+      expect(failure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "invalid-input" });
+      expect("cause" in failure).toBe(false);
+    }
+  })
+);
+
+it.effect("closes malformed native snapshots and oversized owned-byte hashing without altering registry entries", () =>
+  Effect.gen(function* () {
+    const h = yield* setup();
+    const before = yield* h.registry.read;
+    const value = yield* h.values.retainHost("registered value");
+    const bytes = yield* h.values.bytes(new Uint8Array(CitationEngineAbsoluteMaxima.producedTextUtf16 * 4 + 1));
+    const byteFailure = yield* h.registry.set(bytes, value).pipe(Effect.flip);
+    expect(byteFailure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "runtime-failed" });
+    const key = yield* h.values.text("private key");
+    const original = h.values.getUnicode;
+    const malformed = yield* original(key).pipe(Effect.flatMap(Effect.fromOption));
+    Reflect.set(malformed.storage, "width", 3);
+    Reflect.set(
+      h.values,
+      "getUnicode",
+      Effect.fn("CleanerRegistryTest.invalidNativeSnapshot")((ref: CitationCleanerObject) =>
+        ref === key ? Effect.succeedSome(malformed) : original(ref)
+      )
+    );
+    const nativeFailure = yield* h.registry.set(key, value).pipe(Effect.flip);
+    expect(nativeFailure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "runtime-failed" });
+    Reflect.set(
+      h.values,
+      "getUnicode",
+      Effect.fn("CleanerRegistryTest.missingNativeSnapshot")((ref: CitationCleanerObject) =>
+        ref === key ? Effect.succeedNone : original(ref)
+      )
+    );
+    const missingFailure = yield* h.registry.set(key, value).pipe(Effect.flip);
+    expect(missingFailure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "unissued-value" });
+    Reflect.set(h.values, "getUnicode", original);
+    const after = yield* h.registry.read;
+    expect(after).toEqual(before);
+  })
+);
+
+it.effect("distinguishes issued builtin functions from owned text while the pipeline work is live", () =>
+  Effect.gen(function* () {
+    const h = yield* setup();
+    const bindings = yield* h.registry.read;
+    const builtin = A.getUnsafe(bindings, 0)[1];
+    let checked = false;
+    h.hooks({
+      open: Effect.fn("CleanerRegistryTest.checkLiveCallability")(function* (_plan, value, work) {
+        const callable = yield* h.registry.runtime.callable(builtin, work);
+        expect(callable).toBe(true);
+        const failure = yield* h.registry.runtime.invoke(value, value, work).pipe(Effect.result);
+        assertFailure(failure, CitationCleanerFailure.make({ reason: "not-callable" }));
+        checked = true;
+        return { next: Effect.succeedNone };
+      }),
+    });
+    const completed = yield* h.pipeline.run({ text: "owned plain text", plan: "callability" });
+    expect(checked).toBe(true);
+    const text = yield* h.values.getText(completed.value);
+    expect(O.getOrThrow(text).text).toBe("owned plain text");
+  })
+);

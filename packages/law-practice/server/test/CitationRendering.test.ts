@@ -18,6 +18,22 @@ import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
 const ShortText = S.String.check(S.isMaxLength(64));
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original built-in rendering", (it) => {
+  it.effect("rejects malformed rendering policy and requests before assembling text", () =>
+    Effect.gen(function* () {
+      const { owner, limits } = yield* loadCitationRendering();
+      const invalidPolicy = yield* makeCitationRendering(null).pipe(
+        Effect.provideService(CitationFrozenEditions, owner),
+        Effect.flip
+      );
+      expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
+      const renderer = yield* makeCitationRendering(limits).pipe(Effect.provideService(CitationFrozenEditions, owner));
+      for (const input of [null, {}, { mode: "unrecognized" }]) {
+        const failure = yield* renderer.render(input).pipe(Effect.flip);
+        expect(failure).toMatchObject({ reason: "invalid-input" });
+        expect("cause" in failure).toBe(false);
+      }
+    })
+  );
   it.effect("matches all 14934 original rendering observations", replayCitationRendering, { timeout: 120000 });
   it.effect.prop(
     "matched-only rendering preserves schema-derived source text",

@@ -1,6 +1,11 @@
 import { makeCitationRegexAlphabet } from "@beep/law-practice-server/internal/Citation/RegexAlphabet";
 import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import {
+  CitationRegexPointRange,
+  citationRegexHexDigit,
+  complementCitationRegexRanges,
+} from "@beep/law-practice-server/internal/Citation/RegexPointSets";
+import {
   CitationRegexProgram,
   makeCitationRegexProgram,
 } from "@beep/law-practice-server/internal/Citation/RegexProgram";
@@ -11,6 +16,7 @@ import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as RegExp from "effect/RegExp";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -26,6 +32,54 @@ const setup = Effect.fn("RegexProgramTest.setup")(function* () {
   });
   return { limits, input, source, compiler, alphabet, compile };
 });
+
+it.effect("renders alternation, assertions, repetitions and escaped controls with their source semantics", () =>
+  Effect.gen(function* () {
+    const { compile, source, compiler, alphabet } = yield* setup();
+    const cases = [
+      { pattern: "(?:a|b)+?", source: "ab", matched: true },
+      { pattern: "\\B", source: "", matched: false },
+      { pattern: "a\\Bb", source: "ab", matched: true },
+      { pattern: "a(?=b)", source: "ab", matched: true },
+      { pattern: "a{2}\\Z", source: "aa", matched: true },
+      { pattern: "a{1,3}$", source: "aaa\n", matched: true },
+      { pattern: "(a){1,}", source: "aa", matched: true },
+      { pattern: "\\D\\W\\r\\t\\v\\f\\a", source: "a!\r\t\v\f\u0007", matched: true },
+      { pattern: "[\\b]", source: "\b", matched: true },
+    ];
+    for (const row of cases) {
+      const program = yield* compile(row.pattern);
+      const prepared = yield* source.prepareText(row.source, () => Effect.void);
+      const encoded = yield* alphabet.prepare(program.sets, prepared.value.storage);
+      const rendered = yield* compiler.render(program, encoded);
+      const expression = new RegExp.RegExp(rendered, encoded.flags);
+      expect(expression.test(encoded.source), row.pattern).toBe(row.matched);
+    }
+  })
+);
+
+it.effect("rejects expanded Unicode boundaries that exceed the rendered pattern budget", () =>
+  Effect.gen(function* () {
+    const { compile, source, compiler, alphabet } = yield* setup();
+    const program = yield* compile("\\bab\\b");
+    const prepared = yield* source.prepareText("ab", () => Effect.void);
+    const encoded = yield* alphabet.prepare(program.sets, prepared.value.storage);
+    const failure = yield* compiler.render(program, encoded).pipe(Effect.flip);
+    expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patternUtf16" });
+  })
+);
+
+it.effect("rejects malformed policy, flags and native carriers before producing a program", () =>
+  Effect.gen(function* () {
+    const invalidPolicy = yield* makeCitationRegexProgram({}).pipe(Effect.flip);
+    expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
+    const { compiler } = yield* setup();
+    const invalidFlags = yield* compiler.compile({ width: 1, bytes: new Uint8Array(0) }, -1).pipe(Effect.flip);
+    expect(invalidFlags).toMatchObject({ reason: "invalid-input" });
+    const invalidCarrier = yield* compiler.compile({}, 0).pipe(Effect.flip);
+    expect(invalidCarrier).toMatchObject({ reason: "unsupported-syntax" });
+  })
+);
 
 it.effect("preserves names and source profiles while lowering dot and final-LF anchors", () =>
   Effect.gen(function* () {
@@ -238,5 +292,32 @@ it.effect("captures the compiler Clock and equal-deadline operation priority", (
       .compile(source, 0)
       .pipe(Effect.provideService(Clock.Clock, disabled), Effect.flip);
     expect(citationResult19).toMatchObject({ operation: "extract", limit: "operationDeadline" });
+  })
+);
+
+it.effect("rejects incomplete escapes, possessive repetition and unmatched closing grammar", () =>
+  Effect.gen(function* () {
+    const { compile } = yield* setup();
+    for (const pattern of ["\\", "a++", "a{1,2}+", ")"]) {
+      const failure = yield* compile(pattern).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "unsupported-syntax" });
+    }
+    const flags = yield* compile(`(?${Str.repeat(256)("i")}:a)`);
+    const ordinary = yield* compile("(?i:a)");
+    expect(flags.sets).toEqual(ordinary.sets);
+    expect(flags.minimumWidthFloor).toBe(ordinary.minimumWidthFloor);
+    const program = yield* compile("(?P<value>x)");
+    const malformed = {
+      ...program,
+      groups: 2,
+      names: { value: 2 },
+      tokens: A.map(program.tokens, (token) => (token.kind === "open" ? { ...token, value: 2 } : token)),
+    };
+    const rejected = yield* S.decodeEffect(CitationRegexProgram)(malformed).pipe(Effect.flip);
+    expect(rejected).toBeDefined();
+    expect(complementCitationRegexRanges([])).toEqual([CitationRegexPointRange.make({ start: 0, end: 0x10ffff })]);
+    expect(complementCitationRegexRanges([CitationRegexPointRange.make({ start: 0, end: 0x10ffff })])).toEqual([]);
+    expect(citationRegexHexDigit(-1)).toBe(-1);
+    expect(citationRegexHexDigit(128)).toBe(-1);
   })
 );

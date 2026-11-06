@@ -180,6 +180,46 @@ const fixture = Effect.gen(function* () {
 }).pipe(Effect.withSpan("DocumentPersistenceTest.fixture"));
 
 it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
+  it.effect("rejects an unattached persisted list after otherwise valid authority verification", () =>
+    Effect.gen(function* () {
+      const data = yield* fixture;
+      const orphan = CitationMemberList.make({
+        id: CitationMemberListId.make(`cl1:${Str.repeat(64)("e")}`),
+        members: [],
+      });
+      const document = CitationDocument.make({
+        ...data.document,
+        memberLists: A.append(data.document.memberLists, orphan),
+      });
+      const failure = yield* projectCitationDocumentReceipt({ document, editions: data.editions }).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationDocumentFailure", reason: "invalid-input" });
+    })
+  );
+  it.effect("rejects coherent stale occurrence identities at projection before producing a receipt", () =>
+    Effect.gen(function* () {
+      const data = yield* fixture;
+      const last = A.getUnsafe(data.document.mentions, 2);
+      const document = CitationDocument.make({
+        ...data.document,
+        mentions: A.map(data.document.mentions, (mention) =>
+          mention.id === last.id ? CitationMention.make({ ...mention, id: staleMention }) : mention
+        ),
+        resolutions: A.map(data.document.resolutions, (resolution) =>
+          resolution.mentionId === last.id ? { ...resolution, mentionId: staleMention } : resolution
+        ),
+        memberLists: A.map(data.document.memberLists, (list) =>
+          CitationMemberList.make({
+            ...list,
+            members: A.map(list.members, (reference) =>
+              reference._tag === "Mention" && reference.mentionId === last.id ? member(staleMention) : reference
+            ),
+          })
+        ),
+      });
+      const failure = yield* projectCitationDocumentReceipt({ document, editions: data.editions }).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationDocumentFailure", reason: "stale-mention" });
+    })
+  );
   it.effect("persists a resource introduced without a full citation using a trusted out-of-band binding", () =>
     Effect.gen(function* () {
       const data = yield* fixture;
@@ -293,6 +333,13 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
         resourceBindings: [binding],
       });
       expect(restored.authorities).toEqual(document.authorities);
+      const unownedDecision = CitationResourceBinding.make({ ...binding, decisions: [first.id] });
+      const missingDecision = yield* projectCitationDocumentReceipt({
+        document,
+        editions: [],
+        resourceBindings: [unownedDecision],
+      }).pipe(Effect.flip);
+      expect(missingDecision).toMatchObject({ _tag: "CitationDocumentFailure", reason: "stale-authority" });
       const incomplete = bindingFor(identity, authorityId, [first.id]);
       const citationResult4 = yield* Effect.flip(
         projectCitationDocumentReceipt({ document, editions: [], resourceBindings: [incomplete] })

@@ -2061,12 +2061,14 @@ const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
                       (term) => term.anchor.startChar === ancestor.anchor.startChar && term.head === subject.head
                     )))
             );
-            return O.match(parents.length === 1 ? A.head(parents) : O.none(), {
-              onNone: () => [],
-              onSome: (parent): ReadonlyArray<EncodedEdge> => [
-                { kind: "depends-on-element", dependent: element.path, ancestor: parent.path },
-              ],
-            });
+            return (parents.length === 1 ? A.head(parents) : O.none()).pipe(
+              O.map(
+                (parent): ReadonlyArray<EncodedEdge> => [
+                  { kind: "depends-on-element", dependent: element.path, ancestor: parent.path },
+                ]
+              ),
+              O.getOrElse(A.empty<EncodedEdge>)
+            );
           },
         }
       )
