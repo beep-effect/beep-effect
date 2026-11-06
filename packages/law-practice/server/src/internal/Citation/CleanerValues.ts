@@ -21,6 +21,7 @@ import { CitationCleanerFailure, CitationCleanerObject } from "./CleanerPipeline
 import { CitationCleanerTextDescriptor, CitationCleanerTextOutput } from "./CleanerTextIdentity.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationPythonUnicodeValue, makeCitationPythonUnicode } from "./PythonUnicode.ts";
+import { CitationTextBudget } from "./TextBudget.ts";
 import type { CitationPythonUnicodeFailure } from "./PythonUnicode.ts";
 
 const Limits = S.toType(CitationEngineLimits);
@@ -76,6 +77,7 @@ export class CitationCleanerValues extends Context.Service<
     readonly text: (input: unknown) => Effect.Effect<CitationCleanerObject, Failure>;
     readonly unicode: (input: unknown) => Effect.Effect<CitationCleanerObject, Failure>;
     readonly unicodeSubclass: (input: unknown, host: unknown) => Effect.Effect<CitationCleanerObject, Failure>;
+    readonly getUnicodeUnits: (value: CitationCleanerObject) => Effect.Effect<O.Option<number>, CitationCleanerFailure>;
     readonly getUnicode: (
       value: CitationCleanerObject
     ) => Effect.Effect<O.Option<CitationPythonUnicodeValue>, CitationCleanerFailure>;
@@ -303,6 +305,9 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
       const value = yield* unicode.fromStorage(input).pipe(Effect.mapError(translate));
       return yield* Effect.suspend(() => mint({ kind: "text", unicode: value, subtype: "subclass", host }, () => {}));
     }),
+    getUnicodeUnits: Effect.fn("Citation.measureNativeCleanerText")((ref) =>
+      get(ref).pipe(Effect.map((entry) => (entry.kind === "text" ? O.some(entry.unicode.utf16Units) : O.none())))
+    ),
     getUnicode: Effect.fn("Citation.readNativeCleanerText")((ref) =>
       get(ref).pipe(
         Effect.map((entry) =>
@@ -379,4 +384,19 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
       })
     ),
   });
+});
+
+/** Copy a native cleaner value only after the enclosing operation reserves its
+ * measured text. The size lookup neither copies storage nor coerces host values.
+ * @internal @category operations @since 0.0.0
+ */
+export const copyCitationCleanerUnicode = Effect.fn("Citation.copyOwnedCleanerUnicode")(function* <E>(
+  values: CitationCleanerValues["Service"],
+  value: CitationCleanerObject,
+  invalid: () => E
+) {
+  const budget = yield* CitationTextBudget;
+  const units = yield* values.getUnicodeUnits(value).pipe(Effect.flatMap((units) => Effect.fromOption(units, invalid)));
+  yield* budget.reserve(units);
+  return yield* values.getUnicode(value).pipe(Effect.flatMap((text) => Effect.fromOption(text, invalid)));
 });

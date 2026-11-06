@@ -205,6 +205,16 @@ export const assertCitationWorkerCompositionReleased = Effect.fn("RegexWorkerTes
   const native = yield* admission.snapshot;
   expect(native).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
 });
+/** Retain non-vacuous observed-exit and zero-capacity assertions for composed replays. */
+export const assertCitationWorkerCompositionObserved = Effect.fn("RegexWorkerTest.compositionObserved")(function* (
+  operation: CitationOperationAdmission["Service"],
+  admission: CitationNativeProcessAdmission["Service"],
+  observed: Effect.Effect<CitationNativeExitCounts>
+) {
+  const counts = yield* observed;
+  expect(counts.spawned).toBeGreaterThan(0);
+  yield* assertCitationWorkerCompositionReleased(operation, admission, observed, counts.spawned);
+});
 /** Observe both independent native exit acknowledgement and released capacity. */
 export const assertCitationRegexRuntimeReleased = Effect.fn("RegexWorkerTest.runtimeReleased")(function* (
   admission: CitationNativeProcessAdmission["Service"],

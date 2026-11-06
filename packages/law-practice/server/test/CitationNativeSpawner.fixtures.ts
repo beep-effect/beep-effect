@@ -159,6 +159,21 @@ export const makeCitationNodeTestRuntime = Effect.fn("NativeSourceTest.nodeRunti
   (entrypoint: string, cwd: string) => makeCitationBundledTestRuntime("node", entrypoint, cwd)
 );
 
+/** Share actual HTML runtime selection; each worker kind owns its output directory.
+ * @internal @category testing @since 0.0.0
+ */
+export const makeCitationHtmlTestRuntime = Effect.fn("NativeSourceTest.htmlRuntime")(function* (
+  kind: CitationNativeRuntimeKind,
+  cwd: string
+) {
+  if (kind === "node")
+    return yield* makeCitationNodeTestRuntime(
+      NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.node.entry.ts", import.meta.url)),
+      cwd
+    );
+  return yield* citationHtmlWorkerTestRuntime();
+});
+
 /** Share actual regex runtime selection and once-per-installation bundling.
  * Both legs launch the unchanged isolated worker program under the same limits.
  * @internal @category testing @since 0.0.0

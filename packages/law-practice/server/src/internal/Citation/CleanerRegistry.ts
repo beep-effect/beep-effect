@@ -307,9 +307,7 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
     assertOwned: Effect.fn("Citation.registryAssertOwned")((value) =>
       ensureOpen.pipe(Effect.andThen(values.assertOwned(value)))
     ),
-    textUnits: Effect.fn("Citation.registryTextUnits")((value) =>
-      values.getUnicode(value).pipe(Effect.map(O.map((text) => text.utf16Units)))
-    ),
+    textUnits: Effect.fn("Citation.registryTextUnits")((value) => values.getUnicodeUnits(value)),
     open: Effect.fn("Citation.registryOpen")((plan, initial, work) =>
       checkWork(work).pipe(Effect.andThen(protocols.open(plan, initial, work)))
     ),

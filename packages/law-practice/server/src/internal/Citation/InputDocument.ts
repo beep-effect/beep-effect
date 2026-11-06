@@ -17,7 +17,7 @@ import {
   CitationLiveCleanerObject,
   makeCitationCleanerPipeline,
 } from "./CleanerPipeline.ts";
-import { CitationCleanerValues } from "./CleanerValues.ts";
+import { CitationCleanerValues, copyCitationCleanerUnicode } from "./CleanerValues.ts";
 import {
   CitationHtmlGeometryPreparationConfiguration,
   copyCitationHtmlGeometryConfiguration,
@@ -25,6 +25,7 @@ import {
 } from "./HtmlGeometryPreparation.ts";
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
+import { CitationTextBudget } from "./TextBudget.ts";
 import type { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import type { CitationCleanerFailure, CitationCleanerObject } from "./CleanerPipeline.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
@@ -149,8 +150,7 @@ const Patch = S.Struct({
   $I.annoteSchema("Patch", { description: "Complete source branch state before captured invocation accounting." })
 );
 const nativeValue = Effect.fn("Citation.documentNativeValue")(function* (owned: Owned, value: CitationCleanerObject) {
-  const text = yield* owned.values.getUnicode(value);
-  const found = yield* Effect.fromOption(text, () => fail("geometry-input-type", "TypeError"));
+  const found = yield* copyCitationCleanerUnicode(owned.values, value, () => fail("geometry-input-type", "TypeError"));
   return found.storage;
 });
 const cleanValue = Effect.fn("Citation.cleanDocumentInput")(function* (
@@ -190,12 +190,13 @@ const markupBranch = Effect.fn("Citation.initializeMarkupDocument")(function* (
   }
   const result = yield* cleanValue(owned, input, input.markup);
   const markup = yield* nativeValue(owned, input.markup);
+  const budget = yield* CitationTextBudget;
   const geometry = yield* prepareCitationHtmlGeometry(
     limits,
     runtime,
     owned.configuration,
     markup,
-    nativeValue(owned, result.value)
+    nativeValue(owned, result.value).pipe(Effect.provideService(CitationTextBudget, budget))
   );
   return Patch.make({
     plain: result.value,

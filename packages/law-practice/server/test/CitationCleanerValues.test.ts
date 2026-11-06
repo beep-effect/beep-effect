@@ -1,10 +1,17 @@
 import * as NodeURL from "node:url";
-import { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import {
+  CitationCleanerFailure,
+  CitationCleanerObject,
+} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import { citationCleanerHtmlTextOutput } from "@beep/law-practice-server/internal/Citation/CleanerTextIdentity";
-import { makeCitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
+import {
+  copyCitationCleanerUnicode,
+  makeCitationCleanerValues,
+} from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { makeCitationHtmlInput } from "@beep/law-practice-server/internal/Citation/HtmlInput";
 import { makeCitationHtmlKernel } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
 import { makeCitationLiteralCleaners } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
+import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -19,6 +26,7 @@ import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
@@ -348,5 +356,40 @@ it.effect("rejects native output whose declared text differs from the supplied s
     expect(failure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "invalid-text-allocation" });
     const after = yield* values.snapshot;
     expect(after).toEqual(before);
+  })
+);
+
+it.effect("reserves a measured native snapshot before asking the value owner to copy it", () =>
+  Effect.gen(function* () {
+    const { limits } = yield* defaultCitationEnginePolicy;
+    const values = yield* makeCitationCleanerValues(limits);
+    const value = yield* values.sourceText("A😀");
+    const units = yield* values.getUnicodeUnits(value);
+    assertSome(units, 3);
+    const reads = yield* Ref.make(0);
+    const observed = {
+      ...values,
+      getUnicode: Effect.fn("CleanerValuesTest.observeNativeCopy")((ref: CitationCleanerObject) =>
+        Ref.update(reads, (count) => count + 1).pipe(Effect.andThen(values.getUnicode(ref)))
+      ),
+    };
+    const tight = yield* makeCitationTextBudget({ ...limits, producedTextUtf16: 2 });
+    const invalid = () => CitationCleanerFailure.make({ reason: "invalid-input" });
+    const refused = yield* copyCitationCleanerUnicode(observed, value, invalid).pipe(
+      Effect.provideService(CitationTextBudget, tight),
+      Effect.flip
+    );
+    expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
+    const beforeCopy = yield* Ref.get(reads);
+    expect(beforeCopy).toBe(0);
+    const budget = yield* makeCitationTextBudget({ ...limits, producedTextUtf16: 3 });
+    const copied = yield* copyCitationCleanerUnicode(observed, value, invalid).pipe(
+      Effect.provideService(CitationTextBudget, budget)
+    );
+    expect(copied.utf16Units).toBe(3);
+    const afterCopy = yield* Ref.get(reads);
+    expect(afterCopy).toBe(1);
+    const spent = yield* budget.snapshot;
+    expect(spent).toBe(3);
   })
 );

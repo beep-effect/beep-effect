@@ -1,5 +1,14 @@
 # Citation Extraction Engine Plan
 
+Live Document extraction checkpoint (2026-11-06): issued plain/markup/step
+handles now compose actual initialization, cleaning, geometry and complete native
+extraction under one operation/text authority. Six original documents match on
+Bun and Node with source/step and returned-citation identity preserved. All twelve
+constructor/value/extraction regression tests pass; full 36-document hosted replay
+is registered. Native copies reserve measured units before allocation. Raw JS
+entry/joke/public service remain open. See
+[live-input evidence](history/evidence/2026-11-06-document-extraction.md).
+
 Native-text extraction checkpoint (2026-11-06): the complete original tokenizer
 now feeds owned words/tokens into the connected extraction loop under one
 operation, Scope, deadline and text authority. Eight representative original

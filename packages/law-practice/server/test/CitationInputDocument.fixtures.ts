@@ -1,7 +1,6 @@
 /** Source constructor replay through real owned cleaning and geometry.
  * @internal @packageDocumentation @since 0.0.0
  */
-import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationBuiltinCleaners } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
 import {
@@ -29,7 +28,7 @@ import * as Str from "effect/String";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
 import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
 import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixtures.ts";
-import { citationHtmlWorkerTestRuntime, makeCitationNodeTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
+import { makeCitationHtmlTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { readCitationOracleFixture, setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
@@ -314,13 +313,7 @@ export const replayCitationInputDocument = Effect.fn("InputDocumentTest.replay")
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-document-diff-" });
   const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
   const htmlDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-document-html-" });
-  const htmlRuntime =
-    kind === "node"
-      ? yield* makeCitationNodeTestRuntime(
-          NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.node.entry.ts", import.meta.url)),
-          htmlDirectory
-        )
-      : yield* citationHtmlWorkerTestRuntime();
+  const htmlRuntime = yield* makeCitationHtmlTestRuntime(kind, htmlDirectory);
   const rows = A.filter(
     corpus.cases,
     (row) =>

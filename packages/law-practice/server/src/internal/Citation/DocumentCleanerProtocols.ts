@@ -166,6 +166,8 @@ export const makeCitationDocumentCleanerProtocols = Effect.fn("Citation.makeDocu
       // Empty projection iff the owned native string has zero Python points;
       // this test needs no native-storage copy or surrogate normalization.
       if (O.isSome(text) && text.value.subtype === "plain") return Str.isNonEmpty(text.value.text);
+      const host = yield* values.getHost(value);
+      if (O.isSome(host) && host.value === null) return false;
       if (O.isSome(hostDocument)) return yield* hostDocument.value.truth(value);
       return yield* sourceFailure("TypeError");
     }),
