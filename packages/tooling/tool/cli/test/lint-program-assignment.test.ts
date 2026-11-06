@@ -1,11 +1,30 @@
 import { validateLintProgramAssignment } from "@beep/repo-cli/test/Lint";
 import { it } from "@beep/test-runner";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import { expect } from "@effect/vitest";
+import { afterEach, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import { API } from "tsrs/async";
+import { vi } from "vitest";
+
+const startParser = vi.hoisted(() => vi.fn());
+vi.mock("tsrs/async", (importOriginal) =>
+  importOriginal<typeof import("tsrs/async")>().then((original) => ({
+    ...original,
+    API: class extends original.API {
+      constructor(options: ConstructorParameters<typeof original.API>[0]) {
+        startParser();
+        super(options);
+      }
+    },
+  }))
+);
+afterEach(() => {
+  startParser.mockReset();
+  vi.restoreAllMocks();
+});
 
 const fixture = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -20,6 +39,50 @@ const fixture = Effect.fnUntraced(function* () {
 });
 
 it.layer(Layer.merge(NodeFileSystem.layer, Path.layer), { timeout: "30 seconds" })("Rust lint ownership", (it) => {
+  it.effect("rejects a compiler that cannot start", () =>
+    Effect.gen(function* () {
+      const { root } = yield* fixture();
+      startParser.mockImplementationOnce(() => {
+        throw new Error("compiler unavailable");
+      });
+      const error = yield* validateLintProgramAssignment(root, ["index.ts"]).pipe(Effect.flip);
+      expect(error).toMatchObject({
+        _tag: "LintProgramAssignmentError",
+        message: "lint deprecated-apis: cannot start tsrs config parser.",
+      });
+    })
+  );
+  it.effect("rejects a failed compiler request and still closes its process", () =>
+    Effect.gen(function* () {
+      const { root, write } = yield* fixture();
+      yield* write("tsconfig.json", "{}");
+      vi.spyOn(API.prototype, "parseConfigFile").mockRejectedValueOnce(new Error("compiler disconnected"));
+      const close = vi.spyOn(API.prototype, "close");
+      const error = yield* validateLintProgramAssignment(root, ["index.ts"]).pipe(Effect.scoped, Effect.flip);
+      expect(error).toMatchObject({
+        _tag: "LintProgramAssignmentError",
+        message: "lint deprecated-apis: parse tsconfig failed; cannot prove TypeScript coverage.",
+      });
+      expect(close).toHaveBeenCalledOnce();
+    })
+  );
+  it.effect("rejects a malformed compiler response and still closes its process", () =>
+    Effect.gen(function* () {
+      const { root, write } = yield* fixture();
+      yield* write("tsconfig.json", "{}");
+      const response = { fileNames: [], options: {}, errors: [], projectReferences: [] };
+      // Simulate an incompatible wire response without changing the compiler client's declared type.
+      Reflect.set(response, "fileNames", 42);
+      vi.spyOn(API.prototype, "parseConfigFile").mockResolvedValueOnce(response);
+      const close = vi.spyOn(API.prototype, "close");
+      const error = yield* validateLintProgramAssignment(root, ["index.ts"]).pipe(Effect.scoped, Effect.flip);
+      expect(error).toMatchObject({
+        _tag: "LintProgramAssignmentError",
+        message: "lint deprecated-apis: malformed config response for tsconfig.json.",
+      });
+      expect(close).toHaveBeenCalledOnce();
+    })
+  );
   it.effect("resolves directory references, inherited includes and all TypeScript extensions", () =>
     Effect.gen(function* () {
       const { root, write } = yield* fixture();

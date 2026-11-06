@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import { EffectImportRulesOptions, lawsCommand, runEffectImportRules } from "@beep/repo-cli/test/Laws";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
@@ -21,7 +22,9 @@ import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
+// `Git` rides beside the platform services: the Laws discovery lists the visible tree through the kit (SPEC D-21).
 const testLayer = Layer.mergeAll(
+  Git.layer.pipe(Layer.provide(NodeServices.layer)),
   NodeServices.layer,
   NodeCrypto.layer,
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
