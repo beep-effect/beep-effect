@@ -835,6 +835,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       git(["add", "."]);
       git(["commit", "-m", "goal metadata"]);
       assert.strictEqual(profile("pull_request").goals_only, "true");
+      // The goal bootstrap emits these markers. They must not turn packet
+      // prose into a code-bearing diff (the #2750 unit-d regression).
+      for (const directory of ["history", "history/reflections", "research"]) {
+        yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", directory), { recursive: true });
+        yield* fs.writeFileString(path.join(tempRoot, "goals", "example", directory, ".gitkeep"), "");
+      }
+      git(["add", "."]);
+      git(["commit", "-m", "generated packet scaffolding"]);
+      assert.strictEqual(profile("pull_request").goals_only, "true");
+      assert.strictEqual(profile("pull_request").docs_only, "true");
       const metadataHead = git(["rev-parse", "HEAD"]);
 
       for (const directory of ["docs", "designs", "history", "research"] as const) {

@@ -2448,3 +2448,30 @@ artifact hashes. A fixed module family, line and Python version can locate the
 next refusal without publishing exception messages, file paths or frame locals.
 The 256 MiB process cap, archive digest and every other numeric bound remain
 unchanged. This attempt is a refusal and grants no producer approval.
+
+
+### 2026-11-06 — Inherited coverage failures consume unrelated cache qualification runs
+
+The diagnostic PR #2757 passed every unit shard, but hosted Coverage Regression
+job 127893464505 failed on two lint production files unchanged from accepted
+main. The existing consolidated repair #2758 adds failure-path and worker tests
+without lowering floors. The repair is merged into main and present in this
+branch. Its earlier head has a successful hosted coverage receipt; current-head
+coverage proof remains required. Reuse the repair rather than copying its tests
+into both Turbo lanes. The obsolete owned #2760 Check run was cancelled to
+release runners.
+Expose known main coverage dependencies before admitting downstream coverage
+work, and preserve introduced, inherited and intentional cancellation causes.
+
+### Shared HTML corpus watchdog blocked dependency-reader acceptance, 2026-11-06
+
+While accepting the bounded dependency-reader repair (#2764), unit-d failed
+`CitationHtmlKernel.test.ts` at its 29,750 ms watchdog. The unchanged main file
+subsequently passed all eight tests in 27,350 ms (run42226885395,
+job127927919435). Coverage refused because `UNIT_RESULT` was failure before
+coverage evaluation; no coverage drop was established. A single shared repair
+(#2768) divides the pinned 1,097 corpus rows into eleven independently timed
+batches, preserving every row, digest and exact expected outcome. Smaller test
+units with explicit corpus coverage would have prevented one aggregate deadline
+from obscuring the failing case range. Hosted repair proof remains pending;
+no local quality suite or production parser/resource limit was changed.
