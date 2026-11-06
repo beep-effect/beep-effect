@@ -1,6 +1,10 @@
 import { PhoenixConfigInput } from "@beep/phoenix";
 import { DeliveryLedgerConfig } from "@beep/repo-ai-metrics/delivery-ledger";
 import {
+  encodeManagedControllerObservation,
+  ManagedControllerObservation,
+} from "@beep/repo-ai-metrics/managed-controller";
+import {
   makeNativeDelivery,
   NativeDeliveryPolicy,
   NativeDeliveryRequest,
@@ -79,6 +83,8 @@ const fixtureKeys: Readonly<Record<string, string | boolean>> = {
 };
 const changedAttributes = (current: string, attrs: Readonly<Record<string, string | number | boolean>>) =>
   Match.value(current).pipe(
+    Match.when("managed-origin", () => ({ ...attrs, "ai_metrics.producer_origin": "native" })),
+    Match.when("managed-session", () => ({ ...attrs, "session.id": "wrong-private-session" })),
     Match.when("tokens", () => ({ ...attrs, "llm.token_count.total": 136 })),
     Match.when("extra", () => ({ ...attrs, "llm.provider": "invented" })),
     Match.when("time", () => ({ ...attrs, "ai_metrics.source_start_time_unix_nano": "1793000000000000002" })),
@@ -121,7 +127,11 @@ const responseRow = (
   };
 };
 
-const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (fraction = "000000001", durationNano = 100000000) {
+const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (
+  fraction = "000000001",
+  durationNano = 100000000,
+  managed = false
+) {
   const sql = yield* SqlClient.SqlClient;
   const context = yield* Layer.build(BunHttpServer.layer({ hostname: "127.0.0.1", port: 0 }));
   const server = Context.get(context, HttpServer.HttpServer);
@@ -176,9 +186,23 @@ const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (fraction = "0
     NativeTraceRequest.make({
       routeId: id("b"),
       hashSalt: Redacted.make(salt),
-      contentType: "application/json",
-      body: new TextEncoder().encode(body),
-      usageConvention: "claude-code",
+      body: managed
+        ? yield* encodeManagedControllerObservation(
+            ManagedControllerObservation.make({
+              launchId: id("1"),
+              launchRouteId: id("b"),
+              processInstanceId: id("2"),
+              sourceSessionId: id("3"),
+              evidenceId: id("4"),
+              startTimeUnixNano: "1793000000000000001",
+              endTimeUnixNano: "1793000000100000001",
+              elapsedNanos: "100000000",
+            })
+          )
+        : new TextEncoder().encode(body),
+      contentType: managed ? "application/x-protobuf" : "application/json",
+      producer: managed ? O.some("managed-controller") : O.none(),
+      usageConvention: managed ? "unknown" : "claude-code",
       approvedModels: [],
     })
   );
@@ -208,7 +232,10 @@ const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (fraction = "0
       expect(request.url).toContain("limit=2");
       const current = yield* Ref.get(mode);
       const attrs = yield* Ref.get(stored);
-      const row = responseRow(current, attrs, event);
+      const row = {
+        ...responseRow(current, attrs, event),
+        ...(managed ? { name: "managed.controller.canary", span_kind: "AGENT", status_code: "OK" } : {}),
+      };
       return yield* HttpServerResponse.json({
         data: current === "missing" ? [] : current === "duplicate" ? [row, row] : [row],
         next_cursor: null,
@@ -351,6 +378,25 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       yield* f.sender.send(f.selection);
       yield* Ref.set(f.mode, "reversed");
       expect(yield* f.reconcile()).toMatchObject({ _tag: "Mismatch" });
+    })
+  )
+);
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("queries exact managed origin/session/elapsed evidence before declaring backend visibility", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture("000000001", 100000000, true);
+      yield* f.sender.send(f.selection);
+      for (const mode of ["managed-origin", "managed-session", "tokens"]) {
+        yield* Ref.set(f.mode, mode);
+        expect(yield* f.reconcile()).toMatchObject({ _tag: "Mismatch" });
+        expect(yield* f.sender.ledger.state(f.event.eventId)).toMatchObject({
+          value: { state: "accepted-unverified" },
+        });
+      }
+      yield* Ref.set(f.mode, "valid");
+      expect(yield* f.reconcile()).toMatchObject({ _tag: "Visible" });
+      expect(yield* f.sender.ledger.state(f.event.eventId)).toMatchObject({ value: { state: "visible" } });
     })
   )
 );
