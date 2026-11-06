@@ -119,7 +119,7 @@ export const makeSealedRuntimeFixture = Effect.fn("NativeBoundaryTest.sealedRunt
   const close = Scope.close(owned, Exit.void);
   return yield* Effect.gen(function* () {
     const sealed = yield* sealRuntimeCopy();
-    const { executable, sha256 } = sealed;
+    const { executable } = sealed;
     const commands = yield* Effect.acquireRelease(Queue.bounded<Uint8Array>(1), Queue.shutdown);
     const semaphore = yield* Semaphore.make(1);
     const child = yield* ChildProcess.make(executable, ["--eval", sealedRuntimeSocketPeerSource], {
