@@ -8,7 +8,11 @@ import {
   nativeDeliveryTargetId,
 } from "@beep/repo-ai-metrics/native-delivery";
 import { NativeHttpPolicy } from "@beep/repo-ai-metrics/native-http";
-import { ObservationAvailabilityReceipt } from "@beep/repo-ai-metrics/observation-availability";
+import {
+  ObservationAvailabilityReceipt,
+  ObservationAvailabilityReport,
+  ObservationAvailabilitySnapshot,
+} from "@beep/repo-ai-metrics/observation-availability";
 import { ObservationBackupPolicy } from "@beep/repo-ai-metrics/observation-backup";
 import { ObservationControlPolicy } from "@beep/repo-ai-metrics/observation-control";
 import { makeObservationMaintenanceHttp } from "@beep/repo-ai-metrics/observation-maintenance-http";
@@ -81,6 +85,12 @@ const decodeAvailabilityView = S.decodeEffect(availabilityViewJson);
 const equalLaunchOutcome = S.toEquivalence(ObservationLaunchOutcome);
 const equalAvailabilityReceipt = S.toEquivalence(ObservationAvailabilityReceipt);
 const equalAvailabilityView = S.toEquivalence(ObservationAvailabilityView);
+const reportedCases = [
+  { weekly: 100, session: 100, expected: "weekly-exhausted" },
+  { weekly: 100, session: 0, expected: "weekly-exhausted" },
+  { weekly: 0, session: 100, expected: "session-capped" },
+  { weekly: 0, session: 0, expected: "unknown" },
+] as const;
 
 it.effect.prop(
   "roundtrips schema-derived process outcomes without losing identity or inventing native model evidence",
@@ -95,6 +105,41 @@ it.effect.prop(
       cause: "unknown",
       population: "unknown",
     });
+  }),
+  { arbitrary: fcRuns(50) }
+);
+
+it.effect.prop(
+  "enforces receipt-derived Reported labels including weekly precedence in constructors and JSON decoding",
+  [Arbitrary.schema(ObservationAvailabilityReceipt)],
+  Effect.fnUntraced(function* ([receipt]) {
+    yield* Effect.forEach(
+      reportedCases,
+      Effect.fnUntraced(function* (scenario) {
+        const reported = ObservationAvailabilityReceipt.make({
+          ...receipt,
+          snapshot: ObservationAvailabilitySnapshot.make({
+            ...receipt.snapshot,
+            report: ObservationAvailabilityReport.cases.Reported.make({
+              weekly: O.some({ usedPercent: scenario.weekly, reportedResetAt: O.none() }),
+              session: O.some({ usedPercent: scenario.session, reportedResetAt: O.none() }),
+            }),
+          }),
+        });
+        const view = renderObservationAvailability(reported);
+        expect(view.reportedAvailability).toBe(scenario.expected);
+        const encoded = yield* encodeAvailabilityView(view);
+        const decoded = yield* decodeAvailabilityView(encoded);
+        expect(decoded.reportedAvailability).toBe(scenario.expected);
+        const inconsistent = {
+          ...view,
+          reportedAvailability: scenario.expected === "unknown" ? ("weekly-exhausted" as const) : ("unknown" as const),
+        };
+        expect(() => ObservationAvailabilityView.make(inconsistent)).toThrow();
+        const json = yield* encodeJsonValue(inconsistent);
+        yield* decodeAvailabilityView(json).pipe(Effect.flip);
+      })
+    );
   }),
   { arbitrary: fcRuns(50) }
 );

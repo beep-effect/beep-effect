@@ -48,6 +48,13 @@ export class ObservationLaunchOutcome extends S.Opaque<ObservationLaunchOutcome,
     })
   )
 ) {}
+const exhausted = (value: O.Option<{ readonly usedPercent: number }>) => O.exists(value, (w) => w.usedPercent === 100);
+const availability = (receipt: ObservationAvailabilityReceipt) => {
+  const report = receipt.snapshot.report;
+  if (report._tag !== "Reported") return "unknown";
+  if (exhausted(report.weekly)) return "weekly-exhausted";
+  return exhausted(report.session) ? "session-capped" : "unknown";
+};
 /**
  * Display label for a historical quota report; current availability is always Unknown.
  * **Example** (Inspect the historical availability view)
@@ -67,19 +74,19 @@ export class ObservationAvailabilityView extends S.Opaque<
     reportedAvailability: S.Literals(["weekly-exhausted", "session-capped", "unknown"]),
     currentAvailability: S.tag("unknown"),
     invocationBinding: S.tag("unknown"),
-  }).pipe(
-    $I.annoteSchema("ObservationAvailabilityView", {
-      description: "No causal or account join to a model attempt; absence of windows never means ready.",
-    })
-  )
+  })
+    .check(
+      S.makeFilter((view) => view.reportedAvailability === availability(view.receipt), {
+        identifier: "ObservationAvailabilityViewConsistency",
+        message: "Reported availability must match the historical receipt, with weekly exhaustion taking precedence",
+      })
+    )
+    .pipe(
+      $I.annoteSchema("ObservationAvailabilityView", {
+        description: "No causal or account join to a model attempt; absence of windows never means ready.",
+      })
+    )
 ) {}
-const exhausted = (value: O.Option<{ readonly usedPercent: number }>) => O.exists(value, (w) => w.usedPercent === 100);
-const availability = (receipt: ObservationAvailabilityReceipt): ObservationAvailabilityView["reportedAvailability"] => {
-  const report = receipt.snapshot.report;
-  if (report._tag !== "Reported") return "unknown";
-  if (exhausted(report.weekly)) return "weekly-exhausted";
-  return exhausted(report.session) ? "session-capped" : "unknown";
-};
 /**
  * Render one historical status receipt without claiming freshness, native authority or launch causation.
  * **Example** (Inspect the historical availability renderer)
