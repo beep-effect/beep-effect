@@ -1,0 +1,169 @@
+# Local report-only cheap-gate qualification
+
+The final bounded selector, including fresh working-tree verification, saved
+**218.376 seconds (73.075%)** in a separate matched cold-cache pair. The earlier
+three-pair comparison saved a median **162.140 seconds (74.098%)**. Both passed
+the prespecified performance gates. These measurements have different source
+commits and are not pooled or relabeled.
+
+## Scope and safety
+
+Only ordinary additions/modifications of nonexecutable `.md` reports under
+`docs/reports/` qualify. The four static opt-ins are:
+
+- `quality:jsdoc-ratchet:regenerated`
+- `lint:effect-vitest`
+- `lint:effect-imports`
+- `lint:schema-first`
+
+Every other cheap lane stays live, including Markdown fences/imports, retired
+laws, schema catalog, observability/catalog checks, goals, changesets, committed
+JSDoc comparison, and cache policy. The implementation PR changes source and
+therefore takes the ordinary full path; the timing fixtures add only a report
+over an already fixed source commit.
+
+The runner uses existing NUL-safe Git status, name-status, and tree readers. It
+requires a nonempty merge-base diff, stable resolved/pinned base and HEAD, clean
+index/worktree, no nonignored untracked paths, and one shared lane working
+directory. Missing/failed Git reads, deletions, renames, unknown statuses, source,
+configuration, root Markdown, policy directories, hidden tooling, agent
+instructions, MDX, symlinks, and executable/type changes restore normal execution.
+Renames are read as deletion plus addition so their source side cannot disappear.
+Both committed modes and live file metadata must describe ordinary files.
+
+Eligibility is rechecked before each skip. The existing fresh temporary-index
+helper materializes actual tracked contents and must match the captured HEAD
+tree. This catches edits hidden by `assume-unchanged` or `skip-worktree`; it never
+copies, clears, or refreshes the user's index flags. Tests verify byte-for-byte
+index preservation. Final HEAD/base/status fences catch a moved tree, and a
+retained generator changing source restores later source-lane execution. The
+schema guard uses dotAll plus an exact string suffix: newline directories cannot
+conceal hidden segments, and a terminal newline after `.md` is rejected.
+
+A skipped row has status `skipped`, its reason, `inputsCacheable: false`, and no
+fabricated pass, reuse, digest, timing, or exit code. It never enters the lane-proof
+success list or proof-shadow observations. First-red, precise/imprecise scheduling,
+and `not-run-early-stop` accounting retain their meaning. Set
+`BEEP_QUALITY_REPORT_ONLY_SKIP=0` to disable selection.
+
+Qualification locks the exact four IDs, raw selected Turbo task declarations,
+their complete dependency closures, and global/future configuration. Each task
+must exist, enable caching, and declare explicit nondefault inputs. Unknown edges
+or input expansion require renewed review. Five real Turbo report-edit probes
+also keep all four source-task hashes equal, including nested, Unicode, newline,
+and fenced-code reports. Strict Markdown root-import failure remains covered.
+
+## Method and acceptance
+
+The floor was declared before timing: **at least 30% and at least 60 seconds**
+saved, with 22 equivalent retained outcomes and exactly four reasoned skips.
+The six-run order was disabled/enabled, enabled/disabled, disabled/enabled.
+Installation and fixture preparation are excluded; frozen install took 40.52s.
+Each sample had a unique empty local Turbo cache. Clone-owned `.beep`, `.turbo`,
+and `.fallow` outputs/caches were archived between samples after confirming they
+contained no tracked files. No global cache was deleted.
+
+An isolated local clone owned its private `origin/main` and report-only branch;
+shared checkout refs were untouched. The pinned base prevented a fetch. Remote
+credentials were removed, host defaults disabled, proof reuse off, and the cheap
+pool explicitly fixed at four slots. All measured commands used this shape,
+with the source SHA matching that experiment's private base:
+
+```sh
+env -u TURBO_API -u TURBO_TOKEN -u TURBO_TEAM \
+  -u TURBO_REMOTE_CACHE_SIGNATURE_KEY \
+  TURBO_CACHE=local:rw TURBO_CACHE_DIR="$sample_cache" \
+  BEEP_TURBO_HOST_CACHE_DISABLED=true \
+  BEEP_YEET_LANE_PROOF_MODE=off BEEP_YEET_PROOF_BASE="$source_sha" \
+  BEEP_QUALITY_CHEAP_GATE_CONCURRENCY=4 \
+  BEEP_QUALITY_REPORT_ONLY_SKIP="$selector" \
+  TURBO_TELEMETRY_DISABLED=1 TURBO_UI=stream \
+  bun --no-env-file run beep quality github-checks cheap-gates
+```
+
+For reproduction, clone locally, check out the named source, pin private
+`origin/main` to it, add and commit only
+`docs/reports/local-docs-benchmark-fixture.md`, verify clean Git status before and
+after each sample, and time the whole command with a monotonic clock. Use fresh
+cache/output directories for every run. The fixture contains ordinary prose.
+
+## Original six-run comparison
+
+Source: `25aea6ec4e61cd00cc901e5f35e985ab43713537`, tree
+`0bd2b59e87c49fcc47eb07f09e96d26a02d5ebf1`. Report-only HEAD:
+`5e86f23e7257301efb1db8dafcc3e8f86c337d0e`, tree
+`631405e12eb47d8498d765570173bba1d2e2b4a2`.
+
+| Sample | Selector | End-to-end seconds |
+| --- | --- | ---: |
+| 1 | Disabled | 205.388 |
+| 2 | Enabled | 53.581 |
+| 3 | Enabled | 56.679 |
+| 4 | Disabled | 218.818 |
+| 5 | Disabled | 293.768 |
+| 6 | Enabled | 76.009 |
+
+Medians were **218.818 → 56.679 seconds**, saving **162.140 seconds (74.098%)**.
+Every pair independently cleared both thresholds. All six exited zero, with all
+22 retained outcomes equivalent and four explicit candidate skips. Raw summaries
+show all root tasks as cache `MISS`, local/remote hit flags false, and identical
+source-task hashes across all three baselines. No sample invoked a secret session
+or enabled remote caching. Component counts were 26 → 22 lane subprocesses and
+19 → 14 root Turbo task executions; these are not total OS process counts.
+
+## Final materialized-source bridge
+
+Adversarial controls subsequently reproduced unsafe skips for hidden-directory
+newlines, terminal newlines, and source edits hidden by both Git index flags. The
+schema and fresh-tree checks above close those cases. The final source is
+`8fbf67772d7298312d9b677a9a9bb59dee90fb1d`, tree
+`d21ceb59abf57a5e3262b903cdc84eec738d7022`. Its report-only HEAD is
+`1cfcb96f48b31758d714a80816e05eaadec4a35f`, tree
+`ae4970f278f420687a9aa34759361a1d75ec07ec`.
+
+| Final-source sample | End-to-end seconds |
+| --- | ---: |
+| Selector disabled | 298.837 |
+| Selector enabled | 80.461 |
+
+This separate pair saved **218.376 seconds (73.075%)**, including all fresh-tree
+checks, and passed the unchanged 60-second/30-percent floor. Both exited zero,
+all 22 retained outcomes matched, and all four skips passed no-proof-field
+assertions. Root task executions again fell 19 → 14, all cold misses without local
+or remote hits. A separate actual-clone sanity check confirmed materialized-tree
+and HEAD-tree equality. That single sanity probe overlapped the baseline; shared
+host contention also varied. This pair corroborates the final guard's behavior
+and gain; it does not replace the earlier version's three-pair median.
+
+## Verification and limits
+
+Thirty-five focused safety/input/consumer tests, the owning package check, and
+Fallow health with zero findings pass on the final runtime. Scoped `docgen:local`
+passed for its two selected packages; exports did not change afterward. An earlier full package verification passed lint/audit/docgen. On the final
+runtime, package verification passed lint (2.3s), check, and docgen (50.0s), but
+the unit suite had 8,934 passes and one unchanged CI-profile integration case
+reported `Error: Test timed out in 30000ms.` The same-head isolated case passed
+in about 26.5s (31.94s total), leaving limited headroom below its unchanged 30s
+budget. The test and bootstrap script are unchanged from the base. A full
+same-population replay used the existing two-worker configuration via three-CPU
+affinity, without changing assertions/timeouts; it was stopped when polled past
+the ten-minute local-gate cap (682s), with no completed audit receipt. The timeout
+is recorded as environment-only, with failure/pass evidence retained. Final
+package-wide proof remains for hosted verification; these results are not called
+a green final full audit. No floor, test population, retained gate, review window, or proof identity
+was weakened. The evidence is local on one shared host, not hosted CI or production.
+
+The first attempted baseline at `248d165f67` failed Fallow health because four new
+functions/fixtures exceeded existing complexity limits. Its 229.464s receipt is
+preserved and excluded. Helper extraction and Match-based fixtures removed the
+findings without changing baselines. An intermediate filename-only `a2581ed0df`
+pair (354.908 → 83.540s) remains versioned history, not final safety qualification.
+The older 251.373s publish observation had an inherited cache-policy failure and
+is only a cost lead; parallel lane durations were never summed as wall-time gains.
+
+Retained Fallow digests can vary because its own ignored `.fallow/.gitignore` and
+`.fallow/cache/dupes-tokens-v16/.gitignore` enter broad task inputs at different
+within-sample times. Exact task IDs, input paths, before/after task hashes and lane
+digests are preserved as a potential cache-invalidation lead; no extra gain is
+established here. Private receipts retain all raw logs, summaries, cache censuses,
+Git identities, failure-path history, and the original predeclared thresholds.
