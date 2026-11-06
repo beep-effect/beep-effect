@@ -14,7 +14,10 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import { formatCommandLine } from "@beep/repo-cli-kit/process/StepExec";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -23,9 +26,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { runGitOutput } from "./GitExec.ts";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
-import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import { yeetGitKitError } from "./GitExec.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/PullRequestTitle");
@@ -260,24 +261,31 @@ export const resolvePullRequestTitle = Effect.fn("Yeet.resolvePullRequestTitle")
   context: RepoRunContext,
   message: O.Option<string>,
   range: string
-): Effect.fn.Return<
-  YeetPullRequestTitleResolution,
-  YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
-> {
+): Effect.fn.Return<YeetPullRequestTitleResolution, YeetCommandError, Git> {
   const fromMessage = O.flatMap(message, titleFromMessage);
   if (O.isSome(fromMessage)) {
     return YeetPullRequestTitleResolution.make({ title: fromMessage.value, source: "message" });
   }
-  const args = ["log", "--no-merges", "--reverse", "--pretty=%s", range];
-  const subjects = yield* runGitOutput(context.repoRoot, args);
-  return yield* O.match(firstNonEmptyLine(subjects), {
-    onNone: () =>
-      YeetCommandError.make({
-        message: `yeet publish found no non-merge commit in ${range} to title the pull request; pass --message "<conventional subject>".`,
-        command: `git ${A.join(args, " ")}`,
-        exitCode: 1,
-      }),
-    onSome: (title) => Effect.succeed(YeetPullRequestTitleResolution.make({ title, source: "first-non-merge-commit" })),
-  });
+  const git = yield* Git;
+  const options = { revisions: [range], noMerges: true, reverse: true, omitPaths: true };
+  const invocation = GitCommand.log([], false, undefined, false, options);
+  const commits = yield* git.log(context.repoRoot, options).pipe(Effect.mapError(yeetGitKitError(invocation)));
+  return yield* O.match(
+    firstNonEmptyLine(
+      A.join(
+        A.map(commits, (commit) => commit.subject),
+        "\n"
+      )
+    ),
+    {
+      onNone: () =>
+        YeetCommandError.make({
+          message: `yeet publish found no non-merge commit in ${range} to title the pull request; pass --message "<conventional subject>".`,
+          command: formatCommandLine("git", invocation.redactedArgs),
+          exitCode: 1,
+        }),
+      onSome: (title) =>
+        Effect.succeed(YeetPullRequestTitleResolution.make({ title, source: "first-non-merge-commit" })),
+    }
+  );
 });

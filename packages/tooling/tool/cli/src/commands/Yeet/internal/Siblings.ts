@@ -29,7 +29,6 @@ import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
-import { flow } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -39,7 +38,7 @@ import { GithubRest } from "../../../internal/github/index.ts";
 import { runRepoCommandCaptureRaw } from "../../../internal/repo-run/RepoRun.executor.ts";
 import { parseMergeTreeConflictNames } from "../../Worktree/Fleet.service.ts";
 import { provideYeetGhLogin, yeetGithubFailure } from "./GhOps.ts";
-import { refreshBaseRef, runGitOutput } from "./GitExec.ts";
+import { refreshBaseRef, resolveYeetRev } from "./GitExec.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -384,7 +383,7 @@ export const readPacketSiblings = Effect.fn("Yeet.readPacketSiblings")(function*
 ): Effect.fn.Return<
   PacketSiblingsReport,
   YeetCommandError,
-  GithubRest | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  GithubRest | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const rest = yield* GithubRest;
   const files = yield* rest
@@ -414,10 +413,8 @@ export const readPacketSiblings = Effect.fn("Yeet.readPacketSiblings")(function*
   if (A.isReadonlyArrayEmpty(sharing)) return empty;
 
   yield* refreshBaseRef(context.repoRoot, context.base);
-  const baseSha = yield* runGitOutput(context.repoRoot, ["rev-parse", "--verify", `${context.base}^{commit}`]).pipe(
-    Effect.map(flow(Str.trim, O.some)),
-    Effect.orElseSucceed(() => O.none<string>())
-  );
+  // `Git.revParse` verifies the base commit (W7a, SPEC D-18); an unresolvable base is no sha.
+  const baseSha = yield* resolveYeetRev(context.repoRoot, `${context.base}^{commit}`).pipe(Effect.option);
   const siblings = yield* Effect.forEach(sharing, ({ pull, shared }) =>
     probeSibling(context, { prNumber: pull.number, headSha: pull.headSha }).pipe(
       Effect.map(({ probe, conflicts }) =>
@@ -469,7 +466,7 @@ export const broadcastPacketSiblings = Effect.fn("Yeet.broadcastPacketSiblings")
 ): Effect.fn.Return<
   PacketSiblingsReport,
   YeetCommandError,
-  GithubRest | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  GithubRest | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const report = yield* readPacketSiblings(context, mergedPr);
   if (A.isReadonlyArrayEmpty(report.siblings)) return report;

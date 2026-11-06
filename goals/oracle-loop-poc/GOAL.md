@@ -21,6 +21,7 @@ prose when they conflict.
 Scope:
 
 - In: the proposed `oracle-loop` app under `apps/labs` (new, via `create-package --lab`) and lab-local packages; this packet's `history/`; the exploration's `research/OPPORTUNITIES.md`.
+- In: the synthetic, deterministic request-binding fixture in `QUESTION-BINDING.md`; unresolved obligations, replay, and rule counterexamples stay lab-local, with no new inversion dependency.
 - Out: product apps, `@beep/md`/`@beep/markdown`/`@beep/html` source (read-only reuse), the antecedent rules (consumed from `claim-element-antecedent-check`), parse5 vendoring, the rule DSL, any tier 3 content judgment.
 
 Workflow:
