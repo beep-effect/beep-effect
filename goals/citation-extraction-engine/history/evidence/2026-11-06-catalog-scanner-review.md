@@ -10,7 +10,7 @@ The citation exporter independently recomputes this source digest.
 
 The hosted scanner deliberately reads configuration from the PR base. The
 exception already proposed in #2737 therefore cannot approve itself. This
-separate main-based change publishes only that exact exception and this
+separate main-based change publishes only those exact exceptions and this
 receipt. It contains no parser asset, runtime code or workflow change.
 After independent review and merge, #2737 must merge main and rerun the gate.
 No protected base-policy mechanism is bypassed.
@@ -32,3 +32,11 @@ This is local scanner/source proof; hosted confirmation remains pending.
 Cache audit on base e66013fb6c reports existing repo-cli test/test:property
 configuration drift. This scanner-only change does not modify those inputs;
 no cache baseline or quality threshold is updated.
+
+The subsequent helper-configurations.data production projection also matches
+generic-api-key for its exact public reference-token.json source SHA-256.
+The complete digest appears verbatim in the corresponding policy rule.
+The helper exporter independently authenticates that source before projection.
+This amendment includes its own exact digest/path/detector exception. The same
+baseline/candidate, changed-value and other-path controls pass. No runtime asset
+is included in this policy PR. Both source digests remain available verbatim.

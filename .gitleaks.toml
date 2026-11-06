@@ -438,3 +438,11 @@ condition = "AND"
 regexTarget = "secret"
 paths = ['''^(?:/repo/)?packages/law-practice/server/assets/citation/parser-catalog\.data$''']
 regexes = ['''^7f624597ee68176326cd8252a9858acd48faa7be27f1dc3e986119140a4080f3$''']
+
+[[allowlists]]
+description = "The citation helper projection retains this exact public reference-token source SHA-256, independently checked by exporter --check and complete configuration equivalence tests. Only this digest, asset path and detector are excepted."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^(?:/repo/)?packages/law-practice/server/assets/citation/helper-configurations\.data$''']
+regexes = ['''^86dac62c3e85b1de5327dcafd03f4ff3e241b1d013bda00542df149c6867c0b7$''']
