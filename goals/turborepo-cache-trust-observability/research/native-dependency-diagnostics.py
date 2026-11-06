@@ -237,19 +237,25 @@ def observe(source_path, revision):
     declared = source["toolchain"]["installedDependencies"]
     require(declared["format"] == "canonical-gnu-tar/v1", "dependency-format")
     require(bool(HEX64.fullmatch(declared["sha256"])), "dependency-digest")
+    source_revision = source["revision"]
+    declared_digest = declared["sha256"]
+    source_digest = hashlib.sha256(source_bytes).hexdigest()
+    # The full source-file inventory is not needed during either archive pass.
+    del source, declared
     first = snapshot(deadline)
     second = snapshot(deadline)
     before = {row[0]: row for row in first["groups"]}
     after = {row[0]: row for row in second["groups"]}
     changed = sorted(key for key in before.keys() | after.keys() if before.get(key) != after.get(key))
     stable = first == second
-    matched = first["sha256"] == declared["sha256"]
+    matched = first["sha256"] == declared_digest
     unchanged = read_source(source_path, source_bytes)
+    del source_bytes
     report = {
         "schemaVersion": "cache-dependency-diagnostics/v1",
         "authority": "Observation only; no producer approval, qualification or digest normalization.",
-        "revision": source["revision"], "sourceReportSha256": hashlib.sha256(source_bytes).hexdigest(),
-        "declaredSha256": declared["sha256"],
+        "revision": source_revision, "sourceReportSha256": source_digest,
+        "declaredSha256": declared_digest,
         "status": "stable-match" if stable and matched and unchanged else "refused-drift",
         "sourceUnchanged": unchanged, "declaredDigestMatches": matched, "snapshotsEqual": stable,
         "columns": ["package", "entries", "files", "bytes", "contentSha256", "modeSha256", "linksSha256", "headersSha256"],

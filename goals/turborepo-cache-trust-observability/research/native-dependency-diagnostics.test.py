@@ -62,6 +62,9 @@ class DependencyDiagnostics(unittest.TestCase):
         self.assertEqual(diagnostic["status"], "stable-match")
         self.assertTrue(diagnostic["snapshotsEqual"])
         self.assertTrue(diagnostic["declaredDigestMatches"])
+        self.assertEqual(diagnostic["revision"], "a" * 40)
+        self.assertEqual(diagnostic["sourceReportSha256"],
+                         PROBE.hashlib.sha256(PRODUCTION_FIXTURE.read_bytes()).hexdigest())
         self.assertEqual(diagnostic["second"]["changedCount"], 0)
         self.assertEqual(output.stat().st_mode & 0o777, 0o600)
         original = output.read_bytes()
