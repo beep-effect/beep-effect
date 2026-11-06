@@ -100,7 +100,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-05-html-discovery-worker.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-05-html-document-maps.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-05-html-geometry-preparation.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-05-cleaner-owned-input.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-cleaner-owned-input.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-document-input-modes.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -479,6 +480,10 @@
     {
       "path": "ops/probe-html-discovery-patterns.py",
       "purpose": "Bind the two fixed discovery programs and compare finite backreference lowering with exact original captures over sealed cases and exhaustive short tag sequences."
+    },
+    {
+      "path": "ops/probe-document-input-modes.py",
+      "purpose": "Observe actual Document mode branches, reversed insert arguments, step protocols, generator state, partial fields and original phase order without replacing constructor logic."
     }
   ]
 }

@@ -1,5 +1,12 @@
 # Citation Extraction Engine Plan
 
+Document input-mode checkpoint (2026-11-05): 112 actual constructor traces now
+freeze truth/membership/mutation, generator state, partial fields and phase order.
+The pinned source calls list.insert with reversed arguments: ordinary missing-html
+lists fail, while permissive host insertion can proceed. Do not repair that bug
+or normalize protocols to arrays. Target constructor composition remains open.
+See [input-mode evidence](history/evidence/2026-11-05-document-input-modes.md).
+
 Owned cleaner handoff checkpoint (2026-11-05): the existing pipeline/admitted
 operation now accept an issued native/host value without fromText conversion.
 Both entries share one scoped work/timer/close path. Twenty-five focused tests

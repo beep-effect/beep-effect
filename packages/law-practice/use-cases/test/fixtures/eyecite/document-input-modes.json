@@ -1,0 +1,5581 @@
+{
+  "cases": [
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 0,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": false,
+      "stepsKind": "default"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 1,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-empty"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 2,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-html"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 3,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-underscores"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 4,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-empty"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 5,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-html"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 6,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "kind": "none"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "none"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 7,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CREATED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-empty"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 8,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CREATED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-html"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 9,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-none"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 10,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-identity"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 11,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-permissive"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 12,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-false"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 13,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-truth-error"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 14,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": false,
+      "stepsKind": "default"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 15,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-empty"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth", "clean:start", "steps:iter", "clean:end"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 16,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-html"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth", "clean:start", "steps:iter", "clean:end"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 17,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "412042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-underscores"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 18,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-empty"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["clean:start", "clean:end"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 19,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-html"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 20,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "kind": "none"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "none"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["clean:start", "clean:end"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 21,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CLOSED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-empty"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["clean:start", "clean:end"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 22,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CLOSED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-html"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [
+        "steps:truth",
+        "clean:start",
+        "steps:iter",
+        "callback-none",
+        "clean:end"
+      ],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 23,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "none"
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-none"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [
+        "steps:truth",
+        "clean:start",
+        "steps:iter",
+        "callback-identity",
+        "clean:end"
+      ],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 24,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-identity"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 25,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-permissive"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 26,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-false"
+    },
+    {
+      "emphasis": [],
+      "error": "RuntimeError",
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 27,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-truth-error"
+    },
+    {
+      "emphasis": [],
+      "error": "TypeError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 28,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": false,
+      "stepsKind": "default"
+    },
+    {
+      "emphasis": [],
+      "error": "TypeError",
+      "events": ["steps:contains:html", "steps:insert:html:0"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 29,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-empty"
+    },
+    {
+      "emphasis": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ],
+      "error": null,
+      "events": [
+        "steps:contains:html",
+        "clean:start",
+        "steps:iter",
+        "clean:end",
+        "placeholder",
+        "diff:0",
+        "diff:1",
+        "emphasis"
+      ],
+      "hasBackward": true,
+      "hasForward": true,
+      "id": 30,
+      "maps": [
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c58583e466f6f3c2f58583e",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "466f6f",
+              "width": 1
+            }
+          }
+        },
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "466f6f",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c656d3e466f6f3c2f656d3e",
+              "width": 1
+            }
+          }
+        }
+      ],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-html"
+    },
+    {
+      "emphasis": [],
+      "error": "TypeError",
+      "events": ["steps:contains:html", "steps:insert:html:0"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 31,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-underscores"
+    },
+    {
+      "emphasis": [],
+      "error": "AttributeError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 32,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": [],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-empty"
+    },
+    {
+      "emphasis": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ],
+      "error": null,
+      "events": [
+        "clean:start",
+        "clean:end",
+        "placeholder",
+        "diff:0",
+        "diff:1",
+        "emphasis"
+      ],
+      "hasBackward": true,
+      "hasForward": true,
+      "id": 33,
+      "maps": [
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c58583e466f6f3c2f58583e",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "466f6f",
+              "width": 1
+            }
+          }
+        },
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "466f6f",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c656d3e466f6f3c2f656d3e",
+              "width": 1
+            }
+          }
+        }
+      ],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-html"
+    },
+    {
+      "emphasis": [],
+      "error": "TypeError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 34,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "kind": "none"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "none"
+    },
+    {
+      "emphasis": [],
+      "error": "AttributeError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 35,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CLOSED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-empty"
+    },
+    {
+      "emphasis": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ],
+      "error": null,
+      "events": [
+        "clean:start",
+        "clean:end",
+        "placeholder",
+        "diff:0",
+        "diff:1",
+        "emphasis"
+      ],
+      "hasBackward": true,
+      "hasForward": true,
+      "id": 36,
+      "maps": [
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c58583e466f6f3c2f58583e",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c656d3e466f6f3c2f656d3e",
+              "width": 1
+            }
+          }
+        },
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c656d3e466f6f3c2f656d3e",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c656d3e466f6f3c2f656d3e",
+              "width": 1
+            }
+          }
+        }
+      ],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CLOSED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-html"
+    },
+    {
+      "emphasis": [],
+      "error": "TypeError",
+      "events": ["steps:contains:html", "steps:insert:html:0"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 37,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-none"
+    },
+    {
+      "emphasis": [],
+      "error": "TypeError",
+      "events": ["steps:contains:html", "steps:insert:html:0"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 38,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-identity"
+    },
+    {
+      "emphasis": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ],
+      "error": null,
+      "events": [
+        "steps:contains:html",
+        "steps:insert:html:0",
+        "warning:html-added",
+        "clean:start",
+        "steps:iter",
+        "clean:end",
+        "placeholder",
+        "diff:0",
+        "diff:1",
+        "emphasis"
+      ],
+      "hasBackward": true,
+      "hasForward": true,
+      "id": 39,
+      "maps": [
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c58583e466f6f3c2f58583e",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c656d3e466f6f3c2f656d3e",
+              "width": 1
+            }
+          }
+        },
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c656d3e466f6f3c2f656d3e",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c656d3e466f6f3c2f656d3e",
+              "width": 1
+            }
+          }
+        }
+      ],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-permissive"
+    },
+    {
+      "emphasis": [],
+      "error": "TypeError",
+      "events": ["steps:contains:html", "steps:insert:html:0"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 40,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-false"
+    },
+    {
+      "emphasis": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ],
+      "error": null,
+      "events": [
+        "steps:contains:html",
+        "clean:start",
+        "steps:iter",
+        "clean:end",
+        "placeholder",
+        "diff:0",
+        "diff:1",
+        "emphasis"
+      ],
+      "hasBackward": true,
+      "hasForward": true,
+      "id": 41,
+      "maps": [
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c58583e466f6f3c2f58583e",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "466f6f",
+              "width": 1
+            }
+          }
+        },
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "466f6f",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c656d3e466f6f3c2f656d3e",
+              "width": 1
+            }
+          }
+        }
+      ],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-truth-error"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 42,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": false,
+      "stepsKind": "default"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 43,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-empty"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 44,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-html"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 45,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-underscores"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 46,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": [],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-empty"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 47,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-html"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 48,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "kind": "none"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "none"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 49,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CREATED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-empty"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 50,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CREATED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-html"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 51,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-none"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 52,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-identity"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 53,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-permissive"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 54,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-false"
+    },
+    {
+      "emphasis": [],
+      "error": "RuntimeError",
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 55,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c656d3e466f6f3c2f656d3e",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-truth-error"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 56,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": false,
+      "stepsKind": "default"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 57,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-empty"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 58,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-html"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 59,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-underscores"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 60,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-empty"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 61,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-html"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 62,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "kind": "none"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "none"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 63,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CREATED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-empty"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 64,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CREATED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-html"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 65,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-none"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 66,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-identity"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 67,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-permissive"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 68,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-false"
+    },
+    {
+      "emphasis": [],
+      "error": "ValueError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 69,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-truth-error"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 70,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": false,
+      "stepsKind": "default"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 71,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-empty"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth", "clean:start", "steps:iter", "clean:end"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 72,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-html"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth", "clean:start", "steps:iter", "clean:end"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 73,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "412042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-underscores"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 74,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-empty"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["clean:start", "clean:end"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 75,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-html"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 76,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "kind": "none"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "none"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["clean:start", "clean:end"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 77,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CLOSED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-empty"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["clean:start", "clean:end"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 78,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CLOSED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-html"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [
+        "steps:truth",
+        "clean:start",
+        "steps:iter",
+        "callback-none",
+        "clean:end"
+      ],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 79,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "none"
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-none"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [
+        "steps:truth",
+        "clean:start",
+        "steps:iter",
+        "callback-identity",
+        "clean:end"
+      ],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 80,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-identity"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 81,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-permissive"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 82,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-false"
+    },
+    {
+      "emphasis": [],
+      "error": "RuntimeError",
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 83,
+      "maps": [],
+      "markupInput": {
+        "kind": "none"
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "415f5f2042",
+          "width": 1
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-truth-error"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 84,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": false,
+      "stepsKind": "default"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 85,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-empty"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth", "clean:start", "steps:iter", "clean:end"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 86,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "00f601005f0000005f00000041000000",
+          "width": 4
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-html"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth", "clean:start", "steps:iter", "clean:end"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 87,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de4100",
+          "width": 2
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-underscores"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 88,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-empty"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["clean:start", "clean:end"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 89,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "00f601005f0000005f00000041000000",
+          "width": 4
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-html"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 90,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "kind": "none"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "none"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["clean:start", "clean:end"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 91,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CLOSED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-empty"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["clean:start", "clean:end"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 92,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "00f601005f0000005f00000041000000",
+          "width": 4
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CLOSED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-html"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [
+        "steps:truth",
+        "clean:start",
+        "steps:iter",
+        "callback-none",
+        "clean:end"
+      ],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 93,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "none"
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-none"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": [
+        "steps:truth",
+        "clean:start",
+        "steps:iter",
+        "callback-identity",
+        "clean:end"
+      ],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 94,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-identity"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 95,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-permissive"
+    },
+    {
+      "emphasis": [],
+      "error": null,
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 96,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-false"
+    },
+    {
+      "emphasis": [],
+      "error": "RuntimeError",
+      "events": ["steps:truth"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 97,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3dd800de5f005f004100",
+          "width": 2
+        }
+      },
+      "sourceIsMarkupInput": false,
+      "sourceIsPlainInput": true,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-truth-error"
+    },
+    {
+      "emphasis": [],
+      "error": "TypeError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 98,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": false,
+      "stepsKind": "default"
+    },
+    {
+      "emphasis": [],
+      "error": "TypeError",
+      "events": ["steps:contains:html", "steps:insert:html:0"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 99,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-empty"
+    },
+    {
+      "emphasis": [
+        {
+          "end": 22,
+          "start": 0,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ],
+      "error": null,
+      "events": [
+        "steps:contains:html",
+        "clean:start",
+        "steps:iter",
+        "clean:end",
+        "placeholder",
+        "diff:0",
+        "diff:1",
+        "emphasis"
+      ],
+      "hasBackward": true,
+      "hasForward": true,
+      "id": 100,
+      "maps": [
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c5858585858585858585858583e466f6f3c2f58583e",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "466f6f",
+              "width": 1
+            }
+          }
+        },
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "466f6f",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+              "width": 4
+            }
+          }
+        }
+      ],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-html"
+    },
+    {
+      "emphasis": [],
+      "error": "TypeError",
+      "events": ["steps:contains:html", "steps:insert:html:0"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 101,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-underscores"
+    },
+    {
+      "emphasis": [],
+      "error": "AttributeError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 102,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": [],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-empty"
+    },
+    {
+      "emphasis": [
+        {
+          "end": 22,
+          "start": 0,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ],
+      "error": null,
+      "events": [
+        "clean:start",
+        "clean:end",
+        "placeholder",
+        "diff:0",
+        "diff:1",
+        "emphasis"
+      ],
+      "hasBackward": true,
+      "hasForward": true,
+      "id": 103,
+      "maps": [
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c5858585858585858585858583e466f6f3c2f58583e",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "466f6f",
+              "width": 1
+            }
+          }
+        },
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "466f6f",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+              "width": 4
+            }
+          }
+        }
+      ],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "tuple"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "tuple-html"
+    },
+    {
+      "emphasis": [],
+      "error": "TypeError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 104,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "kind": "none"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "none"
+    },
+    {
+      "emphasis": [],
+      "error": "AttributeError",
+      "events": [],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 105,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CLOSED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-empty"
+    },
+    {
+      "emphasis": [
+        {
+          "end": 22,
+          "start": 0,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ],
+      "error": null,
+      "events": [
+        "clean:start",
+        "clean:end",
+        "placeholder",
+        "diff:0",
+        "diff:1",
+        "emphasis"
+      ],
+      "hasBackward": true,
+      "hasForward": true,
+      "id": 106,
+      "maps": [
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c5858585858585858585858583e466f6f3c2f58583e",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+              "width": 4
+            }
+          }
+        },
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+              "width": 4
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+              "width": 4
+            }
+          }
+        }
+      ],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "kind": "generator",
+        "state": "GEN_CLOSED"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "generator-html"
+    },
+    {
+      "emphasis": [],
+      "error": "TypeError",
+      "events": ["steps:contains:html", "steps:insert:html:0"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 107,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-none"
+    },
+    {
+      "emphasis": [],
+      "error": "TypeError",
+      "events": ["steps:contains:html", "steps:insert:html:0"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 108,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["callback"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "callback-identity"
+    },
+    {
+      "emphasis": [
+        {
+          "end": 22,
+          "start": 0,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ],
+      "error": null,
+      "events": [
+        "steps:contains:html",
+        "steps:insert:html:0",
+        "warning:html-added",
+        "clean:start",
+        "steps:iter",
+        "clean:end",
+        "placeholder",
+        "diff:0",
+        "diff:1",
+        "emphasis"
+      ],
+      "hasBackward": true,
+      "hasForward": true,
+      "id": 109,
+      "maps": [
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c5858585858585858585858583e466f6f3c2f58583e",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+              "width": 4
+            }
+          }
+        },
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+              "width": 4
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+              "width": 4
+            }
+          }
+        }
+      ],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": [],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-permissive"
+    },
+    {
+      "emphasis": [],
+      "error": "TypeError",
+      "events": ["steps:contains:html", "steps:insert:html:0"],
+      "hasBackward": false,
+      "hasForward": false,
+      "id": 110,
+      "maps": [],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": true,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["underscores"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-false"
+    },
+    {
+      "emphasis": [
+        {
+          "end": 22,
+          "start": 0,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ],
+      "error": null,
+      "events": [
+        "steps:contains:html",
+        "clean:start",
+        "steps:iter",
+        "clean:end",
+        "placeholder",
+        "diff:0",
+        "diff:1",
+        "emphasis"
+      ],
+      "hasBackward": true,
+      "hasForward": true,
+      "id": 111,
+      "maps": [
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c5858585858585858585858583e466f6f3c2f58583e",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "466f6f",
+              "width": 1
+            }
+          }
+        },
+        {
+          "after": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "466f6f",
+              "width": 1
+            }
+          },
+          "before": {
+            "kind": "unicode",
+            "native": {
+              "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+              "width": 4
+            }
+          }
+        }
+      ],
+      "markupInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "plain": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "466f6f",
+          "width": 1
+        }
+      },
+      "plainInput": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "",
+          "width": 1
+        }
+      },
+      "plainIsPlainInput": false,
+      "source": {
+        "kind": "unicode",
+        "native": {
+          "bytes": "3c000000650000006d000000200000007400000069000000740000006c000000650000003d0000002200000000f60100220000003e000000460000006f0000006f0000003c0000002f000000650000006d0000003e000000",
+          "width": 4
+        }
+      },
+      "sourceIsMarkupInput": true,
+      "sourceIsPlainInput": false,
+      "stepsAfter": {
+        "items": ["html"],
+        "kind": "list"
+      },
+      "stepsIsInput": true,
+      "stepsKind": "list-truth-error"
+    }
+  ],
+  "dependencies": {
+    "fast-diff-match-patch": "2.0.1",
+    "lxml": "5.1.0"
+  },
+  "formatter": "Version: 2.5.6",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "producerSha256": "06635d7b92282af08f713e101e4463b8c37b730f1f80f1045dc4fc68085d2c4b",
+  "python": "3.11.15",
+  "schemaVersion": "citation-document-input-modes/v1",
+  "sources": {
+    "eyecite/clean.py": "b2a1f8484c84f3d704d2e7fe5e0a1fdb36a8bb07d2e56880701a831d5e1a12db",
+    "eyecite/models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a",
+    "eyecite/utils.py": "8e27eb1207f6c0fdb695530e3677a3e9f039986b2baf68461ba680ee2bff902e"
+  }
+}
