@@ -51,10 +51,12 @@ Before marking the packet closed:
   1.104.5 installed with operator `agent`, linger on, pull script, units, mirror
   config, installer and `~/t3-finish.sh` staged, `T3AgentWSL` keep-alive task
   registered and running (the distro stopped within seconds of the last session
-  before it). Open: operator approves the node's login URL; then the finish
-  script, `t3 pair --tailscale`, the hub link and the desktop pairing. dankserver
-  is linked on the agent plane but not yet paired in the desktop app (client
-  plane); the runbook now has that step.
+  before it). Same day, after the operator approved the node: T3 installed
+  pinned to the published version, service active, Serve on the distro's node,
+  linked from the hub with auto access, Claude Code signed in, one delegated
+  Opus 5.5 turn completed (receipt `history/2026-11-06-tom-pc-1-wsl.md`). The
+  desktop-app pairings for dankserver and tom-pc-1-wsl were handed to the
+  operator as app links; the runbook now has that step.
 
 - Preserve unrelated worktree changes.
 - Keep `SPEC.md` normative and update it only when the contract changes.

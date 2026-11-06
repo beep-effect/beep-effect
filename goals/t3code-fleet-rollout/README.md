@@ -33,12 +33,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — publish and pull run unattended on beep-worker and dankserver (#2705, #2719), both linked on the agent plane. tom-pc-1's WSL distro `t3-agent` is provisioned and kept alive; its tailnet join, T3 install, link and the desktop-app pairing of dankserver wait on the operator (login approval, YubiKey touch).
+P1 Implement — publish and pull run unattended on beep-worker and dankserver (#2705, #2719), both linked on the agent plane. tom-pc-1's WSL distro `t3-agent` runs the fork build as a service on its own tailnet node, is linked from the hub and completed a delegated turn. Open: the desktop-app pairings (operator confirms), reboot proof at the PC user's next sign-in, then P2 Verify.
 
 ## Latest Evidence
 
-2026-11-06: `history/2026-11-06-dankserver-link.md` (Serve route and link) and `history/2026-11-06-tom-pc-1-wsl.md` (distro provisioned, keep-alive task, tailnet join pending); runbook gained the WSL host, client-plane pairing and gated tbk-worker sections.
+2026-11-06: `history/2026-11-06-dankserver-link.md` (Serve route and link) and `history/2026-11-06-tom-pc-1-wsl.md` (distro provisioned, keep-alive task, service, hub link, delegated turn); runbook gained the WSL host, client-plane pairing and gated tbk-worker sections.
 
 ## Notes
 
-Host order: beep-worker (done), dankserver (linked), tom-pc-1 (WSL distro provisioned; tailnet join pending). tbk-worker is gated on the operator releasing its latch. grok-bot-box-1 is out of scope.
+Host order: beep-worker (done), dankserver (linked), tom-pc-1 (linked). tbk-worker is gated on the operator releasing its latch. grok-bot-box-1 is out of scope.

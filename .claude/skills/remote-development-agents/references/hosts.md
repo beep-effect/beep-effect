@@ -10,7 +10,7 @@ boundary. Host-specific receipts are under that packet's `history/` directory.
 | `beep-worker` | `environmentId: <beep-worker>` (linked 2026-11-05, Auto access, renew by 2026-12-05; id in the private handoff) | `ssh-beep-worker-yubi` | Existing headless development worker; default wrapper disables forwarding. Runs the fork T3 build as `t3code.service` (pulled from the DankStation mirror by `t3code-fork-pull.timer`; `docs/runbooks/t3code-fleet.md`). Recheck current provider and workload readiness. |
 | `tbk-worker` | `environmentId: <tbk-worker>` once linked (gated on the protective-stop latch release) | `ssh-tbk-worker` | Separate KVM guest, account `worker`, no sudo; initial serialized development verified. Only DankStation has admitted inbound SSH. |
 | `dankserver` | `environmentId: <dankserver>` (linked 2026-11-06, Auto access, renew by 2026-12-06; id in the private handoff) | `ssh-dankserver-worker` | Dedicated bare-metal account `worker`; initial serialized development verified. Runs the fork T3 build as `t3code.service` on loopback (same pull timer), reached through an administrator-owned tailnet-only Serve route on HTTPS 8448. Codex/Claude enabled in T3 there; Cursor/Grok/Muse disabled. |
-| `tom-pc-1` | `environmentId: <tom-pc-1-wsl>` once linked (distro provisioned 2026-11-06; tailnet join and link pending) | key-auth SSH to the PC (`tjopp@tom-pc-1`), then `wsl -d t3-agent -u agent` | Dedicated WSL distro `t3-agent` (user `agent`, automount and interop off, own tailnet node `tom-pc-1-wsl`), kept alive by the `T3AgentWSL` logon task; `docs/runbooks/t3code-fleet.md`. No agent work until the T3 route exists. |
+| `tom-pc-1` | `environmentId: <tom-pc-1-wsl>` (linked 2026-11-06, Auto access, renew by 2026-12-06; id in the private handoff) | key-auth SSH to the PC (`tjopp@tom-pc-1`), then `wsl -d t3-agent -u agent` | Dedicated WSL distro `t3-agent` (user `agent`, automount and interop off, own tailnet node `tom-pc-1-wsl`), kept alive by the `T3AgentWSL` logon task; runs the fork T3 build as `t3code.service` with the same pull timer. Claude signed in there; no Codex. Only the `receipt` project exists (no beep-effect checkout: no GitHub credential granted). Strict tier: no client data in the repo. |
 | `grok-bot-box-1` | out of scope | none | Not a T3 host (exploration ruling 2026-11-01): no operator SSH, no repo record of what runs there, no local credentials allowed. |
 
 ## T3 route
@@ -140,5 +140,6 @@ listener). The existing `Ubuntu` distro is untouched. A logon scheduled task
 (`T3AgentWSL`) keeps the distro running, which is also how it returns after a
 reboot. Strict-tier rules apply: no Funnel, a tailnet-only or loopback
 listener, no client data in the repo. Provisioning, the T3 service and the
-link belong to `goals/t3code-fleet-rollout`; its runbook has the steps. No
-agent work goes there until the T3 route above is filled in.
+link belong to `goals/t3code-fleet-rollout`; its runbook has the steps. Linked
+2026-11-06 with Claude Code signed in; the host has no beep-effect checkout
+until a credential for the `agent` user is granted.
