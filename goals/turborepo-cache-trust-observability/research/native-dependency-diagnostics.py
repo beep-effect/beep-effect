@@ -230,6 +230,7 @@ def observe(source_path, revision):
     started = time.monotonic()
     deadline = started + DEADLINE_SECONDS
     source_bytes = read_source(source_path)
+    source_size = len(source_bytes)
     source = json.loads(source_bytes)
     require(source["schemaVersion"] == "cache-producer-workflow/v2", "source-version")
     require(bool(re.fullmatch(r"[a-f0-9]{40}", source["revision"])), "source-revision")
@@ -269,7 +270,7 @@ def observe(source_path, revision):
         "elapsedSeconds": round(time.monotonic() - started, 3),
     }
     result = encoded(report) + b"\n"
-    require(len(source_bytes) + len(result) <= ARTIFACT_LIMIT, "aggregate-artifact-bound")
+    require(source_size + len(result) <= ARTIFACT_LIMIT, "aggregate-artifact-bound")
     return result, 0 if report["status"] == "stable-match" else 1
 
 

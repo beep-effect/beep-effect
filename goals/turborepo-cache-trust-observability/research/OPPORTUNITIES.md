@@ -2483,3 +2483,14 @@ into both Turbo lanes. The obsolete owned #2760 Check run was cancelled to
 release runners.
 Expose known main coverage dependencies before admitting downstream coverage
 work, and preserve introduced, inherited and intentional cancellation causes.
+
+
+### 2026-11-06 — Preserve scalar bounds when releasing diagnostic buffers
+
+Hosted CLI shard job 127916075431 failed the Python diagnostic integration.
+Source review found that the memory-lifetime repair released source_bytes but
+still referenced its length at the final aggregate-size guard. Retain the byte
+count before release and keep the same aggregate cap. The TypeScript wrapper
+reported only the child exit code, hiding the Python assertion; include its
+bounded, credential-free fixture output in failure diagnostics. Existing
+positive digest and artifact-overflow tests remain the acceptance checks.

@@ -65,7 +65,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("installed cache 
         source: "merge",
         timeout: Duration.seconds(30),
       });
-      expect(result.exitCode).toBe(0);
+      expect(result.exitCode, result.output).toBe(0);
     })
   );
 
