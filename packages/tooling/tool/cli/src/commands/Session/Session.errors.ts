@@ -7,6 +7,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { LiteralKit } from "@beep/schema";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
@@ -121,7 +122,7 @@ export const sessionUsageError = (message: string): SessionLedgerError =>
 
 /**
  * The session commands' CLI error boundary: a typed session failure becomes
- * one `[session] ...` line and a non-zero exit.
+ * one `[session] ...` line on stderr and a non-zero exit.
  *
  * **Example** (Describe the boundary)
  *
@@ -137,4 +138,10 @@ export const sessionUsageError = (message: string): SessionLedgerError =>
  * @since 0.0.0
  */
 export const reportSessionFailure = <A, R>(effect: Effect.Effect<A, SessionLedgerError, R>) =>
-  effect.pipe(Effect.catchTag("SessionLedgerError", (error) => failWithReportedExit(`[session] ${error.message}`)));
+  effect.pipe(
+    Effect.catchTag("SessionLedgerError", (error) => {
+      // `CliReportedExit` tells the runtime the line is already printed, so print it here.
+      const line = `[session] ${error.message}`;
+      return Console.error(line).pipe(Effect.andThen(failWithReportedExit(line)));
+    })
+  );

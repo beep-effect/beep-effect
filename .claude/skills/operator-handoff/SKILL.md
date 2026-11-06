@@ -39,7 +39,7 @@ Do these in order, without asking the operator anything:
    ordered next actions,
    recipes, register rows, communication routes and broadcast text.
 2. Load the [orchestrate skill](../orchestrate/SKILL.md) and follow its
-   Take-over steps 3–5: register list, `gate.sh` compared with the snapshot,
+   Take-over steps 3–5: register list, `yeet gate-table` compared with the snapshot,
    then claim the role (`bun run beep session note --role orchestrator
    --state open --next "<first action>"`) and append `took over from <id>`
    to `STATE.md`. Its steps 6–8 (broadcast, re-arm pollers, write the
@@ -76,7 +76,8 @@ Do these in order, without asking the operator anything:
    conflicts, leak grep, coverage-baseline removals), arm the gate, route
    threads and reds to owners, declare one `unblocks-main` PR per main red
    episode, relay `MERGED` and retire lanes.
-7. Rewrite the `HANDOFF.md` header with this session's id and time, then
+7. Run `bun run beep session handoff --write` and set its `Holder thread:`
+   line to this session's T3 thread link, then
    give the operator a five-line status: role claimed, open PRs by owner,
    the handoff's operator-hands items, main health, first action.
 
@@ -90,15 +91,20 @@ successor's claim appears.
 
 1. Convert everything in-process: `Monitor` tasks and background Bash pollers
    die with the session. Record their exact commands in the handoff's
-   "Recipes" section. Gates and waiters must already be `systemd --user`
+   "Recipes" section and move each register row with `bun run beep session
+   register convert`. Gates and waiters must already be `systemd --user`
    units.
-2. Rewrite `HANDOFF.md` from
-   [the template](../orchestrate/HANDOFF.template.md), backing up the old file
-   first. Fill every template section: verbatim dated rulings, a fresh
-   `gate.sh` snapshot, outstanding "final" promises (with owner addresses),
-   pending operator decisions, operator-hands items, ordered next actions,
-   recipes (gate arming, monitors, scheduled tasks, workers), the live
-   register rows, the communication routes table (thread links, pins, last
+2. Render `HANDOFF.md` in
+   [the template's format](../orchestrate/HANDOFF.template.md): `bun run beep
+   yeet gate-table > ~/.cache/beep/orchestrator/gate-snapshot.txt`, then
+   `bun run beep session handoff --gate-snapshot
+   ~/.cache/beep/orchestrator/gate-snapshot.txt --write`. It backs the old
+   file up and regenerates the holder, the rulings (`session ruling add`),
+   the gate snapshot, the live register and the journal pointer. Then fill
+   the prose sections by hand: outstanding "final" promises (with owner
+   addresses), pending operator decisions, operator-hands items, ordered
+   next actions, recipes (gate arming, monitors, scheduled tasks, workers),
+   the communication routes table (thread links, pins, last
    `clientRequestId` and `runId`), and the broadcast text.
 3. Retire stale register rows you own, then run `bun run beep session note
    --role member --state blocked --next "handing off the orchestrator role;

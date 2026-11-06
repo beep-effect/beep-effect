@@ -89,6 +89,7 @@ int main(int argc,char **argv) {
   printf("{\"grokVersion\":\"%s\",\"cwd\":\"%s\",\"projectRoot\":\"%s/\",\"projectTrusted\":false,\"projectInstructions\":[],\"hooks\":[],\"skills\":[],\"plugins\":[],\"marketplaces\":[],\"mcpServers\":%s,\"lspServers\":[],\"configSources\":{\"layers\":[{\"role\":\"user\",\"path\":\"%s/config.toml\"}]},\"externalCompat\":{\"remoteSettingsLoaded\":false,\"cells\":[{\"enabled\":false}]}}\n",!strcmp(mode,"wrong-version")?"1.0.73":"1.0.77",cwd,cwd,!strcmp(mode,"bad-inspect")?"[{}]":"[]",home);return 0;
  }
  record(home,"source-count");
+ if(!strncmp(mode,"policy-",7)){const char *names[]={"managed_config.toml","requirements.toml"};for(int i=0;i<2;i++){snprintf(p,sizeof(p),"%s/%s",home,names[i]);FILE *z=fopen(p,"w");if(!z)return 94;if(!strcmp(mode,"policy-content"))fputs("[policy]",z);if(!strcmp(mode,"policy-whitespace"))fputs(" ",z);fclose(z);chmod(p,!strcmp(mode,"policy-mode")?0644:0600);}}
  if(!strcmp(mode,"refresh-main")||!strcmp(mode,"refresh-all"))refresh_auth(mode);
  struct stat exe;stat("/proc/self/exe",&exe);char line[8192],tickcopy[128]="";FILE *self=fopen("/proc/self/stat","r");
  if(self){fgets(line,sizeof(line),self);fclose(self);char *save,*token=strtok_r(strrchr(line,')')+2," ",&save);for(int i=0;token&&i<19;i++)token=strtok_r(NULL," ",&save);if(token)snprintf(tickcopy,sizeof(tickcopy),"%s",token);}
@@ -124,6 +125,8 @@ const fixture = async (
     readonly mode?: string;
     readonly driftAuthAtPrepared?: boolean;
     readonly authReaderFault?: "parent-swap" | "descriptor-drift" | "wrong-owner";
+    readonly policyReaderFault?: "descriptor-drift" | "wrong-owner" | "parent-swap";
+    readonly systemPolicy?: "managed_config.toml" | "requirements.toml";
     readonly projectMcp?: string;
     readonly sessionMetadata?: "wrong-owner" | "bus-file" | "symlink" | "drift";
   } = {}
@@ -301,13 +304,15 @@ const fixture = async (
   const bus = `${runtime}/bus`;
   let busStats = 0;
   const mapped = (filename: Parameters<typeof Fs.lstat>[0]) =>
-    filename === runtime
-      ? request.isolatedHome
-      : filename === bus
-        ? options.sessionMetadata === "bus-file"
-          ? auth
-          : request.socketPath
-        : filename;
+    options.systemPolicy !== undefined && filename === `/etc/grok/${options.systemPolicy}`
+      ? request.nativeAuthFile
+      : filename === runtime
+        ? request.isolatedHome
+        : filename === bus
+          ? options.sessionMetadata === "bus-file"
+            ? auth
+            : request.socketPath
+          : filename;
   const statMock = vi.mocked(Fs.lstat).mockImplementation(async (filename, settings) => {
     const value = await nativeLstat(mapped(filename), settings);
     if (filename === runtime && options.sessionMetadata === "wrong-owner") value.uid = process.getuid?.() === 0 ? 1 : 0;
@@ -338,7 +343,35 @@ const fixture = async (
         await Fs.rename(`${parent}.saved`, parent);
       }
     }
+    const policyEntry = typeof filename === "string" && filename.endsWith("/managed_config.toml");
+    if (policyEntry && options.policyReaderFault === "parent-swap" && !swappedParent) {
+      swappedParent = true;
+      const home = request.nativeHome;
+      await Fs.rename(home, `${home}.saved`);
+      await Fs.mkdir(home, { mode: 0o700 });
+      await Fs.writeFile(`${home}/managed_config.toml`, " ", { mode: 0o600 });
+      try {
+        return await nativeOpen(filename, flags, mode);
+      } finally {
+        await Fs.rm(home, { recursive: true });
+        await Fs.rename(`${home}.saved`, home);
+      }
+    }
     const handle = await nativeOpen(filename, flags, mode);
+    if (
+      policyEntry &&
+      (options.policyReaderFault === "descriptor-drift" || options.policyReaderFault === "wrong-owner")
+    ) {
+      const nativeStat = handle.stat.bind(handle);
+      let observations = 0;
+      vi.spyOn(handle, "stat").mockImplementation(async (settings) => {
+        const value = await nativeStat(settings);
+        if (!("mtimeNs" in value)) throw new Error("fixture-stat-kind");
+        if (options.policyReaderFault === "descriptor-drift" && ++observations > 1) value.mtimeNs += 1n;
+        if (options.policyReaderFault === "wrong-owner") value.uid += 1n;
+        return value;
+      });
+    }
     if (authEntry && (options.authReaderFault === "descriptor-drift" || options.authReaderFault === "wrong-owner")) {
       const nativeStat = handle.stat.bind(handle);
       let observations = 0;
@@ -640,6 +673,125 @@ nativeCase("nonempty native inventory refuses before the main source and retains
       expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
       expect(await f.count("source-count")).toBe(0);
       expect(await f.count("inspect-count")).toBe(1);
+    } finally {
+      await f.close();
+    }
+  })
+);
+
+nativeCase(
+  "native-created empty private policy placeholders retain success and metadata replay without new dispatch",
+  () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ mode: "policy-empty" });
+      try {
+        await Effect.runPromise(f.run);
+        expect(f.traces()).toBe(1);
+        await Effect.runPromise(f.run);
+        expect(await f.count("source-count")).toBe(1);
+        expect(await f.count("inspect-count")).toBe(2);
+        expect(
+          vi
+            .mocked(Fs.readFile)
+            .mock.calls.some(
+              ([path]) => typeof path === "string" && /(?:managed_config|requirements)\.toml$/.test(path)
+            )
+        ).toBe(false);
+      } finally {
+        await f.close();
+      }
+    })
+);
+for (const mode of ["policy-content", "policy-whitespace", "policy-mode"]) {
+  nativeCase(`unsafe native-created placeholder ${mode} preserves refusal and consumed source fence`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ mode });
+      try {
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(f.traces()).toBe(0);
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(await f.count("source-count")).toBe(1);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+for (const systemPolicy of ["managed_config.toml", "requirements.toml"] as const) {
+  nativeCase(`system ${systemPolicy} presence remains forbidden`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ systemPolicy });
+      try {
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(await f.count("inspect-count")).toBe(0);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+for (const name of ["managed_config.toml", "requirements.toml"]) {
+  for (const kind of ["nonempty", "whitespace", "symlink", "hardlink", "mode", "directory", "fifo"] as const) {
+    nativeCase(`unsafe private ${name} ${kind} refuses before any native consumer`, () =>
+      Effect.tryPromise(async () => {
+        const f = await fixture();
+        try {
+          const filename = Path.join(f.request.nativeHome, name);
+          if (kind === "directory") await Fs.mkdir(filename, { mode: 0o700 });
+          else if (kind === "fifo") await compile("/usr/bin/mkfifo", ["-m", "600", filename]);
+          else if (kind === "symlink") await Fs.symlink(f.request.nativeAuthFile, filename);
+          else {
+            await Fs.writeFile(filename, kind === "nonempty" ? "[policy]" : kind === "whitespace" ? " " : "", {
+              mode: kind === "mode" ? 0o644 : 0o600,
+            });
+            if (kind === "mode") await Fs.chmod(filename, 0o644);
+            if (kind === "hardlink") await Fs.link(filename, `${filename}.linked`);
+          }
+          expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+          expect(await f.count("inspect-count")).toBe(0);
+          expect(await f.count("source-count")).toBe(0);
+        } finally {
+          await f.close();
+        }
+      })
+    );
+  }
+}
+for (const name of ["managed_config.toml", "requirements.toml"]) {
+  nativeCase(`empty original shared ${name} remains forbidden`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture();
+      try {
+        await Fs.writeFile(Path.join(Path.dirname(f.request.nativeAuthFile), name), "", { mode: 0o600 });
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(await f.count("inspect-count")).toBe(0);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+for (const policyReaderFault of ["descriptor-drift", "wrong-owner"] as const) {
+  nativeCase(`private policy ${policyReaderFault} refuses before native launch`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ policyReaderFault });
+      try {
+        await Fs.writeFile(Path.join(f.request.nativeHome, "managed_config.toml"), "", { mode: 0o600 });
+        expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
+        expect(await f.count("inspect-count")).toBe(0);
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+nativeCase("private placeholder observation stays anchored across temporary parent substitution", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture({ policyReaderFault: "parent-swap" });
+    try {
+      await Fs.writeFile(Path.join(f.request.nativeHome, "managed_config.toml"), "", { mode: 0o600 });
+      await Effect.runPromise(f.run);
+      expect(await f.count("source-count")).toBe(1);
     } finally {
       await f.close();
     }
