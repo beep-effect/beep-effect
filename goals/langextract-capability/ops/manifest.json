@@ -101,15 +101,18 @@
     }
   ],
   "researchReports": [
-    "research/reports/repo-reuse-audit.md",
-    "research/reports/nlp-fit-audit.md",
+    "research/README.md",
+    "research/SOURCES.md",
+    "research/gold-intake-anti-inference-prompt-mode.md",
+    "research/reports/architecture-boundaries.md",
     "research/reports/effect-v3-reference.md",
     "research/reports/effect-v4-migration.md",
-    "research/reports/architecture-boundaries.md",
     "research/reports/extraction-alignment.md",
+    "research/reports/nlp-fit-audit.md",
+    "research/reports/proposal-review-round-1.md",
+    "research/reports/repo-reuse-audit.md",
     "research/reports/testing-quality.md",
-    "research/gold-intake-anti-inference-prompt-mode.md",
-    "research/SOURCES.md"
+    "research/synthesis.md"
   ],
   "proposalReviewReports": ["research/reports/proposal-review-round-1.md"],
   "proposalReviewLoop": {

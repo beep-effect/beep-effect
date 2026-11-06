@@ -39,7 +39,8 @@ it.layer(Repo.layer(RepoRef.make({ owner: "acme", repo: "widget" })), { timeout:
       Effect.gen(function* () {
         const service = yield* Attestation;
         assert.strictEqual((yield* service.upload({})).url, "stub");
-        assert.deepStrictEqual(yield* service.listForSubject("abc"), []);
+        const listForSubject1 = yield* service.listForSubject("abc");
+        assert.deepStrictEqual(listForSubject1, []);
       })
     );
   });
@@ -57,7 +58,8 @@ it.layer(Attestation.layer.pipe(Layer.provideMerge(base)), { timeout: "30 second
       const uploaded = yield* service.upload({ payload: "signed" });
       assert.strictEqual(uploaded.id, undefined);
       assert.strictEqual(uploaded.url, "https://github.com/acme/widget/attestations/");
-      assert.deepStrictEqual(yield* service.listForSubject("abc", {}), []);
+      const listForSubject2 = yield* service.listForSubject("abc", {});
+      assert.deepStrictEqual(listForSubject2, []);
       const entries = yield* service.listForSubject("sha256:abc", { predicateType: "p" });
       assert.deepStrictEqual(
         A.map(entries, (entry) => ({ url: entry.url, predicateType: entry.predicateType })),

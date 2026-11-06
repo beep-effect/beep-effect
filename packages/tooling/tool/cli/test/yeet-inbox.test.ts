@@ -86,9 +86,12 @@ describe("yeetInboxRowId", () => {
       Effect.gen(function* () {
         const base = yield* yeetInboxRowId(capsule());
 
-        expect(yield* yeetInboxRowId(capsule({ headSha: "fff999" }))).not.toBe(base);
-        expect(yield* yeetInboxRowId(capsule({ lane: "Check / Lint" }))).not.toBe(base);
-        expect(yield* yeetInboxRowId(capsule({ prNumber: 99 }))).not.toBe(base);
+        const yeetInboxRowId1 = yield* yeetInboxRowId(capsule({ headSha: "fff999" }));
+        expect(yeetInboxRowId1).not.toBe(base);
+        const yeetInboxRowId2 = yield* yeetInboxRowId(capsule({ lane: "Check / Lint" }));
+        expect(yeetInboxRowId2).not.toBe(base);
+        const yeetInboxRowId3 = yield* yeetInboxRowId(capsule({ prNumber: 99 }));
+        expect(yeetInboxRowId3).not.toBe(base);
       })
     );
 
@@ -195,13 +198,14 @@ describe("yeetInboxRowId", () => {
           YeetSiblingCollisionCapsule.make({ ...siblingCapsule, contendedPaths: ["a.ts", "b.ts"] })
         );
 
-        expect(yield* yeetSiblingCollisionRowId(siblingCapsule)).toBe(resortedSibling);
-        expect(yield* Effect.all(A.map(rows, yeetInboxExpectedRowId))).toStrictEqual(
-          A.map(rows, (subject) => subject.id)
-        );
-        expect(yield* yeetPrMergeReadyRowId(mergeReadyCapsule)).not.toBe(
-          yield* yeetPrMergeReadyRowId(unmeasuredMergeReadyCapsule)
-        );
+        const yeetSiblingCollisionRowId4 = yield* yeetSiblingCollisionRowId(siblingCapsule);
+        expect(yeetSiblingCollisionRowId4).toBe(resortedSibling);
+        const all5 = yield* Effect.all(A.map(rows, yeetInboxExpectedRowId));
+        expect(all5).toStrictEqual(A.map(rows, (subject) => subject.id));
+        const yeetPrMergeReadyRowId6 = yield* yeetPrMergeReadyRowId(mergeReadyCapsule);
+        const argument = expect(yeetPrMergeReadyRowId6).not;
+        const yeetPrMergeReadyRowId1 = yield* yeetPrMergeReadyRowId(unmeasuredMergeReadyCapsule);
+        argument.toBe(yeetPrMergeReadyRowId1);
         expect(A.map(rows, describeYeetInboxRow)).toStrictEqual([
           "sibling collision with /fleet/b (2 path(s))",
           "review thread PRRT_abc (pr #751 @ abc123d)",
@@ -292,15 +296,19 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("appendYeetInboxRow", (it) =>
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped();
       const subject = yield* row(capsule());
-      expect(yield* appendYeetInboxRowOnce(root, subject)).toBe(true);
+      const appendYeetInboxRowOnce7 = yield* appendYeetInboxRowOnce(root, subject);
+      expect(appendYeetInboxRowOnce7).toBe(true);
       const paths = yield* yeetInboxPaths(root);
       const historyBefore = yield* fs.readFileString(paths.failuresPath).pipe(Effect.option);
       const activeBefore = yield* fs.readFileString(paths.activePath).pipe(Effect.option);
       historyBefore.pipe(O.isSome, assertTrue);
       activeBefore.pipe(O.isSome, assertTrue);
-      expect(yield* appendYeetInboxRowOnce(root, subject)).toBe(false);
-      assertSome(yield* fs.readFileString(paths.failuresPath).pipe(Effect.option), O.getOrThrow(historyBefore));
-      assertSome(yield* fs.readFileString(paths.activePath).pipe(Effect.option), O.getOrThrow(activeBefore));
+      const appendYeetInboxRowOnce8 = yield* appendYeetInboxRowOnce(root, subject);
+      expect(appendYeetInboxRowOnce8).toBe(false);
+      const pipe9 = yield* fs.readFileString(paths.failuresPath).pipe(Effect.option);
+      assertSome(pipe9, O.getOrThrow(historyBefore));
+      const pipe10 = yield* fs.readFileString(paths.activePath).pipe(Effect.option);
+      assertSome(pipe10, O.getOrThrow(activeBefore));
     })
   );
 
@@ -336,7 +344,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("appendYeetInboxRow", (it) =>
       yield* fs.writeFileString(paths.failuresPath, "");
       yield* fs.symlink(paths.failuresPath, paths.activePath);
 
-      const failure = yield* Effect.flip(appendYeetInboxRow(root, yield* row(capsule())));
+      const row11 = yield* row(capsule());
+      const failure = yield* Effect.flip(appendYeetInboxRow(root, row11));
 
       expect(failure.message).toContain("Failed to update the active inbox index");
       const names = yield* fs.readDirectory(paths.dir);
@@ -418,7 +427,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("appendYeetInboxRow", (it) =>
       yield* fs.makeDirectory(`${root}/.beep`, { recursive: true });
       yield* fs.writeFileString(`${root}/.beep/inbox`, "squatter");
 
-      const failure = yield* Effect.flip(appendYeetInboxRow(root, yield* row(capsule())));
+      const row12 = yield* row(capsule());
+      const failure = yield* Effect.flip(appendYeetInboxRow(root, row12));
       expect(failure.message).toContain("inbox");
     })
   );
@@ -437,10 +447,12 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("appendYeetInboxRow", (it) =>
       const paths = yield* yeetInboxPaths(repoRoot);
       yield* fs.symlink(outsideFailures, paths.failuresPath);
 
-      const failure = yield* appendYeetInboxRow(repoRoot, yield* row(capsule())).pipe(Effect.flip);
+      const row13 = yield* row(capsule());
+      const failure = yield* appendYeetInboxRow(repoRoot, row13).pipe(Effect.flip);
 
       expect(failure._tag).toBe("YeetCommandError");
-      expect(yield* fs.readFileString(outsideFailures)).toBe(sentinel);
+      const readFileString14 = yield* fs.readFileString(outsideFailures);
+      expect(readFileString14).toBe(sentinel);
     })
   );
 
@@ -457,10 +469,12 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("appendYeetInboxRow", (it) =>
       yield* fs.writeFileString(outsideFailures, sentinel);
       yield* fs.symlink(outsideInbox, `${repoRoot}/.beep/inbox`);
 
-      const failure = yield* appendYeetInboxRow(repoRoot, yield* row(capsule())).pipe(Effect.flip);
+      const row15 = yield* row(capsule());
+      const failure = yield* appendYeetInboxRow(repoRoot, row15).pipe(Effect.flip);
 
       expect(failure._tag).toBe("YeetCommandError");
-      expect(yield* fs.readFileString(outsideFailures)).toBe(sentinel);
+      const readFileString16 = yield* fs.readFileString(outsideFailures);
+      expect(readFileString16).toBe(sentinel);
     })
   );
 });

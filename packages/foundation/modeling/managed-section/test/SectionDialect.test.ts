@@ -7,12 +7,15 @@ import { assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import { identity } from "effect/Function";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Immer } from "immer";
 import type { SectionRenderError } from "@beep/managed-section";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const hashId = SectionId.make({ key: "example-tool", commentStyle: CommentStyle.hash });
 const htmlId = SectionId.make({ key: "example-tool", commentStyle: CommentStyle.html });
@@ -225,9 +228,17 @@ describe("SectionDialect review regressions", () => {
   it("derives attribute refusal from schemas while retaining dollar-anchor behavior", () => {
     for (const name of ["a", "A0_-", "a\n", "a\r", "a\r\n", "a\u2028", "a\u2029", "a\n\n", "", "0a", "_a", "a b"]) {
       const accepted = ATTRIBUTE_NAME_PATTERN.test(name);
-      assert.strictEqual(S.is(AttributeName)(name), accepted, JSON.stringify(name));
+      assert.strictEqual(
+        S.is(AttributeName)(name),
+        accepted,
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(name), identity)
+      );
       const result = SectionDialect.default.render(hashId.section("body", { [name]: "value" }));
-      assert.strictEqual(Result.isSuccess(result), accepted, JSON.stringify(name));
+      assert.strictEqual(
+        Result.isSuccess(result),
+        accepted,
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(name), identity)
+      );
       if (Result.isFailure(result)) {
         assert.strictEqual(result.failure.reason, "invalidAttribute");
         assert.strictEqual(result.failure.attribute, name);

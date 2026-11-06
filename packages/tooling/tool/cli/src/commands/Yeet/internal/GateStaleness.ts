@@ -60,10 +60,11 @@ import {
   jsdocTotalsSnapshotCommand,
 } from "../../Quality/internal/JSDocRatchet.ts";
 import {
+  changedYeetPaths,
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
   collectUntrackedPaths,
-  runGitPathList,
+  YeetChangedPathsQuery,
 } from "./GitExec.ts";
 import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -625,12 +626,10 @@ export const collectYeetGateInputPaths = Effect.fn("Yeet.collectYeetGateInputPat
   YeetCommandError,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
-  const committed = yield* runGitPathList(context.repoRoot, [
-    "diff",
-    "--name-only",
-    "-z",
-    `${context.base}...${context.head}`,
-  ]).pipe(Effect.orElseSucceed(A.empty<string>));
+  const committed = yield* changedYeetPaths(
+    context.repoRoot,
+    YeetChangedPathsQuery.make({ base: context.base, head: context.head, mergeBaseRange: true })
+  ).pipe(Effect.orElseSucceed(A.empty<string>));
   const staged = yield* collectStagedPublishPaths(context.repoRoot).pipe(Effect.orElseSucceed(A.empty<string>));
   const unstaged = yield* collectUnstagedTrackedPaths(context.repoRoot).pipe(Effect.orElseSucceed(A.empty<string>));
   const untracked = yield* collectUntrackedPaths(context.repoRoot).pipe(Effect.orElseSucceed(A.empty<string>));

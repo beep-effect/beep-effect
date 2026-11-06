@@ -59,7 +59,8 @@ describe("ActionState", () => {
             expected += `result<<EFFECTED_EOF${newline}${serialized}${newline}EFFECTED_EOF${newline}`;
             expected += `secret<<EFFECTED_EOF${newline}${serialized}${newline}EFFECTED_EOF${newline}`;
             assert.strictEqual(files.written.text("/rf/state"), expected);
-            assert.strictEqual(yield* S.decodeEffect(JsonString)(serialized), value);
+            const value1 = yield* S.decodeEffect(JsonString)(serialized);
+            assert.strictEqual(value1, value);
           }
         })
       );
@@ -150,7 +151,8 @@ describe("ActionState", () => {
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect("getOptional answers none for a key that was never saved", () =>
         Effect.gen(function* () {
-          assertNone(yield* (yield* ActionState).getOptional("absent", Token));
+          const gotOptional = yield* (yield* ActionState).getOptional("absent", Token);
+          assertNone(gotOptional);
         })
       );
     });
@@ -283,7 +285,9 @@ describe("ActionState", () => {
           });
           return Effect.gen(function* () {
             yield* run;
-            const lines = Result.getOrThrowWith(S.encodeResult(Json)(yield* TestConsole.logLines), (error) => error);
+            const argument = S.encodeResult(Json);
+            const logLines1 = yield* TestConsole.logLines;
+            const lines = Result.getOrThrowWith(argument(logLines1), (error) => error);
             assert.include(lines, "::add-mask::ghs_abc123");
             // GITHUB_STATE is plaintext by GitHub's protocol; the mask is the only
             // available defense, so it must have happened.

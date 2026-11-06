@@ -220,9 +220,8 @@ it.effect("admits only provider-backed files with zero statement, function, and 
         BEEP_COVERAGE_V8_ZERO_WITNESS: "1",
       });
     const discovery = () => CoverageConfig.inspectCoverageRuntimeSources(["vitest", "run"]);
-    expect(yield* discovery().pipe(Effect.provideService(ConfigProvider.ConfigProvider, config("v8")))).toEqual([
-      "/zero.ts",
-    ]);
+    const pipe1 = yield* discovery().pipe(Effect.provideService(ConfigProvider.ConfigProvider, config("v8")));
+    expect(pipe1).toEqual(["/zero.ts"]);
     expect(generate).toHaveBeenCalledWith({ allTestsRun: true });
     generate.mockRejectedValueOnce(new Error("coverage generation failed"));
     const failed = yield* discovery().pipe(
@@ -322,12 +321,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
             trim: true,
           });
           expect(result.exitCode, result.output).toBe(0);
-          expect(yield* decodeFiles(result.output)).toEqual([path.join(root, `src/${side}-${runtime}.ts`)]);
+          const decodedFiles = yield* decodeFiles(result.output);
+          expect(decodedFiles).toEqual([path.join(root, `src/${side}-${runtime}.ts`)]);
         }
 
-        expect(yield* fs.readFileString(path.join(root, "proof.test.ts"))).toBe(
-          'throw new Error("Census must not import test modules");'
-        );
+        const readFileString2 = yield* fs.readFileString(path.join(root, "proof.test.ts"));
+        expect(readFileString2).toBe('throw new Error("Census must not import test modules");');
       })
     );
   }

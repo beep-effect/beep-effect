@@ -77,9 +77,15 @@ describe("AI metrics encrypted raw archive envelope", () => {
             sourceKind: "codex",
             sourcePath: "large-session.jsonl",
           });
-          pipe(yield* fs.exists(object.archivePath), assertTrue);
-          const envelope = Result.getOrThrow(decodeArchiveEnvelope(yield* fs.readFileString(object.archivePath)));
-          expect(yield* decryptEncryptedRawArchiveEnvelope({ envelope, rawArchiveKey })).toBe(content);
+          const exists1 = yield* fs.exists(object.archivePath);
+          pipe(exists1, assertTrue);
+          const readFileString2 = yield* fs.readFileString(object.archivePath);
+          const envelope = Result.getOrThrow(decodeArchiveEnvelope(readFileString2));
+          const decryptEncryptedRawArchiveEnvelope3 = yield* decryptEncryptedRawArchiveEnvelope({
+            envelope,
+            rawArchiveKey,
+          });
+          expect(decryptEncryptedRawArchiveEnvelope3).toBe(content);
         },
         Effect.scoped,
         Effect.scoped

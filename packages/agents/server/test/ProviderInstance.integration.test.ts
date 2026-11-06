@@ -351,7 +351,8 @@ describe("ProviderInstance PGLite integration", { concurrent: false }, () => {
         expect(P.isTagged("ProviderInstanceNotFound")(probeFailure)).toBe(true);
         expect(P.isTagged("ProviderInstanceNotFound")(saveFailure)).toBe(true);
         expect(P.isTagged("ProviderInstanceNotFound")(removeFailure)).toBe(true);
-        expect(yield* Ref.get(runnerRequests)).toHaveLength(0);
+        const got = yield* Ref.get(runnerRequests);
+        expect(got).toHaveLength(0);
 
         const persistedSecondary = yield* secondaryUseCases.get(GetProviderInstanceQuery.make({ id: secondary.id }));
         const updatedSecondary = yield* secondaryUseCases.update(

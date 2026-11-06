@@ -26,6 +26,9 @@
  * @since 0.0.0
  */
 import * as NodeZlib from "node:zlib";
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { GitHubError } from "@beep/github/GitHubError";
+import { Repo } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -37,7 +40,6 @@ import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
-import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -45,14 +47,19 @@ import * as P from "effect/Predicate";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ghOutput } from "../../internal/github/index.ts";
+import {
+  GithubClientRequest,
+  GithubIdentity,
+  layerGithubClientFor,
+  layerGithubRepoFor,
+} from "../../internal/github/GithubIdentity.ts";
+import { GithubRest, layerGithubRest } from "../../internal/github/GithubRest.ts";
 import { sha256HexBytes } from "../Goals/PacketCore/PacketDigest.ts";
 import { HostedJob, HostedRun, RouteCorpusReceipt, RouteError } from "./Route.schemas.ts";
 import { RouteCorpus, RouteCorpusLoaded } from "./Route.service.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { GhCommandFailure } from "../../internal/github/index.ts";
 import type { RouteCorpusCaptureOptions, RouteCorpusShape } from "./Route.service.ts";
 
 const $I = $RepoCliId.create("commands/Ci/RouteCorpus");
@@ -114,19 +121,18 @@ export const ROUTE_CORPUS_RECEIPT_FILE = "RECEIPTS.json";
 const ROUTE_CORPUS_FETCH_CONCURRENCY = 8;
 const RATE_LIMIT_MAX_WAIT = Duration.minutes(60);
 const RATE_LIMIT_MARGIN_MS = 1000;
-const GH_RATE_LIMIT_PATTERN = /rate limit exceeded|secondary rate limit/iu;
 const GH_LIST_FIELDS = "databaseId,workflowName,event,status,conclusion,createdAt,updatedAt,headBranch,headSha,attempt";
 const GH_VIEW_FIELDS = "databaseId,workflowName,event,status,conclusion,createdAt,headBranch,headSha,attempt,jobs";
 
 /**
- * Runs one `gh` command in a checkout and yields its stdout.
+ * Supplies the corpus compatibility protocol in a checkout and yields JSON text.
  *
  * **Details**
  *
  * The corpus depends on this function, not on a process spawner, so a test
  * can answer each argument vector with a recorded payload. The production
- * runner behind {@link RouteCorpusLive} runs the real `gh` through the repo
- * capture and retries a failed call twice. A call GitHub refused for its rate
+ * runner behind {@link RouteCorpusLive} uses paginated GitHub REST reads
+ * with the gh login and retries a failed call twice. A call GitHub refused for its rate
  * limit fails with {@link RouteGhRateLimited} instead, so the corpus can wait
  * for the reset.
  *
@@ -322,40 +328,194 @@ const utcDays = (since: DateTime.DateTime, until: DateTime.DateTime): ReadonlyAr
     )
   );
 
-const ghFailure = Match.type<GhCommandFailure>().pipe(
-  Match.tagsExhaustive({
-    spawn: (failure): RouteError | RouteGhRateLimited =>
-      RouteError.new("corpus-fetch", `Failed to spawn ${failure.command}.`, failure),
-    "nonzero-exit": (failure): RouteError | RouteGhRateLimited =>
-      GH_RATE_LIMIT_PATTERN.test(failure.output)
-        ? RouteGhRateLimited.make({ command: failure.command, output: failure.output })
-        : RouteError.new("corpus-fetch", `${failure.command} exited ${failure.exitCode}: ${failure.output}`, failure),
-    truncated: (failure): RouteError | RouteGhRateLimited =>
-      RouteError.new("corpus-fetch", `${failure.command} overflowed the capture bound.`, failure),
+const WorkflowReference = S.String.check(S.isPattern(/^\d+$|\.ya?ml$/u)).pipe(
+  $I.annoteSchema("WorkflowReference", {
+    description: "A numeric workflow id or YAML filename accepted directly by REST.",
   })
 );
+const WorkflowWire = S.Struct({ id: S.Int, name: S.String, path: S.String });
+const RunWire = S.Struct({
+  id: S.Int,
+  name: S.NullOr(S.String),
+  event: S.String,
+  status: S.NullOr(S.String),
+  conclusion: S.NullOr(S.String),
+  created_at: S.String,
+  head_branch: S.NullOr(S.String),
+  head_sha: S.String,
+  run_attempt: S.optionalKey(S.Int),
+});
+const JobWire = S.Struct({
+  name: S.NonEmptyString,
+  conclusion: S.NullOr(S.String),
+  started_at: S.NullOr(S.String),
+  completed_at: S.NullOr(S.String),
+});
+const decodeWorkflowRows = S.decodeUnknownEffect(S.Array(WorkflowWire));
+const decodeRunRows = S.decodeUnknownEffect(S.Array(RunWire));
+const decodeJobRows = S.decodeUnknownEffect(S.Array(JobWire));
+const encodeWire = S.encodeEffect(S.fromJsonString(S.Unknown));
+const ghRun = (run: typeof RunWire.Type) => ({
+  databaseId: run.id,
+  workflowName: run.name ?? "",
+  event: run.event,
+  status: run.status ?? "",
+  conclusion: run.conclusion,
+  createdAt: run.created_at,
+  headBranch: run.head_branch ?? "",
+  headSha: run.head_sha,
+  attempt: run.run_attempt ?? 1,
+});
 
-const routeGhRunner = Effect.gen(function* () {
-  const context = yield* Effect.context<
-    Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-  >();
-  const runGh: RouteGhRunner = (args, cwd) =>
-    ghOutput({
-      args,
-      cwd,
-      label: A.join(["gh", ...A.take(args, 2)], " "),
-      onFailure: ghFailure,
+/**
+ * Adapt the recorded corpus protocol to paginated GitHub REST reads.
+ *
+ * **Details**
+ * Display names resolve against every workflow page; numeric ids and workflow
+ * filenames go directly to the runs endpoint. The compatibility protocol keeps
+ * the corpus decoder and its error wording stable without spawning `gh`.
+ *
+ * **Example** (Inspect the REST runner)
+ *
+ * ```ts
+ * import { makeRouteGithubRunner } from "@beep/repo-cli/commands/Ci/RouteCorpus"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(makeRouteGithubRunner))
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeRouteGithubRunner = Effect.gen(function* () {
+  const client = yield* GitHubClient;
+  const repo = yield* Repo;
+  const rest = yield* GithubRest;
+  const at = { owner: repo.owner, repo: repo.repo };
+  const runGh: RouteGhRunner = (args) =>
+    Effect.gen(function* () {
+      if (args[0] === "api") {
+        const limit = yield* rest.rateLimit;
+        return yield* encodeWire({ resources: { core: { reset: DateTime.toEpochMillis(limit.core.resetAt) / 1000 } } });
+      }
+      if (args[1] === "list") {
+        const workflow = args[3] ?? "";
+        const id = S.is(WorkflowReference)(workflow)
+          ? workflow
+          : yield* client.paginate("GET /repos/{owner}/{repo}/actions/workflows", { ...at, per_page: 100 }).pipe(
+              Effect.flatMap((rows) => decodeWorkflowRows(rows)),
+              Effect.flatMap((rows) =>
+                Effect.fromOption(
+                  A.findFirst(rows, (row) => row.name === workflow),
+                  () =>
+                    RouteError.new(
+                      "corpus-fetch",
+                      `gh run list --workflow ${workflow} --created ${args[5]} returned no matching workflow.`
+                    )
+                )
+              ),
+              Effect.map((row) => row.id)
+            );
+        const rows = yield* client
+          .paginate("GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs", {
+            ...at,
+            workflow_id: id,
+            created: args[5] ?? "",
+            per_page: 100,
+          })
+          .pipe(Effect.flatMap(decodeRunRows));
+        return yield* encodeWire(A.map(rows, ghRun));
+      }
+      const runId = yield* S.decodeUnknownEffect(S.FiniteFromString)(args[2]);
+      const run = yield* client.requestDecoded(
+        "GET /repos/{owner}/{repo}/actions/runs/{run_id}",
+        { ...at, run_id: runId },
+        RunWire
+      );
+      const jobs = yield* client
+        .paginate("GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs", { ...at, run_id: runId, per_page: 100 })
+        .pipe(Effect.flatMap(decodeJobRows));
+      return yield* encodeWire({
+        ...ghRun(run),
+        jobs: A.map(jobs, (job) => ({
+          name: job.name,
+          conclusion: job.conclusion,
+          startedAt: job.started_at,
+          completedAt: job.completed_at,
+        })),
+      });
     }).pipe(
-      // A rate-limited call is not retried here: the corpus waits for the reset.
+      Effect.mapError(routeGithubFailure(args)),
       Effect.retry({
         times: 2,
         schedule: Schedule.exponential(Duration.seconds(1)),
         while: P.not(P.isTagged("RouteGhRateLimited")),
-      }),
-      Effect.provide(context)
+      })
     );
   return runGh;
-}).pipe(Effect.withSpan("RouteCorpus.ghRunner"));
+}).pipe(Effect.withSpan("RouteCorpus.githubRunner"));
+
+// The gh command line the corpus names in an unreadable-payload message.
+const unreadableCommand = (args: ReadonlyArray<string>): string =>
+  args[1] === "list" ? `gh run list --workflow ${args[3]} --created ${args[5]}` : `gh run view ${args[2]}`;
+
+// A GitHub failure in the corpus's gh wording: a rate limit stays its own tag, a refusal names gh's exit, a decode
+// failure is an unreadable payload.
+const githubFailure = (args: ReadonlyArray<string>, error: unknown): RouteError | RouteGhRateLimited => {
+  const command = A.join(["gh", ...args], " ");
+  if (!S.is(GitHubError)(error))
+    return RouteError.new("corpus-fetch", `${unreadableCommand(args)} returned an unreadable payload.`, error);
+  if (GitHubError.hasKind("rateLimited")(error)) return RouteGhRateLimited.make({ command, output: error.message });
+  return RouteError.new(
+    "corpus-fetch",
+    GitHubError.hasKind("decode")(error)
+      ? `${unreadableCommand(args)} returned an unreadable payload.`
+      : `${command} exited 1: ${error.message}`,
+    error
+  );
+};
+
+const routeGithubFailure =
+  (args: ReadonlyArray<string>) =>
+  (error: unknown): RouteError | RouteGhRateLimited =>
+    S.is(RouteError)(error) ? error : githubFailure(args, error);
+
+const corpusIdentity = GithubIdentity.make({
+  kind: "gh-cli",
+  tokenRef: O.none(),
+  appId: O.none(),
+  installationId: O.none(),
+  privateKeyRef: O.none(),
+});
+const routeGhRunner = Effect.gen(function* () {
+  const context = yield* Effect.context<ChildProcessSpawner.ChildProcessSpawner>();
+  const runGh: RouteGhRunner = (args, cwd) =>
+    Effect.flatMap(
+      Layer.build(
+        layerGithubRest.pipe(
+          Layer.provideMerge(
+            Layer.mergeAll(
+              layerGithubClientFor(GithubClientRequest.make({ identity: corpusIdentity, cwd }), { retry: "off" }),
+              layerGithubRepoFor(cwd)
+            )
+          )
+        )
+      ),
+      (services) =>
+        Effect.provideContext(
+          Effect.flatMap(makeRouteGithubRunner, (run) => run(args, cwd)),
+          services
+        )
+    ).pipe(
+      Effect.scoped,
+      Effect.provideContext(context),
+      Effect.mapError((error): RouteError | RouteGhRateLimited =>
+        S.is(RouteError)(error) || S.is(RouteGhRateLimited)(error)
+          ? error
+          : RouteError.new("corpus-fetch", "Failed to initialize GitHub corpus reads.", error)
+      )
+    );
+  return runGh;
+});
 
 const gzipText = (text: string, file: string) =>
   Effect.try({
@@ -382,7 +542,7 @@ const decodeCorpus = Effect.fnUntraced(function* (
   bytes: Uint8Array,
   file: string
 ): Effect.fn.Return<ReadonlyArray<HostedRun>, RouteError> {
-  const lines = yield* corpusLines(yield* gunzipText(bytes, file), file);
+  const lines = yield* gunzipText(bytes, file).pipe(Effect.flatMap((text) => corpusLines(text, file)));
   return yield* Effect.forEach(lines, (line, index) =>
     decodeHostedRunLine(line).pipe(
       Effect.mapError(RouteError.mapError("corpus-pin", `${file} line ${index + 1} is not a HostedRun.`))
@@ -515,7 +675,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
     const runs = yield* decodeCorpus(bytes, corpusPath);
     return {
       runs: HashMap.fromIterable(A.map(runs, (run): readonly [number, HostedRun] => [run.runId, run])),
-      pinned: O.some(yield* digest(bytes, corpusPath)),
+      pinned: yield* Effect.asSome(digest(bytes, corpusPath)),
       covered: "",
       open: true,
     };
@@ -677,7 +837,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
         `since ${options.since} is after until ${DateTime.formatIsoDateUtc(until)}.`
       );
     }
-    const loaded = (yield* exists(receiptPath)) ? O.some(yield* load(receiptPath)) : O.none();
+    const loaded = (yield* exists(receiptPath)) ? yield* Effect.asSome(load(receiptPath)) : O.none();
     const previous = O.map(loaded, (value) => value.receipt);
     const plan = yield* capturePlan(
       previous,
@@ -756,11 +916,10 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
       state: CaptureState,
       day: string
     ): Effect.fn.Return<CaptureState, RouteError> {
-      const listed = A.flatten(
-        yield* Effect.forEach(plan.workflows, (workflow) => listDay(options.repoRoot, workflow, day), {
-          concurrency: ROUTE_CORPUS_FETCH_CONCURRENCY,
-        })
-      );
+      const forEach2 = yield* Effect.forEach(plan.workflows, (workflow) => listDay(options.repoRoot, workflow, day), {
+        concurrency: ROUTE_CORPUS_FETCH_CONCURRENCY,
+      });
+      const listed = A.flatten(forEach2);
       const eligible = A.filter(listed, isEligibleRun);
       const pending = pipe(
         eligible,
@@ -830,12 +989,12 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
 });
 
 /**
- * The corpus service over the real `gh` CLI.
+ * The corpus service over GitHub REST using the current gh login.
  *
  * **Details**
  *
- * Each `gh` call runs in the capture's `repoRoot`, so `gh` resolves the
- * repository from that checkout's remote. A failed call is retried twice with
+ * REST reads resolve the repository from `GH_REPO` or the capture checkout's origin.
+ * The gh login supplies the token. A failed call is retried twice with
  * exponential backoff from one second, then fails with reason `corpus-fetch`.
  *
  * **Example** (Load a pinned corpus)

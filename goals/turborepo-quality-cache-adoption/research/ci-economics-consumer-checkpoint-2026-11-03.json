@@ -1,0 +1,44 @@
+{
+  "at": "2026-11-03T13:19:53.071306+00:00",
+  "authority": "Consumer notes only; ci-lane-economics remains the timing and placement owner. No new measured before/after cache benefit or admission verdict.",
+  "sourceRevision": "31e2ac20f34a1c699a35be55f67881dbf0d8ffd0",
+  "sourceBindings": [
+    {
+      "path": "goals/ci-lane-economics/SPEC.md",
+      "sha256": "4ff4479ba1d8b2d278b418c5272f6a1fedcbd0d0ee71ad70d5a51df6875acb3d"
+    },
+    {
+      "path": "goals/ci-lane-economics/PLAN.md",
+      "sha256": "9087bcc4193b68e36902d72df2e402d10badbc0748c934d3ce3fe8caf50d7184"
+    },
+    {
+      "path": "goals/ci-lane-economics/GOAL.md",
+      "sha256": "2a2da6b6f75e20345a7c5a8c7e1f36dcdfb7ee51a8114046ffb30711d7960f06"
+    },
+    {
+      "path": "goals/ci-lane-economics/research/test-unit-rebin-2026-11-02.md",
+      "sha256": "14ea14e6b6b9be23609da60ab61ed3136d2abce6914ee0045cb82a4f241cafa5"
+    }
+  ],
+  "window4": {
+    "since": "2026-10-27T10:00:00Z",
+    "until": "2026-11-03T10:00:00Z",
+    "finalAdmissionReportPresent": false,
+    "previewOnly": {
+      "runsAt20261102": 1202,
+      "requiredContexts": 15,
+      "lintP95Seconds": 1652,
+      "testUnitP95Seconds": 2667,
+      "pickupP95Seconds": 678
+    }
+  },
+  "attribution": "Window-4 preview measured the old shard layout, before biome project-scan removal and Test Unit re-binning/two-wide package producers. It does not measure a speed-up from those repairs or from Turbo; the Test Unit gain from re-binning remains unobserved. Cache-specific hit/replay evidence and real whole-command timings are separate required joins.",
+  "next": "Consume the owning final full-window report when available; then compare post-repair window5 under its recorded actual layout and population. No competing timing census started.",
+  "schemaVersion": "cache-adoption-economics-owner-consumption/v1",
+  "limits": [
+    "The numbers are the owning packet preview at its recorded sample, not a final full-week verdict.",
+    "No new timing census, placement decision or claimed cache-only saving.",
+    "Demand-based warming still requires qualified profiles, real protected demand and bounded cost receipts.",
+    "Window 5 needs its own real complete week under the owning re-bin and two-wide producer layout."
+  ]
+}

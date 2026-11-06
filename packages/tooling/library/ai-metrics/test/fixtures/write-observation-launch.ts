@@ -54,7 +54,9 @@ const program = Effect.gen(function* () {
             }),
           }),
   });
-  yield* fs.writeFileString(`${directory}/worker.json`, yield* encodeObservationLaunchConfigJson(config), {
+  const argument = `${directory}/worker.json`;
+  const encodedObservationLaunchConfigJson = yield* encodeObservationLaunchConfigJson(config);
+  yield* fs.writeFileString(argument, encodedObservationLaunchConfigJson, {
     mode: 0o600,
   });
 });

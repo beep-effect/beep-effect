@@ -132,10 +132,14 @@ describe("fdinfoWatches", () => {
       ],
     });
     return Effect.gen(function* () {
-      assertTrue(yield* table.watching(200, ProcessInotifyWatch.make({ device: 33n, inode: 809092275n })));
-      assertFalse(yield* table.watching(200, ProcessInotifyWatch.make({ device: 33n, inode: 2n })));
-      assertFalse(yield* table.watching(100, watch));
-      assertFalse(yield* table.watching(300, watch));
+      const watching1 = yield* table.watching(200, ProcessInotifyWatch.make({ device: 33n, inode: 809092275n }));
+      assertTrue(watching1);
+      const watching2 = yield* table.watching(200, ProcessInotifyWatch.make({ device: 33n, inode: 2n }));
+      assertFalse(watching2);
+      const watching3 = yield* table.watching(100, watch);
+      assertFalse(watching3);
+      const watching4 = yield* table.watching(300, watch);
+      assertFalse(watching4);
     }).pipe(withTable(table));
   });
 });
@@ -168,7 +172,8 @@ const terminalStateIn = (entries: ReadonlyArray<ProcessTableEntry>, pid: number)
 describe("desktopTerminalShellState", () => {
   it.effect("reads a panel shell at its prompt as idle", () =>
     Effect.gen(function* () {
-      assertSome(yield* terminalStateIn(A.append(desktop, panelShell()), 300), "idle");
+      const terminalStateIn5 = yield* terminalStateIn(A.append(desktop, panelShell()), 300);
+      assertSome(terminalStateIn5, "idle");
     })
   );
 
@@ -176,7 +181,8 @@ describe("desktopTerminalShellState", () => {
     Effect.gen(function* () {
       const job = ProcessTableEntry.make({ pid: 310, parent: 300, command: "make", terminal: 34823 });
       const entries = A.appendAll(desktop, [panelShell({ foregroundGroup: 310 }), job]);
-      assertSome(yield* terminalStateIn(entries, 300), "busy");
+      const terminalStateIn6 = yield* terminalStateIn(entries, 300);
+      assertSome(terminalStateIn6, "busy");
     })
   );
 
@@ -184,7 +190,8 @@ describe("desktopTerminalShellState", () => {
     Effect.gen(function* () {
       // The terminal's foreground group is still the shell's, but a child shares it.
       const child = ProcessTableEntry.make({ pid: 311, parent: 300, command: "sleep", processGroup: 300 });
-      assertSome(yield* terminalStateIn(A.appendAll(desktop, [panelShell(), child]), 300), "busy");
+      const terminalStateIn7 = yield* terminalStateIn(A.appendAll(desktop, [panelShell(), child]), 300);
+      assertSome(terminalStateIn7, "busy");
     })
   );
 
@@ -219,16 +226,21 @@ describe("desktopTerminalShellState", () => {
 describe("processLineage", () => {
   it.effect("walks from a process up through its readable ancestors", () =>
     Effect.gen(function* () {
-      expect(pidsOf(yield* processLineage(100))).toEqual([100, 70, 60, 55, 50, 1]);
-      expect(pidsOf(yield* processLineage(81))).toEqual([81, 80, 60, 55, 50, 1]);
+      const processLineage8 = yield* processLineage(100);
+      expect(pidsOf(processLineage8)).toEqual([100, 70, 60, 55, 50, 1]);
+      const processLineage9 = yield* processLineage(81);
+      expect(pidsOf(processLineage9)).toEqual([81, 80, 60, 55, 50, 1]);
     }).pipe(withTable(processTableFromEntries({ self: 100, entries: workstation })))
   );
 
   it.effect("stops at an unreadable parent and at a repeated pid", () =>
     Effect.gen(function* () {
-      expect(pidsOf(yield* processLineage(300))).toEqual([300]);
-      expect(pidsOf(yield* processLineage(400))).toEqual([400, 401]);
-      expect(pidsOf(yield* processLineage(999))).toEqual([]);
+      const processLineage10 = yield* processLineage(300);
+      expect(pidsOf(processLineage10)).toEqual([300]);
+      const processLineage11 = yield* processLineage(400);
+      expect(pidsOf(processLineage11)).toEqual([400, 401]);
+      const processLineage12 = yield* processLineage(999);
+      expect(pidsOf(processLineage12)).toEqual([]);
     }).pipe(
       withTable(
         processTableFromEntries({
@@ -296,13 +308,20 @@ describe("invokerSessionRoot", () => {
 describe("descendsFromProcess", () => {
   it.effect("admits the root and everything under it, refuses the rest", () =>
     Effect.gen(function* () {
-      assertTrue(yield* descendsFromProcess(81, 60));
-      assertTrue(yield* descendsFromProcess(100, 60));
-      assertTrue(yield* descendsFromProcess(60, 60));
-      assertFalse(yield* descendsFromProcess(90, 60));
-      assertFalse(yield* descendsFromProcess(200, 60));
-      assertFalse(yield* descendsFromProcess(999, 60));
-      assertTrue(yield* descendsFromProcess(60)(81));
+      const descendsFromProcess13 = yield* descendsFromProcess(81, 60);
+      assertTrue(descendsFromProcess13);
+      const descendsFromProcess14 = yield* descendsFromProcess(100, 60);
+      assertTrue(descendsFromProcess14);
+      const descendsFromProcess15 = yield* descendsFromProcess(60, 60);
+      assertTrue(descendsFromProcess15);
+      const descendsFromProcess16 = yield* descendsFromProcess(90, 60);
+      assertFalse(descendsFromProcess16);
+      const descendsFromProcess17 = yield* descendsFromProcess(200, 60);
+      assertFalse(descendsFromProcess17);
+      const descendsFromProcess18 = yield* descendsFromProcess(999, 60);
+      assertFalse(descendsFromProcess18);
+      const value = yield* descendsFromProcess(60)(81);
+      assertTrue(value);
     }).pipe(withTable(processTableFromEntries({ self: 100, entries: workstation })))
   );
 });
@@ -323,18 +342,25 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("process table over a fi
         entries: [ProcessTableEntry.make({ pid: 7, parent: 1, command: "scripted" })],
       });
       expect(table.self).toBe(7);
-      expect(O.getOrThrow(yield* table.pids)).toEqual([100, 80]);
-      expect(O.getOrThrow(yield* table.cwd(100))).toBe("/lane");
-      expect(yield* table.descriptors(80)).toEqual(["/lane/held.log"]);
-      expect(O.getOrThrow(yield* table.status(7)).command).toBe("scripted");
-      assertNone(yield* table.status(100));
+      const pids19 = yield* table.pids;
+      expect(O.getOrThrow(pids19)).toEqual([100, 80]);
+      const cwd20 = yield* table.cwd(100);
+      expect(O.getOrThrow(cwd20)).toBe("/lane");
+      const descriptors21 = yield* table.descriptors(80);
+      expect(descriptors21).toEqual(["/lane/held.log"]);
+      const status22 = yield* table.status(7);
+      expect(O.getOrThrow(status22).command).toBe("scripted");
+      const status23 = yield* table.status(100);
+      assertNone(status23);
       // Job control is lineage too: a row without it is its own group with no terminal.
-      expect(O.getOrThrow(yield* table.jobControl(7))).toMatchObject({
+      const jobControl24 = yield* table.jobControl(7);
+      expect(O.getOrThrow(jobControl24)).toMatchObject({
         processGroup: 7,
         terminal: 0,
         foregroundGroup: -1,
       });
-      assertNone(yield* table.jobControl(100));
+      const jobControl25 = yield* table.jobControl(100);
+      assertNone(jobControl25);
     })
   );
 
@@ -342,7 +368,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("process table over a fi
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "process-table-scan-" }));
+      const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({ prefix: "process-table-scan-" });
+      const root = yield* fs.realPath(madeTempDirectoryScoped);
       const table = processTableFromEntries({
         self: 100,
         entries: [
@@ -367,17 +394,20 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("process table over a fi
 
   it.effect("reads the live table for the invoking process", () =>
     Effect.gen(function* () {
-      const own = O.getOrThrow(yield* procProcessTable.status(process.pid));
+      const status26 = yield* procProcessTable.status(process.pid);
+      const own = O.getOrThrow(status26);
       expect(own.parent).toBe(process.ppid);
       expect(own.command.length).toBeGreaterThan(0);
-      const job = O.getOrThrow(yield* procProcessTable.jobControl(process.pid));
+      const jobControl27 = yield* procProcessTable.jobControl(process.pid);
+      const job = O.getOrThrow(jobControl27);
       expect(job.pid).toBe(process.pid);
       expect(job.processGroup).toBeGreaterThan(0);
       const lineage = yield* processLineage(process.pid);
       expect(pidsOf(lineage)).toContain(process.ppid);
       const root = yield* invokerSessionRoot();
       expect(pidsOf(lineage)).toContain(root.pid);
-      assertTrue(yield* descendsFromProcess(process.pid, root.pid));
+      const descendsFromProcess28 = yield* descendsFromProcess(process.pid, root.pid);
+      assertTrue(descendsFromProcess28);
     })
   );
 });

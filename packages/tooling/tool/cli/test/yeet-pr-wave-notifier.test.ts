@@ -258,7 +258,8 @@ it.layer(platform, { timeout: "30 seconds" })("W9 escalation", (it) => {
           `${root}/.claude/hooks/yeet-pr-wave-notifier.sh`,
           descriptorPath,
         ]);
-        const descriptor = yield* YeetPrWaveDescriptorJson.decode(yield* readText(descriptorPath));
+        const readText1 = yield* readText(descriptorPath);
+        const descriptor = yield* YeetPrWaveDescriptorJson.decode(readText1);
         expect(descriptor.urgency).toBe("critical");
         expect(descriptor.ownerReason).toBe("non-claude-harness");
         expect(descriptor.desktopBody).toContain("yeet resume 7");
@@ -273,7 +274,8 @@ it.layer(platform, { timeout: "30 seconds" })("W9 escalation", (it) => {
       Effect.gen(function* () {
         const spawner = recordingSpawner();
         const first = yield* escalateWith(root, A.empty(), spawner);
-        const other = yield* escalateYeetPrWave(root, yield* waveFor(root, ["Lint", "Test"]), head, O.some(prUrl), {
+        const waveFor2 = yield* waveFor(root, ["Lint", "Test"]);
+        const other = yield* escalateYeetPrWave(root, waveFor2, head, O.some(prUrl), {
           lookup: () => Effect.succeed(A.empty()),
         }).pipe(provideSpawner(spawner));
 
@@ -294,7 +296,8 @@ it.layer(platform, { timeout: "30 seconds" })("W9 escalation", (it) => {
         yield* fs.makeDirectory(`${root}/proc/77`, { recursive: true });
         yield* fs.writeFileString(`${root}/sessions/77.json`, encodeJson({ pid: 77, sessionId: "live", cwd: root }));
         const spawner = recordingSpawner();
-        const result = yield* escalateYeetPrWave(root, yield* waveFor(root), head, O.some(prUrl), {
+        const waveFor3 = yield* waveFor(root);
+        const result = yield* escalateYeetPrWave(root, waveFor3, head, O.some(prUrl), {
           lookup: () => Effect.succeed([record("claude-code", "live")]),
           sessionsRoot: `${root}/sessions`,
           procRoot: `${root}/proc`,
@@ -302,7 +305,8 @@ it.layer(platform, { timeout: "30 seconds" })("W9 escalation", (it) => {
 
         expect(result.outcome).toBe("owner-live");
         expect(A.length(launchedOf(spawner))).toBe(0);
-        expect(yield* fs.exists(`${root}/.beep/yeet/pr-wave-notifier`)).toBe(false);
+        const exists4 = yield* fs.exists(`${root}/.beep/yeet/pr-wave-notifier`);
+        expect(exists4).toBe(false);
       })
     )
   );
@@ -320,7 +324,8 @@ it.layer(platform, { timeout: "30 seconds" })("W9 escalation", (it) => {
           );
         const failed = yield* attempt(failing);
         expect(failed.outcome).toBe("spawn-failed");
-        expect(yield* fs.exists(`${root}/.beep/yeet/pr-wave-notifier/waves/${failed.waveKey}.json`)).toBe(false);
+        const exists5 = yield* fs.exists(`${root}/.beep/yeet/pr-wave-notifier/waves/${failed.waveKey}.json`);
+        expect(exists5).toBe(false);
         const retrySpawner = recordingSpawner();
         const retried = yield* attempt(retrySpawner);
         expect(retried.outcome).toBe("spawned");
@@ -335,10 +340,12 @@ it.layer(platform, { timeout: "30 seconds" })("W9 escalation", (it) => {
     withCheckout((root) =>
       Effect.gen(function* () {
         const spawner = recordingSpawner();
-        const unresolved = yield* escalateYeetPrWave(root, yield* waveFor(root), head, O.none(), {
+        const waveFor6 = yield* waveFor(root);
+        const unresolved = yield* escalateYeetPrWave(root, waveFor6, head, O.none(), {
           lookup: () => Effect.die("not read"),
         }).pipe(provideSpawner(spawner));
-        const unreadable = yield* escalateYeetPrWave(root, yield* waveFor(root, ["Test"]), head, O.some(prUrl), {
+        const waveFor7 = yield* waveFor(root, ["Test"]);
+        const unreadable = yield* escalateYeetPrWave(root, waveFor7, head, O.some(prUrl), {
           lookup: () => Effect.fail(PrSessionRegistryError.make({ reason: "io", message: "fixture" })),
         }).pipe(provideSpawner(spawner));
 
@@ -380,9 +387,8 @@ it.layer(platform, { timeout: "30 seconds" })("W9 descriptor rendering", (it) =>
     { descriptor: YeetPrWaveDescriptor },
     ({ descriptor }) =>
       Effect.gen(function* () {
-        const decoded = yield* YeetPrWaveDescriptorJson.decode(
-          yield* YeetPrWaveDescriptorJson.encode(YeetPrWaveDescriptor.make(descriptor))
-        );
+        const encoded8 = yield* YeetPrWaveDescriptorJson.encode(YeetPrWaveDescriptor.make(descriptor));
+        const decoded = yield* YeetPrWaveDescriptorJson.decode(encoded8);
         expect(decoded).toStrictEqual(YeetPrWaveDescriptor.make(descriptor));
         expect(isPrNumber(decoded.prNumber)).toBe(true);
       })
@@ -452,7 +458,8 @@ const runWorker = Effect.fn("prWaveTest.runWorker")(function* (acked: boolean) {
     })
   );
   const descriptorPath = path.join(checkout, ".beep", "yeet", "pr-wave-notifier", "waves", "feedfacefeedface.json");
-  yield* fs.writeFileString(descriptorPath, yield* YeetPrWaveDescriptorJson.encode(descriptor));
+  const encoded9 = yield* YeetPrWaveDescriptorJson.encode(descriptor);
+  yield* fs.writeFileString(descriptorPath, encoded9);
   if (acked) {
     yield* Effect.forEach(descriptor.rowIds, (id) =>
       fs.writeFileString(path.join(checkout, ".beep", "inbox", "acks", id), "{}")
@@ -557,13 +564,12 @@ it.layer(platform, { timeout: "30 seconds" })("W9 notifier worker", (it) => {
     () =>
       Effect.gen(function* () {
         const syntax = yield* ChildProcess.make("bash", ["-n", workerPath], { stdout: "pipe", stderr: "pipe" });
-        expect(yield* syntax.exitCode).toBe(0);
+        const exitCode10 = yield* syntax.exitCode;
+        expect(exitCode10).toBe(0);
         // Comments may cite the sibling worker's conventions; executable lines
         // must not source it, call it, or touch its evidence ledger.
-        const executable = A.filter(
-          Str.split(yield* readText(workerPath), "\n"),
-          (line) => !Str.startsWith("#")(Str.trimStart(line))
-        );
+        const readText11 = yield* readText(workerPath);
+        const executable = A.filter(Str.split(readText11, "\n"), (line) => !Str.startsWith("#")(Str.trimStart(line)));
         pipe(
           A.every(executable, (line) => !Str.includes("sequence-break")(line)),
           assertTrue
@@ -711,7 +717,8 @@ it.layer(platform, { timeout: "30 seconds" })("W9 monitor escalation", (it) => {
       }).pipe(provideSpawner(monitorRunner));
 
       expect(terminal).toBe("closed");
-      expect(yield* Ref.get(verdicts)).toStrictEqual(["owner-live", "spawn-failed", "spawned"]);
+      const got = yield* Ref.get(verdicts);
+      expect(got).toStrictEqual(["owner-live", "spawn-failed", "spawned"]);
     })
   );
 
@@ -825,7 +832,8 @@ it.layer(platform, { timeout: "30 seconds" })("W9 monitor escalation", (it) => {
       }).pipe(provideSpawner(monitorRunner));
 
       expect(terminal).toBe("wave");
-      expect(yield* Ref.get(escalations)).toBe(0);
+      const got12 = yield* Ref.get(escalations);
+      expect(got12).toBe(0);
     })
   );
 });

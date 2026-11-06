@@ -98,7 +98,9 @@ const seedRecordedDraft = Effect.gen(function* () {
 
 const send = Effect.gen(function* () {
   const toolkit = yield* OutboxToolkit;
-  return yield* head(yield* toolkit.handle("m365_outbox_send_draft", yield* sendParams));
+  const sendParams27 = yield* sendParams;
+  const handle1 = yield* toolkit.handle("m365_outbox_send_draft", sendParams27);
+  return yield* head(handle1);
 });
 
 const refusedWith = Effect.gen(function* () {
@@ -115,7 +117,8 @@ describe("@beep/m365-mcp outbox handlers", () => {
         const world = yield* OutboxWorld;
         const toolkit = yield* OutboxToolkit;
 
-        const output = yield* head(yield* toolkit.handle("m365_outbox_create_draft", createDraftParams));
+        const handle2 = yield* toolkit.handle("m365_outbox_create_draft", createDraftParams);
+        const output = yield* head(handle2);
         const records = yield* world.records;
 
         assert.isFalse(output.isFailure);
@@ -130,7 +133,8 @@ describe("@beep/m365-mcp outbox handlers", () => {
             ]
           );
         }
-        assert.deepStrictEqual(yield* world.calls, [
+        const calls3 = yield* world.calls;
+        assert.deepStrictEqual(calls3, [
           "createDraftMessage",
           "addMessageAttachment",
           "addMessageAttachment",
@@ -139,7 +143,8 @@ describe("@beep/m365-mcp outbox handlers", () => {
           "downloadMessageAttachment",
         ]);
         assert.deepStrictEqual(tags(records), ["draft-created"]);
-        assert.deepStrictEqual(yield* world.userIds, A.replicate(O.some(MAILBOX), 6));
+        const userIds4 = yield* world.userIds;
+        assert.deepStrictEqual(userIds4, A.replicate(O.some(MAILBOX), 6));
       })
     );
   });
@@ -152,16 +157,19 @@ describe("@beep/m365-mcp outbox handlers", () => {
         const toolkit = yield* OutboxToolkit;
         yield* world.script({ failAttachmentAt: O.some(1) });
 
-        const output = yield* head(yield* toolkit.handle("m365_outbox_create_draft", createDraftParams));
+        const handle5 = yield* toolkit.handle("m365_outbox_create_draft", createDraftParams);
+        const output = yield* head(handle5);
 
         assert.isTrue(output.isFailure);
-        assert.deepStrictEqual(yield* world.calls, [
+        const calls6 = yield* world.calls;
+        assert.deepStrictEqual(calls6, [
           "createDraftMessage",
           "addMessageAttachment",
           "addMessageAttachment",
           "deleteDraftMessage",
         ]);
-        assert.deepStrictEqual(yield* world.records, []);
+        const records7 = yield* world.records;
+        assert.deepStrictEqual(records7, []);
       })
     );
   });
@@ -174,14 +182,17 @@ describe("@beep/m365-mcp outbox handlers", () => {
         const toolkit = yield* OutboxToolkit;
         yield* world.script({ corruptUploads: true });
 
-        const output = yield* head(yield* toolkit.handle("m365_outbox_create_draft", createDraftParams));
+        const handle8 = yield* toolkit.handle("m365_outbox_create_draft", createDraftParams);
+        const output = yield* head(handle8);
 
         assert.isTrue(output.isFailure);
         if (isToolError(output.result)) {
           assertSome(output.result.reason, "round-trip-mismatch");
         }
-        assertSome(A.last(yield* world.calls), "deleteDraftMessage");
-        assert.deepStrictEqual(yield* world.records, []);
+        const calls9 = yield* world.calls;
+        assertSome(A.last(calls9), "deleteDraftMessage");
+        const records10 = yield* world.records;
+        assert.deepStrictEqual(records10, []);
       })
     );
   });
@@ -194,10 +205,12 @@ describe("@beep/m365-mcp outbox handlers", () => {
         const toolkit = yield* OutboxToolkit;
         yield* world.script({ appendFailsFor: ["draft-created"] });
 
-        const output = yield* head(yield* toolkit.handle("m365_outbox_create_draft", createDraftParams));
+        const handle11 = yield* toolkit.handle("m365_outbox_create_draft", createDraftParams);
+        const output = yield* head(handle11);
 
         assert.isTrue(output.isFailure);
-        assertSome(A.last(yield* world.calls), "deleteDraftMessage");
+        const calls12 = yield* world.calls;
+        assertSome(A.last(calls12), "deleteDraftMessage");
       })
     );
   });
@@ -346,7 +359,8 @@ describe("@beep/m365-mcp outbox handlers", () => {
           assert.deepStrictEqual(output.result.mismatches, ["not-created-here"]);
           assert.isTrue(output.result.auditRecorded);
         }
-        assert.deepStrictEqual(yield* world.calls, []);
+        const calls13 = yield* world.calls;
+        assert.deepStrictEqual(calls13, []);
         assert.deepStrictEqual(
           A.map(records, (record) =>
             record._tag === "send-outcome" ? [record._tag, record.outcome, record.mismatches] : [record._tag]
@@ -362,7 +376,8 @@ describe("@beep/m365-mcp outbox handlers", () => {
         if (isSendResult(own.result)) {
           assert.deepStrictEqual(own.result.mismatches, ["version-unbound"]);
         }
-        assert.deepStrictEqual(sends(yield* world.calls), []);
+        const calls14 = yield* world.calls;
+        assert.deepStrictEqual(sends(calls14), []);
       })
     );
   });
@@ -382,7 +397,8 @@ describe("@beep/m365-mcp outbox handlers", () => {
           assert.deepStrictEqual(output.result.mismatches, ["version-unbound"]);
           assert.isFalse(output.result.auditRecorded);
         }
-        assert.deepStrictEqual(sends(yield* world.calls), []);
+        const calls15 = yield* world.calls;
+        assert.deepStrictEqual(sends(calls15), []);
       })
     );
   });
@@ -404,16 +420,19 @@ describe("@beep/m365-mcp outbox handlers", () => {
           records: [draftCreatedRecord([])],
         });
         const alreadySent = yield* deleteDraft;
-        assert.notInclude(yield* world.calls, "deleteDraftMessage");
+        const calls16 = yield* world.calls;
+        assert.notInclude(calls16, "deleteDraftMessage");
         yield* world.script({ draft: storedDraft });
         const own = yield* deleteDraft;
 
         assert.isTrue(unrecorded.isFailure);
         assert.isTrue(alreadySent.isFailure);
         assert.isFalse(own.isFailure);
-        assertSome(A.last(yield* world.calls), "deleteDraftMessage");
+        const calls17 = yield* world.calls;
+        assertSome(A.last(calls17), "deleteDraftMessage");
+        const records18 = yield* world.records;
         assertSome(
-          O.map(A.last(yield* world.records), (record) => record._tag),
+          O.map(A.last(records18), (record) => record._tag),
           "draft-deleted"
         );
       })
@@ -427,17 +446,23 @@ describe("@beep/m365-mcp outbox handlers", () => {
         const world = yield* OutboxWorld;
         const toolkit = yield* OutboxToolkit;
 
-        const created = yield* head(yield* toolkit.handle("m365_outbox_create_event", eventParams));
-        const updated = yield* head(
-          yield* toolkit.handle("m365_outbox_update_event", { eventId: EVENT_ID, subject: "Fixture event (moved)" })
-        );
+        const handle19 = yield* toolkit.handle("m365_outbox_create_event", eventParams);
+        const created = yield* head(handle19);
+        const handle20 = yield* toolkit.handle("m365_outbox_update_event", {
+          eventId: EVENT_ID,
+          subject: "Fixture event (moved)",
+        });
+        const updated = yield* head(handle20);
 
         assert.isFalse(created.isFailure);
         assert.isFalse(updated.isFailure);
         // The update reads the event before it changes it.
-        assert.deepStrictEqual(yield* world.calls, ["createEvent", "getEvent", "updateEvent"]);
-        assert.deepStrictEqual(yield* world.userIds, A.replicate(O.some(MAILBOX), 3));
-        assert.deepStrictEqual(tags(yield* world.records), ["event-created", "event-updated"]);
+        const calls21 = yield* world.calls;
+        assert.deepStrictEqual(calls21, ["createEvent", "getEvent", "updateEvent"]);
+        const userIds22 = yield* world.userIds;
+        assert.deepStrictEqual(userIds22, A.replicate(O.some(MAILBOX), 3));
+        const records23 = yield* world.records;
+        assert.deepStrictEqual(tags(records23), ["event-created", "event-updated"]);
       })
     );
   });
@@ -483,8 +508,10 @@ describe("@beep/m365-mcp outbox handlers", () => {
         assert.deepStrictEqual(refusedCalls, ["getEvent", "getEvent"]);
         assert.deepStrictEqual(tags(refusedRecords), ["event-created"]);
         assert.isFalse(own.isFailure);
-        assert.deepStrictEqual(yield* world.calls, ["getEvent", "getEvent", "getEvent", "updateEvent"]);
-        assert.deepStrictEqual(tags(yield* world.records), ["event-created", "event-updated"]);
+        const calls24 = yield* world.calls;
+        assert.deepStrictEqual(calls24, ["getEvent", "getEvent", "getEvent", "updateEvent"]);
+        const records25 = yield* world.records;
+        assert.deepStrictEqual(tags(records25), ["event-created", "event-updated"]);
       })
     );
   });
@@ -503,9 +530,11 @@ describe("@beep/m365-mcp outbox handlers", () => {
             Effect.flatMap(head),
             Effect.map((output) => output.isFailure)
           );
+        const firstInvocation = failed(toolkit.handle("m365_outbox_get_draft", { draftId: DRAFT_ID }));
+        const sendParams1 = yield* sendParams;
         const invocations = [
-          ["m365_outbox_get_draft", failed(toolkit.handle("m365_outbox_get_draft", { draftId: DRAFT_ID }))],
-          ["m365_outbox_send_draft", failed(toolkit.handle("m365_outbox_send_draft", yield* sendParams))],
+          ["m365_outbox_get_draft", firstInvocation],
+          ["m365_outbox_send_draft", failed(toolkit.handle("m365_outbox_send_draft", sendParams1))],
           ["m365_outbox_create_event", failed(toolkit.handle("m365_outbox_create_event", eventParams))],
           ["m365_outbox_update_event", failed(toolkit.handle("m365_outbox_update_event", { eventId: EVENT_ID }))],
           ["m365_outbox_create_draft", failed(toolkit.handle("m365_outbox_create_draft", createDraftParams))],
@@ -516,7 +545,8 @@ describe("@beep/m365-mcp outbox handlers", () => {
         const observed = yield* Effect.forEach(invocations, ([name, invocation]) =>
           Effect.gen(function* () {
             const before = yield* sendCalls;
-            assert.isFalse(yield* invocation, name);
+            const invocation26 = yield* invocation;
+            assert.isFalse(invocation26, name);
             return [name, (yield* sendCalls) - before] as const;
           })
         );

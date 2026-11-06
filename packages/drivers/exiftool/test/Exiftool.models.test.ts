@@ -172,23 +172,23 @@ describe("@beep/exiftool models", () => {
   it.effect(
     "keeps Option-modeled optional metadata encoded as omitted keys",
     Effect.fnUntraced(function* () {
-      expect(
-        yield* encodeBeepQaProvenance(
-          BeepQaProvenance.make({
-            actionId: "act-9",
-            capturedAtEpochMs: 1753900000000,
-            scenarioName: "sash-drag",
-            sessionId: "sess-1",
-          })
-        )
-      ).toEqual({
+      const encodedBeepQaProvenance = yield* encodeBeepQaProvenance(
+        BeepQaProvenance.make({
+          actionId: "act-9",
+          capturedAtEpochMs: 1753900000000,
+          scenarioName: "sash-drag",
+          sessionId: "sess-1",
+        })
+      );
+      expect(encodedBeepQaProvenance).toEqual({
         actionId: "act-9",
         capturedAtEpochMs: 1753900000000,
         scenarioName: "sash-drag",
         sessionId: "sess-1",
       });
 
-      expect(yield* encodeBeepQaProvenance(fullProvenance)).toEqual({
+      const encodedBeepQaProvenance1 = yield* encodeBeepQaProvenance(fullProvenance);
+      expect(encodedBeepQaProvenance1).toEqual({
         actionId: "act-9",
         capturedAtEpochMs: 1753900000000,
         clockOffsetMs: 12.5,
@@ -199,15 +199,14 @@ describe("@beep/exiftool models", () => {
         toolVersions: { exiftool: "13.55" },
       });
 
-      expect(
-        yield* encodeExifMetadata(
-          ExifMetadata.make({
-            fileType: O.some("PNG"),
-            imageWidth: O.some(8),
-            raw: { "File:FileType": "PNG" },
-          })
-        )
-      ).toEqual({
+      const encodedExifMetadata = yield* encodeExifMetadata(
+        ExifMetadata.make({
+          fileType: O.some("PNG"),
+          imageWidth: O.some(8),
+          raw: { "File:FileType": "PNG" },
+        })
+      );
+      expect(encodedExifMetadata).toEqual({
         fileType: "PNG",
         imageWidth: 8,
         raw: { "File:FileType": "PNG" },
@@ -340,13 +339,14 @@ describe("@beep/exiftool models", () => {
       });
 
       pipe(decoded, O.isSome, assertTrue);
-      expect(
-        yield* pipe(
-          decoded,
-          O.map(encodeBeepQaProvenance),
-          O.getOrElse(() => Effect.succeed({}))
-        )
-      ).toEqual(yield* encodeBeepQaProvenance(fullProvenance));
+      const pipe2 = yield* pipe(
+        decoded,
+        O.map(encodeBeepQaProvenance),
+        O.getOrElse(() => Effect.succeed({}))
+      );
+      const expectation = expect(pipe2);
+      const encodedBeepQaProvenance2 = yield* encodeBeepQaProvenance(fullProvenance);
+      expectation.toEqual(encodedBeepQaProvenance2);
 
       assertNone(
         provenanceFromRawTags({

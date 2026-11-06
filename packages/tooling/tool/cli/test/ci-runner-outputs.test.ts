@@ -63,7 +63,8 @@ describe("ci runner outputs", () => {
         const outputs = yield* ActionOutputs;
         yield* fs.makeDirectory("/runner", { recursive: true });
         yield* Effect.forEach(ENVIRONMENT, ([name, value]) => outputs.exportVariable(name, value), { discard: true });
-        const written = parseRunnerFile(yield* fs.readFileString(GITHUB_ENV));
+        const readFileString1 = yield* fs.readFileString(GITHUB_ENV);
+        const written = parseRunnerFile(readFileString1);
         expect(written).toEqual(ENVIRONMENT);
         expect(written).toEqual(
           parseRunnerFile(
@@ -86,11 +87,13 @@ describe("ci runner outputs", () => {
         yield* fs.writeFileString(GITHUB_OUTPUT, "prior=1\n");
         yield* outputs.set("verdict", "run");
         yield* outputs.summary("## Summary\n");
-        expect(parseRunnerFile(yield* fs.readFileString(GITHUB_OUTPUT))).toEqual([
+        const readFileString2 = yield* fs.readFileString(GITHUB_OUTPUT);
+        expect(parseRunnerFile(readFileString2)).toEqual([
           ["prior", "1"],
           ["verdict", "run"],
         ]);
-        expect(yield* fs.readFileString(GITHUB_STEP_SUMMARY)).toBe("## Summary\n");
+        const readFileString3 = yield* fs.readFileString(GITHUB_STEP_SUMMARY);
+        expect(readFileString3).toBe("## Summary\n");
         // An empty runner variable is absent: the write fails typed instead of
         // appending to a file named "".
         const missing = yield* Effect.flip(outputs.exportVariable("A", "1"));

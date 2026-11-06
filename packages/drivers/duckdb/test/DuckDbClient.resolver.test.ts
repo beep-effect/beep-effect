@@ -44,19 +44,17 @@ describe("DuckDbClient SqlResolver", () => {
             },
           });
           const execute = SqlResolver.request(Insert);
-          assert.deepStrictEqual(
-            yield* Effect.all(
-              {
-                one: execute("one"),
-                two: execute("two"),
-              },
-              { concurrency: "unbounded" }
-            ),
+          const all1 = yield* Effect.all(
             {
-              one: { id: 101, name: "one" },
-              two: { id: 102, name: "two" },
-            }
+              one: execute("one"),
+              two: execute("two"),
+            },
+            { concurrency: "unbounded" }
           );
+          assert.deepStrictEqual(all1, {
+            one: { id: 101, name: "one" },
+            two: { id: 102, name: "two" },
+          });
           assert.deepStrictEqual(batches, [["one", "two"]]);
         })
       );
@@ -128,24 +126,22 @@ describe("DuckDbClient SqlResolver", () => {
           });
           yield* sql`INSERT INTO ${test} ${sql.insert({ name: "name1" })}`;
           const execute = SqlResolver.request(FindByName);
-          assert.deepStrictEqual(
-            yield* Effect.all(
-              {
-                one: execute("name1"),
-                two: execute("name2"),
-                three: Effect.flip(execute("name0")),
-              },
-              { concurrency: "unbounded" }
-            ),
+          const all2 = yield* Effect.all(
             {
-              one: [
-                { id: 1, name: "name1" },
-                { id: 101, name: "name1" },
-              ],
-              two: [{ id: 2, name: "name2" }],
-              three: new Cause.NoSuchElementError(),
-            }
+              one: execute("name1"),
+              two: execute("name2"),
+              three: Effect.flip(execute("name0")),
+            },
+            { concurrency: "unbounded" }
           );
+          assert.deepStrictEqual(all2, {
+            one: [
+              { id: 1, name: "name1" },
+              { id: 101, name: "name1" },
+            ],
+            two: [{ id: 2, name: "name2" }],
+            three: new Cause.NoSuchElementError(),
+          });
         })
       );
 
@@ -162,24 +158,22 @@ describe("DuckDbClient SqlResolver", () => {
           });
           yield* sql`INSERT INTO ${test} ${sql.insert({ name: "name1" })}`;
           const execute = SqlResolver.request(FindByName);
-          assert.deepStrictEqual(
-            yield* Effect.all(
-              {
-                one: execute("name1"),
-                two: execute("name2"),
-                three: Effect.flip(execute("name0")),
-              },
-              { concurrency: "unbounded" }
-            ),
+          const all3 = yield* Effect.all(
             {
-              one: [
-                { id: 1, name: "name1" },
-                { id: 101, name: "name1" },
-              ],
-              two: [{ id: 2, name: "name2" }],
-              three: new Cause.NoSuchElementError(),
-            }
+              one: execute("name1"),
+              two: execute("name2"),
+              three: Effect.flip(execute("name0")),
+            },
+            { concurrency: "unbounded" }
           );
+          assert.deepStrictEqual(all3, {
+            one: [
+              { id: 1, name: "name1" },
+              { id: 101, name: "name1" },
+            ],
+            two: [{ id: 2, name: "name2" }],
+            three: new Cause.NoSuchElementError(),
+          });
         })
       );
     });
@@ -195,21 +189,19 @@ describe("DuckDbClient SqlResolver", () => {
             execute: (ids) => sql`SELECT * FROM ${test} WHERE id IN ${sql.in(ids)}`,
           });
           const execute = SqlResolver.request(FindById);
-          assert.deepStrictEqual(
-            yield* Effect.all(
-              {
-                one: execute(1),
-                two: execute(2),
-                three: Effect.flip(execute(101)),
-              },
-              { concurrency: "unbounded" }
-            ),
+          const all4 = yield* Effect.all(
             {
-              one: { id: 1, name: "name1" },
-              two: { id: 2, name: "name2" },
-              three: new Cause.NoSuchElementError(),
-            }
+              one: execute(1),
+              two: execute(2),
+              three: Effect.flip(execute(101)),
+            },
+            { concurrency: "unbounded" }
           );
+          assert.deepStrictEqual(all4, {
+            one: { id: 1, name: "name1" },
+            two: { id: 2, name: "name2" },
+            three: new Cause.NoSuchElementError(),
+          });
         })
       );
 
@@ -223,21 +215,19 @@ describe("DuckDbClient SqlResolver", () => {
             execute: (ids) => sql<{ readonly id: number }>`SELECT * FROM ${test} WHERE id IN ${sql.in(ids)}`,
           });
           const execute = SqlResolver.request(FindById);
-          assert.deepStrictEqual(
-            yield* Effect.all(
-              {
-                one: execute(1),
-                two: execute(2),
-                three: Effect.flip(execute(101)),
-              },
-              { concurrency: "unbounded" }
-            ),
+          const all5 = yield* Effect.all(
             {
-              one: { id: 1, name: "name1" },
-              two: { id: 2, name: "name2" },
-              three: new Cause.NoSuchElementError(),
-            }
+              one: execute(1),
+              two: execute(2),
+              three: Effect.flip(execute(101)),
+            },
+            { concurrency: "unbounded" }
           );
+          assert.deepStrictEqual(all5, {
+            one: { id: 1, name: "name1" },
+            two: { id: 2, name: "name2" },
+            three: new Cause.NoSuchElementError(),
+          });
         })
       );
     });

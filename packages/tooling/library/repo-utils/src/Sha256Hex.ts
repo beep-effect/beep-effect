@@ -28,5 +28,6 @@ export const sha256Hex = Effect.fn("RepoUtils.sha256Hex")(function* (
   text: string
 ): Effect.fn.Return<string, never, Digest.Digest> {
   const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text)));
+  const digest1 = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text));
+  return Hex.encode(digest1);
 });

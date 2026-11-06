@@ -286,8 +286,10 @@ describe("extendsTarget exports resolution matches tsc", () => {
   })("relative directory targets", (it) => {
     it.effect("retries a relative directory as its .json sibling", () =>
       Effect.gen(function* () {
-        assertSome(yield* resolveExtendsTarget("./base", "/p/tsconfig.json"), "/p/base.json");
-        assertNone(yield* resolveExtendsTarget("./directory.json", "/p/tsconfig.json"));
+        const resolvedExtendsTarget = yield* resolveExtendsTarget("./base", "/p/tsconfig.json");
+        assertSome(resolvedExtendsTarget, "/p/base.json");
+        const resolvedExtendsTarget1 = yield* resolveExtendsTarget("./directory.json", "/p/tsconfig.json");
+        assertNone(resolvedExtendsTarget1);
       })
     );
   });

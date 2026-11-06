@@ -676,7 +676,8 @@ const toFields = Effect.fn("PnpmLockfile.toFields")(function* (
       ...importerEdges(path, importer, index),
     })
   );
-  const packages = A.appendAll(workspacePackages, yield* instancePackages(raw, index));
+  const instancePackages1 = yield* instancePackages(raw, index);
+  const packages = A.appendAll(workspacePackages, instancePackages1);
   const workspaceNames = HashSet.fromIterable(
     A.appendAll(
       A.flatMap(importers, ([, importer]) => linkedNames(importer)),

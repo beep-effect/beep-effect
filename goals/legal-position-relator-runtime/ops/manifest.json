@@ -34,9 +34,10 @@
     "goals/legal-position-relator-runtime/research/SOURCES.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
     "research/01-surface-reverification.md",
-    "research/02-handoff-shape-evidence.md"
+    "research/02-handoff-shape-evidence.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {

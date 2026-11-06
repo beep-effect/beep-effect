@@ -115,7 +115,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
           );
           expect(chunked.status).toBe(413);
           (yield* fixture.artifactBytes(artifactHash).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
-          expect(A.map(yield* fixture.events, (event) => event.status)).toEqual([413, 413]);
+          const events1 = yield* fixture.events;
+          expect(A.map(events1, (event) => event.status)).toEqual([413, 413]);
         }).pipe(Effect.ensuring(Effect.sync(() => serve.mockRestore())));
       })
     );
@@ -128,7 +129,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
           expect((yield* put(endpoint(fixture.url))).status).toBe(400);
           expect(read).toHaveBeenCalledTimes(1);
           (yield* fixture.artifactBytes(artifactHash).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
-          expect(A.map(yield* fixture.events, (event) => event.status)).toEqual([400]);
+          const events2 = yield* fixture.events;
+          expect(A.map(events2, (event) => event.status)).toEqual([400]);
         }).pipe(Effect.ensuring(Effect.sync(() => read.mockRestore())));
       })
     );
@@ -142,10 +144,13 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         const before = yield* fixture.events;
         const copy = yield* fixture.artifactBytes(artifactHash);
         copy[0] = 0;
-        expect(yield* fixture.artifactBytes(artifactHash)).toEqual(bytes);
-        expect(yield* fixture.events).toEqual(before);
+        const artifactBytes3 = yield* fixture.artifactBytes(artifactHash);
+        expect(artifactBytes3).toEqual(bytes);
+        const events4 = yield* fixture.events;
+        expect(events4).toEqual(before);
         const downloaded = yield* get(endpoint(fixture.url));
-        expect(new Uint8Array(yield* downloaded.arrayBuffer)).toEqual(bytes);
+        const arrayBuffer5 = yield* downloaded.arrayBuffer;
+        expect(new Uint8Array(arrayBuffer5)).toEqual(bytes);
       })
     );
     it.effect("attributes opaque request tags separately from returned tags without retaining their values", () =>
@@ -207,9 +212,11 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         ] satisfies ReadonlyArray<readonly [string, Uint8Array]>) {
           const uploaded = yield* put(endpoint(fixture.url, hash), body);
           expect(uploaded.status).toBe(200);
-          expect(yield* uploaded.text).toBe("");
+          const text6 = yield* uploaded.text;
+          expect(text6).toBe("");
           const downloaded = yield* get(endpoint(fixture.url, hash));
-          expect(new Uint8Array(yield* downloaded.arrayBuffer)).toEqual(body);
+          const arrayBuffer7 = yield* downloaded.arrayBuffer;
+          expect(new Uint8Array(arrayBuffer7)).toEqual(body);
           assertSome(Headers.get(downloaded.headers, "x-artifact-tag"), tag);
           const head = yield* HttpClient.head(endpoint(fixture.url, hash), {
             headers: { authorization: `Bearer ${reader}` },
@@ -230,7 +237,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
           });
           expect(response.status).toBe(404);
         }
-        expect(A.map(yield* fixture.events, (event) => event.operation)).toEqual(["events", "batch"]);
+        const events8 = yield* fixture.events;
+        expect(A.map(events8, (event) => event.operation)).toEqual(["events", "batch"]);
       })
     );
 
@@ -249,7 +257,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         ])
           expect((yield* get(`${fixture.url}/v8/artifacts/${artifactHash}?${query}`)).status).toBe(403);
         const restored = yield* get(endpoint(fixture.url));
-        expect(new Uint8Array(yield* restored.arrayBuffer)).toEqual(bytes);
+        const arrayBuffer9 = yield* restored.arrayBuffer;
+        expect(new Uint8Array(arrayBuffer9)).toEqual(bytes);
       })
     );
 
@@ -330,7 +339,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
           headers: { authorization: `Bearer ${reader}` },
         });
         expect(response.status).toBe(405);
-        expect(A.map(yield* fixture.events, (event) => event.operation)).toEqual(["rejected", "rejected", "rejected"]);
+        const events10 = yield* fixture.events;
+        expect(A.map(events10, (event) => event.operation)).toEqual(["rejected", "rejected", "rejected"]);
       })
     );
     it.effect("changes both signature prefixes and handles empty corrupt artifacts without altering storage", () =>
@@ -345,7 +355,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
           yield* fixture.setScenario(CacheFixtureScenario.make({ id: "empty-corrupt", fault: "corrupt-body" }));
           const empty = yield* get(endpoint(fixture.url));
           expect((yield* empty.arrayBuffer).byteLength).toBe(0);
-          expect(yield* fixture.artifactBytes(artifactHash)).toEqual(new Uint8Array());
+          const artifactBytes11 = yield* fixture.artifactBytes(artifactHash);
+          expect(artifactBytes11).toEqual(new Uint8Array());
         }
       })
     );
@@ -361,7 +372,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         expect(A.filter(uploaded, (r) => r.status === 200)).toHaveLength(1);
         expect(A.filter(uploaded, (r) => r.status === 409)).toHaveLength(1);
         const downloaded = yield* get(endpoint(fixture.url));
-        const winner = new Uint8Array(yield* downloaded.arrayBuffer);
+        const arrayBuffer12 = yield* downloaded.arrayBuffer;
+        const winner = new Uint8Array(arrayBuffer12);
         expect(winner).toEqual(A.getUnsafe(uploaded, 0).status === 200 ? first : second);
         expect((yield* put(endpoint(fixture.url), winner)).status).toBe(200);
         expect((yield* put(endpoint(fixture.url), winner, writer, "different-tag")).status).toBe(409);
@@ -375,7 +387,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         for (const fault of ReadFault.literals) {
           yield* fixture.setScenario(CacheFixtureScenario.make({ id: fault, fault }));
           const response = yield* get(endpoint(fixture.url));
-          const body = new Uint8Array(yield* response.arrayBuffer);
+          const arrayBuffer13 = yield* response.arrayBuffer;
+          const body = new Uint8Array(arrayBuffer13);
           expect(response.status).toBe(200);
           expect(body.byteLength).toBe(bytes.byteLength);
           if (fault === "corrupt-body") expect(body).not.toEqual(bytes);
@@ -390,7 +403,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         }
         const events = yield* fixture.events;
         const encoded = yield* S.encodeEffect(FixtureEventsJson)(events);
-        expect(yield* S.decodeEffect(FixtureEventsJson)(encoded)).toEqual(events);
+        const value14 = yield* S.decodeEffect(FixtureEventsJson)(encoded);
+        expect(value14).toEqual(events);
         for (const secret of [reader, writer, tag, "complete fixture artifact"]) expect(encoded).not.toContain(secret);
         expect(events).toHaveLength(5);
         expect(A.map(events, (event) => event.sequence)).toEqual([1, 2, 3, 4, 5]);
@@ -419,9 +433,11 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         }
         yield* fixture.setScenario(CacheFixtureScenario.make({ id: "recovery", fault: "none" }));
         const recovered = yield* get(endpoint(fixture.url));
-        expect(new Uint8Array(yield* recovered.arrayBuffer)).toEqual(bytes);
+        const arrayBuffer15 = yield* recovered.arrayBuffer;
+        expect(new Uint8Array(arrayBuffer15)).toEqual(bytes);
         expect((yield* get(endpoint(fixture.url, otherArtifactHash))).status).toBe(404);
-        const failures = A.filter(yield* fixture.events, (event) => event.status === 429 || event.status === 503);
+        const events16 = yield* fixture.events;
+        const failures = A.filter(events16, (event) => event.status === 429 || event.status === 503);
         expect(failures).toHaveLength(8);
         assertTrue(A.every(failures, (event) => O.isNone(event.digest) && event.bytes === 0 && !event.tagPresent));
       })
@@ -435,13 +451,15 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         yield* fixture.setScenario(CacheFixtureScenario.make({ id: "truncated", fault: "truncated-body" }));
         const response = yield* get(endpoint(fixture.url));
         expect(response.status).toBe(200);
-        expect(new Uint8Array(yield* response.arrayBuffer)).toEqual(bytes.subarray(0, bytes.byteLength - 1));
+        const arrayBuffer17 = yield* response.arrayBuffer;
+        expect(new Uint8Array(arrayBuffer17)).toEqual(bytes.subarray(0, bytes.byteLength - 1));
         assertSome(Headers.get(response.headers, "x-artifact-tag"), tag);
         const empty = yield* get(endpoint(fixture.url, otherArtifactHash));
         expect((yield* empty.arrayBuffer).byteLength).toBe(0);
         yield* fixture.setScenario(CacheFixtureScenario.make({ id: "recovery", fault: "none" }));
         const recovered = yield* get(endpoint(fixture.url));
-        expect(new Uint8Array(yield* recovered.arrayBuffer)).toEqual(bytes);
+        const arrayBuffer18 = yield* recovered.arrayBuffer;
+        expect(new Uint8Array(arrayBuffer18)).toEqual(bytes);
         const events = yield* fixture.events;
         expect(A.getUnsafe(events, 2).digest).not.toEqual(A.getUnsafe(events, 0).digest);
         expect(A.getUnsafe(events, 4).digest).toEqual(A.getUnsafe(events, 0).digest);
@@ -454,7 +472,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         const responses = yield* Effect.forEach(A.range(1, 102), () => get(endpoint(fixture.url)), { concurrency: 4 });
         expect(A.filter(responses, (r) => r.status === 404)).toHaveLength(100);
         expect(A.filter(responses, (r) => r.status === 429)).toHaveLength(2);
-        expect(yield* fixture.events).toHaveLength(101);
+        const events19 = yield* fixture.events;
+        expect(events19).toHaveLength(101);
       })
     );
 
@@ -465,7 +484,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         const rejected = yield* put(endpoint(fixture.url), new Uint8Array(2 * 1024 * 1024 + 1));
         expect(rejected.status).toBe(413);
         const restored = yield* get(endpoint(fixture.url));
-        expect(new Uint8Array(yield* restored.arrayBuffer)).toEqual(bytes);
+        const arrayBuffer20 = yield* restored.arrayBuffer;
+        expect(new Uint8Array(arrayBuffer20)).toEqual(bytes);
       })
     );
 

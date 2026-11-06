@@ -183,7 +183,8 @@ describe("FsUtils", () => {
         const root = yield* fs.makeTempDirectoryScoped();
         const present = `${root}/present.json`;
         yield* fs.writeFileString(present, '{ "available": true }');
-        assertSome(yield* utils.readJson(present), { available: true });
+        const readJson1 = yield* utils.readJson(present);
+        assertSome(readJson1, { available: true });
       })
     );
 
@@ -240,12 +241,14 @@ describe("FsUtils", () => {
         const changed = yield* utils.modifyFile(filePath, (content) => content);
         expect(changed).toBe(false);
         expect(writeSpy).not.toHaveBeenCalled();
-        expect(yield* fs.readFileString(filePath)).toBe("unchanged");
+        const readFileString2 = yield* fs.readFileString(filePath);
+        expect(readFileString2).toBe("unchanged");
 
         const changedControl = yield* utils.modifyFile(filePath, () => "changed");
         expect(changedControl).toBe(true);
         expect(writeSpy).toHaveBeenCalledTimes(1);
-        expect(yield* fs.readFileString(filePath)).toBe("changed");
+        const readFileString3 = yield* fs.readFileString(filePath);
+        expect(readFileString3).toBe("changed");
       })
     );
 
@@ -262,8 +265,10 @@ describe("FsUtils", () => {
         const root = yield* fs.makeTempDirectoryScoped();
         const present = `${root}/present.txt`;
         yield* fs.writeFileString(present, "available");
-        expect(yield* utils.modifyFile(present, () => "updated")).toBe(true);
-        expect(yield* fs.readFileString(present)).toBe("updated");
+        const modifyFile4 = yield* utils.modifyFile(present, () => "updated");
+        expect(modifyFile4).toBe(true);
+        const readFileString5 = yield* fs.readFileString(present);
+        expect(readFileString5).toBe("updated");
       })
     );
   });
@@ -290,7 +295,8 @@ describe("FsUtils", () => {
 
         const fs = yield* Fs.FileSystem;
         const present = yield* fs.makeTempDirectoryScoped();
-        expect(yield* utils.existsOrThrow(present)).toBeUndefined();
+        const existsOrThrow6 = yield* utils.existsOrThrow(present);
+        expect(existsOrThrow6).toBeUndefined();
       })
     );
   });
@@ -303,8 +309,10 @@ describe("FsUtils", () => {
         const fs = yield* Fs.FileSystem;
         const tmpDir = yield* fs.makeTempDirectoryScoped();
 
-        expect(yield* utils.isDirectory(tmpDir)).toBe(true);
-        expect(yield* utils.isFile(tmpDir)).toBe(false);
+        const isDirectory7 = yield* utils.isDirectory(tmpDir);
+        expect(isDirectory7).toBe(true);
+        const isFile8 = yield* utils.isFile(tmpDir);
+        expect(isFile8).toBe(false);
       })
     );
 
@@ -317,8 +325,10 @@ describe("FsUtils", () => {
         const tmpFile = `${tmpDir}/file`;
         yield* fs.writeFileString(tmpFile, "");
 
-        expect(yield* utils.isFile(tmpFile)).toBe(true);
-        expect(yield* utils.isDirectory(tmpFile)).toBe(false);
+        const isFile9 = yield* utils.isFile(tmpFile);
+        expect(isFile9).toBe(true);
+        const isDirectory10 = yield* utils.isDirectory(tmpFile);
+        expect(isDirectory10).toBe(false);
       })
     );
   });
@@ -358,7 +368,8 @@ describe("FsUtils", () => {
         const root = yield* fs.makeTempDirectoryScoped();
         const present = `${root}/present.ts`;
         yield* fs.writeFileString(present, "");
-        expect(yield* utils.globFiles("**", { cwd: root, absolute: true })).toEqual([present]);
+        const globFiles11 = yield* utils.globFiles("**", { cwd: root, absolute: true });
+        expect(globFiles11).toEqual([present]);
       })
     );
 
@@ -418,8 +429,10 @@ describe("FsUtils", () => {
         yield* fs.writeFileString(`${tmpDir}/node_modules/dep/index.ts`, "");
         yield* fs.writeFileString(`${tmpDir}/root.ts`, "");
 
-        expect(yield* utils.globFiles("**/*.ts", { cwd: tmpDir })).toEqual(["node_modules/dep/index.ts", "root.ts"]);
-        expect(yield* utils.globFiles("**/*.ts", { cwd: tmpDir, ignore: "node_modules" })).toEqual(["root.ts"]);
+        const globFiles12 = yield* utils.globFiles("**/*.ts", { cwd: tmpDir });
+        expect(globFiles12).toEqual(["node_modules/dep/index.ts", "root.ts"]);
+        const globFiles13 = yield* utils.globFiles("**/*.ts", { cwd: tmpDir, ignore: "node_modules" });
+        expect(globFiles13).toEqual(["root.ts"]);
       })
     );
 
@@ -475,7 +488,8 @@ describe("FsUtils", () => {
         Effect.fn(function* () {
           const utils = yield* FsUtils;
           const fs = yield* Fs.FileSystem;
-          const tmpDir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+          const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped();
+          const tmpDir = yield* fs.realPath(madeTempDirectoryScoped);
 
           yield* fs.makeDirectory(`${tmpDir}/src`);
           yield* fs.writeFileString(`${tmpDir}/src/a.ts`, "");
@@ -514,7 +528,8 @@ describe("FsUtils", () => {
         "should skip a directory whose readDirectory fails NotFound (injected fault)",
         Effect.fn(function* () {
           const utils = yield* FsUtils;
-          expect(yield* utils.globFiles("**/*.ts", { cwd: "/repo" })).toEqual(["src/a.ts"]);
+          const globFiles14 = yield* utils.globFiles("**/*.ts", { cwd: "/repo" });
+          expect(globFiles14).toEqual(["src/a.ts"]);
         })
       );
     });
@@ -552,7 +567,8 @@ describe("FsUtils", () => {
           expect(error.message).toBe('Glob failed for pattern "**/*.ts"');
 
           yield* fs.chmod(`${tmpDir}/locked`, 0o755);
-          expect(yield* utils.globFiles("**/*.ts", { cwd: tmpDir })).toEqual(["locked/a.ts"]);
+          const globFiles15 = yield* utils.globFiles("**/*.ts", { cwd: tmpDir });
+          expect(globFiles15).toEqual(["locked/a.ts"]);
         })
       );
     });
@@ -564,7 +580,8 @@ describe("FsUtils", () => {
       Effect.fn(function* () {
         const fs = yield* Fs.FileSystem;
         const tmpDir = yield* fs.makeTempDirectoryScoped();
-        expect(yield* exists(tmpDir)).toBe(true);
+        const exists16 = yield* exists(tmpDir);
+        expect(exists16).toBe(true);
       })
     );
 
@@ -572,11 +589,13 @@ describe("FsUtils", () => {
       "should return false and never fail for a missing path",
       Effect.fn(function* () {
         // No error channel to catch: the success value is total.
-        expect(yield* exists("/nonexistent/path/xyz")).toBe(false);
+        const exists17 = yield* exists("/nonexistent/path/xyz");
+        expect(exists17).toBe(false);
 
         const fs = yield* Fs.FileSystem;
         const present = yield* fs.makeTempDirectoryScoped();
-        expect(yield* exists(present)).toBe(true);
+        const exists18 = yield* exists(present);
+        expect(exists18).toBe(true);
       })
     );
   });

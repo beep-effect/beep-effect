@@ -61,15 +61,18 @@ describe("@beep/professional-desktop schema parity", () => {
     Effect.fnUntraced(function* () {
       const sidecarTransportWire = { ipc: true };
       const sidecarTransport = yield* decodeSidecarTransport(sidecarTransportWire);
-      expect(yield* encodeSidecarTransport(sidecarTransport)).toStrictEqual(sidecarTransportWire);
+      const encodedSidecarTransport = yield* encodeSidecarTransport(sidecarTransport);
+      expect(encodedSidecarTransport).toStrictEqual(sidecarTransportWire);
 
       const inboundFrameWire = '{"jsonrpc":"2.0"}\n';
       const inboundFrame = yield* S.decodeEffect(InboundFrame)(inboundFrameWire);
-      expect(yield* encodeInboundFrame(inboundFrame)).toStrictEqual(inboundFrameWire);
+      const encodedInboundFrame = yield* encodeInboundFrame(inboundFrame);
+      expect(encodedInboundFrame).toStrictEqual(inboundFrameWire);
 
       const inboundEventWire = { _tag: "Rx", payload: inboundFrameWire };
       const inboundEvent = yield* decodeInboundEvent(inboundEventWire);
-      expect(yield* encodeInboundEvent(inboundEvent)).toStrictEqual(inboundEventWire);
+      const encodedInboundEvent = yield* encodeInboundEvent(inboundEvent);
+      expect(encodedInboundEvent).toStrictEqual(inboundEventWire);
 
       const closedPayloadWire = {
         code: 0,
@@ -78,7 +81,8 @@ describe("@beep/professional-desktop schema parity", () => {
         signal: null,
       };
       const closedPayload = yield* SidecarClosedPayload.decodeUnknownEffect(closedPayloadWire);
-      expect(yield* encodeSidecarClosedPayload(closedPayload)).toStrictEqual(closedPayloadWire);
+      const encodedSidecarClosedPayload = yield* encodeSidecarClosedPayload(closedPayload);
+      expect(encodedSidecarClosedPayload).toStrictEqual(closedPayloadWire);
     })
   );
 
@@ -87,7 +91,8 @@ describe("@beep/professional-desktop schema parity", () => {
     Effect.fnUntraced(function* () {
       const customWire = { migrationsSchema: "chat_runtime" };
       const custom = yield* decodeProfessionalDesktopMigrationOptions(customWire);
-      expect(yield* encodeProfessionalDesktopMigrationOptions(custom)).toStrictEqual(customWire);
+      const encodedProfessionalDesktopMigrationOptions = yield* encodeProfessionalDesktopMigrationOptions(custom);
+      expect(encodedProfessionalDesktopMigrationOptions).toStrictEqual(customWire);
 
       const withDefault = ProfessionalDesktopMigrationOptions.make({});
       expect(withDefault.migrationsSchema).toBe("drizzle");
@@ -101,7 +106,8 @@ describe("@beep/professional-desktop schema parity", () => {
         vaultRootPath: "/tmp/beep-documents-vault",
         workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID,
       });
-      expect(yield* encodeSetWorkspaceVaultInput(configure)).toStrictEqual({
+      const encodedSetWorkspaceVaultInput = yield* encodeSetWorkspaceVaultInput(configure);
+      expect(encodedSetWorkspaceVaultInput).toStrictEqual({
         vaultRootPath: "/tmp/beep-documents-vault",
         workspaceId: 1,
       });
@@ -112,7 +118,8 @@ describe("@beep/professional-desktop schema parity", () => {
         originalFileName: "Complaint.pdf",
         workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID,
       });
-      expect(yield* encodeDroppedDocumentInput(dropped)).toStrictEqual({
+      const encodedDroppedDocumentInput = yield* encodeDroppedDocumentInput(dropped);
+      expect(encodedDroppedDocumentInput).toStrictEqual({
         content: "AQID",
         intakeBatchId: "batch-1",
         originalFileName: "Complaint.pdf",
@@ -134,7 +141,8 @@ describe("@beep/professional-desktop schema parity", () => {
       );
 
       expect(payload.content).toEqual(new Uint8Array([1, 2, 3]));
-      expect(yield* encodeIntakeDroppedFilePayload(payload)).toMatchObject({
+      const encodedIntakeDroppedFilePayload = yield* encodeIntakeDroppedFilePayload(payload);
+      expect(encodedIntakeDroppedFilePayload).toMatchObject({
         content: "AQID",
         originalFileName: "Raw.pdf",
       });
@@ -145,17 +153,20 @@ describe("@beep/professional-desktop schema parity", () => {
     "preserves vault sync wire shapes",
     Effect.fnUntraced(function* () {
       const workspacePayload = VaultSyncWorkspacePayload.make({ workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID });
-      expect(yield* encodeVaultSyncWorkspacePayload(workspacePayload)).toStrictEqual({
+      const encodedVaultSyncWorkspacePayload = yield* encodeVaultSyncWorkspacePayload(workspacePayload);
+      expect(encodedVaultSyncWorkspacePayload).toStrictEqual({
         workspaceId: 1,
       });
 
       const reviewedWire = { conflictId: 7, workspaceId: 1 };
       const reviewed = yield* decodeMarkVaultSyncConflictReviewedPayload(reviewedWire);
-      expect(yield* encodeMarkVaultSyncConflictReviewedPayload(reviewed)).toStrictEqual(reviewedWire);
+      const encodedMarkVaultSyncConflictReviewedPayload = yield* encodeMarkVaultSyncConflictReviewedPayload(reviewed);
+      expect(encodedMarkVaultSyncConflictReviewedPayload).toStrictEqual(reviewedWire);
 
       const statusRequestWire = { forceProbe: true, workspaceId: 1 };
       const statusRequest = yield* decodeGetVaultSyncStatusPayload(statusRequestWire);
-      expect(yield* encodeGetVaultSyncStatusPayload(statusRequest)).toStrictEqual(statusRequestWire);
+      const encodedGetVaultSyncStatusPayload = yield* encodeGetVaultSyncStatusPayload(statusRequest);
+      expect(encodedGetVaultSyncStatusPayload).toStrictEqual(statusRequestWire);
 
       // An older app omits forceProbe entirely; the sidecar must decode it as
       // the cached-read default, not reject the request.
@@ -178,7 +189,8 @@ describe("@beep/professional-desktop schema parity", () => {
       };
       const bootstrapStatus = yield* decodeVaultSyncStatus(bootstrapStatusWire);
       assertNone(bootstrapStatus.cursorPosition);
-      expect(yield* encodeVaultSyncStatus(bootstrapStatus)).toStrictEqual(bootstrapStatusWire);
+      const encodedVaultSyncStatus = yield* encodeVaultSyncStatus(bootstrapStatus);
+      expect(encodedVaultSyncStatus).toStrictEqual(bootstrapStatusWire);
 
       const activeStatusWire = {
         conflictItems: 1,
@@ -195,7 +207,8 @@ describe("@beep/professional-desktop schema parity", () => {
         queuedOperations: 5,
       };
       const activeStatus = yield* decodeVaultSyncStatus(activeStatusWire);
-      expect(yield* encodeVaultSyncStatus(activeStatus)).toStrictEqual(activeStatusWire);
+      const encodedVaultSyncStatus1 = yield* encodeVaultSyncStatus(activeStatus);
+      expect(encodedVaultSyncStatus1).toStrictEqual(activeStatusWire);
 
       // An older sidecar omits disconnectReason and probedAt entirely; the
       // status must still decode (missing key -> none) instead of going

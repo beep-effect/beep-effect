@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   KnowledgeCardFrontmatter,
   pullResearchNotionLinks,
@@ -39,7 +40,11 @@ const encodeCardFrontmatter = S.encodeEffect(KnowledgeCardFrontmatter);
 const testLayer = Layer.mergeAll(
   ResearchCommandServiceLive.pipe(
     Layer.provideMerge(
-      FetchHttpClient.layer.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+      Layer.mergeAll(
+        FetchHttpClient.layer.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+        // The vault commit runs through the kit (W7b, SPEC D-19).
+        Git.layer.pipe(Layer.provide(NodeServices.layer))
+      )
     )
   ),
   Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)
@@ -87,18 +92,17 @@ it.layer(testLayer, { timeout: "30 seconds" })("research status", (it) => {
       const vaultRoot = yield* makeVault;
       const linksRoot = yield* fs.makeTempDirectoryScoped({ prefix: "research-links-" });
       const linksFile = path.join(linksRoot, "links.json");
-      yield* fs.writeFileString(
-        linksFile,
-        yield* encodeLinksFile([
-          { title: "First Post", url: "https://example.com/first" },
-          { title: "Second Post", url: "https://example.com/second" },
-        ])
-      );
+      const encodedLinksFile = yield* encodeLinksFile([
+        { title: "First Post", url: "https://example.com/first" },
+        { title: "Second Post", url: "https://example.com/second" },
+      ]);
+      yield* fs.writeFileString(linksFile, encodedLinksFile);
       const pulled = yield* pullResearchNotionLinks(
         ResearchNotionPullOptions.make({ database: "Reading List", linksFile, vaultRoot })
       );
       expect(pulled.cardsWritten).toBe(2);
-      yield* persistCards(vaultRoot, yield* catalogDbPath(vaultRoot), "manual", [yield* articleCard("triaged")]);
+      const catalogDbPath1 = yield* catalogDbPath(vaultRoot);
+      yield* persistCards(vaultRoot, catalogDbPath1, "manual", [yield* articleCard("triaged")]);
 
       const status = yield* researchStatus(ResearchStatusOptions.make({ vaultRoot }));
       expect(status.totalCards).toBe(3);
@@ -119,7 +123,8 @@ describe("research card frontmatter", () => {
     { frontmatter: Arbitrary.schema(KnowledgeCardFrontmatter) },
     ({ frontmatter }) =>
       Effect.gen(function* () {
-        const decoded = yield* decodeCardFrontmatter(yield* encodeCardFrontmatter(frontmatter));
+        const encodedCardFrontmatter = yield* encodeCardFrontmatter(frontmatter);
+        const decoded = yield* decodeCardFrontmatter(encodedCardFrontmatter);
         expect(decoded).toEqual(frontmatter);
       }),
     { arbitrary: fcRuns(32) }
@@ -133,7 +138,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("research card output", (it) => {
       const path = yield* Path.Path;
       const vaultRoot = yield* makeVault;
       const card = yield* articleCard("inbox");
-      yield* persistCards(vaultRoot, yield* catalogDbPath(vaultRoot), "manual", [card]);
+      const catalogDbPath2 = yield* catalogDbPath(vaultRoot);
+      yield* persistCards(vaultRoot, catalogDbPath2, "manual", [card]);
 
       const content = yield* fs.readFileString(path.join(vaultRoot, card.relativePath));
       const frontmatter = O.getOrNull(Str.match(/^---\n([\s\S]*?)\n---\n/)(content));

@@ -18,9 +18,10 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { applyJsoncModification, JsoncModification } from "@beep/repo-cli-kit/cli/Jsonc";
 import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { A, O, pipe, Str } from "@beep/utils";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { GoalStatus, isGoalPhaseStatus, isGoalStatus } from "./Goals.schemas.ts";
 import {
@@ -33,6 +34,10 @@ import {
 } from "./Inventory.ts";
 import type { GoalPhaseStatus } from "./Goals.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
+
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
 
 const $I = $RepoCliId.create("commands/Goals/Migration");
 
@@ -318,7 +323,7 @@ export const buildBackfillManifestText: {
       ...optionalProp("grandfatheredNote", O.fromUndefinedOr(backfill.grandfatheredNote)),
     },
   };
-  return `${JSON.stringify(manifest, null, 2)}\n`;
+  return `${Result.getOrThrowWith(encodePrettyJson(manifest), identity)}\n`;
 });
 
 /**
@@ -459,7 +464,7 @@ const planSupersededByEdits = (manifest: Readonly<Record<string, unknown>>, edit
   const packetSlug = pipe(
     stringField(supersededBy.value, "packet"),
     O.map(slugFromPacketPath),
-    O.getOrElse(() => JSON.stringify(supersededBy.value))
+    O.getOrElse(() => Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(supersededBy.value), identity))
   );
   edit(["supersededBy"], packetSlug, `normalize object supersededBy -> "${packetSlug}"`);
   if (O.isSome(stringField(manifest, "supersededNote"))) {

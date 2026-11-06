@@ -156,7 +156,7 @@ export const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
   }
   yield* cogneeCognify(connection, datasets, true);
 
-  const now = DateTime.formatIso(yield* DateTime.now);
+  const now = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   yield* runWithResearchDb(
     Effect.gen(function* () {
       const db = yield* DuckDb;

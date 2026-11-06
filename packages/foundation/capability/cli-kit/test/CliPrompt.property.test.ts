@@ -30,7 +30,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(CliPromptTarget)(value);
       const decoded = yield* S.decodeEffect(CliPromptTarget)(encoded);
       assert.deepStrictEqual(decoded, value);
-      assert.deepStrictEqual(yield* S.encodeEffect(CliPromptTarget)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(CliPromptTarget)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );

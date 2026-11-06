@@ -196,35 +196,32 @@ const SeededTestLayer = Layer.effect(
   Effect.gen(function* () {
     const scenario = yield* seedScenario(41);
     const repository = yield* EdgeAuthorityRepository;
-    yield* repository.record(
-      yield* recordFact({
-        fact: { amount: "original" },
-        identity: scenario.identity,
-        recordedAt: 1000,
-        validFrom: 1000,
-      })
-    );
-    yield* repository.supersede(
-      yield* supersedeFact({
-        expectedVersion: 1,
-        fact: { amount: "corrected amount" },
-        identity: scenario.identity,
-        recordedAt: 2000,
-        validFrom: 1000,
-      })
-    );
+    const recordFact1 = yield* recordFact({
+      fact: { amount: "original" },
+      identity: scenario.identity,
+      recordedAt: 1000,
+      validFrom: 1000,
+    });
+    yield* repository.record(recordFact1);
+    const supersedeFact2 = yield* supersedeFact({
+      expectedVersion: 1,
+      fact: { amount: "corrected amount" },
+      identity: scenario.identity,
+      recordedAt: 2000,
+      validFrom: 1000,
+    });
+    yield* repository.supersede(supersedeFact2);
     const dispositionRepository = yield* ClaimDispositionRepository;
-    yield* dispositionRepository.record(
-      yield* S.decodeUnknownEffect(ClaimDisposition)({
-        ...productEntityFixtureInput("EpistemicClaimDisposition", 41),
-        claimId: scenario.claimId,
-        reason: "Synthetic rejection for projection drill",
-        resolvedAt: 2000,
-        resolvedBy: systemPrincipal,
-        status: "rejected",
-        violations: [],
-      })
-    );
+    const value = yield* S.decodeUnknownEffect(ClaimDisposition)({
+      ...productEntityFixtureInput("EpistemicClaimDisposition", 41),
+      claimId: scenario.claimId,
+      reason: "Synthetic rejection for projection drill",
+      resolvedAt: 2000,
+      resolvedBy: systemPrincipal,
+      status: "rejected",
+      violations: [],
+    });
+    yield* dispositionRepository.record(value);
     return scenario;
   })
 ).pipe(Layer.provideMerge(TestLayer));
@@ -268,7 +265,8 @@ describe("retention authority rebuild", { concurrent: false }, () => {
           result,
           RetentionUnavailable.make({ operation: "store", message: "Disposable report store unavailable" })
         );
-        expect(yield* fs.readFileString(root)).toBe("keep this file");
+        const readFileString3 = yield* fs.readFileString(root);
+        expect(readFileString3).toBe("keep this file");
       })
     );
 
@@ -289,7 +287,8 @@ describe("retention authority rebuild", { concurrent: false }, () => {
             const path = yield* Path.Path;
             const temp = yield* fs.makeTempDirectoryScoped({ prefix: "retention-proof-" });
             const store = path.join(temp, "projections");
-            const key = logicalEdgeKey(yield* decodeIdentity(scenario.identity));
+            const decodedIdentity = yield* decodeIdentity(scenario.identity);
+            const key = logicalEdgeKey(decodedIdentity);
             const answers = yield* Effect.forEach([1500, 2500], (knownAt) =>
               Effect.gen(function* () {
                 const query = yield* S.decodeEffect(RetentionQuery)({
@@ -309,22 +308,29 @@ describe("retention authority rebuild", { concurrent: false }, () => {
                 // Destroy the complete store, including an unrelated derived cache artifact.
                 yield* fs.writeFileString(path.join(store, "derived.cache"), "disposable");
                 yield* fs.remove(store, { recursive: true });
-                expect(yield* fs.exists(store)).toBe(false);
+                const exists4 = yield* fs.exists(store);
+                expect(exists4).toBe(false);
                 const rebuilt = yield* rebuildRetentionStore(store, query, O.some(candidate));
-                expect(yield* fs.readFile(path.join(store, "report.json"))).toEqual(bytes);
-                expect(yield* fs.readFile(path.join(store, "report.txt"))).toEqual(text);
+                const readFile5 = yield* fs.readFile(path.join(store, "report.json"));
+                expect(readFile5).toEqual(bytes);
+                const readFile6 = yield* fs.readFile(path.join(store, "report.txt"));
+                expect(readFile6).toEqual(text);
                 expect(rebuilt).toStrictEqual(report);
-                expect(A.sort(yield* fs.readDirectory(store), Str.Order)).toEqual(["report.json", "report.txt"]);
+                const readDirectory7 = yield* fs.readDirectory(store);
+                expect(A.sort(readDirectory7, Str.Order)).toEqual(["report.json", "report.txt"]);
                 return report;
               })
             );
             return answers;
           }).pipe(Effect.scoped);
           expect(answers[0]?.payloadBytes).not.toBe(answers[1]?.payloadBytes);
-          expect(yield* db.select().from(edgeTable).orderBy(asc(edgeTable.id))).toStrictEqual(beforeEdges);
-          expect(
-            yield* db.select().from(DbSchema.claimDisposition).orderBy(asc(DbSchema.claimDisposition.id))
-          ).toStrictEqual(beforeDispositions);
+          const orderBy8 = yield* db.select().from(edgeTable).orderBy(asc(edgeTable.id));
+          expect(orderBy8).toStrictEqual(beforeEdges);
+          const orderBy9 = yield* db
+            .select()
+            .from(DbSchema.claimDisposition)
+            .orderBy(asc(DbSchema.claimDisposition.id));
+          expect(orderBy9).toStrictEqual(beforeDispositions);
         }),
       { timeout: 300_000 }
     );

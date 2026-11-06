@@ -101,15 +101,12 @@ const seededHub = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const questions = yield* DocketQuestions;
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "review-hub-" });
-  const store = Context.get(
-    yield* Layer.build(makeReviewFilesLayer(ReviewFilesConfig.make({ dataDirectory: directory }))),
-    ReviewItemStore
+  const build1 = yield* Layer.build(makeReviewFilesLayer(ReviewFilesConfig.make({ dataDirectory: directory })));
+  const store = Context.get(build1, ReviewItemStore);
+  const forEach2 = yield* Effect.forEach(["m-journaled", "m-in-ledger", "m-unjournaled", "m-moved"], (messageId) =>
+    questions.raise(DocketQuestionInput.make({ outcome: needsReview(messageId) }))
   );
-  const unnamed = A.getSomes(
-    yield* Effect.forEach(["m-journaled", "m-in-ledger", "m-unjournaled", "m-moved"], (messageId) =>
-      questions.raise(DocketQuestionInput.make({ outcome: needsReview(messageId) }))
-    )
-  );
+  const unnamed = A.getSomes(forEach2);
   const named = yield* questions.raise(
     DocketQuestionInput.make({ outcome: needsReview("m-named"), receivedDate: O.some(DAY) })
   );
@@ -150,7 +147,8 @@ describe("@beep/docket-intake backfill-questions", () => {
         );
         // Only the journaled messages outside the ledger are read from the mailbox.
         expect(messageIds).toStrictEqual(["m-journaled", "m-moved"]);
-        expect(yield* fs.readFileString(file)).toBe(before);
+        const readFileString3 = yield* fs.readFileString(file);
+        expect(readFileString3).toBe(before);
       })
     );
 
@@ -175,7 +173,8 @@ describe("@beep/docket-intake backfill-questions", () => {
         expect(second.report).toStrictEqual(
           DocketBackfillReport.make({ applied: true, enriched: 0, found: 3, inLedger: 1, unmatched: 1, unreadable: 1 })
         );
-        expect(yield* fs.readFileString(file)).toBe(once);
+        const readFileString4 = yield* fs.readFileString(file);
+        expect(readFileString4).toBe(once);
         expect(A.length(items)).toBe(5);
         assertTrue(rewritten.kind === "question" && docketQuestionNamesEmail(rewritten));
         expect(rewritten.kind === "question" ? rewritten.options : []).toStrictEqual(original.options);
@@ -212,7 +211,8 @@ describe("@beep/docket-intake backfill-questions", () => {
             })
           ),
         }));
-        const email = yield* Effect.fromOption(yield* read("m-journaled"));
+        const read5 = yield* read("m-journaled");
+        const email = yield* Effect.fromOption(read5);
 
         assertSome(email.subject, "Office action response");
         assertSome(email.sender, "examiner@example.com");
@@ -226,13 +226,15 @@ describe("@beep/docket-intake backfill-questions", () => {
           ...script,
           getMessage: Effect.fail(M365Error.fromReason("response status", { status: 404 })),
         }));
-        assertNone(yield* read("m-moved"));
+        const read6 = yield* read("m-moved");
+        assertNone(read6);
 
         yield* Ref.update(fake.script, (script) => ({ ...script, getMessage: Effect.fail(throttled) }));
         const error = yield* Effect.flip(read("m-journaled"));
         expect([error.stage, error.cause]).toStrictEqual(["mailbox", "throttled"]);
         // Graph is asked for the four fields that name the message, never the body.
-        expect(yield* Ref.get(fake.calls)).toStrictEqual([
+        const got = yield* Ref.get(fake.calls);
+        expect(got).toStrictEqual([
           "getMessage m-journaled select=subject,from,receivedDateTime,webLink",
           "getMessage m-moved select=subject,from,receivedDateTime,webLink",
           "getMessage m-journaled select=subject,from,receivedDateTime,webLink",

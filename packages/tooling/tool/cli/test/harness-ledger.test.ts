@@ -164,7 +164,8 @@ const sessionStart = Effect.fnUntraced(function* (sessionId: Sha256Hex, ts: stri
 // snapshot the fingerprint is built from, reduced by `deriveHarnessHash`.
 const repoHarnessHash = Effect.fn("test.repoHarnessHash")(function* (repoRoot: string) {
   const snapshot = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
-  return yield* deriveHarnessHash(yield* makeHarnessFingerprint(HarnessFingerprintInput.make({ snapshot })));
+  const madeHarnessFingerprint = yield* makeHarnessFingerprint(HarnessFingerprintInput.make({ snapshot }));
+  return yield* deriveHarnessHash(madeHarnessFingerprint);
 });
 
 const writeShard = Effect.fn("test.writeShard")(function* (
@@ -204,11 +205,13 @@ describe("harness-ledger CLI", () => {
   it.effect("parses edit and surface tokens", () =>
     Effect.gen(function* () {
       expect((yield* parseHarnessEditSpec("pending")).kind).toBe("pending");
-      expect(yield* parseHarnessEditSpec("commit:489ea7c488")).toMatchObject({ kind: "commit", ref: "489ea7c488" });
+      const parsedHarnessEditSpec = yield* parseHarnessEditSpec("commit:489ea7c488");
+      expect(parsedHarnessEditSpec).toMatchObject({ kind: "commit", ref: "489ea7c488" });
       expect((yield* parseHarnessEditSpec(`diff:${Str.repeat(64)("d")}`)).kind).toBe("diff-digest");
       const bad = yield* Effect.flip(parseHarnessEditSpec("diff:not-a-digest"));
       expect(bad._tag).toBe("HarnessLedgerInputError");
-      expect(yield* parseHarnessSurfaceSpec("skill:yeet")).toMatchObject({ kind: "skill", name: "yeet" });
+      const parsedHarnessSurfaceSpec = yield* parseHarnessSurfaceSpec("skill:yeet");
+      expect(parsedHarnessSurfaceSpec).toMatchObject({ kind: "skill", name: "yeet" });
       expect((yield* Effect.flip(parseHarnessSurfaceSpec("bogus:yeet")))._tag).toBe("HarnessLedgerInputError");
     })
   );
@@ -233,7 +236,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const ledger = yield* HarnessLedgerService;
       const entries = yield* ledger.list(HarnessLedgerListOptions.make({ repoRoot: root, month: O.some("2099-01") }));
       const encodedRow = yield* HarnessLedgerRow.encodeJsonEffect(row);
-      expect(yield* encodeLedgerList(entries)).toEqual([
+      const encodedLedgerList = yield* encodeLedgerList(entries);
+      expect(encodedLedgerList).toEqual([
         { row: yield* S.decodeEffect(transcriptJson)(encodedRow), stale: false, chainLength: 1 },
       ]);
     })
@@ -344,7 +348,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       );
       assertSome(accepted.previousRowId, proposed.rowId);
       expect(accepted.disposition).toBe("accepted");
-      expect(HashSet.has(accepted.touched, yield* contextSurfaceId("skill", "alpha"))).toBe(true);
+      const contextSurfaceId1 = yield* contextSurfaceId("skill", "alpha");
+      expect(HashSet.has(accepted.touched, contextSurfaceId1)).toBe(true);
       expect(accepted.fingerprint.fingerprintId).toBe(proposed.fingerprint.fingerprintId);
 
       const lines = yield* readLedgerLines(root);
@@ -376,7 +381,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
         )
       );
       expect(misplaced._tag).toBe("HarnessLedgerInputError");
-      expect(yield* readLedgerLines(root)).toHaveLength(2);
+      const readLedgerLines2 = yield* readLedgerLines(root);
+      expect(readLedgerLines2).toHaveLength(2);
     })
   );
 
@@ -397,12 +403,14 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       );
       expect(A.filter(outcomes, Result.isSuccess)).toHaveLength(1);
       expect(A.filter(outcomes, Result.isFailure)).toHaveLength(1);
-      expect(yield* readLedgerLines(root)).toHaveLength(2);
+      const readLedgerLines3 = yield* readLedgerLines(root);
+      expect(readLedgerLines3).toHaveLength(2);
       const stale = yield* Effect.flip(ledger.disposition(options));
       expect(stale._tag).toBe("HarnessLedgerChainError");
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      expect(yield* fs.exists(path.join(root, "harness-ledger", ".write.lock"))).toBe(false);
+      const exists4 = yield* fs.exists(path.join(root, "harness-ledger", ".write.lock"));
+      expect(exists4).toBe(false);
     })
   );
 
@@ -429,13 +437,17 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(busyDisposition._tag).toBe("HarnessLedgerBusyError");
       const busyPropose = yield* Effect.flip(proposePending(root));
       expect(busyPropose._tag).toBe("HarnessLedgerBusyError");
-      expect(yield* readLedgerLines(root)).toHaveLength(1);
-      expect(yield* fs.readFileString(lockFile)).toBe("held by another writer\n");
+      const readLedgerLines5 = yield* readLedgerLines(root);
+      expect(readLedgerLines5).toHaveLength(1);
+      const readFileString6 = yield* fs.readFileString(lockFile);
+      expect(readFileString6).toBe("held by another writer\n");
 
       yield* fs.remove(lockFile);
       yield* proposePending(root);
-      expect(yield* readLedgerLines(root)).toHaveLength(2);
-      expect(yield* fs.exists(lockFile)).toBe(false);
+      const readLedgerLines7 = yield* readLedgerLines(root);
+      expect(readLedgerLines7).toHaveLength(2);
+      const exists8 = yield* fs.exists(lockFile);
+      expect(exists8).toBe(false);
     })
   );
 
@@ -453,12 +465,12 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
         })
       );
       yield* proposePending(root);
-      expect(yield* ledger.list(HarnessLedgerListOptions.make({ repoRoot: root, staleOnly: true }))).toHaveLength(0);
-      expect(
-        yield* ledger.list(
-          HarnessLedgerListOptions.make({ repoRoot: root, staleOnly: true, modelId: O.some("new-model") })
-        )
-      ).toHaveLength(2);
+      const list9 = yield* ledger.list(HarnessLedgerListOptions.make({ repoRoot: root, staleOnly: true }));
+      expect(list9).toHaveLength(0);
+      const list10 = yield* ledger.list(
+        HarnessLedgerListOptions.make({ repoRoot: root, staleOnly: true, modelId: O.some("new-model") })
+      );
+      expect(list10).toHaveLength(2);
       // Supplying both components compares them: only the unknown-model row is stale.
       const matching = yield* ledger.list(
         HarnessLedgerListOptions.make({
@@ -472,7 +484,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       yield* fs.writeFileString(path.join(root, "AGENTS.md"), "# Changed guidance\n");
-      expect(yield* ledger.list(HarnessLedgerListOptions.make({ repoRoot: root, staleOnly: true }))).toHaveLength(2);
+      const list11 = yield* ledger.list(HarnessLedgerListOptions.make({ repoRoot: root, staleOnly: true }));
+      expect(list11).toHaveLength(2);
     })
   );
 
@@ -493,7 +506,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       );
       expect(missing._tag).toBe("HarnessLedgerChainError");
       expect(missing.message).toBe("No ledger row hl-20260101-00000000.");
-      expect(yield* readLedgerLines(root)).toHaveLength(1);
+      const readLedgerLines12 = yield* readLedgerLines(root);
+      expect(readLedgerLines12).toHaveLength(1);
     })
   );
 
@@ -593,14 +607,16 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       assertSome(A.last(harnessLedgerPruneReportLines(dryRun, false)), "nothing written: no fresh proposals.");
       expect(harnessLedgerPruneReportLines(dryRun, false)[0]).toContain("observed 2 (partial window) ending");
       // Dry run: nothing written, not even the ledger directory or its lock.
-      expect(yield* fs.exists(path.join(root, "harness-ledger"))).toBe(false);
+      const exists13 = yield* fs.exists(path.join(root, "harness-ledger"));
+      expect(exists13).toBe(false);
 
       // An open chain head without a target surface is read but never dedupes a candidate.
       yield* proposePending(root);
       const again = yield* ledger.pruneProposals(options);
       expect(again.proposals).toHaveLength(0);
       expect(again.alreadyProposed).toBe(0);
-      expect(yield* readLedgerLines(root)).toHaveLength(1);
+      const readLedgerLines14 = yield* readLedgerLines(root);
+      expect(readLedgerLines14).toHaveLength(1);
 
       const narrow = yield* ledger.pruneProposals(HarnessLedgerPruneOptions.make({ ...options, windowSessions: 1 }));
       expect(narrow.sessionsObserved).toBe(1);
@@ -641,7 +657,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(report.nonUseQualified).toBe(false);
       expect(report.written).toBe(false);
       expect(report.proposals).toHaveLength(3);
-      expect(yield* fs.exists(path.join(root, "harness-ledger"))).toBe(false);
+      const exists15 = yield* fs.exists(path.join(root, "harness-ledger"));
+      expect(exists15).toBe(false);
       assertSome(
         A.last(harnessLedgerPruneReportLines(report, true)),
         "nothing written: transcript and surface coverage are unqualified."
@@ -689,7 +706,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(harnessLedgerPruneReportLines(again, true)[3]).toBe(
         "candidates: 3; touched: 0; already proposed: 0; decided under this harness: 3"
       );
-      expect(yield* readLedgerLines(root)).toHaveLength(6);
+      const readLedgerLines16 = yield* readLedgerLines(root);
+      expect(readLedgerLines16).toHaveLength(6);
 
       // A tombstone never blocks: beta is proposed afresh, and accepting it blocks again.
       yield* decide(betaDeferred.rowId, "tombstoned");
@@ -701,7 +719,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const afterAccept = yield* ledger.pruneProposals(options);
       expect(afterAccept.proposals).toHaveLength(0);
       expect(afterAccept.decidedUnderHarness).toBe(3);
-      expect(yield* readLedgerLines(root)).toHaveLength(9);
+      const readLedgerLines17 = yield* readLedgerLines(root);
+      expect(readLedgerLines17).toHaveLength(9);
 
       // A harness edit expires every decision: a full window under the new hash proposes again.
       yield* fs.writeFileString(path.join(root, "AGENTS.md"), "# Changed guidance\n");
@@ -729,7 +748,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(open.harnessHash).toBe(latest);
       expect(open.proposals).toHaveLength(0);
       expect([open.alreadyProposed, open.decidedUnderHarness]).toStrictEqual([2, 0]);
-      expect(yield* readLedgerLines(root)).toHaveLength(11);
+      const readLedgerLines18 = yield* readLedgerLines(root);
+      expect(readLedgerLines18).toHaveLength(11);
     })
   );
 
@@ -780,7 +800,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(again.proposals).toHaveLength(0);
       expect([again.alreadyProposed, again.decidedUnderHarness]).toStrictEqual([0, 1]);
       expect(again.written).toBe(false);
-      expect(yield* readLedgerLines(root)).toHaveLength(2);
+      const readLedgerLines19 = yield* readLedgerLines(root);
+      expect(readLedgerLines19).toHaveLength(2);
     })
   );
 
@@ -1032,9 +1053,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
       const stateDir = yield* makeHookStateDir("harness-unknown-role-");
-      const unknown = yield* HookPulseV1.decodeJsonEffect(
-        yield* pulseRow(sessionA, "2026-10-09T10:01:00Z", "PostToolUse", O.none(), O.none(), O.none())
-      );
+      const pulseRow20 = yield* pulseRow(sessionA, "2026-10-09T10:01:00Z", "PostToolUse", O.none(), O.none(), O.none());
+      const unknown = yield* HookPulseV1.decodeJsonEffect(pulseRow20);
       yield* writeShard(stateDir, "2026-10-09", sessionA, [
         yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
         yield* pulseRow(sessionA, "2026-10-09T10:00:30Z", "UserPromptSubmit", O.none(), O.none(), O.none()),
@@ -1056,9 +1076,15 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const current = yield* repoHarnessHash(root);
       const stateDir = yield* makeHookStateDir("harness-child-touch-");
       const alphaId = yield* contextSurfaceId("skill", "alpha");
-      const child = yield* HookPulseV1.decodeJsonEffect(
-        yield* pulseRow(sessionA, "2026-10-09T10:01:30Z", "PostToolUse", O.some(alphaId), O.none(), O.some("subagent"))
+      const pulseRow21 = yield* pulseRow(
+        sessionA,
+        "2026-10-09T10:01:30Z",
+        "PostToolUse",
+        O.some(alphaId),
+        O.none(),
+        O.some("subagent")
       );
+      const child = yield* HookPulseV1.decodeJsonEffect(pulseRow21);
       yield* writeShard(stateDir, "2026-10-09", sessionA, [
         yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
         yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
@@ -1110,18 +1136,20 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const evidenceRoot = yield* fs.makeTempDirectoryScoped({ prefix: "harness-buckets-" });
       const stateDir = path.join(evidenceRoot, "hook-events");
       yield* fs.makeDirectory(stateDir);
+      const argument = yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current);
       yield* writeShard(stateDir, "2026-10-09", sessionA, [
-        yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
+        argument,
         yield* HookPulseV1.encodeJsonEffect(
           HookPulseV1.make({
-            ...(yield* HookPulseV1.decodeJsonEffect(
-              yield* pulseRow(
+            ...(yield* yield* Effect.map(
+              pulseRow(
                 sessionA,
                 "2026-10-09T10:00:01Z",
                 "SessionStart",
                 O.none(),
                 O.some(Sha256Hex.make(Str.repeat(64)("f")))
-              )
+              ),
+              HookPulseV1.decodeJsonEffect
             )),
             transcriptPath: O.some(Sha256Hex.make(Str.repeat(64)("e"))),
           })
@@ -1151,9 +1179,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
       const stateDir = yield* makeHookStateDir("harness-primary-conflict-");
-      const start = yield* HookPulseV1.decodeJsonEffect(
-        yield* pulseRow(sessionA, "2026-10-09T10:00:00Z", "SessionStart", O.none(), O.some(current))
-      );
+      const pulseRow22 = yield* pulseRow(sessionA, "2026-10-09T10:00:00Z", "SessionStart", O.none(), O.some(current));
+      const start = yield* HookPulseV1.decodeJsonEffect(pulseRow22);
       const second = HookPulseV1.make({ ...start, transcriptPath: O.some(Sha256Hex.make(Str.repeat(64)("e"))) });
       yield* writeShard(stateDir, "2026-10-09", sessionA, [
         yield* HookPulseV1.encodeJsonEffect(start),
@@ -1173,9 +1200,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
       const stateDir = yield* makeHookStateDir("harness-resume-");
-      const start = yield* HookPulseV1.decodeJsonEffect(
-        yield* pulseRow(sessionA, "2026-10-09T10:00:00Z", "SessionStart", O.none(), O.some(current))
-      );
+      const pulseRow23 = yield* pulseRow(sessionA, "2026-10-09T10:00:00Z", "SessionStart", O.none(), O.some(current));
+      const start = yield* HookPulseV1.decodeJsonEffect(pulseRow23);
       yield* writeShard(stateDir, "2026-10-09", sessionA, [
         yield* HookPulseV1.encodeJsonEffect(HookPulseV1.make({ ...start, sessionStartSource: O.some("resume") })),
         yield* pulseRow(sessionA, "2026-10-09T10:00:30Z", "UserPromptSubmit", O.none(), O.none()),
@@ -1241,22 +1267,20 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
         reason: O.none(),
         evidenceTier: "unknown",
       });
-      yield* fs.writeFileString(
-        path.join(evidenceRoot, "hook-pulse-disarm-windows.ndjson"),
-        yield* HookPulseDisarmWindow.encodeJsonEffect(gap)
-      );
+      const argument1 = path.join(evidenceRoot, "hook-pulse-disarm-windows.ndjson");
+      const encodedJsonEffect1 = yield* HookPulseDisarmWindow.encodeJsonEffect(gap);
+      yield* fs.writeFileString(argument1, encodedJsonEffect1);
       const ledger = yield* HarnessLedgerService;
       const report = yield* ledger.pruneProposals(
         HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
       );
       expect(report.sessionsObserved).toBe(0);
       expect(report.sessionsSkippedDisarmed).toBe(1);
-      yield* fs.writeFileString(
-        path.join(evidenceRoot, "hook-pulse-disarm-windows.ndjson"),
-        yield* HookPulseDisarmWindow.encodeJsonEffect(
-          HookPulseDisarmWindow.make({ ...gap, disarmedAt: O.none(), rearmedAt: "2026-10-09T09:59:00Z" })
-        )
+      const argument2 = path.join(evidenceRoot, "hook-pulse-disarm-windows.ndjson");
+      const encodedJsonEffect2 = yield* HookPulseDisarmWindow.encodeJsonEffect(
+        HookPulseDisarmWindow.make({ ...gap, disarmedAt: O.none(), rearmedAt: "2026-10-09T09:59:00Z" })
       );
+      yield* fs.writeFileString(argument2, encodedJsonEffect2);
       const afterRearm = yield* ledger.pruneProposals(
         HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
       );
@@ -1291,7 +1315,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
           "--agent-kind",
           agentKind,
         ]).pipe(Effect.provideService(CommandJsonOutput, (text) => Ref.set(output, text)));
-        const report = yield* decodeReconcileReport(yield* Ref.get(output));
+        const got = yield* Ref.get(output);
+        const report = yield* decodeReconcileReport(got);
         expect(report.agentKind).toBe(agentKind);
         expect(report.transcriptFiles).toBe(0);
       }),
@@ -1313,13 +1338,18 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const toolRow = yield* encode({ sessionId: parent, message: { content: [{ type: "tool_use", id: "one" }] } });
       yield* fs.writeFileString(path.join(transcriptDir, `${parent}.jsonl`), toolRow);
       yield* fs.writeFileString(path.join(nested, "child.jsonl"), toolRow);
-      const identity = Sha256Hex.make(yield* hashPrivateIdentifier(parent, yield* hookPulseHashSalt));
+      const hookPulseHashSalt39 = yield* hookPulseHashSalt;
+      const hashPrivateIdentifier24 = yield* hashPrivateIdentifier(parent, hookPulseHashSalt39);
+      const identity = Sha256Hex.make(hashPrivateIdentifier24);
       const fixturePaths = [path.join(transcriptDir, `${parent}.jsonl`), path.join(nested, "child.jsonl")];
       const hookRows = yield* Effect.forEach(
         fixturePaths,
         Effect.fnUntraced(function* (file) {
-          const row = yield* HookPulseV1.decodeJsonEffect(yield* pulse(identity, "2026-10-09T10:00:00Z", O.none()));
-          const transcriptPath = Sha256Hex.make(yield* hashPrivateIdentifier(file, yield* hookPulseHashSalt));
+          const pulse25 = yield* pulse(identity, "2026-10-09T10:00:00Z", O.none());
+          const row = yield* HookPulseV1.decodeJsonEffect(pulse25);
+          const hookPulseHashSalt40 = yield* hookPulseHashSalt;
+          const hashPrivateIdentifier26 = yield* hashPrivateIdentifier(file, hookPulseHashSalt40);
+          const transcriptPath = Sha256Hex.make(hashPrivateIdentifier26);
           return yield* HookPulseV1.encodeJsonEffect(
             HookPulseV1.make({ ...row, transcriptPath: O.some(transcriptPath) })
           );
@@ -1357,11 +1387,15 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
           "\n"
         )
       );
-      const firstIdentity = Sha256Hex.make(yield* hashPrivateIdentifier("first", yield* hookPulseHashSalt));
-      const hook = yield* HookPulseV1.decodeJsonEffect(yield* pulse(firstIdentity, "2026-10-09T10:00:00Z", O.none()));
-      const transcriptPath = Sha256Hex.make(
-        yield* hashPrivateIdentifier(path.join(root, "mixed.jsonl"), yield* hookPulseHashSalt)
-      );
+      const hookPulseHashSalt41 = yield* hookPulseHashSalt;
+      const hashPrivateIdentifier27 = yield* hashPrivateIdentifier("first", hookPulseHashSalt41);
+      const firstIdentity = Sha256Hex.make(hashPrivateIdentifier27);
+      const pulse28 = yield* pulse(firstIdentity, "2026-10-09T10:00:00Z", O.none());
+      const hook = yield* HookPulseV1.decodeJsonEffect(pulse28);
+      const argument3 = path.join(root, "mixed.jsonl");
+      const hookPulseHashSalt3 = yield* hookPulseHashSalt;
+      const hashPrivateIdentifier29 = yield* hashPrivateIdentifier(argument3, hookPulseHashSalt3);
+      const transcriptPath = Sha256Hex.make(hashPrivateIdentifier29);
       yield* writeShard(stateDir, "2026-10-09", firstIdentity, [
         yield* HookPulseV1.encodeJsonEffect(HookPulseV1.make({ ...hook, transcriptPath: O.some(transcriptPath) })),
       ]);
@@ -1405,13 +1439,17 @@ const hookedTranscript = Effect.fn("test.hookedTranscript")(function* (
   salt: O.Option<string>
 ) {
   const fs = yield* FileSystem.FileSystem;
-  yield* fs.writeFileString(
-    file,
-    yield* encodeUnknownTranscript({ sessionId: rawSession, message: { content: [{ type: "tool_use", id: "x" }] } })
-  );
-  const identity = Sha256Hex.make(yield* hashPrivateIdentifier(rawSession, salt));
-  const transcriptPath = Sha256Hex.make(yield* hashPrivateIdentifier(file, salt));
-  const row = yield* HookPulseV1.decodeJsonEffect(yield* pulse(identity, `${day}T10:00:00Z`, O.none()));
+  const encodedUnknownTranscript = yield* encodeUnknownTranscript({
+    sessionId: rawSession,
+    message: { content: [{ type: "tool_use", id: "x" }] },
+  });
+  yield* fs.writeFileString(file, encodedUnknownTranscript);
+  const hashPrivateIdentifier30 = yield* hashPrivateIdentifier(rawSession, salt);
+  const identity = Sha256Hex.make(hashPrivateIdentifier30);
+  const hashPrivateIdentifier31 = yield* hashPrivateIdentifier(file, salt);
+  const transcriptPath = Sha256Hex.make(hashPrivateIdentifier31);
+  const pulse32 = yield* pulse(identity, `${day}T10:00:00Z`, O.none());
+  const row = yield* HookPulseV1.decodeJsonEffect(pulse32);
   yield* writeShard(stateDir, day, identity, [
     yield* HookPulseV1.encodeJsonEffect(HookPulseV1.make({ ...row, transcriptPath: O.some(transcriptPath) })),
   ]);
@@ -1469,15 +1507,13 @@ const ProjectedLayer = Layer.unwrap(
     const path = yield* Path.Path;
     const dir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-projection-" });
     const file = path.join(dir, "namespace-projection.json");
-    yield* fs.writeFileString(
-      file,
-      yield* encodeUnknownJson({
-        version: 1,
-        cutoverUtc: PROJECTION_CUTOVER,
-        hashSalt: PROJECTION_SALT,
-        previousRegime: "library-default",
-      })
-    );
+    const encodedUnknownJson = yield* encodeUnknownJson({
+      version: 1,
+      cutoverUtc: PROJECTION_CUTOVER,
+      hashSalt: PROJECTION_SALT,
+      previousRegime: "library-default",
+    });
+    yield* fs.writeFileString(file, encodedUnknownJson);
     return HarnessLedgerServiceLive.pipe(
       Layer.provideMerge(Git.layer),
       Layer.provideMerge(NodeServices.layer),
@@ -1553,15 +1589,13 @@ const EqualNamespaceLayer = Layer.unwrap(
     const path = yield* Path.Path;
     const dir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-equal-namespace-" });
     const file = path.join(dir, "namespace-projection.json");
-    yield* fs.writeFileString(
-      file,
-      yield* encodeUnknownJson({
-        version: 1,
-        cutoverUtc: PROJECTION_CUTOVER,
-        hashSalt: AI_METRICS_LOCAL_INSECURE_HASH_SALT,
-        previousRegime: "library-default",
-      })
-    );
+    const encodedUnknownJson33 = yield* encodeUnknownJson({
+      version: 1,
+      cutoverUtc: PROJECTION_CUTOVER,
+      hashSalt: AI_METRICS_LOCAL_INSECURE_HASH_SALT,
+      previousRegime: "library-default",
+    });
+    yield* fs.writeFileString(file, encodedUnknownJson33);
     return HarnessLedgerServiceLive.pipe(
       Layer.provideMerge(Git.layer),
       Layer.provideMerge(NodeServices.layer),
@@ -1625,7 +1659,9 @@ const activeSessionFixture = Effect.fn("test.activeSessionFixture")(function* (p
 
 const withAgentKind = Effect.fnUntraced(function* (encoded: string, agentKind: HookPulseAgentKind, file: string) {
   const row = yield* HookPulseV1.decodeJsonEffect(encoded);
-  const transcriptPath = Sha256Hex.make(yield* hashPrivateIdentifier(file, yield* hookPulseHashSalt));
+  const hookPulseHashSalt42 = yield* hookPulseHashSalt;
+  const hashPrivateIdentifier34 = yield* hashPrivateIdentifier(file, hookPulseHashSalt42);
+  const transcriptPath = Sha256Hex.make(hashPrivateIdentifier34);
   return yield* HookPulseV1.encodeJsonEffect(
     HookPulseV1.make({ ...row, agentKind, transcriptPath: O.some(transcriptPath) })
   );
@@ -1637,10 +1673,9 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger prune window diagnos
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const { evidenceRoot, options } = yield* activeSessionFixture("harness-sentinel-");
-      yield* fs.writeFileString(
-        path.join(evidenceRoot, "hook-pulse.disarmed"),
-        yield* disarmSentinel("2026-10-09T10:00:30Z")
-      );
+      const argument4 = path.join(evidenceRoot, "hook-pulse.disarmed");
+      const disarmSentinel4 = yield* disarmSentinel("2026-10-09T10:00:30Z");
+      yield* fs.writeFileString(argument4, disarmSentinel4);
       const ledger = yield* HarnessLedgerService;
       const report = yield* ledger.pruneProposals(options);
       expect(report.sessionsObserved).toBe(0);
@@ -1662,18 +1697,17 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger prune window diagnos
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const { evidenceRoot, options } = yield* activeSessionFixture("harness-startless-gap-");
-      yield* fs.writeFileString(
-        path.join(evidenceRoot, "hook-pulse-disarm-windows.ndjson"),
-        yield* HookPulseDisarmWindow.encodeJsonEffect(
-          HookPulseDisarmWindow.make({
-            schemaVersion: "hook-pulse-disarm-window/v1",
-            disarmedAt: O.none(),
-            rearmedAt: "2026-10-09T10:00:40Z",
-            reason: O.none(),
-            evidenceTier: "unknown",
-          })
-        )
+      const argument5 = path.join(evidenceRoot, "hook-pulse-disarm-windows.ndjson");
+      const encodedJsonEffect5 = yield* HookPulseDisarmWindow.encodeJsonEffect(
+        HookPulseDisarmWindow.make({
+          schemaVersion: "hook-pulse-disarm-window/v1",
+          disarmedAt: O.none(),
+          rearmedAt: "2026-10-09T10:00:40Z",
+          reason: O.none(),
+          evidenceTier: "unknown",
+        })
       );
+      yield* fs.writeFileString(argument5, encodedJsonEffect5);
       const report = yield* (yield* HarnessLedgerService).pruneProposals(options);
       expect(report.sessionsObserved).toBe(0);
       expect(report.sessionsSkippedDisarmed).toBe(1);
@@ -1688,7 +1722,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger prune window diagnos
       const { root, evidenceRoot, stateDir, options } = yield* activeSessionFixture("harness-spike-rows-");
       // Without `.mcp.json` only the skills are prunable surfaces.
       yield* fs.remove(path.join(root, ".mcp.json"));
-      const spike = yield* HookPulseV1.decodeJsonEffect(yield* pulse(sessionB, "2026-10-09T11:00:00Z", O.none()));
+      const pulse35 = yield* pulse(sessionB, "2026-10-09T11:00:00Z", O.none());
+      const spike = yield* HookPulseV1.decodeJsonEffect(pulse35);
       yield* writeShard(stateDir, "2026-10-09", sessionB, [
         yield* HookPulseV1.encodeJsonEffect(HookPulseV1.make({ ...spike, instrumentClass: "spike" })),
       ]);
@@ -1730,21 +1765,23 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger prune window diagnos
         )
       );
       yield* fs.writeFileString(path.join(root, "notes.txt"), "not a transcript\n");
-      yield* fs.writeFileString(path.join(root, "quiet.jsonl"), yield* encode({ sessionId: "second", type: "user" }));
-      yield* fs.writeFileString(
-        path.join(root, "anonymous.jsonl"),
-        yield* encode({ message: { content: [{ type: "tool_use", id: "two" }] } })
-      );
-      const identity = Sha256Hex.make(yield* hashPrivateIdentifier("first", yield* hookPulseHashSalt));
+      const argument6 = path.join(root, "quiet.jsonl");
+      const encoded6 = yield* encode({ sessionId: "second", type: "user" });
+      yield* fs.writeFileString(argument6, encoded6);
+      const argument7 = path.join(root, "anonymous.jsonl");
+      const encoded7 = yield* encode({ message: { content: [{ type: "tool_use", id: "two" }] } });
+      yield* fs.writeFileString(argument7, encoded7);
+      const hookPulseHashSalt43 = yield* hookPulseHashSalt;
+      const hashPrivateIdentifier36 = yield* hashPrivateIdentifier("first", hookPulseHashSalt43);
+      const identity = Sha256Hex.make(hashPrivateIdentifier36);
       const terminal = yield* pulse(identity, "2026-10-09T10:00:00Z", O.none());
       const opening = yield* HookPulseV1.decodeJsonEffect(terminal);
+      const encodedJsonEffect = yield* HookPulseV1.encodeJsonEffect(
+        HookPulseV1.make({ ...opening, hookEvent: "PreToolUse" })
+      );
       yield* writeShard(stateDir, "2026-10-09", identity, [
         "{not json",
-        yield* withAgentKind(
-          yield* HookPulseV1.encodeJsonEffect(HookPulseV1.make({ ...opening, hookEvent: "PreToolUse" })),
-          "claude-code",
-          attributed
-        ),
+        yield* withAgentKind(encodedJsonEffect, "claude-code", attributed),
         yield* withAgentKind(terminal, "claude-code", attributed),
         yield* withAgentKind(terminal, "claude-code", attributed),
         yield* withAgentKind(terminal, "codex-cli", attributed),
@@ -1778,10 +1815,11 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger prune window diagnos
           "\n"
         )
       );
-      const identity = Sha256Hex.make(yield* hashPrivateIdentifier("codex-thread", yield* hookPulseHashSalt));
-      yield* writeShard(stateDir, "2026-10-09", identity, [
-        yield* withAgentKind(yield* pulse(identity, "2026-10-09T10:00:00Z", O.none()), "codex-cli", rollout),
-      ]);
+      const hookPulseHashSalt44 = yield* hookPulseHashSalt;
+      const hashPrivateIdentifier37 = yield* hashPrivateIdentifier("codex-thread", hookPulseHashSalt44);
+      const identity = Sha256Hex.make(hashPrivateIdentifier37);
+      const pulse38 = yield* pulse(identity, "2026-10-09T10:00:00Z", O.none());
+      yield* writeShard(stateDir, "2026-10-09", identity, [yield* withAgentKind(pulse38, "codex-cli", rollout)]);
       const report = yield* (yield* HarnessLedgerService).reconcile(stateDir, root, "codex-cli");
       expect(report.agentKind).toBe("codex-cli");
       expect(report.transcriptFiles).toBe(1);
@@ -1834,10 +1872,9 @@ layer(EmptySentinelLayer, { timeout: "30 seconds" })("harness-ledger service wit
       const ledger = yield* HarnessLedgerService;
       const armed = yield* ledger.pruneProposals(options);
       expect(armed.sessionsObserved).toBe(1);
-      yield* fs.writeFileString(
-        path.join(evidenceRoot, "hook-pulse.disarmed"),
-        yield* disarmSentinel("2026-10-09T10:00:30Z")
-      );
+      const argument8 = path.join(evidenceRoot, "hook-pulse.disarmed");
+      const disarmSentinel8 = yield* disarmSentinel("2026-10-09T10:00:30Z");
+      yield* fs.writeFileString(argument8, disarmSentinel8);
       const disarmed = yield* ledger.pruneProposals(options);
       expect(disarmed.sessionsObserved).toBe(0);
       expect(disarmed.sessionsSkippedDisarmed).toBe(1);

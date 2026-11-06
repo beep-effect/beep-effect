@@ -53,17 +53,27 @@ describe("GitBranch test doubles", () => {
       it.effect("layer preserves all supplied overrides", () =>
         Effect.gen(function* () {
           const service = yield* GitBranch;
-          assert.strictEqual(yield* service.create("main", "sha"), undefined);
-          assert.strictEqual(yield* service.upsert("main", "sha"), "created");
-          assert.strictEqual(yield* service.exists("main"), true);
-          assert.strictEqual(yield* service.sha("main"), "sha");
-          assertSome(yield* service.shaOption("main"), "sha");
-          assert.strictEqual(yield* service.reset("main", "sha"), undefined);
-          assert.strictEqual(yield* service.delete("main"), undefined);
-          assert.strictEqual(
-            yield* service.createLinked({ issueNodeId: "issue", repositoryNodeId: "repo", name: "main", sha: "sha" }),
-            undefined
-          );
+          const created1 = yield* service.create("main", "sha");
+          assert.strictEqual(created1, undefined);
+          const upsert2 = yield* service.upsert("main", "sha");
+          assert.strictEqual(upsert2, "created");
+          const exists3 = yield* service.exists("main");
+          assert.strictEqual(exists3, true);
+          const sha4 = yield* service.sha("main");
+          assert.strictEqual(sha4, "sha");
+          const shaOption5 = yield* service.shaOption("main");
+          assertSome(shaOption5, "sha");
+          const reset6 = yield* service.reset("main", "sha");
+          assert.strictEqual(reset6, undefined);
+          const delete7 = yield* service.delete("main");
+          assert.strictEqual(delete7, undefined);
+          const createdLinked = yield* service.createLinked({
+            issueNodeId: "issue",
+            repositoryNodeId: "repo",
+            name: "main",
+            sha: "sha",
+          });
+          assert.strictEqual(createdLinked, undefined);
         })
       );
     });

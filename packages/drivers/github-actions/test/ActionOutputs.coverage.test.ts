@@ -30,8 +30,9 @@ it.layer(ActionOutputs.layerTest(), { timeout: "30 seconds" })((it) => {
         ["setSecret", outputs.setSecret("secret")],
       ] as const;
       for (const [member, call] of calls) {
+        const exit1 = yield* Effect.exit(call);
         assertExitFailure(
-          yield* Effect.exit(call),
+          exit1,
           Cause.die(
             UnstubbedMemberError.make({
               message: `ActionOutputs.makeTest: ${member}() was called but not stubbed — pass a \`${member}\` override.`,

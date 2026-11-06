@@ -14,28 +14,32 @@ describe("Sync repository optimistic concurrency (in-memory)", () => {
   it.effect(
     "rejects a stale SyncItem update with a typed version conflict",
     Effect.fnUntraced(function* () {
-      yield* Versioning.staleSyncItemUpdate(yield* makeInMemorySyncItemRepository());
+      const madeInMemorySyncItemRepository = yield* makeInMemorySyncItemRepository();
+      yield* Versioning.staleSyncItemUpdate(madeInMemorySyncItemRepository);
     })
   );
 
   it.effect(
     "advances SyncOperation versions on requeue so a stale lease cannot write",
     Effect.fnUntraced(function* () {
-      yield* Versioning.staleSyncOperationAfterRequeue(yield* makeInMemorySyncOperationRepository());
+      const madeInMemorySyncOperationRepository = yield* makeInMemorySyncOperationRepository();
+      yield* Versioning.staleSyncOperationAfterRequeue(madeInMemorySyncOperationRepository);
     })
   );
 
   it.effect(
     "advances the SyncConflict version on review",
     Effect.fnUntraced(function* () {
-      yield* Versioning.reviewAdvancesSyncConflictVersion(yield* makeInMemorySyncConflictRepository());
+      const madeInMemorySyncConflictRepository = yield* makeInMemorySyncConflictRepository();
+      yield* Versioning.reviewAdvancesSyncConflictVersion(madeInMemorySyncConflictRepository);
     })
   );
 
   it.effect(
     "advances the SyncCursor version on a replacing upsert",
     Effect.fnUntraced(function* () {
-      yield* Versioning.upsertAdvancesSyncCursorVersion(yield* makeInMemorySyncCursorRepository());
+      const madeInMemorySyncCursorRepository = yield* makeInMemorySyncCursorRepository();
+      yield* Versioning.upsertAdvancesSyncCursorVersion(madeInMemorySyncCursorRepository);
     })
   );
 });

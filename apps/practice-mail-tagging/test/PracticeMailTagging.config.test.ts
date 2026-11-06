@@ -169,7 +169,8 @@ describe("m365AppOnlyConfig", () => {
     Effect.gen(function* () {
       const { CLOUD_M365_DOCKET_CERT_PRIVATE_KEY: _dropped, ...withoutKey } = credentialEnvironment;
 
-      assertInstanceOf(yield* Effect.flip(parse(m365AppOnlyConfig, withoutKey)), Config.ConfigError);
+      const flip1 = yield* Effect.flip(parse(m365AppOnlyConfig, withoutKey));
+      assertInstanceOf(flip1, Config.ConfigError);
     })
   );
 });

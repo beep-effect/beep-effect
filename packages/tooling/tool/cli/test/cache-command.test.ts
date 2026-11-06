@@ -1,7 +1,6 @@
 import { buildCacheDashboard, CacheCommandError, CacheWarmLane } from "@beep/repo-cli/commands/Cache";
 import { runCacheWarmForTesting, runCacheWarmLaneForTesting } from "@beep/repo-cli/test/Cache";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -13,6 +12,7 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { NodeTestLayer } from "./support/CommandTest.ts";
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const initializeWarmRepository = Effect.fn("CacheCommandTest.initializeWarmRepository")(function* (repoRoot: string) {
@@ -64,7 +64,7 @@ const validWarmEnvironment = {
   TURBO_TOKEN: "fixture-write-token",
   TURBO_TEAM: "fixture-team",
 } as const;
-it.layer(NodeServices.layer, { timeout: "5 seconds" })("cache command", (it) => {
+it.layer(NodeTestLayer, { timeout: "5 seconds" })("cache command", (it) => {
   it.effect("reports a non-zero inherited cache-warm lane exit", () =>
     Effect.gen(function* () {
       const error = yield* runCacheWarmLaneForTesting(process.cwd())(["bun", "-e", "process.exit(7)"]).pipe(
@@ -276,7 +276,8 @@ it.layer(NodeServices.layer, { timeout: "5 seconds" })("cache command", (it) => 
           )
         );
         expect(error.message).toBe("injected warm failure");
-        expect(yield* fs.exists(receiptPath)).toBe(false);
+        const exists1 = yield* fs.exists(receiptPath);
+        expect(exists1).toBe(false);
       }),
     15000
   );
@@ -301,7 +302,8 @@ it.layer(NodeServices.layer, { timeout: "5 seconds" })("cache command", (it) => 
           )
         );
         expect(error.message).toContain("checkout changed during execution");
-        expect(yield* fs.exists(receiptPath)).toBe(false);
+        const exists2 = yield* fs.exists(receiptPath);
+        expect(exists2).toBe(false);
       }),
     15000
   );

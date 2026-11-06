@@ -95,7 +95,8 @@ describe("document intake surface", { concurrent: false }, () => {
       const ready = yield* waitFor((current) => current.vaultStatus === "configured");
 
       expect(ready.state.vaultSelection.kind).toBe("idle");
-      expect(yield* Ref.get(saved)).toMatchObject([{ vaultRootPath: selectedPath, workspaceId }]);
+      const got = yield* Ref.get(saved);
+      expect(got).toMatchObject([{ vaultRootPath: selectedPath, workspaceId }]);
       // The file-input ref callback and every handler stay referentially stable.
       expect(ready.actions).toBe(onboarding.actions);
     })
@@ -118,7 +119,8 @@ describe("document intake surface", { concurrent: false }, () => {
       const unavailable = yield* waitFor((current) => current.vaultStatus === "unavailable");
       unavailable.actions.retryVaultConfig();
       yield* waitFor((current) => current.vaultStatus === "configured");
-      expect(yield* Ref.get(attempts)).toBe(2);
+      const got1 = yield* Ref.get(attempts);
+      expect(got1).toBe(2);
     })
   );
 

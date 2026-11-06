@@ -732,9 +732,12 @@ const replayLivePin = Effect.fnUntraced(function* (
   const manifestBytes = yield* readBytes(manifestPath);
   const journalDigest = yield* sha256Bytes(journalBytes);
   yield* requirePinFact("journalSha256", window.journalSha256, O.some(journalDigest));
-  yield* requirePinFact("manifestSha256", window.manifestSha256, O.some(yield* sha256Bytes(manifestBytes)));
-  yield* checkManifestWindow(yield* decodeUtf8(manifestBytes, manifestPath), window);
-  const events = yield* decodeAdmissionJournal(yield* decodeUtf8(journalBytes, journalPath));
+  const sha256Bytes1 = yield* sha256Bytes(manifestBytes);
+  yield* requirePinFact("manifestSha256", window.manifestSha256, O.some(sha256Bytes1));
+  const decodedUtf8 = yield* decodeUtf8(manifestBytes, manifestPath);
+  yield* checkManifestWindow(decodedUtf8, window);
+  const decodedUtf82 = yield* decodeUtf8(journalBytes, journalPath);
+  const events = yield* decodeAdmissionJournal(decodedUtf82);
   const options = ReplayOptions.make({ window: O.some(window) });
   // The bytes' own digest feeds the replay, so its window guard re-checks the pin.
   const report = yield* replayAdmissionJournal(policy, events, policyDigest, journalDigest, options);

@@ -78,17 +78,22 @@ const linkedLayout = Effect.fnUntraced(function* (checkout: string) {
   const fs = yield* FileSystem.FileSystem;
   const git = yield* Git;
   // Any git failure ends the proof, as a missing fact does.
-  const toplevel = yield* fs.realPath(yield* git.repoRoot(checkout));
-  const gitDir = yield* fs.realPath(yield* git.gitDir(checkout));
-  const commonDir = yield* fs.realPath(yield* git.commonDir(checkout));
+  const repoRoot = yield* git.repoRoot(checkout);
+  const toplevel = yield* fs.realPath(repoRoot);
+  const gitDirPath = yield* git.gitDir(checkout);
+  const gitDir = yield* fs.realPath(gitDirPath);
+  const commonDirPath = yield* git.commonDir(checkout);
+  const commonDir = yield* fs.realPath(commonDirPath);
   yield* holds(Str.Equivalence(toplevel, checkout) && !Str.Equivalence(gitDir, commonDir));
-  yield* holds(O.getOrElse(yield* isRegisteredWorktree(checkout, checkout), thunkFalse));
+  const isRegisteredWorktree5 = yield* isRegisteredWorktree(checkout, checkout);
+  yield* holds(O.getOrElse(isRegisteredWorktree5, thunkFalse));
   return commonDir;
 });
 
 // Processes whose cwd is inside the checkout, minus the invoking CLI and its ancestry.
 const liveProcessCount = Effect.fnUntraced(function* (checkout: string) {
-  const attachments = yield* Effect.fromOption(yield* scanProcessAttachments({ directory: checkout, kinds: ["cwd"] }));
+  const scanProcessAttachments6 = yield* scanProcessAttachments({ directory: checkout, kinds: ["cwd"] });
+  const attachments = yield* Effect.fromOption(scanProcessAttachments6);
   const ancestry = yield* invokerAncestryPids();
   return A.length(A.filter(attachments, (attachment) => !HashSet.has(ancestry, attachment.pid)));
 });
@@ -98,7 +103,9 @@ const liveSessionRowCount = Effect.fnUntraced(function* (checkout: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const ledger = yield* SessionLedger;
-  const rows = openSessionRows(yield* ledger.list(yield* detectPrRepository(checkout)));
+  const detectPrRepository13 = yield* detectPrRepository(checkout);
+  const list7 = yield* ledger.list(detectPrRepository13);
+  const rows = openSessionRows(list7);
   const named = yield* Effect.filter(rows, (row) =>
     fs.realPath(row.checkout).pipe(
       Effect.orElseSucceed(() => path.resolve(row.checkout)),
@@ -122,23 +129,31 @@ const proveTerminalLane = Effect.fnUntraced(function* (
   const commonDir = yield* linkedLayout(checkout);
   // A detached HEAD has no branch: `None` ends the proof as symbolic-ref's failure did.
   const git = yield* Git;
-  const branch = yield* Effect.fromOption(yield* git.currentBranch(checkout));
-  const head = yield* decodeGitObjectId(yield* git.revParse(checkout, "HEAD"));
-  yield* holds(
-    A.isReadonlyArrayEmpty(
-      yield* git.status(checkout, { noOptionalLocks: true, untrackedFiles: "all", ignoreSubmodules: "none" })
-    )
-  );
-  yield* holds(N.Equivalence(yield* liveProcessCount(checkout), 0));
-  yield* holds(N.Equivalence(yield* liveSessionRowCount(checkout), 0));
-  const merged = yield* Effect.fromOption(yield* pullRequests(checkout, branch));
+  const currentBranch = yield* git.currentBranch(checkout);
+  const branch = yield* Effect.fromOption(currentBranch);
+  const headSha = yield* git.revParse(checkout, "HEAD");
+  const head = yield* decodeGitObjectId(headSha);
+  const status = yield* git.status(checkout, {
+    noOptionalLocks: true,
+    untrackedFiles: "all",
+    ignoreSubmodules: "none",
+  });
+  yield* holds(A.isReadonlyArrayEmpty(status));
+  const processes = yield* liveProcessCount(checkout);
+  yield* holds(N.Equivalence(processes, 0));
+  const sessionRows = yield* liveSessionRowCount(checkout);
+  yield* holds(N.Equivalence(sessionRows, 0));
+  const pulls = yield* pullRequests(checkout, branch);
+  const merged = yield* Effect.fromOption(pulls);
   const equal = A.findFirst(merged, (pullRequest) => Str.Equivalence(pullRequest.headRefOid, head));
   const proof = O.isSome(equal)
     ? O.some({ pullRequest: equal.value, headRelation: "equal" as const })
-    : O.map(yield* Effect.findFirst(merged, ancestorOf(checkout, head)), (pullRequest) => ({
-        pullRequest,
-        headRelation: "ancestor" as const,
-      }));
+    : yield* Effect.map(Effect.findFirst(merged, ancestorOf(checkout, head)), (value) =>
+        O.map(value, (pullRequest) => ({
+          pullRequest,
+          headRelation: "ancestor" as const,
+        }))
+      );
   const { pullRequest, headRelation } = yield* Effect.fromOption(proof);
   return ResidueTerminalLaneAuthority.make({
     checkoutRoot,

@@ -36,7 +36,10 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
+    "research/ci-lane-parity.md",
     "research/decisions-locked.md",
+    "research/local-verdict-parity-fixtures.md",
+    "research/p1-numruns-inventory.md",
     "research/research-facts.md"
   ],
   "agentLaunchers": [

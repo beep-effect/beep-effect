@@ -1100,7 +1100,8 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
   const resolveExportEntry = Effect.fn("Libpff.pffexport.resolveExportEntry")(function* (
     absolutePath: string
   ): Effect.fn.Return<string, LibpffError> {
-    if (O.isSome(yield* fs.readLink(absolutePath).pipe(Effect.option))) {
+    const pipe1 = yield* fs.readLink(absolutePath).pipe(Effect.option);
+    if (O.isSome(pipe1)) {
       return yield* makeLibpffError(
         "process",
         LibpffErrorOptions.make({ cause: "export tree contains a symbolic link" })
@@ -1778,7 +1779,8 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     readonly state: EmlBudgetState;
     readonly warnings: Array<string>;
   }): Effect.fn.Return<O.Option<ResolvedExportedMessage>, LibpffError, Digest.Digest> {
-    const outlookHeaders = parseOutlookHeaders(yield* readItemText(input.item.outlookHeaders.absolutePath));
+    const readItemText2 = yield* readItemText(input.item.outlookHeaders.absolutePath);
+    const outlookHeaders = parseOutlookHeaders(readItemText2);
     const folderPath = yield* decodeChildPath(input.item.folderPath);
     const messagePath = yield* decodeChildPath(input.item.directoryPath);
     if (O.isNone(folderPath) || O.isNone(messagePath)) {
@@ -1822,7 +1824,8 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     claimPath: string,
     warnings: Array<string>
   ) {
-    const claimReleased = O.isSome(yield* fs.remove(claimPath, { recursive: true }).pipe(Effect.option));
+    const pipe3 = yield* fs.remove(claimPath, { recursive: true }).pipe(Effect.option);
+    const claimReleased = O.isSome(pipe3);
     if (!claimReleased) warnings.push(claimReleaseFailedWarning);
   });
 

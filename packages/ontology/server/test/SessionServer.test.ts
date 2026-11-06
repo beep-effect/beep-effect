@@ -397,8 +397,10 @@ describe("Ontology file-store security boundary", () => {
           const result = read;
 
           expect(result.source).toBe("original turtle");
-          expect(yield* fileSystem.readFileString(path.join(root, "nested/result.ttl"))).toBe("original turtle");
-          expect(yield* fileSystem.readDirectory(path.join(root, "nested"))).toEqual(["result.ttl"]);
+          const readFileString1 = yield* fileSystem.readFileString(path.join(root, "nested/result.ttl"));
+          expect(readFileString1).toBe("original turtle");
+          const readDirectory2 = yield* fileSystem.readDirectory(path.join(root, "nested"));
+          expect(readDirectory2).toEqual(["result.ttl"]);
         })
       );
     });
@@ -485,8 +487,10 @@ describe("Ontology file-store security boundary", () => {
             expect(writeError.message).toContain("root-relative");
           }
 
-          pipe(yield* fileSystem.exists(absoluteTarget), assertFalse);
-          pipe(yield* fileSystem.exists(outsideCreation), assertFalse);
+          const exists3 = yield* fileSystem.exists(absoluteTarget);
+          pipe(exists3, assertFalse);
+          const exists4 = yield* fileSystem.exists(outsideCreation);
+          pipe(exists4, assertFalse);
         })
       );
     });
@@ -533,8 +537,10 @@ describe("Ontology file-store security boundary", () => {
           expect(readError.message).toContain("escapes the allowed root");
           expect(writeError.message).toContain("escapes the allowed root");
 
-          expect(yield* fileSystem.readFileString(outsideVictim)).toBe("outside remains unchanged");
-          expect(yield* fileSystem.readLink(linkPath)).toBe(outsideVictim);
+          const readFileString5 = yield* fileSystem.readFileString(outsideVictim);
+          expect(readFileString5).toBe("outside remains unchanged");
+          const readLink6 = yield* fileSystem.readLink(linkPath);
+          expect(readLink6).toBe(outsideVictim);
         })
       );
     });
@@ -580,8 +586,10 @@ describe("Ontology file-store security boundary", () => {
           expect(readError.message).toContain("must resolve");
           expect(writeError.message).toContain("must resolve");
 
-          expect(yield* fileSystem.readFileString(victim)).toBe("non-Turtle victim remains unchanged");
-          expect(yield* fileSystem.readLink(alias)).toBe(victim);
+          const readFileString7 = yield* fileSystem.readFileString(victim);
+          expect(readFileString7).toBe("non-Turtle victim remains unchanged");
+          const readLink8 = yield* fileSystem.readLink(alias);
+          expect(readLink8).toBe(victim);
         })
       );
     });
@@ -628,8 +636,10 @@ describe("Ontology file-store security boundary", () => {
           expect(readError.message).toContain("must resolve");
           expect(writeError.message).toContain("must resolve");
 
-          expect(yield* fileSystem.readFileString(victim)).toBe("literal-backslash victim remains unchanged");
-          expect(yield* fileSystem.readLink(alias)).toBe(victim);
+          const readFileString9 = yield* fileSystem.readFileString(victim);
+          expect(readFileString9).toBe("literal-backslash victim remains unchanged");
+          const readLink10 = yield* fileSystem.readLink(alias);
+          expect(readLink10).toBe(victim);
         })
       );
     });
@@ -680,8 +690,10 @@ describe("Ontology file-store security boundary", () => {
           expect(readError.message).toContain("escapes the allowed root");
           expect(writeError.message).toContain("escapes the allowed root");
 
-          expect(yield* fileSystem.readFileString(outsideVictim)).toBe("outside remains unchanged");
-          expect(yield* fileSystem.readLink(configuredRoot)).toBe(outside);
+          const readFileString11 = yield* fileSystem.readFileString(outsideVictim);
+          expect(readFileString11).toBe("outside remains unchanged");
+          const readLink12 = yield* fileSystem.readLink(configuredRoot);
+          expect(readLink12).toBe(outside);
         })
       );
     });

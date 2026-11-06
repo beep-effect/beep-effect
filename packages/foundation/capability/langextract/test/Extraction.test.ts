@@ -207,7 +207,8 @@ describe("parseModelOutput", () => {
       assertNone(request.options.fuzzyThreshold);
       assertNone(request.options.maxExtractions);
 
-      expect(yield* encodeLangExtractRequest(request)).toEqual({
+      const encodedLangExtractRequest = yield* encodeLangExtractRequest(request);
+      expect(encodedLangExtractRequest).toEqual({
         documentId: "doc-1",
         examples: [],
         options: {},

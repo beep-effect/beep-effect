@@ -46,11 +46,13 @@ describe("repository permissive shapes", () => {
       const repositoryWire = { type: "git", url: "effected/kit", directory: "packages/spdx", custom: true };
       const repository = yield* S.decodeEffect(Repository.FromValue)(repositoryWire);
       assert.deepStrictEqual(repository.rest, { custom: true });
-      assert.deepStrictEqual(yield* S.encodeEffect(Repository.FromValue)(repository), repositoryWire);
+      const value1 = yield* S.encodeEffect(Repository.FromValue)(repository);
+      assert.deepStrictEqual(value1, repositoryWire);
       const bugsWire = { email: "bugs@example.com", url: "https://issues.dev", tracker: { kind: "custom" } };
       const bugs = yield* S.decodeEffect(Bugs.FromValue)(bugsWire);
       assert.deepStrictEqual(bugs.rest, { tracker: { kind: "custom" } });
-      assert.deepStrictEqual(yield* S.encodeEffect(Bugs.FromValue)(bugs), bugsWire);
+      const value2 = yield* S.encodeEffect(Bugs.FromValue)(bugs);
+      assert.deepStrictEqual(value2, bugsWire);
     })
   );
   it.effect("the strict manifest tier rejects a malformed repository url with a typed error", () =>
@@ -86,7 +88,8 @@ describe("repository object property", () => {
       Effect.gen(function* () {
         const value = yield* S.decodeEffect(Repository.FromValue)(wire);
         assert.strictEqual(value.url, wire.url);
-        assert.deepStrictEqual(yield* S.encodeEffect(Repository.FromValue)(value), wire);
+        const value3 = yield* S.encodeEffect(Repository.FromValue)(value);
+        assert.deepStrictEqual(value3, wire);
       }),
     { arbitrary: fcRuns(50) }
   );

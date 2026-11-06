@@ -5,13 +5,14 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { GlobSet } from "@beep/glob/GlobSet";
 import { $RepoCliId } from "@beep/identity/packages";
 import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
 import { FrontmatterFormat } from "@beep/markdown/MarkdownNode";
 import { messageWithCause } from "@beep/repo-cli-kit/cli/CommandErrorFields";
 import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
-import { runCaptured } from "@beep/repo-cli-kit/process/index";
 import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
@@ -26,6 +27,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { ChangesetGraphError } from "./Quality.errors.ts";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -149,8 +151,7 @@ const normalizePath = Str.replaceAll("\\", "/");
 const stripTrailingSlashes = Str.replace(/\/+$/g, "");
 const isReadmeChangeset = Str.endsWith("/README.md");
 
-const toNulSeparatedLines: (output: string) => ReadonlyArray<string> = flow(
-  Str.split(nulSeparator),
+const canonicalTrackedPaths: (paths: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
   A.map(Str.trim),
   A.filter(Str.isNonEmpty),
   A.dedupe,
@@ -215,22 +216,23 @@ export const changesetsParseClosingFenceLine = (lines: Iterable<string>): O.Opti
   return O.none();
 };
 
-const collectGitOutput = Effect.fn("ChangesetGraph.collectGitOutput")(function* (
+// `git ls-files -- <pathspec>` through the kit, keeping the capture's two failure wordings.
+const collectTrackedPaths = Effect.fn("ChangesetGraph.collectTrackedPaths")(function* (
   repoRoot: string,
-  args: ReadonlyArray<string>
-): Effect.fn.Return<string, ChangesetGraphError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const result = yield* runCaptured({
-    command: "git",
-    args,
-    cwd: repoRoot,
-    source: "stdout",
-  }).pipe(ChangesetGraphError.mapError(`Failed to run git ${A.join(args, " ")}.`));
-  if (result.exitCode !== 0) {
-    return yield* ChangesetGraphError.make({
-      message: `git ${A.join(args, " ")} failed with exit code ${result.exitCode}.`,
-    });
-  }
-  return result.output;
+  pathspec: ReadonlyArray<string>
+): Effect.fn.Return<ReadonlyArray<string>, ChangesetGraphError, Git> {
+  const git = yield* Git;
+  const entries = yield* git.lsFiles(repoRoot, { pathspec }).pipe(
+    Effect.mapError(
+      adaptGitKitError(GitCommand.lsFiles(pathspec), {
+        onSpawnFailure: (commandLine) => ChangesetGraphError.new(`Failed to run ${commandLine}.`),
+        onNonZeroExit: ({ commandLine, exitCode }) =>
+          ChangesetGraphError.make({ message: `${commandLine} failed with exit code ${exitCode}.` }),
+        onTruncated: O.none(),
+      })
+    )
+  );
+  return canonicalTrackedPaths(A.map(entries, (entry) => entry.path));
 });
 
 const readPackageJsonText = Effect.fn("ChangesetGraph.readPackageJsonText")(function* (
@@ -343,15 +345,16 @@ export const collectWorkspacePackageJsonFiles = Effect.fn("ChangesetGraph.collec
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   ChangesetGraphError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
+  const readWorkspacePatterns1 = yield* readWorkspacePatterns(repoRoot);
   const workspaceManifests = yield* GlobSet.compile(
-    A.map(yield* readWorkspacePatterns(repoRoot), packageJsonGlobForWorkspacePattern)
+    A.map(readWorkspacePatterns1, packageJsonGlobForWorkspacePattern)
   ).pipe(Effect.mapError((error) => ChangesetGraphError.new(error, error.message)));
-  const output = yield* collectGitOutput(repoRoot, ["ls-files", "-z", "--", ...gitTrackedPackageJsonPathspecs]);
+  const tracked = yield* collectTrackedPaths(repoRoot, gitTrackedPackageJsonPathspecs);
 
   return pipe(
-    toNulSeparatedLines(output),
+    tracked,
     A.filter((file) => file !== "package.json" && workspaceManifests.matches(file))
   );
 });
@@ -361,7 +364,7 @@ const collectWorkspacePackages = Effect.fn("ChangesetGraph.collectWorkspacePacka
 ): Effect.fn.Return<
   ReadonlyArray<LenientManifest>,
   ChangesetGraphError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const path = yield* Path.Path;
   const packageJsonFiles = yield* collectWorkspacePackageJsonFiles(repoRoot);
@@ -369,7 +372,8 @@ const collectWorkspacePackages = Effect.fn("ChangesetGraph.collectWorkspacePacka
     packageJsonFiles,
     Effect.fn(function* (file) {
       const filePath = path.join(repoRoot, file);
-      const document = yield* readChangesetGraphWorkspaceManifest(yield* readPackageJsonText(filePath), filePath);
+      const readPackageJsonText2 = yield* readPackageJsonText(filePath);
+      const document = yield* readChangesetGraphWorkspaceManifest(readPackageJsonText2, filePath);
       if (P.isUndefined(document.name)) {
         return yield* ChangesetGraphError.make({
           message: `Workspace package manifest ${file} does not declare a package name.`,
@@ -384,18 +388,21 @@ const collectWorkspacePackages = Effect.fn("ChangesetGraph.collectWorkspacePacka
   return documents;
 });
 
+// The changeset documents, matched as a glob whatever the inherited pathspec magic.
+const CHANGESET_PATHSPEC = [":(glob).changeset/*.md"];
+
 const collectChangesetFiles = Effect.fn("ChangesetGraph.collectChangesetFiles")(function* (
   repoRoot: string
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   ChangesetGraphError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const output = yield* collectGitOutput(repoRoot, ["ls-files", "-z", "--", ":(glob).changeset/*.md"]);
+  const tracked = yield* collectTrackedPaths(repoRoot, CHANGESET_PATHSPEC);
   const trackedFiles = pipe(
-    toNulSeparatedLines(output),
+    tracked,
     A.filter((file) => !isReadmeChangeset(file)),
     A.sort(Order.String)
   );
@@ -633,7 +640,7 @@ export const runChangesetGraphCheck = Effect.fn("ChangesetGraph.runChangesetGrap
 ): Effect.fn.Return<
   ChangesetGraphSummary,
   ChangesetGraphError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const workspaces = yield* collectWorkspacePackages(repoRoot);
   const workspacePackageNames = pipe(

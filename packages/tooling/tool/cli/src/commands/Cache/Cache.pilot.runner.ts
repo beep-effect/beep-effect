@@ -196,8 +196,9 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       yield* requireCacheLinuxX64("Signed pilot supervisor requires Linux x64.");
-      if ((yield* hashCacheExperimentExecutable(request.pilot.executable)) !== request.pilot.client.sha256)
+      if ((yield* hashCacheExperimentExecutable(request.pilot.executable)) !== request.pilot.client.sha256) {
         return yield* CacheCommandError.new("Signed pilot executable differs from its requested binary pin.");
+      }
       const hashIssuerMaterial = Effect.fn("CachePilot.hashIssuerMaterial")(function* (file: string) {
         return yield* readCacheExperimentBytes(path.dirname(file), file, 4096).pipe(Effect.flatMap(hashBytes));
       });
@@ -210,6 +211,7 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
       const bun = yield* fs.realPath(process.execPath);
       const node = yield* fs.realPath(request.pilot.nodeExecutable);
       const dependencies = yield* readCacheDependencyMaterialization(sourceRoot, request.pilot.dependencies);
+      // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
       const git = yield* runCapturedStreams({
         command: "/usr/bin/git",
         args: ["rev-parse", "--path-format=absolute", "--git-common-dir"],
@@ -218,8 +220,9 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
         env: { PATH: "/usr/bin" },
         bound,
       });
-      if (git.exitCode !== 0 || git.truncated)
+      if (git.exitCode !== 0 || git.truncated) {
         return yield* CacheCommandError.new("Cannot resolve signed pilot source Git metadata.");
+      }
       const commonGit = yield* fs.realPath(Str.trim(git.stdout));
       const mounts = yield* Effect.forEach(
         [
@@ -236,11 +239,10 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
         fs.realPath
       );
       const directory = yield* makePrivateSupervisorStorage(root, mounts);
-      yield* writeContainedFileString(
-        directory,
-        "request.json",
-        yield* JsonStringCodec(CacheSignedPilotRequest).encode(CacheSignedPilotRequest.make({ ...request, sourceRoot }))
+      const encoded = yield* JsonStringCodec(CacheSignedPilotRequest).encode(
+        CacheSignedPilotRequest.make({ ...request, sourceRoot })
       );
+      yield* writeContainedFileString(directory, "request.json", encoded);
       const worker = yield* renderSignedPilotWorker(root, directory, protectedIssuerMaterial, upload);
       yield* writeContainedFileString(directory, "worker.ts", worker);
       // Bun otherwise discovers sourceRoot/bunfig.toml from the untrusted cwd,
@@ -253,8 +255,9 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
             A.some([...mounts, directory, "/usr"], (mount) =>
               isResolvedPathWithinRoot(path, { root: mount, candidate: issuer })
             )
-          )
+          ) {
             return yield* CacheCommandError.new("Issuer material must remain outside every signed pilot input mount.");
+          }
         }
       });
       yield* verifyIssuerMountIsolation();
@@ -361,9 +364,12 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
       if (!isSignedPilotReceipt(report)) {
         if (
           O.isSome(protectedIssuerMaterial) &&
-          !O.contains(issuerDigest, yield* hashIssuerMaterial(protectedIssuerMaterial.value))
-        )
+          !(yield* Effect.map(hashIssuerMaterial(protectedIssuerMaterial.value), (value) =>
+            O.contains(issuerDigest, value)
+          ))
+        ) {
           return yield* CacheCommandError.new("Persistent issuer material changed during the upload worker.");
+        }
         return report;
       }
       const verifySupervisedReceipt = Effect.fn("CachePilot.verifySupervisedReceipt")(function* () {
@@ -371,16 +377,19 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
           report.channel !== request.pilot.channel ||
           !S.toEquivalence(CacheClientPin)(report.client, request.pilot.client) ||
           report.bun.sha256 !== (yield* hashCacheExperimentExecutable(bun))
-        )
+        ) {
           return yield* CacheCommandError.new("Signed pilot report differs from its supervised identities.");
+        }
         if (O.isSome(protectedIssuerMaterial)) {
+          const hashIssuerMaterial1 = yield* hashIssuerMaterial(protectedIssuerMaterial.value);
           if (
-            !O.contains(issuerDigest, yield* hashIssuerMaterial(protectedIssuerMaterial.value)) ||
+            !O.contains(issuerDigest, hashIssuerMaterial1) ||
             !A.every(report.comparisons, (pair) => O.contains(pair.protection.issuerMaterialDenied, true))
-          )
+          ) {
             return yield* CacheCommandError.new(
               "Persistent issuer material was exposed or changed during the signed pilot."
             );
+          }
         }
       });
       yield* verifySupervisedReceipt();
@@ -477,7 +486,8 @@ export const runCacheProducerUploadExperiment = Effect.fn("CachePilot.producerUp
           const summary = yield* report.nativeSummary.pipe(
             Effect.fromOption(() => CacheCommandError.new("Owned upload omitted its complete native summary."))
           );
-          return yield* joinCacheProducerUpload(expected, summary, yield* proxy.events, expectedTasks);
+          const events2 = yield* proxy.events;
+          return yield* joinCacheProducerUpload(expected, summary, events2, expectedTasks);
         })
       )
     )

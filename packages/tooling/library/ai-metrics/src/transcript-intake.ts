@@ -500,7 +500,9 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
                     Effect.flatMap(S.decodeUnknownEffect(PayloadRows))
                   );
                 const row = A.head(rows);
-                return O.isNone(row) ? O.none<TranscriptCursor>() : O.some(yield* decodeCursor(row.value.payload));
+                return O.isNone(row)
+                  ? O.none<TranscriptCursor>()
+                  : yield* Effect.asSome(decodeCursor(row.value.payload));
               })
             )
         );
@@ -521,7 +523,7 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
                 if (payloadBytes > 4_194_304) return yield* failure("oversize");
 
                 const expectedJson = O.isSome(expected)
-                  ? O.some(yield* encodeCursor(expected.value))
+                  ? yield* Effect.asSome(encodeCursor(expected.value))
                   : O.none<string>();
                 const nextCursor = yield* encodeCursor(page.cursor);
                 const key = `${page.cursor.source}:${page.cursor.pathHash}`;

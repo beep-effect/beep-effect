@@ -11,11 +11,15 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: 10000 })("r
     Effect.gen(function* () {
       const path = yield* Path.Path;
       const absent = yield* ActionEnvironment.makeTest({ RUNNER_OS: "", RUNNER_TOOL_CACHE: "" });
-      assert.strictEqual(yield* isWindowsRunner(absent), false);
-      assert.strictEqual(yield* toolCacheRoot(path)(absent), path.join("/tmp", "runner-tool-cache"));
+      const isWindowsRunner1 = yield* isWindowsRunner(absent);
+      assert.strictEqual(isWindowsRunner1, false);
+      const value = yield* toolCacheRoot(path)(absent);
+      assert.strictEqual(value, path.join("/tmp", "runner-tool-cache"));
       const windows = yield* ActionEnvironment.makeTest({ RUNNER_OS: "wInDoWs", RUNNER_TOOL_CACHE: "/custom" });
-      assert.strictEqual(yield* isWindowsRunner(windows), true);
-      assert.strictEqual(yield* toolCacheRoot(windows, path), "/custom");
+      const isWindowsRunner2 = yield* isWindowsRunner(windows);
+      assert.strictEqual(isWindowsRunner2, true);
+      const toolCacheRoot3 = yield* toolCacheRoot(windows, path);
+      assert.strictEqual(toolCacheRoot3, "/custom");
     })
   );
 });

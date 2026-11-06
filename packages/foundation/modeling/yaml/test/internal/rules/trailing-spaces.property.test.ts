@@ -16,7 +16,8 @@ describe("trailing-spaces schema properties", () => {
         const encoded = yield* S.encodeEffect(trailingSpacesOptions)(value);
         const decoded = yield* S.decodeEffect(trailingSpacesOptions)(encoded);
         assert.isTrue(S.toEquivalence(trailingSpacesOptions)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(trailingSpacesOptions)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(trailingSpacesOptions)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

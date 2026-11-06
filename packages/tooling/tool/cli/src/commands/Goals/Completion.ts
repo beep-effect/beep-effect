@@ -30,17 +30,12 @@ import { decideYeetReviewWindow, YEET_REVIEW_WINDOW_DEFAULT, YeetReviewWindow } 
 import { YeetMergeReadyFromEncoded, YeetVerdict } from "../Yeet/internal/Verdict.ts";
 import { YeetWatchCheck } from "../Yeet/internal/WatchStream.ts";
 import { YeetCommandError } from "../Yeet/Yeet.errors.ts";
-import {
-  GoalCompletionEvidenceInput,
-  GoalMergeTimeEvidenceRequest,
-  GoalObservedCheckRun,
-} from "./CompletionEvidence.schemas.ts";
+import { GoalCompletionEvidenceInput, GoalMergeTimeEvidenceRequest } from "./CompletionEvidence.schemas.ts";
 import {
   decideGoalCompletionEvidence,
   describeGoalCompletionEvidence,
-  readGoalCompletionGit,
-  readGoalCompletionGithub,
-  readGoalCompletionJson,
+  goalCompletionIo,
+  readGoalCompletion,
   readGoalMergeTimeEvidence,
 } from "./CompletionEvidence.ts";
 import {
@@ -65,6 +60,7 @@ import { listGoalPackets, parseGoalManifestText } from "./Inventory.ts";
 import { canonicalJsonText, sha256Hex } from "./PacketCore/PacketDigest.ts";
 import type { FsGuardError } from "@beep/repo-cli-kit/cli/FsGuards";
 import type * as FileSystem from "effect/FileSystem";
+import type { GoalObservedCheckRun } from "./CompletionEvidence.schemas.ts";
 import type { GoalCompletionEvidenceVerdict, GoalCompletionOutcome, GoalPullRequestRef } from "./Goals.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
 
@@ -273,25 +269,6 @@ export class GoalCompletionVerifier extends Context.Service<
   );
 }
 
-const Pull = S.Struct({
-  created_at: S.DateTimeUtcFromString,
-  number: S.Int,
-  merged: S.Boolean,
-  merged_at: S.OptionFromNullOr(S.DateTimeUtcFromString),
-  merge_commit_sha: S.OptionFromNullOr(S.NonEmptyString),
-  head: S.Struct({ sha: S.NonEmptyString }),
-  base: S.Struct({ ref: S.NonEmptyString, repo: S.Struct({ full_name: S.NonEmptyString }) }),
-});
-const Commit = S.Struct({
-  sha: S.NonEmptyString,
-  parents: S.Array(S.Struct({ sha: S.NonEmptyString })),
-  commit: S.Struct({ tree: S.Struct({ sha: S.NonEmptyString }) }),
-});
-const CheckPages = S.Array(S.Struct({ check_runs: S.Array(GoalObservedCheckRun) }));
-const TimelinePages = S.Struct({ event: S.String, created_at: S.optionalKey(S.DateTimeUtcFromString) }).pipe(
-  S.Array,
-  S.Array
-);
 const equivalentReceipt = S.toEquivalence(GoalCompletionReceipt);
 /**
  * Digests the decoded completion declaration, initiative identity and packet identity canonically.
@@ -357,6 +334,7 @@ const RecoveryFacts = S.Struct({
   remote: S.Struct({
     available: S.Boolean,
     checked: S.Boolean,
+    readFailure: YeetCommandError.pipe(S.OptionFromOptionalKey),
     number: S.Int,
     state: S.String,
     isDraft: S.Boolean,
@@ -406,34 +384,33 @@ const recoverReadiness = Effect.fn("Goals.Completion.recoverReadiness")(function
   const path = yield* Path.Path;
   const runId = yield* repoRunArtifactId(branch);
   const runRoot = path.join(root, ".beep", "yeet", "runs", runId);
-  if (path.resolve(root, ref.ref) !== path.join(runRoot, "verdict.json"))
+  if (path.resolve(root, ref.ref) !== path.join(runRoot, "verdict.json")) {
     return yield* YeetCommandError.make({ message: "Declared verdict path is not canonical for its branch." });
+  }
   const jobFile = path.join(root, ".beep", "yeet", "jobs", `${recovery.jobId}.json`);
   const jobRead = yield* readContainedFileStringNoFollow(root, jobFile);
   const statusFile = path.join(runRoot, "status.json");
   const statusRead = yield* readContainedFileStringNoFollow(root, statusFile);
-  const job = yield* decodeJob(
-    yield* Effect.fromOption(jobRead.contents).pipe(
-      Effect.mapError(() =>
-        YeetCommandError.make({
-          message: jobRead.exists
-            ? "canonical job artifact is unreadable or not a file"
-            : "canonical job artifact is absent",
-        })
-      )
+  const pipe1 = yield* Effect.fromOption(jobRead.contents).pipe(
+    Effect.mapError(() =>
+      YeetCommandError.make({
+        message: jobRead.exists
+          ? "canonical job artifact is unreadable or not a file"
+          : "canonical job artifact is absent",
+      })
     )
   );
-  const status = yield* decodeRecoveryStatus(
-    yield* Effect.fromOption(statusRead.contents).pipe(
-      Effect.mapError(() =>
-        YeetCommandError.make({
-          message: statusRead.exists
-            ? "canonical status artifact is unreadable or not a file"
-            : "canonical status artifact is absent",
-        })
-      )
+  const job = yield* decodeJob(pipe1);
+  const pipe2 = yield* Effect.fromOption(statusRead.contents).pipe(
+    Effect.mapError(() =>
+      YeetCommandError.make({
+        message: statusRead.exists
+          ? "canonical status artifact is unreadable or not a file"
+          : "canonical status artifact is absent",
+      })
     )
   );
+  const status = yield* decodeRecoveryStatus(pipe2);
   const runner = yield* Effect.fromOption(job.runner).pipe(
     Effect.mapError(() => YeetCommandError.make({ message: "job runner receipt is absent" }))
   );
@@ -489,7 +466,9 @@ const recoverReadiness = Effect.fn("Goals.Completion.recoverReadiness")(function
     ],
   ];
   const refusal = A.findFirst(checks, ([, holds]) => !holds);
-  if (O.isSome(refusal)) return yield* YeetCommandError.make({ message: refusal.value[0] });
+  if (O.isSome(refusal)) {
+    return yield* YeetCommandError.make({ message: refusal.value[0] });
+  }
   return true;
 });
 
@@ -528,7 +507,7 @@ const readLocalEvidence = Effect.fn("Goals.Completion.localEvidence")(function* 
   const observedHead = verdict.value.resolvedHeadSha;
   const ready = O.map(verdict.value.mergeReady, (value) => value.ready);
   const refusal = readinessRecoveryRefusal(verdict.value, head);
-  if (O.isSome(recovery) && O.isNone(refusal))
+  if (O.isSome(recovery) && O.isNone(refusal)) {
     return yield* recoverReadiness(root, ref, head, verdict.value.branch, recovery.value).pipe(
       Effect.map(() =>
         evidenceCheck(
@@ -542,6 +521,7 @@ const readLocalEvidence = Effect.fn("Goals.Completion.localEvidence")(function* 
         Effect.succeed(evidenceCheck(ref, "unknown", observedHead, `Readiness recovery refused: ${error.message}`))
       )
     );
+  }
   const outcome = Match.value({ observedHead, ready }).pipe(
     Match.when(
       ({ observedHead, ready }) => O.exists(observedHead, (value) => value !== head) || O.contains(false)(ready),
@@ -575,17 +555,12 @@ const readAcceptedManifest = Effect.fn("Goals.Completion.acceptedManifest")(func
   head: string,
   slug: string
 ) {
-  const acceptedText = yield* readGoalCompletionGit(root, ["show", `${head}:goals/${slug}/ops/manifest.json`]).pipe(
-    Effect.catchTag("YeetCommandError", () =>
-      readGoalCompletionGithub(root, [
-        "api",
-        `repos/{owner}/{repo}/contents/goals/${slug}/ops/manifest.json?ref=${head}`,
-        "-H",
-        "Accept: application/vnd.github.raw+json",
-      ])
-    ),
-    Effect.option
-  );
+  const io = yield* goalCompletionIo();
+  const path = `goals/${slug}/ops/manifest.json`;
+  const local = yield* io.manifestAtHead(root, head, path).pipe(Effect.orElseSucceed(O.none<string>));
+  const acceptedText = O.isSome(local)
+    ? local
+    : yield* io.hostedManifest(root, head, path).pipe(Effect.orElseSucceed(O.none<string>));
   const acceptedParsed = O.flatMap(acceptedText, parseGoalManifestText);
   const acceptedManifest = O.isSome(acceptedParsed)
     ? yield* S.decodeUnknownEffect(GoalManifest)(acceptedParsed.value).pipe(Effect.option)
@@ -679,11 +654,9 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
     verifiedAt,
   });
   if (initial.grandfathered) return yield* resolve(initial);
-  const pullRead = yield* readGoalCompletionJson(
-    root,
-    ["api", `repos/{owner}/{repo}/pulls/${final.number}`],
-    Pull
-  ).pipe(Effect.option);
+  const pullRead = yield* readGoalCompletion(root, (io, root) => io.pullRequest(root, final.number)).pipe(
+    Effect.option
+  );
   if (O.isNone(pullRead)) return yield* resolve(initial);
   const pull = pullRead.value;
   const head = pull.head.sha;
@@ -693,7 +666,9 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
     acceptedHead: O.some(head),
     merged: O.some(pull.merged),
   });
-  if (!pull.merged) return yield* resolve(known);
+  if (!pull.merged) {
+    return yield* resolve(known);
+  }
   const reads = yield* Effect.gen(function* () {
     const mergeSha = yield* Effect.fromOption(pull.merge_commit_sha).pipe(
       Effect.mapError(() => YeetCommandError.make({ message: "Merged PR has no merge result" }))
@@ -703,16 +678,7 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
     );
     // Project only the decoded fields: a large merge commit's file patches would
     // otherwise truncate the captured response and lose the merge facts.
-    const mergeCommit = yield* readGoalCompletionJson(
-      root,
-      [
-        "api",
-        `repos/{owner}/{repo}/commits/${mergeSha}`,
-        "--jq",
-        "{sha: .sha, parents: [.parents[] | {sha: .sha}], commit: {tree: {sha: .commit.tree.sha}}}",
-      ],
-      Commit
-    );
+    const mergeCommit = yield* readGoalCompletion(root, (io, root) => io.commit(root, mergeSha));
     // GitHub binds this merge result to this PR head for all three workflows. A single-parent
     // result cannot distinguish squash from rebase reliably; retain method=None rather than guess.
     const merge = GoalMergeResult.make({
@@ -724,13 +690,9 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
     });
     const acceptedManifest = yield* readAcceptedManifest(root, head, slug);
     const acceptedDeclarationDigest = O.isSome(acceptedManifest)
-      ? O.some(yield* goalCompletionDeclarationDigest(acceptedManifest.value))
+      ? yield* Effect.asSome(goalCompletionDeclarationDigest(acceptedManifest.value))
       : O.none<string>();
-    const pages = yield* readGoalCompletionJson(
-      root,
-      ["api", `repos/{owner}/{repo}/commits/${head}/check-runs?per_page=100&filter=all`, "--paginate", "--slurp"],
-      CheckPages
-    );
+    const pages = yield* readGoalCompletion(root, (io, root) => io.checkRuns(root, head));
     const checks = A.flatMap(pages, (page) => page.check_runs);
     const mergeTime = yield* readGoalMergeTimeEvidence(
       root,
@@ -808,11 +770,7 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
           })
         ),
     });
-    const timeline = yield* readGoalCompletionJson(
-      root,
-      ["api", `repos/{owner}/{repo}/issues/${final.number}/timeline?per_page=100`, "--paginate", "--slurp"],
-      TimelinePages
-    ).pipe(Effect.option);
+    const timeline = yield* readGoalCompletion(root, (io, root) => io.timeline(root, final.number)).pipe(Effect.option);
     const events = O.getOrElse(O.map(timeline, A.flatten), A.empty);
     const readyTimes = A.getSomes(
       A.map(
@@ -823,11 +781,7 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
     const lastReady = A.reduce(readyTimes, O.none<DateTime.Utc>(), (found, time) =>
       O.isNone(found) || DateTime.toEpochMillis(time) > DateTime.toEpochMillis(found.value) ? O.some(time) : found
     );
-    const suites = yield* readGoalCompletionJson(
-      root,
-      ["api", `repos/{owner}/{repo}/commits/${head}/check-suites?per_page=100`, "--paginate", "--slurp"],
-      S.Struct({ check_suites: S.Array(S.Struct({ created_at: S.DateTimeUtcFromString })) }).pipe(S.Array)
-    ).pipe(Effect.option);
+    const suites = yield* readGoalCompletion(root, (io, root) => io.checkSuites(root, head)).pipe(Effect.option);
     const received = O.flatMap(suites, (pages) =>
       A.reduce(
         A.flatMap(pages, (page) => page.check_suites),
@@ -931,7 +885,9 @@ const receiptLocation = Effect.fn("Goals.Completion.receiptLocation")(function* 
 });
 
 const readReceiptRepository = Effect.fn("Goals.Completion.receiptRepository")(function* (root: string) {
-  const remote = yield* readGoalCompletionGit(root, ["remote", "get-url", "origin"]).pipe(Effect.option);
+  const remote = yield* Effect.flatMap(goalCompletionIo(), (io) => io.originUrl(root)).pipe(
+    Effect.orElseSucceed(O.none<string>)
+  );
   return O.flatMap(remote, (text) =>
     O.flatMap(Str.match(/github\.com[:/]([^/\s]+\/[^/\s]+?)(?:\.git)?\s*$/u)(text), (match) => A.get(match, 1))
   );
@@ -1029,15 +985,14 @@ export const storedGoalCompletion = Effect.fn("Goals.Completion.stored")(functio
       : picked;
   if (O.isNone(newest)) return newest;
   const receipt = newest.value;
-  return O.some(
-    yield* GoalCompletionVerifier.resolve(
-      GoalCompletionObservation.make({
-        ...receipt,
-        merged: O.isSome(receipt.merge) ? O.some(true) : O.none(),
-        grandfathered: manifest.completionGate.grandfathered,
-      })
-    )
+  const resolved3 = yield* GoalCompletionVerifier.resolve(
+    GoalCompletionObservation.make({
+      ...receipt,
+      merged: O.isSome(receipt.merge) ? O.some(true) : O.none(),
+      grandfathered: manifest.completionGate.grandfathered,
+    })
   );
+  return O.some(resolved3);
 });
 
 /**
@@ -1251,6 +1206,14 @@ const readRefreshManifest = Effect.fn("Goals.Completion.refreshManifest")(functi
     Effect.mapError(() => YeetCommandError.make({ message: "Requested goal manifest cannot decode" }))
   );
 });
+// Verification is proof, not closeout: the packet finishes only when its
+// committed closeout record merges, so name that step at the moment it opens.
+const adoptionHint = (slug: string, manifest: GoalManifest, receipt: GoalCompletionReceipt) =>
+  receipt.outcome === "verified" && manifest.proposedCloseout !== undefined
+    ? Console.log(
+        `[goals:completion] next: bun run beep goals set-status ${slug} ${manifest.proposedCloseout.status}, then merge that packet-state PR`
+      )
+    : Effect.void;
 const refreshRecord = Effect.fn("Goals.Completion.refreshRecord")(function* (
   root: string,
   record: GoalPacketRecord,
@@ -1264,7 +1227,9 @@ const refreshRecord = Effect.fn("Goals.Completion.refreshRecord")(function* (
   const manifest = yield* explicit ? decoded.pipe(Effect.asSome) : decoded.pipe(Effect.option);
   if (O.isNone(manifest)) return;
   if (manifest.value.completionGate.grandfathered) {
-    if (explicit) yield* Console.log(`[goals:completion] ${record.slug}: grandfathered (no receipt needed)`);
+    if (explicit) {
+      yield* Console.log(`[goals:completion] ${record.slug}: grandfathered (no receipt needed)`);
+    }
     return;
   }
   const finalRead = Effect.fromOption(
@@ -1281,24 +1246,27 @@ const refreshRecord = Effect.fn("Goals.Completion.refreshRecord")(function* (
   }
   yield* write(receipt);
   yield* Console.log(`[goals:completion] ${record.slug} #${final.value.number}: ${receipt.outcome}`);
+  yield* adoptionHint(record.slug, manifest.value, receipt);
 });
 const refresh = Effect.fn("Goals.Completion.refresh")(function* (
   slug: O.Option<string>,
   readinessJob: O.Option<string>
 ) {
-  if (O.isSome(readinessJob) && O.isNone(slug))
+  if (O.isSome(readinessJob) && O.isNone(slug)) {
     return yield* YeetCommandError.make({ message: "--readiness-job requires --slug" });
-  if (O.isSome(readinessJob))
+  }
+  if (O.isSome(readinessJob)) {
     yield* decodeRecoveryJobId(readinessJob.value).pipe(
       Effect.mapError(() => YeetCommandError.make({ message: "--readiness-job must be a job UUID" }))
     );
+  }
   const root = yield* findRepoRoot();
   const records = yield* listGoalPackets(root);
   const location = yield* receiptLocation(root);
   const repository = yield* readReceiptRepository(root);
   // The workstation store is shared by every clone of the repository; without
   // a resolvable github.com origin the owning clone's legacy file still records it.
-  const store = O.isSome(repository) ? O.some(yield* goalCompletionReceiptStore()) : O.none();
+  const store = O.isSome(repository) ? yield* Effect.asSome(goalCompletionReceiptStore()) : O.none();
   const write = (receipt: GoalCompletionReceipt) =>
     O.match(store, {
       onSome: (shared) => shared.append(receipt),
@@ -1308,8 +1276,9 @@ const refresh = Effect.fn("Goals.Completion.refresh")(function* (
           Effect.asVoid
         ),
     });
-  if (O.exists(slug, (value) => !A.some(records, (record) => record.slug === value)))
+  if (O.exists(slug, (value) => !A.some(records, (record) => record.slug === value))) {
     return yield* YeetCommandError.make({ message: "Requested goal packet does not exist" });
+  }
   const selected = O.match(slug, {
     onNone: () => records,
     onSome: (value) => A.filter(records, (record) => record.slug === value),

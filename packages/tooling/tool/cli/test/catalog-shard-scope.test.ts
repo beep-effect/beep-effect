@@ -175,16 +175,21 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
             yield* removeProjectFile(schemaShard("@beep/b"));
 
             yield* runLint(["schema-catalog", "--write", sourceA]);
-            expect(yield* readProjectFile(schemaShard("@beep/a"))).toBe(fullA);
-            expect(yield* projectFileExists(schemaShard("@beep/b"))).toBe(false);
+            const readProjectFile1 = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(readProjectFile1).toBe(fullA);
+            const projectFileExists2 = yield* projectFileExists(schemaShard("@beep/b"));
+            expect(projectFileExists2).toBe(false);
 
             // The package that lost its last schema loses its shard; the other shard is untouched.
             yield* runLint(["schema-catalog", "--write", sourceB]);
-            expect(yield* readProjectFile(schemaShard("@beep/b"))).toBe(fullB);
+            const readProjectFile3 = yield* readProjectFile(schemaShard("@beep/b"));
+            expect(readProjectFile3).toBe(fullB);
             yield* removeProjectFile(sourceB);
             yield* runLint(["schema-catalog", "--write", sourceB]);
-            expect(yield* projectFileExists(schemaShard("@beep/b"))).toBe(false);
-            expect(yield* readProjectFile(schemaShard("@beep/a"))).toBe(fullA);
+            const projectFileExists4 = yield* projectFileExists(schemaShard("@beep/b"));
+            expect(projectFileExists4).toBe(false);
+            const readProjectFile5 = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(readProjectFile5).toBe(fullA);
           })
         );
       })
@@ -204,7 +209,8 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
 
             // Staging the out-of-glob file still regenerates the owner, from in-glob files only.
             yield* runLint(["schema-catalog", "--write", sourceInfraLambda]);
-            expect(yield* readProjectFile(schemaShard("@beep/infra"))).toBe(fullInfra);
+            const readProjectFile6 = yield* readProjectFile(schemaShard("@beep/infra"));
+            expect(readProjectFile6).toBe(fullInfra);
           })
         );
       })
@@ -221,11 +227,13 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
             yield* removeProjectFile(schemaShard("@beep/a"));
 
             yield* runLint(["schema-catalog", "--write", "--stage", sourceA]);
-            expect(yield* stagedPaths(root)).toEqual([]);
+            const stagedPaths7 = yield* stagedPaths(root);
+            expect(stagedPaths7).toEqual([]);
             // The rewrite restored the committed bytes, so nothing is staged; a real change is.
             yield* removeProjectFile(sourceB);
             yield* runLint(["schema-catalog", "--write", "--stage", sourceB]);
-            expect(yield* stagedPaths(root)).toEqual([schemaShard("@beep/b")]);
+            const stagedPaths8 = yield* stagedPaths(root);
+            expect(stagedPaths8).toEqual([schemaShard("@beep/b")]);
           })
         );
       })
@@ -248,16 +256,21 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
 
             yield* runObservability(["catalog", "--write", "--stage", sourceA]);
             // The report prints as one multi-line block.
-            const report = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
+            const logLines9 = yield* TestConsole.logLines;
+            const report = A.join(A.filter(logLines9, P.isString), "\n");
             expect(report).toContain(`[observability-catalog] ${standardPath}: skipped`);
-            expect(yield* readProjectFile(spanShard("@beep/a"))).toBe(fullA);
+            const readProjectFile10 = yield* readProjectFile(spanShard("@beep/a"));
+            expect(readProjectFile10).toBe(fullA);
             // The standard's generated section belongs to the full run.
-            expect(yield* readProjectFile(standardPath)).not.toBe(fullStandard);
-            expect(yield* stagedPaths(root)).toEqual([]);
+            const readProjectFile11 = yield* readProjectFile(standardPath);
+            expect(readProjectFile11).not.toBe(fullStandard);
+            const stagedPaths12 = yield* stagedPaths(root);
+            expect(stagedPaths12).toEqual([]);
 
             yield* removeProjectFile(sourceB);
             yield* runObservability(["catalog", "--write", "--stage", sourceB]);
-            expect(yield* stagedPaths(root)).toEqual([spanShard("@beep/b")]);
+            const stagedPaths13 = yield* stagedPaths(root);
+            expect(stagedPaths13).toEqual([spanShard("@beep/b")]);
           })
         );
       })

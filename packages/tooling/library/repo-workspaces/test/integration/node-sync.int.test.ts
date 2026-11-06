@@ -51,8 +51,9 @@ layer(Workspaces.layer({ cwd }).pipe(Layer.provideMerge(nodeHost)), { timeout: "
         A.map(getWorkspacePackagesSync(info.root, nodeSyncOps), (pkg) => pkg.name),
         Str.Order
       );
+      const listPackages1 = yield* discovery.listPackages;
       const async = A.sort(
-        A.map(yield* discovery.listPackages, (pkg) => pkg.name),
+        A.map(listPackages1, (pkg) => pkg.name),
         Str.Order
       );
       assert.deepStrictEqual(sync, async);

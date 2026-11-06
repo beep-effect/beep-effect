@@ -38,11 +38,7 @@
     "explorations/ci-hang-observability/RESEARCH.md",
     "explorations/ci-hang-observability/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/ci-hang-observability/RESEARCH.md",
-    "../../explorations/ci-hang-observability/research/SOURCES.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -113,5 +109,9 @@
     "The Bun 1.4.0 soak records a hang recurrence or incompatible runtime behavior on the already-landed pin.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
+  ],
+  "researchReferences": [
+    "../../explorations/ci-hang-observability/RESEARCH.md",
+    "../../explorations/ci-hang-observability/research/SOURCES.md"
   ]
 }

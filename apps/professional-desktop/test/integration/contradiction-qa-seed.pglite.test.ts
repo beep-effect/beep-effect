@@ -219,7 +219,8 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
       Effect.fnUntraced(function* () {
         const { fs, qaVaultRoot } = yield* DisabledSeedFixture;
         yield* seedContradictionQaFixtures();
-        expect(yield* databaseSnapshot()).toStrictEqual({
+        const databaseSnapshot1 = yield* databaseSnapshot();
+        expect(databaseSnapshot1).toStrictEqual({
           candidates: 0,
           dispositions: 0,
           edges: 0,
@@ -230,7 +231,8 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
         const store = yield* Workspace.WorkspaceVaultStore;
         const config = yield* store.getVaultConfig(desktopWorkspaceId);
         assertNone(config.vaultRootPath);
-        expect(yield* fs.exists(qaVaultRoot)).toBe(false);
+        const exists2 = yield* fs.exists(qaVaultRoot);
+        expect(exists2).toBe(false);
       })
     );
   });
@@ -257,9 +259,8 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
           expect(second).toStrictEqual(first);
           expect(Str.length(CONTRADICTION_QA_SOURCE_TEXT)).toBeGreaterThan(SOURCE_TEXT_PAGE_CODE_UNITS);
           expect(CONTRADICTION_QA_ANCHOR_START).toBe(SOURCE_TEXT_PAGE_CODE_UNITS - 1);
-          expect(yield* fs.readFileString(path.join(qaVaultRoot, CONTRADICTION_QA_SOURCE_LOCATOR))).toBe(
-            CONTRADICTION_QA_SOURCE_TEXT
-          );
+          const readFileString3 = yield* fs.readFileString(path.join(qaVaultRoot, CONTRADICTION_QA_SOURCE_LOCATOR));
+          expect(readFileString3).toBe(CONTRADICTION_QA_SOURCE_TEXT);
 
           const repository = yield* ContradictionTriageRepository;
           const page = yield* repository.list(
@@ -280,18 +281,16 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
             ),
             "expected deadline contradiction candidate"
           );
-          const expanded = yield* requireSome(
-            yield* repository.getExpanded(
-              GetExpandedContradictionCandidate.make({
-                candidateId: deadline.candidate.id,
-                knownAt: instant(1_767_225_610_000),
-                orgId: 1,
-                sourceScopeRef: "workspace:1",
-                validAt: instant(1_767_225_610_000),
-              })
-            ),
-            "expected expanded deadline contradiction candidate"
+          const gotExpanded = yield* repository.getExpanded(
+            GetExpandedContradictionCandidate.make({
+              candidateId: deadline.candidate.id,
+              knownAt: instant(1_767_225_610_000),
+              orgId: 1,
+              sourceScopeRef: "workspace:1",
+              validAt: instant(1_767_225_610_000),
+            })
           );
+          const expanded = yield* requireSome(gotExpanded, "expected expanded deadline contradiction candidate");
           const evidence = A.appendAll(expanded.left.evidence, expanded.right.evidence);
           const verified = yield* requireSome(
             A.findFirst(evidence, ({ latestVerification }) => O.isSome(latestVerification)),
@@ -336,8 +335,10 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
           const store = yield* Workspace.WorkspaceVaultStore;
           const config = yield* store.getVaultConfig(desktopWorkspaceId);
           expect(O.getOrNull(config.vaultRootPath)).toBe(userRoot);
-          expect(yield* fs.readFileString(userMarker)).toBe("user-owned");
-          expect(yield* fs.exists(path.join(qaVaultRoot, CONTRADICTION_QA_SOURCE_LOCATOR))).toBe(false);
+          const readFileString4 = yield* fs.readFileString(userMarker);
+          expect(readFileString4).toBe("user-owned");
+          const exists5 = yield* fs.exists(path.join(qaVaultRoot, CONTRADICTION_QA_SOURCE_LOCATOR));
+          expect(exists5).toBe(false);
           expect((yield* databaseSnapshot()).candidates).toBe(0);
         })
       );
@@ -356,7 +357,8 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
           assertTrue(failed);
           assertTrue(ContradictionQaSeedError.is(result.failure));
           expect(result.failure.reason).toBe("source-conflict");
-          expect(yield* fs.readFileString(sourcePath)).toBe("user-owned source");
+          const readFileString6 = yield* fs.readFileString(sourcePath);
+          expect(readFileString6).toBe("user-owned source");
           expect((yield* databaseSnapshot()).candidates).toBe(0);
           expect((yield* databaseSnapshot()).evidence).toBe(0);
         })

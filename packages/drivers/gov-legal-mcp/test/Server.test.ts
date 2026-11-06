@@ -393,16 +393,21 @@ describe("gov-legal MCP frozen contract", () => {
             encodeMcpSchemaTool(tool).pipe(Effect.flatMap(decodeUnknownMcpSchemaTool))
           );
           const listing = McpSchema.ListToolsResult.make({ tools });
-          yield* decodeMcpSchemaListToolsResult(yield* encodeMcpSchemaListToolsResult(listing));
+          const encodedMcpSchemaListToolsResult = yield* encodeMcpSchemaListToolsResult(listing);
+          yield* decodeMcpSchemaListToolsResult(encodedMcpSchemaListToolsResult);
 
           const titlesArguments = yield* decodeEcfrListTitlesParams({});
           const searchArguments = yield* decodeEcfrSearchParams(ecfrSearchArguments);
           const structureArguments = yield* decodeEcfrDatedTitleParams(ecfrStructureArguments);
           const govinfoSearchArguments = yield* decodeUnknownSearchPayload(govinfoArguments);
-          yield* decodeEcfrListTitlesParams(yield* encodeEcfrListTitlesParams(titlesArguments));
-          yield* decodeEcfrSearchParams(yield* encodeEcfrSearchParams(searchArguments));
-          yield* decodeEcfrDatedTitleParams(yield* encodeEcfrDatedTitleParams(structureArguments));
-          yield* decodeSearchPayload(yield* encodeSearchPayload(govinfoSearchArguments));
+          const encodedEcfrListTitlesParams = yield* encodeEcfrListTitlesParams(titlesArguments);
+          yield* decodeEcfrListTitlesParams(encodedEcfrListTitlesParams);
+          const encodedEcfrSearchParams = yield* encodeEcfrSearchParams(searchArguments);
+          yield* decodeEcfrSearchParams(encodedEcfrSearchParams);
+          const encodedEcfrDatedTitleParams = yield* encodeEcfrDatedTitleParams(structureArguments);
+          yield* decodeEcfrDatedTitleParams(encodedEcfrDatedTitleParams);
+          const encodedSearchPayload = yield* encodeSearchPayload(govinfoSearchArguments);
+          yield* decodeSearchPayload(encodedSearchPayload);
 
           const requests = [
             { name: "ecfr_list_titles", arguments: {} },
@@ -424,10 +429,14 @@ describe("gov-legal MCP frozen contract", () => {
           const searchResult = yield* decodeUnknownSearchResultsResponse(search.structuredContent);
           const structureResult = yield* decodeUnknownStructureNode(structure.structuredContent);
           const govinfoResult = yield* decodeUnknownSearchSuccess(govinfo.structuredContent);
-          yield* decodeTitlesResponse(yield* encodeTitlesResponse(titlesResult));
-          yield* decodeSearchResultsResponse(yield* encodeSearchResultsResponse(searchResult));
-          yield* decodeStructureNode(yield* encodeStructureNode(structureResult));
-          yield* decodeSearchSuccess(yield* encodeSearchSuccess(govinfoResult));
+          const encodedTitlesResponse = yield* encodeTitlesResponse(titlesResult);
+          yield* decodeTitlesResponse(encodedTitlesResponse);
+          const encodedSearchResultsResponse = yield* encodeSearchResultsResponse(searchResult);
+          yield* decodeSearchResultsResponse(encodedSearchResultsResponse);
+          const encodedStructureNode = yield* encodeStructureNode(structureResult);
+          yield* decodeStructureNode(encodedStructureNode);
+          const encodedSearchSuccess = yield* encodeSearchSuccess(govinfoResult);
+          yield* decodeSearchSuccess(encodedSearchSuccess);
         })
       );
 
@@ -523,13 +532,11 @@ describe("gov-legal MCP frozen contract", () => {
     it.effect(
       "fails closed on cross-driver normalization collisions",
       Effect.fnUntraced(function* () {
-        const error = assertCollision(
-          yield* buildToolNameCollisionReport([
-            ToolNameCandidate.make({ source: "agency.alpha", operationId: "search" }),
-            ToolNameCandidate.make({ source: "agency_alpha", operationId: "search" }),
-          ]).pipe(Effect.result),
-          "duplicate_normalized"
-        );
+        const pipe1 = yield* buildToolNameCollisionReport([
+          ToolNameCandidate.make({ source: "agency.alpha", operationId: "search" }),
+          ToolNameCandidate.make({ source: "agency_alpha", operationId: "search" }),
+        ]).pipe(Effect.result);
+        const error = assertCollision(pipe1, "duplicate_normalized");
         assert.deepEqual(error.collisionKeys, ["agency_alpha_search"]);
       })
     );
@@ -561,13 +568,11 @@ describe("gov-legal MCP frozen contract", () => {
     it.effect(
       "marks punctuation normalization duplicates before failing",
       Effect.fnUntraced(function* () {
-        const error = assertCollision(
-          yield* buildToolNameCollisionReport([
-            ToolNameCandidate.make({ source: "ecfr", operationId: "search.results" }),
-            ToolNameCandidate.make({ source: "ecfr", operationId: "search/results" }),
-          ]).pipe(Effect.result),
-          "duplicate_normalized"
-        );
+        const pipe2 = yield* buildToolNameCollisionReport([
+          ToolNameCandidate.make({ source: "ecfr", operationId: "search.results" }),
+          ToolNameCandidate.make({ source: "ecfr", operationId: "search/results" }),
+        ]).pipe(Effect.result);
+        const error = assertCollision(pipe2, "duplicate_normalized");
         assert.isTrue(A.every(error.report.candidates, (row) => row.duplicateVerdict === "duplicate_normalized"));
       })
     );
@@ -594,10 +599,8 @@ describe("gov-legal MCP frozen contract", () => {
         assert.strictEqual(secondRow.digest, "a06e92ed");
         assert.strictEqual(firstRow.finalWireName.length, 64);
         assert.strictEqual(firstRow.finalWireName, secondRow.finalWireName);
-        const error = assertCollision(
-          yield* buildToolNameCollisionReport([first, second]).pipe(Effect.result),
-          "duplicate_final"
-        );
+        const pipe3 = yield* buildToolNameCollisionReport([first, second]).pipe(Effect.result);
+        const error = assertCollision(pipe3, "duplicate_final");
         assert.isTrue(A.every(error.report.candidates, (row) => row.duplicateVerdict === "duplicate_final"));
       })
     );

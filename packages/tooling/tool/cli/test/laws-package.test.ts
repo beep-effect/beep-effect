@@ -80,10 +80,14 @@ it.layer(platform, { concurrent: false, timeout: "30 seconds" })("package-local 
     "round trips the Laws domain schemas",
     [ScopeArbitrary, ReportArbitrary, FindingArbitrary, LawArbitrary],
     Effect.fnUntraced(function* ([scope, report, finding, law]) {
-      expect(yield* encodeScope(scope).pipe(Effect.flatMap(decodeScope))).toEqual(scope);
-      expect(yield* encodeReport(report).pipe(Effect.flatMap(decodeReport))).toEqual(report);
-      expect(yield* encodeFinding(finding).pipe(Effect.flatMap(decodeFinding))).toEqual(finding);
-      expect(yield* encodeLaw(law).pipe(Effect.flatMap(decodeLaw))).toEqual(law);
+      const pipe1 = yield* encodeScope(scope).pipe(Effect.flatMap(decodeScope));
+      expect(pipe1).toEqual(scope);
+      const pipe2 = yield* encodeReport(report).pipe(Effect.flatMap(decodeReport));
+      expect(pipe2).toEqual(report);
+      const pipe3 = yield* encodeFinding(finding).pipe(Effect.flatMap(decodeFinding));
+      expect(pipe3).toEqual(finding);
+      const pipe4 = yield* encodeLaw(law).pipe(Effect.flatMap(decodeLaw));
+      expect(pipe4).toEqual(law);
     }),
     { arbitrary: fcRuns(30) }
   );
@@ -116,8 +120,16 @@ it.layer(platform, { concurrent: false, timeout: "30 seconds" })("package-local 
         const actualCount = yield* service.inspectProject(request, ({ project }) => project.getSourceFiles().length);
         expect(actualCount).toBe(2);
         const preloaded = TsMorphProjectInspectionRequest.make({ ...request, loadTsconfigFiles: true });
-        expect(yield* service.inspectProject(preloaded, ({ project }) => project.getSourceFiles().length)).toBe(3);
-        expect(yield* service.inspectProject(request, ({ project }) => project.getSourceFiles().length)).toBe(2);
+        const inspectProject5 = yield* service.inspectProject(
+          preloaded,
+          ({ project }) => project.getSourceFiles().length
+        );
+        expect(inspectProject5).toBe(3);
+        const inspectProject6 = yield* service.inspectProject(
+          request,
+          ({ project }) => project.getSourceFiles().length
+        );
+        expect(inspectProject6).toBe(2);
       })
     );
   });
@@ -178,7 +190,8 @@ it.layer(platform, { concurrent: false, timeout: "30 seconds" })("package-local 
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "laws-empty-" });
         yield* write(root, "packages/empty/package.json", '{"name":"@beep/empty"}');
         const scope = yield* resolveLawsPackageScope(root, "packages/empty");
-        expect(yield* scanLawsPackage(scope)).toEqual(
+        const scanLawsPackage7 = yield* scanLawsPackage(scope);
+        expect(scanLawsPackage7).toEqual(
           LawsPackageReport.make({
             projectSourceFileCount: 0,
             findings: [
@@ -204,9 +217,8 @@ it.layer(platform, { concurrent: false, timeout: "30 seconds" })("package-local 
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "laws-empty-app-" });
         yield* write(root, "apps/empty/package.json", '{"name":"@beep/empty-app"}');
         const scope = yield* resolveLawsPackageScope(root, "apps/empty");
-        expect(yield* scanLawsPackage(scope)).toEqual(
-          LawsPackageReport.make({ projectSourceFileCount: 0, findings: [] })
-        );
+        const scanLawsPackage8 = yield* scanLawsPackage(scope);
+        expect(scanLawsPackage8).toEqual(LawsPackageReport.make({ projectSourceFileCount: 0, findings: [] }));
       })
     );
   });

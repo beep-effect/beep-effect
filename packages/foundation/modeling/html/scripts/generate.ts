@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { CodegenKit, GeneratedModule } from "@beep/codegen-kit";
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 /**
@@ -25,12 +26,15 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as A from "effect/Array";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as Match from "effect/Match";
@@ -4123,91 +4127,116 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = Object.f
 // IO program
 // ---------------------------------------------------------------------------
 
-const program = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const pkgRoot = path.resolve(import.meta.dirname, "..");
-  const dataDir = path.join(pkgRoot, "data");
-  const srcDir = path.join(pkgRoot, "src");
+const program = Command.make(
+  "generate",
+  { check: Flag.Boolean("check").pipe(Flag.withDefault(false)) },
+  Effect.fn("HtmlGenerator.generate")(function* ({ check }) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const pkgRoot = path.resolve(import.meta.dirname, "..");
+    const dataDir = path.join(pkgRoot, "data");
+    const srcDir = path.join(pkgRoot, "src");
 
-  const readJson = Effect.fn("HtmlGenerator.readJson")(function* <Schema extends S.Top>(schema: Schema, rel: string) {
-    const source = yield* fs.readFileString(path.join(dataDir, rel));
-    return yield* S.decodeEffect(S.fromJsonString(schema), {
-      errors: "all",
-      onExcessProperty: "error",
-    })(source).pipe(
-      Effect.mapError((cause) =>
-        HtmlGenerationError.make({
-          cause,
-          message: `HTML generator could not decode ${rel}`,
-        })
-      )
+    const readJson = Effect.fn("HtmlGenerator.readJson")(function* <Schema extends S.Top>(schema: Schema, rel: string) {
+      const source = yield* fs.readFileString(path.join(dataDir, rel));
+      return yield* S.decodeEffect(S.fromJsonString(schema), {
+        errors: "all",
+        onExcessProperty: "error",
+      })(source).pipe(
+        Effect.mapError((cause) =>
+          HtmlGenerationError.make({
+            cause,
+            message: `HTML generator could not decode ${rel}`,
+          })
+        )
+      );
+    });
+
+    const dfnsDoc = yield* readJson(DfnsDoc, "webref/dfns-html.json");
+    const elementsDoc = yield* readJson(ElementsDoc, "webref/elements-html.json");
+    const cmDoc = yield* readJson(ContentModelDoc, "whatwg/content-model.json");
+    const classification = yield* readJson(Classification, "overrides/classification.json");
+    const obsDoc = yield* readJson(ObsoleteInterfacesDoc, "overrides/obsolete-interfaces.json");
+    const languageSubtagRegistrySource = yield* fs.readFileString(
+      path.join(dataDir, "iana/language-subtag-registry.txt")
     );
-  });
-
-  const dfnsDoc = yield* readJson(DfnsDoc, "webref/dfns-html.json");
-  const elementsDoc = yield* readJson(ElementsDoc, "webref/elements-html.json");
-  const cmDoc = yield* readJson(ContentModelDoc, "whatwg/content-model.json");
-  const classification = yield* readJson(Classification, "overrides/classification.json");
-  const obsDoc = yield* readJson(ObsoleteInterfacesDoc, "overrides/obsolete-interfaces.json");
-  const languageSubtagRegistrySource = yield* fs.readFileString(
-    path.join(dataDir, "iana/language-subtag-registry.txt")
-  );
-  const crypto = yield* Digest.Digest;
-  const registryHash = Hex.encode(
-    yield* crypto.digest(Digest.sha256, new TextEncoder().encode(languageSubtagRegistrySource)).pipe(
+    const crypto = yield* Digest.Digest;
+    const pipe1 = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(languageSubtagRegistrySource)).pipe(
       Effect.mapError((cause) =>
         HtmlGenerationError.make({
           cause,
           message: "HTML generator could not hash the IANA language-subtag registry",
         })
       )
-    )
-  );
-  if (registryHash !== IANA_LANGUAGE_SUBTAG_REGISTRY_SHA256) {
-    return yield* HtmlGenerationError.make({
-      message: `IANA registry requires SHA-256 ${IANA_LANGUAGE_SUBTAG_REGISTRY_SHA256}; received ${registryHash}`,
-    });
-  }
+    );
+    const registryHash = Hex.encode(pipe1);
+    if (registryHash !== IANA_LANGUAGE_SUBTAG_REGISTRY_SHA256) {
+      return yield* HtmlGenerationError.make({
+        message: `IANA registry requires SHA-256 ${IANA_LANGUAGE_SUBTAG_REGISTRY_SHA256}; received ${registryHash}`,
+      });
+    }
 
-  const { conforming, languageTagRegistry, meta, model, total } = yield* Effect.try({
-    try: () => {
-      const registry = parseLanguageSubtagRegistry(languageSubtagRegistrySource);
-      return {
-        ...buildModel({
-          dfns: dfnsDoc.dfns,
-          elements: elementsDoc.elements,
-          contentModel: cmDoc.elements,
-          classification,
-          obsoleteInterfaces: obsDoc.interfaces,
-        }),
-        languageTagRegistry: buildLanguageTagRegistryModule(registry),
-      };
-    },
-    catch: (cause) =>
-      isHtmlGenerationError(cause)
-        ? cause
-        : HtmlGenerationError.make({
-            cause,
-            message: "HTML generation failed unexpectedly",
+    const { conforming, languageTagRegistry, meta, model, total } = yield* Effect.try({
+      try: () => {
+        const registry = parseLanguageSubtagRegistry(languageSubtagRegistrySource);
+        return {
+          ...buildModel({
+            dfns: dfnsDoc.dfns,
+            elements: elementsDoc.elements,
+            contentModel: cmDoc.elements,
+            classification,
+            obsoleteInterfaces: obsDoc.interfaces,
           }),
-  });
+          languageTagRegistry: buildLanguageTagRegistryModule(registry),
+        };
+      },
+      catch: (cause) =>
+        isHtmlGenerationError(cause)
+          ? cause
+          : HtmlGenerationError.make({
+              cause,
+              message: "HTML generation failed unexpectedly",
+            }),
+    });
 
-  yield* fs.writeFileString(path.join(srcDir, "Html.model.ts"), model);
-  yield* fs.writeFileString(path.join(srcDir, "Html.meta.ts"), meta);
-  yield* fs.makeDirectory(path.join(srcDir, "internal"), { recursive: true });
-  yield* fs.writeFileString(path.join(srcDir, "internal/Html.language-tag-registry.generated.ts"), languageTagRegistry);
+    if (check) {
+      const kit = yield* CodegenKit;
+      yield* kit.checkModules([
+        GeneratedModule.make({ path: path.join(srcDir, "Html.model.ts"), content: model }),
+        GeneratedModule.make({ path: path.join(srcDir, "Html.meta.ts"), content: meta }),
+        GeneratedModule.make({
+          path: path.join(srcDir, "internal/Html.language-tag-registry.generated.ts"),
+          content: languageTagRegistry,
+        }),
+      ]);
+      return yield* Effect.log("HTML generated modules are current; no files written.");
+    }
 
-  yield* Effect.log(
-    `generated ${total} elements (${conforming} conforming, ${total - conforming} obsolete) + 6 node kinds and IANA language-tag registry`
-  );
-});
+    yield* fs.writeFileString(path.join(srcDir, "Html.model.ts"), model);
+    yield* fs.writeFileString(path.join(srcDir, "Html.meta.ts"), meta);
+    yield* fs.makeDirectory(path.join(srcDir, "internal"), { recursive: true });
+    yield* fs.writeFileString(
+      path.join(srcDir, "internal/Html.language-tag-registry.generated.ts"),
+      languageTagRegistry
+    );
 
-const runtimeLayer = Layer.mergeAll(Logger.layer([Logger.consolePretty()]), NodeServices.layer, NodeCrypto.layerDigest);
+    yield* Effect.log(
+      `generated ${total} elements (${conforming} conforming, ${total - conforming} obsolete) + 6 node kinds and IANA language-tag registry`
+    );
+  })
+);
+
+const platform = Layer.mergeAll(
+  Logger.layer([Logger.consolePretty()]),
+  NodeServices.layer,
+  NodeCrypto.layerDigest,
+  FetchHttpClient.layer
+);
+const runtimeLayer = Layer.merge(platform, CodegenKit.layer().pipe(Layer.provide(platform)));
 
 const main = runtimeLayer.pipe(
   Layer.build,
-  Effect.flatMap((context) => Effect.provide(program, context)),
+  Effect.flatMap((context) => Command.run(program, { version: "0.0.0" }).pipe(Effect.provide(context))),
   Effect.scoped
 );
 

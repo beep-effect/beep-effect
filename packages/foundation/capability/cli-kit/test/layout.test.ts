@@ -5,7 +5,7 @@ import { flatten, paintSpans, truncateSpans, widthOf, wrapSpans } from "@beep/cl
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -257,7 +257,8 @@ describe("flatten under hostile input: nothing can reassemble into a live sequen
         const check = (inlines: ReadonlyArray<Inline>, label: string): void => {
           cases++;
           const found = problems(ctx, inlines);
-          if (found.length > 0 && failures.length < 5) failures.push(`${label} ${JSON.stringify(found)}`);
+          if (found.length > 0 && failures.length < 5)
+            failures.push(`${label} ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(found), identity)}`);
         };
         for (const one of upTo(3)) {
           check([Doc.text(one)], Result.getOrThrow(S.encodeUnknownResult(Json)([one])));
@@ -489,7 +490,16 @@ describe("wrapSpans", () => {
         pipe(
           graphemes(span.text),
           A.filter((g) => g !== " "),
-          A.map((g) => [g, span.token ?? null, span.link === undefined ? null : JSON.stringify(span.link)] as const)
+          A.map(
+            (g) =>
+              [
+                g,
+                span.token ?? null,
+                span.link === undefined
+                  ? null
+                  : Result.getOrThrowWith(S.encodeUnknownResult(Json)(span.link), identity),
+              ] as const
+          )
         )
       );
     assert.deepStrictEqual(

@@ -432,6 +432,7 @@ export const makeFreshbooksAuthLayer = (
       const client = yield* HttpClient.HttpClient;
       const store = yield* FreshbooksTokenStore;
       const resolved = yield* resolveConfig(config);
-      return FreshbooksAuth.of(yield* makeFreshbooksAuth(client, resolved, store));
+      const madeFreshbooksAuth = yield* makeFreshbooksAuth(client, resolved, store);
+      return FreshbooksAuth.of(madeFreshbooksAuth);
     })
   );

@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "cache-proof-scm-ref-binding-review/v1",
+  "recordedAt": "2026-11-04T01:13:00.500101+00:00",
+  "acceptedBase": "31e2ac20f34a1c699a35be55f67881dbf0d8ffd0",
+  "authority": "Current-source defect and prepared regression only; hosted execution remains pending.",
+  "finding": {
+    "kind": "mismatched-query-and-dry-run-source-range",
+    "query": "Explicit --base and --head are supplied from TurboConfigProofOptions.",
+    "before": "The affected dry-run receives --affected without TURBO_SCM_BASE/TURBO_SCM_HEAD, so ambient/default refs can describe a different change.",
+    "caller": "quality turbo-config-proof forwards user --base/--head into options without a surrounding SCM environment override.",
+    "sourceReviewOnly": true,
+    "additional": "Absent or malformed native task arrays were converted to zero tasks by permissive traversal defaults."
+  },
+  "repair": {
+    "reuse": "Reuse the existing TurboConfigProofOptions schema and runCaptured helper; no new model, service, proof store or runner.",
+    "behavior": "Both query and every dry-run child receive the requested SCM refs explicitly, with extendEnv true to preserve the tool environment.",
+    "selectors": ["affected", "filter-range"],
+    "sourceRefsAreResolvedToCommits": false,
+    "movingRefLimit": "Callers requiring an immutable comparison must supply commit SHAs; this component does not claim automatic ref freezing.",
+    "taskEnvelopeBoundary": "Schema-first required query/dry task arrays; optional package inventory decodes to Option. Valid explicit empty arrays stay zero; malformed envelopes fail with TurboConfigProofError.",
+    "payloadSafety": "Parser failures contain generic typed messages and do not retain raw native payloads or schema issue values."
+  },
+  "regression": {
+    "topLevelCasesAuthored": 5,
+    "selectorRows": 2,
+    "capturedCommandsPerRow": 3,
+    "checks": [
+      "Both query and every dry run receive the explicit requested SCM refs, including a nondefault head.",
+      "Both selector modes preserve their report source range and the two requested task plans.",
+      "The child environment explicitly extends the existing tool environment."
+    ],
+    "executedLocally": false,
+    "hostedStatus": "pending for updated source",
+    "malformedArrayRows": 10,
+    "syntheticPayloadRows": 3,
+    "validEmptySelections": 2
+  },
+  "sourceBindings": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
+      "previousGitObject": "b04579a12aaba7f51e17f7b842d8b9f023adb091",
+      "preparedSha256": "8806db49f0a49e1610a106d11cd109f73bda29888cb4d2e972a78fe9a2d19356"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
+      "previousGitObject": "638cc6e3608ef52282e56760b0c1bda9b7b4593c",
+      "preparedSha256": "2b6147782a5755a1656e437bc2ce415f674a615c955bcd39df75aedaef553d61"
+    }
+  ],
+  "qualificationGranted": false,
+  "featureAcceptanceCountsUnchanged": {
+    "acceptedScopedDecisions": 11,
+    "pending": 25
+  },
+  "rollback": "Revert the SCM environment binding, regression and associated packet entries; treat old affected-mode proof reports as unverified unless their actual comparison refs are independently established.",
+  "currentRootObservation": {
+    "report": "research/actual-current-law-check-selection-2026-11-04.json",
+    "sourceRevision": "31e2ac20f34a1c699a35be55f67881dbf0d8ffd0",
+    "cases": 8,
+    "noChangeSelectedNodes": 0,
+    "acceptedDomainChangeSelectedNodes": 28,
+    "samePlanAcrossClientsAndSelectors": true,
+    "taskExecution": false,
+    "nativeWrapperWasInvoked": false,
+    "scope": "Direct pinned native dry planning on the actual accepted checkout; not an end-to-end execution of the repaired proof wrapper or task qualification.",
+    "rawCaptureSha256": "ef85b83034ef4558222c9ff53b5930fab510af874dbad552b73d12357334050f",
+    "rawCaptureBytes": 12900,
+    "captureDriverSha256": "a167c4c283f64d73358a1061c6810c1b0f2eded01e681161ec04febdb33549fc",
+    "captureDriverLocation": "Owned private state, retained outside git; report records native argv, immutable refs and source bindings."
+  },
+  "preparedSourceRevision": "f48bf842d2eebd2a7a491283e829bfef637a2ac0",
+  "sourceBindingScope": "Initial prepared source at the named revision; preserved as historical evidence. Later repairs have their own source bindings."
+}

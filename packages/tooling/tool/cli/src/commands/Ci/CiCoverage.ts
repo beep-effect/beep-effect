@@ -136,7 +136,8 @@ const coverageTestCommands = Effect.fn("CiCoverage.testCommands")(function* (
         (match) => match[0]
       );
       const [assignments, tokens] = A.span(words, isEnvironmentAssignment);
-      const args = A.flatten(yield* Effect.forEach(A.drop(tokens, 1), (word) => expandCanonicalWord(word, cwd)));
+      const forEach1 = yield* Effect.forEach(A.drop(tokens, 1), (word) => expandCanonicalWord(word, cwd));
+      const args = A.flatten(forEach1);
       const env = A.reduce(assignments, R.empty<string, string>(), (values, assignment) => {
         const name = A.headNonEmpty(Str.split("=")(assignment));
         return R.set(values, name, Str.slice(name.length + 1)(assignment));

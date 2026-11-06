@@ -384,7 +384,8 @@ describe("dependency review compare schema", () => {
     ([page]) =>
       Effect.gen(function* () {
         const wire = yield* encodePage(page);
-        expect(yield* decodePage(wire)).toEqual(page);
+        const decodedPage = yield* decodePage(wire);
+        expect(decodedPage).toEqual(page);
         const isFixture = isFixtureManifest(dependencyReviewFixturePolicy);
         // Any manifest, moved under a declared fixture root, is excluded.
         for (const row of page) {
@@ -536,19 +537,26 @@ it.layer(Layer.provideMerge(DependencyReviewLive, RecordedGithub), { timeout: "3
               })
             )
           );
-        expect(yield* exitCode(PR_1592)).toBe(0);
-        expect(yield* exitCode(PR_911)).toBe(1);
-        expect(yield* exitCode(HTTP_403)).toBe(1);
-        expect(yield* exitCode(MISSING_HEAD)).toBe(1);
-        expect(yield* exitCode({ base: "abc", head: PR_911.head })).toBe(64);
+        const exitCode1 = yield* exitCode(PR_1592);
+        expect(exitCode1).toBe(0);
+        const exitCode2 = yield* exitCode(PR_911);
+        expect(exitCode2).toBe(1);
+        const exitCode3 = yield* exitCode(HTTP_403);
+        expect(exitCode3).toBe(1);
+        const exitCode4 = yield* exitCode(MISSING_HEAD);
+        expect(exitCode4).toBe(1);
+        const exitCode5 = yield* exitCode({ base: "abc", head: PR_911.head });
+        expect(exitCode5).toBe(64);
       })
     );
 
     it.effect("reads every compare page, so an advisory on page 2 still fails", () =>
       Effect.gen(function* () {
-        expect(findings(yield* review(PAGE_2_ADVISORY))).toEqual(["vulnerability:urllib3"]);
+        const review6 = yield* review(PAGE_2_ADVISORY);
+        expect(findings(review6)).toEqual(["vulnerability:urllib3"]);
         // The next link names `page` before `per_page`.
-        expect(findings(yield* review(PAGE_PARAM_FIRST))).toEqual(["vulnerability:urllib3"]);
+        const review7 = yield* review(PAGE_PARAM_FIRST);
+        expect(findings(review7)).toEqual(["vulnerability:urllib3"]);
       })
     );
 
@@ -624,28 +632,27 @@ it.layer(RecordedGithub, { timeout: "30 seconds" })("dependency review boundary 
   it.effect("handles unquoted pagination, truncated licenses, absent scopes, and low advisories", () =>
     Effect.gen(function* () {
       const client = yield* GithubPolicyClient;
-      const rows = yield* decodePage(
-        yield* encodePage([
-          DependencyChange.make({
-            change_type: "added",
-            manifest: "package.json",
-            ecosystem: "npm",
-            name: "low-risk",
-            version: "1.0.0",
-            package_url: null,
-            license: Str.repeat(255)("x"),
-            source_repository_url: "https://github.com/example/license",
-            vulnerabilities: [
-              {
-                advisory_ghsa_id: "GHSA-0000-0000-0000",
-                advisory_summary: "Fixture advisory",
-                advisory_url: "https://example.invalid/advisory",
-                severity: "low",
-              },
-            ],
-          }),
-        ])
-      );
+      const encodedPage = yield* encodePage([
+        DependencyChange.make({
+          change_type: "added",
+          manifest: "package.json",
+          ecosystem: "npm",
+          name: "low-risk",
+          version: "1.0.0",
+          package_url: null,
+          license: Str.repeat(255)("x"),
+          source_repository_url: "https://github.com/example/license",
+          vulnerabilities: [
+            {
+              advisory_ghsa_id: "GHSA-0000-0000-0000",
+              advisory_summary: "Fixture advisory",
+              advisory_url: "https://example.invalid/advisory",
+              severity: "low",
+            },
+          ],
+        }),
+      ]);
+      const rows = yield* decodePage(encodedPage);
       const body = yield* encodePage([
         ...rows,
         DependencyChange.make({

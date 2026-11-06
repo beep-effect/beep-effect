@@ -91,27 +91,25 @@ describe("@beep/law-practice-use-cases review hub", () => {
 
         expect(before).toStrictEqual(["kg-answer:hub-1", "question:hub-1", "kg-answer:hub-2"]);
         expect(after).toStrictEqual(["kg-answer:hub-2"]);
-        expect(
-          yield* Effect.all([
-            codeOf(hub.recordAnswer(answer("question:hub-1", "move-date"))),
-            codeOf(hub.recordAnswer(answer("kg-answer:hub-2", "keep-date"))),
-            codeOf(hub.recordAnswer(answer("question:missing", "keep-date"))),
-            codeOf(hub.lockBatch(LockBatchRequest.make({ batchId: "sitting-empty" }))),
-          ])
-        ).toStrictEqual(["unknown-option", "not-found", "not-found", "not-found"]);
+        const all1 = yield* Effect.all([
+          codeOf(hub.recordAnswer(answer("question:hub-1", "move-date"))),
+          codeOf(hub.recordAnswer(answer("kg-answer:hub-2", "keep-date"))),
+          codeOf(hub.recordAnswer(answer("question:missing", "keep-date"))),
+          codeOf(hub.lockBatch(LockBatchRequest.make({ batchId: "sitting-empty" }))),
+        ]);
+        expect(all1).toStrictEqual(["unknown-option", "not-found", "not-found", "not-found"]);
 
         const lock = yield* hub.lockBatch(LockBatchRequest.make({ batchId: "sitting-1" }));
         assertSome(lock.lockedAt, DateTime.makeUnsafe(0));
-        expect(
-          yield* Effect.all([
-            codeOf(hub.lockBatch(LockBatchRequest.make({ batchId: "sitting-1" }))),
-            codeOf(
-              hub.recordVerdict(
-                RecordVerdictInput.make({ itemId: "kg-answer:hub-2", batchId: "sitting-1", verdict: "wrong" })
-              )
-            ),
-          ])
-        ).toStrictEqual(["locked", "locked"]);
+        const all2 = yield* Effect.all([
+          codeOf(hub.lockBatch(LockBatchRequest.make({ batchId: "sitting-1" }))),
+          codeOf(
+            hub.recordVerdict(
+              RecordVerdictInput.make({ itemId: "kg-answer:hub-2", batchId: "sitting-1", verdict: "wrong" })
+            )
+          ),
+        ]);
+        expect(all2).toStrictEqual(["locked", "locked"]);
       })
     );
   });

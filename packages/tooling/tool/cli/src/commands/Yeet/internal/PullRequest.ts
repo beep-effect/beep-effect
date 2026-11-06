@@ -13,7 +13,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
@@ -28,7 +28,7 @@ import {
   runArtifactPathForContext as runOutputPathForContext,
   writeTextFile,
 } from "./ArtifactPaths.ts";
-import { runGitOutput, yeetGitKitError } from "./GitExec.ts";
+import { yeetGitKitError } from "./GitExec.ts";
 import {
   ensureProvenanceFooter,
   isProvenanceStampFailure,
@@ -300,6 +300,61 @@ const branchCommitRange = Effect.fn("Yeet.branchCommitRange")(function* (
 });
 
 /**
+ * What the body of a pull request a publish creates should carry.
+ *
+ * **Details**
+ *
+ * `summary` replaces the generated commit-log summary (`--body-file`), so an
+ * agent writes its own description at creation instead of rewriting the body
+ * afterwards, which is what used to drop the provenance footer. `hostedProof`
+ * marks a `yeet open` body: no local gate ran, and the "Local proof" section
+ * says so.
+ *
+ * **Example** (Request a hosted-proof body)
+ *
+ * ```ts
+ * import { YeetPrBodyRequest } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const request = YeetPrBodyRequest.make({ summary: O.some("## Summary\n\nWhy."), hostedProof: true })
+ * console.log(request.hostedProof) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetPrBodyRequest extends S.Opaque<YeetPrBodyRequest, { readonly brand: unique symbol }>()(
+  S.Struct({
+    summary: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    hostedProof: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+  }).pipe(
+    $I.annoteSchema("YeetPrBodyRequest", {
+      description: "Summary override and proof route for the body of a pull request a publish creates.",
+    })
+  )
+) {}
+
+const HOSTED_PROOF_SECTION =
+  "- none: `yeet open` pushed without local gates; hosted CI is the authoritative proof" as const;
+
+const commitLogSummary = Effect.fn("Yeet.commitLogSummary")(function* (context: RepoRunContext) {
+  const range = yield* branchCommitRange(context);
+  // `Git.log` with `includeBody` carries `%b`, so the body renders back to the `## %s%n%n%b` text
+  // entries joined by a newline, as `--pretty=format:` separated them (W7a Y55, SPEC D-18).
+  const git = yield* Git;
+  const logOptions = { revisions: [range], reverse: true, omitPaths: true, includeBody: true };
+  return yield* git.log(context.repoRoot, logOptions).pipe(
+    Effect.mapBoth({
+      onFailure: yeetGitKitError(GitCommand.log([], false, undefined, false, logOptions)),
+      onSuccess: flow(
+        A.map((commit) => `## ${commit.subject}\n\n${commit.body ?? ""}`),
+        A.join("\n")
+      ),
+    })
+  );
+});
+
+/**
  * Build the PR body from commit log text and recorded local proof lanes.
  *
  * **Example** (Build body with recorder)
@@ -330,13 +385,16 @@ const branchCommitRange = Effect.fn("Yeet.branchCommitRange")(function* (
  * artifact path.
  * @param recorder - Ref containing proof lanes already executed before PR
  * creation.
+ * @param request - Optional summary override and proof route; the default
+ * summarizes the branch's commits and lists the recorded lanes.
  * @returns Markdown body text for the pull request the publish opens.
  * @category formatting
  * @since 0.0.0
  */
 export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
   context: RepoRunContext,
-  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  request: YeetPrBodyRequest = YeetPrBodyRequest.make({})
 ): Effect.fn.Return<
   string,
   YeetCommandError,
@@ -347,20 +405,23 @@ export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
   | Digest.Digest
   | Git
 > {
-  const range = yield* branchCommitRange(context);
-  // KEEP (W2b): `Git.log` carries each commit's subject but not its body (`%b`).
-  const commitLog = yield* runGitOutput(context.repoRoot, ["log", "--reverse", "--pretty=format:## %s%n%n%b", range]);
+  const summary = yield* O.match(request.summary, {
+    onNone: () => commitLogSummary(context),
+    onSome: Effect.succeed,
+  });
   const executed = yield* Ref.get(recorder);
   const laneSummary = pipe(
     executed,
     A.map((entry) => `- ${entry.step.label}: ${entry.result.exitCode === 0 ? "passed" : "failed"}`),
     A.join("\n")
   );
-  const proofSection = Str.isNonEmpty(laneSummary)
-    ? laneSummary
-    : "- no local proof lane ran before the push; hosted CI is the authoritative proof";
+  const proofSection = request.hostedProof
+    ? HOSTED_PROOF_SECTION
+    : Str.isNonEmpty(laneSummary)
+      ? laneSummary
+      : "- no local proof lane ran before the push; hosted CI is the authoritative proof";
   const runId = yield* runIdForContext(context);
-  return `${Str.trim(commitLog)}\n\n## Local proof\n\n${proofSection}\n\nVerdict: .beep/yeet/runs/${runId}/verdict.json\n`;
+  return `${Str.trim(summary)}\n\n## Local proof\n\n${proofSection}\n\nVerdict: .beep/yeet/runs/${runId}/verdict.json\n`;
 });
 
 /**
@@ -605,7 +666,8 @@ const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
   context: RepoRunContext,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   prStep: O.Option<RepoPlanStep>,
-  message: O.Option<string>
+  message: O.Option<string>,
+  bodyRequest: YeetPrBodyRequest
 ): Effect.fn.Return<
   YeetEnsuredPullRequest,
   YeetCommandError,
@@ -617,11 +679,12 @@ const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
   | Git
   | YeetGithubServices
 > {
-  const resolved = yield* resolvePullRequestTitle(context, message, yield* branchCommitRange(context));
+  const commitRange = yield* branchCommitRange(context);
+  const resolved = yield* resolvePullRequestTitle(context, message, commitRange);
   const title = resolved.title;
   yield* Console.log(`[yeet] --pr: title from ${resolved.source}: ${title}`);
   const bodyPath = yield* runOutputPathForContext(context, "pr-body.md");
-  const body = yield* buildPrBody(context, recorder);
+  const body = yield* buildPrBody(context, recorder, bodyRequest);
   yield* writeTextFile(bodyPath, body);
   const draft = O.exists(prStep, (step) => A.contains(step.args, "--draft"));
   const base = yield* resolveDefaultBranchViaRest();
@@ -684,7 +747,8 @@ const syncExistingPullRequestTitle = Effect.fn("Yeet.syncExistingPullRequestTitl
       message: `pull request #${existing.number} keeps its title`,
     });
   }
-  const resolved = yield* resolvePullRequestTitle(context, message, yield* branchCommitRange(context)).pipe(
+  const commitRange = yield* branchCommitRange(context);
+  const resolved = yield* resolvePullRequestTitle(context, message, commitRange).pipe(
     Effect.asSome,
     Effect.catchTag("YeetCommandError", (error) =>
       Effect.as(Console.error(`[yeet] warning: ${error.message}`), O.none())
@@ -785,6 +849,8 @@ const reuseExistingPullRequest = Effect.fn("Yeet.reuseExistingPullRequest")(func
  * @param stampStep - Optional planned provenance-stamp lane for recorder metadata.
  * @param dependencies - Injectable open pull request lookup and registry for deterministic tests.
  * @param message - The publish `--message`, whose first line titles the pull request.
+ * @param bodyRequest - Summary override and proof route for a pull request this
+ * call creates; an existing pull request keeps its body.
  * @returns The open pull request the branch now has, and whether this call
  * created it. A create step whose args carry `--draft` opens a draft.
  * @category workflows
@@ -796,7 +862,8 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
   prStep: O.Option<RepoPlanStep>,
   stampStep: O.Option<RepoPlanStep> = O.none(),
   dependencies: EnsurePullRequestDependencies = {},
-  message: O.Option<string> = O.none()
+  message: O.Option<string> = O.none(),
+  bodyRequest: YeetPrBodyRequest = YeetPrBodyRequest.make({})
 ): Effect.fn.Return<
   YeetEnsuredPullRequest,
   YeetCommandError,
@@ -811,7 +878,7 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
   const existing = yield* (dependencies.findOpen ?? findOpenPullRequest)(context);
   const pullRequest = O.isSome(existing)
     ? yield* reuseExistingPullRequest(context, recorder, prStep, existing.value, message)
-    : yield* createPullRequest(context, recorder, prStep, message);
+    : yield* createPullRequest(context, recorder, prStep, message, bodyRequest);
   // A failed provenance stamp must not stop the heavy-admission label or the
   // readiness monitor that follow: the pull request already exists on the
   // remote, so record the failure and carry on.

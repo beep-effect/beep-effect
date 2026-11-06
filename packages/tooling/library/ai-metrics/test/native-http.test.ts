@@ -1,6 +1,17 @@
 import * as Zlib from "node:zlib";
 import { DeliveryLedgerConfig } from "@beep/repo-ai-metrics/delivery-ledger";
+import {
+  encodeManagedControllerObservation,
+  ManagedControllerObservation,
+} from "@beep/repo-ai-metrics/managed-controller";
 import { makeNativeHttpIntake, NativeHttpPolicy, renderNativeHttpMetrics } from "@beep/repo-ai-metrics/native-http";
+import * as LaunchFacts from "@beep/repo-ai-metrics/observation-launch-facts";
+import {
+  makeObservationLaunchFacts,
+  ObservationLaunchFact,
+  ObservationLaunchIdentity,
+} from "@beep/repo-ai-metrics/observation-launch-facts";
+import { ObservationLaunchHttpPolicy } from "@beep/repo-ai-metrics/observation-launch-http";
 import { makePayloadReclaimer, PayloadRetentionPolicy } from "@beep/repo-ai-metrics/payload-reclamation";
 import { hashPrivateIdentifier } from "@beep/repo-ai-metrics/privacy";
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
@@ -9,7 +20,7 @@ import { it } from "@beep/test-runner";
 import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import * as NodeHttpServer from "@effect/platform-node/NodeHttpServer";
-import { expect } from "@effect/vitest";
+import { expect, vi } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -30,7 +41,11 @@ import * as SqlClient from "effect/sql/SqlClient";
 import * as Protobuf from "protobufjs";
 
 const sqlLayer = makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver });
-const fixture = Effect.fn("NativeHttpTest.fixture")(function* (maxPages = 16, bodyTimeoutMillis = 2000) {
+const fixture = Effect.fn("NativeHttpTest.fixture")(function* (
+  maxPages = 16,
+  bodyTimeoutMillis = 2000,
+  managed = false
+) {
   const salt = "synthetic-native-http-salt";
   const config = TranscriptIntakeConfig.make({
     hostId: Sha256Hex.make(Str.repeat(64)("a")),
@@ -45,13 +60,22 @@ const fixture = Effect.fn("NativeHttpTest.fixture")(function* (maxPages = 16, bo
       routeId: Sha256Hex.make(Str.repeat(64)("b")),
       hashSalt: Redacted.make(salt),
       approvedModels: [],
-      usageConvention: "claude-code",
+      usageConvention: managed === true ? "unknown" : "claude-code",
+      producer: managed === true ? O.some("managed-controller") : O.none(),
       bodyTimeoutMillis,
-    })
+    }),
+    undefined,
+    managed === true
+      ? ObservationLaunchHttpPolicy.make({
+          routes: [{ routeId: Sha256Hex.make(Str.repeat(64)("c")), harness: "grok", surface: "cli" }],
+          bodyTimeoutMillis: 1000,
+        })
+      : undefined
   );
   const context = yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh));
   const server = Context.get(context, HttpServer.HttpServer);
-  const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
+  const build1 = yield* Layer.build(NodeHttpClient.layerNodeHttp);
+  const client = Context.get(build1, HttpClient.HttpClient);
   yield* server.serve(intake.handler);
   const url = `${HttpServer.formatAddress(server.address)}/v1/traces`;
   const post = Effect.fn("NativeHttpTest.post")(function* (
@@ -66,7 +90,8 @@ const fixture = Effect.fn("NativeHttpTest.fixture")(function* (maxPages = 16, bo
       HttpClientRequest.setHeaders({ "content-type": contentType, "content-encoding": encoding })
     );
     const received = yield* client.execute(request);
-    const bytes = new Uint8Array(yield* received.arrayBuffer);
+    const arrayBuffer2 = yield* received.arrayBuffer;
+    const bytes = new Uint8Array(arrayBuffer2);
     return {
       status: received.status,
       headers: new Headers(received.headers),
@@ -113,7 +138,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   it.effect("acknowledges committed JSON metadata, partial rejection and exact retry over a real socket", () =>
     Effect.gen(function* () {
       const { post, journal, health } = yield* fixture(1);
-      const first = yield* post(yield* spanBody(true));
+      const spanBody3 = yield* spanBody(true);
+      const first = yield* post(spanBody3);
       expect(first.status).toBe(200);
       expect(first.text).toBe(
         '{"partialSuccess":{"rejectedSpans":"1","errorMessage":"Some spans were rejected by local admission"}}'
@@ -121,15 +147,19 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const receiptId = yield* S.decodeUnknownEffect(Sha256Hex)(first.headers.get("x-observation-receipt"));
       const stored = yield* journal.receipt(receiptId);
       expect(stored).toMatchObject({ _tag: "Some", value: { accepted: 1, rejected: 1, newEvents: 1 } });
-      expect(yield* journal.stats).toMatchObject({ pages: 1, frames: 1 });
-      const replay = yield* post(yield* spanBody(true));
+      const stats4 = yield* journal.stats;
+      expect(stats4).toMatchObject({ pages: 1, frames: 1 });
+      const spanBody5 = yield* spanBody(true);
+      const replay = yield* post(spanBody5);
       expect(replay.headers.get("x-observation-receipt")).toBe(receiptId);
-      const refused = yield* post(yield* spanBody());
+      const spanBody6 = yield* spanBody();
+      const refused = yield* post(spanBody6);
       expect(refused.status).toBe(503);
       expect(refused.headers.get("retry-after")).toBe("1");
       expect(refused.headers.get("x-observation-receipt")).toBeNull();
       expect((yield* post()).status).toBe(200);
-      expect(yield* journal.stats).toMatchObject({ pages: 1 });
+      const stats7 = yield* journal.stats;
+      expect(stats7).toMatchObject({ pages: 1 });
       expect(first.text).not.toContain("private");
       const observation = yield* health;
       expect(observation.counts).toMatchObject({ partial: 2, accepted: 1, capacity: 1 });
@@ -175,10 +205,12 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
           errorMessage: "Some spans were rejected by local admission",
         },
       });
-      const json = yield* post(Zlib.gzipSync(yield* spanBody()), "application/json; charset=utf-8", "gzip");
+      const spanBody8 = yield* spanBody();
+      const json = yield* post(Zlib.gzipSync(spanBody8), "application/json; charset=utf-8", "gzip");
       expect(json.status).toBe(200);
       expect(json.text).toBe("{}");
-      expect(yield* journal.stats).toMatchObject({ pages: 2, frames: 2 });
+      const stats9 = yield* journal.stats;
+      expect(stats9).toMatchObject({ pages: 2, frames: 2 });
     })
   )
 );
@@ -203,7 +235,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
         code: 3,
         message: "Local intake refused the request",
       });
-      expect(yield* journal.stats).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
+      const stats10 = yield* journal.stats;
+      expect(stats10).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
     })
   )
 );
@@ -214,16 +247,21 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const { post, journal, health } = yield* fixture();
       const sql = yield* SqlClient.SqlClient;
       yield* sql`CREATE TRIGGER synthetic_receipt_failure BEFORE INSERT ON observation_native_receipts BEGIN SELECT RAISE(ABORT, 'private-storage-cause'); END`;
-      const refused = yield* post(yield* spanBody());
+      const spanBody11 = yield* spanBody();
+      const refused = yield* post(spanBody11);
       expect(refused.status).toBe(503);
       expect(refused.text).not.toContain("private");
       expect((yield* health).counts.storage).toBe(1);
       expect(refused.headers.get("x-observation-receipt")).toBeNull();
-      expect(yield* journal.stats).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
-      expect(yield* sql`SELECT count(*) AS n FROM observation_native_events`).toEqual([{ n: 0 }]);
+      const stats12 = yield* journal.stats;
+      expect(stats12).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
+      const value13 = yield* sql`SELECT count(*) AS n FROM observation_native_events`;
+      expect(value13).toEqual([{ n: 0 }]);
       yield* sql`DROP TRIGGER synthetic_receipt_failure`;
-      expect((yield* post(yield* spanBody())).status).toBe(200);
-      expect(yield* journal.stats).toMatchObject({ pages: 1, frames: 1 });
+      const spanBody14 = yield* spanBody();
+      expect((yield* post(spanBody14)).status).toBe(200);
+      const stats15 = yield* journal.stats;
+      expect(stats15).toMatchObject({ pages: 1, frames: 1 });
     })
   )
 );
@@ -260,9 +298,11 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       expect(busy).toBe(503);
       expect((yield* health).counts.overloaded).toBeGreaterThanOrEqual(1);
       yield* pending.end(Str.repeat(262145)(" "));
-      expect(yield* pending.status).toBe(413);
+      const status16 = yield* pending.status;
+      expect(status16).toBe(413);
       expect((yield* post()).status).toBe(200);
-      expect(yield* journal.stats).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
+      const stats17 = yield* journal.stats;
+      expect(stats17).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
     })
   )
 );
@@ -272,11 +312,15 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
     Effect.gen(function* () {
       const { post, journal, url, client, health } = yield* fixture(16, 100);
       const pending = yield* openChunked(url, client);
-      expect(yield* pending.status).toBe(503);
+      const status18 = yield* pending.status;
+      expect(status18).toBe(503);
       expect((yield* health).counts.timedOut).toBe(1);
-      expect(yield* journal.stats).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
-      expect((yield* post(yield* spanBody())).status).toBe(200);
-      expect(yield* journal.stats).toMatchObject({ pages: 1, frames: 1 });
+      const stats19 = yield* journal.stats;
+      expect(stats19).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
+      const spanBody20 = yield* spanBody();
+      expect((yield* post(spanBody20)).status).toBe(200);
+      const stats21 = yield* journal.stats;
+      expect(stats21).toMatchObject({ pages: 1, frames: 1 });
     }).pipe(Effect.timeout("3 seconds"))
   )
 );
@@ -342,11 +386,13 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       });
       const partial = yield* post(mixed);
       expect(partial.status).toBe(200);
-      expect(yield* decodeJsonValue(partial.text)).toMatchObject({
+      const decodedJsonValue = yield* decodeJsonValue(partial.text);
+      expect(decodedJsonValue).toMatchObject({
         partialSuccess: { rejectedSpans: "1" },
       });
       const mixedId = yield* S.decodeUnknownEffect(Sha256Hex)(partial.headers.get("x-observation-receipt"));
-      expect(yield* journal.receipt(mixedId)).toMatchObject({
+      const receipt22 = yield* journal.receipt(mixedId);
+      expect(receipt22).toMatchObject({
         _tag: "Some",
         value: { accepted: 1, rejected: 1, newEvents: 1, expiredIndices: [0] },
       });
@@ -355,3 +401,177 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
     })
   )
 );
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.effect("requires actual matching local launch/process/session/finish facts before controller intake", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture(16, 2000, true);
+      const id = (c: string) => Sha256Hex.make(Str.repeat(64)(c));
+      const observed = ManagedControllerObservation.make({
+        launchId: id("1"),
+        launchRouteId: id("c"),
+        processInstanceId: id("2"),
+        sourceSessionId: id("3"),
+        evidenceId: id("4"),
+        startTimeUnixNano: "1793000000000000000",
+        endTimeUnixNano: "1793000000100000000",
+        elapsedNanos: "100000000",
+      });
+      const bytes = yield* encodeManagedControllerObservation(observed);
+      expect((yield* f.post(bytes, "application/x-protobuf")).status).toBe(400);
+      const launches = yield* makeObservationLaunchFacts(f.config);
+      const unknown = ObservationLaunchIdentity.fields.repository.cases.Unknown.make({});
+      yield* launches.record(
+        ObservationLaunchFact.cases.Prepared.make({
+          launchId: observed.launchId,
+          identity: ObservationLaunchIdentity.make({
+            routeId: id("c"),
+            harness: "grok",
+            surface: "cli",
+            root: unknown,
+            repository: unknown,
+            clone: unknown,
+            worktree: unknown,
+            task: unknown,
+            attempt: unknown,
+            evidenceId: id("5"),
+          }),
+        }),
+        0
+      );
+      yield* launches.record(
+        ObservationLaunchFact.cases.Started.make({
+          launchId: observed.launchId,
+          processInstanceId: observed.processInstanceId,
+        }),
+        0
+      );
+      yield* launches.record(
+        ObservationLaunchFact.cases.SessionBound.make({
+          launchId: observed.launchId,
+          sourceSessionId: observed.sourceSessionId,
+        }),
+        0
+      );
+      expect((yield* f.post(bytes, "application/x-protobuf")).status).toBe(400);
+      yield* launches.record(
+        ObservationLaunchFact.cases.Finished.make({ launchId: observed.launchId, outcome: "cancelled" }),
+        0
+      );
+      for (const changed of [
+        { ...observed, processInstanceId: id("9") },
+        { ...observed, sourceSessionId: id("9") },
+        { ...observed, launchRouteId: id("9") },
+        { ...observed, launchId: id("9") },
+      ]) {
+        const wrong = yield* encodeManagedControllerObservation(ManagedControllerObservation.make(changed));
+        expect((yield* f.post(wrong, "application/x-protobuf")).status).toBe(400);
+      }
+      const foreign = ManagedControllerObservation.make({ ...observed, launchId: id("6"), launchRouteId: id("9") });
+      yield* launches.record(
+        ObservationLaunchFact.cases.Prepared.make({
+          launchId: foreign.launchId,
+          identity: ObservationLaunchIdentity.make({
+            routeId: foreign.launchRouteId,
+            harness: "grok",
+            surface: "cli",
+            root: unknown,
+            repository: unknown,
+            clone: unknown,
+            worktree: unknown,
+            task: unknown,
+            attempt: unknown,
+            evidenceId: id("5"),
+          }),
+        }),
+        0
+      );
+      yield* launches.record(
+        ObservationLaunchFact.cases.Started.make({
+          launchId: foreign.launchId,
+          processInstanceId: foreign.processInstanceId,
+        }),
+        0
+      );
+      yield* launches.record(
+        ObservationLaunchFact.cases.SessionBound.make({
+          launchId: foreign.launchId,
+          sourceSessionId: foreign.sourceSessionId,
+        }),
+        0
+      );
+      yield* launches.record(
+        ObservationLaunchFact.cases.Finished.make({ launchId: foreign.launchId, outcome: "succeeded" }),
+        0
+      );
+      const foreignBody = yield* encodeManagedControllerObservation(foreign);
+      const foreignResponse = yield* f.post(foreignBody, "application/x-protobuf");
+      expect(foreignResponse.status).toBe(400);
+      const accepted = yield* f.post(bytes, "application/x-protobuf");
+      expect(accepted.status).toBe(200);
+      expect(accepted.bytes).toHaveLength(0);
+      const duplicate = yield* f.post(bytes, "application/x-protobuf");
+      expect(duplicate.headers.get("x-observation-receipt")).toBe(accepted.headers.get("x-observation-receipt"));
+      const changed = yield* encodeManagedControllerObservation(
+        ManagedControllerObservation.make({ ...observed, evidenceId: id("8") })
+      );
+      expect((yield* f.post(changed, "application/x-protobuf")).bytes.length).toBeGreaterThan(0);
+    })
+  );
+});
+
+const realMakeLaunchFacts = LaunchFacts.makeObservationLaunchFacts;
+for (const reason of LaunchFacts.ObservationLaunchFactsError.fields.reason.literals) {
+  const expectedStatus = reason === "retired" ? 410 : reason === "conflict" ? 409 : 503;
+  const expectedCode = reason === "retired" ? 9 : reason === "conflict" ? 3 : 14;
+  const expectedCounter = reason === "retired" ? "expired" : reason === "capacity" ? "capacity" : "storage";
+  const expectedMessage =
+    reason === "retired"
+      ? "Request references expired local acceptance; it cannot be reaccepted"
+      : "Local intake refused the request";
+  it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+    it.effect(`returns a content-free native refusal for ${reason} launch-fact read failure`, () =>
+      Effect.gen(function* () {
+        const read = vi.fn(() => Effect.fail(LaunchFacts.ObservationLaunchFactsError.make({ reason })));
+        yield* Effect.acquireRelease(
+          Effect.sync(() =>
+            vi
+              .spyOn(LaunchFacts, "makeObservationLaunchFacts")
+              .mockImplementation((config) =>
+                realMakeLaunchFacts(config).pipe(Effect.map((facts) => ({ ...facts, read })))
+              )
+          ),
+          (mock) => Effect.sync(() => mock.mockRestore())
+        );
+        const f = yield* fixture(16, 2000, true);
+        const id = (c: string) => Sha256Hex.make(Str.repeat(64)(c));
+        const observed = ManagedControllerObservation.make({
+          launchId: id("1"),
+          launchRouteId: id("c"),
+          processInstanceId: id("2"),
+          sourceSessionId: id("3"),
+          evidenceId: id("4"),
+          startTimeUnixNano: "1793000000000000000",
+          endTimeUnixNano: "1793000000100000000",
+          elapsedNanos: "100000000",
+        });
+        const bytes = yield* encodeManagedControllerObservation(observed);
+        const refused = yield* f.post(bytes, "application/x-protobuf");
+        expect(read).toHaveBeenCalledTimes(1);
+        expect(refused.status).toBe(expectedStatus);
+        expect(refused.headers.get("x-observation-receipt")).toBeNull();
+        const status = responseType.lookupType("Status");
+        expect(status.toObject(status.decode(refused.bytes))).toEqual({
+          code: expectedCode,
+          message: expectedMessage,
+        });
+        expect(refused.text).not.toContain("ObservationLaunchFactsError");
+        const health = yield* f.health;
+        expect(health.counts.accepted).toBe(0);
+        expect(health.counts).toMatchObject({ [expectedCounter]: 1 });
+        const stats = yield* f.journal.stats;
+        expect(stats).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
+      })
+    )
+  );
+}

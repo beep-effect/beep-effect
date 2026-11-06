@@ -131,12 +131,16 @@ it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extr
           matchedText: anchor.quote,
           span: { start: anchor.startChar, end: anchor.endChar },
         });
-      expect(
-        yield* structure.fromExtractions(input, [fuzzy("action-finality", raw.finalityAnchor), period])
-      ).toMatchObject({ code: "rule-not-covered" });
-      expect(
-        yield* structure.fromExtractions(input, [finality, fuzzy("shortened-statutory-period", raw.periodAnchor)])
-      ).toMatchObject({ code: "rule-not-covered" });
+      const fromExtractions1 = yield* structure.fromExtractions(input, [
+        fuzzy("action-finality", raw.finalityAnchor),
+        period,
+      ]);
+      expect(fromExtractions1).toMatchObject({ code: "rule-not-covered" });
+      const fromExtractions2 = yield* structure.fromExtractions(input, [
+        finality,
+        fuzzy("shortened-statutory-period", raw.periodAnchor),
+      ]);
+      expect(fromExtractions2).toMatchObject({ code: "rule-not-covered" });
       const invalidPeriod = GroundedExtraction.cases.match_exact.make({
         label: "shortened-statutory-period",
         text: raw.periodAnchor.quote,
@@ -156,9 +160,11 @@ it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extr
           end: S.Natural.make(Str.indexOf("A")(text).pipe(O.getOrElse(() => 0)) + 1),
         },
       });
-      expect(yield* structure.fromExtractions(input, [other, period])).toMatchObject({ code: "rule-not-covered" });
+      const fromExtractions3 = yield* structure.fromExtractions(input, [other, period]);
+      expect(fromExtractions3).toMatchObject({ code: "rule-not-covered" });
       const otherPeriod = GroundedExtraction.cases.match_exact.make({ ...other, label: "shortened-statutory-period" });
-      expect(yield* structure.fromExtractions(input, [finality, otherPeriod])).toMatchObject({
+      const fromExtractions4 = yield* structure.fromExtractions(input, [finality, otherPeriod]);
+      expect(fromExtractions4).toMatchObject({
         code: "rule-not-covered",
       });
 
@@ -239,12 +245,11 @@ it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extr
         OfficeActionStructureInput.make({ document, verifiedSource, ocrPages: [page] })
       );
       expect(ocr).toMatchObject({ status: "abstained", code: "low-quality-source" });
-      expect(
-        yield* structure.fromExtractions(
-          OfficeActionStructureInput.make({ document, verifiedSource, ocrPages: [page] }),
-          []
-        )
-      ).toMatchObject({ status: "abstained", code: "low-quality-source" });
+      const fromExtractions5 = yield* structure.fromExtractions(
+        OfficeActionStructureInput.make({ document, verifiedSource, ocrPages: [page] }),
+        []
+      );
+      expect(fromExtractions5).toMatchObject({ status: "abstained", code: "low-quality-source" });
       const unknown = yield* structure.extract(
         OfficeActionStructureInput.make({
           document,

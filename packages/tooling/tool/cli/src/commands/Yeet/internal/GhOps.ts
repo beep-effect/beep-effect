@@ -37,12 +37,14 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SynchronizedRef from "effect/SynchronizedRef";
@@ -64,8 +66,13 @@ import {
 } from "../../../internal/github/index.ts";
 import { enforceReviewerGate } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { parsePrProvenanceFooter } from "./Provenance.ts";
-import { ensureProvenanceFooter, ProvenanceStampOutcome, recordMonitoredPrSessionThen } from "./ProvenanceFooter.ts";
+import { parsePrProvenanceFooter, replacePrBodyKeepingFooter } from "./Provenance.ts";
+import {
+  detectPrRepository,
+  ensureProvenanceFooter,
+  ProvenanceStampOutcome,
+  recordMonitoredPrSessionThen,
+} from "./ProvenanceFooter.ts";
 import { readYeetReviewWindow, YeetReviewWindowUnknown } from "./ReviewWindow.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
 import type { Repo } from "@beep/github/Repo";
@@ -1211,7 +1218,8 @@ export const recordInheritedRedsInPullRequestBody = Effect.fn("YeetGh.recordInhe
   entries: ReadonlyArray<YeetReadyInheritedRed>,
   headSha: string
 ) {
-  return yield* recordInheritedRedsWithRest(yield* GithubRest, prNumber, entries, headSha);
+  const GithubRest1 = yield* GithubRest;
+  return yield* recordInheritedRedsWithRest(GithubRest1, prNumber, entries, headSha);
 }, withYeetGh(O.none()));
 
 const report = (exitCode: number) => (message: string) => failWithReportedExit(message, exitCode);
@@ -1551,6 +1559,90 @@ export const runYeetGhPrComment = (
     })
   );
 
+/**
+ * Replace a pull request's body through REST and keep its live provenance footer.
+ *
+ * **Details**
+ *
+ * One read and one write. A concurrent stamp between them is overwritten, and
+ * the next `yeet monitor`, `yeet ready` or `yeet merge-gate` puts the footer
+ * back from the local registry.
+ *
+ * **Example** (Build the replacement)
+ *
+ * ```ts
+ * import { replacePullRequestBodyWithRest } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof replacePullRequestBodyWithRest) // "function"
+ * ```
+ *
+ * @param rest - The REST pull-request read and write.
+ * @param prNumber - Pull request whose body is replaced.
+ * @param next - The replacement Markdown.
+ * @returns Whether the live body carried a provenance footer that was kept.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const replacePullRequestBodyWithRest = Effect.fn("YeetGh.replacePullRequestBodyWithRest")(function* (
+  rest: Pick<GithubRestShape, "pullRequest" | "updatePullRequest">,
+  prNumber: number,
+  next: string
+) {
+  const pull = yield* rest.pullRequest(prNumber);
+  yield* rest.updatePullRequest(prNumber, { body: replacePrBodyKeepingFooter(pull.body, next) });
+  return O.isSome(parsePrProvenanceFooter(pull.body));
+});
+
+/**
+ * `yeet gh pr body <n> --body-file <path>`: replace a pull request's body over
+ * REST and keep its provenance footer.
+ *
+ * **Details**
+ *
+ * This replaces `gh pr edit --body-file`, which drops the Yeet provenance
+ * footer with the rest of the old body. The live footer is carried over as
+ * opaque text (see `replacePrBodyKeepingFooter`); a footer pasted into the
+ * new file is dropped. A pull request that had no footer gets none, and the
+ * command says how to stamp one.
+ *
+ * **Example** (Build the command effect)
+ *
+ * ```ts
+ * import { runYeetGhPrBody } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof runYeetGhPrBody) // "function"
+ * ```
+ *
+ * @param options - The parsed command flags and arguments.
+ * @returns The command effect; a read or write failure exits 1 through `CliReportedExit`.
+ * @category commands
+ * @since 0.0.0
+ */
+export const runYeetGhPrBody = (
+  options: typeof YeetGhCommonOptions.Encoded & { readonly number: number; readonly bodyFile: string }
+) =>
+  runGh(
+    options,
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const file = path.resolve(options.bodyFile);
+      const next = yield* fs
+        .readFileString(file)
+        .pipe(Effect.catch((error) => report(1)(`[gh] could not read --body-file ${file}: ${error.message}`)));
+      if (Str.isEmpty(Str.trim(next))) {
+        return yield* report(1)(`[gh] --body-file ${file} is empty`);
+      }
+      const rest = yield* GithubRest;
+      const kept = yield* replacePullRequestBodyWithRest(rest, options.number, next);
+      yield* Console.log(
+        kept
+          ? `[gh] replaced the body of #${options.number}; kept its provenance footer`
+          : `[gh] replaced the body of #${options.number}; it had no provenance footer (run \`bun run beep yeet monitor\` from the owning lane to stamp one)`
+      );
+    })
+  );
+
 const failedConclusions = HashSet.make("failure", "timed_out", "cancelled", "startup_failure");
 const cancellableStatuses = HashSet.make("queued", "waiting", "pending", "requested", "in_progress");
 
@@ -1727,5 +1819,55 @@ export const recordMonitoredPrSessionAsGhLogin = Effect.fn("GhOps.recordMonitore
         );
       })
     )
+  );
+});
+
+/**
+ * Re-assert a pull request's provenance footer from the local registry rows
+ * without recording a session row, using the operator's `gh` login.
+ *
+ * **Details**
+ *
+ * `yeet merge-gate` takes any pull request number and may run from any
+ * checkout, so it records no row: a row would name the gating checkout's
+ * branch and head. It only puts back a footer that a body rewrite dropped. A
+ * pull request with no local rows, a non-GitHub origin, or a missing login is
+ * one warning and a `skipped` outcome, never a failure.
+ *
+ * **Example** (Build the re-assert)
+ *
+ * ```ts
+ * import { reassertProvenanceFooterAsGhLogin, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main", branch: "main", cwd: ".", head: "HEAD",
+ *   originalArgv: [], packetDir: ".beep/yeet", repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * console.log(Effect.isEffect(reassertProvenanceFooterAsGhLogin(context, 42))) // true
+ * ```
+ *
+ * @param context - Hydrated Yeet context of the invoking checkout.
+ * @param prNumber - Pull request whose footer is re-asserted.
+ * @param registryOverride - Optional in-memory registry used by fixture-safe tests.
+ * @returns The typed stamp outcome; `skipped` when rows, origin or login were unavailable.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const reassertProvenanceFooterAsGhLogin = Effect.fn("GhOps.reassertProvenanceFooterAsGhLogin")(function* (
+  context: RepoRunContext,
+  prNumber: PrNumber,
+  registryOverride?: PrSessionRegistryShape
+) {
+  return yield* detectPrRepository(context.repoRoot).pipe(
+    Effect.flatMap((repository) => ensureProvenanceFooter(context, repository, prNumber, registryOverride)),
+    provideYeetGhLogin(context.repoRoot),
+    Effect.catchTag("YeetCommandError", (error) => {
+      const warning = `[yeet] provenance footer re-assert skipped for PR #${prNumber}: ${error.message}`;
+      return Console.warn(warning).pipe(
+        Effect.as(ProvenanceStampOutcome.make({ status: "skipped", message: warning }))
+      );
+    })
   );
 });

@@ -153,7 +153,8 @@ describe("DetachedProcess", () => {
       it.effect("the control: a positive pid DOES reach process.kill", () =>
         Effect.gen(function* () {
           const calls = (yield* KillSpy).mock.calls;
-          assert.isTrue(yield* DetachedProcess.reap(4242, "SIGTERM"));
+          const reap1 = yield* DetachedProcess.reap(4242, "SIGTERM");
+          assert.isTrue(reap1);
           assert.deepStrictEqual(calls, [[4242, "SIGTERM"]]);
         })
       );
@@ -169,7 +170,8 @@ describe("DetachedProcess", () => {
         // A failed spawn must never reach a pid-0 group signal.
         assertTrue(Number.isSafeInteger(pid) && pid > 0);
         // SIGCONT is harmless if the OS has already reused the pid.
-        assertFalse(yield* DetachedProcess.reap(pid, "SIGCONT"));
+        const reap2 = yield* DetachedProcess.reap(pid, "SIGCONT");
+        assertFalse(reap2);
       })
     );
 
@@ -190,7 +192,8 @@ describe("DetachedProcess", () => {
       it.effect("reports an already-dead process as false rather than failing", () =>
         Effect.gen(function* () {
           // A post phase finding its child already gone is the normal ending.
-          assert.isFalse(yield* DetachedProcess.reap(4242));
+          const reap3 = yield* DetachedProcess.reap(4242);
+          assert.isFalse(reap3);
         })
       );
     });
@@ -230,7 +233,8 @@ describe("DetachedProcess", () => {
 
     it.effect("accepts a real pid", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* S.decodeEffect(ProcessId)(4242), 4242);
+        const value4 = yield* S.decodeEffect(ProcessId)(4242);
+        assert.strictEqual(value4, 4242);
       })
     );
   });
@@ -332,7 +336,8 @@ describe("DetachedProcess", () => {
       it.effect("answers true for a 2xx response", () =>
         Effect.gen(function* () {
           const url = yield* ServerUrl;
-          assert.isTrue(yield* DetachedProcess.httpProbe(url));
+          const httpProbe5 = yield* DetachedProcess.httpProbe(url);
+          assert.isTrue(httpProbe5);
         })
       );
     });
@@ -347,7 +352,8 @@ describe("DetachedProcess", () => {
       it.effect("answers false for a non-2xx response — answering is not ready", () =>
         Effect.gen(function* () {
           const url = yield* ServerUrl;
-          assert.isFalse(yield* DetachedProcess.httpProbe(url));
+          const httpProbe6 = yield* DetachedProcess.httpProbe(url);
+          assert.isFalse(httpProbe6);
         })
       );
     });
@@ -371,7 +377,8 @@ describe("DetachedProcess", () => {
           // The assertion that matters is that this line is reached at all: a
           // probe that let the transport error through would fail the effect
           // here instead of answering false.
-          assert.isFalse(yield* DetachedProcess.httpProbe(`http://127.0.0.1:${port}/status`));
+          const httpProbe7 = yield* DetachedProcess.httpProbe(`http://127.0.0.1:${port}/status`);
+          assert.isFalse(httpProbe7);
         })
       );
     });
@@ -424,7 +431,8 @@ describe("DetachedProcess", () => {
       it.effect("an unstubbed member dies loudly, naming the member and the fix", () =>
         Effect.gen(function* () {
           const ops = DetachedProcess.makeTestOps();
-          const message = defectMessage(yield* Effect.exit(ops.reap(4242)));
+          const exit8 = yield* Effect.exit(ops.reap(4242));
+          const message = defectMessage(exit8);
           assert.include(message, "reap");
           assert.include(message, "not stubbed");
         })
@@ -433,11 +441,10 @@ describe("DetachedProcess", () => {
       it.effect("each member names ITSELF — spawn does not die blaming reap", () =>
         Effect.gen(function* () {
           const ops = DetachedProcess.makeTestOps();
-          assert.include(
-            defectMessage(yield* Effect.exit(ops.spawn({ command: "node", logFile: "/tmp/never.log" }))),
-            "spawn"
-          );
-          assert.include(defectMessage(yield* Effect.exit(ops.awaitReady(Effect.succeed(true)))), "awaitReady");
+          const exit9 = yield* Effect.exit(ops.spawn({ command: "node", logFile: "/tmp/never.log" }));
+          assert.include(defectMessage(exit9), "spawn");
+          const exit10 = yield* Effect.exit(ops.awaitReady(Effect.succeed(true)));
+          assert.include(defectMessage(exit10), "awaitReady");
         })
       );
 
@@ -454,13 +461,12 @@ describe("DetachedProcess", () => {
                 })
             ),
           });
-          assert.isTrue(yield* ops.reap(4242));
+          const reap11 = yield* ops.reap(4242);
+          assert.isTrue(reap11);
           assert.deepStrictEqual(reaped, [4242]);
           // The overrides must not soften the rest of the double.
-          assert.include(
-            defectMessage(yield* Effect.exit(ops.spawn({ command: "node", logFile: "/tmp/never.log" }))),
-            "spawn"
-          );
+          const exit12 = yield* Effect.exit(ops.spawn({ command: "node", logFile: "/tmp/never.log" }));
+          assert.include(defectMessage(exit12), "spawn");
         })
       );
 
@@ -471,7 +477,8 @@ describe("DetachedProcess", () => {
           const ops = DetachedProcess.makeTestOps();
           const described = ops.reap(4242);
           assert.isDefined(described);
-          const message = defectMessage(yield* Effect.exit(described));
+          const exit13 = yield* Effect.exit(described);
+          const message = defectMessage(exit13);
           assert.include(message, "reap");
         })
       );
@@ -503,7 +510,8 @@ describe("DetachedProcess", () => {
         });
         assert.isTrue(wrote, "the child's stdout must reach the log file");
 
-        assert.isTrue(yield* DetachedProcess.reap(pid));
+        const reap14 = yield* DetachedProcess.reap(pid);
+        assert.isTrue(reap14);
         const gone = yield* eventually(() => !alive(pid));
         assert.isTrue(gone, "the reaped child must actually exit");
       }).pipe(Effect.ensuring(Effect.sync(() => rmSync(directory, { recursive: true, force: true }))));
@@ -625,7 +633,8 @@ describe("DetachedSpawnOptions schema contract", () => {
   it.effect("keeps absent options absent and rejects explicit undefined", () =>
     Effect.gen(function* () {
       const minimal: DetachedSpawnOptions.Encoded = { command: "node", logFile: "/tmp/child.log" };
-      assert.deepStrictEqual(yield* S.decodeEffect(DetachedSpawnOptions)(minimal), minimal);
+      const value15 = yield* S.decodeEffect(DetachedSpawnOptions)(minimal);
+      assert.deepStrictEqual(value15, minimal);
       // Exact optional keys (EF-40): an optional key is omitted, never undefined.
       for (const key of ["args", "cwd", "base", "env"]) {
         assert.isFalse(S.is(DetachedSpawnOptions)({ ...minimal, [key]: undefined }));
@@ -637,7 +646,8 @@ describe("DetachedSpawnOptions schema contract", () => {
         base: { PATH: undefined, HOME: "/home/ci" },
         env: { MODE: "worker" },
       };
-      assert.deepStrictEqual(yield* S.decodeEffect(DetachedSpawnOptions)(configured), configured);
+      const value16 = yield* S.decodeEffect(DetachedSpawnOptions)(configured);
+      assert.deepStrictEqual(value16, configured);
     })
   );
 
@@ -660,7 +670,10 @@ describe("ProcessId codec property", () => {
     [Arbitrary.schema(ProcessId)],
     ([value]) =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* S.decodeEffect(ProcessId)(yield* S.encodeEffect(ProcessId)(value)), value);
+        const argument = S.decodeEffect(ProcessId);
+        const value1 = yield* S.encodeEffect(ProcessId)(value);
+        const value17 = yield* argument(value1);
+        assert.deepStrictEqual(value17, value);
       }),
     { arbitrary: fcRuns(100) }
   );

@@ -14,7 +14,9 @@ it.effect.prop(
     Effect.gen(function* () {
       const codec = S.fromJsonString(S.Unknown);
       const body = { signed_upload_url: value };
-      const decoded = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(body));
+      const argument = S.decodeEffect(codec);
+      const value1 = yield* S.encodeEffect(codec)(body);
+      const decoded = yield* argument(value1);
       const extracted = field(decoded, "signedUploadUrl");
       assert.strictEqual(
         S.toEquivalence(S.Json)(S.decodeUnknownResult(S.Json)(extracted).pipe(Result.getOrThrow), value),

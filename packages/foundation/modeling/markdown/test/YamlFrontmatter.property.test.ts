@@ -22,7 +22,8 @@ describe("YamlFrontmatter properties", () => {
     ([value]) =>
       Effect.gen(function* () {
         const encoded = yield* YamlFrontmatter.encode(value);
-        assert.deepStrictEqual(yield* decode(encoded), value);
+        const decoded = yield* decode(encoded);
+        assert.deepStrictEqual(decoded, value);
       }),
     runs
   );
@@ -35,13 +36,16 @@ describe("YamlFrontmatter properties", () => {
         const parsed = yield* decode(first);
         const second = yield* YamlFrontmatter.encode(parsed);
         assert.strictEqual(second, first);
-        assert.deepStrictEqual(yield* decode(second), parsed);
+        const decoded1 = yield* decode(second);
+        assert.deepStrictEqual(decoded1, parsed);
       }),
     runs
   );
   it.effect("empty mappings survive the codec boundary", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* decode(yield* YamlFrontmatter.encode({})), {});
+      const encoded3 = yield* YamlFrontmatter.encode({});
+      const decoded2 = yield* decode(encoded3);
+      assert.deepStrictEqual(decoded2, {});
     })
   );
 });

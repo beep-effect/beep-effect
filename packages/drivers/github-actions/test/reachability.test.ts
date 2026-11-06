@@ -122,7 +122,8 @@ describe("bundle reachability", () => {
     Effect.gen(function* () {
       // The control: without it every negative below could pass because the
       // walker is blind rather than because the edge is absent.
-      assert.deepStrictEqual(yield* reachingAmong(AZURE_SERVICES, "@azure/storage-blob"), AZURE_SERVICES);
+      const reachingAmong1 = yield* reachingAmong(AZURE_SERVICES, "@azure/storage-blob");
+      assert.deepStrictEqual(reachingAmong1, AZURE_SERVICES);
       for (const entry of AZURE_SERVICES) {
         assert.include((yield* runtimeClosure(entry)).modules, AZURE_BOUNDARY);
       }
@@ -131,7 +132,8 @@ describe("bundle reachability", () => {
 
   it.effect("no other module reaches @azure/storage-blob", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* reachingAmong(LIGHT_MODULES, "@azure/storage-blob"), []);
+      const reachingAmong2 = yield* reachingAmong(LIGHT_MODULES, "@azure/storage-blob");
+      assert.deepStrictEqual(reachingAmong2, []);
     })
   );
 
@@ -140,7 +142,8 @@ describe("bundle reachability", () => {
       // `src/index.ts` re-exports the three heavy services, so of course it
       // reaches Azure. The property that matters is the one above: every light
       // module is reachable WITHOUT it.
-      assert.isTrue(yield* reaches("index.ts", "@azure/storage-blob"));
+      const reaches3 = yield* reaches("index.ts", "@azure/storage-blob");
+      assert.isTrue(reaches3);
     })
   );
 
@@ -173,13 +176,15 @@ describe("bundle reachability", () => {
       // The reporting suite ships as `@beep/github-reporting`, whose own
       // reachability test pins its markdown edges; this package does not
       // import it.
-      assert.deepStrictEqual(yield* reachingAmong(MODULES, "@beep/markdown"), []);
+      const reachingAmong4 = yield* reachingAmong(MODULES, "@beep/markdown");
+      assert.deepStrictEqual(reachingAmong4, []);
     })
   );
 
   it.effect("the @beep/npm-spec edge is confined to the installer", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* reachingAmong(LIGHT_MODULES, "@beep/npm-spec"), ["PackageManagerInstaller.ts"]);
+      const reachingAmong5 = yield* reachingAmong(LIGHT_MODULES, "@beep/npm-spec");
+      assert.deepStrictEqual(reachingAmong5, ["PackageManagerInstaller.ts"]);
     })
   );
 
@@ -204,8 +209,9 @@ describe("bundle reachability", () => {
   it.effect("every runtime dependency is declared", () =>
     Effect.gen(function* () {
       const declared = R.keys(manifest.dependencies);
+      const packagesOf6 = yield* packagesOf("index.ts");
       const undeclared = A.filter(
-        yield* packagesOf("index.ts"),
+        packagesOf6,
         (specifier) => !Str.startsWith("node:")(specifier) && !A.some(declared, (pkg) => names(pkg)(specifier))
       );
       assert.deepStrictEqual(undeclared, []);

@@ -1080,7 +1080,9 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
   const writeOutgoing = Effect.fn($I`writeOutgoing`)(function* (message: AcpWireMessage, encoded: string | Uint8Array) {
     yield* ensureActive;
     const acknowledgement =
-      message._tag === "Exit" ? O.some(yield* Deferred.make<void, AcpError.AcpError>()) : O.none<AcpAcknowledgement>();
+      message._tag === "Exit"
+        ? yield* Effect.asSome(Deferred.make<void, AcpError.AcpError>())
+        : O.none<AcpAcknowledgement>();
     yield* admitOutgoing(acknowledgement);
     if (options.testHooks?.onOutgoingWriteAdmitted !== undefined) {
       yield* options.testHooks.onOutgoingWriteAdmitted();

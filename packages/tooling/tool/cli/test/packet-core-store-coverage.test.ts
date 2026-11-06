@@ -122,7 +122,8 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })("PacketEv
       const failure = yield* store.append(locator, genesis("refused")).pipe(Effect.flip);
       expect(failure.message).toContain("Interrupted fork replacement");
       expect(failure.message).toContain(recoveryRoot);
-      expect(yield* fs.exists(eventsDirectory)).toBe(false);
+      const exists1 = yield* fs.exists(eventsDirectory);
+      expect(exists1).toBe(false);
     })
   );
 
@@ -157,14 +158,12 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })("PacketEv
           return yield* fs.rename(from, to);
         }),
       });
-      const store = Context.get(
-        yield* PacketEventStoreLive.pipe(
-          Layer.fresh,
-          Layer.build,
-          Effect.provideService(FileSystem.FileSystem, failingFs)
-        ),
-        PacketEventStore
+      const pipe2 = yield* PacketEventStoreLive.pipe(
+        Layer.fresh,
+        Layer.build,
+        Effect.provideService(FileSystem.FileSystem, failingFs)
       );
+      const store = Context.get(pipe2, PacketEventStore);
       const failure = yield* store.append(locator, genesis("unpublished")).pipe(Effect.flip);
       expect(failure._tag).toBe("PacketStreamError");
       expect(failure.message).toContain("Failed to publish packet event");

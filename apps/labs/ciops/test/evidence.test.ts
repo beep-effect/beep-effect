@@ -42,29 +42,26 @@ const readEvidence = Effect.fn("EvidenceTest.readEvidence")(function* (paths: Ev
 describe("@beep/ciops replay evidence", () => {
   it.effect("decodes a bare argv as the read-only check mode", () =>
     Effect.gen(function* () {
-      expect(
-        yield* decodeEvidenceMode(
-          ["bun", "scripts/generate-replay-evidence.ts"],
-          EvidenceWriteScript.Enum["evidence:s7:write"]
-        )
-      ).toBe(EvidenceMode.Enum.check);
-      expect(
-        yield* decodeEvidenceMode(
-          ["bun", "scripts/generate-replay-evidence.ts", "--check"],
-          EvidenceWriteScript.Enum["evidence:s7:write"]
-        )
-      ).toBe(EvidenceMode.Enum.check);
+      const decodedEvidenceMode = yield* decodeEvidenceMode(
+        ["bun", "scripts/generate-replay-evidence.ts"],
+        EvidenceWriteScript.Enum["evidence:s7:write"]
+      );
+      expect(decodedEvidenceMode).toBe(EvidenceMode.Enum.check);
+      const decodedEvidenceMode1 = yield* decodeEvidenceMode(
+        ["bun", "scripts/generate-replay-evidence.ts", "--check"],
+        EvidenceWriteScript.Enum["evidence:s7:write"]
+      );
+      expect(decodedEvidenceMode1).toBe(EvidenceMode.Enum.check);
     })
   );
 
   it.effect("decodes --write as the opt-in write mode", () =>
     Effect.gen(function* () {
-      expect(
-        yield* decodeEvidenceMode(
-          ["bun", "scripts/generate-replay-evidence.ts", "--write"],
-          EvidenceWriteScript.Enum["evidence:s7:write"]
-        )
-      ).toBe(EvidenceMode.Enum.write);
+      const decodedEvidenceMode2 = yield* decodeEvidenceMode(
+        ["bun", "scripts/generate-replay-evidence.ts", "--write"],
+        EvidenceWriteScript.Enum["evidence:s7:write"]
+      );
+      expect(decodedEvidenceMode2).toBe(EvidenceMode.Enum.write);
     })
   );
 
@@ -93,7 +90,8 @@ describe("@beep/ciops replay evidence", () => {
         expect(S.is(EvidenceRun)(run)).toBe(true);
         expect(EvidenceMode.is.check(run.mode)).toBe(true);
         expect(Str.includes("PASS")(run.rendered)).toBe(true);
-        expect(yield* readEvidence(paths)).toBe(frozenRecord);
+        const readEvidence3 = yield* readEvidence(paths);
+        expect(readEvidence3).toBe(frozenRecord);
       })
     );
 
@@ -103,7 +101,8 @@ describe("@beep/ciops replay evidence", () => {
         const run = yield* generateReplayEvidence(EvidenceMode.Enum.write, paths);
 
         expect(EvidenceMode.is.write(run.mode)).toBe(true);
-        expect(yield* readEvidence(paths)).toBe(run.rendered);
+        const readEvidence4 = yield* readEvidence(paths);
+        expect(readEvidence4).toBe(run.rendered);
       })
     );
 
@@ -113,7 +112,8 @@ describe("@beep/ciops replay evidence", () => {
         const failure = yield* Effect.flip(generateReplayEvidence(EvidenceMode.Enum.write, paths));
 
         expect(failure._tag).toBe("ReplayMismatchError");
-        expect(yield* readEvidence(paths)).toBe(frozenRecord);
+        const readEvidence5 = yield* readEvidence(paths);
+        expect(readEvidence5).toBe(frozenRecord);
       })
     );
   });

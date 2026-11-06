@@ -34,9 +34,9 @@
     "goals/codex-security-findings-2026-08-13/research/QUALITY_REVIEW.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
     "research/OPPORTUNITIES.md",
-    "research/QUALITY_REVIEW.md"
+    "research/QUALITY_REVIEW.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {

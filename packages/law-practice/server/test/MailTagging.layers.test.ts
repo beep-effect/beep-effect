@@ -170,7 +170,12 @@ const lines = Effect.fn("MailTaggingLayersTest.lines")(function* (name: string) 
   const location = yield* MailTaggingStateLocation;
   const target = path.join(location.stateDirectory, name);
   const exists = yield* fs.exists(target);
-  return exists ? A.filter(Str.split(yield* fs.readFileString(target), "\n"), Str.isNonEmpty) : [];
+  return exists
+    ? yield* Effect.map(
+        Effect.map(fs.readFileString(target), (value) => Str.split(value, "\n")),
+        (value) => A.filter(value, Str.isNonEmpty)
+      )
+    : [];
 });
 
 const run = Effect.fn("MailTaggingLayersTest.run")(function* (mode: "dry-run" | "apply", id: string) {
@@ -187,24 +192,32 @@ describe("MailTagging live layers over file-backed state", () => {
         const preview = yield* run("dry-run", "run-0001");
 
         expect([preview.matched, preview.attachmentsFiled, preview.wrote]).toStrictEqual([1, 1, false]);
-        expect(yield* lines("tag-ledger.jsonl")).toStrictEqual([]);
-        expect(yield* lines("filing-ledger.jsonl")).toStrictEqual([]);
-        expect(yield* lines("checkpoint.json")).toStrictEqual([]);
+        const lines1 = yield* lines("tag-ledger.jsonl");
+        expect(lines1).toStrictEqual([]);
+        const lines2 = yield* lines("filing-ledger.jsonl");
+        expect(lines2).toStrictEqual([]);
+        const lines3 = yield* lines("checkpoint.json");
+        expect(lines3).toStrictEqual([]);
 
         const applied = yield* run("apply", "run-0002");
         const message = yield* Ref.get(inbox.message);
 
         expect([applied.matched, applied.attachmentsFiled, applied.wrote]).toStrictEqual([1, 1, true]);
         expect(message.categories).toStrictEqual(["Personal", "M: acme.10001", "P: USPTO"]);
-        expect(yield* Ref.get(inbox.uploads)).toStrictEqual(["folder-uspto-incoming/2026-07-01 office-action.pdf"]);
-        expect(yield* lines("tag-ledger.jsonl")).toHaveLength(1);
-        expect(yield* lines("filing-ledger.jsonl")).toHaveLength(2);
-        expect(yield* lines("checkpoint.json")).toHaveLength(1);
+        const got = yield* Ref.get(inbox.uploads);
+        expect(got).toStrictEqual(["folder-uspto-incoming/2026-07-01 office-action.pdf"]);
+        const lines4 = yield* lines("tag-ledger.jsonl");
+        expect(lines4).toHaveLength(1);
+        const lines5 = yield* lines("filing-ledger.jsonl");
+        expect(lines5).toHaveLength(2);
+        const lines6 = yield* lines("checkpoint.json");
+        expect(lines6).toHaveLength(1);
 
         const again = yield* run("apply", "run-0003");
 
         expect([again.alreadyTagged, again.attachmentsFiled]).toStrictEqual([1, 0]);
-        expect(yield* lines("tag-ledger.jsonl")).toHaveLength(1);
+        const lines7 = yield* lines("tag-ledger.jsonl");
+        expect(lines7).toHaveLength(1);
 
         const undo = yield* MailTaggingUndo;
         const undone = yield* undo.run(
@@ -218,7 +231,8 @@ describe("MailTagging live layers over file-backed state", () => {
 
         expect([undone.entries, undone.categoriesRemoved]).toStrictEqual([1, 2]);
         expect((yield* Ref.get(inbox.message)).categories).toStrictEqual(["Personal"]);
-        expect(A.map(yield* ledger.records, (record) => record._tag)).toStrictEqual(["TagApplied", "TagUndone"]);
+        const records8 = yield* ledger.records;
+        expect(A.map(records8, (record) => record._tag)).toStrictEqual(["TagApplied", "TagUndone"]);
       })
     );
   });

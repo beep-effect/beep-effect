@@ -53,18 +53,22 @@ describe("DuckDbClient generic SqlClient consumers", { concurrent: false }, () =
           Result: PersonRow,
           execute: (id) => sql`SELECT id, name FROM schema_people WHERE id = ${id}`,
         });
-        assert.deepStrictEqual(yield* findAll(undefined), [
+        const foundAll = yield* findAll(undefined);
+        assert.deepStrictEqual(foundAll, [
           { id: 1, name: "Ada" },
           { id: 2, name: "Grace" },
         ]);
-        assertSome(yield* findOne(2), { id: 2, name: "Grace" });
-        assertNone(yield* findOne(3));
+        const foundOne = yield* findOne(2);
+        assertSome(foundOne, { id: 2, name: "Grace" });
+        const foundOne1 = yield* findOne(3);
+        assertNone(foundOne1);
         const exactlyOne = SqlSchema.findOne({
           Request: S.Finite,
           Result: PersonRow,
           execute: (id) => sql`SELECT id, name FROM schema_people WHERE id = ${id}`,
         });
-        assert.deepStrictEqual(yield* exactlyOne(1), { id: 1, name: "Ada" });
+        const exactlyOne2 = yield* exactlyOne(1);
+        assert.deepStrictEqual(exactlyOne2, { id: 1, name: "Ada" });
       })
     );
   });

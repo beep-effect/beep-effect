@@ -33,17 +33,38 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
-    "research/p0-site-inventory-2026-11-02.md",
-    "research/is-ancestor-prune-differential-w0.json",
-    "research/git-readers-differential-w1a.json",
-    "research/yeet-git-differential-w1b.json",
+    "research/cache-baseline-request-w0.json",
+    "research/cache-baseline-request-w1b.json",
+    "research/cache-baseline-request-w2b.json",
+    "research/cache-baseline-request-w3-kit.json",
+    "research/cache-baseline-request-w3-sites.json",
+    "research/cache-baseline-request-w6.json",
+    "research/cache-baseline-request-w7-kit.json",
+    "research/cache-baseline-request-w7b.json",
+    "research/cache-baseline-request-w7c.json",
+    "research/cache-baseline-review-w0.md",
+    "research/cache-baseline-review-w1b.md",
+    "research/cache-baseline-review-w2b.md",
+    "research/cache-baseline-review-w3-kit.md",
+    "research/cache-baseline-review-w3-sites.md",
+    "research/cache-baseline-review-w6.md",
+    "research/cache-baseline-review-w7-kit.md",
+    "research/cache-baseline-review-w7b.md",
+    "research/cache-baseline-review-w7c.md",
     "research/dirty-axis-differential-w2.json",
-    "research/yeet-remainder-differential-w2b.json",
-    "research/reviewer-ci-github-differential-w3.json",
+    "research/git-readers-differential-w1a.json",
+    "research/groups-differential-w7.json",
+    "research/is-ancestor-prune-differential-w0.json",
+    "research/p0-site-inventory-2026-11-02.md",
     "research/review-thread-differential-w4.json",
-    "research/yeet-gh-seams-differential-w6.json",
+    "research/reviewer-ci-github-differential-w3.json",
+    "research/site-list.md",
     "research/w7-site-census-2026-11-03.md",
-    "research/worktree-differential-w7.json"
+    "research/worktree-differential-w7.json",
+    "research/yeet-differential-w7.json",
+    "research/yeet-gh-seams-differential-w6.json",
+    "research/yeet-git-differential-w1b.json",
+    "research/yeet-remainder-differential-w2b.json"
   ],
   "agentLaunchers": [
     {
@@ -227,6 +248,82 @@
     {
       "path": "ops/frozen-w6/Merge.old.ts",
       "purpose": "Frozen pre-W6 merge phase of mergePr (the gh pr merge --squash --match-head-commit call and its bounded MERGED confirmation, lane base 641180ade6), lifted below the reviewer gate and replayed by ops/yeet-gh-seams-differential-w6.ts."
+    },
+    {
+      "path": "ops/yeet-differential-w7.ts",
+      "purpose": "W7a differential: the frozen pre-W7 Yeet git bodies (ops/frozen-w7a) compared with their @beep/git replacements over scratch repositories; 81 scenarios, 72 same, 9 classified, 0 unclassified (research/yeet-differential-w7.json)."
+    },
+    {
+      "path": "ops/frozen-w7a/ExpectationRewrite.old.ts",
+      "purpose": "Frozen pre-W7 Yeet ExpectationRewrite git body (lane base 8602b24203) replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/GateStaleness.old.ts",
+      "purpose": "Frozen pre-W7 Yeet GateStaleness git body (lane base 8602b24203) replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/GitRunners.old.ts",
+      "purpose": "Frozen pre-W7 runGitOutput/runGitPathList/runGitRawOutput/runGitFoldedStdout with their private capture helpers (lane base 8602b24203), inlined because the runner retirement deletes them; used by the other frozen-w7a bodies."
+    },
+    {
+      "path": "ops/frozen-w7a/Handler.old.ts",
+      "purpose": "Frozen pre-W7 Yeet Handler git body (lane base 8602b24203) replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/HeadInstallReceipt.old.ts",
+      "purpose": "Frozen pre-W7 Yeet HeadInstallReceipt git body (lane base 8602b24203) replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/MergedPreview.old.ts",
+      "purpose": "Frozen pre-W7 Yeet MergedPreview git body (lane base 8602b24203) replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/ProofState.old.ts",
+      "purpose": "Frozen pre-W7 Yeet ProofState git body (lane base 8602b24203) replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/PublishScope.old.ts",
+      "purpose": "Frozen pre-W7 Yeet PublishScope git body (lane base 8602b24203) replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/PullRequest.old.ts",
+      "purpose": "Frozen pre-W7 Yeet PullRequest git body (lane base 8602b24203) replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7a/PullRequestTitle.old.ts",
+      "purpose": "Frozen pre-W7 Yeet PullRequestTitle git body (lane base 8602b24203) replayed by ops/yeet-differential-w7.ts."
+    },
+    {
+      "path": "ops/groups-differential-w7.ts",
+      "purpose": "W7b differential: the frozen pre-W7 command-group git bodies (ops/frozen-w7b) compared with their @beep/git replacements over scratch repositories; with ops/groups-differential-w7.github.ts, 100 scenarios, 76 same, 24 classified, 0 unclassified (research/groups-differential-w7.json)."
+    },
+    {
+      "path": "ops/groups-differential-w7.github.ts",
+      "purpose": "W7b differential, gh half: the frozen pre-W7 Goals completion, Groups, RepoCards and RouteCorpus gh bodies (ops/frozen-w7b) compared with their @beep/github replacements over one fixture table served to a scripted gh and a REST fetch."
+    },
+    {
+      "path": "ops/frozen-w7b/Completion.old.ts",
+      "purpose": "Frozen pre-W7 Completion git and gh body (lane base 8602b24203) replayed by ops/groups-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7b/CompletionEvidence.old.ts",
+      "purpose": "Frozen pre-W7 CompletionEvidence git and gh body (lane base 8602b24203) replayed by ops/groups-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7b/GitRunners.old.ts",
+      "purpose": "Frozen pre-W7 git runners with their private capture helpers (lane base 8602b24203), inlined because the runner retirement deletes them; used by the other frozen-w7b bodies."
+    },
+    {
+      "path": "ops/frozen-w7b/Groups.old.ts",
+      "purpose": "Frozen pre-W7 Groups git and gh body (lane base 8602b24203) replayed by ops/groups-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7b/RepoCards.old.ts",
+      "purpose": "Frozen pre-W7 RepoCards git and gh body (lane base 8602b24203) replayed by ops/groups-differential-w7.ts."
+    },
+    {
+      "path": "ops/frozen-w7b/RouteCorpus.old.ts",
+      "purpose": "Frozen pre-W7 RouteCorpus git and gh body (lane base 8602b24203) replayed by ops/groups-differential-w7.ts."
     },
     {
       "path": "ops/worktree-differential-w7.ts",

@@ -318,25 +318,26 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "transformation-helpers-" });
       const absent = path.join(root, "absent");
-      expect(yield* RT.measureTransformationTreeBytes(absent)).toBe(0);
+      const measureTransformationTreeBytes1 = yield* RT.measureTransformationTreeBytes(absent);
+      expect(measureTransformationTreeBytes1).toBe(0);
       expect((yield* RT.hashTransformationTree(absent)).sizeBytes).toBe(0);
 
       const file = path.join(root, "single.bin");
       yield* fs.writeFileString(file, "abc");
-      expect(yield* RT.measureTransformationTreeBytes(file)).toBe(3);
+      const measureTransformationTreeBytes2 = yield* RT.measureTransformationTreeBytes(file);
+      expect(measureTransformationTreeBytes2).toBe(3);
       expect((yield* RT.hashTransformationTree(file)).sizeBytes).toBe(3);
 
       const tree = path.join(root, "tree");
       yield* fs.makeDirectory(path.join(tree, "nested"), { recursive: true });
       yield* fs.writeFileString(path.join(tree, "a.txt"), "a");
       yield* fs.writeFileString(path.join(tree, "nested", "b.txt"), "bb");
-      expect(yield* RT.measureTransformationTreeBytes(tree)).toBe(3);
-      expect(A.map(yield* RT.walkFiles(tree), (entry) => entry.relativePath)).toEqual(["a.txt", "nested/b.txt"]);
-      expect(A.map(yield* RT.walkTransformationEntries(tree), (entry) => entry.kind)).toEqual([
-        "file",
-        "directory",
-        "file",
-      ]);
+      const measureTransformationTreeBytes3 = yield* RT.measureTransformationTreeBytes(tree);
+      expect(measureTransformationTreeBytes3).toBe(3);
+      const walkFiles4 = yield* RT.walkFiles(tree);
+      expect(A.map(walkFiles4, (entry) => entry.relativePath)).toEqual(["a.txt", "nested/b.txt"]);
+      const walkTransformationEntries5 = yield* RT.walkTransformationEntries(tree);
+      expect(A.map(walkTransformationEntries5, (entry) => entry.kind)).toEqual(["file", "directory", "file"]);
       expect((yield* RT.hashTransformationTree(tree)).sizeBytes).toBe(3);
     })
   );
@@ -355,12 +356,15 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       expect((yield* RT.hashRecycleContent(source)).sizeBytes).toBe(7);
       const direct = path.join(outputRoot, "direct.txt");
       yield* RT.exclusiveCopyFile(source, direct, outputRoot);
-      expect(yield* fs.readFileString(direct)).toBe("recycle");
+      const readFileString6 = yield* fs.readFileString(direct);
+      expect(readFileString6).toBe("recycle");
       (yield* RT.exclusiveCopyFile(source, direct, outputRoot).pipe(Effect.option)).pipe(assertNone);
 
       const promoted = path.join(outputRoot, "promoted.txt");
-      expect(yield* RT.copyRecycleContent(outputRoot, source, promoted, sourceDigest)).toBe(7);
-      expect(yield* RT.copyRecycleContent(outputRoot, source, promoted, sourceDigest)).toBe(0);
+      const copyRecycleContent7 = yield* RT.copyRecycleContent(outputRoot, source, promoted, sourceDigest);
+      expect(copyRecycleContent7).toBe(7);
+      const copyRecycleContent8 = yield* RT.copyRecycleContent(outputRoot, source, promoted, sourceDigest);
+      expect(copyRecycleContent8).toBe(0);
       (yield* RT.copyRecycleContent(outputRoot, source, promoted, sha("wrong")).pipe(Effect.option)).pipe(assertNone);
 
       const partialDestination = path.join(outputRoot, "partial.txt");
@@ -415,9 +419,13 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       yield* fs.writeFileString(path.join(sourceDirectory, "nested/b.txt"), "bb");
       const directoryDigest = yield* RT.hashRecycleContent(sourceDirectory);
       const directoryDestination = path.join(outputRoot, "directory");
-      expect(
-        yield* RT.copyRecycleContent(outputRoot, sourceDirectory, directoryDestination, directoryDigest.sha256)
-      ).toBe(3);
+      const copyRecycleContent9 = yield* RT.copyRecycleContent(
+        outputRoot,
+        sourceDirectory,
+        directoryDestination,
+        directoryDigest.sha256
+      );
+      expect(copyRecycleContent9).toBe(3);
       expect((yield* RT.hashRecycleContent(directoryDestination)).sha256).toBe(directoryDigest.sha256);
 
       const fifo = path.join(root, "unsupported.fifo");
@@ -460,23 +468,31 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         options,
         -10_001
       ).pipe(Effect.option)).pipe(assertNone);
+      const argument1 = capacityContext("output");
+      const argument2 = { sha256: sha("payload"), sizeBytes: 2 };
+
+      const now1 = yield* DateTime.now;
       (yield* RT.requireRecycleCopyCapacity(
-        capacityContext("output"),
-        { sha256: sha("payload"), sizeBytes: 2 },
+        argument1,
+        argument2,
         { inputBytes: 0, mappingCount: 0, outputBytes: 99 },
         options,
-        DateTime.toEpochMillis(yield* DateTime.now)
+        DateTime.toEpochMillis(now1)
       ).pipe(Effect.option)).pipe(assertNone);
       const enormousOptions = RestorationRecycleOptions.make({
         ...options,
         maxTotalOutputBytes: PosInt.make(Number.MAX_SAFE_INTEGER),
       });
+      const argument4 = capacityContext("free-space");
+      const argument5 = { sha256: sha("payload"), sizeBytes: Number.MAX_SAFE_INTEGER };
+
+      const now2 = yield* DateTime.now;
       (yield* RT.requireRecycleCopyCapacity(
-        capacityContext("free-space"),
-        { sha256: sha("payload"), sizeBytes: Number.MAX_SAFE_INTEGER },
+        argument4,
+        argument5,
         { inputBytes: 0, mappingCount: 0, outputBytes: 0 },
         enormousOptions,
-        DateTime.toEpochMillis(yield* DateTime.now)
+        DateTime.toEpochMillis(now2)
       ).pipe(Effect.option)).pipe(assertNone);
     })
   );
@@ -500,7 +516,8 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       });
       const candidates = RT.mailCandidates(path, "/archive", [pst]);
       const candidate = O.getOrThrow(A.head(candidates));
-      expect(yield* RT.selectPlannedMailCandidate(member, candidates)).toEqual(candidates);
+      const selectPlannedMailCandidate10 = yield* RT.selectPlannedMailCandidate(member, candidates);
+      expect(selectPlannedMailCandidate10).toEqual(candidates);
       for (const invalid of [
         [],
         [candidate, candidate],
@@ -630,7 +647,8 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       ).toBe(true);
       const ledger = yield* fs.readFileString(recycleContext.ledgerPath);
       yield* RT.appendRecycleJoins(grouped, RT.recycleSurfaceCounts(grouped), recycleContext, joins);
-      expect(yield* fs.readFileString(recycleContext.ledgerPath)).toBe(ledger);
+      const readFileString11 = yield* fs.readFileString(recycleContext.ledgerPath);
+      expect(readFileString11).toBe(ledger);
       (yield* RT.appendRecycleJoins(grouped, RT.recycleSurfaceCounts(grouped), recycleContext, [
         TransformationLedgerRecord.cases["recycle-join"].make({ ...joins[0]!, count: S.Natural.make(2) }),
       ]).pipe(Effect.option)).pipe(assertNone);
@@ -666,7 +684,9 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       });
       const groups = RT.groupRecycleEntries(RT.recycleEntries(path, archiveRoot, [metadataRecord, contentRecord]));
       const pair = RT.sortedRecyclePairs(groups)[0];
-      if (pair === undefined) return yield* Effect.die("Expected one deterministic recycle pair.");
+      if (pair === undefined) {
+        return yield* Effect.die("Expected one deterministic recycle pair.");
+      }
 
       const decoded = yield* RT.readRecycleMetadata(pair.metadata);
       expect(decoded.originalPath).toBe(originalPath);
@@ -716,18 +736,31 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       ]) {
         expect(RT.recycleMappingIdentityMatches(mismatch, pair, digest, originalPath, expected)).toBe(false);
       }
-      expect(yield* RT.recycleRetainedCheckpointMatches(recycleContext, outputRoot, restoredRelativePath, digest)).toBe(
-        true
+      const recycleRetainedCheckpointMatches12 = yield* RT.recycleRetainedCheckpointMatches(
+        recycleContext,
+        outputRoot,
+        restoredRelativePath,
+        digest
       );
-      expect(
-        yield* RT.recycleRetainedCheckpointMatches(recycleContext, outputRoot, restoredRelativePath, {
+      expect(recycleRetainedCheckpointMatches12).toBe(true);
+      const recycleRetainedCheckpointMatches13 = yield* RT.recycleRetainedCheckpointMatches(
+        recycleContext,
+        outputRoot,
+        restoredRelativePath,
+        {
           ...digest,
           sizeBytes: digest.sizeBytes + 1,
-        })
-      ).toBe(false);
-      expect(
-        yield* RT.validateRecycleMappingCheckpoint(recycleContext, outputRoot, pair, mapping, MutableHashMap.empty())
-      ).toBe(7);
+        }
+      );
+      expect(recycleRetainedCheckpointMatches13).toBe(false);
+      const validateRecycleMappingCheckpoint14 = yield* RT.validateRecycleMappingCheckpoint(
+        recycleContext,
+        outputRoot,
+        pair,
+        mapping,
+        MutableHashMap.empty()
+      );
+      expect(validateRecycleMappingCheckpoint14).toBe(7);
       (yield* RT.validateRecycleMappingCheckpoint(
         recycleContext,
         outputRoot,
@@ -735,7 +768,13 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         TransformationLedgerRecord.cases["recycle-mapping"].make({ ...mapping, contentObjectId: "different" }),
         MutableHashMap.empty()
       ).pipe(Effect.option)).pipe(assertNone);
-      expect(yield* RT.validateRecycleMappingPrefix(recycleContext, outputRoot, [mapping], [pair])).toMatchObject({
+      const validateRecycleMappingPrefix15 = yield* RT.validateRecycleMappingPrefix(
+        recycleContext,
+        outputRoot,
+        [mapping],
+        [pair]
+      );
+      expect(validateRecycleMappingPrefix15).toMatchObject({
         inputBytes: 7,
       });
       (yield* RT.validateRecycleMappingPrefix(recycleContext, outputRoot, [mapping], []).pipe(Effect.option)).pipe(
@@ -761,22 +800,26 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
             : fs.open(filePath, options);
         },
       };
+      const argument7 = MutableHashMap.empty<string, string>();
+
+      const argument9 = RestorationRecycleOptions.make({
+        corpusRoot: root,
+        expectedMissingContentCount: S.Natural.make(0),
+        expectedSurfaceCount: S.Natural.make(1),
+        maxTotalElapsedMillis: PosInt.make(10_000),
+        maxTotalOutputBytes: PosInt.make(1_000),
+      });
+      const now3 = yield* DateTime.now;
       const restoreSourceDriftError = yield* RT.restoreRecyclePair(
         pair.metadata,
         pair.content,
         pair.group,
         raceContext,
         raceRestoredRoot,
-        MutableHashMap.empty(),
+        argument7,
         { inputBytes: 0, mappingCount: 0, outputBytes: 0 },
-        RestorationRecycleOptions.make({
-          corpusRoot: root,
-          expectedMissingContentCount: S.Natural.make(0),
-          expectedSurfaceCount: S.Natural.make(1),
-          maxTotalElapsedMillis: PosInt.make(10_000),
-          maxTotalOutputBytes: PosInt.make(1_000),
-        }),
-        DateTime.toEpochMillis(yield* DateTime.now)
+        argument9,
+        DateTime.toEpochMillis(now3)
       ).pipe(Effect.provideService(FileSystem.FileSystem, restoreRaceFileSystem), Effect.flip);
       expect(restoreSourceDriftError.message).toContain("source bytes changed while parsing or copying");
       yield* fs.writeFileString(contentPath, "recycle");
@@ -846,9 +889,10 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       );
       yield* fs.writeFileString(recycleContext.ledgerPath, `${A.join(encodedInterruptedSeed, "\n")}\n`);
       yield* RT.recoverRecycleInterruptedAttempts(recycleContext, [pair]);
-      expect(yield* fs.exists(path.join(recycleContext.outputRoot, `interrupted/${recycleAttempt.attemptId}`))).toBe(
-        true
+      const exists16 = yield* fs.exists(
+        path.join(recycleContext.outputRoot, `interrupted/${recycleAttempt.attemptId}`)
       );
+      expect(exists16).toBe(true);
 
       const encodedTooManyMappings = yield* Effect.forEach(
         [recycleStart, recycleAttempt, mapping],
@@ -1086,7 +1130,8 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       const partial = `${destination}.partial`;
       yield* fs.writeFileString(partial, `${canonical}\n`);
       yield* RT.removeMatchingAcceptancePartial(directory, partial, canonical);
-      expect(yield* fs.exists(partial)).toBe(false);
+      const exists17 = yield* fs.exists(partial);
+      expect(exists17).toBe(false);
 
       const changed = RestorationAcceptanceRecord.make({
         ...record,
@@ -1109,7 +1154,8 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       const encodedRecycle = yield* encodeRestorationAcceptanceRecordJson(recycle);
       yield* fs.writeFileString(recyclePartial, `${encodedRecycle}\n`);
       yield* RT.writeAcceptanceRecord(corpusRoot, "run-2", recycle);
-      expect(yield* fs.exists(path.join(recycleDirectory, "recycle.json"))).toBe(true);
+      const exists18 = yield* fs.exists(path.join(recycleDirectory, "recycle.json"));
+      expect(exists18).toBe(true);
 
       const conflictingPartialDirectory = path.join(corpusRoot, "staging/restoration/runs/run-3/acceptance");
       yield* fs.makeDirectory(conflictingPartialDirectory, { recursive: true });
@@ -1220,15 +1266,17 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         ...fs,
         exists: (filePath) => (filePath === "/lib64" ? Effect.succeed(false) : fs.exists(filePath)),
       };
-      expect(
-        yield* RT.sandboxRuntimeBinds().pipe(Effect.provideService(FileSystem.FileSystem, runtimeFileSystem))
-      ).not.toContain("/lib64");
+      const pipe19 = yield* RT.sandboxRuntimeBinds().pipe(
+        Effect.provideService(FileSystem.FileSystem, runtimeFileSystem)
+      );
+      expect(pipe19).not.toContain("/lib64");
       const captured = yield* RT.runLegacyStep("sh", ["-c", "printf semantic-proof"], 2_000, "stdout");
       expect(captured.exitCode).toBe(0);
       expect(captured.output).toBe("semantic-proof");
       const exhausted = yield* RT.runLegacyStep("sh", ["-c", "exit 0"], 0).pipe(Effect.option);
       exhausted.pipe(assertNone);
-      expect(yield* RT.maximumPageRmse([], [], legacyOptions, legacyBudget)).toBe(0);
+      const maximumPageRmse20 = yield* RT.maximumPageRmse([], [], legacyOptions, legacyBudget);
+      expect(maximumPageRmse20).toBe(0);
     })
   );
 
@@ -1247,7 +1295,8 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         runRoot: root,
         startedAt: 0,
       };
-      const now = DateTime.toEpochMillis(yield* DateTime.now);
+      const now21 = yield* DateTime.now;
+      const now = DateTime.toEpochMillis(now21);
       const budget = { attemptStartedAt: now, context: legacyContext, familyStartedAt: now };
       const input = path.join(root, "source.doc");
       yield* fs.writeFileString(input, "not-doc");
@@ -1293,16 +1342,15 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       yield* fs.writeFileString(probe, "#!/bin/sh\nprintf 'Pages: 2\\n'\n");
       expect((yield* RT.runLegacyStep("chmod", ["+x", probe], 2_000)).exitCode).toBe(0);
       const probeOptions = RestorationLegacyWordOptions.make({ ...baseOptions, bwrapPath: probe });
-      expect(yield* RT.pdfPageCount(input, probeOptions, budget)).toBe(2);
+      const pdfPageCount22 = yield* RT.pdfPageCount(input, probeOptions, budget);
+      expect(pdfPageCount22).toBe(2);
 
       const rendered = path.join(root, "rendered");
       yield* fs.makeDirectory(rendered);
       yield* fs.writeFileString(path.join(rendered, "page-1.png"), "png");
       yield* fs.writeFileString(path.join(rendered, "page-2.png"), "png");
-      expect(yield* RT.renderPdfPages(input, rendered, emptyOptions, budget)).toEqual([
-        path.join(rendered, "page-1.png"),
-        path.join(rendered, "page-2.png"),
-      ]);
+      const renderPdfPages23 = yield* RT.renderPdfPages(input, rendered, emptyOptions, budget);
+      expect(renderPdfPages23).toEqual([path.join(rendered, "page-1.png"), path.join(rendered, "page-2.png")]);
       (yield* RT.renderPdfPages(input, path.join(root, "render-fail"), failedOptions, budget).pipe(Effect.option)).pipe(
         assertNone
       );
@@ -1311,7 +1359,8 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       yield* fs.writeFileString(compare, "#!/bin/sh\nprintf '0 (0.25)\\n'\n");
       expect((yield* RT.runLegacyStep("chmod", ["+x", compare], 2_000)).exitCode).toBe(0);
       const compareOptions = RestorationLegacyWordOptions.make({ ...baseOptions, bwrapPath: compare });
-      expect(yield* RT.comparePageRmse(input, input, compareOptions, budget)).toBe(0.25);
+      const comparePageRmse24 = yield* RT.comparePageRmse(input, input, compareOptions, budget);
+      expect(comparePageRmse24).toBe(0.25);
       (yield* RT.comparePageRmse(input, input, failedOptions, budget).pipe(Effect.option)).pipe(assertNone);
       (yield* RT.comparePageRmse(input, input, emptyOptions, budget).pipe(Effect.option)).pipe(assertNone);
       const compareFailure = path.join(root, "compare-failure.sh");
@@ -1326,7 +1375,8 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       expect(compareFailureError.message).toContain("Rendered-page comparison failed or exceeded");
 
       const workRoot = yield* RT.makeLegacyWorkRoot(outputRoot, sha("work"), "attempt-work");
-      expect(yield* fs.exists(workRoot)).toBe(true);
+      const exists25 = yield* fs.exists(workRoot);
+      expect(exists25).toBe(true);
       (yield* RT.makeLegacyWorkRoot(outputRoot, sha("work"), "attempt-work").pipe(Effect.option)).pipe(assertNone);
 
       const converted = path.join(root, "converted.docx");
@@ -1373,7 +1423,13 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         sha256: sha("not-doc"),
       });
       const candidate = { digest: pass.sha256, occurrenceCount: 1, pass, sourcePath: input };
-      expect(yield* RT.processLegacyWordCandidate(candidate, "LibreOffice test", legacyContext, baseOptions)).toEqual({
+      const processLegacyWordCandidate26 = yield* RT.processLegacyWordCandidate(
+        candidate,
+        "LibreOffice test",
+        legacyContext,
+        baseOptions
+      );
+      expect(processLegacyWordCandidate26).toEqual({
         inputBytes: 7,
         outputBytes: 0,
         passed: false,
@@ -1388,16 +1444,15 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       (yield* RT.legacyFailureTerminal(legacyContext, candidate).pipe(Effect.option)).pipe(assertNone);
 
       const expiredCandidate = { ...candidate, digest: sha("expired"), pass: { ...pass, sha256: sha("expired") } };
-      expect(
-        yield* RT.processLegacyWordTerminal(
-          expiredCandidate,
-          "LibreOffice test",
-          legacyContext,
-          baseOptions,
-          -10_000,
-          0
-        )
-      ).toEqual({
+      const processLegacyWordTerminal27 = yield* RT.processLegacyWordTerminal(
+        expiredCandidate,
+        "LibreOffice test",
+        legacyContext,
+        baseOptions,
+        -10_000,
+        0
+      );
+      expect(processLegacyWordTerminal27).toEqual({
         inputBytes: 7,
         outputBytes: 0,
         passed: false,
@@ -1525,7 +1580,7 @@ else exit 92; fi
         ledgerPath: path.join(root, "legacy.jsonl"),
         outputRoot,
         runRoot: root,
-        startedAt: DateTime.toEpochMillis(yield* DateTime.now),
+        startedAt: yield* Effect.map(DateTime.now, DateTime.toEpochMillis),
       };
       const cfb = new Uint8Array(64);
       cfb.set([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
@@ -1613,9 +1668,12 @@ else exit 92; fi
       const invalidStart = { ...runStart, recordedAt: "not-a-date" };
       (yield* RT.contextFromFamilyStart(context, invalidStart).pipe(Effect.option)).pipe(assertNone);
       (yield* RT.requireMailScope(context).pipe(Effect.option)).pipe(assertNone);
-      expect(
-        yield* RT.requireMailScope({ ...context, family: "mail", mailScope: O.some<"full" | "slice">("full") })
-      ).toBe("full");
+      const requireMailScope28 = yield* RT.requireMailScope({
+        ...context,
+        family: "mail",
+        mailScope: O.some<"full" | "slice">("full"),
+      });
+      expect(requireMailScope28).toBe("full");
       (yield* RT.rejectFamilyPreflight(
         true,
         context,
@@ -1658,7 +1716,8 @@ else exit 92; fi
         runId: "preservation-1",
         schemaVersion: "oppold-corpus-restoration/v1",
       });
-      expect(yield* RT.deterministicPreservationElapsed([preflight, seal], seal)).toBe(125);
+      const deterministicPreservationElapsed29 = yield* RT.deterministicPreservationElapsed([preflight, seal], seal);
+      expect(deterministicPreservationElapsed29).toBe(125);
       const invalidElapsed = yield* RT.deterministicPreservationElapsed([], seal).pipe(Effect.option);
       invalidElapsed.pipe(assertNone);
 
@@ -1753,7 +1812,8 @@ else exit 92; fi
         "unsupported",
         O.none()
       );
-      expect(yield* fs.readFileString(ledgerPath)).toBe(first);
+      const readFileString30 = yield* fs.readFileString(ledgerPath);
+      expect(readFileString30).toBe(first);
       const conflict = yield* RT.appendAttachmentRepair(
         mailContext,
         "attempt-1",
@@ -1786,7 +1846,8 @@ else exit 92; fi
         "repaired",
         O.some({ sha256: sha("typed"), sizeBytes: PosInt.make(1) })
       );
-      expect(yield* fs.readFileString(ledgerPath)).toContain('"derivedSizeBytes":1');
+      const readFileString31 = yield* fs.readFileString(ledgerPath);
+      expect(readFileString31).toContain('"derivedSizeBytes":1');
 
       const unterminatedPath = path.join(root, "ledgers/mail/unterminated.jsonl");
       yield* fs.writeFileString(unterminatedPath, Str.trimEnd(first));
@@ -1894,7 +1955,8 @@ else exit 92; fi
       );
       expect(resumed.candidates).toEqual([]);
       expect(resumed.counters.inputBytes).toBe(1);
-      expect(yield* RT.currentLedgerDigest(path.join(root, "absent.jsonl"))).toBe(sha(""));
+      const currentLedgerDigest32 = yield* RT.currentLedgerDigest(path.join(root, "absent.jsonl"));
+      expect(currentLedgerDigest32).toBe(sha(""));
       expect(RT.familyRunStartMatches(runStart, runContext, 1, PosInt.make(100), PosInt.make(100), sha("policy"))).toBe(
         true
       );
@@ -1947,8 +2009,10 @@ else exit 92; fi
         scope: "full",
         tikaJarPath: "/tika.jar",
       });
-      const now = DateTime.toEpochMillis(yield* DateTime.now);
-      expect(yield* RT.familyElapsedMillis(-1)).toBeGreaterThan(0);
+      const now33 = yield* DateTime.now;
+      const now = DateTime.toEpochMillis(now33);
+      const familyElapsedMillis34 = yield* RT.familyElapsedMillis(-1);
+      expect(familyElapsedMillis34).toBeGreaterThan(0);
       (yield* RT.familyElapsedMillis(now + 60_000).pipe(Effect.option)).pipe(assertNone);
       const expiredAttachmentError = yield* RT.extractAttachmentText(
         "/missing",
@@ -1960,16 +2024,15 @@ else exit 92; fi
         100
       ).pipe(Effect.flip);
       expect(expiredAttachmentError.message).toContain("Attachment repair exhausted the elapsed-time budget");
-      expect(
-        yield* RT.processPstCandidate(
-          { family: "pst", objectId: "missing", pass: O.none(), sourcePath: "/missing.pst" },
-          options,
-          { ...context, family: "mail", mailScope: O.some<"full" | "slice">("full") },
-          100,
-          100,
-          "attempt-1"
-        )
-      ).toEqual({ inputBytes: 0, outputBytes: 0, passed: false, unapproved: true });
+      const processPstCandidate35 = yield* RT.processPstCandidate(
+        { family: "pst", objectId: "missing", pass: O.none(), sourcePath: "/missing.pst" },
+        options,
+        { ...context, family: "mail", mailScope: O.some<"full" | "slice">("full") },
+        100,
+        100,
+        "attempt-1"
+      );
+      expect(processPstCandidate35).toEqual({ inputBytes: 0, outputBytes: 0, passed: false, unapproved: true });
     })
   );
 
@@ -2011,7 +2074,8 @@ else exit 92; fi
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "tika-output-exhausted-" });
       const retainedPath = path.join(root, "retained.bin");
       yield* fs.writeFileString(retainedPath, "retained");
-      const now = DateTime.toEpochMillis(yield* DateTime.now);
+      const now36 = yield* DateTime.now;
+      const now = DateTime.toEpochMillis(now36);
       const options = RestorationMailOptions.make({
         corpusRoot: root,
         expectedStoreCount: S.Natural.make(1),
@@ -2034,8 +2098,10 @@ else exit 92; fi
         8
       ).pipe(Effect.flip);
       expect(error.message).toBe("Attachment Tika evidence has no remaining output budget.");
-      expect(yield* fs.readFileString(retainedPath)).toBe("retained");
-      expect(yield* fs.readDirectory(root)).toEqual(["retained.bin"]);
+      const readFileString37 = yield* fs.readFileString(retainedPath);
+      expect(readFileString37).toBe("retained");
+      const readDirectory38 = yield* fs.readDirectory(root);
+      expect(readDirectory38).toEqual(["retained.bin"]);
     })
   );
 
@@ -2063,18 +2129,27 @@ else exit 92; fi
         sourceArtifactId,
         warnings: [],
       });
-      expect(yield* RT.pstEngineChildMatches(result, file)).toBe(true);
-      expect(yield* RT.pstEngineChildMatches({ ...result, children: [] }, file)).toBe(false);
-      expect(
-        yield* RT.pstEngineChildMatches(
-          { ...result, children: [{ ...child, digest: ContentDigest.make(`sha256:${sha("different")}`) }] },
-          file
-        )
-      ).toBe(false);
+      const pstEngineChildMatches39 = yield* RT.pstEngineChildMatches(result, file);
+      expect(pstEngineChildMatches39).toBe(true);
+      const pstEngineChildMatches40 = yield* RT.pstEngineChildMatches({ ...result, children: [] }, file);
+      expect(pstEngineChildMatches40).toBe(false);
+      const pstEngineChildMatches41 = yield* RT.pstEngineChildMatches(
+        { ...result, children: [{ ...child, digest: ContentDigest.make(`sha256:${sha("different")}`) }] },
+        file
+      );
+      expect(pstEngineChildMatches41).toBe(false);
       const { digest: _digest, ...childWithoutDigest } = child;
-      expect(yield* RT.pstEngineChildMatches({ ...result, children: [childWithoutDigest] }, file)).toBe(true);
+      const pstEngineChildMatches42 = yield* RT.pstEngineChildMatches(
+        { ...result, children: [childWithoutDigest] },
+        file
+      );
+      expect(pstEngineChildMatches42).toBe(true);
       const { sizeBytes: _sizeBytes, ...childWithoutSize } = child;
-      expect(yield* RT.pstEngineChildMatches({ ...result, children: [childWithoutSize] }, file)).toBe(true);
+      const pstEngineChildMatches43 = yield* RT.pstEngineChildMatches(
+        { ...result, children: [childWithoutSize] },
+        file
+      );
+      expect(pstEngineChildMatches43).toBe(true);
     })
   );
 
@@ -2126,7 +2201,8 @@ else exit 92; fi
       });
       const validated = { engineFiles: [], enginePaths: MutableHashSet.empty<string>(), result };
       const sourceBefore = { sha256: sha("before"), sizeBytes: 6 };
-      const startedAt = DateTime.toEpochMillis(yield* DateTime.now);
+      const now44 = yield* DateTime.now;
+      const startedAt = DateTime.toEpochMillis(now44);
       const exhaustedPartial = path.join(root, "attempts/exhausted.partial");
       yield* fs.makeDirectory(exhaustedPartial, { recursive: true });
       yield* fs.writeFileString(path.join(exhaustedPartial, "message.eml"), "message");
@@ -2152,18 +2228,20 @@ else exit 92; fi
       yield* fs.makeDirectory(driftPartial, { recursive: true });
       yield* fs.writeFileString(path.join(driftPartial, "message.eml"), "message");
       yield* fs.writeFileString(sourcePath, "after!");
+      const argument10 = path.join(root, "attempts/drift");
+      const now4 = yield* DateTime.now;
       const drifted = yield* RT.finishPstAttempt(
         {
           attemptId: "attempt-drift",
           attemptOutputCeiling: 100,
           candidate,
           context: mailContext,
-          finalRoot: path.join(root, "attempts/drift"),
+          finalRoot: argument10,
           options,
           partialRoot: driftPartial,
           pass,
           sourceBefore,
-          startedAt: DateTime.toEpochMillis(yield* DateTime.now),
+          startedAt: DateTime.toEpochMillis(now4),
         },
         validated,
         100
@@ -2211,7 +2289,8 @@ else exit 92; fi
       const candidate = { family: "pst" as const, objectId: pass.objectId, pass: O.some(pass), sourcePath };
       const exhausted = yield* RT.processPstCandidate(candidate, options, mailContext, 0, 100, "attempt-budget");
       expect(exhausted).toEqual({ inputBytes: 3, outputBytes: 0, passed: false, unapproved: true });
-      expect(yield* fs.readFileString(ledgerPath)).toContain("no remaining approved cumulative output budget");
+      const readFileString45 = yield* fs.readFileString(ledgerPath);
+      expect(readFileString45).toContain("no remaining approved cumulative output budget");
 
       const drifted = { ...candidate, pass: O.some({ ...pass, sha256: sha("different") }) };
       (yield* RT.processPstCandidate(drifted, options, mailContext, 100, 100, "attempt-drift").pipe(
@@ -2231,9 +2310,8 @@ else exit 92; fi
         "attempt-space"
       );
       expect(noSpace).toEqual({ inputBytes: 3, outputBytes: 0, passed: false, unapproved: true });
-      expect(yield* fs.readFileString(ledgerPath)).toContain(
-        "Available bytes are below the next mail attempt output ceiling"
-      );
+      const readFileString46 = yield* fs.readFileString(ledgerPath);
+      expect(readFileString46).toContain("Available bytes are below the next mail attempt output ceiling");
     })
   );
 
@@ -2264,23 +2342,27 @@ else exit 92; fi
         scope: "full",
         tikaJarPath: "/tika.jar",
       });
-      const now = DateTime.toEpochMillis(yield* DateTime.now);
+      const now47 = yield* DateTime.now;
+      const now = DateTime.toEpochMillis(now47);
       const residue = { family: "residue" as const, objectId: "residue-1", pass: O.none(), sourcePath: "/absent" };
-      expect(yield* RT.processMailCandidate(residue, options, mailContext, -1_000, 0)).toEqual({
+      const processMailCandidate48 = yield* RT.processMailCandidate(residue, options, mailContext, -1_000, 0);
+      expect(processMailCandidate48).toEqual({
         inputBytes: 0,
         outputBytes: 0,
         passed: false,
         unapproved: true,
       });
       const deferred = { ...residue, objectId: "residue-2" };
-      expect(yield* RT.processMailCandidate(deferred, options, mailContext, now, 0)).toEqual({
+      const processMailCandidate49 = yield* RT.processMailCandidate(deferred, options, mailContext, now, 0);
+      expect(processMailCandidate49).toEqual({
         inputBytes: 0,
         outputBytes: 0,
         passed: false,
         unapproved: false,
       });
       const pst = { family: "pst" as const, objectId: "pst-missing", pass: O.none(), sourcePath: "/absent" };
-      expect(yield* RT.processMailCandidate(pst, options, mailContext, now, 0)).toEqual({
+      const processMailCandidate50 = yield* RT.processMailCandidate(pst, options, mailContext, now, 0);
+      expect(processMailCandidate50).toEqual({
         inputBytes: 0,
         outputBytes: 0,
         passed: false,
@@ -2387,32 +2469,30 @@ else exit 92; fi
       });
       const unknownAttachment = path.join(attemptRoot, "Attachment-unknown.bin");
       yield* fs.writeFile(unknownAttachment, Uint8Array.of(0x00));
-      expect(
-        yield* RT.repairAttachment(
-          { absolutePath: unknownAttachment, relativePath: "Attachment-unknown.bin" },
-          attemptRoot,
-          "attempt-unknown",
-          "object-unknown",
-          options,
-          mailContext,
-          0,
-          100
-        )
-      ).toBe(0);
+      const repairAttachment51 = yield* RT.repairAttachment(
+        { absolutePath: unknownAttachment, relativePath: "Attachment-unknown.bin" },
+        attemptRoot,
+        "attempt-unknown",
+        "object-unknown",
+        options,
+        mailContext,
+        0,
+        100
+      );
+      expect(repairAttachment51).toBe(0);
       const matchingAttachment = path.join(attemptRoot, "Attachment-document.pdf");
       yield* fs.writeFile(matchingAttachment, Uint8Array.of(0x25, 0x50, 0x44, 0x46));
-      expect(
-        yield* RT.repairAttachment(
-          { absolutePath: matchingAttachment, relativePath: "Attachment-document.pdf" },
-          attemptRoot,
-          "attempt-matching",
-          "object-matching",
-          options,
-          mailContext,
-          0,
-          100
-        )
-      ).toBe(0);
+      const repairAttachment52 = yield* RT.repairAttachment(
+        { absolutePath: matchingAttachment, relativePath: "Attachment-document.pdf" },
+        attemptRoot,
+        "attempt-matching",
+        "object-matching",
+        options,
+        mailContext,
+        0,
+        100
+      );
+      expect(repairAttachment52).toBe(0);
       const mismatchedAttachment = path.join(attemptRoot, "Attachment-document.bin");
       yield* fs.writeFile(mismatchedAttachment, Uint8Array.of(0x25, 0x50, 0x44, 0x46));
       (yield* RT.repairAttachment(
@@ -2451,21 +2531,24 @@ else exit 92; fi
       yield* fs.writeFile(zeroAttachment, new Uint8Array());
       yield* fs.writeFileString(emptyTika, "#!/bin/sh\nprintf text\n");
       yield* fs.chmod(emptyTika, 0o755);
+
+      const argument12 = RestorationMailOptions.make({
+        ...options,
+        bwrapPath: emptyTika,
+        javaPath: emptyTika,
+        maxElapsedMillis: PosInt.make(10_000),
+        tikaJarPath: emptyTika,
+      });
+      const now5 = yield* DateTime.now;
       const emptyRepairError = yield* RT.repairDetectedAttachment(
         { absolutePath: zeroAttachment, relativePath: "Attachment-empty.bin" },
         "pdf",
         attemptRoot,
         "attempt-empty",
         "object-empty",
-        RestorationMailOptions.make({
-          ...options,
-          bwrapPath: emptyTika,
-          javaPath: emptyTika,
-          maxElapsedMillis: PosInt.make(10_000),
-          tikaJarPath: emptyTika,
-        }),
+        argument12,
         mailContext,
-        DateTime.toEpochMillis(yield* DateTime.now),
+        DateTime.toEpochMillis(now5),
         100
       ).pipe(Effect.flip);
       expect(emptyRepairError.message).toContain("produced an empty derived file");
@@ -2630,16 +2713,31 @@ else exit 92; fi
       ).toBe(false);
       expect(RT.strictEvidenceSha256(["one", "summary", "acceptance"])).toBe(sha("one\n"));
       expect(RT.strictEvidenceSha256(["summary", "acceptance"])).toBe(sha(""));
-      expect(yield* RT.requireStrictFamilyTerminalRows(context, [runStart, summary, acceptance])).toEqual({
+      const requireStrictFamilyTerminalRows53 = yield* RT.requireStrictFamilyTerminalRows(context, [
+        runStart,
+        summary,
+        acceptance,
+      ]);
+      expect(requireStrictFamilyTerminalRows53).toEqual({
         acceptance,
         summary,
       });
-      expect(yield* RT.requireStrictFamilyTerminalRows(context, [runStart, summary, failure])).toEqual({
+      const requireStrictFamilyTerminalRows54 = yield* RT.requireStrictFamilyTerminalRows(context, [
+        runStart,
+        summary,
+        failure,
+      ]);
+      expect(requireStrictFamilyTerminalRows54).toEqual({
         acceptance: failure,
         summary,
       });
       (yield* RT.requireStrictFamilyTerminalRows(context, [runStart, acceptance]).pipe(Effect.option)).pipe(assertNone);
-      expect(yield* RT.requireStrictFamilySegment(context, [runStart, summary, acceptance])).toEqual([runStart]);
+      const requireStrictFamilySegment55 = yield* RT.requireStrictFamilySegment(context, [
+        runStart,
+        summary,
+        acceptance,
+      ]);
+      expect(requireStrictFamilySegment55).toEqual([runStart]);
       (yield* RT.requireStrictFamilySegment(context, [runStart, summary, summary, acceptance]).pipe(
         Effect.option
       )).pipe(assertNone);
@@ -3326,9 +3424,13 @@ printf '%%PDF-1.4 synthetic attachment' > "$item/Attachment00001/report.bin"
           runLabel,
           "ledgers/recycle/full.jsonl"
         );
-        const recycleLines = Str.split("\n")(Str.trimEnd(yield* fs.readFileString(recycleLedgerPath)));
+        const argument13 = Str.split("\n");
+        const readFileString7 = yield* fs.readFileString(recycleLedgerPath);
+        const recycleLines = argument13(Str.trimEnd(readFileString7));
         const lastRecycleLine = recycleLines.at(-1);
-        if (lastRecycleLine === undefined) return yield* Effect.die("Recycle ledger was unexpectedly empty.");
+        if (lastRecycleLine === undefined) {
+          return yield* Effect.die("Recycle ledger was unexpectedly empty.");
+        }
         expect((yield* decodeTransformationLedgerRecordJson(lastRecycleLine)).recordType).toBe(
           "family-acceptance-pass"
         );
@@ -3342,9 +3444,13 @@ printf '%%PDF-1.4 synthetic attachment' > "$item/Attachment00001/report.bin"
           runLabel,
           "ledgers/legacy-word/full.jsonl"
         );
-        const legacyLines = Str.split("\n")(Str.trimEnd(yield* fs.readFileString(legacyLedgerPath)));
+        const argument14 = Str.split("\n");
+        const readFileString8 = yield* fs.readFileString(legacyLedgerPath);
+        const legacyLines = argument14(Str.trimEnd(readFileString8));
         const lastLegacyLine = legacyLines.at(-1);
-        if (lastLegacyLine === undefined) return yield* Effect.die("Legacy ledger was unexpectedly empty.");
+        if (lastLegacyLine === undefined) {
+          return yield* Effect.die("Legacy ledger was unexpectedly empty.");
+        }
         expect((yield* decodeTransformationLedgerRecordJson(lastLegacyLine)).recordType).toBe("family-acceptance-pass");
         yield* fs.writeFileString(legacyLedgerPath, `${A.join(legacyLines.slice(0, -1), "\n")}\n`);
         yield* restoreLegacyWord(legacyWordOptions);

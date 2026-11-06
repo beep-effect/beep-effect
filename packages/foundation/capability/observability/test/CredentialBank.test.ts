@@ -30,7 +30,9 @@ describe("CauseRedaction canonical bank compatibility", () => {
       expect(O.match(safe.detail, { onNone: () => true, onSome: (detail) => !Str.includes(canary())(detail) })).toBe(
         true
       );
-      expect(Str.includes(canary())(yield* encode(safe))).toBe(false);
+      const argument = Str.includes(canary());
+      const encoded = yield* encode(safe);
+      expect(argument(encoded)).toBe(false);
     })
   );
 });

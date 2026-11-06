@@ -91,8 +91,12 @@ describe("AppDirs", () => {
       Effect.gen(function* () {
         const reencodedOptions = yield* S.encodeEffect(AppDirsOptions)(options);
         const reencodedDirs = yield* S.encodeEffect(ResolvedAppDirs)(dirs);
-        assertTrue(S.toEquivalence(AppDirsOptions)(yield* S.decodeEffect(AppDirsOptions)(reencodedOptions), options));
-        assertTrue(S.toEquivalence(ResolvedAppDirs)(yield* S.decodeEffect(ResolvedAppDirs)(reencodedDirs), dirs));
+        const argument = S.toEquivalence(AppDirsOptions);
+        const value4 = yield* S.decodeEffect(AppDirsOptions)(reencodedOptions);
+        assertTrue(argument(value4, options));
+        const argument1 = S.toEquivalence(ResolvedAppDirs);
+        const value5 = yield* S.decodeEffect(ResolvedAppDirs)(reencodedDirs);
+        assertTrue(argument1(value5, dirs));
       }),
     { arbitrary: fcRuns(50) }
   );
@@ -128,7 +132,8 @@ describe("AppDirs", () => {
       });
       assert.isTrue(S.is(DirectoryEvent)({ kind: "config" }));
       assert.isFalse(S.is(DirectoryEvent)({ kind: "other" }));
-      assert.strictEqual(yield* S.decodeEffect(AppDirKind)("cache"), "cache");
+      const value1 = yield* S.decodeEffect(AppDirKind)("cache");
+      assert.strictEqual(value1, "cache");
     })
   );
 
@@ -156,14 +161,14 @@ describe("AppDirs", () => {
           fallbackDir: ".fallback",
           dirs: { config: "/c", data: "/d", cache: "/ca", state: "/s", runtime: "/r" },
         };
-        assert.deepStrictEqual(
-          yield* S.encodeEffect(AppDirsOptions)(yield* S.decodeEffect(AppDirsOptions)(input)),
-          input
-        );
-        assert.deepStrictEqual(
-          yield* S.encodeEffect(AppDirOverrides)(yield* S.decodeEffect(AppDirOverrides)(input.dirs)),
-          input.dirs
-        );
+        const argument2 = S.encodeEffect(AppDirsOptions);
+        const value6 = yield* S.decodeEffect(AppDirsOptions)(input);
+        const value2 = yield* argument2(value6);
+        assert.deepStrictEqual(value2, input);
+        const argument3 = S.encodeEffect(AppDirOverrides);
+        const value7 = yield* S.decodeEffect(AppDirOverrides)(input.dirs);
+        const value3 = yield* argument3(value7);
+        assert.deepStrictEqual(value3, input.dirs);
       })
     );
 

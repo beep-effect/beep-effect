@@ -16,6 +16,15 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+class CiFleetControllerTestOperationError extends S.TaggedError<
+  CiFleetControllerTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "CiFleetControllerTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in CiFleetController.test.ts." }
+) {}
+
 const validConfigValues = {
   githubAppIdSsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/id",
   githubAppKeyBase64SsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/key",
@@ -29,7 +38,7 @@ const validConfigValues = {
 };
 
 const decodeConfigValues = S.decodeUnknownResult(CiFleetControllerPulumiConfigValues);
-const decodePolicyDocument = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
+const decodePolicyDocument = S.decodeResult(S.fromJsonString(S.Unknown));
 const isString = S.is(S.String);
 
 const assertSubstringBefore = (text: string, before: string, after: string): void => {
@@ -176,77 +185,79 @@ describe("@beep/infra CiFleetController", () => {
       const decryptGrants = MutableHashMap.empty<string, unknown>();
 
       yield* Effect.acquireUseRelease(
-        Effect.tryPromise(() =>
-          pulumi.runtime.setMocks(
-            {
-              call: (args) => {
-                if (args.token === "aws:lambda/getFunction:getFunction" && isString(args.inputs.functionName)) {
-                  MutableHashMap.set(lambdaRegions, args.inputs.functionName, args.inputs.region);
-                  return { role: `arn:aws:iam::123456789012:role/beep-ci/${args.inputs.functionName}-role` };
-                }
-                if (args.token === "aws:iam/getRole:getRole" && isString(args.inputs.name)) {
-                  return { uniqueId: `immutable-id-${args.inputs.name}` };
-                }
-                return { accountId: "123456789012", partition: "aws" };
+        Effect.tryPromise({
+          try: () =>
+            pulumi.runtime.setMocks(
+              {
+                call: (args) => {
+                  if (args.token === "aws:lambda/getFunction:getFunction" && isString(args.inputs.functionName)) {
+                    MutableHashMap.set(lambdaRegions, args.inputs.functionName, args.inputs.region);
+                    return { role: `arn:aws:iam::123456789012:role/beep-ci/${args.inputs.functionName}-role` };
+                  }
+                  if (args.token === "aws:iam/getRole:getRole" && isString(args.inputs.name)) {
+                    return { uniqueId: `immutable-id-${args.inputs.name}` };
+                  }
+                  return { accountId: "123456789012", partition: "aws" };
+                },
+                newResource: (args) => {
+                  const postInstall = args.inputs.userdata_post_install;
+                  if (args.type === "ghaRunners:index:Module" && isString(postInstall)) {
+                    MutableHashMap.set(modulePostInstall, args.name, postInstall);
+                    MutableHashMap.set(
+                      moduleManagedPolicyArns,
+                      args.name,
+                      args.inputs.runner_iam_role_managed_policy_arns
+                    );
+                    MutableHashMap.set(moduleMetadataOptions, args.name, args.inputs.runner_metadata_options);
+                    MutableHashMap.set(
+                      moduleOrganizationRunnerEnabled,
+                      args.name,
+                      args.inputs.enable_organization_runners
+                    );
+                    MutableHashMap.set(moduleRunnerGroupNames, args.name, args.inputs.runner_group_name);
+                    MutableHashMap.set(moduleCapacityTypes, args.name, args.inputs.instance_target_capacity_type);
+                    MutableHashMap.set(moduleRunnerCaps, args.name, args.inputs.runners_maximum_count);
+                    MutableHashMap.set(moduleAllocationStrategies, args.name, args.inputs.instance_allocation_strategy);
+                    MutableHashMap.set(moduleInstanceTypes, args.name, args.inputs.instance_types);
+                    MutableHashMap.set(moduleSubnetIds, args.name, args.inputs.subnet_ids);
+                    MutableHashMap.set(
+                      moduleOnDemandFailover,
+                      args.name,
+                      args.inputs.enable_runner_on_demand_failover_for_errors
+                    );
+                    MutableHashMap.set(
+                      moduleScaleUpConcurrency,
+                      args.name,
+                      args.inputs.scale_up_reserved_concurrent_executions
+                    );
+                    MutableHashMap.set(moduleScaleDownSchedules, args.name, args.inputs.scale_down_schedule_expression);
+                  }
+                  const policy = args.inputs.policy;
+                  if (args.type === "aws:kms/grant:Grant") {
+                    MutableHashMap.set(decryptGrants, args.name, args.inputs);
+                  }
+                  if (args.type === "aws:iam/rolePolicy:RolePolicy" && isString(policy)) {
+                    MutableHashMap.set(policyDocuments, args.name, policy);
+                    MutableHashMap.set(rolePolicyRoles, args.name, args.inputs.role);
+                  }
+                  if (args.type === "aws:iam/policy:Policy" && isString(policy)) {
+                    MutableHashMap.set(policyDocuments, args.name, policy);
+                    return {
+                      id: `${args.name}-id`,
+                      state: {
+                        ...args.inputs,
+                        arn: "arn:aws:iam::123456789012:policy/beep-ci-runner-imds-disable",
+                      },
+                    };
+                  }
+                  return { id: `${args.name}-id`, state: args.inputs };
+                },
               },
-              newResource: (args) => {
-                const postInstall = args.inputs.userdata_post_install;
-                if (args.type === "ghaRunners:index:Module" && isString(postInstall)) {
-                  MutableHashMap.set(modulePostInstall, args.name, postInstall);
-                  MutableHashMap.set(
-                    moduleManagedPolicyArns,
-                    args.name,
-                    args.inputs.runner_iam_role_managed_policy_arns
-                  );
-                  MutableHashMap.set(moduleMetadataOptions, args.name, args.inputs.runner_metadata_options);
-                  MutableHashMap.set(
-                    moduleOrganizationRunnerEnabled,
-                    args.name,
-                    args.inputs.enable_organization_runners
-                  );
-                  MutableHashMap.set(moduleRunnerGroupNames, args.name, args.inputs.runner_group_name);
-                  MutableHashMap.set(moduleCapacityTypes, args.name, args.inputs.instance_target_capacity_type);
-                  MutableHashMap.set(moduleRunnerCaps, args.name, args.inputs.runners_maximum_count);
-                  MutableHashMap.set(moduleAllocationStrategies, args.name, args.inputs.instance_allocation_strategy);
-                  MutableHashMap.set(moduleInstanceTypes, args.name, args.inputs.instance_types);
-                  MutableHashMap.set(moduleSubnetIds, args.name, args.inputs.subnet_ids);
-                  MutableHashMap.set(
-                    moduleOnDemandFailover,
-                    args.name,
-                    args.inputs.enable_runner_on_demand_failover_for_errors
-                  );
-                  MutableHashMap.set(
-                    moduleScaleUpConcurrency,
-                    args.name,
-                    args.inputs.scale_up_reserved_concurrent_executions
-                  );
-                  MutableHashMap.set(moduleScaleDownSchedules, args.name, args.inputs.scale_down_schedule_expression);
-                }
-                const policy = args.inputs.policy;
-                if (args.type === "aws:kms/grant:Grant") {
-                  MutableHashMap.set(decryptGrants, args.name, args.inputs);
-                }
-                if (args.type === "aws:iam/rolePolicy:RolePolicy" && isString(policy)) {
-                  MutableHashMap.set(policyDocuments, args.name, policy);
-                  MutableHashMap.set(rolePolicyRoles, args.name, args.inputs.role);
-                }
-                if (args.type === "aws:iam/policy:Policy" && isString(policy)) {
-                  MutableHashMap.set(policyDocuments, args.name, policy);
-                  return {
-                    id: `${args.name}-id`,
-                    state: {
-                      ...args.inputs,
-                      arn: "arn:aws:iam::123456789012:policy/beep-ci-runner-imds-disable",
-                    },
-                  };
-                }
-                return { id: `${args.name}-id`, state: args.inputs };
-              },
-            },
-            "beep-effect",
-            "test"
-          )
-        ),
+              "beep-effect",
+              "test"
+            ),
+          catch: (cause) => CiFleetControllerTestOperationError.make({ cause }),
+        }),
         () =>
           Effect.sync(() => {
             new CiFleetController("ci-fleet-controller-test", {
@@ -262,7 +273,11 @@ describe("@beep/infra CiFleetController", () => {
               workerSecurityGroupId: "sg-456",
             });
           }),
-        () => Effect.tryPromise(() => pulumi.runtime.disconnect())
+        () =>
+          Effect.tryPromise({
+            try: () => pulumi.runtime.disconnect(),
+            catch: (cause) => CiFleetControllerTestOperationError.make({ cause }),
+          })
       );
 
       const captured = MutableHashMap.get(modulePostInstall, "ci-fleet-controller-test");

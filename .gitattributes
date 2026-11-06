@@ -8,8 +8,15 @@ standards/fallow.boundaries.generated.jsonc merge=regenerate
 tsconfig.json merge=regenerate
 tsconfig.packages.json merge=regenerate
 apps/professional-desktop/src/runtime/Migrations.gen.ts merge=regenerate
+# goals/<slug>/ops/manifest.json carries the generated researchReports projection of research/
+# (bun run beep goals manifest --write); goals doctor proves it on hosted CI.
+goals/*/ops/manifest.json merge=regenerate
 
 # Friction ledgers are append-only, so a union merge keeps every lane's receipt.
 # goals/*/SPEC.md is not union-merged: its tables edit and delete rows, and a union merge
 # cannot express a deletion (it resurrects removed rows and keeps both sides of an edited one).
 goals/*/research/OPPORTUNITIES.md merge=union
+
+# Preserve final blank lines in these immutable upstream notice texts.
+packages/law-practice/server/assets/citation-html/licenses/wasi-libc-LICENSE-APACHE-LLVM whitespace=-blank-at-eof
+packages/law-practice/server/assets/citation-html/licenses/wasi-libc-dlmalloc-src-malloc.txt whitespace=-blank-at-eof

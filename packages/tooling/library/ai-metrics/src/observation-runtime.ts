@@ -322,8 +322,9 @@ export const makeObservationRuntime = Effect.fn("AiMetrics.makeObservationRuntim
           const control = yield* worker.status;
           if (control.closed) return ObservationSourceCycle.cases.Failed.make({});
           if (!control.accepting) return ObservationSourceCycle.cases.Paused.make({});
+          const poll1 = yield* sourceWork.value.poll;
           return ObservationSourceCycle.cases.Completed.make({
-            summary: summarizeObservationSources(yield* sourceWork.value.poll),
+            summary: summarizeObservationSources(poll1),
           });
         }).pipe(
           Effect.orElseSucceed(
@@ -398,7 +399,9 @@ export const makeObservationRuntime = Effect.fn("AiMetrics.makeObservationRuntim
         })
     );
     const sources = O.isSome(sourceWork)
-      ? configuredSourceHealth(now, current, sourceWork.value.policy, yield* Ref.get(sourceState))
+      ? yield* Effect.map(Ref.get(sourceState), (value) =>
+          configuredSourceHealth(now, current, sourceWork.value.policy, value)
+        )
       : ObservationSourceHealth.cases.NotConfigured.make({});
     return ObservationRuntimeHealth.make({
       observedAt: now,

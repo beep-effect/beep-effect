@@ -152,7 +152,8 @@ const isCacheMaxAgeDays = S.is(FallowAuditCacheSettings.fields.maxAgeDays);
 export const resolveFallowAuditCacheSettings = Effect.fn("FallowAuditCache.resolveFallowAuditCacheSettings")(
   function* (): Effect.fn.Return<FallowAuditCacheSettings, never, Path.Path> {
     const pathService = yield* Path.Path;
-    const override = O.filter(yield* configuredPath(FALLOW_AUDIT_CACHE_ROOT_ENV), pathService.isAbsolute);
+    const configuredPath1 = yield* configuredPath(FALLOW_AUDIT_CACHE_ROOT_ENV);
+    const override = O.filter(configuredPath1, pathService.isAbsolute);
     const root = yield* O.match(override, {
       onNone: () =>
         resolveBeepCacheRoot().pipe(
@@ -161,8 +162,9 @@ export const resolveFallowAuditCacheSettings = Effect.fn("FallowAuditCache.resol
         ),
       onSome: (value) => Effect.succeed(pathService.resolve(value)),
     });
+    const configuredPath2 = yield* configuredPath(FALLOW_AUDIT_CACHE_MAX_AGE_ENV);
     const maxAgeDays = pipe(
-      yield* configuredPath(FALLOW_AUDIT_CACHE_MAX_AGE_ENV),
+      configuredPath2,
       O.flatMap(N.parse),
       O.filter(isCacheMaxAgeDays),
       O.getOrElse(() => DEFAULT_FALLOW_AUDIT_CACHE_MAX_AGE_DAYS)

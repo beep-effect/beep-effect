@@ -83,13 +83,17 @@ it.layer(timeoutProbeLayer, { excludeTestServices: true })("native CLI timeout o
           }
           expect(tracked.children).toHaveLength(1);
           const child = O.getOrThrow(A.head(tracked.children));
-          expect(yield* child.isRunning).toBe(false);
-          expect(yield* fs.readFileString(marker)).toBe("TERM");
+          const isRunning1 = yield* child.isRunning;
+          expect(isRunning1).toBe(false);
+          const readFileString2 = yield* fs.readFileString(marker);
+          expect(readFileString2).toBe("TERM");
           return { directory, child };
         })
       );
-      expect(yield* fs.exists(result.directory)).toBe(false);
-      expect(yield* result.child.isRunning).toBe(false);
+      const exists3 = yield* fs.exists(result.directory);
+      expect(exists3).toBe(false);
+      const isRunning4 = yield* result.child.isRunning;
+      expect(isRunning4).toBe(false);
     }),
     20_000
   );

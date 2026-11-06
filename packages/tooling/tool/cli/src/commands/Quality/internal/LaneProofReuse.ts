@@ -4,6 +4,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { turboEnvExtendsAmbient } from "@beep/repo-cli-kit/cli/EnvConfig";
 import { runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
@@ -25,6 +27,7 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { adaptGitKitError } from "../../../internal/repo-run/GitExec.ts";
 import { QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV, QUALITY_TASK_LANE_RUN_PARENT_ID_ENV } from "../Quality.schemas.ts";
 import type { GithubCheckLaneSpec } from "../Quality.schemas.ts";
 
@@ -171,7 +174,8 @@ export class LaneProofSession extends S.Opaque<LaneProofSession, { readonly bran
 
 const hashText = Effect.fnUntraced(function* (value: string) {
   const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(value)));
+  const digest1 = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(value));
+  return Hex.encode(digest1);
 });
 
 const stableRecordText = (value: Readonly<Record<string, string | undefined>>): string =>
@@ -236,20 +240,37 @@ const runGit = Effect.fnUntraced(function* (
   return result.exitCode === 0 ? result.stdout : yield* LaneProofGitError.make({ message: result.stderr });
 });
 
+const laneProofGitErrorAdapter = {
+  onSpawnFailure: (commandLine: string) => () => LaneProofGitError.make({ message: `Unable to run ${commandLine}.` }),
+  onNonZeroExit: ({ output }: { readonly output: string }) => LaneProofGitError.make({ message: output }),
+  onTruncated: O.none(),
+};
+
+// A leaf `Git` instance, as `virtualTreeSha`: the proof-environment reader runs without a `Git` service.
+const revParseLaneRef = (repoRoot: string, ref: string) =>
+  Effect.flatMap(Git.make, (git) => git.revParse(repoRoot, ref)).pipe(
+    Effect.mapError(adaptGitKitError(GitCommand.revParse(ref), laneProofGitErrorAdapter))
+  );
+
 const virtualTreeSha = Effect.fn("LaneProofReuse.virtualTreeSha")(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const crypto = yield* SecureRandom.SecureRandom;
-  const indexPath = path.resolve(
-    repoRoot,
-    yield* runGit(repoRoot, ["rev-parse", "--git-path", `yeet-lane-proof-index-${yield* crypto.uuidV4()}`])
-  );
+  // A leaf instance: Yeet's proof-environment reader calls this without a `Git` service in its context.
+  const git = yield* Git.make;
+  const indexName = `yeet-lane-proof-index-${yield* crypto.uuidV4()}`;
+  // `--path-format=absolute` answers the absolute path, so it needs no resolve against the root.
+  const indexPath = yield* git
+    .gitDir(repoRoot, { path: indexName })
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.gitDir(indexName), laneProofGitErrorAdapter)));
   const indexEnv = { GIT_INDEX_FILE: indexPath };
   return yield* Effect.acquireUseRelease(
     Effect.succeed(indexPath),
     Effect.fnUntraced(function* () {
+      // KEEP (D-19): per-call GIT_INDEX_FILE for a temporary index; the kit reads its env once at make (#106b).
       yield* runGit(repoRoot, ["read-tree", "HEAD"], indexEnv);
+      // KEEP (D-19): as read-tree, the temporary index's GIT_INDEX_FILE.
       yield* runGit(repoRoot, ["add", "-A", "--", "."], indexEnv);
+      // KEEP (D-19): as read-tree, the temporary index's GIT_INDEX_FILE.
       return yield* runGit(repoRoot, ["write-tree"], indexEnv);
     }),
     (temporaryIndex) => fs.remove(temporaryIndex).pipe(Effect.ignore)
@@ -279,9 +300,10 @@ const shortSha = Str.takeLeft(12);
 const resolveProofBase = Effect.fnUntraced(function* (repoRoot: string) {
   const pinned = pinnedLaneProofBaseSha();
   if (O.isNone(pinned)) {
-    return O.some(yield* runGit(repoRoot, ["rev-parse", Bun.env[LANE_PROOF_BASE_ENV] ?? LANE_BASE_REF]));
+    const pinned = yield* revParseLaneRef(repoRoot, Bun.env[LANE_PROOF_BASE_ENV] ?? LANE_BASE_REF);
+    return O.some(pinned);
   }
-  const laneBase = yield* runGit(repoRoot, ["rev-parse", LANE_BASE_REF]);
+  const laneBase = yield* revParseLaneRef(repoRoot, LANE_BASE_REF);
   if (laneBase === pinned.value) {
     return pinned;
   }
@@ -328,7 +350,7 @@ export const prepareLaneProofSession = Effect.fn("LaneProofReuse.prepareSession"
   const prepared = yield* Effect.all(
     {
       baseSha: resolveProofBase(repoRoot),
-      headSha: runGit(repoRoot, ["rev-parse", "HEAD"]),
+      headSha: revParseLaneRef(repoRoot, "HEAD"),
       tree: virtualTreeSha(repoRoot),
     },
     { concurrency: "unbounded" }

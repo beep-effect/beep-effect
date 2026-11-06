@@ -260,7 +260,8 @@ describe("ConfigFile merged schema validation", () => {
         const cfg = yield* ExclusiveConfig;
         const defaultValue = { a: 1, b: 2 };
         assert.isFalse(S.is(ExclusiveFields)(defaultValue));
-        assert.strictEqual(yield* cfg.loadOrDefault(defaultValue), defaultValue);
+        const loadedOrDefault = yield* cfg.loadOrDefault(defaultValue);
+        assert.strictEqual(loadedOrDefault, defaultValue);
       })
     );
   });
@@ -288,8 +289,10 @@ describe("ConfigFile merged schema validation", () => {
     it.effect("validates the decoded type after merging without repeating wire transformations", () =>
       Effect.gen(function* () {
         const cfg = yield* TransformedConfig;
-        assert.deepStrictEqual(yield* cfg.load, { port: 8080, host: "base" });
-        assert.deepStrictEqual(yield* cfg.loadOrDefault({ port: 1 }), { port: 8080, host: "base" });
+        const loaded = yield* cfg.load;
+        assert.deepStrictEqual(loaded, { port: 8080, host: "base" });
+        const loadedOrDefault1 = yield* cfg.loadOrDefault({ port: 1 });
+        assert.deepStrictEqual(loadedOrDefault1, { port: 8080, host: "base" });
       })
     );
   });

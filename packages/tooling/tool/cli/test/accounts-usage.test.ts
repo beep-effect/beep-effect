@@ -173,7 +173,8 @@ const kimiProfile = `{"user_id":"u_1","nickname":"Someone","status":"USER_STATUS
 describe("account usage wire mapping", () => {
   it.effect("reads Claude's normalized limits and skips kinds it does not know", () =>
     Effect.gen(function* () {
-      const windows = claudeUsageWindows(yield* ClaudeUsageBodyJson.decode(claudeBody));
+      const decoded1 = yield* ClaudeUsageBodyJson.decode(claudeBody);
+      const windows = claudeUsageWindows(decoded1);
       expect(A.map(windows, (window) => [window.kind, window.usedPercent, O.getOrNull(window.scope)])).toEqual([
         ["session", 40, null],
         ["weekly", 86, null],
@@ -196,7 +197,8 @@ describe("account usage wire mapping", () => {
 
   it.effect("classifies a Codex window by its duration, not its slot", () =>
     Effect.gen(function* () {
-      const windows = codexUsageWindows(yield* CodexUsageBodyJson.decode(codexBody));
+      const decoded2 = yield* CodexUsageBodyJson.decode(codexBody);
+      const windows = codexUsageWindows(decoded2);
       expect(A.map(windows, (window) => [window.kind, window.usedPercent])).toEqual([["weekly", 38]]);
       assertSome(
         O.map(
@@ -884,9 +886,10 @@ it.layer(inheritedPlatform, { timeout: "30 seconds" })("live account poller", (i
         O.map(kimi, (usage) => (usage.outcome._tag === "Ok" ? O.getOrNull(usage.outcome.identity) : null)),
         "kimi@example.com"
       );
+      const got = yield* Ref.get(seen);
       expect(
         A.sort(
-          yield* Ref.get(seen),
+          got,
           Order.mapInput(Order.String, (entry: ReadonlyArray<string | undefined>) => String(entry[1]))
         )
       ).toEqual([
@@ -1149,7 +1152,8 @@ const runScreen = Effect.fnUntraced(function* (
   keys: ReadonlyArray<ScreenKey>
 ) {
   const terminal = yield* TestTerminal.make({ columns: 90, rows: 40 });
-  const screenTerminal = Context.get(yield* Layer.build(terminal.layer), Terminal.Terminal);
+  const build3 = yield* Layer.build(terminal.layer);
+  const screenTerminal = Context.get(build3, Terminal.Terminal);
   const poller = AccountsUsage.of({
     accounts: Effect.succeed([]),
     poll: Effect.fn("AccountsUsage.poll")(function* (ref: AccountRef) {
@@ -1208,18 +1212,16 @@ describe("Junie direct balance", () => {
     "round trips Junie balance and credential wire schemas",
     [Arbitrary.schema(JunieAuthTestBody), Arbitrary.schema(JunieStoredCredential)],
     Effect.fnUntraced(function* ([balance, credential]) {
-      assertTrue(
-        S.toEquivalence(JunieAuthTestBody)(
-          yield* S.decodeEffect(JunieAuthTestBody)(yield* S.encodeEffect(JunieAuthTestBody)(balance)),
-          balance
-        )
-      );
-      assertTrue(
-        S.toEquivalence(JunieStoredCredential)(
-          yield* S.decodeEffect(JunieStoredCredential)(yield* S.encodeEffect(JunieStoredCredential)(credential)),
-          credential
-        )
-      );
+      const argument = S.toEquivalence(JunieAuthTestBody);
+      const argument1 = S.decodeEffect(JunieAuthTestBody);
+      const value8 = yield* S.encodeEffect(JunieAuthTestBody)(balance);
+      const argument12 = yield* argument1(value8);
+      assertTrue(argument(argument12, balance));
+      const argument2 = S.toEquivalence(JunieStoredCredential);
+      const argument3 = S.decodeEffect(JunieStoredCredential);
+      const value9 = yield* S.encodeEffect(JunieStoredCredential)(credential);
+      const argument33 = yield* argument3(value9);
+      assertTrue(argument2(argument33, credential));
     }),
     { arbitrary: fcRuns(24) }
   );
@@ -1573,14 +1575,16 @@ describe("Junie fallback poller", () => {
           expect(A.map(rows, (row) => [row.account.provider, row.account.label, row.outcome._tag])).toEqual([
             ["junie", "Synthetic Name", "Ok"],
           ]);
-          expect(yield* Ref.get(seen)).toEqual([
+          const got4 = yield* Ref.get(seen);
+          expect(got4).toEqual([
             ["GET", "https://ingrazzio-cloud-prod.labs.jb.gg/auth/test", "Bearer synthetic-old", "true", "true"],
             ["POST", "https://oauth.account.jetbrains.com/oauth2/token", undefined, undefined, undefined],
             ["GET", "https://ingrazzio-cloud-prod.labs.jb.gg/auth/test", "Bearer synthetic-fresh", "true", "true"],
           ]);
           yield* Ref.set(seen, []);
           yield* pollAccounts;
-          expect(yield* Ref.get(seen)).toEqual([
+          const got5 = yield* Ref.get(seen);
+          expect(got5).toEqual([
             ["GET", "https://ingrazzio-cloud-prod.labs.jb.gg/auth/test", "Bearer synthetic-fresh", "true", "true"],
           ]);
         })
@@ -1601,7 +1605,9 @@ describe("Junie fallback poller", () => {
         expect(row.outcome).toEqual(
           AccountUsageOutcome.cases.Failed.make({ detail: "Junie credential storage is unavailable" })
         );
-        expect(yield* Ref.get(yield* JunieRequests)).toEqual([]);
+        const JunieRequests23 = yield* JunieRequests;
+        const got6 = yield* Ref.get(JunieRequests23);
+        expect(got6).toEqual([]);
       })
     );
   });
@@ -1617,7 +1623,8 @@ describe("Junie fallback poller", () => {
 
         const second = yield* pollAccounts;
         expect(second[0]?.outcome._tag).toBe("Ok");
-        expect(yield* Ref.get(seen)).toEqual([
+        const got7 = yield* Ref.get(seen);
+        expect(got7).toEqual([
           ["GET", "https://ingrazzio-cloud-prod.labs.jb.gg/auth/test", "Bearer synthetic-old", "true", "true"],
           ["POST", "https://oauth.account.jetbrains.com/oauth2/token", undefined, undefined, undefined],
           ["GET", "https://ingrazzio-cloud-prod.labs.jb.gg/auth/test", "Bearer synthetic-fresh", "true", "true"],
@@ -1640,7 +1647,8 @@ describe("Junie fallback poller", () => {
         const second = yield* pollAccounts;
         expect(second[0]?.account.label).toBe("New Synthetic Name");
         expect(second[0]?.outcome._tag).toBe("Ok");
-        expect(yield* Ref.get(seen)).toEqual([
+        const got8 = yield* Ref.get(seen);
+        expect(got8).toEqual([
           ["GET", "https://ingrazzio-cloud-prod.labs.jb.gg/auth/test", "Bearer synthetic-new-login", "true", "true"],
         ]);
       })
@@ -1652,7 +1660,8 @@ describe("Junie fallback poller", () => {
         const seen = yield* JunieRequests;
         const rows = yield* pollAccounts;
         expect(rows[0]?.outcome._tag).toBe("Ok");
-        expect(A.map(yield* Ref.get(seen), (request) => request[0])).toEqual(["GET"]);
+        const got9 = yield* Ref.get(seen);
+        expect(A.map(got9, (request) => request[0])).toEqual(["GET"]);
       })
     );
   });
@@ -1665,7 +1674,8 @@ describe("Junie fallback poller", () => {
           _tag: "NeedsLogin",
           detail: "JetBrains rejected the Junie login; run `junie` and sign in again",
         });
-        expect(A.map(yield* Ref.get(seen), (request) => request[0])).toEqual(["GET", "POST", "GET"]);
+        const got10 = yield* Ref.get(seen);
+        expect(A.map(got10, (request) => request[0])).toEqual(["GET", "POST", "GET"]);
       })
     );
   });
@@ -1675,7 +1685,8 @@ describe("Junie fallback poller", () => {
         const seen = yield* JunieRequests;
         const rows = yield* pollAccounts;
         expect(rows[0]?.outcome).toMatchObject({ _tag: "Ok" });
-        expect(A.map(yield* Ref.get(seen), (request) => request[0])).toEqual(["GET", "POST", "GET"]);
+        const got11 = yield* Ref.get(seen);
+        expect(A.map(got11, (request) => request[0])).toEqual(["GET", "POST", "GET"]);
       })
     );
   });
@@ -1685,7 +1696,8 @@ describe("Junie fallback poller", () => {
         const seen = yield* JunieRequests;
         const rows = yield* pollAccounts;
         expect(rows[0]?.outcome).toMatchObject({ _tag: "NeedsLogin", detail: expect.stringContaining("HTTP 400") });
-        expect(A.map(yield* Ref.get(seen), (request) => request[0])).toEqual(["GET", "POST"]);
+        const got12 = yield* Ref.get(seen);
+        expect(A.map(got12, (request) => request[0])).toEqual(["GET", "POST"]);
       })
     );
   });
@@ -1694,7 +1706,8 @@ describe("Junie fallback poller", () => {
       Effect.gen(function* () {
         const requests = yield* JunieRequests;
         const rows = yield* pollAccounts;
-        expect(A.map(yield* Ref.get(requests), (request) => request[0])).toEqual(["GET", "POST"]);
+        const got13 = yield* Ref.get(requests);
+        expect(A.map(got13, (request) => request[0])).toEqual(["GET", "POST"]);
         expect(rows[0]?.outcome).toMatchObject({
           _tag: "NeedsLogin",
           detail: expect.stringContaining("rotated the refresh token"),
@@ -1745,30 +1758,26 @@ describe("Junie detailed cycle quota", () => {
       Arbitrary.schema(JunieRefillBody),
     ],
     Effect.fnUntraced(function* ([options, exchange, quota, refill]) {
-      assertTrue(
-        S.toEquivalence(JunieAccessOptionsBody)(
-          options,
-          yield* S.decodeEffect(JunieAccessOptionsBody)(yield* S.encodeEffect(JunieAccessOptionsBody)(options))
-        )
-      );
-      assertTrue(
-        S.toEquivalence(JunieExchangeBody)(
-          exchange,
-          yield* S.decodeEffect(JunieExchangeBody)(yield* S.encodeEffect(JunieExchangeBody)(exchange))
-        )
-      );
-      assertTrue(
-        S.toEquivalence(JunieQuotaBody)(
-          quota,
-          yield* S.decodeEffect(JunieQuotaBody)(yield* S.encodeEffect(JunieQuotaBody)(quota))
-        )
-      );
-      assertTrue(
-        S.toEquivalence(JunieRefillBody)(
-          refill,
-          yield* S.decodeEffect(JunieRefillBody)(yield* S.encodeEffect(JunieRefillBody)(refill))
-        )
-      );
+      const argument4 = S.toEquivalence(JunieAccessOptionsBody);
+      const argument5 = S.decodeEffect(JunieAccessOptionsBody);
+      const value10 = yield* S.encodeEffect(JunieAccessOptionsBody)(options);
+      const argument54 = yield* argument5(value10);
+      assertTrue(argument4(options, argument54));
+      const argument6 = S.toEquivalence(JunieExchangeBody);
+      const argument7 = S.decodeEffect(JunieExchangeBody);
+      const value11 = yield* S.encodeEffect(JunieExchangeBody)(exchange);
+      const argument75 = yield* argument7(value11);
+      assertTrue(argument6(exchange, argument75));
+      const argument8 = S.toEquivalence(JunieQuotaBody);
+      const argument9 = S.decodeEffect(JunieQuotaBody);
+      const value12 = yield* S.encodeEffect(JunieQuotaBody)(quota);
+      const argument96 = yield* argument9(value12);
+      assertTrue(argument8(quota, argument96));
+      const argument10 = S.toEquivalence(JunieRefillBody);
+      const argument11 = S.decodeEffect(JunieRefillBody);
+      const value13 = yield* S.encodeEffect(JunieRefillBody)(refill);
+      const argument117 = yield* argument11(value13);
+      assertTrue(argument10(refill, argument117));
     }),
     { arbitrary: fcRuns(24) }
   );
@@ -1822,7 +1831,8 @@ describe("Junie detailed cycle quota", () => {
         ]) {
           expect(A.some(attributes, ([, value]) => value === secret)).toBe(false);
         }
-        expect(yield* Headers.CurrentRedactedNames).toEqual(inheritedNames);
+        const CurrentRedactedNames14 = yield* Headers.CurrentRedactedNames;
+        expect(CurrentRedactedNames14).toEqual(inheritedNames);
       })
     );
   });
@@ -1862,7 +1872,8 @@ describe("Junie detailed cycle quota", () => {
           assertSome(rank.weeklyRemainingPercent, 88);
           assertSome(rank.hoursUntilWeeklyReset, 24);
           yield* pollAccounts;
-          const seen = yield* Ref.get(yield* JunieRequests);
+          const JunieRequests15 = yield* JunieRequests;
+          const seen = yield* Ref.get(JunieRequests15);
           assertTrue(
             A.filter(seen, (request) => O.exists(O.fromNullishOr(request[1]), Str.includes("provide-access")))
               .length === 1
@@ -1895,17 +1906,18 @@ describe("Junie detailed cycle quota", () => {
       "renews the exchange token at its JWT expiry while preserving cycle usage",
       Effect.fnUntraced(function* () {
         yield* TestClock.setTime(0);
-        const first = A.head(yield* pollAccounts).pipe(O.getOrThrow);
+        const pollAccounts16 = yield* pollAccounts;
+        const first = A.head(pollAccounts16).pipe(O.getOrThrow);
         expect(first.outcome).toMatchObject({ _tag: "Ok", windows: [{ kind: "cycle", usedPercent: 12 }] });
         const seen = yield* JunieRequests;
         yield* Ref.set(seen, []);
         yield* TestClock.adjust("121 seconds");
 
-        const second = A.head(yield* pollAccounts).pipe(O.getOrThrow);
+        const pollAccounts17 = yield* pollAccounts;
+        const second = A.head(pollAccounts17).pipe(O.getOrThrow);
         expect(second.outcome).toMatchObject({ _tag: "Ok", windows: [{ kind: "cycle", usedPercent: 12 }] });
-        expect(
-          A.filter(yield* Ref.get(seen), (request) => Str.includes("provide-access")(request[1] ?? ""))
-        ).toHaveLength(1);
+        const got18 = yield* Ref.get(seen);
+        expect(A.filter(got18, (request) => Str.includes("provide-access")(request[1] ?? ""))).toHaveLength(1);
       })
     );
   });
@@ -1962,7 +1974,8 @@ describe("Junie detailed cycle quota", () => {
   const detailedLayer = (overrides: Parameters<typeof junieTestLayer>[10], audienceRotated = false) =>
     junieTestLayer(credential, false, 401, 200, 200, true, undefined, 200, audienceRotated, false, overrides);
   const countOf = Effect.fnUntraced(function* (fragment: string) {
-    const seen = yield* Ref.get(yield* JunieRequests);
+    const JunieRequests19 = yield* JunieRequests;
+    const seen = yield* Ref.get(JunieRequests19);
     return A.filter(seen, (request) => O.exists(O.fromNullishOr(request[1]), Str.includes(fragment))).length;
   });
   const okOutcome = Effect.fnUntraced(function* () {
@@ -1978,12 +1991,15 @@ describe("Junie detailed cycle quota", () => {
         const expected = AccountUsageOutcome.cases.NeedsLogin.make({
           detail: "JetBrains rotated the refresh token during cycle lookup; run `junie` and sign in again",
         });
-        assertSome(A.head(yield* pollAccounts).pipe(O.map((row) => row.outcome)), expected);
+        const pollAccounts20 = yield* pollAccounts;
+        assertSome(A.head(pollAccounts20).pipe(O.map((row) => row.outcome)), expected);
         assertTrue((yield* countOf("oauth2")) === 2);
         assertTrue((yield* countOf("ai-access-options")) === 0);
-        assertSome(A.head(yield* pollAccounts).pipe(O.map((row) => row.outcome)), expected);
+        const pollAccounts21 = yield* pollAccounts;
+        assertSome(A.head(pollAccounts21).pipe(O.map((row) => row.outcome)), expected);
         assertTrue((yield* countOf("oauth2")) === 2);
-        const seen = yield* Ref.get(yield* JunieRequests);
+        const JunieRequests22 = yield* JunieRequests;
+        const seen = yield* Ref.get(JunieRequests22);
         assertTrue(!A.some(seen, (request) => request[2] === "Bearer synthetic-rotated"));
       })
     );

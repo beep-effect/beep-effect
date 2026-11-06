@@ -87,8 +87,9 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("rows filesystem", (it) => {
       yield* fs.writeFileString(path.join(output, "unrelated.jsonl"), '{"producer":"other"}\n');
 
       yield* writeEffectVitestRows(root, "rows", [row]);
+      const readDirectory1 = yield* fs.readDirectory(output);
       const generated = A.findFirst(
-        yield* fs.readDirectory(output),
+        readDirectory1,
         (fileName) => fileName !== "unrelated.jsonl" && Str.endsWith(".jsonl")(fileName)
       );
       assertTrue(O.isSome(generated), "Expected the detector-owned JSONL file alongside unrelated files");
@@ -100,7 +101,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("rows filesystem", (it) => {
       assertTrue(first === second);
 
       yield* writeEffectVitestRows(root, "rows", []);
-      assertFalse(yield* fs.exists(path.join(output, generated.value)));
+      const exists2 = yield* fs.exists(path.join(output, generated.value));
+      assertFalse(exists2);
       assertTrue((yield* fs.readFileString(path.join(output, "keep.txt"))) === "unrelated\n");
       assertTrue((yield* fs.readFileString(path.join(output, "unrelated.jsonl"))) === '{"producer":"other"}\n');
     })

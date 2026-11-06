@@ -315,7 +315,8 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const httpClient = yield* HttpClient.HttpClient;
-  const formatter = yield* makeFormatter();
+  const formatter = yield* makeFormatter(false);
+  const projectFormatter = yield* makeFormatter(true);
   const openApiGenerator = yield* OpenApiGenerator.make;
 
   const readJson = Effect.fn("CodegenKit.readJson")(function* (filePath: string) {
@@ -388,7 +389,8 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
       Effect.mapError((cause) => generateError(`Could not decode OpenAPI document for ${config.packageName}`, cause))
     );
     const warnings = MutableList.make<OpenApiGenerator.OpenApiGeneratorWarning>();
-    const onEnter = composeTransforms(config.transforms, yield* definitionsFor(document, config));
+    const definitionsFor1 = yield* definitionsFor(document, config);
+    const onEnter = composeTransforms(config.transforms, definitionsFor1);
     // The upstream generator runs synchronously inside its own Effect, so a throwing `onEnter` transform
     // or importer surfaces as a defect. Report it like the schemas branch does: as a typed generate error.
     const generated = yield* openApiGenerator
@@ -448,6 +450,40 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
     return DriftReport.make({ path: module.path, status: diffLines === 0 ? "clean" : "changed", diffLines });
   });
 
+  const printDrift = Effect.fn("CodegenKit.printDrift")(function* (
+    modules: ReadonlyArray<GeneratedModule>,
+    reports: ReadonlyArray<DriftReport>
+  ) {
+    yield* Effect.forEach(
+      A.zip(modules, reports),
+      ([module, report]) =>
+        hasDrift(report)
+          ? formatter.unifiedDiff(module.path, module.content).pipe(Effect.flatMap(Console.error))
+          : Effect.void,
+      { concurrency: 1, discard: true }
+    );
+  });
+
+  const checkModules = Effect.fn("CodegenKit.checkModules")(function* (modules: ReadonlyArray<GeneratedModule>) {
+    const formatted = yield* Effect.forEach(
+      modules,
+      Effect.fn("CodegenKit.checkModule")(function* (module) {
+        const content = yield* projectFormatter.content(module.content, module.path);
+        return GeneratedModule.make({ path: module.path, content });
+      }),
+      { concurrency: 1 }
+    );
+    const reports = yield* Effect.forEach(formatted, drift, { concurrency: 1 });
+    if (A.some(reports, hasDrift)) {
+      yield* printDrift(formatted, reports);
+      return yield* CodegenDriftError.make({
+        message: "Generated output drift detected; run the writing generator.",
+        reports,
+      });
+    }
+    return reports;
+  });
+
   const renderExtras = Effect.fn("CodegenKit.renderExtras")(function* (config: GenerateConfig, refresh: boolean) {
     return yield* Effect.forEach(
       config.extraModules,
@@ -464,27 +500,14 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
     );
   });
 
-  const printDrift = Effect.fn("CodegenKit.printDrift")(function* (
-    modules: ReadonlyArray<GeneratedModule>,
-    reports: ReadonlyArray<DriftReport>
-  ) {
-    yield* Effect.forEach(
-      A.zip(modules, reports),
-      ([module, report]) =>
-        hasDrift(report)
-          ? formatter.unifiedDiff(module.path, module.content).pipe(Effect.flatMap(Console.error))
-          : Effect.void,
-      { concurrency: 1, discard: true }
-    );
-  });
-
   const run = Effect.fn("CodegenKit.run")(function* (config: GenerateConfig, mode: "write" | "check", refresh = false) {
     const document = yield* fetch(config.source, refresh);
     const patched = yield* patch(document, config.patches);
     const raw = yield* generate(patched, config);
     const processed = yield* postProcess(raw, config);
     const main = yield* format(GeneratedModule.make({ path: config.output.path, content: processed }));
-    const modules = A.prepend(yield* renderExtras(config, refresh), main);
+    const renderExtras2 = yield* renderExtras(config, refresh);
+    const modules = A.prepend(renderExtras2, main);
     if (mode === "write") {
       yield* Effect.forEach(modules, write, { concurrency: 1, discard: true });
       return A.empty<DriftReport>();
@@ -515,7 +538,7 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
     return reports;
   });
 
-  return { fetch, patch, generate, postProcess, format, write, drift, run, runAll } as const;
+  return { fetch, patch, generate, postProcess, format, write, drift, checkModules, run, runAll } as const;
 });
 
 const packageLabel = (packageName: string): string =>
@@ -530,6 +553,13 @@ const packageLabel = (packageName: string): string =>
 /**
  * Shared code-generation service from pinned source through drift detection.
  *
+ * **Details**
+ *
+ * `checkModules` checks already-rendered TypeScript with the repository's Biome
+ * configuration. Formatting uses stdin and never rewrites a generated target;
+ * missing and stale modules are reported together. The OpenAPI pipeline keeps
+ * its existing formatting policy.
+ *
  * **Example** (Access the service)
  *
  * ```ts
@@ -540,6 +570,21 @@ const packageLabel = (packageName: string): string =>
  *   return kit
  * })
  * console.log(program)
+ * ```
+ *
+ * **Example** (Check a pre-rendered module without writing it)
+ *
+ * ```ts
+ * import { CodegenKit, GeneratedModule } from "@beep/codegen-kit"
+ * import * as Effect from "effect/Effect"
+ *
+ * const check = Effect.gen(function* () {
+ *   const kit = yield* CodegenKit
+ *   return yield* kit.checkModules([
+ *     GeneratedModule.make({ path: "src/Example.ts", content: "export const answer = 42;\n" })
+ *   ])
+ * })
+ * console.log(Effect.isEffect(check))
  * ```
  *
  * @category services

@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // `stopAt` across every root-resolving service, and through the composites.
 //
 // The layout is the nested checkout: a plain single-package repository checked
@@ -31,6 +32,8 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { manifest, platform } from "./support/fixtures.ts";
 import type { LocalExecShape } from "@beep/commands";
@@ -58,7 +61,10 @@ const outerLockfile = A.join(
   ],
   "\n"
 );
-const outerRootManifest = JSON.stringify({ name: "outer-root", version: "0.0.0", private: true });
+const outerRootManifest = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "outer-root", version: "0.0.0", private: true }),
+  identity
+);
 
 const nestedCheckout: Tree = {
   "/outer/pnpm-workspace.yaml": outerWorkspaceYaml,
@@ -256,7 +262,8 @@ describe("stopAt — Workspaces.localExecLayer reads a refused root as None", ()
   layer(localContexts, { timeout: "30 seconds" })((it) => {
     it.effect("bounded: no project-local launcher; unbounded: the outer workspace's pnpm", () =>
       Effect.gen(function* () {
-        assertNone(yield* (yield* LocalExec).context);
+        const context1 = yield* (yield* LocalExec).context;
+        assertNone(context1);
         const unbounded = yield* (yield* UnboundedLocalExec).context;
         assertSome(
           O.map(unbounded, (context) => context.directory),

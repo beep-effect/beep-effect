@@ -50,12 +50,18 @@ describe("FilePath part schemas", () => {
   it.effect(
     "decodes the literal family unions",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownFilePathSchemaSupportedPathFamily("windowsDrive")).toBe("windowsDrive");
-      expect(yield* decodeUnknownFilePathSchemaWindowsDotSegment(".")).toBe(".");
-      expect(yield* decodeUnknownFilePathSchemaWindowsDotSegment("..")).toBe("..");
-      const isFailure1 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaSupportedPathFamily("other")));
+      const decodedUnknownFilePathSchemaSupportedPathFamily =
+        yield* decodeUnknownFilePathSchemaSupportedPathFamily("windowsDrive");
+      expect(decodedUnknownFilePathSchemaSupportedPathFamily).toBe("windowsDrive");
+      const decodedUnknownFilePathSchemaWindowsDotSegment = yield* decodeUnknownFilePathSchemaWindowsDotSegment(".");
+      expect(decodedUnknownFilePathSchemaWindowsDotSegment).toBe(".");
+      const decodedUnknownFilePathSchemaWindowsDotSegment1 = yield* decodeUnknownFilePathSchemaWindowsDotSegment("..");
+      expect(decodedUnknownFilePathSchemaWindowsDotSegment1).toBe("..");
+      const exit2 = yield* Effect.exit(decodeUnknownFilePathSchemaSupportedPathFamily("other"));
+      const isFailure1 = Exit.hasFails(exit2);
       assertTrue(isFailure1);
-      const isFailure2 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaWindowsDotSegment("...")));
+      const exit3 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsDotSegment("..."));
+      const isFailure2 = Exit.hasFails(exit3);
       assertTrue(isFailure2);
     })
   );
@@ -65,14 +71,14 @@ describe("FilePath part schemas", () => {
     Effect.fnUntraced(function* () {
       expect(isFilePathSchemaHasNullByte(`bad\u0000path.txt`)).toBe(true);
       expect(isFilePathSchemaHasNullByte("plain.txt")).toBe(false);
-      expect(yield* decodeUnknownFilePathSchemaSupportedWindowsNamespace("C:\\file.txt")).toBe("C:\\file.txt");
-      const isFailure3 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaSupportedWindowsNamespace("\\\\?\\C:\\file.txt"))
-      );
+      const decodedUnknownFilePathSchemaSupportedWindowsNamespace =
+        yield* decodeUnknownFilePathSchemaSupportedWindowsNamespace("C:\\file.txt");
+      expect(decodedUnknownFilePathSchemaSupportedWindowsNamespace).toBe("C:\\file.txt");
+      const exit4 = yield* Effect.exit(decodeUnknownFilePathSchemaSupportedWindowsNamespace("\\\\?\\C:\\file.txt"));
+      const isFailure3 = Exit.hasFails(exit4);
       assertTrue(isFailure3);
-      const isFailure4 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaSupportedWindowsNamespace("\\\\.\\COM1"))
-      );
+      const exit5 = yield* Effect.exit(decodeUnknownFilePathSchemaSupportedWindowsNamespace("\\\\.\\COM1"));
+      const isFailure4 = Exit.hasFails(exit5);
       assertTrue(isFailure4);
     })
   );
@@ -92,17 +98,22 @@ describe("FilePath part schemas", () => {
   it.effect(
     "validates Windows roots",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownFilePathSchemaWindowsDriveRoot("C:")).toBe("C:");
-      expect(yield* decodeUnknownFilePathSchemaWindowsDriveRoot("C:\\")).toBe("C:\\");
-      const isFailure5 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaWindowsDriveRoot("C:file.txt")));
+      const decodedUnknownFilePathSchemaWindowsDriveRoot = yield* decodeUnknownFilePathSchemaWindowsDriveRoot("C:");
+      expect(decodedUnknownFilePathSchemaWindowsDriveRoot).toBe("C:");
+      const decodedUnknownFilePathSchemaWindowsDriveRoot6 = yield* decodeUnknownFilePathSchemaWindowsDriveRoot("C:\\");
+      expect(decodedUnknownFilePathSchemaWindowsDriveRoot6).toBe("C:\\");
+      const exit7 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsDriveRoot("C:file.txt"));
+      const isFailure5 = Exit.hasFails(exit7);
       assertTrue(isFailure5);
 
-      expect(yield* decodeUnknownFilePathSchemaWindowsUncRoot("\\\\server\\share")).toBe("\\\\server\\share");
-      const isFailure6 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaWindowsUncRoot("\\\\server\\share\\"))
-      );
+      const decodedUnknownFilePathSchemaWindowsUncRoot =
+        yield* decodeUnknownFilePathSchemaWindowsUncRoot("\\\\server\\share");
+      expect(decodedUnknownFilePathSchemaWindowsUncRoot).toBe("\\\\server\\share");
+      const exit8 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsUncRoot("\\\\server\\share\\"));
+      const isFailure6 = Exit.hasFails(exit8);
       assertTrue(isFailure6);
-      const isFailure7 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaWindowsUncRoot("\\\\server")));
+      const exit9 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsUncRoot("\\\\server"));
+      const isFailure7 = Exit.hasFails(exit9);
       assertTrue(isFailure7);
     })
   );
@@ -111,7 +122,8 @@ describe("FilePath part schemas", () => {
     "derives valid values from the WindowsDriveRoot source schema and round-trips",
     [Arbitrary.schema(FilePathSchema.WindowsDriveRoot)],
     Effect.fnUntraced(function* ([value]) {
-      expect(yield* decodeUnknownFilePathSchemaWindowsDriveRoot(value)).toBe(value);
+      const decodedUnknownFilePathSchemaWindowsDriveRoot10 = yield* decodeUnknownFilePathSchemaWindowsDriveRoot(value);
+      expect(decodedUnknownFilePathSchemaWindowsDriveRoot10).toBe(value);
       expect(value).toMatch(/^[A-Za-z]:[\\/]?$/);
 
       return true;
@@ -122,32 +134,40 @@ describe("FilePath part schemas", () => {
   it.effect(
     "validates Windows path segments",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownFilePathSchemaValidWindowsPlainPathSegment("file.txt")).toBe("file.txt");
-      const isFailure8 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsPlainPathSegment("bad|name"))
-      );
+      const decodedUnknownFilePathSchemaValidWindowsPlainPathSegment =
+        yield* decodeUnknownFilePathSchemaValidWindowsPlainPathSegment("file.txt");
+      expect(decodedUnknownFilePathSchemaValidWindowsPlainPathSegment).toBe("file.txt");
+      const exit11 = yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsPlainPathSegment("bad|name"));
+      const isFailure8 = Exit.hasFails(exit11);
       assertTrue(isFailure8);
-      const isFailure9 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsPlainPathSegment("foo/bar"))
-      );
+      const exit12 = yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsPlainPathSegment("foo/bar"));
+      const isFailure9 = Exit.hasFails(exit12);
       assertTrue(isFailure9);
-      const isFailure10 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsPlainPathSegment("bad."))
-      );
+      const exit13 = yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsPlainPathSegment("bad."));
+      const isFailure10 = Exit.hasFails(exit13);
       assertTrue(isFailure10);
 
-      expect(yield* decodeUnknownFilePathSchemaValidWindowsRootSegment("share")).toBe("share");
-      const isFailure11 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsRootSegment(".")));
+      const decodedUnknownFilePathSchemaValidWindowsRootSegment =
+        yield* decodeUnknownFilePathSchemaValidWindowsRootSegment("share");
+      expect(decodedUnknownFilePathSchemaValidWindowsRootSegment).toBe("share");
+      const exit14 = yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsRootSegment("."));
+      const isFailure11 = Exit.hasFails(exit14);
       assertTrue(isFailure11);
-      const isFailure12 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsRootSegment("..")));
+      const exit15 = yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsRootSegment(".."));
+      const isFailure12 = Exit.hasFails(exit15);
       assertTrue(isFailure12);
 
-      expect(yield* decodeUnknownFilePathSchemaValidWindowsPathSegment(".")).toBe(".");
-      expect(yield* decodeUnknownFilePathSchemaValidWindowsPathSegment("..")).toBe("..");
-      expect(yield* decodeUnknownFilePathSchemaValidWindowsPathSegment("folder")).toBe("folder");
-      const isFailure13 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsPathSegment("foo/bar"))
-      );
+      const decodedUnknownFilePathSchemaValidWindowsPathSegment =
+        yield* decodeUnknownFilePathSchemaValidWindowsPathSegment(".");
+      expect(decodedUnknownFilePathSchemaValidWindowsPathSegment).toBe(".");
+      const decodedUnknownFilePathSchemaValidWindowsPathSegment16 =
+        yield* decodeUnknownFilePathSchemaValidWindowsPathSegment("..");
+      expect(decodedUnknownFilePathSchemaValidWindowsPathSegment16).toBe("..");
+      const decodedUnknownFilePathSchemaValidWindowsPathSegment17 =
+        yield* decodeUnknownFilePathSchemaValidWindowsPathSegment("folder");
+      expect(decodedUnknownFilePathSchemaValidWindowsPathSegment17).toBe("folder");
+      const exit18 = yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsPathSegment("foo/bar"));
+      const isFailure13 = Exit.hasFails(exit18);
       assertTrue(isFailure13);
     })
   );
@@ -155,33 +175,33 @@ describe("FilePath part schemas", () => {
   it.effect(
     "validates Windows segment collections",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownFilePathSchemaWindowsSegments(["folder", "..", "file.txt"])).toEqual([
+      const decodedUnknownFilePathSchemaWindowsSegments = yield* decodeUnknownFilePathSchemaWindowsSegments([
         "folder",
         "..",
         "file.txt",
       ]);
-      const isFailure14 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaWindowsSegments([])));
+      expect(decodedUnknownFilePathSchemaWindowsSegments).toEqual(["folder", "..", "file.txt"]);
+      const exit19 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsSegments([]));
+      const isFailure14 = Exit.hasFails(exit19);
       assertTrue(isFailure14);
 
-      expect(yield* decodeUnknownFilePathSchemaValidWindowsUncRest(["folder", "file.txt"])).toEqual([
+      const decodedUnknownFilePathSchemaValidWindowsUncRest = yield* decodeUnknownFilePathSchemaValidWindowsUncRest([
         "folder",
         "file.txt",
       ]);
-      const isFailure15 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsUncRest([])));
+      expect(decodedUnknownFilePathSchemaValidWindowsUncRest).toEqual(["folder", "file.txt"]);
+      const exit20 = yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsUncRest([]));
+      const isFailure15 = Exit.hasFails(exit20);
       assertTrue(isFailure15);
 
-      expect(yield* decodeUnknownFilePathSchemaValidWindowsUncSegments(["server", "share", "file.txt"])).toEqual([
-        "server",
-        "share",
-        "file.txt",
-      ]);
-      const isFailure16 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsUncSegments(["server", "share"]))
-      );
+      const decodedUnknownFilePathSchemaValidWindowsUncSegments =
+        yield* decodeUnknownFilePathSchemaValidWindowsUncSegments(["server", "share", "file.txt"]);
+      expect(decodedUnknownFilePathSchemaValidWindowsUncSegments).toEqual(["server", "share", "file.txt"]);
+      const exit21 = yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsUncSegments(["server", "share"]));
+      const isFailure16 = Exit.hasFails(exit21);
       assertTrue(isFailure16);
-      const isFailure17 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsUncSegments([".", "share", "file.txt"]))
-      );
+      const exit22 = yield* Effect.exit(decodeUnknownFilePathSchemaValidWindowsUncSegments([".", "share", "file.txt"]));
+      const isFailure17 = Exit.hasFails(exit22);
       assertTrue(isFailure17);
     })
   );
@@ -189,19 +209,26 @@ describe("FilePath part schemas", () => {
   it.effect(
     "detects whether a path includes a leaf segment",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownFilePathSchemaHasLeafSegment("/usr/bin/env")).toBe("/usr/bin/env");
-      expect(yield* decodeUnknownFilePathSchemaHasLeafSegment("folder\\file.txt")).toBe("folder\\file.txt");
-      const isFailure18 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaHasLeafSegment("/")));
+      const decodedUnknownFilePathSchemaHasLeafSegment =
+        yield* decodeUnknownFilePathSchemaHasLeafSegment("/usr/bin/env");
+      expect(decodedUnknownFilePathSchemaHasLeafSegment).toBe("/usr/bin/env");
+      const decodedUnknownFilePathSchemaHasLeafSegment23 =
+        yield* decodeUnknownFilePathSchemaHasLeafSegment("folder\\file.txt");
+      expect(decodedUnknownFilePathSchemaHasLeafSegment23).toBe("folder\\file.txt");
+      const exit24 = yield* Effect.exit(decodeUnknownFilePathSchemaHasLeafSegment("/"));
+      const isFailure18 = Exit.hasFails(exit24);
       assertTrue(isFailure18);
-      const isFailure19 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaHasLeafSegment("foo/")));
+      const exit25 = yield* Effect.exit(decodeUnknownFilePathSchemaHasLeafSegment("foo/"));
+      const isFailure19 = Exit.hasFails(exit25);
       assertTrue(isFailure19);
-      const isFailure20 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaHasLeafSegment("foo\\")));
+      const exit26 = yield* Effect.exit(decodeUnknownFilePathSchemaHasLeafSegment("foo\\"));
+      const isFailure20 = Exit.hasFails(exit26);
       assertTrue(isFailure20);
-      const isFailure21 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaHasLeafSegment("C:")));
+      const exit27 = yield* Effect.exit(decodeUnknownFilePathSchemaHasLeafSegment("C:"));
+      const isFailure21 = Exit.hasFails(exit27);
       assertTrue(isFailure21);
-      const isFailure22 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaHasLeafSegment("\\\\server\\share"))
-      );
+      const exit28 = yield* Effect.exit(decodeUnknownFilePathSchemaHasLeafSegment("\\\\server\\share"));
+      const isFailure22 = Exit.hasFails(exit28);
       assertTrue(isFailure22);
     })
   );
@@ -209,24 +236,26 @@ describe("FilePath part schemas", () => {
   it.effect(
     "validates Windows drive paths",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownFilePathSchemaWindowsDrivePath("C:\\Users\\test\\file.txt")).toBe(
-        "C:\\Users\\test\\file.txt"
-      );
-      expect(yield* decodeUnknownFilePathSchemaWindowsDrivePath("C:/Users/test/file.txt")).toBe(
-        "C:/Users/test/file.txt"
-      );
-      expect(yield* decodeUnknownFilePathSchemaWindowsDrivePath("C:relative.txt")).toBe("C:relative.txt");
-      const isFailure23 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaWindowsDrivePath("C:")));
+      const decodedUnknownFilePathSchemaWindowsDrivePath =
+        yield* decodeUnknownFilePathSchemaWindowsDrivePath("C:\\Users\\test\\file.txt");
+      expect(decodedUnknownFilePathSchemaWindowsDrivePath).toBe("C:\\Users\\test\\file.txt");
+      const decodedUnknownFilePathSchemaWindowsDrivePath29 =
+        yield* decodeUnknownFilePathSchemaWindowsDrivePath("C:/Users/test/file.txt");
+      expect(decodedUnknownFilePathSchemaWindowsDrivePath29).toBe("C:/Users/test/file.txt");
+      const decodedUnknownFilePathSchemaWindowsDrivePath30 =
+        yield* decodeUnknownFilePathSchemaWindowsDrivePath("C:relative.txt");
+      expect(decodedUnknownFilePathSchemaWindowsDrivePath30).toBe("C:relative.txt");
+      const exit31 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsDrivePath("C:"));
+      const isFailure23 = Exit.hasFails(exit31);
       assertTrue(isFailure23);
-      const isFailure24 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaWindowsDrivePath("C:\\")));
+      const exit32 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsDrivePath("C:\\"));
+      const isFailure24 = Exit.hasFails(exit32);
       assertTrue(isFailure24);
-      const isFailure25 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaWindowsDrivePath("C:\\folder\\"))
-      );
+      const exit33 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsDrivePath("C:\\folder\\"));
+      const isFailure25 = Exit.hasFails(exit33);
       assertTrue(isFailure25);
-      const isFailure26 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaWindowsDrivePath("C:\\bad<name.txt"))
-      );
+      const exit34 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsDrivePath("C:\\bad<name.txt"));
+      const isFailure26 = Exit.hasFails(exit34);
       assertTrue(isFailure26);
     })
   );
@@ -234,22 +263,21 @@ describe("FilePath part schemas", () => {
   it.effect(
     "validates Windows UNC paths",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownFilePathSchemaWindowsUncPath("\\\\server\\share\\folder\\file.txt")).toBe(
+      const decodedUnknownFilePathSchemaWindowsUncPath = yield* decodeUnknownFilePathSchemaWindowsUncPath(
         "\\\\server\\share\\folder\\file.txt"
       );
-      const isFailure27 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaWindowsUncPath("\\\\server\\share"))
-      );
+      expect(decodedUnknownFilePathSchemaWindowsUncPath).toBe("\\\\server\\share\\folder\\file.txt");
+      const exit35 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsUncPath("\\\\server\\share"));
+      const isFailure27 = Exit.hasFails(exit35);
       assertTrue(isFailure27);
-      const isFailure28 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaWindowsUncPath("\\\\server")));
+      const exit36 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsUncPath("\\\\server"));
+      const isFailure28 = Exit.hasFails(exit36);
       assertTrue(isFailure28);
-      const isFailure29 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaWindowsUncPath("\\\\server\\share\\folder\\"))
-      );
+      const exit37 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsUncPath("\\\\server\\share\\folder\\"));
+      const isFailure29 = Exit.hasFails(exit37);
       assertTrue(isFailure29);
-      const isFailure30 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaWindowsUncPath("\\\\?\\C:\\file.txt"))
-      );
+      const exit38 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsUncPath("\\\\?\\C:\\file.txt"));
+      const isFailure30 = Exit.hasFails(exit38);
       assertTrue(isFailure30);
     })
   );
@@ -257,23 +285,26 @@ describe("FilePath part schemas", () => {
   it.effect(
     "validates Windows relative paths without accepting UNC or drive-prefixed inputs",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownFilePathSchemaWindowsRelativePath("folder\\file.txt")).toBe("folder\\file.txt");
-      expect(yield* decodeUnknownFilePathSchemaWindowsRelativePath(".\\file.txt")).toBe(".\\file.txt");
-      const isFailure31 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaWindowsRelativePath("file.txt")));
+      const decodedUnknownFilePathSchemaWindowsRelativePath =
+        yield* decodeUnknownFilePathSchemaWindowsRelativePath("folder\\file.txt");
+      expect(decodedUnknownFilePathSchemaWindowsRelativePath).toBe("folder\\file.txt");
+      const decodedUnknownFilePathSchemaWindowsRelativePath39 =
+        yield* decodeUnknownFilePathSchemaWindowsRelativePath(".\\file.txt");
+      expect(decodedUnknownFilePathSchemaWindowsRelativePath39).toBe(".\\file.txt");
+      const exit40 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsRelativePath("file.txt"));
+      const isFailure31 = Exit.hasFails(exit40);
       assertTrue(isFailure31);
-      const isFailure32 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaWindowsRelativePath("folder/child.txt"))
-      );
+      const exit41 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsRelativePath("folder/child.txt"));
+      const isFailure32 = Exit.hasFails(exit41);
       assertTrue(isFailure32);
-      const isFailure33 = Exit.hasFails(yield* Effect.exit(decodeUnknownFilePathSchemaWindowsRelativePath("folder\\")));
+      const exit42 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsRelativePath("folder\\"));
+      const isFailure33 = Exit.hasFails(exit42);
       assertTrue(isFailure33);
-      const isFailure34 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaWindowsRelativePath("\\\\server\\share\\file.txt"))
-      );
+      const exit43 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsRelativePath("\\\\server\\share\\file.txt"));
+      const isFailure34 = Exit.hasFails(exit43);
       assertTrue(isFailure34);
-      const isFailure35 = Exit.hasFails(
-        yield* Effect.exit(decodeUnknownFilePathSchemaWindowsRelativePath("C:\\file.txt"))
-      );
+      const exit44 = yield* Effect.exit(decodeUnknownFilePathSchemaWindowsRelativePath("C:\\file.txt"));
+      const isFailure35 = Exit.hasFails(exit44);
       assertTrue(isFailure35);
     })
   );
@@ -283,48 +314,59 @@ describe("FilePath", () => {
   it.effect(
     "publishes codec statics and a canonical arbitrary for file paths",
     Effect.fnUntraced(function* () {
-      expect(
-        A.every(
-          yield* Arbitrary.sampleEffect(Arbitrary.schema(FilePathSchema.FilePath), { count: 20, seed: 0x5eed }),
-          S.is(FilePathSchema.FilePath)
-        )
-      ).toBe(true);
-      expect(yield* S.decodeEffect(FilePathSchema.FilePath)("data/ontology.ttl")).toBe("data/ontology.ttl");
+      const sampleEffect45 = yield* Arbitrary.sampleEffect(Arbitrary.schema(FilePathSchema.FilePath), {
+        count: 20,
+        seed: 0x5eed,
+      });
+      expect(A.every(sampleEffect45, S.is(FilePathSchema.FilePath))).toBe(true);
+      const value46 = yield* S.decodeEffect(FilePathSchema.FilePath)("data/ontology.ttl");
+      expect(value46).toBe("data/ontology.ttl");
     })
   );
 
   it.effect(
     "accepts valid POSIX file paths",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownFilePathSchemaFilePath("/usr/bin/env")).toBe("/usr/bin/env");
-      expect(yield* decodeUnknownFilePathSchemaFilePath("./foo/bar.txt")).toBe("./foo/bar.txt");
-      expect(yield* decodeUnknownFilePathSchemaFilePath("../a")).toBe("../a");
+      const decodedUnknownFilePathSchemaFilePath = yield* decodeUnknownFilePathSchemaFilePath("/usr/bin/env");
+      expect(decodedUnknownFilePathSchemaFilePath).toBe("/usr/bin/env");
+      const decodedUnknownFilePathSchemaFilePath47 = yield* decodeUnknownFilePathSchemaFilePath("./foo/bar.txt");
+      expect(decodedUnknownFilePathSchemaFilePath47).toBe("./foo/bar.txt");
+      const decodedUnknownFilePathSchemaFilePath48 = yield* decodeUnknownFilePathSchemaFilePath("../a");
+      expect(decodedUnknownFilePathSchemaFilePath48).toBe("../a");
     })
   );
 
   it.effect(
     "accepts valid Windows drive paths",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownFilePathSchemaFilePath("C:\\Users\\test\\file.txt")).toBe("C:\\Users\\test\\file.txt");
-      expect(yield* decodeUnknownFilePathSchemaFilePath("C:/Users/test/file.txt")).toBe("C:/Users/test/file.txt");
-      expect(yield* decodeUnknownFilePathSchemaFilePath("C:relative.txt")).toBe("C:relative.txt");
+      const decodedUnknownFilePathSchemaFilePath49 =
+        yield* decodeUnknownFilePathSchemaFilePath("C:\\Users\\test\\file.txt");
+      expect(decodedUnknownFilePathSchemaFilePath49).toBe("C:\\Users\\test\\file.txt");
+      const decodedUnknownFilePathSchemaFilePath50 =
+        yield* decodeUnknownFilePathSchemaFilePath("C:/Users/test/file.txt");
+      expect(decodedUnknownFilePathSchemaFilePath50).toBe("C:/Users/test/file.txt");
+      const decodedUnknownFilePathSchemaFilePath51 = yield* decodeUnknownFilePathSchemaFilePath("C:relative.txt");
+      expect(decodedUnknownFilePathSchemaFilePath51).toBe("C:relative.txt");
     })
   );
 
   it.effect(
     "accepts valid UNC file paths",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownFilePathSchemaFilePath("\\\\server\\share\\folder\\file.txt")).toBe(
+      const decodedUnknownFilePathSchemaFilePath52 = yield* decodeUnknownFilePathSchemaFilePath(
         "\\\\server\\share\\folder\\file.txt"
       );
+      expect(decodedUnknownFilePathSchemaFilePath52).toBe("\\\\server\\share\\folder\\file.txt");
     })
   );
 
   it.effect(
     "locks the any-major-os policy for ambiguous leaf paths",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownFilePathSchemaFilePath("CON")).toBe("CON");
-      expect(yield* decodeUnknownFilePathSchemaFilePath("a<")).toBe("a<");
+      const decodedUnknownFilePathSchemaFilePath53 = yield* decodeUnknownFilePathSchemaFilePath("CON");
+      expect(decodedUnknownFilePathSchemaFilePath53).toBe("CON");
+      const decodedUnknownFilePathSchemaFilePath54 = yield* decodeUnknownFilePathSchemaFilePath("a<");
+      expect(decodedUnknownFilePathSchemaFilePath54).toBe("a<");
     })
   );
 
@@ -333,7 +375,8 @@ describe("FilePath", () => {
     Effect.fnUntraced(function* () {
       const input = "C:/Users/Test/Mixed-Case.txt";
 
-      expect(yield* decodeUnknownFilePathSchemaFilePath(input)).toBe(input);
+      const decodedUnknownFilePathSchemaFilePath55 = yield* decodeUnknownFilePathSchemaFilePath(input);
+      expect(decodedUnknownFilePathSchemaFilePath55).toBe(input);
     })
   );
 
@@ -489,7 +532,8 @@ describe("FilePath", () => {
     Effect.fnUntraced(function* () {
       const input = { filePath: "./folder/file.txt" };
 
-      expect(yield* decodeFilePathPayload(input)).toEqual(input);
+      const decodedFilePathPayload = yield* decodeFilePathPayload(input);
+      expect(decodedFilePathPayload).toEqual(input);
     })
   );
 });

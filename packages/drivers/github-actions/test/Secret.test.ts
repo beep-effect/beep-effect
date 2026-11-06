@@ -92,7 +92,8 @@ describe("Secret", () => {
     it.effect("returns an empty record for no entries, masking nothing", () => {
       const outputs = recordingOutputs();
       return Effect.gen(function* () {
-        assert.deepStrictEqual(yield* Secret.forChildEnv({}), {});
+        const forChildEnv1 = yield* Secret.forChildEnv({});
+        assert.deepStrictEqual(forChildEnv1, {});
         assert.lengthOf(outputs.masked, 0);
       }).pipe(Effect.provideService(ActionOutputs, outputs.service));
     });
@@ -102,7 +103,8 @@ describe("Secret", () => {
     it.effect("masks then returns the plaintext", () => {
       const outputs = recordingOutputs();
       return Effect.gen(function* () {
-        assert.strictEqual(yield* Secret.forRunnerFile(Redacted.make("ghs_abc")), "ghs_abc");
+        const forRunnerFile2 = yield* Secret.forRunnerFile(Redacted.make("ghs_abc"));
+        assert.strictEqual(forRunnerFile2, "ghs_abc");
         assert.deepStrictEqual(outputs.masked, ["ghs_abc"]);
       }).pipe(Effect.provideService(ActionOutputs, outputs.service));
     });
@@ -112,7 +114,8 @@ describe("Secret", () => {
     it.effect("masks then returns the plaintext", () => {
       const outputs = recordingOutputs();
       return Effect.gen(function* () {
-        assert.strictEqual(yield* Secret.forProcessEnv(Redacted.make("ghs_env")), "ghs_env");
+        const forProcessEnv3 = yield* Secret.forProcessEnv(Redacted.make("ghs_env"));
+        assert.strictEqual(forProcessEnv3, "ghs_env");
         assert.deepStrictEqual(outputs.masked, ["ghs_env"]);
       }).pipe(Effect.provideService(ActionOutputs, outputs.service));
     });

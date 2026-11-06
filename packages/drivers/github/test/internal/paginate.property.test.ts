@@ -19,13 +19,13 @@ it.effect.prop(
   ([sample]) =>
     Effect.gen(function* () {
       const stream = paginate(() => fromArray(sample.items, sample.perPage), undefined);
-      assert.deepStrictEqual(yield* Stream.runCollect(stream), sample.items);
-      assert.deepStrictEqual(yield* Stream.runCollect(stream), sample.items);
+      const resultCollect = yield* Stream.runCollect(stream);
+      assert.deepStrictEqual(resultCollect, sample.items);
+      const resultCollect1 = yield* Stream.runCollect(stream);
+      assert.deepStrictEqual(resultCollect1, sample.items);
       const bounded = paginate(sample.maxPages)(() => fromArray(sample.perPage)(sample.items));
-      assert.deepStrictEqual(
-        yield* Stream.runCollect(bounded),
-        sample.items.slice(0, sample.perPage * sample.maxPages)
-      );
+      const resultCollect2 = yield* Stream.runCollect(bounded);
+      assert.deepStrictEqual(resultCollect2, sample.items.slice(0, sample.perPage * sample.maxPages));
     }),
   runs
 );

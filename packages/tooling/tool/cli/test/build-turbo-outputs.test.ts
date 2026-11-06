@@ -47,7 +47,9 @@ const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeSer
 
 const readBaseTsconfig = Effect.fn("BuildTurboOutputsTest.readBaseTsconfig")(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* decodeBaseTsconfig(yield* Jsonc.parse(yield* fs.readFileString(`${repoRoot}/tsconfig.base.json`)));
+  const readFileString4 = yield* fs.readFileString(`${repoRoot}/tsconfig.base.json`);
+  const parsed = yield* Jsonc.parse(readFileString4);
+  return yield* decodeBaseTsconfig(parsed);
 });
 
 const writeFile = Effect.fn("BuildTurboOutputsTest.writeFile")(function* (root: string, file: string, content: string) {
@@ -72,7 +74,8 @@ const compile = Effect.fn("BuildTurboOutputsTest.compile")(function* (repoRoot: 
 
 const listDist = Effect.fn("BuildTurboOutputsTest.listDist")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
-  return A.sort(yield* fs.readDirectory(`${root}/dist`), Str.Order);
+  const readDirectory1 = yield* fs.readDirectory(`${root}/dist`);
+  return A.sort(readDirectory1, Str.Order);
 });
 
 it.layer(PlatformLayer, { concurrent: false, timeout: "90 seconds" })("build incremental state (#1874)", (it) => {
@@ -82,7 +85,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "90 seconds" })("build inc
       const repoRoot = yield* findRepoRoot();
       const fs = yield* FileSystem.FileSystem;
       const base = yield* readBaseTsconfig(repoRoot);
-      const build = (yield* decodeBuildConfiguration(yield* fs.readFileString(`${repoRoot}/turbo.json`))).tasks.build;
+      const readFileString2 = yield* fs.readFileString(`${repoRoot}/turbo.json`);
+      const build = (yield* decodeBuildConfiguration(readFileString2)).tasks.build;
 
       expect(base.compilerOptions.incremental).toBe(true);
       expect(Str.startsWith(CONFIG_DIR)(base.compilerOptions.outDir)).toBe(true);
@@ -115,7 +119,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "90 seconds" })("build inc
 
       yield* fs.remove(`${root}/dist`, { recursive: true });
       yield* compile(repoRoot, root);
-      expect(yield* listDist(root)).toEqual(cold);
+      const listDist3 = yield* listDist(root);
+      expect(listDist3).toEqual(cold);
     })
   );
 });

@@ -1,10 +1,15 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
+import { Git } from "@beep/git/Git";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   buildJSDocDocumentationInventory,
   JSDocDocumentationInventoryOptions,
   listSourceFiles,
+  runTurboConfigProof,
   summarizeTurboDryRunOutput,
   summarizeTurboQueryAffectedOutput,
+  TurboConfigProofOptions,
+  TurboConfigProofSelectorMode,
   writeJSDocDocumentationInventory,
   zeroLegacyCorpusFiles,
 } from "@beep/repo-cli/test/Quality";
@@ -29,12 +34,17 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
-const PlatformLayer = Layer.mergeAll(
-  BunCrypto.layer,
-  FileSystemLayer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer))
+// `Git` over the platform spawner: the inventories list the visible tree through the kit (W7b, SPEC D-19).
+const PlatformLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    BunCrypto.layer,
+    FileSystemLayer,
+    NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer))
+  )
 );
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const fixedGeneratedAt = "2026-01-01T00:00:00.000Z";
@@ -176,7 +186,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("quality a
       yield* fs.symlink(external, path.join(root, "escape"));
       yield* fs.symlink(path.join(external, "escape.ts"), path.join(root, "escape.ts"));
 
-      expect(yield* listSourceFiles(root, path)).toEqual([source, source]);
+      const listSourceFiles1 = yield* listSourceFiles(root, path);
+      expect(listSourceFiles1).toEqual([source, source]);
     })
   );
 
@@ -251,9 +262,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("quality a
               expect(directory).toBe(path.join(root, targetDirectory));
               if (labs) {
                 // Labs setup must reach its own mkdir after package setup has completed.
-                expect(yield* fs.readFileString(path.join(root, "packages", "demo", "src", "index.ts"))).toBe(
-                  packageSource
+                const readFileString2 = yield* fs.readFileString(
+                  path.join(root, "packages", "demo", "src", "index.ts")
                 );
+                expect(readFileString2).toBe(packageSource);
               }
               yield* Ref.update(injectedDirectories, A.append(relativeDirectory));
               return yield* interrupted ? Effect.interrupt : Effect.fail(failure);
@@ -275,11 +287,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("quality a
         }
         const root = yield* Ref.get(allocated);
         expect(root).not.toBe("");
-        expect(yield* Ref.get(attemptedDirectories)).toEqual(
-          labs ? ["packages/demo/src", "apps/labs/demo/src"] : ["packages/demo/src"]
-        );
-        expect(yield* Ref.get(injectedDirectories)).toEqual([targetDirectory]);
-        expect(yield* fs.exists(root)).toBe(false);
+        const got = yield* Ref.get(attemptedDirectories);
+        expect(got).toEqual(labs ? ["packages/demo/src", "apps/labs/demo/src"] : ["packages/demo/src"]);
+        const got3 = yield* Ref.get(injectedDirectories);
+        expect(got3).toEqual([targetDirectory]);
+        const exists4 = yield* fs.exists(root);
+        expect(exists4).toBe(false);
       })
     );
   }
@@ -389,7 +402,8 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
           generatedAt: fixedGeneratedAt,
         })
       );
-      const inventory = parseJsoncText(yield* fs.readFileString(outputJsonPath)) as {
+      const readFileString5 = yield* fs.readFileString(outputJsonPath);
+      const inventory = parseJsoncText(readFileString5) as {
         readonly generatedAt: string;
         readonly packages: ReadonlyArray<{
           readonly packageName: string;
@@ -431,8 +445,14 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
 
       expect(result.outputJsonPath).toBe(outputJsonPath);
       expect(result.outputMarkdownPath).toBe(outputMarkdownPath);
-      expect(yield* fs.readFileString(ciOutputJsonPath)).toBe(yield* fs.readFileString(outputJsonPath));
-      expect(yield* fs.readFileString(ciOutputMarkdownPath)).toBe(yield* fs.readFileString(outputMarkdownPath));
+      const readFileString6 = yield* fs.readFileString(ciOutputJsonPath);
+      const expectation = expect(readFileString6);
+      const readFileString1 = yield* fs.readFileString(outputJsonPath);
+      expectation.toBe(readFileString1);
+      const readFileString7 = yield* fs.readFileString(ciOutputMarkdownPath);
+      const expectation1 = expect(readFileString7);
+      const readFileString3 = yield* fs.readFileString(outputMarkdownPath);
+      expectation1.toBe(readFileString3);
     })
   );
 
@@ -460,10 +480,8 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
       const files = A.flatMap(inventory.packages, (pkg) => A.map(pkg.modules, (entry) => entry.filePath));
       expect(files).toEqual(["src/Untracked.ts", "src/index.ts"]);
       // The ratchet's zero-legacy corpus follows the same rule.
-      expect(yield* zeroLegacyCorpusFiles(repoRoot, false)).toEqual([
-        "packages/demo/src/Untracked.ts",
-        "packages/demo/src/index.ts",
-      ]);
+      const zeroLegacyCorpusFiles8 = yield* zeroLegacyCorpusFiles(repoRoot, false);
+      expect(zeroLegacyCorpusFiles8).toEqual(["packages/demo/src/Untracked.ts", "packages/demo/src/index.ts"]);
     })
   );
 
@@ -484,7 +502,8 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
           generatedAt: fixedGeneratedAt,
         })
       );
-      const inventory = parseJsoncText(yield* fs.readFileString(outputJsonPath)) as {
+      const readFileString9 = yield* fs.readFileString(outputJsonPath);
+      const inventory = parseJsoncText(readFileString9) as {
         readonly packages: ReadonlyArray<{ readonly packageName: string }>;
       };
       const markdown = yield* fs.readFileString(outputMarkdownPath);
@@ -526,8 +545,99 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
 `);
 
       expect(summary.total).toBe(3);
+      expect(summary.packages).toBe(2);
       expect(summary.byTask).toEqual({ check: 1, lint: 2 });
       expect(summary.byReason).toEqual({ TaskFileChanged: 2, TaskGlobalDepsChanged: 1 });
+    })
+  );
+
+  it.effect("binds the requested source range to the query and every dry run for both selectors", () =>
+    Effect.forEach(
+      [TurboConfigProofSelectorMode.Enum.affected, TurboConfigProofSelectorMode.Enum["filter-range"]],
+      (selector) =>
+        Effect.gen(function* () {
+          const spawner = ScriptedSpawner.make((_command, args) => ({
+            stdout: A.contains(args, "query")
+              ? '{"data":{"affectedTasks":{"items":[]}}}'
+              : '{"packages":[],"tasks":[]}',
+          }));
+          const base = "refs/tags/requested-proof-base";
+          const head = "refs/heads/requested-proof-head";
+          const report = yield* runTurboConfigProof(
+            "/repo",
+            TurboConfigProofOptions.make({ base, head, selector, tasks: ["lint", "check"] })
+          ).pipe(provideSpawner(spawner));
+
+          const requestedRange = expect.objectContaining({
+            env: expect.objectContaining({ TURBO_SCM_BASE: base, TURBO_SCM_HEAD: head }),
+            extendEnv: true,
+          });
+          expect(spawner.spawns).toEqual([requestedRange, requestedRange, requestedRange]);
+          expect(spawner.spawns[0]?.args).toContain(base);
+          expect(spawner.spawns[0]?.args).toContain(head);
+          expect(report.base).toBe(base);
+          expect(report.head).toBe(head);
+          expect(A.map(report.dryRuns, (dryRun) => dryRun.task)).toEqual(["lint", "check"]);
+        }),
+      { concurrency: 1 }
+    )
+  );
+
+  it.effect("rejects absent or malformed affected-query task arrays", () =>
+    Effect.forEach(
+      [
+        "",
+        "{}",
+        '{"data":null}',
+        '{"data":{"affectedTasks":{"items":{}}}}',
+        '{"data":{"affectedTasks":{"items":[null]}}}',
+      ],
+      (output) =>
+        summarizeTurboQueryAffectedOutput(output).pipe(
+          Effect.flip,
+          Effect.map((error) => expect(error._tag).toBe("TurboConfigProofError"))
+        ),
+      { concurrency: 1 }
+    )
+  );
+
+  it.effect("rejects absent or malformed dry-run task arrays", () =>
+    Effect.forEach(
+      ["", "{}", '{"tasks":"missing"}', '{"tasks":[null]}', '{"tasks":[],"packages":{}}'],
+      (output) =>
+        summarizeTurboDryRunOutput(output).pipe(
+          Effect.flip,
+          Effect.map((error) => expect(error._tag).toBe("TurboConfigProofError"))
+        ),
+      { concurrency: 1 }
+    )
+  );
+
+  it.effect("does not retain synthetic native payload values in parser failures", () => {
+    const sentinel = "synthetic-native-payload-must-not-be-retained";
+    return Effect.forEach(
+      [
+        summarizeTurboDryRunOutput(`{"${sentinel}":`),
+        summarizeTurboDryRunOutput(encodeJson({ tasks: sentinel })),
+        summarizeTurboQueryAffectedOutput(encodeJson({ data: { affectedTasks: { items: sentinel } } })),
+      ],
+      (parse) =>
+        parse.pipe(
+          Effect.flip,
+          Effect.map((error) => expect(encodeJson(error)).not.toContain(sentinel))
+        ),
+      { concurrency: 1 }
+    );
+  });
+
+  it.effect("preserves explicitly empty native selections", () =>
+    Effect.gen(function* () {
+      const query = yield* summarizeTurboQueryAffectedOutput('{"data":{"affectedTasks":{"items":[]}}}');
+      const dry = yield* summarizeTurboDryRunOutput('{"tasks":[]}');
+      expect(query.total).toBe(0);
+      expect(query.packages).toBe(0);
+      expect(dry.total).toBe(0);
+      expect(dry.packages).toBe(0);
     })
   );
 

@@ -15,6 +15,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { nativeTraceWire } from "./internal/native-trace-wire.ts";
+import { ManagedControllerObservation, managedControllerTraceIdentity } from "./managed-controller.ts";
 import { hashPrivateIdentifier } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("native-trace");
@@ -87,6 +88,9 @@ export class NativeTraceRequest extends S.Opaque<NativeTraceRequest, { readonly 
     ),
     approvedModels: S.Array(SafeName).check(S.isMaxLength(256)),
     usageConvention: UsageConvention,
+    producer: S.OptionFromOptionalKey(S.Literals(["managed-controller"])).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     syntheticFixtureMetadata: S.OptionFromOptionalKey(S.Literal(true)).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
@@ -129,6 +133,9 @@ export class NativeTraceMetadata extends S.Opaque<NativeTraceMetadata, { readonl
     fixtureSurface: S.OptionFromOptionalKey(FixtureSurface).pipe(S.withConstructorDefault(Effect.succeedNone)),
     modelHash: optionalHash,
     modelName: S.OptionFromOptionalKey(SafeName),
+    managedController: S.OptionFromOptionalKey(ManagedControllerObservation).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     usage: S.Struct({
       convention: UsageConvention,
       input: S.OptionFromOptionalKey(TokenCount),
@@ -137,6 +144,35 @@ export class NativeTraceMetadata extends S.Opaque<NativeTraceMetadata, { readonl
       cacheWrite: S.OptionFromOptionalKey(TokenCount),
     }),
   })
+    .check(
+      S.makeFilter(
+        (value) => {
+          if (O.isNone(value.managedController)) return true;
+          const controller = value.managedController.value;
+          return A.every(
+            [
+              value.kind === "AGENT",
+              value.status === "ok",
+              O.isNone(value.fixtureSurface),
+              O.isNone(value.modelName),
+              O.isNone(value.modelHash),
+              O.contains(value.sessionHash, controller.sourceSessionId),
+              O.contains(value.startTimeUnixNano, controller.startTimeUnixNano),
+              O.contains(value.endTimeUnixNano, controller.endTimeUnixNano),
+              value.usage.convention === "unknown",
+              A.every([value.usage.input, value.usage.output, value.usage.cacheRead, value.usage.cacheWrite], O.isNone),
+            ],
+            (valid) => valid
+          );
+        },
+        {
+          identifier: "ManagedControllerMetadata",
+          title: "Consistent controller provenance",
+          description:
+            "Controller metadata must agree with AGENT identity, timing, unknown usage and the preserved session hash.",
+        }
+      )
+    )
     .check(
       S.makeFilter(
         (value) => {
@@ -345,7 +381,8 @@ const decodeBoundaryValue = S.decodeUnknownEffect(S.Option(FixtureSurface));
 const parentIdentity = Effect.fnUntraced(function* (parent: unknown, protobuf: boolean) {
   if (parent === undefined || parent === "") return O.none<string>();
   if (S.is(S.Uint8Array)(parent) && parent.byteLength === 0) return O.none<string>();
-  return O.some(yield* id(parent, 16, protobuf));
+  const id1 = yield* id(parent, 16, protobuf);
+  return O.some(id1);
 });
 const claudeSpanKind = Match.type<string | undefined>().pipe(
   Match.when("claude_code.llm_request", (): typeof SpanKind.Type => "LLM"),
@@ -394,13 +431,34 @@ const sourceUsage = Effect.fnUntraced(function* (
 const privateHash = (salt: string) => (value: string) =>
   hashPrivateIdentifier(value, O.some(salt)).pipe(Effect.mapError(() => failure("hash-failure")));
 const hashTextOption = Effect.fnUntraced(function* (value: O.Option<string>, hash: ReturnType<typeof privateHash>) {
-  return O.isSome(value) ? O.some(yield* hash(value.value)) : O.none();
+  return O.isSome(value) ? yield* Effect.asSome(hash(value.value)) : O.none();
 });
-const projectSpan = Effect.fnUntraced(function* (
+const readManagedController = Effect.fnUntraced(function* (
+  attributes: typeof Attributes.Type,
+  timing: Effect.Success<ReturnType<typeof sourceTiming>>
+) {
+  const requiredText = (key: string) =>
+    textAttribute(attributes, [key]).pipe(
+      Effect.flatMap(Effect.fromOption),
+      Effect.mapError(() => failure("invalid-envelope"))
+    );
+  return yield* S.decodeEffect(ManagedControllerObservation)({
+    version: "managed-controller-observation/v1",
+    outcome: "completed",
+    response: "exact-constant-matched",
+    launchId: yield* requiredText("beep.managed.launch_id"),
+    launchRouteId: yield* requiredText("beep.managed.launch_route_id"),
+    processInstanceId: yield* requiredText("beep.managed.process_instance_id"),
+    sourceSessionId: yield* requiredText("beep.managed.session_hash"),
+    evidenceId: yield* requiredText("beep.managed.evidence_id"),
+    elapsedNanos: yield* requiredText("beep.managed.elapsed_nanos"),
+    startTimeUnixNano: yield* Effect.fromOption(timing.startTimeUnixNano),
+    endTimeUnixNano: yield* Effect.fromOption(timing.endTimeUnixNano),
+  }).pipe(Effect.mapError(() => failure("invalid-envelope")));
+});
+const readSpanSource = Effect.fnUntraced(function* (
   entry: { readonly span: unknown; readonly resource: typeof Attributes.Type },
   input: NativeTraceRequest,
-  namespaceId: Sha256Hex,
-  hash: ReturnType<typeof privateHash>,
   protobuf: boolean
 ) {
   const span = yield* S.decodeUnknownEffect(RawSpan)(entry.span);
@@ -414,10 +472,97 @@ const projectSpan = Effect.fnUntraced(function* (
   const fixtureSurface = O.isSome(input.syntheticFixtureMetadata)
     ? yield* textAttribute(attributes, ["beep.fixture.surface"]).pipe(Effect.flatMap(decodeBoundaryValue))
     : O.none();
-  const kind = projectedKind(kindValue, span.name, input.usageConvention);
   const timing = yield* sourceTiming(span);
+  const managed = O.isSome(input.producer);
+  return {
+    span,
+    traceId,
+    spanId,
+    parentSpanId,
+    attributes,
+    session,
+    model,
+    kindValue,
+    fixtureSurface,
+    timing,
+    managed,
+  };
+});
+const validateManagedSource = Effect.fnUntraced(function* (
+  source: Effect.Success<ReturnType<typeof readSpanSource>>,
+  input: NativeTraceRequest
+) {
+  const { managed, session, model, kindValue, span, timing, attributes } = source;
+  if (
+    managed &&
+    A.some(
+      [
+        input.usageConvention !== "unknown",
+        O.isSome(input.syntheticFixtureMetadata),
+        O.isSome(session),
+        O.isSome(model),
+        !O.contains(kindValue, "AGENT"),
+        span.status?.code !== 1,
+        O.isNone(timing.startTimeUnixNano),
+        O.isNone(timing.endTimeUnixNano),
+        A.some(
+          attributes,
+          (attribute) =>
+            A.contains(
+              [
+                "input_tokens",
+                "output_tokens",
+                "cache_read_tokens",
+                "cache_creation_tokens",
+                "llm.provider",
+                "gen_ai.provider.name",
+              ],
+              attribute.key
+            ) || Str.startsWith("llm.token_count.")(attribute.key)
+        ),
+      ],
+      (invalid) => invalid
+    )
+  )
+    return yield* failure("invalid-envelope");
+});
+const projectSpan = Effect.fnUntraced(function* (
+  entry: { readonly span: unknown; readonly resource: typeof Attributes.Type },
+  input: NativeTraceRequest,
+  namespaceId: Sha256Hex,
+  hash: ReturnType<typeof privateHash>,
+  protobuf: boolean
+) {
+  const source = yield* readSpanSource(entry, input, protobuf);
+  yield* validateManagedSource(source, input);
+  const {
+    span,
+    traceId,
+    spanId,
+    parentSpanId,
+    attributes,
+    session,
+    model,
+    kindValue,
+    fixtureSurface,
+    timing,
+    managed,
+  } = source;
+  const controller = yield* managed
+    ? readManagedController(attributes, timing).pipe(Effect.asSome)
+    : Effect.succeed(O.none<ManagedControllerObservation>());
+  if (O.isSome(controller)) {
+    const expectedIdentity = yield* managedControllerTraceIdentity(controller.value.launchId).pipe(
+      Effect.mapError(() => failure("hash-failure"))
+    );
+    if (traceId !== expectedIdentity.traceId || spanId !== expectedIdentity.spanId || O.isSome(parentSpanId))
+      return yield* failure("invalid-envelope");
+  }
+  const kind = managed ? "AGENT" : projectedKind(kindValue, span.name, input.usageConvention);
   return NativeTraceMetadata.make({
-    eventId: yield* hash(`native-span/v1:${input.routeId}:${traceId}:${spanId}`),
+    eventId: yield* hash(
+      `${managed ? "managed-controller-span/v1" : "native-span/v1"}:${input.routeId}:${traceId}:${spanId}`
+    ),
     routeId: input.routeId,
     namespaceId,
     traceId,
@@ -428,7 +573,8 @@ const projectSpan = Effect.fnUntraced(function* (
     ...timing,
     status: projectedStatus(span.status),
     fixtureSurface,
-    sessionHash: yield* hashTextOption(session, hash),
+    sessionHash: O.isSome(controller) ? O.some(controller.value.sourceSessionId) : yield* hashTextOption(session, hash),
+    managedController: controller,
     modelHash: yield* hashTextOption(model, hash),
     modelName: O.filter(model, (value) => A.contains(input.approvedModels, value)),
     usage: yield* sourceUsage(attributes, input.usageConvention),

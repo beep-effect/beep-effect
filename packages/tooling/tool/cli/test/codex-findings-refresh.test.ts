@@ -117,7 +117,8 @@ const documentsFor = (plan: Effect.Success<ReturnType<typeof planFor>>) =>
 
 const encodeLedger = S.encodeUnknownEffect(S.fromJsonString(CodexTriageLedger));
 const encodeLedgerText = Effect.fn("CodexFindingsRefreshTest.encodeLedgerText")(function* (ledger: CodexTriageLedger) {
-  return renderPrettyCommandJson(yield* encodeLedger(ledger));
+  const encodedLedger = yield* encodeLedger(ledger);
+  return renderPrettyCommandJson(encodedLedger);
 });
 
 const findingEntryWindow = (text: string, id: string, nextId: string): string => {
@@ -245,7 +246,8 @@ const packetSnapshot = Effect.fnUntraced(function* (repoRoot: string, includeRaw
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = `goals/${SLUG}`;
-  const entries = A.sort(yield* fs.readDirectory(path.join(repoRoot, root), { recursive: true }), Order.String);
+  const readDirectory1 = yield* fs.readDirectory(path.join(repoRoot, root), { recursive: true });
+  const entries = A.sort(readDirectory1, Order.String);
   const files: Array<string> = [];
   for (const entry of entries) {
     if (includeRaw === false && Str.startsWith("raw/")(entry)) {
@@ -267,7 +269,9 @@ const setPacketBranch = Effect.fnUntraced(function* (repoRoot: string, branch: s
     ...source.ledger,
     meta: CodexTriageMeta.make({ ...source.ledger.meta, branch }),
   });
-  yield* fs.writeFileString(path.join(repoRoot, `goals/${SLUG}/ops/triage.json`), yield* encodeLedgerText(ledger));
+  const argument = path.join(repoRoot, `goals/${SLUG}/ops/triage.json`);
+  const encodedLedgerText = yield* encodeLedgerText(ledger);
+  yield* fs.writeFileString(argument, encodedLedgerText);
   const manifestPath = `goals/${SLUG}/ops/manifest.json`;
   const manifest = yield* fs.readFileString(path.join(repoRoot, manifestPath));
   yield* fs.writeFileString(
@@ -285,10 +289,9 @@ describe("codex findings preservation-safe refresh", () => {
         const { alphaText, firstTriageEntry, qualityReviewText, rawGitignoreText } =
           yield* bootstrapAuthoredPacket(repoRoot);
         const sourcesPath = `goals/${SLUG}/research/SOURCES.md`;
-        const sourceProse = Str.replace(
-          "2-record",
-          "2-record full-snapshot"
-        )(yield* fs.readFileString(path.join(repoRoot, sourcesPath)));
+        const argument1 = Str.replace("2-record", "2-record full-snapshot");
+        const readFileString1 = yield* fs.readFileString(path.join(repoRoot, sourcesPath));
+        const sourceProse = argument1(readFileString1);
         yield* fs.writeFileString(path.join(repoRoot, sourcesPath), sourceProse);
         const { source, plan, documents } = yield* refreshPlan(repoRoot);
 
@@ -303,26 +306,18 @@ describe("codex findings preservation-safe refresh", () => {
 
         assert.strictEqual(outcome.committed, true);
         assert.deepStrictEqual(outcome.reconciliation.appendedIds, ["CSF-003", "CSF-004"]);
-        assert.strictEqual(
-          yield* fs.readFileString(path.join(repoRoot, `goals/${SLUG}/findings/CSF-001.md`)),
-          alphaText
+        const readFileString2 = yield* fs.readFileString(path.join(repoRoot, `goals/${SLUG}/findings/CSF-001.md`));
+        assert.strictEqual(readFileString2, alphaText);
+        const readFileString3 = yield* fs.readFileString(
+          path.join(repoRoot, `goals/${SLUG}/research/QUALITY_REVIEW.md`)
         );
-        assert.strictEqual(
-          yield* fs.readFileString(path.join(repoRoot, `goals/${SLUG}/research/QUALITY_REVIEW.md`)),
-          qualityReviewText
-        );
-        assert.strictEqual(
-          yield* fs.readFileString(path.join(repoRoot, `goals/${SLUG}/raw/.gitignore`)),
-          rawGitignoreText
-        );
-        assert.strictEqual(
-          yield* fs.readFileString(path.join(repoRoot, sourcesPath)),
-          Str.replace("2-record", "4-record")(sourceProse)
-        );
-        assert.match(
-          yield* fs.readFileString(path.join(repoRoot, `goals/${SLUG}/README.md`)),
-          /AUTHORED PACKET NOTE MUST SURVIVE/u
-        );
+        assert.strictEqual(readFileString3, qualityReviewText);
+        const readFileString4 = yield* fs.readFileString(path.join(repoRoot, `goals/${SLUG}/raw/.gitignore`));
+        assert.strictEqual(readFileString4, rawGitignoreText);
+        const readFileString5 = yield* fs.readFileString(path.join(repoRoot, sourcesPath));
+        assert.strictEqual(readFileString5, Str.replace("2-record", "4-record")(sourceProse));
+        const readFileString6 = yield* fs.readFileString(path.join(repoRoot, `goals/${SLUG}/README.md`));
+        assert.match(readFileString6, /AUTHORED PACKET NOTE MUST SURVIVE/u);
 
         const refreshed = yield* loadCodexRefreshLedgerSource({ repoRoot, slug: SLUG });
         assert.strictEqual(findingEntryWindow(refreshed.contents, "CSF-001", "CSF-002"), firstTriageEntry);
@@ -375,7 +370,8 @@ describe("codex findings preservation-safe refresh", () => {
         assert.strictEqual(outcome.committed, false);
         assert.strictEqual(outcome.reconciliation.status, "no-new-findings");
         assert.deepStrictEqual(outcome.reconciliation.updatedPaths, []);
-        assert.strictEqual(yield* packetSnapshot(repoRoot), before);
+        const packetSnapshot7 = yield* packetSnapshot(repoRoot);
+        assert.strictEqual(packetSnapshot7, before);
       })
     )
   );
@@ -396,7 +392,8 @@ describe("codex findings preservation-safe refresh", () => {
 
         assert.strictEqual(outcome.committed, false);
         assert.deepStrictEqual(outcome.reconciliation.appendedIds, ["CSF-003", "CSF-004"]);
-        assert.strictEqual(yield* packetSnapshot(repoRoot), before);
+        const packetSnapshot8 = yield* packetSnapshot(repoRoot);
+        assert.strictEqual(packetSnapshot8, before);
       })
     )
   );
@@ -434,8 +431,10 @@ describe("codex findings preservation-safe refresh", () => {
           const beforeIndex = yield* fs.readFileString(path.join(repoRoot, "goals/INDEX.md"));
           yield* runCodexFindingsIngest(options);
 
-          assert.strictEqual(yield* packetSnapshot(repoRoot), beforePacket);
-          assert.strictEqual(yield* fs.readFileString(path.join(repoRoot, "goals/INDEX.md")), beforeIndex);
+          const packetSnapshot9 = yield* packetSnapshot(repoRoot);
+          assert.strictEqual(packetSnapshot9, beforePacket);
+          const readFileString10 = yield* fs.readFileString(path.join(repoRoot, "goals/INDEX.md"));
+          assert.strictEqual(readFileString10, beforeIndex);
           const source = yield* loadCodexRefreshLedgerSource({ repoRoot, slug: SLUG });
           assert.strictEqual(source.ledger.meta.branch, branch);
         })
@@ -456,7 +455,8 @@ describe("codex findings preservation-safe refresh", () => {
         const trackedBefore = yield* packetSnapshot(repoRoot, false);
         const source = yield* loadCodexRefreshLedgerSource({ repoRoot, slug: SLUG });
         const plan = yield* planFor([arrivingHigh, alpha, beta, arrivingInfo], source);
-        const documents = A.map(yield* documentsFor(plan), (document) =>
+        const documentsFor11 = yield* documentsFor(plan);
+        const documents = A.map(documentsFor11, (document) =>
           document.path === "raw/payload.json"
             ? PacketDocument.make({
                 ...document,
@@ -477,7 +477,8 @@ describe("codex findings preservation-safe refresh", () => {
         assert.strictEqual(outcome.committed, true);
         assert.strictEqual(outcome.reconciliation.status, "no-new-findings");
         assert.deepStrictEqual(outcome.reconciliation.updatedPaths, ["raw/payload.json"]);
-        assert.strictEqual(yield* packetSnapshot(repoRoot, false), trackedBefore);
+        const packetSnapshot12 = yield* packetSnapshot(repoRoot, false);
+        assert.strictEqual(packetSnapshot12, trackedBefore);
       })
     )
   );
@@ -526,10 +527,9 @@ describe("codex findings preservation-safe refresh", () => {
         assert(second !== undefined);
         const duplicate = CodexTriageFinding.make({ ...second, codexId: first.codexId, id: first.id });
         const ledger = CodexTriageLedger.make({ ...source.ledger, findings: [first, duplicate] });
-        yield* fs.writeFileString(
-          path.join(repoRoot, `goals/${SLUG}/ops/triage.json`),
-          yield* encodeLedgerText(ledger)
-        );
+        const argument2 = path.join(repoRoot, `goals/${SLUG}/ops/triage.json`);
+        const encodedLedgerText2 = yield* encodeLedgerText(ledger);
+        yield* fs.writeFileString(argument2, encodedLedgerText2);
 
         const reason = yield* loadCodexRefreshLedgerSource({ repoRoot, slug: SLUG }).pipe(
           Effect.as("accepted"),
@@ -615,10 +615,8 @@ describe("codex findings preservation-safe refresh", () => {
           Effect.catchTag("CodexFindingsIngestError", (error) => Effect.succeed(error.reason))
         );
         assert.strictEqual(reason, "refresh-metadata-drift");
-        assert.strictEqual(
-          yield* fs.readFileString(path.join(repoRoot, `goals/${SLUG}/findings/CSF-001.md`)),
-          alphaText
-        );
+        const readFileString13 = yield* fs.readFileString(path.join(repoRoot, `goals/${SLUG}/findings/CSF-001.md`));
+        assert.strictEqual(readFileString13, alphaText);
       })
     )
   );
@@ -657,13 +655,13 @@ describe("codex findings preservation-safe refresh", () => {
         );
 
         assert.strictEqual(exit._tag, "Failure");
-        assert.strictEqual(
-          yield* fs.readFileString(path.join(repoRoot, `goals/${SLUG}/findings/CSF-001.md`)),
-          alphaText
-        );
-        assert.strictEqual(yield* fs.exists(path.join(repoRoot, `goals/${SLUG}`)), true);
+        const readFileString14 = yield* fs.readFileString(path.join(repoRoot, `goals/${SLUG}/findings/CSF-001.md`));
+        assert.strictEqual(readFileString14, alphaText);
+        const exists15 = yield* fs.exists(path.join(repoRoot, `goals/${SLUG}`));
+        assert.strictEqual(exists15, true);
+        const readDirectory16 = yield* fs.readDirectory(path.join(repoRoot, "goals"));
         assert.deepStrictEqual(
-          A.filter(yield* fs.readDirectory(path.join(repoRoot, "goals")), (entry) => Str.includes("-previous")(entry)),
+          A.filter(readDirectory16, (entry) => Str.includes("-previous")(entry)),
           []
         );
       })
@@ -695,7 +693,8 @@ describe("codex findings first-capture ingest", () => {
         yield* fs.writeFileString(path.join(repoRoot, csvPath), csvSnapshot([alpha, beta]));
 
         yield* runCodexFindingsIngest(ingestOptions);
-        assert.strictEqual(yield* fs.exists(path.join(repoRoot, `goals/${SLUG}/ops/triage.json`)), true);
+        const exists17 = yield* fs.exists(path.join(repoRoot, `goals/${SLUG}/ops/triage.json`));
+        assert.strictEqual(exists17, true);
 
         // A ledger that exists but does not decode must stop the ingest rather
         // than reassign every CSF-NNN from the current sort order.

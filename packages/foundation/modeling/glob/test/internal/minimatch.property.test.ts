@@ -43,7 +43,8 @@ describe("minimatch property floor", () => {
         const encoded = yield* S.encodeEffect(MinimatchError)(value);
         const decoded = yield* S.decodeEffect(MinimatchError)(encoded);
         assert.isTrue(S.toEquivalence(MinimatchError)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(MinimatchError)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(MinimatchError)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

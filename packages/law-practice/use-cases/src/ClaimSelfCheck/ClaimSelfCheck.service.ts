@@ -115,9 +115,8 @@ export class ClaimSelfCheck extends Context.Service<ClaimSelfCheck, ClaimSelfChe
 const check = Effect.fn("ClaimSelfCheck.check")(function* (
   claims: PatentClaims
 ): Effect.fn.Return<ClaimSelfCheckReport, ClaimSelfCheckError> {
-  const [trees, undecomposed] = A.separate(
-    yield* Effect.forEach(claims, (claim) => Effect.result(decomposeClaim(claim, claims)))
-  );
+  const forEach1 = yield* Effect.forEach(claims, (claim) => Effect.result(decomposeClaim(claim, claims)));
+  const [trees, undecomposed] = A.separate(forEach1);
   return yield* A.match(trees, {
     onEmpty: () =>
       Effect.fail(

@@ -42,7 +42,10 @@ describe("Repository and Bugs — own __proto__ extension fidelity", () => {
         assert.deepStrictEqual(R.get(rest, "__proto__"), O.some({ keep: 1 }));
         assert.strictEqual(Object.getPrototypeOf(rest), Object.prototype);
         assert.deepStrictEqual(R.keys(rest), ["__proto__", "tracker"]);
-        assert.strictEqual(yield* S.encodeUnknownEffect(json)(yield* S.encodeUnknownEffect(codec)(value)), text);
+        const argument = S.encodeUnknownEffect(json);
+        const value2 = yield* S.encodeUnknownEffect(codec)(value);
+        const value1 = yield* argument(value2);
+        assert.strictEqual(value1, text);
         Object.assign(value, { url: "https://new.example" });
         const encoded = yield* S.encodeUnknownEffect(codec)(value);
         assertTrue(P.isObject(encoded));
@@ -178,7 +181,8 @@ describe("Repository — wire fidelity", () => {
   it.effect("an object re-encodes as an object", () =>
     Effect.gen(function* () {
       const wire = { type: "git", url: "https://github.com/effected/kit" };
-      const encoded = yield* encode(Repository.FromValue, yield* decode(Repository.FromValue, wire));
+      const decoded2 = yield* decode(Repository.FromValue, wire);
+      const encoded = yield* encode(Repository.FromValue, decoded2);
       assert.deepStrictEqual<unknown>(encoded, wire);
     })
   );
@@ -241,7 +245,8 @@ describe("Bugs", () => {
   it.effect("a string round-trips as a string", () =>
     Effect.gen(function* () {
       const input = "https://github.com/effected/kit/issues";
-      const encoded = yield* encode(Bugs.FromValue, yield* decode(Bugs.FromValue, input));
+      const decoded3 = yield* decode(Bugs.FromValue, input);
+      const encoded = yield* encode(Bugs.FromValue, decoded3);
       assert.strictEqual(encoded, input);
     })
   );
@@ -347,13 +352,15 @@ describe("Repository — directoryUrl", () => {
         const repo = yield* decode(codec, text);
         assert.instanceOf(repo, Repository);
         assert.doesNotThrow(() => assertNone(repo.directoryUrl));
-        assert.deepStrictEqual(yield* encode(Repository.FromValue, repo), input);
+        const encoded4 = yield* encode(Repository.FromValue, repo);
+        assert.deepStrictEqual(encoded4, input);
         const encoded = yield* encode(codec, repo);
         assert.strictEqual(encoded, text);
         const roundTripped = yield* decode(codec, encoded);
         assert.strictEqual(roundTripped.directory, repo.directory);
         assertNone(roundTripped.directoryUrl);
-        assert.strictEqual(yield* encode(codec, roundTripped), text);
+        const encoded5 = yield* encode(codec, roundTripped);
+        assert.strictEqual(encoded5, text);
       }
     })
   );
@@ -371,7 +378,8 @@ describe("Repository — directoryUrl", () => {
       const input = { url: "effected/kit", directory: "packages/spdx" };
       const repo = yield* decode(Repository.FromValue, input);
       assertSome(repo.directoryUrl, O.getOrThrow(repo.directoryUrl));
-      assert.deepStrictEqual(yield* encode(Repository.FromValue, repo), input);
+      const encoded6 = yield* encode(Repository.FromValue, repo);
+      assert.deepStrictEqual(encoded6, input);
     })
   );
 });
@@ -387,7 +395,8 @@ describe("Repository and Bugs — the object wire is replayed only while it is f
     Effect.gen(function* () {
       const repo = yield* decode(Repository.FromValue, { type: "git", url: "effected/kit" });
       Object.assign(repo, { url: "effected/other" } satisfies Partial<Repository>);
-      assert.deepStrictEqual(yield* encode(Repository.FromValue, repo), {
+      const encoded7 = yield* encode(Repository.FromValue, repo);
+      assert.deepStrictEqual(encoded7, {
         type: "git",
         url: "effected/other",
       });
@@ -400,7 +409,8 @@ describe("Repository and Bugs — the object wire is replayed only while it is f
       // back a directoryUrl for the wrong package.
       const repo = yield* decode(Repository.FromValue, { url: "effected/kit", directory: "packages/spdx" });
       Object.assign(repo, { directory: "packages/glob" } satisfies Partial<Repository>);
-      assert.deepStrictEqual(yield* encode(Repository.FromValue, repo), {
+      const encoded8 = yield* encode(Repository.FromValue, repo);
+      assert.deepStrictEqual(encoded8, {
         url: "effected/kit",
         directory: "packages/glob",
       });
@@ -415,7 +425,9 @@ describe("Repository and Bugs — the object wire is replayed only while it is f
       const repo = yield* decode(Repository.FromValue, input);
       const encoded = yield* encode(Repository.FromValue, repo);
       assert.deepStrictEqual(encoded, input);
-      assert.strictEqual(yield* S.encodeEffect(Json)(encoded), yield* S.encodeEffect(Json)(input));
+      const value9 = yield* S.encodeEffect(Json)(encoded);
+      const value23 = yield* S.encodeEffect(Json)(input);
+      assert.strictEqual(value9, value23);
     })
   );
 
@@ -423,7 +435,8 @@ describe("Repository and Bugs — the object wire is replayed only while it is f
     Effect.gen(function* () {
       const repo = yield* decode(Repository.FromValue, { url: "effected/kit", homepage: "https://example.com" });
       Object.assign(repo, { url: "effected/other" } satisfies Partial<Repository>);
-      assert.deepStrictEqual(yield* encode(Repository.FromValue, repo), {
+      const encoded10 = yield* encode(Repository.FromValue, repo);
+      assert.deepStrictEqual(encoded10, {
         url: "effected/other",
         homepage: "https://example.com",
       });
@@ -434,7 +447,8 @@ describe("Repository and Bugs — the object wire is replayed only while it is f
     Effect.gen(function* () {
       const bugs = yield* decode(Bugs.FromValue, { url: "https://example.com/a" });
       Object.assign(bugs, { url: "https://example.com/b" } satisfies Partial<Bugs>);
-      assert.deepStrictEqual(yield* encode(Bugs.FromValue, bugs), { url: "https://example.com/b" });
+      const encoded11 = yield* encode(Bugs.FromValue, bugs);
+      assert.deepStrictEqual(encoded11, { url: "https://example.com/b" });
     })
   );
 
@@ -442,7 +456,8 @@ describe("Repository and Bugs — the object wire is replayed only while it is f
     Effect.gen(function* () {
       const bugs = yield* decode(Bugs.FromValue, { email: "old@example.com" });
       Object.assign(bugs, { email: "new@example.com" } satisfies Partial<Bugs>);
-      assert.deepStrictEqual(yield* encode(Bugs.FromValue, bugs), { email: "new@example.com" });
+      const encoded12 = yield* encode(Bugs.FromValue, bugs);
+      assert.deepStrictEqual(encoded12, { email: "new@example.com" });
     })
   );
 
@@ -450,7 +465,8 @@ describe("Repository and Bugs — the object wire is replayed only while it is f
     Effect.gen(function* () {
       const input = { url: "https://github.com/effected/kit/issues", email: "bugs@example.com" };
       const bugs = yield* decode(Bugs.FromValue, input);
-      assert.deepStrictEqual(yield* encode(Bugs.FromValue, bugs), input);
+      const encoded13 = yield* encode(Bugs.FromValue, bugs);
+      assert.deepStrictEqual(encoded13, input);
     })
   );
 
@@ -460,7 +476,8 @@ describe("Repository and Bugs — the object wire is replayed only while it is f
       // of provenance, not in the two classes being fixed here.
       const person = yield* decode(Person.FromValue, { name: "Ada", email: "ada@example.com" });
       Object.assign(person, { name: "Grace" } satisfies Partial<Person>);
-      assert.deepStrictEqual(yield* encode(Person.FromValue, person), {
+      const encoded14 = yield* encode(Person.FromValue, person);
+      assert.deepStrictEqual(encoded14, {
         name: "Grace",
         email: "ada@example.com",
       });
@@ -481,7 +498,8 @@ describe("Repository and Bugs — the shorthand is replayed only while it can ca
       // bare-string repository into a monorepo member is the natural edit.
       const repo = yield* decode(Repository.FromValue, "effected/kit");
       Object.assign(repo, { directory: "packages/spdx" } satisfies Partial<Repository>);
-      assert.deepStrictEqual(yield* encode(Repository.FromValue, repo), {
+      const encoded15 = yield* encode(Repository.FromValue, repo);
+      assert.deepStrictEqual(encoded15, {
         url: "effected/kit",
         directory: "packages/spdx",
       });
@@ -492,7 +510,8 @@ describe("Repository and Bugs — the shorthand is replayed only while it can ca
     Effect.gen(function* () {
       const repo = yield* decode(Repository.FromValue, "effected/kit");
       Object.assign(repo, { type: "git" } satisfies Partial<Repository>);
-      assert.deepStrictEqual(yield* encode(Repository.FromValue, repo), { type: "git", url: "effected/kit" });
+      const encoded16 = yield* encode(Repository.FromValue, repo);
+      assert.deepStrictEqual(encoded16, { type: "git", url: "effected/kit" });
     })
   );
 
@@ -500,7 +519,8 @@ describe("Repository and Bugs — the shorthand is replayed only while it can ca
     Effect.gen(function* () {
       const repo = yield* decode(Repository.FromValue, "effected/kit");
       Object.assign(repo, { rest: { homepage: "https://example.com" } } satisfies Partial<Repository>);
-      assert.deepStrictEqual(yield* encode(Repository.FromValue, repo), {
+      const encoded17 = yield* encode(Repository.FromValue, repo);
+      assert.deepStrictEqual(encoded17, {
         url: "effected/kit",
         homepage: "https://example.com",
       });
@@ -513,7 +533,8 @@ describe("Repository and Bugs — the shorthand is replayed only while it can ca
       // shorthand CAN still carry re-encodes as that exact string.
       for (const input of ["effected/kit", "github:effected/kit", "git@github.com:effected/kit.git"]) {
         const repo = yield* decode(Repository.FromValue, input);
-        assert.strictEqual(yield* encode(Repository.FromValue, repo), input, input);
+        const encoded18 = yield* encode(Repository.FromValue, repo);
+        assert.strictEqual(encoded18, input, input);
       }
     })
   );
@@ -522,7 +543,8 @@ describe("Repository and Bugs — the shorthand is replayed only while it can ca
     Effect.gen(function* () {
       const bugs = yield* decode(Bugs.FromValue, "https://example.com/issues");
       Object.assign(bugs, { rest: { tracker: "linear" } } satisfies Partial<Bugs>);
-      assert.deepStrictEqual(yield* encode(Bugs.FromValue, bugs), {
+      const encoded19 = yield* encode(Bugs.FromValue, bugs);
+      assert.deepStrictEqual(encoded19, {
         url: "https://example.com/issues",
         tracker: "linear",
       });
@@ -535,7 +557,8 @@ describe("Repository and Bugs — the shorthand is replayed only while it can ca
       // predicate cannot quietly drop the clause that was already correct.
       const bugs = yield* decode(Bugs.FromValue, "https://example.com/issues");
       Object.assign(bugs, { email: "bugs@example.com" } satisfies Partial<Bugs>);
-      assert.deepStrictEqual(yield* encode(Bugs.FromValue, bugs), {
+      const encoded20 = yield* encode(Bugs.FromValue, bugs);
+      assert.deepStrictEqual(encoded20, {
         url: "https://example.com/issues",
         email: "bugs@example.com",
       });
@@ -546,7 +569,8 @@ describe("Repository and Bugs — the shorthand is replayed only while it can ca
     Effect.gen(function* () {
       const input = "https://example.com/issues";
       const bugs = yield* decode(Bugs.FromValue, input);
-      assert.strictEqual(yield* encode(Bugs.FromValue, bugs), input);
+      const encoded21 = yield* encode(Bugs.FromValue, bugs);
+      assert.strictEqual(encoded21, input);
     })
   );
 });
@@ -559,7 +583,8 @@ describe("Bugs shorthand property", () => {
       Effect.gen(function* () {
         const bugs = yield* S.decodeEffect(Bugs.FromValue)(url);
         assert.strictEqual(bugs.url, url);
-        assert.strictEqual(yield* S.encodeEffect(Bugs.FromValue)(bugs), url);
+        const value22 = yield* S.encodeEffect(Bugs.FromValue)(bugs);
+        assert.strictEqual(value22, url);
       }),
     { arbitrary: fcRuns(50) }
   );

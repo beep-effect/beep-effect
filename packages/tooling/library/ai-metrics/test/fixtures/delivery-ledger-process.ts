@@ -116,8 +116,9 @@ const program = Effect.gen(function* () {
       return yield* Effect.never;
     }
   }
+  const state1 = yield* ledger.state(event.eventId);
   yield* writeJson(output, {
-    state: O.getOrNull(yield* ledger.state(event.eventId)),
+    state: O.getOrNull(state1),
     attempts: yield* client`SELECT count(*) AS n FROM observation_delivery_attempts`,
     results: yield* client`SELECT count(*) AS n FROM observation_delivery_results`,
     integrity: yield* client`PRAGMA integrity_check`,

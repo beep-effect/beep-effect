@@ -151,7 +151,8 @@ describe("CatalogAssemblyError source projection", () => {
         assert.strictEqual(error.failure.source, source);
         if (source === "hooks") assert.propertyVal(error.failure, "reason", "fetchFailed");
         else assert.notProperty(error.failure, "reason");
-        assert.deepStrictEqual(yield* S.encodeEffect(CatalogAssemblyError)(error), encoded);
+        const value = yield* S.encodeEffect(CatalogAssemblyError)(error);
+        assert.deepStrictEqual(value, encoded);
       }
     })
   );

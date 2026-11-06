@@ -46,14 +46,13 @@ git rev-list --count "$(git merge-base HEAD origin/main)"..origin/main
    feature branch — never by rebasing:
 
 ```bash
-git fetch origin
-```
-
-```bash
-git merge origin/main
+git fetch origin && git merge origin/main
 ```
 
    Resolve conflicts, re-run `bun run beep yeet verify`, then publish again.
+   A base-conflict P0 inbox row or a merge-gate "sibling #N merged" comment is
+   this same merge, now, whatever your brief says about acceptance or merge
+   authority (2026-11-05; [`references/merge-loop.md`](references/merge-loop.md#base-conflict-rows-and-packet-siblings)).
    Do not rebase a published branch: rebase implies a force-push, and this
    repository denies `git push --force*`. GitHub squash-merge erases
    feature-branch merge commits at land time anyway. `--allow-stale-base` is
@@ -458,20 +457,20 @@ comments exist). Deep review is on-demand:
 
 `yeet publish` is push-first by default (push-first-publish, 2026-10-05):
 
-- Gate before the push: cheap-gates tier + head-install preflight. The schema-catalog
-  scan holds weighted admission for its measured memory cost. If admission or
-  local gates wait ten minutes, use the hosted escape in AGENTS.md.
-- After the push: `gh pr create --draft`, `ready-for-heavy` label (skipped on
-  docs-only diffs and on PRs that already existed), provenance stamp, then
-  `monitor --until-ready --detach` is submitted and publish exits with the PR
-  URL and job id. `--monitor` stays attached instead (opt-in).
+- Gate before the push: cheap-gates + head-install preflight (the schema-catalog
+  scan holds weighted admission). Admission or gates waiting ten minutes: stop and
+  run `yeet open` on the committed HEAD (same push and PR tail, no local gate).
+- After the push: draft PR (REST create; `--body-file <md>` replaces the commit-log
+  summary), `ready-for-heavy` label (skipped on docs-only diffs and on PRs that
+  already existed), provenance stamp, then `monitor --until-ready --detach` is
+  submitted and publish exits with the PR URL and job id. `--monitor` stays
+  attached. Never `gh pr create` or `gh pr edit --body*` (footer lost): use
+  `yeet open`, `--body-file`, or `yeet gh pr body <n> --body-file <md>`.
 - `--no-pr` pushes without a PR and warns: `check.yml` runs only on
   `pull_request`, so no hosted checks run until a PR exists.
-- `--prove-first` restores the previous proof order (full proof + CI parity
-  before the push). It is the only way to put the full proof on the publish
-  path. `--push-only` still pushes an already-proven commit. Both share the
-  same draft, label, and detached-monitor tail as the default. `--fast` and
-  `--start-pr-early` no longer exist.
+- `--prove-first` (full proof + CI parity before the push) is the only way to
+  put the full proof on the publish path; `--push-only` pushes an
+  already-proven commit. Both share the default's draft, label and monitor tail.
 - `bun run audit:github pre-push` remains the named full local fallback for
   secrets, security, SAST, Nix, and any lane that must be proven outside Yeet.
 
@@ -493,7 +492,7 @@ Load these on demand; `SKILL.md` keeps the path, the references keep the depth.
 | [`references/gates-and-proof.md`](references/gates-and-proof.md) | a cheap gate is red, reproducing a hosted red locally, plan mode |
 | [`references/monitor-and-inbox.md`](references/monitor-and-inbox.md) | monitor exits, `--watch` rows, resume, settle rule, inbox rows and waves |
 | [`references/review-threads.md`](references/review-threads.md) | thread states, review bodies, comment replay, `yeet reply` drafts |
-| [`references/merge-loop.md`](references/merge-loop.md) | heavy admission label, job triage, branch-deletion contract |
+| [`references/merge-loop.md`](references/merge-loop.md) | heavy admission label, job triage, branch-deletion contract, base-conflict rows, `yeet siblings` |
 | [`references/gh-rest.md`](references/gh-rest.md) | any GitHub call: `yeet gh` instead of `gh pr` |
 | [`references/sweep-retire.md`](references/sweep-retire.md) | `sweep --retire` refusals and holders |
 | [`references/run-artifacts.md`](references/run-artifacts.md) | verdict, packets, proof ledger, changeset gate |

@@ -9,9 +9,14 @@ import {
 } from "@beep/yaml/internal/fold";
 import { RequoteScalarInput, requoteScalarText } from "@beep/yaml/internal/requote";
 import { assert, describe, it } from "@effect/vitest";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { parse } from "yaml";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 /** Adapt an Option-returning renderer to its nullable reading for assertions. */
 const nullable =
@@ -60,7 +65,7 @@ describe("folded scalar more-indented transitions", () => {
   // The independent yaml parser resolves that output to " a\n\nb". YAML 1.2
   // already preserves a break following a more-indented line; no blank is needed.
   for (const value of [" a\nb", "\ta\nb", "a\n b\nc", " a\n\nb", "a\nb", "a\n\nb", " a\nb\n", " a\nb\n\n"]) {
-    it(`round-trips ${JSON.stringify(value)} through an independent parser`, () => {
+    it(`round-trips ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)} through an independent parser`, () => {
       const rendered = O.getOrNull(renderBlockFolded(value, "  "));
       assert.strictEqual(parse(`${rendered}\n`), value);
     });

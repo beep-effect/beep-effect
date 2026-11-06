@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // THE RECURSION-SURFACE ENUMERATION.
 //
 // Every self-recursive function in `src/` is listed here, with what bounds it.
@@ -68,9 +69,12 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { renderHtml } from "./support/htmlWriter.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 // Vitest's threads pool runs this regression in Node, whose argument limit
 // rejects the former segment spread even though Bun accepts it.
@@ -351,13 +355,20 @@ describe("adversarial characters", () => {
     ];
     for (const source of sources) {
       const rendered = renderHtml(parseBlocks(source).root);
-      assert.notInclude(rendered, "\u0000", `a NUL survived: ${JSON.stringify(source)}`);
+      assert.notInclude(
+        rendered,
+        "\u0000",
+        `a NUL survived: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)}`
+      );
     }
   });
 
   it("parses a lone surrogate without throwing", () => {
     for (const source of ["a\uD800b\n", "a\uDFFFb\n", "\uD800\n", "*\uD800*\n", "[\uD800](/u)\n"]) {
-      assert.doesNotThrow(() => renderHtml(parseBlocks(source).root), `failed for ${JSON.stringify(source)}`);
+      assert.doesNotThrow(
+        () => renderHtml(parseBlocks(source).root),
+        `failed for ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)}`
+      );
     }
   });
 
@@ -370,14 +381,21 @@ describe("adversarial characters", () => {
 
   it("parses an unterminated construct at the end of input without throwing", () => {
     for (const source of ["`code", "[link](", "![img][", "<!-- comment", "***", "> ", "- ", "```"]) {
-      assert.doesNotThrow(() => renderHtml(parseBlocks(source).root), `failed for ${JSON.stringify(source)}`);
+      assert.doesNotThrow(
+        () => renderHtml(parseBlocks(source).root),
+        `failed for ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)}`
+      );
     }
   });
 
   it("parses the empty document and a lone newline", () => {
     for (const source of ["", "\n", "\r", "\r\n", "\n\n\n"]) {
       const { root } = parseBlocks(source);
-      assert.strictEqual(root.children.length, 0, `failed for ${JSON.stringify(source)}`);
+      assert.strictEqual(
+        root.children.length,
+        0,
+        `failed for ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)}`
+      );
     }
   });
 });

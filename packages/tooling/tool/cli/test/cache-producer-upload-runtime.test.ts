@@ -62,7 +62,8 @@ it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
           })
         )
       );
-      assertTrue(yield* assertCacheProducerUploadRuntime(binding, O.some(aliased)).pipe(Effect.isFailure));
+      const pipe1 = yield* assertCacheProducerUploadRuntime(binding, O.some(aliased)).pipe(Effect.isFailure);
+      assertTrue(pipe1);
     })
   );
   it.effect.prop(
@@ -97,11 +98,15 @@ it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
   it.effect("requires paired independent approval and runtime before an upload", () =>
     Effect.gen(function* () {
       const [binding, runtime] = yield* fixture();
-      assertSome(yield* assertCacheProducerUploadRuntime(binding, O.some(runtime)), runtime);
-      assertTrue(yield* assertCacheProducerUploadRuntime(binding, O.none()).pipe(Effect.isFailure));
+      const assertCacheProducerUploadRuntime2 = yield* assertCacheProducerUploadRuntime(binding, O.some(runtime));
+      assertSome(assertCacheProducerUploadRuntime2, runtime);
+      const pipe3 = yield* assertCacheProducerUploadRuntime(binding, O.none()).pipe(Effect.isFailure);
+      assertTrue(pipe3);
       const historical = CacheProducerBinding.make({ ...binding, uploadApproval: O.none() });
-      assertNone(yield* assertCacheProducerUploadRuntime(historical, O.none()));
-      assertTrue(yield* assertCacheProducerUploadRuntime(historical, O.some(runtime)).pipe(Effect.isFailure));
+      const assertCacheProducerUploadRuntime4 = yield* assertCacheProducerUploadRuntime(historical, O.none());
+      assertNone(assertCacheProducerUploadRuntime4);
+      const pipe5 = yield* assertCacheProducerUploadRuntime(historical, O.some(runtime)).pipe(Effect.isFailure);
+      assertTrue(pipe5);
       const encoded = yield* S.encodeEffect(CacheProducerBinding)(historical);
       expect(encoded).not.toHaveProperty("uploadApproval");
     })
@@ -110,7 +115,8 @@ it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
   it.effect("owns its validated descriptor and capabilities after caller mutation", () =>
     Effect.gen(function* () {
       const [binding, runtime] = yield* fixture();
-      const owned = O.getOrThrow(yield* assertCacheProducerUploadRuntime(binding, O.some(runtime)));
+      const assertCacheProducerUploadRuntime6 = yield* assertCacheProducerUploadRuntime(binding, O.some(runtime));
+      const owned = O.getOrThrow(assertCacheProducerUploadRuntime6);
       const writer = Redacted.value(runtime.bearers.writer);
       const originalStorageKey = Redacted.value(O.getOrThrow(runtime.adapter).secretKey);
       const originalEndpoint = O.getOrThrow(runtime.target.storage).endpoint.href;
@@ -123,9 +129,8 @@ it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
       expect(Redacted.value(owned.bearers.writer)).toBe(writer);
       expect(O.getOrThrow(owned.target.storage).endpoint.href).toBe(originalEndpoint);
       expect(Redacted.value(O.getOrThrow(owned.adapter).secretKey)).toBe(originalStorageKey);
-      expect(yield* hashCacheProducerUploadKey(owned.signing)).toBe(
-        O.getOrThrow(binding.uploadApproval).artifactKeySha256
-      );
+      const hashCacheProducerUploadKey7 = yield* hashCacheProducerUploadKey(owned.signing);
+      expect(hashCacheProducerUploadKey7).toBe(O.getOrThrow(binding.uploadApproval).artifactKeySha256);
     })
   );
 
@@ -211,7 +216,8 @@ it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
           CacheProducerAdapterLaunch.make({ ...O.getOrThrow(runtime.adapter), executable: "relative-adapter" })
         ),
       });
-      assertTrue(yield* assertCacheProducerUploadRuntime(binding, O.some(relative)).pipe(Effect.isFailure));
+      const pipe8 = yield* assertCacheProducerUploadRuntime(binding, O.some(relative)).pipe(Effect.isFailure);
+      assertTrue(pipe8);
     })
   );
 
@@ -222,25 +228,27 @@ it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
         ...runtime.target,
         backend: { ...runtime.target.backend, release: "changed-adapter-release" },
       });
-      expect(yield* hashCacheProducerUploadTarget(changed)).not.toBe(
-        yield* hashCacheProducerUploadTarget(runtime.target)
-      );
-      assertTrue(
-        yield* assertCacheProducerUploadRuntime(
-          binding,
-          O.some(CacheProducerUploadRuntime.make({ ...runtime, target: changed }))
-        ).pipe(Effect.isFailure)
-      );
+      const hashCacheProducerUploadTarget9 = yield* hashCacheProducerUploadTarget(changed);
+      const argument = expect(hashCacheProducerUploadTarget9).not;
+      const hashCacheProducerUploadTarget1 = yield* hashCacheProducerUploadTarget(runtime.target);
+      argument.toBe(hashCacheProducerUploadTarget1);
+      const pipe10 = yield* assertCacheProducerUploadRuntime(
+        binding,
+        O.some(CacheProducerUploadRuntime.make({ ...runtime, target: changed }))
+      ).pipe(Effect.isFailure);
+      assertTrue(pipe10);
       const rotated = CacheProducerUploadRuntime.make({
         ...runtime,
         bearers: { ...runtime.bearers, writer: Redacted.make("synthetic-rotated-writer") },
       });
-      assertSome(yield* assertCacheProducerUploadRuntime(binding, O.some(rotated)), rotated);
+      const assertCacheProducerUploadRuntime11 = yield* assertCacheProducerUploadRuntime(binding, O.some(rotated));
+      assertSome(assertCacheProducerUploadRuntime11, rotated);
       const changedKey = CacheProducerUploadRuntime.make({
         ...runtime,
         signing: Redacted.make("synthetic-rotated-upload-key"),
       });
-      assertTrue(yield* assertCacheProducerUploadRuntime(binding, O.some(changedKey)).pipe(Effect.isFailure));
+      const pipe12 = yield* assertCacheProducerUploadRuntime(binding, O.some(changedKey)).pipe(Effect.isFailure);
+      assertTrue(pipe12);
       const descriptor = yield* encodeTarget(runtime.target);
       for (const value of [Redacted.value(runtime.signing), Redacted.value(runtime.bearers.writer)])
         expect(descriptor).not.toContain(value);
@@ -354,10 +362,10 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("closed producer 
         ...profile.target,
         storage: O.some({ ...O.getOrThrow(profile.target.storage), bucket: "unapproved-bucket" }),
       });
-      yield* fs.writeFileString(
-        file,
-        yield* encodeExecutionProfile(CacheProducerExecutionProfile.make({ ...profile, target }))
+      const encodedExecutionProfile = yield* encodeExecutionProfile(
+        CacheProducerExecutionProfile.make({ ...profile, target })
       );
+      yield* fs.writeFileString(file, encodedExecutionProfile);
       (yield* loadCacheProducerExecutionRuntime(directory).pipe(
         Effect.provideService(ConfigProvider.ConfigProvider, denyCredentialLookup),
         Effect.result
@@ -382,7 +390,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("closed producer 
         Effect.provideService(ConfigProvider.ConfigProvider, denyCredentialLookup),
         Effect.result
       )).pipe(Result.isFailure, assertTrue);
-      expect(yield* fs.exists(file)).toBe(false);
+      const exists13 = yield* fs.exists(file);
+      expect(exists13).toBe(false);
     })
   );
   it.effect("fails closed when required credentials are absent", () =>
@@ -390,30 +399,27 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("closed producer 
       const { directory, fs, path } = yield* executionFixture();
       const material = path.join(directory, "issuer.key");
       const before = yield* fs.readFile(material);
-      assertTrue(
-        yield* loadCacheProducerExecutionRuntime(directory).pipe(
-          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord({})),
-          Effect.isFailure
-        )
+      const pipe14 = yield* loadCacheProducerExecutionRuntime(directory).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord({})),
+        Effect.isFailure
       );
-      expect(yield* fs.readFile(material)).toEqual(before);
+      assertTrue(pipe14);
+      const readFile15 = yield* fs.readFile(material);
+      expect(readFile15).toEqual(before);
     })
   );
   it.effect("rejects a relative executable even with the approved destination and credentials", () =>
     Effect.gen(function* () {
       const { fs, file, profile, directory, environment } = yield* executionFixture();
-      yield* fs.writeFileString(
-        file,
-        yield* encodeExecutionProfile(
-          CacheProducerExecutionProfile.make({ ...profile, adapterExecutable: "relative/adapter" })
-        )
+      const encodedExecutionProfile16 = yield* encodeExecutionProfile(
+        CacheProducerExecutionProfile.make({ ...profile, adapterExecutable: "relative/adapter" })
       );
-      assertTrue(
-        yield* loadCacheProducerExecutionRuntime(directory).pipe(
-          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord(environment)),
-          Effect.isFailure
-        )
+      yield* fs.writeFileString(file, encodedExecutionProfile16);
+      const pipe17 = yield* loadCacheProducerExecutionRuntime(directory).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord(environment)),
+        Effect.isFailure
       );
+      assertTrue(pipe17);
     })
   );
 });

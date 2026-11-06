@@ -197,12 +197,10 @@ export const readEmailRows = Effect.fn("PracticeKg.readEmailRows")(function* (
   if (!rootExists) {
     return A.empty();
   }
-  const archiveEntries = A.sort(
-    yield* fs
-      .readDirectory(childrenRoot)
-      .pipe(PracticeKgProjectionError.mapError(`Failed reading extract children root "${childrenRoot}".`)),
-    Order.String
-  );
+  const pipe1 = yield* fs
+    .readDirectory(childrenRoot)
+    .pipe(PracticeKgProjectionError.mapError(`Failed reading extract children root "${childrenRoot}".`));
+  const archiveEntries = A.sort(pipe1, Order.String);
   const rows = yield* Effect.forEach(archiveEntries, (archiveEntry) =>
     O.match(archiveDigestFromDirectory(archiveEntry), {
       onNone: () => Effect.succeed(A.empty<PracticeKgEmailHeaderRow>()),

@@ -31,16 +31,18 @@ it.effect("empty launcher prefixes preserve argv and optionally set cwd", () =>
       LocalExecError.make({ directory: "/project" }).message,
       "Could not determine the project-local execution context for /project"
     );
-    assertNone(yield* LocalExec.makeTest().context);
-    assertNone(yield* Effect.flatMap(LocalExec, (service) => service.context).pipe(withLayer(LocalExec.layerTest())));
+    const context1 = yield* LocalExec.makeTest().context;
+    assertNone(context1);
+    const pipe2 = yield* Effect.flatMap(LocalExec, (service) => service.context).pipe(withLayer(LocalExec.layerTest()));
+    assertNone(pipe2);
     const expected = ExecContext.make({ label: "bun", ...LocalExec.prefixes("bun") });
-    assertSome(
-      yield* Effect.flatMap(LocalExec, (service) => service.context).pipe(withLayer(LocalExec.layerFor("bun"))),
-      expected
+    const pipe3 = yield* Effect.flatMap(LocalExec, (service) => service.context).pipe(
+      withLayer(LocalExec.layerFor("bun"))
     );
-    assertSome(
-      yield* Effect.flatMap(LocalExec, (service) => service.context).pipe(withLayer(LocalExec.layerFor("bun", {}))),
-      expected
+    assertSome(pipe3, expected);
+    const pipe4 = yield* Effect.flatMap(LocalExec, (service) => service.context).pipe(
+      withLayer(LocalExec.layerFor("bun", {}))
     );
+    assertSome(pipe4, expected);
   })
 );

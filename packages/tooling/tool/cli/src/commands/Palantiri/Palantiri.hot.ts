@@ -357,7 +357,8 @@ export const carryHotLines: {
 export const stageHotParcels = Effect.fn("Palantiri.stageHotParcels")(function* (lines: ReadonlyArray<HotParcelLine>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const file = path.join(yield* palantiriStateDir, HOT_PARCELS_FILE);
+  const palantiriStateDir1 = yield* palantiriStateDir;
+  const file = path.join(palantiriStateDir1, HOT_PARCELS_FILE);
   const previous = yield* fs.readFileString(file).pipe(
     Effect.flatMap(S.decodeEffect(HotParcelsJson)),
     Effect.map((hot) => hot.lines),

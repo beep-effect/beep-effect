@@ -75,8 +75,10 @@ describe("CURIE codec", () => {
   it.effect(
     "decodes and encodes known CURIEs",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeCurie("skos:prefLabel")).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
-      expect(yield* encodeIri("http://www.w3.org/2004/02/skos/core#prefLabel")).toBe("skos:prefLabel");
+      const decodedCurie = yield* decodeCurie("skos:prefLabel");
+      expect(decodedCurie).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
+      const encodedIri = yield* encodeIri("http://www.w3.org/2004/02/skos/core#prefLabel");
+      expect(encodedIri).toBe("skos:prefLabel");
     })
   );
 
@@ -142,8 +144,10 @@ describe("custom vocabulary codecs", () => {
     Effect.fnUntraced(function* () {
       const codec = makeCurieFromIri(CoreVocab);
       const iri = "http://www.w3.org/2004/02/skos/core#prefLabel";
-      expect(yield* S.decodeEffect(codec)("skos:prefLabel")).toBe(iri);
-      expect(yield* S.encodeEffect(codec)(iri)).toBe("skos:prefLabel");
+      const value1 = yield* S.decodeEffect(codec)("skos:prefLabel");
+      expect(value1).toBe(iri);
+      const value2 = yield* S.encodeEffect(codec)(iri);
+      expect(value2).toBe("skos:prefLabel");
       expect((yield* Effect.flip(S.decodeEffect(codec)("missing:term"))).message).toContain("Unknown CURIE");
       expect((yield* Effect.flip(S.encodeEffect(codec)("https://unknown.example/term"))).message).toContain(
         "Unknown IRI"

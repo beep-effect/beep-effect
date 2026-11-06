@@ -958,7 +958,7 @@ export const renderKnowledgeLeasesReport = (report: KnowledgeLeasesReport): stri
 // branch of this repository. The command checks it itself instead of trusting its caller.
 const mintPullRequestReasons = Effect.gen(function* () {
   const ci = yield* isCi;
-  const reasons = knowledgeMintPullRequestRefusals(yield* readKnowledgeMintPullRequest());
+  const reasons = yield* readKnowledgeMintPullRequest().pipe(Effect.map(knowledgeMintPullRequestRefusals));
   return ci ? reasons : A.prepend(reasons, "CI is not true; --accept-mint is CI-only.");
 });
 

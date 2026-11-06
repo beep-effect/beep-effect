@@ -182,7 +182,8 @@ describe("contact verbs", () => {
           assertNone(contact.mobilePhone);
           assertSome(contact.changeKey, "version-1");
           assertSome(contact.rawJson, wire);
-          const captures = yield* Ref.get(yield* Captures);
+          const Captures1 = yield* Captures;
+          const captures = yield* Ref.get(Captures1);
           expect(A.map(captures, (capture) => `${capture.method} ${capture.url}`)).toEqual([
             `POST ${route}/contactFolders/folder-fixture/contacts`,
             `POST ${route}/contactFolders`,
@@ -223,7 +224,8 @@ describe("contact verbs", () => {
           yield* m365.listContacts(M365ListContactsRequest.make({ userId, folderId: O.some("folder-fixture") }));
           expect(contacts.value).toHaveLength(1);
           assertNone(O.getOrThrow(A.head(folders.value)).displayName);
-          const captures = yield* Ref.get(yield* Captures);
+          const Captures2 = yield* Captures;
+          const captures = yield* Ref.get(Captures2);
           const url = new URL(O.getOrThrow(A.head(captures)).url);
           expect(url.pathname).toBe(`${new URL(route).pathname}/contacts`);
           expect(url.searchParams.get("$expand")).toBe(
@@ -251,11 +253,13 @@ describe("contact verbs", () => {
           `never replays ${appOnly ? "app-only" : "delegated"} contact POST after ${reason} ${status}`,
           Effect.fnUntraced(function* () {
             const m365 = yield* M365;
-            assertSome(
-              yield* failed(m365.createContact(M365CreateContactRequest.make({ userId, contact: draft }))),
-              reason
+            const failed3 = yield* failed(
+              m365.createContact(M365CreateContactRequest.make({ userId, contact: draft }))
             );
-            expect(yield* Ref.get(yield* Captures)).toHaveLength(1);
+            assertSome(failed3, reason);
+            const Captures6 = yield* Captures;
+            const got = yield* Ref.get(Captures6);
+            expect(got).toHaveLength(1);
           })
         );
       });
@@ -273,7 +277,9 @@ describe("contact verbs", () => {
           })
         );
         expect(page.value).toHaveLength(1);
-        expect(yield* Ref.get(yield* Captures)).toHaveLength(1);
+        const Captures7 = yield* Captures;
+        const got4 = yield* Ref.get(Captures7);
+        expect(got4).toHaveLength(1);
       })
     );
   });
@@ -309,7 +315,9 @@ describe("contact verbs", () => {
           { concurrency: 1 }
         );
         for (const failure of failures) assertSome(failure, "request encoding");
-        expect(yield* Ref.get(yield* Captures)).toHaveLength(0);
+        const Captures8 = yield* Captures;
+        const got5 = yield* Ref.get(Captures8);
+        expect(got5).toHaveLength(0);
       })
     );
   });

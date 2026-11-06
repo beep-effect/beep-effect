@@ -520,6 +520,7 @@ const buildPlanFromChangedFiles = Effect.fn("DocgenLocal.buildPlanFromChangedFil
     O.getOrElse(() => "scoped" as const)
   );
 
+  const argument1 = localParallel(options.parallel);
   return DocgenLocalPlan.make({
     base: options.base,
     changedFiles,
@@ -527,10 +528,16 @@ const buildPlanFromChangedFiles = Effect.fn("DocgenLocal.buildPlanFromChangedFil
     fullReasons,
     head: options.head,
     mode,
-    parallel: localParallel(options.parallel),
+    parallel: argument1,
     selectedPackages: sortedSelectedPackages,
     turboArgs:
-      mode === "scoped" ? [...turboArgsForSelectedPackages(sortedSelectedPackages, options.parallel, yield* isCi)] : [],
+      mode === "scoped"
+        ? [
+            ...(yield* Effect.map(isCi, (value) =>
+              turboArgsForSelectedPackages(sortedSelectedPackages, options.parallel, value)
+            )),
+          ]
+        : [],
   });
 });
 
@@ -563,17 +570,26 @@ const buildPlanFromPackage = Effect.fn("DocgenLocal.buildPlanFromPackage")(funct
   const selectedPackages = [selectedPackageFromWorkspacePackage(target, [`--package ${packageSelector}`])] as const;
   const mode: DocgenLocalMode = options.full ? "full" : "scoped";
 
+  const argument2 = A.empty();
+  const argument3 = A.empty();
+  const argument4 = localParallel(options.parallel);
   return DocgenLocalPlan.make({
     base: options.base,
-    changedFiles: A.empty(),
+    changedFiles: argument2,
     fallbackCommand: DOCGEN_FULL_COMMAND,
-    fullReasons: A.empty(),
+    fullReasons: argument3,
     head: options.head,
     mode,
-    parallel: localParallel(options.parallel),
+    parallel: argument4,
     selectedPackages,
     turboArgs:
-      mode === "scoped" ? [...turboArgsForSelectedPackages(selectedPackages, options.parallel, yield* isCi)] : [],
+      mode === "scoped"
+        ? [
+            ...(yield* Effect.map(isCi, (value) =>
+              turboArgsForSelectedPackages(selectedPackages, options.parallel, value)
+            )),
+          ]
+        : [],
   });
 });
 

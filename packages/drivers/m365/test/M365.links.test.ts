@@ -51,15 +51,19 @@ describe("OutlookItemRefFromInput", () => {
     "takes the kind from a message:/conversation: prefix and gets every reference back from its encoding",
     Effect.fnUntraced(function* () {
       const shaped = OutlookItemRef.cases.message.make({ id: "AAQkMsgShaped" });
-      deepStrictEqual(yield* decode("message:AAQkMsgShaped"), shaped);
-      deepStrictEqual(
-        yield* decode("conversation: AAMkAGI2%2Fx "),
-        OutlookItemRef.cases.conversation.make({ id: "AAMkAGI2-x" })
-      );
-      strictEqual(yield* encode(shaped), "message:AAQkMsgShaped");
-      deepStrictEqual(yield* decode(yield* encode(shaped)), shaped);
+      const decoded = yield* decode("message:AAQkMsgShaped");
+      deepStrictEqual(decoded, shaped);
+      const decoded1 = yield* decode("conversation: AAMkAGI2%2Fx ");
+      deepStrictEqual(decoded1, OutlookItemRef.cases.conversation.make({ id: "AAMkAGI2-x" }));
+      const encoded2 = yield* encode(shaped);
+      strictEqual(encoded2, "message:AAQkMsgShaped");
+      const encoded5 = yield* encode(shaped);
+      const decoded3 = yield* decode(encoded5);
+      deepStrictEqual(decoded3, shaped);
       const conversation = OutlookItemRef.cases.conversation.make({ id: "AAQkAGI2" });
-      deepStrictEqual(yield* decode(yield* encode(conversation)), conversation);
+      const encoded6 = yield* encode(conversation);
+      const decoded4 = yield* decode(encoded6);
+      deepStrictEqual(decoded4, conversation);
     })
   );
 

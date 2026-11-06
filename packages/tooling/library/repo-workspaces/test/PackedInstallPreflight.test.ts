@@ -55,10 +55,8 @@ describe("PackedInstall.preflight and gate", () => {
       Effect.gen(function* () {
         const result = yield* PackedInstall.preflight(options);
         assert.deepStrictEqual(result, PackedInstallPreflight.make({ ready: true, missing: [] }));
-        assert.deepStrictEqual(
-          yield* PackedInstall.gate(result).pipe(withEnv({ CI: "true" })),
-          PackedInstallGate.make({ action: "run", message: "" })
-        );
+        const pipe1 = yield* PackedInstall.gate(result).pipe(withEnv({ CI: "true" }));
+        assert.deepStrictEqual(pipe1, PackedInstallGate.make({ action: "run", message: "" }));
       })
     );
   });

@@ -76,12 +76,15 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
       yield* f.facts.record(bind, 0);
       yield* f.facts.record(finish(), 0);
       const reopened = yield* makeObservationLaunchFacts(f.config);
-      expect(yield* reopened.record(prepare(), 0)).toEqual(first);
-      expect(yield* reopened.record(start(), 0)).toEqual(started);
+      const record1 = yield* reopened.record(prepare(), 0);
+      expect(record1).toEqual(first);
+      const record2 = yield* reopened.record(start(), 0);
+      expect(record2).toEqual(started);
       const rows = yield* reopened.read(id("7"), 0);
       expect(rows.length).toBe(4);
       expect(rows[2]?.fact).toEqual(bind);
-      expect(yield* f.journal.reservedLaunchBytes).toBe(0);
+      const reservedLaunchBytes3 = yield* f.journal.reservedLaunchBytes;
+      expect(reservedLaunchBytes3).toBe(0);
       expect((yield* f.journal.stats).pages).toBe(0);
       expect((yield* f.journal.stats).payloadBytes).toBeGreaterThan(0);
     })
@@ -115,11 +118,13 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
       const first = yield* f.facts.record(prepare(), 0);
       expect((yield* f.journal.stats).payloadBytes + (yield* f.journal.reservedLaunchBytes)).toBe(32768);
       expect((yield* f.facts.record(prepare("f"), 0).pipe(Effect.flip)).reason).toBe("capacity");
-      expect(yield* f.facts.record(prepare(), 0)).toEqual(first);
+      const record4 = yield* f.facts.record(prepare(), 0);
+      expect(record4).toEqual(first);
       yield* f.facts.record(start(), 0);
       yield* f.facts.record(bind, 0);
       yield* f.facts.record(finish(), 0);
-      expect(yield* f.journal.reservedLaunchBytes).toBe(0);
+      const reservedLaunchBytes5 = yield* f.journal.reservedLaunchBytes;
+      expect(reservedLaunchBytes5).toBe(0);
     })
   );
 });
@@ -130,7 +135,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
       const f = yield* fixture();
       const prepared = yield* f.facts.record(prepare(), 0);
       yield* TestClock.adjust(60001);
-      assertNone(yield* f.retention.seal(0));
+      const seal6 = yield* f.retention.seal(0);
+      assertNone(seal6);
       yield* f.facts.record(start(), 0);
       yield* f.facts.record(bind, 0);
       yield* f.facts.record(finish(), 0);
@@ -147,7 +153,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
       expect((yield* f.facts.read(id("7"), 0).pipe(Effect.flip)).reason).toBe("retired");
       expect((yield* f.journal.stats).payloadBytes).toBe(0);
       yield* f.retention.restore(sealed.value.digest);
-      expect(yield* f.facts.record(prepare(), 0)).toEqual(prepared);
+      const record7 = yield* f.facts.record(prepare(), 0);
+      expect(record7).toEqual(prepared);
       expect((yield* f.facts.read(id("7"), 0)).length).toBe(4);
     })
   );
@@ -173,12 +180,11 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
   it.effect("rejects private fields at the fact decoding boundary", () =>
     Effect.gen(function* () {
       const encoded = yield* S.encodeEffect(ObservationLaunchFact)(prepare());
-      expect(
-        yield* S.decodeUnknownEffect(ObservationLaunchFact, { onExcessProperty: "error" })({
-          ...encoded,
-          command: "private-synthetic-command",
-        }).pipe(Effect.isFailure)
-      ).toBe(true);
+      const pipe8 = yield* S.decodeUnknownEffect(ObservationLaunchFact, { onExcessProperty: "error" })({
+        ...encoded,
+        command: "private-synthetic-command",
+      }).pipe(Effect.isFailure);
+      expect(pipe8).toBe(true);
     })
   );
 });

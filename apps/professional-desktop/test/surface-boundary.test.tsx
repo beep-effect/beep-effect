@@ -6,8 +6,18 @@ import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/re
 import * as Effect from "effect/Effect";
 import * as Logger from "effect/Logger";
 import * as References from "effect/References";
+import * as S from "effect/Schema";
 import { SurfaceBoundary } from "@/App";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
+
+class SurfaceBoundaryTestOperationError extends S.TaggedError<
+  SurfaceBoundaryTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "SurfaceBoundaryTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in surface-boundary.test.tsx." }
+) {}
 
 // A child that throws for its first `limit` renders, then renders healthy —
 // the deterministic stand-in for a surface tripped by a transient crash
@@ -96,7 +106,10 @@ describe("SurfaceBoundary", { concurrent: false }, () => {
       );
 
       expect(within(container).getByRole("button", { name: "Reload Ontology" })).toBeInTheDocument();
-      yield* Effect.tryPromise(() => waitFor(() => expect(annotations).toHaveLength(1)));
+      yield* Effect.tryPromise({
+        try: () => waitFor(() => expect(annotations).toHaveLength(1)),
+        catch: (cause) => SurfaceBoundaryTestOperationError.make({ cause }),
+      });
       expect(annotations[0]?.["professional_desktop.renderer.source"]).toBe("workspace");
       expect(annotations[0]?.cause_message).not.toContain("private-value");
       expect(annotations[0]?.cause_detail).not.toContain("/home/operator");

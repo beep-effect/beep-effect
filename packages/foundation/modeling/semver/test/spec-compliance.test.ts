@@ -73,7 +73,8 @@ describe("build metadata (§10)", () => {
   it.effect("does not affect range matching", () =>
     Effect.gen(function* () {
       const range = yield* Range.parse(">=1.0.0+different");
-      assert.isTrue(range.test(yield* SemVer.parse("1.0.0+build")));
+      const parsed = yield* SemVer.parse("1.0.0+build");
+      assert.isTrue(range.test(parsed));
     })
   );
 });

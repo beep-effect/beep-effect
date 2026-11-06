@@ -23,9 +23,8 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layerWith({ "/ws/a.txt": "a", "/ws/b.lo
 })((it) => {
   it.effect("a negated brace alternative filters without expanding the workspace", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* CacheKey.matchingFiles({ workspace: "/ws", patterns: ["{!*.txt,*.lock}"] }), [
-        "/ws/b.lock",
-      ]);
+      const matchingFiles1 = yield* CacheKey.matchingFiles({ workspace: "/ws", patterns: ["{!*.txt,*.lock}"] });
+      assert.deepStrictEqual(matchingFiles1, ["/ws/b.lock"]);
     })
   );
 });

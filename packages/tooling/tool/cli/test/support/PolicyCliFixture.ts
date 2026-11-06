@@ -2,8 +2,13 @@ import { PolicyToolsFingerprintPolicy } from "@beep/repo-cli/test/PackageScripts
 import { A, O, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 /** One command group of a fixture CLI: `beep <group> [<leaf>]` and the specifiers its module imports. */
 export interface FixtureCommand {
@@ -98,7 +103,7 @@ export const policyCliFixtureFiles = (commands: ReadonlyArray<FixtureCommand>): 
 
 /** A one-file workspace package `@beep/<name>` at `packages/<name>` exporting `value`. */
 export const fixturePackageFiles = (name: string): Record<string, string> => ({
-  [`packages/${name}/package.json`]: `${JSON.stringify({ name: `@beep/${name}`, exports: { ".": "./src/index.ts" } })}\n`,
+  [`packages/${name}/package.json`]: `${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ name: `@beep/${name}`, exports: { ".": "./src/index.ts" } }), identity)}\n`,
   [`packages/${name}/src/index.ts`]: "export const value = 1;\n",
 });
 

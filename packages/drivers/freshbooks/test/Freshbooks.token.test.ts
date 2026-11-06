@@ -17,14 +17,19 @@ import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import { identity } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { FreshbooksError } from "@beep/freshbooks";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 /**
  * A mock FreshBooks OAuth token server that enforces single-use refresh
@@ -51,7 +56,10 @@ const decodeBody = (request: HttpClientRequest.HttpClientRequest): Record<string
   if (body._tag !== "Uint8Array") {
     return {};
   }
-  return JSON.parse(new TextDecoder().decode(body.body)) as Record<string, string>;
+  return Result.getOrThrowWith(S.decodeResult(UnknownJson)(new TextDecoder().decode(body.body)), identity) as Record<
+    string,
+    string
+  >;
 };
 
 const TokenServerLayer = (initialRefresh: string): Layer.Layer<TokenServer> =>
@@ -149,7 +157,8 @@ describe("@beep/freshbooks token rotation", () => {
             return HttpClientResponse.fromWeb(request, response);
           })
         );
-        const auth = yield* makeFreshbooksAuth(client, yield* resolveConfig(config), {
+        const resolvedConfig = yield* resolveConfig(config);
+        const auth = yield* makeFreshbooksAuth(client, resolvedConfig, {
           read: store.read,
           write: Effect.fn("InterruptedRotationTest.write")(function* (token) {
             yield* Deferred.succeed(persistenceStarted, undefined);
@@ -164,11 +173,16 @@ describe("@beep/freshbooks token rotation", () => {
           yield* Effect.yieldNow;
           yield* Deferred.succeed(responseReady, undefined);
           yield* Deferred.await(persistenceStarted);
-          expect(Redacted.value(O.getOrThrow(yield* store.read).refreshToken)).toBe("refresh-0");
+          const read1 = yield* store.read;
+          expect(Redacted.value(O.getOrThrow(read1).refreshToken)).toBe("refresh-0");
           yield* Deferred.succeed(persistenceReady, undefined);
           yield* Fiber.join(cancellation);
-          expect(Redacted.value(O.getOrThrow(yield* store.read).refreshToken)).toBe(yield* server.currentRefresh);
-          expect(Redacted.value(yield* auth.refresh)).toBe("access-2");
+          const read2 = yield* store.read;
+          const expectation = expect(Redacted.value(O.getOrThrow(read2).refreshToken));
+          const currentRefresh1 = yield* server.currentRefresh;
+          expectation.toBe(currentRefresh1);
+          const refresh3 = yield* auth.refresh;
+          expect(Redacted.value(refresh3)).toBe("access-2");
         }).pipe(
           Effect.ensuring(
             Effect.all([Deferred.succeed(responseReady, undefined), Deferred.succeed(persistenceReady, undefined)], {
@@ -281,11 +295,13 @@ describe("@beep/freshbooks token rotation", () => {
 
         // accessToken reuses the fresh token without a network refresh.
         yield* auth.accessToken;
-        expect(yield* server.refreshCount).toBe(0);
+        const refreshCount4 = yield* server.refreshCount;
+        expect(refreshCount4).toBe(0);
 
         // An explicit refresh rotates it anyway (revoked-before-expiry case).
         const rotated = yield* auth.refresh;
-        expect(yield* server.refreshCount).toBe(1);
+        const refreshCount5 = yield* server.refreshCount;
+        expect(refreshCount5).toBe(1);
         expect(Redacted.value(rotated)).toBe("access-1");
       })
     );

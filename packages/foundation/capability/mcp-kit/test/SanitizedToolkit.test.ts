@@ -21,14 +21,18 @@ import * as Toolkit from "effect/ai/Toolkit";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { identity } from "effect/Function";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Tracer from "effect/Tracer";
 import { fixtureHost } from "./fixtures/FixtureHost.ts";
 import { makeStubMcpClient, StubMcpClientLayer } from "./fixtures/McpClient.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const FixtureTool = Tool.make("fixture_tool", {
   parameters: S.Struct({ secret: S.String }),
@@ -215,7 +219,7 @@ const makeRecordingTracer = (): { readonly tracer: Tracer.Tracer; readonly captu
 // into the first text content part.
 const callerReport = <A = string>(result: { readonly content: ReadonlyArray<unknown> }): A => {
   const [first] = result.content;
-  return JSON.parse((first as { readonly text: string }).text) as A;
+  return Result.getOrThrowWith(S.decodeResult(UnknownJson)((first as { readonly text: string }).text), identity) as A;
 };
 
 // Direct `server.callTool` is rc.117's stateful-only seam: it mints a caller

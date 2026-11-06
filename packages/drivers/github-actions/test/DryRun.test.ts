@@ -35,7 +35,8 @@ describe("DryRun", () => {
         it.effect("reports what it would have done", () =>
           Effect.gen(function* () {
             yield* (yield* DryRun).guard("publish @acme/thing@1.2.3", Effect.succeed("real"), "rehearsed");
-            assert.deepStrictEqual(yield* lines, ["[DRY-RUN] publish @acme/thing@1.2.3"]);
+            const lines1 = yield* lines;
+            assert.deepStrictEqual(lines1, ["[DRY-RUN] publish @acme/thing@1.2.3"]);
           })
         );
       });
@@ -49,7 +50,8 @@ describe("DryRun", () => {
             const result = yield* (yield* DryRun).guard("publish", effect, "rehearsed");
             assert.strictEqual(result, "real");
             assert.deepStrictEqual(performed, ["ran"]);
-            assert.deepStrictEqual(yield* lines, [], "a real run announces nothing");
+            const lines2 = yield* lines;
+            assert.deepStrictEqual(lines2, [], "a real run announces nothing");
           })
         );
       });
@@ -58,7 +60,8 @@ describe("DryRun", () => {
     it.layer(DryRun.layerFrom(true), { timeout: "30 seconds" })((it) => {
       it.effect("isDryRun reports the mode", () =>
         Effect.gen(function* () {
-          assert.isTrue(yield* (yield* DryRun).isDryRun);
+          const isDryRun3 = yield* (yield* DryRun).isDryRun;
+          assert.isTrue(isDryRun3);
         })
       );
     });
@@ -71,7 +74,8 @@ describe("DryRun", () => {
     })((it) => {
       it.effect("reads a true input", () =>
         Effect.gen(function* () {
-          assert.isTrue(yield* (yield* DryRun).isDryRun);
+          const isDryRun4 = yield* (yield* DryRun).isDryRun;
+          assert.isTrue(isDryRun4);
         })
       );
     });
@@ -79,7 +83,8 @@ describe("DryRun", () => {
     it.layer(DryRun.layer.pipe(Layer.provide(ActionInput.layer({}))), { timeout: "30 seconds" })((it) => {
       it.effect("defaults to a real run when the input is absent", () =>
         Effect.gen(function* () {
-          assert.isFalse(yield* (yield* DryRun).isDryRun);
+          const isDryRun5 = yield* (yield* DryRun).isDryRun;
+          assert.isFalse(isDryRun5);
         })
       );
     });
@@ -89,7 +94,8 @@ describe("DryRun", () => {
     })((it) => {
       it.effect("defaults to a real run when the input is the empty string the runner writes", () =>
         Effect.gen(function* () {
-          assert.isFalse(yield* (yield* DryRun).isDryRun);
+          const isDryRun6 = yield* (yield* DryRun).isDryRun;
+          assert.isFalse(isDryRun6);
         })
       );
     });
@@ -118,7 +124,8 @@ describe("DryRun", () => {
     )((it) => {
       it.effect("layerFromInput reads the name it is given", () =>
         Effect.gen(function* () {
-          assert.isTrue(yield* (yield* DryRun).isDryRun);
+          const isDryRun7 = yield* (yield* DryRun).isDryRun;
+          assert.isTrue(isDryRun7);
         })
       );
     });
@@ -130,7 +137,8 @@ describe("DryRun", () => {
         it.effect("defaults to rehearsing, which is the safe direction", () =>
           Effect.gen(function* () {
             const { performed, effect } = mutation();
-            assert.isTrue(yield* (yield* DryRun).isDryRun);
+            const isDryRun8 = yield* (yield* DryRun).isDryRun;
+            assert.isTrue(isDryRun8);
             yield* (yield* DryRun).guard("publish", effect, "rehearsed");
             assert.deepStrictEqual(performed, []);
           })
@@ -141,7 +149,8 @@ describe("DryRun", () => {
     it.layer(DryRun.layerTest({ isDryRun: Effect.succeed(false) }), { timeout: "30 seconds" })((it) => {
       it.effect("an override wins over the default", () =>
         Effect.gen(function* () {
-          assert.isFalse(yield* (yield* DryRun).isDryRun);
+          const isDryRun9 = yield* (yield* DryRun).isDryRun;
+          assert.isFalse(isDryRun9);
         })
       );
     });

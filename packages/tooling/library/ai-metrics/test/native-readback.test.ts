@@ -1,6 +1,10 @@
 import { PhoenixConfigInput } from "@beep/phoenix";
 import { DeliveryLedgerConfig } from "@beep/repo-ai-metrics/delivery-ledger";
 import {
+  encodeManagedControllerObservation,
+  ManagedControllerObservation,
+} from "@beep/repo-ai-metrics/managed-controller";
+import {
   makeNativeDelivery,
   NativeDeliveryPolicy,
   NativeDeliveryRequest,
@@ -17,7 +21,7 @@ import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
-import { expect } from "@effect/vitest";
+import { expect, vi } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -35,6 +39,15 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as Protobuf from "protobufjs";
+
+class NativeReadbackTestOperationError extends S.TaggedError<
+  NativeReadbackTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "NativeReadbackTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in native-readback.test.ts." }
+) {}
 
 const sqlLayer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver }), NodeCrypto.layer);
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
@@ -79,15 +92,18 @@ const fixtureKeys: Readonly<Record<string, string | boolean>> = {
 };
 const changedAttributes = (current: string, attrs: Readonly<Record<string, string | number | boolean>>) =>
   Match.value(current).pipe(
+    Match.when("managed-origin", () => ({ ...attrs, "ai_metrics.producer_origin": "native" })),
+    Match.when("managed-session", () => ({ ...attrs, "session.id": "wrong-private-session" })),
     Match.when("tokens", () => ({ ...attrs, "llm.token_count.total": 136 })),
     Match.when("extra", () => ({ ...attrs, "llm.provider": "invented" })),
     Match.when("time", () => ({ ...attrs, "ai_metrics.source_start_time_unix_nano": "1793000000000000002" })),
     Match.orElse(() => attrs)
   );
 const decodeWireAttributes = Effect.fnUntraced(function* (bytes: Uint8Array) {
-  const decoded = yield* Effect.try(() => proto.toObject(proto.decode(bytes), { longs: String })).pipe(
-    Effect.flatMap(S.decodeUnknownEffect(requestSchema))
-  );
+  const decoded = yield* Effect.try({
+    try: () => proto.toObject(proto.decode(bytes), { longs: String }),
+    catch: (cause) => NativeReadbackTestOperationError.make({ cause }),
+  }).pipe(Effect.flatMap(S.decodeUnknownEffect(requestSchema)));
   const span = decoded.resourceSpans[0]?.scopeSpans[0]?.spans[0];
   if (span === undefined) return yield* Effect.die("Invalid synthetic wire");
   const entries = yield* Effect.forEach(
@@ -121,12 +137,17 @@ const responseRow = (
   };
 };
 
-const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (fraction = "000000001", durationNano = 100000000) {
+const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (
+  fraction = "000000001",
+  durationNano = 100000000,
+  managed = false
+) {
   const sql = yield* SqlClient.SqlClient;
   const context = yield* Layer.build(BunHttpServer.layer({ hostname: "127.0.0.1", port: 0 }));
   const server = Context.get(context, HttpServer.HttpServer);
   const origin = HttpServer.formatAddress(server.address);
-  const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
+  const build1 = yield* Layer.build(NodeHttpClient.layerNodeHttp);
+  const client = Context.get(build1, HttpClient.HttpClient);
   const salt = "synthetic-readback-salt";
   const intake = TranscriptIntakeConfig.make({
     hostId: id("a"),
@@ -176,9 +197,24 @@ const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (fraction = "0
     NativeTraceRequest.make({
       routeId: id("b"),
       hashSalt: Redacted.make(salt),
-      contentType: "application/json",
-      body: new TextEncoder().encode(body),
-      usageConvention: "claude-code",
+      body:
+        managed === true
+          ? yield* encodeManagedControllerObservation(
+              ManagedControllerObservation.make({
+                launchId: id("1"),
+                launchRouteId: id("b"),
+                processInstanceId: id("2"),
+                sourceSessionId: id("3"),
+                evidenceId: id("4"),
+                startTimeUnixNano: "1793000000000000001",
+                endTimeUnixNano: "1793000000100000001",
+                elapsedNanos: "100000000",
+              })
+            )
+          : new TextEncoder().encode(body),
+      contentType: managed === true ? "application/x-protobuf" : "application/json",
+      producer: managed === true ? O.some("managed-controller") : O.none(),
+      usageConvention: managed === true ? "unknown" : "claude-code",
       approvedModels: [],
     })
   );
@@ -199,8 +235,10 @@ const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (fraction = "0
     Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
       if (request.method === "POST") {
-        const bytes = new Uint8Array(yield* request.arrayBuffer);
-        yield* Ref.set(stored, yield* decodeWireAttributes(bytes));
+        const arrayBuffer2 = yield* request.arrayBuffer;
+        const bytes = new Uint8Array(arrayBuffer2);
+        const decodedWireAttributes = yield* decodeWireAttributes(bytes);
+        yield* Ref.set(stored, decodedWireAttributes);
         return HttpServerResponse.uint8Array(new Uint8Array(), { contentType: "application/x-protobuf" });
       }
       yield* Ref.update(reads, (n) => n + 1);
@@ -208,7 +246,10 @@ const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (fraction = "0
       expect(request.url).toContain("limit=2");
       const current = yield* Ref.get(mode);
       const attrs = yield* Ref.get(stored);
-      const row = responseRow(current, attrs, event);
+      const row = {
+        ...responseRow(current, attrs, event),
+        ...(managed === true ? { name: "managed.controller.canary", span_kind: "AGENT", status_code: "OK" } : {}),
+      };
       return yield* HttpServerResponse.json({
         data: current === "missing" ? [] : current === "duplicate" ? [row, row] : [row],
         next_cursor: null,
@@ -224,6 +265,31 @@ const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (fraction = "0
   const reconcile = () => reader.reconcile(selection, event.eventId);
   return { sql, sender, selection, reconcile, reader, event, mode, reads, intake, config, policy, backend, client };
 });
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("refuses to verify visibility when the original wire metadata cannot be decoded", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      yield* f.sender.send(f.selection);
+      const cause = NativeReadbackTestOperationError.make({ cause: "unreadable native wire metadata" });
+      const decode = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          vi.spyOn(Protobuf.Reader.prototype, "bytes").mockImplementationOnce(() => {
+            throw cause;
+          })
+        ),
+        (spy) => Effect.sync(() => spy.mockRestore())
+      );
+      const error = yield* f.reconcile().pipe(Effect.flip);
+      expect(error.reason).toBe("encoding");
+      expect(decode).toHaveBeenCalledTimes(1);
+      const reads = yield* Ref.get(f.reads);
+      expect(reads).toBe(0);
+      const state = yield* f.sender.ledger.state(f.event.eventId);
+      expect(state).toMatchObject({ value: { state: "accepted-unverified" } });
+    })
+  )
+);
+
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect(
     "verifies the original wire metadata before persisting visible and does not downgrade historical proof",
@@ -241,17 +307,23 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
           "ai_metrics.fixture.provenance",
         ]) {
           yield* Ref.set(f.mode, mode);
-          expect(yield* f.reconcile()).toMatchObject({ _tag: mode === "missing" ? "Missing" : "Mismatch" });
-          expect(yield* f.sender.ledger.state(f.event.eventId)).toMatchObject({
+          const reconcile3 = yield* f.reconcile();
+          expect(reconcile3).toMatchObject({ _tag: mode === "missing" ? "Missing" : "Mismatch" });
+          const state4 = yield* f.sender.ledger.state(f.event.eventId);
+          expect(state4).toMatchObject({
             value: { state: "accepted-unverified" },
           });
         }
         yield* Ref.set(f.mode, "valid");
-        expect(yield* f.reconcile()).toMatchObject({ _tag: "Visible" });
-        expect(yield* f.sender.ledger.state(f.event.eventId)).toMatchObject({ value: { state: "visible" } });
+        const reconcile5 = yield* f.reconcile();
+        expect(reconcile5).toMatchObject({ _tag: "Visible" });
+        const state6 = yield* f.sender.ledger.state(f.event.eventId);
+        expect(state6).toMatchObject({ value: { state: "visible" } });
         yield* Ref.set(f.mode, "missing");
-        expect(yield* f.reconcile()).toMatchObject({ _tag: "Missing" });
-        expect(yield* f.sender.ledger.state(f.event.eventId)).toMatchObject({ value: { state: "visible" } });
+        const reconcile7 = yield* f.reconcile();
+        expect(reconcile7).toMatchObject({ _tag: "Missing" });
+        const state8 = yield* f.sender.ledger.state(f.event.eventId);
+        expect(state8).toMatchObject({ value: { state: "visible" } });
       })
   )
 );
@@ -259,21 +331,26 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   it.effect("refuses duplicate query rows, invalid attempts and failed visibility writes", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      expect(yield* f.reconcile().pipe(Effect.flip)).toMatchObject({ reason: "unknown-attempt" });
-      expect(yield* Ref.get(f.reads)).toBe(0);
+      const pipe9 = yield* f.reconcile().pipe(Effect.flip);
+      expect(pipe9).toMatchObject({ reason: "unknown-attempt" });
+      const got = yield* Ref.get(f.reads);
+      expect(got).toBe(0);
       yield* f.sender.send(f.selection);
-      expect(
-        yield* f.reader
-          .reconcile(NativeDeliveryRequest.make({ ...f.selection, offset: 1 }), f.event.eventId)
-          .pipe(Effect.flip)
-      ).toMatchObject({ reason: "attempt-mismatch" });
-      expect(yield* Ref.get(f.reads)).toBe(0);
+      const pipe10 = yield* f.reader
+        .reconcile(NativeDeliveryRequest.make({ ...f.selection, offset: 1 }), f.event.eventId)
+        .pipe(Effect.flip);
+      expect(pipe10).toMatchObject({ reason: "attempt-mismatch" });
+      const got11 = yield* Ref.get(f.reads);
+      expect(got11).toBe(0);
       yield* Ref.set(f.mode, "duplicate");
-      expect(yield* f.reconcile().pipe(Effect.flip)).toMatchObject({ reason: "ambiguous" });
+      const pipe12 = yield* f.reconcile().pipe(Effect.flip);
+      expect(pipe12).toMatchObject({ reason: "ambiguous" });
       yield* Ref.set(f.mode, "valid");
       yield* f.sql`CREATE TRIGGER synthetic_visibility_failure BEFORE INSERT ON observation_delivery_visibility BEGIN SELECT RAISE(ABORT,'synthetic'); END`;
-      expect(yield* f.reconcile().pipe(Effect.flip)).toMatchObject({ reason: "storage" });
-      expect(yield* f.sender.ledger.state(f.event.eventId)).toMatchObject({ value: { state: "accepted-unverified" } });
+      const pipe13 = yield* f.reconcile().pipe(Effect.flip);
+      expect(pipe13).toMatchObject({ reason: "storage" });
+      const state14 = yield* f.sender.ledger.state(f.event.eventId);
+      expect(state14).toMatchObject({ value: { state: "accepted-unverified" } });
     })
   )
 );
@@ -285,14 +362,15 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
         ...f.policy,
         readbackOrigin: O.some(Redacted.make("https://phoenix.example")),
       });
-      expect(yield* nativeDeliveryTargetId(changed)).not.toBe(f.config.targetId);
-      expect(
-        yield* makeNativeReadback(f.intake, f.config, changed, f.backend).pipe(
-          Effect.provideService(HttpClient.HttpClient, f.client),
-          Effect.flip
-        )
-      ).toMatchObject({ reason: "configuration" });
-      expect(yield* Ref.get(f.reads)).toBe(0);
+      const nativeDeliveryTargetId15 = yield* nativeDeliveryTargetId(changed);
+      expect(nativeDeliveryTargetId15).not.toBe(f.config.targetId);
+      const pipe16 = yield* makeNativeReadback(f.intake, f.config, changed, f.backend).pipe(
+        Effect.provideService(HttpClient.HttpClient, f.client),
+        Effect.flip
+      );
+      expect(pipe16).toMatchObject({ reason: "configuration" });
+      const got17 = yield* Ref.get(f.reads);
+      expect(got17).toBe(0);
     })
   )
 );
@@ -304,10 +382,12 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       yield* f.sender.send(f.selection);
       for (const mode of ["beyond-precision", "submicro", "time"]) {
         yield* Ref.set(f.mode, mode);
-        expect(yield* f.reconcile()).toMatchObject({ _tag: "Mismatch" });
+        const reconcile18 = yield* f.reconcile();
+        expect(reconcile18).toMatchObject({ _tag: "Mismatch" });
       }
       yield* Ref.set(f.mode, "rounded");
-      expect(yield* f.reconcile()).toMatchObject({ _tag: "Visible" });
+      const reconcile19 = yield* f.reconcile();
+      expect(reconcile19).toMatchObject({ _tag: "Visible" });
     })
   )
 );
@@ -317,7 +397,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const f = yield* fixture("000000000");
       yield* f.sender.send(f.selection);
       yield* Ref.set(f.mode, "rounded");
-      expect(yield* f.reconcile()).toMatchObject({ _tag: "Mismatch" });
+      const reconcile20 = yield* f.reconcile();
+      expect(reconcile20).toMatchObject({ _tag: "Mismatch" });
     })
   )
 );
@@ -327,7 +408,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const f = yield* fixture("999999870");
       yield* f.sender.send(f.selection);
       yield* Ref.set(f.mode, "carry");
-      expect(yield* f.reconcile()).toMatchObject({ _tag: "Visible" });
+      const reconcile21 = yield* f.reconcile();
+      expect(reconcile21).toMatchObject({ _tag: "Visible" });
     })
   )
 );
@@ -338,9 +420,11 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const f = yield* fixture("000000870", 0);
       yield* f.sender.send(f.selection);
       yield* Ref.set(f.mode, "point-split");
-      expect(yield* f.reconcile()).toMatchObject({ _tag: "Mismatch" });
+      const reconcile22 = yield* f.reconcile();
+      expect(reconcile22).toMatchObject({ _tag: "Mismatch" });
       yield* Ref.set(f.mode, "point-rounded");
-      expect(yield* f.reconcile()).toMatchObject({ _tag: "Visible" });
+      const reconcile23 = yield* f.reconcile();
+      expect(reconcile23).toMatchObject({ _tag: "Visible" });
     })
   )
 );
@@ -350,7 +434,29 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const f = yield* fixture("000000870", 10);
       yield* f.sender.send(f.selection);
       yield* Ref.set(f.mode, "reversed");
-      expect(yield* f.reconcile()).toMatchObject({ _tag: "Mismatch" });
+      const reconcile24 = yield* f.reconcile();
+      expect(reconcile24).toMatchObject({ _tag: "Mismatch" });
+    })
+  )
+);
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("queries exact managed origin/session/elapsed evidence before declaring backend visibility", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture("000000001", 100000000, true);
+      yield* f.sender.send(f.selection);
+      for (const mode of ["managed-origin", "managed-session", "tokens"]) {
+        yield* Ref.set(f.mode, mode);
+        const mismatch = yield* f.reconcile();
+        expect(mismatch).toMatchObject({ _tag: "Mismatch" });
+        const unverified = yield* f.sender.ledger.state(f.event.eventId);
+        expect(unverified).toMatchObject({ value: { state: "accepted-unverified" } });
+      }
+      yield* Ref.set(f.mode, "valid");
+      const visible = yield* f.reconcile();
+      expect(visible).toMatchObject({ _tag: "Visible" });
+      const verified = yield* f.sender.ledger.state(f.event.eventId);
+      expect(verified).toMatchObject({ value: { state: "visible" } });
     })
   )
 );

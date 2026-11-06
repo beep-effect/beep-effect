@@ -14,25 +14,33 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { fixturePackageFiles, policyCliFixtureFiles, writeFixtureFiles } from "./support/PolicyCliFixture.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const platform = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
 
 const rootManifest = (scripts: Readonly<Record<string, string>>) =>
-  `${JSON.stringify({ name: "fixture", workspaces: ["packages/*"], scripts })}\n`;
+  `${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ name: "fixture", workspaces: ["packages/*"], scripts }), identity)}\n`;
 
 const turbo = (tasks: ReadonlyArray<string>) =>
-  `${JSON.stringify({
-    tasks: {
-      "//#lint:policy-fingerprint": { cache: true, outputs: [], inputs: [] },
-      ...R.fromEntries(A.map(tasks, (task) => [task, { dependsOn: ["//#lint:policy-fingerprint"] }] as const)),
-    },
-  })}\n`;
+  `${Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({
+      tasks: {
+        "//#lint:policy-fingerprint": { cache: true, outputs: [], inputs: [] },
+        ...R.fromEntries(A.map(tasks, (task) => [task, { dependsOn: ["//#lint:policy-fingerprint"] }] as const)),
+      },
+    }),
+    identity
+  )}\n`;
 
 const fixture = Effect.fnUntraced(function* (files: Readonly<Record<string, string>>) {
   const fs = yield* FileSystem.FileSystem;
@@ -184,7 +192,8 @@ describe("policy fingerprint closures", () => {
         // Contents and unimported files do not move the declaration.
         yield* fs.writeFileString(`${root}/packages/nested/src/index.ts`, "export const value = 2;\n");
         yield* fs.writeFileString(`${root}/packages/nested/src/new.ts`, "export const fresh = 1;\n");
-        expect(yield* computePolicyFingerprint(root)).toEqual(first);
+        const computePolicyFingerprint1 = yield* computePolicyFingerprint(root);
+        expect(computePolicyFingerprint1).toEqual(first);
         // A new import edge does.
         yield* fs.writeFileString(`${root}/packages/nested/src/index.ts`, 'export { value } from "@beep/unrelated";\n');
         const expanded = yield* computePolicyFingerprint(root);

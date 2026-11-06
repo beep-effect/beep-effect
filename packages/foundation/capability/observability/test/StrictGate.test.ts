@@ -151,7 +151,8 @@ describe("StrictGate", () => {
     for (const rule of GateRule.literals) {
       it.effect(`goes red when only the ${rule} rule is off`, () =>
         Effect.gen(function* () {
-          expect(yield* exportsNeedle({ ...StrictGateRulesOn, [rule]: false }, gateMutants[rule])).toBe(true);
+          const exportsNeedle1 = yield* exportsNeedle({ ...StrictGateRulesOn, [rule]: false }, gateMutants[rule]);
+          expect(exportsNeedle1).toBe(true);
         })
       );
     }
@@ -240,7 +241,8 @@ describe("StrictGate", () => {
         const gate = yield* makeStrictGate(demoConfig());
         const text = bodyText(gate.serialization.logs(representativeLogs()));
         expect(text).toBe('{"resourceLogs":[]}');
-        expect(countOf(yield* gate.ledger, "log-record-dropped")).toBe(2);
+        const ledger2 = yield* gate.ledger;
+        expect(countOf(ledger2, "log-record-dropped")).toBe(2);
       })
     );
 
@@ -249,7 +251,8 @@ describe("StrictGate", () => {
       [Arbitrary.schema(GateRules)],
       ([rules]) =>
         Effect.gen(function* () {
-          expect(yield* leaks(rules)).toBe(A.some(contentRules, (rule) => !rules[rule]));
+          const leaks3 = yield* leaks(rules);
+          expect(leaks3).toBe(A.some(contentRules, (rule) => !rules[rule]));
         }),
       { arbitrary: fcRuns(25) }
     );
@@ -280,7 +283,8 @@ describe("StrictGate", () => {
         for (const key of ['"sum":', '"min":', '"max":']) {
           expect([key, Str.includes(key)(text)]).toEqual([key, false]);
         }
-        expect(countOf(yield* gate.ledger, "metric-value-dropped")).toBe(3);
+        const ledger4 = yield* gate.ledger;
+        expect(countOf(ledger4, "metric-value-dropped")).toBe(3);
       })
     );
 
@@ -297,16 +301,21 @@ describe("StrictGate", () => {
           { ...StrictGateRulesOn, "metric-names": false },
           "beep.demo.latency"
         );
-        expect(Str.includes(batchCanary())(yield* encodeUnknownJson(raw))).toBe(true);
+        const argument = Str.includes(batchCanary());
+        const encodedUnknownJson = yield* encodeUnknownJson(raw);
+        expect(argument(encodedUnknownJson)).toBe(true);
       })
     );
 
     it.effect("refuses an exponential histogram series and counts it", () =>
       Effect.gen(function* () {
         const { gate, metrics } = yield* exportedMetrics(StrictGateRulesOn, "beep.demo.latency");
-        expect(Str.includes("exponentialHistogram")(yield* encodeUnknownJson(metrics))).toBe(false);
+        const argument1 = Str.includes("exponentialHistogram");
+        const encodedUnknownJson1 = yield* encodeUnknownJson(metrics);
+        expect(argument1(encodedUnknownJson1)).toBe(false);
         // The exponential series and the unknown metric name.
-        expect(countOf(yield* gate.ledger, "metric-not-allowed")).toBe(2);
+        const ledger5 = yield* gate.ledger;
+        expect(countOf(ledger5, "metric-not-allowed")).toBe(2);
       })
     );
 
@@ -320,7 +329,9 @@ describe("StrictGate", () => {
           { ...StrictGateRulesOn, "metric-values": false },
           "beep.demo.latency"
         );
-        expect(Str.includes('"asInt":1234567')(yield* encodeUnknownJson(calls))).toBe(true);
+        const argument2 = Str.includes('"asInt":1234567');
+        const encodedUnknownJson2 = yield* encodeUnknownJson(calls);
+        expect(argument2(encodedUnknownJson2)).toBe(true);
         const latencyText = yield* encodeUnknownJson(latency);
         expect(Str.includes('"sum":98765.4')(latencyText)).toBe(true);
         expect(Str.includes("exponentialHistogram")(latencyText)).toBe(true);

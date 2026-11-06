@@ -145,16 +145,18 @@ it.layer(layers("agent", "absent"), { timeout: "30 seconds" })((it) => {
         const out = Render.plain(docOf("keep\n::error::x"), ctx);
         assert.include(out, `${ZWSP}::error::x`);
         assert.include(out, "keep");
-        assert.strictEqual(
-          Str.replaceAll(ZWSP, "")(out),
-          Render.plain(docOf("keep\n::error::x"), yield* contextFor("agent", "none"))
-        );
+        const argument = Str.replaceAll(ZWSP, "")(out);
+        const argument1 = docOf("keep\n::error::x");
+        const contextFor5 = yield* contextFor("agent", "none");
+        assert.strictEqual(argument, Render.plain(argument1, contextFor5));
       })
     );
 
     it.effect("githubLog is not neutralized twice", () =>
       Effect.gen(function* () {
-        const out = Render.githubLog(docOf("::error::x"), yield* contextFor("ci", "github-actions"));
+        const argument2 = docOf("::error::x");
+        const contextFor6 = yield* contextFor("ci", "github-actions");
+        const out = Render.githubLog(argument2, contextFor6);
         assert.strictEqual(Str.split(out, ZWSP).length - 1, 1);
         assert.notInclude(out, `${ZWSP}${ZWSP}`);
       })
@@ -183,8 +185,10 @@ it.layer(layers("agent", "absent"), { timeout: "30 seconds" })((it) => {
     it.effect("every heading survives: a bare ## is not a command, so the facade leaves it alone", () =>
       Effect.gen(function* () {
         for (const audience of ["human", "agent", "ci"] as const) {
-          const under = Render.markdown(sectioned, yield* contextFor(audience, "github-actions"));
-          const outside = Render.markdown(sectioned, yield* contextFor(audience, "none"));
+          const contextFor1 = yield* contextFor(audience, "github-actions");
+          const under = Render.markdown(sectioned, contextFor1);
+          const contextFor2 = yield* contextFor(audience, "none");
+          const outside = Render.markdown(sectioned, contextFor2);
           assert.strictEqual(
             headingsOf(under).length,
             4,
@@ -198,10 +202,9 @@ it.layer(layers("agent", "absent"), { timeout: "30 seconds" })((it) => {
     it.effect("text can not make ##[ appear outside code: markdown escapes the bracket", () =>
       Effect.gen(function* () {
         const text = "see ##[add-mask]secret and ##[error]x";
-        const out = Render.markdown(
-          [Doc.paragraph(text), Doc.list([Doc.paragraph("a ##[b]")])],
-          yield* contextFor("agent", "none")
-        );
+        const argument3 = [Doc.paragraph(text), Doc.list([Doc.paragraph("a ##[b]")])];
+        const contextFor7 = yield* contextFor("agent", "none");
+        const out = Render.markdown(argument3, contextFor7);
         assert.notInclude(out, "##[");
       })
     );
@@ -212,10 +215,12 @@ it.layer(layers("agent", "absent"), { timeout: "30 seconds" })((it) => {
           Doc.paragraph(Doc.code("##[error]x")),
           Doc.codeBlock("a ##[add-mask]b\n::error::c", "txt"),
         ];
-        const under = Render.markdown(doc, yield* contextFor("agent", "github-actions"));
+        const contextFor3 = yield* contextFor("agent", "github-actions");
+        const under = Render.markdown(doc, contextFor3);
         assert.deepStrictEqual(commandLines(under), []);
         assert.include(under, `##${ZWSP}[error]x`);
-        const outside = Render.markdown(doc, yield* contextFor("agent", "none"));
+        const contextFor4 = yield* contextFor("agent", "none");
+        const outside = Render.markdown(doc, contextFor4);
         assert.include(outside, "##[error]x");
         assert.notInclude(outside, ZWSP);
       })
@@ -244,7 +249,9 @@ it.layer(layers("agent", "absent"), { timeout: "30 seconds" })((it) => {
 
     it.effect("githubLog still neutralizes, wherever it is chosen explicitly", () =>
       Effect.gen(function* () {
-        const out = Render.githubLog(docOf("::error::y"), yield* contextFor("agent", "none"));
+        const argument4 = docOf("::error::y");
+        const contextFor8 = yield* contextFor("agent", "none");
+        const out = Render.githubLog(argument4, contextFor8);
         assert.deepStrictEqual(commandLines(out), []);
         assert.include(out, ZWSP);
       })
@@ -274,7 +281,7 @@ describe("the default failure report", () => {
       log: () => undefined,
       error: (...args: ReadonlyArray<unknown>) => err.push(pipe(args, A.map(String), A.join(" "))),
     });
-    const program = Effect.suspend(() => Effect.fail(TestError.make({ message })));
+    const program = Effect.failSync(() => TestError.make({ message }));
     yield* (
       withEnv === false
         ? CliRuntime.main(program, { platform: Layer.empty })

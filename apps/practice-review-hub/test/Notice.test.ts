@@ -115,10 +115,12 @@ describe("@beep/practice-review-hub daily notice", () => {
         const claims = yield* (yield* FileSystem.FileSystem).readDirectory(`${yield* DataDirectory}/notice-sent`);
 
         expect([first.status, second.status]).toStrictEqual(["sent", "already-sent"]);
-        expect(summaries(yield* Ref.get(yield* SentMail))).toStrictEqual([
-          "Claude: 1 question waiting -> attorney@example.test (text)",
-        ]);
-        expect(contents(yield* Ref.get(yield* SentMail))).toStrictEqual([
+        const SentMail5 = yield* SentMail;
+        const got = yield* Ref.get(SentMail5);
+        expect(summaries(got)).toStrictEqual(["Claude: 1 question waiting -> attorney@example.test (text)"]);
+        const SentMail6 = yield* SentMail;
+        const got1 = yield* Ref.get(SentMail6);
+        expect(contents(got1)).toStrictEqual([
           "1 question is waiting for you in Claude. Open the review queue to answer.",
         ]);
         expect(claims).toStrictEqual(["1970-01-01"]);
@@ -134,7 +136,8 @@ describe("@beep/practice-review-hub daily notice", () => {
 
         // The exact line `notice` prints to the journal.
         const printed = yield* noticeOutcomeLine(UTC);
-        const sent = yield* Ref.get(yield* SentMail);
+        const SentMail2 = yield* SentMail;
+        const sent = yield* Ref.get(SentMail2);
 
         expect(summaries(sent)).toStrictEqual(["Claude: 1 question waiting -> attorney@example.test (html)"]);
         expect(contents(sent)).toStrictEqual([
@@ -163,8 +166,11 @@ describe("@beep/practice-review-hub daily notice", () => {
         const claims = `${yield* DataDirectory}/notice-sent`;
 
         expect(outcome.status).toBe("nothing-waiting");
-        expect(yield* Ref.get(yield* SentMail)).toStrictEqual([]);
-        expect(yield* (yield* FileSystem.FileSystem).exists(claims)).toBe(false);
+        const SentMail7 = yield* SentMail;
+        const got3 = yield* Ref.get(SentMail7);
+        expect(got3).toStrictEqual([]);
+        const exists4 = yield* (yield* FileSystem.FileSystem).exists(claims);
+        expect(exists4).toBe(false);
       })
     );
   });

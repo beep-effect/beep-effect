@@ -615,3 +615,66 @@ production qualification.
 
 - [Current npm dist-tags](https://registry.npmjs.org/-/package/turbo/dist-tags), observed 2026-11-03: stable 2.11.10 and canary 2.11.11-canary.1. `current-feature-client-refresh-2026-11-03.json` binds the current pins, SRI-verified canary package/native archive and availability observations; the previous aggregate pins remain byte-identical in `client-pins-before-current-pair-refresh-2026-11-03.json`.
 - [Published current canary package](https://registry.npmjs.org/turbo/2.11.11-canary.1): schema declares the canary-only `hashFilePermissions` flag. Sixty shared-flag and four canary-only-flag native dry runs executed no tasks. `native-permission-flag-availability.py` reuses the existing bounded collector; its three refusal controls are retained separately. No mode-hash semantics, task qualification or runtime activation is claimed.
+
+
+### Permission-sensitive Linux input hashes, 2026-11-03
+
+- [The driver](native-permission-mode-controls.py) binds its own source, the
+  unchanged bounded collector and exact native pins. It accepts distinct report
+  and raw-capture locations, refuses overwrites and bounds 132 sequential dry
+  runs to three minutes and sixteen MiB. Raw captures remain private.
+- [The native observation](native-permission-mode-controls-2026-11-03.json)
+  contains every task/input hash, inclusion result and stream digest. The
+  installed stable `reference/run.mdx` documents dry-run task hashes as plans
+  without execution; the current canary schema description is retained in the
+  feature matrix. No task body or cache write occurs in these fixtures.
+- [Four early refusals](permission-mode-driver-controls-2026-11-03.json) cover
+  optimized Python, existing report/raw paths and changed native pins. The
+  passing observation and source pins remain unchanged. The checkpoint binds
+  published bytes separately from the original native report encoding.
+- The flag is still pending. Alias observations do not establish Windows,
+  restoration, cross-worktree, real-task or epoch qualification.
+
+
+### Source-capture repair after #2679 review, 2026-11-03
+
+- The three native drivers now parse captured pin/collector/schema bytes and
+  derive their bindings from those same bytes. The `run_bounded` AST is unchanged.
+- Fresh `source-capture-shared-availability-2026-11-03.json`,
+  `source-capture-permission-availability-2026-11-03.json` and
+  `source-capture-permission-mode-2026-11-03.json` retain 60, four and 132 actual
+  dry plans. All execute zero task bodies; regular-mode/hash rows match the
+  earlier observation without transplanting its driver digest.
+- `source-capture-prefix-controls-2026-11-03.json` records six deterministic
+  changes immediately after a source read. The captured-byte drivers refuse
+  before client selection; the legacy prefixes at the recorded immutable head
+  do not. These are bounded prefix controls, not full repository tests.
+- The byte-identical prior checkpoint is retained in
+  `permission-mode-hash-before-source-capture-fix-2026-11-03.json`. Its source
+  bindings and earlier observation reports resolve against the recorded prior
+  Git head, rather than the repaired files now occupying those paths.
+
+### Actual current-root check selection, 2026-11-04
+
+`actual-current-law-check-selection-2026-11-04.json` records eight direct native
+dry plans on clean accepted source31e2ac20. Both frozen clients and selector
+forms agree: identical refs select zero nodes; the actual preceding commit to
+that head selects the same28-node closure for the named domain-check cohort.
+The report supplies immutable refs, exact native argv, source bindings and
+version-content pins. The owned one-off capture driver is retained privately
+under its recorded SHA. No task command, local quality suite or repaired proof
+wrapper executes in this observation. Full qualification remains pending.
+
+### Selector flag factorial control, 2026-11-04
+
+- `selector-flag-isolation-checkpoint-2026-11-04.json` binds the optional
+  existing driver mode to its actual captured source and native report.
+- `native-selector-flag-isolation-controls-2026-11-04.json` contains all 320
+  selection cases and 320 one-flag comparisons on the frozen stable/current
+  canary pair; source/tool digests are checked before and after execution.
+- Installed `turbo/docs/reference/run.mdx` and
+  `turbo/docs/reference/configuration.mdx` supply selector terminology. The
+  observed interaction is bounded native evidence, not an assumption that the
+  two flags are independent or a whole-repository qualification grant.
+
+- `query-package-count-repair-2026-11-06.json`: repair native affected-query package counting, with a three-task/two-package and empty-query assertion. The initial SCM proof report's hashes are explicitly bound to its original f48bf842 source; historical hashes and native captures remain intact. Hosted proof is pending.

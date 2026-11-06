@@ -59,8 +59,12 @@ const assertUntrustedReceipt = Effect.fn("CalibrationCLITest.assertUntrustedRece
   const { fs, path, temp, packet } = yield* copyPacket();
   const fixturePath = path.join(packet, "ops/fixture-v1.json");
   const manifestPath = path.join(packet, "ops/dataset-v1.json");
-  const fixture = yield* S.decodeEffect(Json)(yield* fs.readFileString(fixturePath));
-  const manifest = yield* S.decodeEffect(Json)(yield* fs.readFileString(manifestPath));
+  const argument = S.decodeEffect(Json);
+  const readFileString1 = yield* fs.readFileString(fixturePath);
+  const fixture = yield* argument(readFileString1);
+  const argument1 = S.decodeEffect(Json);
+  const readFileString2 = yield* fs.readFileString(manifestPath);
+  const manifest = yield* argument1(readFileString2);
   // Entirely synthetic untrusted fixture: the user principal does not attest to approval.
   // Schema validity must not promote caller data to trusted registry membership.
   const untrusted = yield* S.decodeUnknownEffect(RetentionCalibration)({
@@ -81,18 +85,18 @@ const assertUntrustedReceipt = Effect.fn("CalibrationCLITest.assertUntrustedRece
   });
   yield* fs.writeFileString(fixturePath, text);
   const crypto = yield* Digest.Digest;
-  yield* fs.writeFileString(
-    manifestPath,
-    yield* S.encodeEffect(Json)({
-      ...manifest,
-      sha256: Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text))),
-    })
-  );
+  const argument2 = S.encodeEffect(Json);
+  const value = yield* argument2({
+    ...manifest,
+    sha256: yield* Effect.map(crypto.digest(Digest.sha256, new TextEncoder().encode(text)), Hex.encode),
+  });
+  yield* fs.writeFileString(manifestPath, value);
   const output = path.join(temp, "bundle.json");
   const result = yield* run(packet, output);
   expect(result.code, result.text).not.toBe(0);
   expect(result.text).toContain("calibration");
-  expect(yield* fs.exists(output)).toBe(false);
+  const exists1 = yield* fs.exists(output);
+  expect(exists1).toBe(false);
 });
 
 it.layer(
@@ -112,15 +116,19 @@ it.layer(
       const bytes = yield* fs.readFileString(path.join(store, "bundle.json"));
       yield* fs.writeFileString(path.join(store, "unrelated-derived-cache"), "disposable");
       yield* fs.remove(store, { recursive: true });
-      expect(yield* fs.exists(store)).toBe(false);
+      const exists2 = yield* fs.exists(store);
+      expect(exists2).toBe(false);
       yield* fs.makeDirectory(store);
       const second = yield* run(packet, path.join(store, "bundle.json"));
       expect(second.code, second.text).toBe(0);
-      expect(yield* fs.readFileString(path.join(store, "bundle.json"))).toBe(bytes);
-      expect(yield* fs.readDirectory(store)).toEqual(["bundle.json"]);
+      const readFileString3 = yield* fs.readFileString(path.join(store, "bundle.json"));
+      expect(readFileString3).toBe(bytes);
+      const readDirectory4 = yield* fs.readDirectory(store);
+      expect(readDirectory4).toEqual(["bundle.json"]);
       const repeat = yield* run(packet, path.join(store, "bundle.json"));
       expect(repeat.code).not.toBe(0);
-      expect(yield* fs.readFileString(path.join(store, "bundle.json"))).toBe(bytes);
+      const readFileString5 = yield* fs.readFileString(path.join(store, "bundle.json"));
+      expect(readFileString5).toBe(bytes);
     })
   );
   it.effect("refuses a complete matching-policy receipt without trusted membership", () =>
@@ -148,26 +156,30 @@ it.layer(
       Effect.gen(function* () {
         const { fs, path, temp, packet } = yield* copyPacket();
         const fixturePath = path.join(packet, "ops/fixture-v1.json");
-        const fixture = yield* S.decodeEffect(Json)(yield* fs.readFileString(fixturePath));
+        const argument3 = S.decodeEffect(Json);
+        const readFileString4 = yield* fs.readFileString(fixturePath);
+        const fixture = yield* argument3(readFileString4);
         // A fixture receipt is untrusted input, never registry membership. This input surface
         // excludes every receipt, including claims of human approval or historical validity.
         const text = yield* S.encodeEffect(Json)({ ...fixture, calibration: submission });
         yield* fs.writeFileString(fixturePath, text);
         const crypto = yield* Digest.Digest;
         const manifestPath = path.join(packet, "ops/dataset-v1.json");
-        const manifest = yield* S.decodeEffect(Json)(yield* fs.readFileString(manifestPath));
-        yield* fs.writeFileString(
-          manifestPath,
-          yield* S.encodeEffect(Json)({
-            ...manifest,
-            sha256: Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text))),
-          })
-        );
+        const argument4 = S.decodeEffect(Json);
+        const readFileString6 = yield* fs.readFileString(manifestPath);
+        const manifest = yield* argument4(readFileString6);
+        const argument5 = S.encodeEffect(Json);
+        const value6 = yield* argument5({
+          ...manifest,
+          sha256: yield* Effect.map(crypto.digest(Digest.sha256, new TextEncoder().encode(text)), Hex.encode),
+        });
+        yield* fs.writeFileString(manifestPath, value6);
         const output = path.join(temp, "bundle.json");
         const result = yield* run(packet, output);
         expect(result.code, result.text).not.toBe(0);
         expect(result.text).toContain("calibration");
-        expect(yield* fs.exists(output)).toBe(false);
+        const exists7 = yield* fs.exists(output);
+        expect(exists7).toBe(false);
       })
     );
   }
@@ -199,19 +211,21 @@ it.layer(
         if (mode !== "digest") {
           const crypto = yield* Digest.Digest;
           const manifestPath = path.join(packet, "ops/dataset-v1.json");
-          const manifest = yield* S.decodeEffect(Json)(yield* fs.readFileString(manifestPath));
-          yield* fs.writeFileString(
-            manifestPath,
-            yield* S.encodeEffect(Json)({
-              ...manifest,
-              sha256: Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text))),
-            })
-          );
+          const argument6 = S.decodeEffect(Json);
+          const readFileString7 = yield* fs.readFileString(manifestPath);
+          const manifest = yield* argument6(readFileString7);
+          const argument7 = S.encodeEffect(Json);
+          const value8 = yield* argument7({
+            ...manifest,
+            sha256: yield* Effect.map(crypto.digest(Digest.sha256, new TextEncoder().encode(text)), Hex.encode),
+          });
+          yield* fs.writeFileString(manifestPath, value8);
         }
         const output = path.join(temp, "bundle.json");
         const result = yield* run(packet, output);
         expect(result.code, result.text).not.toBe(0);
-        expect(yield* fs.exists(output)).toBe(false);
+        const exists9 = yield* fs.exists(output);
+        expect(exists9).toBe(false);
       })
     );
   }

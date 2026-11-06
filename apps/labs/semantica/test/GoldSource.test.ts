@@ -83,14 +83,12 @@ const encodedProposer = Result.getOrThrow(S.encodeResult(ModelIdentity)(proposer
 const writeGoldFixture = Effect.fn("GoldSourceTest.writeFixture")(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const files = A.sort(
-    yield* Effect.forEach(
-      A.flatMap(GOLD_SUBSETS, (subset) => A.map(subsets[subset], (paperId) => ({ paperId, subset }))),
-      ({ paperId, subset }) =>
-        Effect.succeed(GoldFile.make({ labels: [], paperId, proposer, subset, version: "gold/v1" }))
-    ),
-    goldFileOrder
+  const forEach1 = yield* Effect.forEach(
+    A.flatMap(GOLD_SUBSETS, (subset) => A.map(subsets[subset], (paperId) => ({ paperId, subset }))),
+    ({ paperId, subset }) =>
+      Effect.succeed(GoldFile.make({ labels: [], paperId, proposer, subset, version: "gold/v1" }))
   );
+  const files = A.sort(forEach1, goldFileOrder);
   yield* Effect.forEach(files, (file) =>
     encodeGoldFileJson(file).pipe(
       Effect.flatMap((json) =>

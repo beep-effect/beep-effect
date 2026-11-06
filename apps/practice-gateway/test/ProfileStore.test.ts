@@ -78,7 +78,8 @@ describe("ProfileStore", () => {
     it.effect("reads none before saving and round-trips a saved profile", () =>
       Effect.gen(function* () {
         const store = yield* ProfileStore;
-        assertNone(yield* store.get);
+        const got = yield* store.get;
+        assertNone(got);
         yield* store.save(fullProfile);
         const saved = yield* store.get;
         assertSome(
@@ -86,7 +87,8 @@ describe("ProfileStore", () => {
           3
         );
         const fs = yield* FileSystem.FileSystem;
-        expect(yield* fs.exists(`${yield* profilePath}.tmp`)).toBe(false);
+        const exists1 = yield* fs.exists(`${yield* profilePath}.tmp`);
+        expect(exists1).toBe(false);
       })
     );
   });
@@ -95,7 +97,8 @@ describe("ProfileStore", () => {
     it.effect("fails with a typed error", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        yield* fs.writeFileString(yield* profilePath, "{not json");
+        const profilePath2 = yield* profilePath;
+        yield* fs.writeFileString(profilePath2, "{not json");
         const error = yield* ProfileStore.use((store) => store.get).pipe(Effect.flip);
         expect(error._tag).toBe("ProfileStoreFailure");
       })
@@ -122,7 +125,8 @@ describe("--self-check", () => {
     it.effect("prints a refusal line and fails when the profile cannot be read", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        yield* fs.writeFileString(yield* profilePath, "{}");
+        const profilePath3 = yield* profilePath;
+        yield* fs.writeFileString(profilePath3, "{}");
         const { lines, value } = yield* printGatewaySelfCheck(runGatewaySelfCheck).pipe(Effect.flip, printed);
         expect(value).toBeInstanceOf(SelfCheckFailure);
         expect(lines).toHaveLength(1);

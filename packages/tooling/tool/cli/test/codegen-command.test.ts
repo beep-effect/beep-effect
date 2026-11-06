@@ -32,7 +32,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("codegen command", (it) => {
       yield* fs.writeFileString(path.join(srcDir, "View.tsx"), "export const View = null;\n");
 
       yield* runCodegenCommand(["barrel", "--package", packageDir, "--dry-run"]);
-      expect(yield* fs.exists(path.join(srcDir, "index.ts"))).toBe(false);
+      const exists1 = yield* fs.exists(path.join(srcDir, "index.ts"));
+      expect(exists1).toBe(false);
 
       yield* runCodegenCommand(["barrel", "--package", packageDir]);
 

@@ -10,7 +10,7 @@ import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow, pipe } from "effect/Function";
+import { flow, identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
@@ -21,6 +21,8 @@ import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -64,18 +66,21 @@ const handle = (output: string, exitCode = 0) =>
     unref: Effect.succeed(Effect.void),
   });
 
-const pullRequestJson = JSON.stringify({
-  headRefOid: HEAD,
-  id: "PR_chain",
-  isDraft: false,
-  labels: [{ name: "ready-for-heavy" }],
-  mergeable: "MERGEABLE",
-  mergeStateStatus: "BLOCKED",
-  number: 1311,
-  reviewDecision: null,
-  state: "OPEN",
-  url: "https://github.com/beep/beep/pull/1311",
-});
+const pullRequestJson = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    headRefOid: HEAD,
+    id: "PR_chain",
+    isDraft: false,
+    labels: [{ name: "ready-for-heavy" }],
+    mergeable: "MERGEABLE",
+    mergeStateStatus: "BLOCKED",
+    number: 1311,
+    reviewDecision: null,
+    state: "OPEN",
+    url: "https://github.com/beep/beep/pull/1311",
+  }),
+  identity
+);
 
 // Two failing checks (one required), one pending, one passing.
 const jsdocRatchet = {
@@ -88,95 +93,110 @@ const jsdocRatchet = {
   workflow: "Check",
 };
 // A failing check whose own text carries gh's "no checks reported" phrase.
-const failingChecksJson = JSON.stringify([
-  {
-    bucket: "fail",
-    completedAt: "2026-09-25T18:15:00Z",
-    description: "no checks reported upstream",
-    link: link(9),
-    name: "Check / Gate",
-    startedAt: "2026-09-25T18:10:00Z",
-    state: "FAILURE",
-    workflow: "Check",
-  },
-]);
+const failingChecksJson = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
+    {
+      bucket: "fail",
+      completedAt: "2026-09-25T18:15:00Z",
+      description: "no checks reported upstream",
+      link: link(9),
+      name: "Check / Gate",
+      startedAt: "2026-09-25T18:10:00Z",
+      state: "FAILURE",
+      workflow: "Check",
+    },
+  ]),
+  identity
+);
 
-const checksJson = JSON.stringify([
-  jsdocRatchet,
-  {
-    bucket: "fail",
-    completedAt: "0001-01-01T00:00:00Z",
-    link: "",
-    name: "Vercel",
-    startedAt: "0001-01-01T00:00:00Z",
-    state: "FAILURE",
-    workflow: "",
-  },
-  {
-    bucket: "pending",
-    completedAt: "0001-01-01T00:00:00Z",
-    link: link(2),
-    name: "Check / Coverage",
-    startedAt: "2026-09-25T18:21:00Z",
-    state: "IN_PROGRESS",
-    workflow: "Check",
-  },
-  {
-    bucket: "pass",
-    completedAt: "2026-09-25T18:15:00Z",
-    link: link(3),
-    name: "Check / Lint",
-    startedAt: "2026-09-25T18:10:00Z",
-    state: "SUCCESS",
-    workflow: "Check",
-  },
-]);
-const requiredChecksJson = JSON.stringify([
-  jsdocRatchet,
-  {
-    bucket: "pending",
-    completedAt: "0001-01-01T00:00:00Z",
-    link: link(2),
-    name: "Check / Coverage",
-    startedAt: "2026-09-25T18:21:00Z",
-    state: "IN_PROGRESS",
-    workflow: "Check",
-  },
-]);
-const threadsJson = JSON.stringify({
-  data: {
-    node: {
-      author: { login: "author" },
-      reviewThreads: {
-        nodes: [
-          {
-            id: "PRRT_chain_1",
-            isResolved: false,
-            isOutdated: false,
-            path: "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
-            line: 1317,
-            resolvedBy: null,
-            comments: {
-              nodes: [
-                { author: { __typename: "Bot", login: "openclaw" }, body: "**P2** order matters", databaseId: 7 },
-              ],
+const checksJson = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
+    jsdocRatchet,
+    {
+      bucket: "fail",
+      completedAt: "0001-01-01T00:00:00Z",
+      link: "",
+      name: "Vercel",
+      startedAt: "0001-01-01T00:00:00Z",
+      state: "FAILURE",
+      workflow: "",
+    },
+    {
+      bucket: "pending",
+      completedAt: "0001-01-01T00:00:00Z",
+      link: link(2),
+      name: "Check / Coverage",
+      startedAt: "2026-09-25T18:21:00Z",
+      state: "IN_PROGRESS",
+      workflow: "Check",
+    },
+    {
+      bucket: "pass",
+      completedAt: "2026-09-25T18:15:00Z",
+      link: link(3),
+      name: "Check / Lint",
+      startedAt: "2026-09-25T18:10:00Z",
+      state: "SUCCESS",
+      workflow: "Check",
+    },
+  ]),
+  identity
+);
+const requiredChecksJson = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
+    jsdocRatchet,
+    {
+      bucket: "pending",
+      completedAt: "0001-01-01T00:00:00Z",
+      link: link(2),
+      name: "Check / Coverage",
+      startedAt: "2026-09-25T18:21:00Z",
+      state: "IN_PROGRESS",
+      workflow: "Check",
+    },
+  ]),
+  identity
+);
+const threadsJson = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    data: {
+      node: {
+        author: { login: "author" },
+        reviewThreads: {
+          nodes: [
+            {
+              id: "PRRT_chain_1",
+              isResolved: false,
+              isOutdated: false,
+              path: "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+              line: 1317,
+              resolvedBy: null,
+              comments: {
+                nodes: [
+                  { author: { __typename: "Bot", login: "openclaw" }, body: "**P2** order matters", databaseId: 7 },
+                ],
+              },
+              latest: {
+                nodes: [
+                  { author: { __typename: "Bot", login: "openclaw" }, body: "**P2** order matters", databaseId: 7 },
+                ],
+              },
             },
-            latest: {
-              nodes: [
-                { author: { __typename: "Bot", login: "openclaw" }, body: "**P2** order matters", databaseId: 7 },
-              ],
-            },
-          },
-        ],
-        pageInfo: { endCursor: null, hasNextPage: false },
+          ],
+          pageInfo: { endCursor: null, hasNextPage: false },
+        },
       },
     },
-  },
-});
-const runsJson = JSON.stringify([
-  { databaseId: 77, headSha: HEAD, status: "completed", conclusion: "failure", name: "Check" },
-  { databaseId: 76, headSha: Str.repeat(40)("0"), status: "completed", conclusion: "success", name: "Check" },
-]);
+  }),
+  identity
+);
+const runsJson = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
+    { databaseId: 77, headSha: HEAD, status: "completed", conclusion: "failure", name: "Check" },
+    { databaseId: 76, headSha: Str.repeat(40)("0"), status: "completed", conclusion: "success", name: "Check" },
+  ]),
+  identity
+);
 
 type Invocation = { readonly command: string; readonly args: ReadonlyArray<string> };
 
@@ -403,8 +423,9 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("yeet status chain (W10)", (i
       const root = yield* tempRoot();
       const recorder = yield* makeRecorder;
       const snapshot = yield* collectYeetStatus(contextFor(root), true).pipe(withFakeRunner(recorder, Duration.zero));
+      const encoded = yield* YeetStatusSnapshotJson.encode(snapshot);
       const json = pipe(
-        yield* YeetStatusSnapshotJson.encode(snapshot),
+        encoded,
         Str.replaceAll(root, "<root>"),
         Str.replaceAll(/feature_chain-[0-9a-f]{12}/gu, "feature_chain-<run>")
       );

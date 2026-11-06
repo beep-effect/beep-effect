@@ -12,6 +12,7 @@ import { Jsonc } from "@beep/jsonc/Jsonc";
 import { formatJsonc, readArtifact, writeArtifact } from "@beep/repo-cli-kit/artifacts/index";
 import { messageWithCause } from "@beep/repo-cli-kit/cli/CommandErrorFields";
 import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
+import { formatCommandLine } from "@beep/repo-cli-kit/process/StepExec";
 import { DomainError } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { HUNDRED as HUNDRED_PERCENTAGE, Percentage, ZERO as ZERO_PERCENTAGE } from "@beep/schema/Percentage";
@@ -21,7 +22,7 @@ import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual, flow, pipe } from "effect/Function";
+import { dual, flow, identity, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Inspectable from "effect/Inspectable";
 import * as Match from "effect/Match";
@@ -36,12 +37,7 @@ import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { enforceRatchet } from "../../../internal/ratchet/index.ts";
 import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../../internal/repo-run/ChangedFiles.ts";
-import {
-  adaptGitKitError,
-  resolveGitCommit,
-  resolveGitMergeBase,
-  runGitRawOutput,
-} from "../../../internal/repo-run/GitExec.ts";
+import { adaptGitKitError, resolveGitCommit, resolveGitMergeBase } from "../../../internal/repo-run/GitExec.ts";
 import { QualityTaskConfigurationError, QualityTaskFailed } from "../Quality.errors.ts";
 import {
   CoverageBaselineRowDelta,
@@ -60,6 +56,8 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
 import type { WorkspacePackageInfo } from "./QualityArtifactSupport.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageRegression");
 
@@ -1773,6 +1771,26 @@ const coverageBaselineGitAdapter: GitCommandErrorAdapter<QualityTaskConfiguratio
   onTruncated: O.none(),
 };
 
+// `git show <rev>:<baseline>` through the kit; an absent document is the adapter's exit-128 error, as git's own
+// `does not exist` exit was (the document is ~1.5 MB, inside the kit's 16 MiB bound).
+const showCoverageBaselineAt = Effect.fn("CoverageRegression.showCoverageBaselineAt")(function* (
+  repoRoot: string,
+  rev: string
+) {
+  const git = yield* Git;
+  const invocation = GitCommand.show(rev, coverageRegressionBaselinePath);
+  const text = yield* git
+    .show(repoRoot, rev, coverageRegressionBaselinePath)
+    .pipe(Effect.mapError(adaptGitKitError(invocation, coverageBaselineGitAdapter)));
+  return yield* Effect.fromOption(text, () =>
+    coverageBaselineGitAdapter.onNonZeroExit({
+      commandLine: formatCommandLine("git", invocation.redactedArgs),
+      exitCode: 128,
+      output: `${rev}:${coverageRegressionBaselinePath} does not exist`,
+    })
+  );
+});
+
 const packageBaselineEquivalence = S.toEquivalence(CoveragePackageBaseline);
 const tieredMinimumEquivalence = S.toEquivalence(CoverageTieredMinimum);
 const rationaleRecordEquivalence = S.toEquivalence(S.Record(S.String, S.NonEmptyString));
@@ -1922,13 +1940,7 @@ export const coverageBaselineRowDeltaFromBase = Effect.fn("CoverageRegression.co
     // the document must come from that same commit: reading the ref's tip would
     // compare against rows main changed after this branch diverged.
     const previous = yield* resolveGitMergeBase(repoRoot, base, "HEAD", coverageBaselineGitAdapter).pipe(
-      Effect.flatMap((mergeBase) =>
-        runGitRawOutput(
-          repoRoot,
-          ["show", `${mergeBase}:${coverageRegressionBaselinePath}`],
-          coverageBaselineGitAdapter
-        )
-      ),
+      Effect.flatMap((mergeBase) => showCoverageBaselineAt(repoRoot, mergeBase)),
       Effect.flatMap(Jsonc.bind(CoverageRegressionBaseline).decode),
       Effect.option
     );
@@ -2176,11 +2188,7 @@ const readComparisonBaseline = Effect.fn("CoverageRegression.readComparisonBasel
   return yield* O.match(configuredBase, {
     onNone: () => readBaseline(repoRoot).pipe(Effect.map(baseOnlyComparison)),
     onSome: Effect.fn("CoverageRegression.readBaseComparisonBaseline")(function* (base) {
-      const baseBaseline = yield* runGitRawOutput(
-        repoRoot,
-        ["show", `${base}:${coverageRegressionBaselinePath}`],
-        coverageBaselineGitAdapter
-      ).pipe(
+      const baseBaseline = yield* showCoverageBaselineAt(repoRoot, base).pipe(
         Effect.flatMap(Jsonc.bind(CoverageRegressionBaseline).decode),
         Effect.mapError((cause) =>
           coverageConfigurationError(`Failed to read the coverage comparison baseline from ${base}`, cause)
@@ -2219,13 +2227,7 @@ const readComparisonBaseline = Effect.fn("CoverageRegression.readComparisonBasel
       // reads fail closed — an unreadable merge base or an unresolvable change
       // set leaves every row at the base floor, exactly as before.
       const mergeBase = yield* resolveGitMergeBase(repoRoot, base, "HEAD", coverageBaselineGitAdapter).pipe(
-        Effect.flatMap((mergeBaseCommit) =>
-          runGitRawOutput(
-            repoRoot,
-            ["show", `${mergeBaseCommit}:${coverageRegressionBaselinePath}`],
-            coverageBaselineGitAdapter
-          )
-        ),
+        Effect.flatMap((mergeBaseCommit) => showCoverageBaselineAt(repoRoot, mergeBaseCommit)),
         Effect.flatMap(Jsonc.bind(CoverageRegressionBaseline).decode),
         Effect.option
       );
@@ -2288,14 +2290,13 @@ const readPreviousBaseline = Effect.fn("CoverageRegression.readPreviousBaseline"
     return O.none();
   }
 
-  return O.some(
-    yield* readArtifact({
-      path: baselinePath,
-      schema: CoverageRegressionBaselineDocument,
-      onReadError: baselineReadError,
-      onDecodeError: baselineDecodeError,
-    })
-  );
+  const readArtifact1 = yield* readArtifact({
+    path: baselinePath,
+    schema: CoverageRegressionBaselineDocument,
+    onReadError: baselineReadError,
+    onDecodeError: baselineDecodeError,
+  });
+  return O.some(readArtifact1);
 });
 
 const formatBaseline = Effect.fn("CoverageRegression.formatBaseline")(function* (
@@ -2675,15 +2676,17 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
     // run replaced every row of every package it touched — including files the
     // change set never went near.
     const writePlan = O.isSome(currentPrevious)
-      ? O.some(
-          planCoverageBaselineWrite(
-            currentPrevious.value.packages,
-            entries,
-            yield* collectCoverageBaselineChangeSet(repoRoot),
-            CoverageBaselineWriteOptions.make({
-              replaceAll,
-              carryUnmeasured: scoped,
-            })
+      ? yield* Effect.asSome(
+          Effect.map(collectCoverageBaselineChangeSet(repoRoot), (value) =>
+            planCoverageBaselineWrite(
+              currentPrevious.value.packages,
+              entries,
+              value,
+              CoverageBaselineWriteOptions.make({
+                replaceAll,
+                carryUnmeasured: scoped,
+              })
+            )
           )
         )
       : O.none<CoverageBaselineWritePlan>();
@@ -3966,10 +3969,14 @@ export const renderCoverageMeasuredRowProposals = (result: CoverageComparisonRes
       ...A.map(
         proposals,
         (proposal) =>
-          `  ${JSON.stringify(proposal.packageName)} ${O.match(proposal.filePath, {
-            onNone: () => "totals",
-            onSome: (filePath) => `files[${JSON.stringify(filePath)}]`,
-          })}: ${Result.match(encodeCoverageFileBaseline(proposal.row), {
+          `  ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(proposal.packageName), identity)} ${O.match(
+            proposal.filePath,
+            {
+              onNone: () => "totals",
+              onSome: (filePath) =>
+                `files[${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(filePath), identity)}]`,
+            }
+          )}: ${Result.match(encodeCoverageFileBaseline(proposal.row), {
             onFailure: (error) => `[cannot encode measured row: ${error.message}]`,
             onSuccess: (encoded) => encoded,
           })}`

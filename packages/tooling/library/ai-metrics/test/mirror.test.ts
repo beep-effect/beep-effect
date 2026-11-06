@@ -76,13 +76,15 @@ it.effect("preserves the manifest.json wire shape", () =>
 
 it.effect("rejects exact and extended local paths in JSON payloads", () =>
   Effect.gen(function* () {
-    pipe(
-      yield* aiMetricsMirrorPayloadContainsJsonStringPrefix('{"remoteRoot":"/tmp/ai-metrics"}', "/tmp/ai-metrics"),
-      assertTrue
+    const aiMetricsMirrorPayloadContainsJsonStringPrefix1 = yield* aiMetricsMirrorPayloadContainsJsonStringPrefix(
+      '{"remoteRoot":"/tmp/ai-metrics"}',
+      "/tmp/ai-metrics"
     );
-    pipe(
-      yield* aiMetricsMirrorPayloadContainsJsonStringPrefix('{"remoteRoot":"/tmp/ai-metrics/sub"}', "/tmp/ai-metrics"),
-      assertTrue
+    pipe(aiMetricsMirrorPayloadContainsJsonStringPrefix1, assertTrue);
+    const aiMetricsMirrorPayloadContainsJsonStringPrefix2 = yield* aiMetricsMirrorPayloadContainsJsonStringPrefix(
+      '{"remoteRoot":"/tmp/ai-metrics/sub"}',
+      "/tmp/ai-metrics"
     );
+    pipe(aiMetricsMirrorPayloadContainsJsonStringPrefix2, assertTrue);
   })
 );

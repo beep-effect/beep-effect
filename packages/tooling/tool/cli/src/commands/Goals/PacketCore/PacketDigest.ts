@@ -18,14 +18,17 @@ import { A, O, pipe, Str } from "@beep/utils";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { isJsonRecord } from "../Inventory.ts";
 import { PacketEvent, PacketEventType } from "./PacketCore.schemas.ts";
 import type { PacketEventId } from "./PacketCore.schemas.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketDigest");
 
@@ -47,7 +50,8 @@ export const PACKET_EVENT_SEQ_WIDTH = 5;
 
 // JSON.stringify is used ONLY on primitives here: string escaping must match
 // JSON exactly, and no schema codec expresses a key-sorted canonical form.
-const canonicalPrimitive = (value: string | number | boolean): string => JSON.stringify(value);
+const canonicalPrimitive = (value: string | number | boolean): string =>
+  Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity);
 
 const isJsonPrimitive = (value: unknown): value is string | number | boolean =>
   P.isString(value) || P.isNumber(value) || P.isBoolean(value);
@@ -203,7 +207,8 @@ export const sha256Hex = Effect.fn("PacketDigest.sha256Hex")(function* (text: st
  */
 export const sha256HexBytes = Effect.fn("PacketDigest.sha256HexBytes")(function* (bytes: Uint8Array) {
   const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, bytes));
+  const digest1 = yield* crypto.digest(Digest.sha256, bytes);
+  return Hex.encode(digest1);
 });
 
 const encodePacketEvent = S.encodeUnknownEffect(PacketEvent);

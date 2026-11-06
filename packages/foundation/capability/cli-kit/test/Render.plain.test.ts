@@ -26,8 +26,10 @@ describe("Render.plain: verbatim whitespace fidelity", () => {
   it.effect("keeps trailing spaces and whitespace-only indentation at top level and inside a list", () =>
     Effect.gen(function* () {
       const block = Doc.verbatim("x  \n  \n\ny  ", { indent: 2 });
-      assert.strictEqual(yield* plain([block], { width: 1 }), "  x  \n    \n  \n  y  ");
-      assert.strictEqual(yield* plain([Doc.list([block])], { width: 1 }), "-   x  \n      \n    \n    y  ");
+      const plain1 = yield* plain([block], { width: 1 });
+      assert.strictEqual(plain1, "  x  \n    \n  \n  y  ");
+      const plain2 = yield* plain([Doc.list([block])], { width: 1 });
+      assert.strictEqual(plain2, "-   x  \n      \n    \n    y  ");
     })
   );
 });
@@ -74,17 +76,22 @@ describe("Render.plain: no escapes of any kind", () => {
 describe("Render.plain: inline content", () => {
   it.effect("a heading is its text alone, and code carries literal backticks", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* linesOf([Doc.heading(2, ["Run ", Doc.code("pnpm test")])]), ["Run `pnpm test`"]);
-      assert.deepStrictEqual(yield* linesOf([Doc.heading(1, "Title"), Doc.heading(4, "Sub")]), ["Title", "Sub"]);
+      const linesOf3 = yield* linesOf([Doc.heading(2, ["Run ", Doc.code("pnpm test")])]);
+      assert.deepStrictEqual(linesOf3, ["Run `pnpm test`"]);
+      const linesOf4 = yield* linesOf([Doc.heading(1, "Title"), Doc.heading(4, "Sub")]);
+      assert.deepStrictEqual(linesOf4, ["Title", "Sub"]);
     })
   );
 
   it.effect("a path joins with ' > ' for any audience and either glyph set; a status is its glyph", () =>
     Effect.gen(function* () {
       const doc = [Doc.paragraph(Doc.status(Status.core, "failure"), " ", Doc.path("src", "a.test.ts", "suite"))];
-      assert.deepStrictEqual(yield* linesOf(doc), ["✗ src > a.test.ts > suite"]);
-      assert.deepStrictEqual(yield* linesOf(doc, { audience: "human" }), ["✗ src > a.test.ts > suite"]);
-      assert.deepStrictEqual(yield* linesOf(doc, { glyphs: Glyphs.ascii }), ["[FAIL] src > a.test.ts > suite"]);
+      const linesOf5 = yield* linesOf(doc);
+      assert.deepStrictEqual(linesOf5, ["✗ src > a.test.ts > suite"]);
+      const linesOf6 = yield* linesOf(doc, { audience: "human" });
+      assert.deepStrictEqual(linesOf6, ["✗ src > a.test.ts > suite"]);
+      const linesOf7 = yield* linesOf(doc, { glyphs: Glyphs.ascii });
+      assert.deepStrictEqual(linesOf7, ["[FAIL] src > a.test.ts > suite"]);
     })
   );
 
@@ -176,18 +183,17 @@ describe("Render.plain: paragraphs", () => {
 
   it.effect("an empty paragraph is an empty line, and an empty document is the empty string", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* plain([]), "");
-      assert.deepStrictEqual(yield* linesOf([Doc.paragraph()]), [""]);
+      const plain8 = yield* plain([]);
+      assert.strictEqual(plain8, "");
+      const linesOf9 = yield* linesOf([Doc.paragraph()]);
+      assert.deepStrictEqual(linesOf9, [""]);
     })
   );
 
   it.effect("top-level blocks are consecutive lines", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* linesOf([Doc.heading(1, "T"), Doc.paragraph("a"), Doc.paragraph("b")]), [
-        "T",
-        "a",
-        "b",
-      ]);
+      const linesOf10 = yield* linesOf([Doc.heading(1, "T"), Doc.paragraph("a"), Doc.paragraph("b")]);
+      assert.deepStrictEqual(linesOf10, ["T", "a", "b"]);
     })
   );
 });
@@ -208,24 +214,18 @@ describe("Render.plain: lists", () => {
     () =>
       Effect.gen(function* () {
         const items = A.map(["a", "b", "c", "d"], (t) => Doc.paragraph(t));
-        assert.deepStrictEqual(yield* linesOf([Doc.list(items, { cap: 2 })]), ["- a", "- b", "… 2 more"]);
-        assert.deepStrictEqual(yield* linesOf([Doc.list(items, { cap: 2 })], { glyphs: Glyphs.ascii }), [
-          "- a",
-          "- b",
-          "... 2 more",
+        const linesOf11 = yield* linesOf([Doc.list(items, { cap: 2 })]);
+        assert.deepStrictEqual(linesOf11, ["- a", "- b", "… 2 more"]);
+        const linesOf12 = yield* linesOf([Doc.list(items, { cap: 2 })], { glyphs: Glyphs.ascii });
+        assert.deepStrictEqual(linesOf12, ["- a", "- b", "... 2 more"]);
+        const linesOf13 = yield* linesOf([
+          Doc.list(items, { cap: 1, overflow: (hidden) => [`… ${hidden} more (see `, Doc.code("tool"), ")"] }),
         ]);
-        assert.deepStrictEqual(
-          yield* linesOf([
-            Doc.list(items, { cap: 1, overflow: (hidden) => [`… ${hidden} more (see `, Doc.code("tool"), ")"] }),
-          ]),
-          ["- a", "… 3 more (see `tool`)"]
-        );
-        assert.deepStrictEqual(
-          yield* linesOf([Doc.list(items, { cap: 4 })]),
-          ["- a", "- b", "- c", "- d"],
-          "a cap that is not exceeded adds no row"
-        );
-        assert.deepStrictEqual(yield* linesOf([Doc.list(items, { cap: 0 })]), ["… 4 more"]);
+        assert.deepStrictEqual(linesOf13, ["- a", "… 3 more (see `tool`)"]);
+        const linesOf14 = yield* linesOf([Doc.list(items, { cap: 4 })]);
+        assert.deepStrictEqual(linesOf14, ["- a", "- b", "- c", "- d"], "a cap that is not exceeded adds no row");
+        const linesOf15 = yield* linesOf([Doc.list(items, { cap: 0 })]);
+        assert.deepStrictEqual(linesOf15, ["… 4 more"]);
       })
   );
 });
@@ -250,18 +250,10 @@ describe("Render.plain: tables", () => {
 
   it.effect("honours align, per column, in the header and the cells", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* linesOf([table("right")]), [
-        "Name   Count",
-        "-----  -----",
-        "alpha      1",
-        "b       1234",
-      ]);
-      assert.deepStrictEqual(yield* linesOf([table("center")]), [
-        "Name   Count",
-        "-----  -----",
-        "alpha    1",
-        "b      1234",
-      ]);
+      const linesOf16 = yield* linesOf([table("right")]);
+      assert.deepStrictEqual(linesOf16, ["Name   Count", "-----  -----", "alpha      1", "b       1234"]);
+      const linesOf17 = yield* linesOf([table("center")]);
+      assert.deepStrictEqual(linesOf17, ["Name   Count", "-----  -----", "alpha    1", "b      1234"]);
     })
   );
 
@@ -468,7 +460,8 @@ describe("Render.plain: trees", () => {
 
   it.effect("draws with the glyph set's segments: unicode", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* linesOf([tree]), ["root", "├─ a", "│  ├─ a1", "│  └─ a2", "└─ b"]);
+      const linesOf18 = yield* linesOf([tree]);
+      assert.deepStrictEqual(linesOf18, ["root", "├─ a", "│  ├─ a1", "│  └─ a2", "└─ b"]);
     })
   );
 
@@ -483,7 +476,8 @@ describe("Render.plain: trees", () => {
 
   it.effect("a lone root is just its label", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* linesOf([Doc.tree({ label: "only" })]), ["only"]);
+      const linesOf19 = yield* linesOf([Doc.tree({ label: "only" })]);
+      assert.deepStrictEqual(linesOf19, ["only"]);
     })
   );
 });
@@ -502,11 +496,10 @@ describe("Render.plain: collapsible, callout, code and diff", () => {
         const out = yield* linesOf([Doc.callout(kind, [Doc.paragraph("careful")])]);
         assert.deepStrictEqual(out, [`${Str.toUpperCase(kind)}: careful`]);
       }
-      assert.deepStrictEqual(yield* linesOf([Doc.callout("warning", [Doc.paragraph("one"), Doc.paragraph("two")])]), [
-        "WARNING: one",
-        "         two",
-      ]);
-      assert.deepStrictEqual(yield* linesOf([Doc.callout("note", [])]), ["NOTE:"]);
+      const linesOf20 = yield* linesOf([Doc.callout("warning", [Doc.paragraph("one"), Doc.paragraph("two")])]);
+      assert.deepStrictEqual(linesOf20, ["WARNING: one", "         two"]);
+      const linesOf21 = yield* linesOf([Doc.callout("note", [])]);
+      assert.deepStrictEqual(linesOf21, ["NOTE:"]);
     })
   );
 
@@ -520,14 +513,10 @@ describe("Render.plain: collapsible, callout, code and diff", () => {
 
   it.effect("a diff is '- expected' lines then '+ received' lines, and a cap limits each side", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* linesOf([Doc.diff("a\nb", "a\nc")]), ["- a", "- b", "+ a", "+ c"]);
-      assert.deepStrictEqual(yield* linesOf([Doc.diff("1\n2\n3\n4", "x\ny", { cap: 2 })]), [
-        "- 1",
-        "- 2",
-        "  … 2 more lines",
-        "+ x",
-        "+ y",
-      ]);
+      const linesOf22 = yield* linesOf([Doc.diff("a\nb", "a\nc")]);
+      assert.deepStrictEqual(linesOf22, ["- a", "- b", "+ a", "+ c"]);
+      const linesOf23 = yield* linesOf([Doc.diff("1\n2\n3\n4", "x\ny", { cap: 2 })]);
+      assert.deepStrictEqual(linesOf23, ["- 1", "- 2", "  … 2 more lines", "+ x", "+ y"]);
     })
   );
 });
@@ -546,10 +535,10 @@ describe("Render.plain: Counts", () => {
       Effect.gen(function* () {
         const out = yield* linesOf([Doc.counts({ counters, durationMs: 1200, layout: "inline" })]);
         assert.deepStrictEqual(out, ["3/5 passed, 1 failed, 1 skipped (1.2s)"]);
-        assert.deepStrictEqual(
-          yield* linesOf([Doc.counts({ label: "Widgets", counters, qualifier: "(1 flaky)", layout: "inline" })]),
-          ["Widgets: 3/5 passed, 1 failed, 1 skipped (1 flaky)"]
-        );
+        const linesOf24 = yield* linesOf([
+          Doc.counts({ label: "Widgets", counters, qualifier: "(1 flaky)", layout: "inline" }),
+        ]);
+        assert.deepStrictEqual(linesOf24, ["Widgets: 3/5 passed, 1 failed, 1 skipped (1 flaky)"]);
       })
   );
 
@@ -559,9 +548,8 @@ describe("Render.plain: Counts", () => {
         ...counters.slice(0, 2),
         Doc.counter(Status.core, "pending", { key: "todo", label: "todo", n: 0, showZero: true }),
       ];
-      assert.deepStrictEqual(yield* linesOf([Doc.counts({ counters: shown, layout: "inline" })]), [
-        "3/4 passed, 1 failed, 0 todo",
-      ]);
+      const linesOf25 = yield* linesOf([Doc.counts({ counters: shown, layout: "inline" })]);
+      assert.deepStrictEqual(linesOf25, ["3/4 passed, 1 failed, 0 todo"]);
     })
   );
 
@@ -569,7 +557,8 @@ describe("Render.plain: Counts", () => {
     Effect.gen(function* () {
       const node = Doc.counts({ counters, total: () => 99, layout: "inline" });
       assert.strictEqual(Doc.total(node), 99);
-      assert.deepStrictEqual(yield* linesOf([node]), ["3/99 passed, 1 failed, 1 skipped"]);
+      const linesOf26 = yield* linesOf([node]);
+      assert.deepStrictEqual(linesOf26, ["3/99 passed, 1 failed, 1 skipped"]);
       const excludingSkips = Doc.counts({
         counters,
         total: (all) =>
@@ -580,26 +569,20 @@ describe("Render.plain: Counts", () => {
           ),
         layout: "inline",
       });
-      assert.deepStrictEqual(yield* linesOf([excludingSkips]), ["3/4 passed, 1 failed, 1 skipped"]);
+      const linesOf27 = yield* linesOf([excludingSkips]);
+      assert.deepStrictEqual(linesOf27, ["3/4 passed, 1 failed, 1 skipped"]);
     })
   );
 
   it.effect("columns: aligned label and number pairs, numbers right-aligned, then qualifier and duration", () =>
     Effect.gen(function* () {
       const wide = [...counters.slice(0, 3), Doc.counter(Status.core, "info", { key: "n", label: "noted", n: 120 })];
-      assert.deepStrictEqual(yield* linesOf([Doc.counts({ label: "Summary", counters: wide, layout: "columns" })]), [
-        "Summary",
-        "passed     3",
-        "failed     1",
-        "skipped    1",
-        "noted    120",
+      const linesOf28 = yield* linesOf([Doc.counts({ label: "Summary", counters: wide, layout: "columns" })]);
+      assert.deepStrictEqual(linesOf28, ["Summary", "passed     3", "failed     1", "skipped    1", "noted    120"]);
+      const linesOf29 = yield* linesOf([
+        Doc.counts({ counters: counters.slice(0, 2), qualifier: "flaky", durationMs: 250, layout: "columns" }),
       ]);
-      assert.deepStrictEqual(
-        yield* linesOf([
-          Doc.counts({ counters: counters.slice(0, 2), qualifier: "flaky", durationMs: 250, layout: "columns" }),
-        ]),
-        ["passed  3", "failed  1", "flaky", "250ms"]
-      );
+      assert.deepStrictEqual(linesOf29, ["passed  3", "failed  1", "flaky", "250ms"]);
     })
   );
 
@@ -631,7 +614,8 @@ describe("Render.plain: Counts", () => {
         counters: [Doc.counter(Status.core, "success", { key: "k", label: "frobs", n: 2 })],
         layout: "inline",
       });
-      assert.deepStrictEqual(yield* linesOf([node]), ["2/2 frobs"]);
+      const linesOf30 = yield* linesOf([node]);
+      assert.deepStrictEqual(linesOf30, ["2/2 frobs"]);
     })
   );
 });
@@ -708,27 +692,27 @@ describe("Render.plain: okfit's trial (link suffix, verbatim, counts options, an
       const doc = [
         Doc.paragraph(Doc.link({ file: "/repo/okf/modules/a.md", line: 5, col: 3 }, "modules/a.md:5:3"), " error x"),
       ];
-      assert.strictEqual(yield* plain(doc, { displayPath: bundle }), "modules/a.md:5:3 error x");
+      const plain31 = yield* plain(doc, { displayPath: bundle });
+      assert.strictEqual(plain31, "modules/a.md:5:3 error x");
     })
   );
 
   it.effect("suffix: false never appends the target, and suffix: true always does", () =>
     Effect.gen(function* () {
       const target = { file: "/repo/okf/modules/a.md", line: 5 };
-      assert.strictEqual(yield* plain([Doc.paragraph(Doc.link(target, "here", { suffix: false }))]), "here");
-      assert.strictEqual(
-        yield* plain([Doc.paragraph(Doc.link(target, "modules/a.md:5", { suffix: true }))], { displayPath: bundle }),
-        "modules/a.md:5 (modules/a.md:5)"
-      );
+      const plain32 = yield* plain([Doc.paragraph(Doc.link(target, "here", { suffix: false }))]);
+      assert.strictEqual(plain32, "here");
+      const plain33 = yield* plain([Doc.paragraph(Doc.link(target, "modules/a.md:5", { suffix: true }))], {
+        displayPath: bundle,
+      });
+      assert.strictEqual(plain33, "modules/a.md:5 (modules/a.md:5)");
     })
   );
 
   it.effect("a link with no target renders as its label", () =>
     Effect.gen(function* () {
-      assert.strictEqual(
-        yield* plain([Doc.paragraph(Doc.link(undefined, "(bundle)"), " error x")]),
-        "(bundle) error x"
-      );
+      const plain34 = yield* plain([Doc.paragraph(Doc.link(undefined, "(bundle)"), " error x")]);
+      assert.strictEqual(plain34, "(bundle) error x");
     })
   );
 
@@ -746,18 +730,20 @@ describe("Render.plain: okfit's trial (link suffix, verbatim, counts options, an
 
   it.effect("share: false drops the headline's share of the total", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* plain([Doc.counts({ layout: "inline", counters })]), "2/3 errors, 1 warnings");
-      assert.strictEqual(
-        yield* plain([Doc.counts({ layout: "inline", counters, share: false, qualifier: "in 3 concepts" })]),
-        "2 errors, 1 warnings in 3 concepts"
-      );
+      const plain35 = yield* plain([Doc.counts({ layout: "inline", counters })]);
+      assert.strictEqual(plain35, "2/3 errors, 1 warnings");
+      const plain36 = yield* plain([
+        Doc.counts({ layout: "inline", counters, share: false, qualifier: "in 3 concepts" }),
+      ]);
+      assert.strictEqual(plain36, "2 errors, 1 warnings in 3 concepts");
     })
   );
 
   it.effect("an annotation renders nothing, and leaves a section's spacing as it was", () =>
     Effect.gen(function* () {
       const annotation = Doc.annotation({ level: "error", file: "a.ts", line: 1 }, "boom");
-      assert.strictEqual(yield* plain([annotation]), "");
+      const plain37 = yield* plain([annotation]);
+      assert.strictEqual(plain37, "");
       const without = yield* plain([Doc.section("T", [Doc.paragraph("a"), Doc.paragraph("b")])]);
       const within = yield* plain([Doc.section("T", [Doc.paragraph("a"), annotation, Doc.paragraph("b")])]);
       assert.strictEqual(within, without);
@@ -773,16 +759,15 @@ describe("Render.plain: reporter blocks (strong, lines, file, counts tables and 
 
   it.effect("strong and em are their content as is", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* plain([Doc.paragraph("a ", Doc.strong("Total"), " ", Doc.em("x"))]), "a Total x");
+      const plain38 = yield* plain([Doc.paragraph("a ", Doc.strong("Total"), " ", Doc.em("x"))]);
+      assert.strictEqual(plain38, "a Total x");
     })
   );
 
   it.effect("lines are one line per entry", () =>
     Effect.gen(function* () {
-      assert.strictEqual(
-        yield* plain([Doc.lines(["one", ["two ", Doc.code("x")], "- three"])]),
-        "one\ntwo `x`\n- three"
-      );
+      const plain39 = yield* plain([Doc.lines(["one", ["two ", Doc.code("x")], "- three"])]);
+      assert.strictEqual(plain39, "one\ntwo `x`\n- three");
     })
   );
 
@@ -828,12 +813,10 @@ describe("Render.plain: reporter blocks (strong, lines, file, counts tables and 
   it.effect("a compact list puts no blank lines between an item's children", () =>
     Effect.gen(function* () {
       const item = Doc.section("FAIL a.test.ts", [Doc.paragraph("expected 1"), Doc.paragraph("got 2")]);
-      assert.include(yield* plain([Doc.list([item])]), "\n\n", "control: an ordinary list keeps the section's spacing");
-      assert.deepStrictEqual(Str.split(yield* plain([Doc.list([item], { compact: true })]), "\n"), [
-        "- FAIL a.test.ts",
-        "  expected 1",
-        "  got 2",
-      ]);
+      const plain40 = yield* plain([Doc.list([item])]);
+      assert.include(plain40, "\n\n", "control: an ordinary list keeps the section's spacing");
+      const plain41 = yield* plain([Doc.list([item], { compact: true })]);
+      assert.deepStrictEqual(Str.split(plain41, "\n"), ["- FAIL a.test.ts", "  expected 1", "  got 2"]);
     })
   );
 
@@ -842,15 +825,18 @@ describe("Render.plain: reporter blocks (strong, lines, file, counts tables and 
       const content = "a very long line of text";
       const cut = yield* plain([Doc.line(content, { truncate: true })], { width: 10 });
       assert.strictEqual(cut, "a very lo…");
-      assert.isAbove(Str.split(yield* plain([Doc.line(content)], { width: 10 }), "\n").length, 1);
+      const plain42 = yield* plain([Doc.line(content)], { width: 10 });
+      assert.isAbove(Str.split(plain42, "\n").length, 1);
     })
   );
 
   it.effect("diffText is the unified diff as given, sanitized, with a cap", () =>
     Effect.gen(function* () {
       const unified = `@@ -1 +1 @@\n-old${ESC}[31m\n+new\n context`;
-      assert.strictEqual(yield* plain([Doc.diffText(unified)]), "@@ -1 +1 @@\n-old\n+new\n context");
-      assert.strictEqual(yield* plain([Doc.diffText(unified, { cap: 2 })]), "@@ -1 +1 @@\n-old\n… 2 more lines");
+      const plain43 = yield* plain([Doc.diffText(unified)]);
+      assert.strictEqual(plain43, "@@ -1 +1 @@\n-old\n+new\n context");
+      const plain44 = yield* plain([Doc.diffText(unified, { cap: 2 })]);
+      assert.strictEqual(plain44, "@@ -1 +1 @@\n-old\n… 2 more lines");
     })
   );
 
@@ -890,7 +876,8 @@ describe("Render.plain: diffText in a compact list item (A5)", () => {
 
   it.effect("control: outside a list a blank line is empty, and a non-compact list keeps its separators empty", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* plain([Doc.diffText("+ a\n\n- b")]), "+ a\n\n- b");
+      const plain45 = yield* plain([Doc.diffText("+ a\n\n- b")]);
+      assert.strictEqual(plain45, "+ a\n\n- b");
       const loose = yield* plain([Doc.list([Doc.section("T", [Doc.paragraph("x")])])]);
       assert.strictEqual(loose, "- T\n\n  x");
     })

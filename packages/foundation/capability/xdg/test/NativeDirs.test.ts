@@ -84,15 +84,19 @@ describe("NativeDirs.resolve", () => {
 
     it.effect("has no native mapping on linux — XDG is the native convention there", () =>
       Effect.gen(function* () {
-        assertNone(yield* resolve("linux"));
+        const resolved = yield* resolve("linux");
+        assertNone(resolved);
       })
     );
 
     it.effect("has no native mapping on other unix platforms", () =>
       Effect.gen(function* () {
-        assertNone(yield* resolve("freebsd"));
-        assertNone(yield* resolve("openbsd"));
-        assertNone(yield* resolve("sunos"));
+        const resolved1 = yield* resolve("freebsd");
+        assertNone(resolved1);
+        const resolved2 = yield* resolve("openbsd");
+        assertNone(resolved2);
+        const resolved3 = yield* resolve("sunos");
+        assertNone(resolved3);
       })
     );
   });

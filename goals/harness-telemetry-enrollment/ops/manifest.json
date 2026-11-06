@@ -42,13 +42,40 @@
     "explorations/agent-observability-rebuild/DECISIONS.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
+    "research/COVERAGE.md",
     "research/CURRENT-SOURCE-ADMISSION.md",
     "research/HARNESS-ROUTES.md",
-    "ops/history/current-source-admission-20261103.json",
-    "research/COVERAGE.md",
     "research/OPPORTUNITIES.md",
-    "ops/history/post-t3-source-admission-20261103.json"
+    "research/SOURCES.md",
+    "research/audit/ADHD.md",
+    "research/audit/DEPLOYMENT-AUDIT.md",
+    "research/audit/DESIGN-REVIEW.md",
+    "research/audit/FLEET-AUDIT.md",
+    "research/audit/HARNESS-COVERAGE.md",
+    "research/audit/LIVE-AUDIT.md",
+    "research/audit/PHOENIX-CAPABILITIES.md",
+    "research/audit/REVIEW.md",
+    "research/audit/SOURCE-AUDIT.md",
+    "research/audit/SOURCES.md",
+    "research/audit/codex-versioned-config-evidence.json",
+    "research/audit/dankserver-live-receipt.txt",
+    "research/audit/dankserver-producer-settings.json",
+    "research/audit/fleet-agent-surfaces.json",
+    "research/audit/fleet-collector-status.json",
+    "research/audit/fleet-inventory.json",
+    "research/audit/phoenix-attribute-key-sample.json",
+    "research/audit/phoenix-filter-counts.json",
+    "research/audit/phoenix-project-schema.json",
+    "research/audit/phoenix-project-totals.json",
+    "research/audit/phoenix-query-schema.json",
+    "research/audit/phoenix-retention-types.json",
+    "research/audit/phoenix-safe-producer-sample.json",
+    "research/audit/phoenix-schema-details.json",
+    "research/audit/phoenix-semantic-coverage.json",
+    "research/audit/phoenix-surface-counts.json",
+    "research/audit/phoenix-window-and-coverage.json",
+    "research/audit/prometheus-metric-inventory.json",
+    "research/audit/upstream-license-checks.json"
   ],
   "agentLaunchers": [
     {
@@ -100,5 +127,9 @@
   ],
   "statusNote": "Enrollment remains active. Supporting PR2663 refreshes source-bound admission after accepted T3-only retirement2594:81 preparation inputs,87 disposable and86 live selected bindings, exact2synthetic events per stage, fresh backend readback and independent reviews. Separate actual-root identity proof passes. Historical470d609 receipts and prototype remain preserved; incompatible active session scripts removed without restoring messaging. All seven real harness populations remain Unknown. Native one-shot producer work proceeds separately; recovery forwarder service/timer remain masked/inactive.",
   "resumeConditions": [],
-  "dependencies": ["goals/agent-observability-foundation"]
+  "dependencies": ["goals/agent-observability-foundation"],
+  "researchReferences": [
+    "ops/history/current-source-admission-20261103.json",
+    "ops/history/post-t3-source-admission-20261103.json"
+  ]
 }

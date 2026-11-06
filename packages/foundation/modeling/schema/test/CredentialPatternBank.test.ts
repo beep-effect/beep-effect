@@ -32,7 +32,9 @@ describe("canonical credential bank", () => {
           expect(
             A.every(matches, (match) => match.start === Str.length(prefix) && match.end === Str.length(input))
           ).toBe(true);
-          expect(Str.includes(secret())(yield* encodeMatches(matches))).toBe(false);
+          const argument = Str.includes(secret());
+          const encodedMatches = yield* encodeMatches(matches);
+          expect(argument(encodedMatches)).toBe(false);
           expect(Bank.countCredentialCategory("secret-assignment")(input)).toBe(1);
           expect(
             Bank.replaceCredentialCategory("secret-assignment", "$1=[REDACTED]")(input) === `${name}=[REDACTED]`

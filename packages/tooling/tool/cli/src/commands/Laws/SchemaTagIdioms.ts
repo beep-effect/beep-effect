@@ -47,6 +47,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
@@ -60,7 +62,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import { ts } from "ts-morph";
-import { runGitRawOutput } from "../../internal/repo-run/GitExec.ts";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { typescriptFences as sharedTypeScriptFences } from "./internal/TypeScriptFences.ts";
 import { SchemaTagIdiomsExecutionError } from "./Laws.errors.ts";
 import { SchemaTagIdiomFinding, SchemaTagIdiomsSummary } from "./SchemaTagIdioms.model.ts";
@@ -1040,10 +1042,13 @@ const gitErrorAdapter: GitCommandErrorAdapter<SchemaTagIdiomsExecutionError> = {
   onTruncated: O.none(),
 };
 
-/** Unbounded NUL-separated listing: the tracked Markdown paths alone exceed the bounded readers' 512 KiB. */
+/** The tracked paths: the Markdown paths alone exceed the old bounded readers' 512 KiB, well inside the kit's 16 MiB. */
 const listTracked = Effect.fnUntraced(function* (repoRoot: string, pathspecs: ReadonlyArray<string>) {
-  const output = yield* runGitRawOutput(repoRoot, ["ls-files", "-z", "--", ...pathspecs], gitErrorAdapter);
-  return A.filter(Str.split("\0")(output), Str.isNonEmpty);
+  const git = yield* Git;
+  const entries = yield* git
+    .lsFiles(repoRoot, { pathspec: pathspecs })
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.lsFiles(pathspecs), gitErrorAdapter)));
+  return A.map(entries, (entry) => entry.path);
 });
 
 const scanTrackedFile = Effect.fnUntraced(function* (repoRoot: string, file: string, markdown: boolean) {
@@ -1096,13 +1101,15 @@ export const runSchemaTagIdioms = Effect.fn("SchemaTagIdioms.runSchemaTagIdioms"
 ): Effect.fn.Return<
   SchemaTagIdiomsSummary,
   SchemaTagIdiomsExecutionError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const repoRoot = yield* findRepoRoot(options.cwd).pipe(
     SchemaTagIdiomsExecutionError.mapError("Failed to locate the repository root")
   );
-  const typescript = A.filter(yield* listTracked(repoRoot, TYPESCRIPT_PATHSPECS), isSchemaTagIdiomsTypeScriptPath);
-  const markdown = A.filter(yield* listTracked(repoRoot, MARKDOWN_PATHSPECS), isSchemaTagIdiomsMarkdownPath);
+  const listTracked1 = yield* listTracked(repoRoot, TYPESCRIPT_PATHSPECS);
+  const typescript = A.filter(listTracked1, isSchemaTagIdiomsTypeScriptPath);
+  const listTracked2 = yield* listTracked(repoRoot, MARKDOWN_PATHSPECS);
+  const markdown = A.filter(listTracked2, isSchemaTagIdiomsMarkdownPath);
   const scans = yield* Effect.forEach(
     A.appendAll(
       A.map(typescript, (file) => [file, false] as const),

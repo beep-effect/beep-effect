@@ -68,13 +68,12 @@ export const accountsStatusCommand = Command.make(
       }
       // One document on the console, like the other `--json` surfaces that
       // automation decodes as a whole.
-      yield* Console.log(
-        yield* AccountsStatusReportJson.encode(report).pipe(
-          Effect.mapError((cause) =>
-            AccountsError.make({ reason: "decode", message: "Failed to encode the accounts report.", cause })
-          )
+      const pipe1 = yield* AccountsStatusReportJson.encode(report).pipe(
+        Effect.mapError((cause) =>
+          AccountsError.make({ reason: "decode", message: "Failed to encode the accounts report.", cause })
         )
       );
+      yield* Console.log(pipe1);
     });
     yield* reportFailure(program);
   })

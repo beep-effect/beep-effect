@@ -278,7 +278,8 @@ describe("identity RDF binding", () => {
       );
 
       pipe(result.conforms, assertTrue);
-      assert.deepStrictEqual(yield* Ref.get(receivedShapes), shapes);
+      const got = yield* Ref.get(receivedShapes);
+      assert.deepStrictEqual(got, shapes);
       assert.deepStrictEqual(request.shapes, shapes);
       const shape = request.shapes[0];
       assert.isDefined(shape);

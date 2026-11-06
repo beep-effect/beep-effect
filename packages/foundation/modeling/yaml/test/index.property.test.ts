@@ -19,7 +19,8 @@ const roundTrips = <T, E, RD, RE>(name: string, schema: S.Codec<T, E, RD, RE>): 
         const encoded = yield* S.encodeEffect(schema)(value).pipe(Effect.provideContext(services));
         const decoded = yield* S.decodeEffect(schema)(encoded).pipe(Effect.provideContext(services));
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded).pipe(Effect.provideContext(services)), encoded);
+        const pipe1 = yield* S.encodeEffect(schema)(decoded).pipe(Effect.provideContext(services));
+        assert.deepStrictEqual(pipe1, encoded);
       }),
     runs
   );

@@ -241,7 +241,9 @@ describe("LangExtractService", () => {
 
           expect(error).toBeInstanceOf(LangExtractError);
           expect(error.reason).toBe("remote-policy-denied");
-          expect(yield* Ref.get(yield* GenerationCalls)).toBe(0);
+          const GenerationCalls3 = yield* GenerationCalls;
+          const got = yield* Ref.get(GenerationCalls3);
+          expect(got).toBe(0);
         })
       );
     }
@@ -255,7 +257,8 @@ it.layer(
     "records model generation when remote policy permits the request",
     Effect.fnUntraced(function* () {
       const calls = yield* GenerationCalls;
-      expect(yield* Ref.get(calls)).toBe(0);
+      const got1 = yield* Ref.get(calls);
+      expect(got1).toBe(0);
       const service = yield* LangExtractService;
       const result = yield* service.extract(
         LangExtractRequest.make({
@@ -265,7 +268,8 @@ it.layer(
         })
       );
       expect(result.extractions).toEqual([]);
-      expect(yield* Ref.get(calls)).toBe(1);
+      const got2 = yield* Ref.get(calls);
+      expect(got2).toBe(1);
     })
   );
 });

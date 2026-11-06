@@ -39,8 +39,9 @@ it.effect("patches initialize empty state, replace scalar state and retain the l
       ),
       "InvalidData"
     );
+    const got = yield* SubscriptionRef.get(journal.latest);
     assertSome(
-      O.map(yield* SubscriptionRef.get(journal.latest), (row) => row.data),
+      O.map(got, (row) => row.data),
       replaced.data
     );
   })
@@ -50,12 +51,15 @@ it.effect("empty reads, past-end cursors and whitespace history yield no envelop
     const fs = yield* memory();
     const journal = yield* open(fs);
     yield* journal.create;
-    assert.deepStrictEqual(yield* Stream.runCollect(journal.query()), []);
+    const resultCollect = yield* Stream.runCollect(journal.query());
+    assert.deepStrictEqual(resultCollect, []);
     yield* fs.writeFileString(path, `\n \t\r\n${line(1)}`);
     assert.strictEqual((yield* Stream.runCollect(journal.query())).length, 1);
     yield* fs.writeFileString(path, line(1));
-    assert.deepStrictEqual(yield* Stream.runCollect(journal.query({ cursor: 1 })), []);
-    assert.deepStrictEqual(yield* Stream.runCollect(journal.query({ cursor: 10000 })), []);
+    const resultCollect1 = yield* Stream.runCollect(journal.query({ cursor: 1 }));
+    assert.deepStrictEqual(resultCollect1, []);
+    const resultCollect2 = yield* Stream.runCollect(journal.query({ cursor: 10000 }));
+    assert.deepStrictEqual(resultCollect2, []);
   })
 );
 it.effect("scope filters select scoped appends on historical and live surfaces", () =>
@@ -66,8 +70,9 @@ it.effect("scope filters select scoped appends on historical and live surfaces",
     yield* journal.append("noted", { round: 1, label: "mail" }, { scope: "mail" });
     yield* journal.append("noted", { round: 2, label: "other" }, { scope: "other" });
     yield* journal.append("ended", null, { scope: "other" });
+    const resultCollect3 = yield* Stream.runCollect(journal.changes({ cursor: 0, scopes: ["mail"] }));
     assert.deepStrictEqual(
-      A.map(yield* Stream.runCollect(journal.changes({ cursor: 0, scopes: ["mail"] })), (row) => row.scope),
+      A.map(resultCollect3, (row) => row.scope),
       ["mail"]
     );
   })
@@ -80,7 +85,8 @@ it.effect("closed changes replay only when a cursor is requested", () =>
     yield* journal.create;
     yield* journal.append("noted", { round: 1, label: "a" });
     yield* Scope.close(scope, Exit.void);
-    assert.deepStrictEqual(yield* Stream.runCollect(journal.changes()), []);
+    const resultCollect4 = yield* Stream.runCollect(journal.changes());
+    assert.deepStrictEqual(resultCollect4, []);
     assert.strictEqual((yield* Stream.runCollect(journal.changes({ cursor: 0 }))).length, 1);
   })
 );
@@ -93,8 +99,9 @@ it.effect("local append catches up blank, unknown and corrupt foreign lines befo
     yield* externalAppend(fs, ` \n{}\n${line(1)}`);
     const next = yield* journal.append("noted", { round: 2, label: "ours" });
     assert.strictEqual(next.line.offset, new TextEncoder().encode(` \n{}\n${line(1)}`).length);
+    const got5 = yield* SubscriptionRef.get(journal.latest);
     assertSome(
-      O.map(yield* SubscriptionRef.get(journal.latest), (row) => row.data),
+      O.map(got5, (row) => row.data),
       next.data
     );
   })
@@ -109,11 +116,10 @@ for (const target of ["events.jsonl", "/events.jsonl", "\\events.jsonl"]) {
         watch: (directory) => Stream.fromEffect(Deferred.succeed(registered, directory)).pipe(Stream.drain),
       };
       const journal = yield* open(decorated, { path: target });
-      assert.strictEqual(
-        yield* Deferred.await(registered),
-        target === "events.jsonl" ? "." : target === "/events.jsonl" ? "/" : "\\"
-      );
-      assertNone(yield* SubscriptionRef.get(journal.latest));
+      const await6 = yield* Deferred.await(registered);
+      assert.strictEqual(await6, target === "events.jsonl" ? "." : target === "/events.jsonl" ? "/" : "\\");
+      const got7 = yield* SubscriptionRef.get(journal.latest);
+      assertNone(got7);
     })
   );
 }
@@ -134,8 +140,10 @@ it.effect("a lossy payload codec fails validation before bytes are written", () 
       ),
       "InvalidData"
     );
-    assert.strictEqual(yield* fs.readFileString(path), "");
-    assertNone(yield* SubscriptionRef.get(journal.latest));
+    const readFileString8 = yield* fs.readFileString(path);
+    assert.strictEqual(readFileString8, "");
+    const got9 = yield* SubscriptionRef.get(journal.latest);
+    assertNone(got9);
   })
 );
 it.effect("an immediately ending activation watch rearms finitely and preserves local operations", () =>
@@ -216,8 +224,9 @@ it.effect("an append queued behind an in-flight write is refused once shutdown s
     const closing = yield* Scope.close(scope, Exit.void).pipe(Effect.forkChild({ startImmediately: true }));
     yield* Deferred.succeed(release, undefined);
     yield* Fiber.join(writing);
+    const join10 = yield* Fiber.join(queued);
     assertFailure(
-      Result.mapError(yield* Fiber.join(queued), (error) => error._tag),
+      Result.mapError(join10, (error) => error._tag),
       "JournalClosed"
     );
     yield* Fiber.join(closing);
@@ -239,7 +248,8 @@ it.effect("a file disappearing between the existence check and seed refresh rema
       }),
     };
     const journal = yield* open(decorated);
-    assertNone(yield* SubscriptionRef.get(journal.latest));
+    const got11 = yield* SubscriptionRef.get(journal.latest);
+    assertNone(got11);
     assertFailure(
       (yield* Effect.result(journal.append("noted", { round: 1, label: "missing" }))).pipe(
         Result.mapError((error) => error._tag)
@@ -286,7 +296,8 @@ it.effect("an ending watch ingests foreign blank and corrupt records without adv
     const fs = yield* memory();
     yield* fs.writeFileString(path, "");
     const journal = yield* endingWatch(fs, externalAppend(fs, " \n{}\n"));
-    assertNone(yield* SubscriptionRef.get(journal.latest));
+    const got12 = yield* SubscriptionRef.get(journal.latest);
+    assertNone(got12);
     assert.strictEqual((yield* journal.append("noted", { round: 1, label: "a" })).line.offset, 5);
   })
 );
@@ -295,7 +306,8 @@ it.effect("a watch ending after removal can rearm over the missing journal", () 
     const fs = yield* memory();
     yield* fs.writeFileString(path, "");
     const journal = yield* endingWatch(fs, fs.remove(path), "/journal");
-    assertNone(yield* SubscriptionRef.get(journal.latest));
+    const got13 = yield* SubscriptionRef.get(journal.latest);
+    assertNone(got13);
     yield* journal.create;
     assertFailure(
       (yield* Effect.result(journal.append("noted", { round: 1, label: "recreated" }))).pipe(
@@ -312,12 +324,14 @@ it.effect("a torn foreign line holds the cursor until its bytes are completed", 
     yield* fs.writeFileString(path, "");
     const whole = line(1);
     const journal = yield* endingWatch(fs, externalAppend(fs, Str.slice(0, 20)(whole)));
-    assertNone(yield* SubscriptionRef.get(journal.latest));
+    const got14 = yield* SubscriptionRef.get(journal.latest);
+    assertNone(got14);
     yield* externalAppend(fs, Str.slice(20)(whole));
     const next = yield* journal.append("noted", { round: 2, label: "a" });
     assert.strictEqual(next.line.offset, new TextEncoder().encode(whole).length);
+    const resultCollect15 = yield* Stream.runCollect(journal.query({ events: ["noted"] }));
     assert.deepStrictEqual(
-      A.map(yield* Stream.runCollect(journal.query({ events: ["noted"] })), (row) => row.data.round),
+      A.map(resultCollect15, (row) => row.data.round),
       [1, 2]
     );
   })
@@ -327,7 +341,8 @@ it.effect("a completed truncation resync clears latest and resumes writes on the
     const fs = yield* memory();
     yield* fs.writeFileString(path, line(1) + line(2));
     const journal = yield* endingWatch(fs, fs.writeFileString(path, ""));
-    assertNone(yield* SubscriptionRef.get(journal.latest));
+    const got16 = yield* SubscriptionRef.get(journal.latest);
+    assertNone(got16);
     assert.strictEqual((yield* journal.append("noted", { round: 3, label: "new file" })).line.offset, 0);
   })
 );
@@ -364,8 +379,10 @@ for (const [step, opens, stats] of [
       const fs = yield* memory();
       yield* fs.writeFileString(path, `\ufeff${line(1)}`);
       const journal = yield* open(vanishingAt(fs, opens, stats));
-      assert.isFalse(yield* fs.exists(path), "the journal vanished during the seed");
-      assertNone(yield* SubscriptionRef.get(journal.latest));
+      const exists17 = yield* fs.exists(path);
+      assert.isFalse(exists17, "the journal vanished during the seed");
+      const got18 = yield* SubscriptionRef.get(journal.latest);
+      assertNone(got18);
       assertFailure(
         (yield* Effect.result(journal.append("noted", { round: 1, label: "missing" }))).pipe(
           Result.mapError((error) => error._tag)

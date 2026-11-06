@@ -29,6 +29,15 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as S from "effect/Schema";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
 
+class CiRunnersTestOperationError extends S.TaggedError<
+  CiRunnersTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "CiRunnersTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in CiRunners.test.ts." }
+) {}
+
 const decodeCiRunnersPulumiConfigValues = S.decodeEffect(CiRunnersPulumiConfigValues);
 const isCiRunnersPulumiConfigValues = S.is(CiRunnersPulumiConfigValues);
 const CiRunnersPulumiConfigValuesEquivalent = S.toEquivalence(CiRunnersPulumiConfigValues);
@@ -65,29 +74,31 @@ const provisionCiRunnersStack = Effect.fnUntraced(function* (
   };
 
   yield* Effect.acquireUseRelease(
-    Effect.tryPromise(() =>
-      pulumi.runtime.setMocks(
-        {
-          call: () => ({ accountId: "123456789012", partition: "aws", value: "ami-0123456789abcdef0" }),
-          newResource: (args) => {
-            if (args.type === "aws:ec2/subnet:Subnet") {
-              MutableHashMap.set(subnets, args.name, {
-                availabilityZone: args.inputs.availabilityZone,
-                cidrBlock: args.inputs.cidrBlock,
-                mapPublicIpOnLaunch: args.inputs.mapPublicIpOnLaunch,
-              });
-            }
-            if (args.type === "aws:ec2/routeTableAssociation:RouteTableAssociation") {
-              MutableHashMap.set(routeTableSubnets, args.name, args.inputs.subnetId);
-            }
-            const result = { id: `${args.name}-id`, state: args.inputs };
-            return args.name === heldAssociationName ? associationReady.promise.then(() => result) : result;
+    Effect.tryPromise({
+      try: () =>
+        pulumi.runtime.setMocks(
+          {
+            call: () => ({ accountId: "123456789012", partition: "aws", value: "ami-0123456789abcdef0" }),
+            newResource: (args) => {
+              if (args.type === "aws:ec2/subnet:Subnet") {
+                MutableHashMap.set(subnets, args.name, {
+                  availabilityZone: args.inputs.availabilityZone,
+                  cidrBlock: args.inputs.cidrBlock,
+                  mapPublicIpOnLaunch: args.inputs.mapPublicIpOnLaunch,
+                });
+              }
+              if (args.type === "aws:ec2/routeTableAssociation:RouteTableAssociation") {
+                MutableHashMap.set(routeTableSubnets, args.name, args.inputs.subnetId);
+              }
+              const result = { id: `${args.name}-id`, state: args.inputs };
+              return args.name === heldAssociationName ? associationReady.promise.then(() => result) : result;
+            },
           },
-        },
-        "beep-ci-runners",
-        "test"
-      )
-    ),
+          "beep-ci-runners",
+          "test"
+        ),
+      catch: (cause) => CiRunnersTestOperationError.make({ cause }),
+    }),
     () =>
       Effect.suspend(() => {
         const stack = new CiRunnersStack(
@@ -111,7 +122,12 @@ const provisionCiRunnersStack = Effect.fnUntraced(function* (
     // held association is still pending must not leave teardown waiting on it.
     () =>
       Deferred.succeed(associationGate, undefined).pipe(
-        Effect.andThen(Effect.tryPromise(() => pulumi.runtime.disconnect()))
+        Effect.andThen(
+          Effect.tryPromise({
+            try: () => pulumi.runtime.disconnect(),
+            catch: (cause) => CiRunnersTestOperationError.make({ cause }),
+          })
+        )
       )
   );
 
@@ -243,13 +259,16 @@ describe("@beep/infra CiRunners", () => {
         Effect.fnUntraced(function* (probe) {
           for (const slot of ["a", "b", "d", "e"]) {
             // The exported id is the subnet id itself, not the association id.
-            expect(yield* Deferred.await(probe.routedSubnetId(slot))).toBe(`ci-runners-public-${slot}-id`);
+            const await1 = yield* Deferred.await(probe.routedSubnetId(slot));
+            expect(await1).toBe(`ci-runners-public-${slot}-id`);
           }
           // Slot C's subnet exists, but its association is still unregistered.
-          pipe(yield* Deferred.isDone(probe.routedSubnetId("c")), assertFalse);
+          const isDone2 = yield* Deferred.isDone(probe.routedSubnetId("c"));
+          pipe(isDone2, assertFalse);
 
           yield* Deferred.succeed(probe.associationGate, undefined);
-          expect(yield* Deferred.await(probe.routedSubnetId("c"))).toBe("ci-runners-public-c-id");
+          const await3 = yield* Deferred.await(probe.routedSubnetId("c"));
+          expect(await3).toBe("ci-runners-public-c-id");
         })
       );
 

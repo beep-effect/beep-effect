@@ -52,7 +52,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })("shared flag factory defaults", (
     Effect.gen(function* () {
       const { run, parsed } = yield* testCommand;
       yield* run(["--package", "@beep/schema", "--output", "report.json"]);
-      expect(yield* Ref.get(parsed)).toEqual({
+      const got = yield* Ref.get(parsed);
+      expect(got).toEqual({
         package: "@beep/schema",
         output: "report.json",
         verbose: false,
@@ -66,7 +67,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })("shared flag factory defaults", (
     Effect.gen(function* () {
       const { run, parsed } = yield* testCommand;
       yield* run(["-p", "@beep/schema", "-o", "report.json", "--verbose", "--dry-run", "--force"]);
-      expect(yield* Ref.get(parsed)).toEqual({
+      const got1 = yield* Ref.get(parsed);
+      expect(got1).toEqual({
         package: "@beep/schema",
         output: "report.json",
         verbose: true,

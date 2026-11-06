@@ -852,7 +852,8 @@ export class CliLog {
                 }
                 if (O.isSome(target) && target.value !== "") {
                   const location = yield* PathModule.Path;
-                  loggers.push(yield* makeFileSink(location.resolve(target.value), lowered, underActionsIn));
+                  const madeFileSink = yield* makeFileSink(location.resolve(target.value), lowered, underActionsIn);
+                  loggers.push(madeFileSink);
                 }
               }
               return Logger.layer(loggers);

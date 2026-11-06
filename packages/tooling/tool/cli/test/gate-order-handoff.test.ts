@@ -104,7 +104,8 @@ const loadEconomics = Effect.fnUntraced(function* () {
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot();
   const economicsPath = path.join(repoRoot, ECONOMICS_PATH);
-  const view = yield* EconomicsSeedSourceViewJson.decode(yield* fs.readFileString(economicsPath));
+  const readFileString1 = yield* fs.readFileString(economicsPath);
+  const view = yield* EconomicsSeedSourceViewJson.decode(readFileString1);
   return { repoRoot, economicsPath, view, handoffPath: path.join(repoRoot, HANDOFF_PATH) };
 });
 
@@ -421,8 +422,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const changed = Uint8Array.from(bytes);
         changed[0] = (changed[0] ?? 0) ^ 1;
 
-        expect(yield* hashBytes(bytes)).toBe(GATE_ORDER_SOURCE.sha256);
-        expect(yield* hashBytes(changed)).not.toBe(GATE_ORDER_SOURCE.sha256);
+        const hashBytes2 = yield* hashBytes(bytes);
+        expect(hashBytes2).toBe(GATE_ORDER_SOURCE.sha256);
+        const hashBytes3 = yield* hashBytes(changed);
+        expect(hashBytes3).not.toBe(GATE_ORDER_SOURCE.sha256);
       })
     );
 
@@ -482,7 +485,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             handoffSource(view),
             view
           );
-        expect(yield* encodeHandoffBytes(withoutCost("quality:storybook"))).toBe(bytes);
+        const encodedHandoffBytes = yield* encodeHandoffBytes(withoutCost("quality:storybook"));
+        expect(encodedHandoffBytes).toBe(bytes);
         expect(() => withoutCost("quality:lint")).toThrow();
       })
     );
@@ -589,7 +593,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       Effect.fnUntraced(function* () {
         const { view } = yield* loadEconomics();
         const handoff = defaultHandoff(view);
-        const roundTrip = yield* GateOrderHandoffJson.decode(yield* GateOrderHandoffJson.encode(handoff));
+        const encoded4 = yield* GateOrderHandoffJson.encode(handoff);
+        const roundTrip = yield* GateOrderHandoffJson.decode(encoded4);
         expect(S.toEquivalence(GateOrderHandoff)(roundTrip, handoff)).toBe(true);
 
         const encoded = yield* encodeHandoff(handoff);
@@ -604,7 +609,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         });
 
         // The unmutated encoded document decodes, so every rejection below is the mutation's.
-        yield* GateOrderHandoffJson.decode(yield* encodeJsonText(encoded));
+        const encodedJsonText = yield* encodeJsonText(encoded);
+        yield* GateOrderHandoffJson.decode(encodedJsonText);
 
         yield* rejects("schemaVersion v0", '"gate-order-handoff/v1"', {
           ...encoded,

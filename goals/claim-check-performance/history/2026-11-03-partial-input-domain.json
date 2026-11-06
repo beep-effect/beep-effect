@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "claim-performance-partial-input-domain/v1",
+  "implementationFreeze": "research/implementation-partial-input-001.json",
+  "evaluationResultSha256": "b491dcd2764e18e168c9d09f00955d993f852981881d8c58f52c79d159f8c536",
+  "evaluationPath": "~/.cache/beep/claim-check-performance/strict-partial-input-001/results.json",
+  "selectedClaims": 538,
+  "strictMatches": 37,
+  "inputFailed": 43,
+  "previousPredictionReportsByteIdentical": 56,
+  "originalProtectedFiles": 1213,
+  "lostOriginalPasses": [],
+  "packageAudit": "passed",
+  "packageDocgen": "passed",
+  "focusedInputTests": 13,
+  "independentReview": {
+    "model": "gpt-6.1-sol",
+    "reasoningEffort": "medium",
+    "requiredFindings": 0,
+    "algorithmBodyCompared": "identical after whitespace normalization"
+  },
+  "productIntegrationComplete": false,
+  "usefulnessEstablished": false,
+  "goalComplete": false,
+  "next": "Integrate qualified per-record structures with conservative substantive policy and a real published inspection port/service/tool; evaluate only through that product path."
+}

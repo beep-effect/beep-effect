@@ -174,7 +174,8 @@ export const harnessLedgerProposeCommand = Command.make(
         })
       );
       if (input.json) {
-        return yield* printCommandJson(yield* encodeLedgerRowValue(row));
+        const encodedLedgerRowValue = yield* encodeLedgerRowValue(row);
+        return yield* printCommandJson(encodedLedgerRowValue);
       }
       return yield* printLines([row.rowId, `Harness-Ledger: ${row.rowId}`]);
     }).pipe(
@@ -265,7 +266,8 @@ export const harnessLedgerDispositionCommand = Command.make(
         })
       );
       if (input.json) {
-        return yield* printCommandJson(yield* encodeLedgerRowValue(row));
+        const encodedLedgerRowValue1 = yield* encodeLedgerRowValue(row);
+        return yield* printCommandJson(encodedLedgerRowValue1);
       }
       return yield* printLines([
         `${row.rowId} ${row.disposition} (supersedes ${O.getOrElse(row.previousRowId, () => "-")})`,

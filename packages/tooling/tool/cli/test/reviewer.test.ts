@@ -257,7 +257,8 @@ it.layer(HttpTestLayer, { timeout: "30 seconds" })("reviewer HTTP operations", (
       const http = client((_method, url) =>
         Str.endsWith("/files")(url.pathname) ? files : Str.endsWith("/pulls")(url.pathname) ? [pull()] : pull()
       );
-      assertSome(yield* Reviewer.use((reviewer) => reviewer.docsOnly(7, sha)).pipe(usingHttp(http)), baseSha);
+      const pipe1 = yield* Reviewer.use((reviewer) => reviewer.docsOnly(7, sha)).pipe(usingHttp(http));
+      assertSome(pipe1, baseSha);
       const sharedHead = client((_method, url) =>
         Str.endsWith("/files")(url.pathname)
           ? files
@@ -265,11 +266,13 @@ it.layer(HttpTestLayer, { timeout: "30 seconds" })("reviewer HTTP operations", (
             ? [pull(), pull({ number: 8 })]
             : pull()
       );
-      assertNone(yield* Reviewer.use((reviewer) => reviewer.docsOnly(7, sha)).pipe(usingHttp(sharedHead)));
+      const pipe2 = yield* Reviewer.use((reviewer) => reviewer.docsOnly(7, sha)).pipe(usingHttp(sharedHead));
+      assertNone(pipe2);
       const missingAssociation = client((_method, url) =>
         Str.endsWith("/files")(url.pathname) ? files : Str.endsWith("/pulls")(url.pathname) ? [] : pull()
       );
-      assertNone(yield* Reviewer.use((reviewer) => reviewer.docsOnly(7, sha)).pipe(usingHttp(missingAssociation)));
+      const pipe3 = yield* Reviewer.use((reviewer) => reviewer.docsOnly(7, sha)).pipe(usingHttp(missingAssociation));
+      assertNone(pipe3);
       let reads = 0;
       const moved = client((_method, url) => {
         if (Str.endsWith("/files")(url.pathname)) return files;
@@ -319,7 +322,8 @@ it.layer(HttpTestLayer, { timeout: "30 seconds" })("reviewer HTTP operations", (
         }
         return { total_count: 1, check_runs: [check(3, 42, "in_progress", null, 8)] };
       });
-      expect(yield* Reviewer.use((reviewer) => reviewer.start(7, sha)).pipe(usingHttp(otherPr))).toBe(44);
+      const pipe4 = yield* Reviewer.use((reviewer) => reviewer.start(7, sha)).pipe(usingHttp(otherPr));
+      expect(pipe4).toBe(44);
       expect((yield* decodeObject(postedBody)).external_id).toBe(reviewerCheckExternalId(7, sha, baseSha));
       const changedSinceClassification = client((_method, url) => {
         if (Str.endsWith("/pulls/7")(url.pathname)) return pull({ base: Str.repeat(40)("d") });
@@ -346,7 +350,8 @@ it.layer(HttpTestLayer, { timeout: "30 seconds" })("reviewer HTTP operations", (
         pages += 1;
         return { total_count: 999, check_runs: [] };
       });
-      expect(yield* Reviewer.use((reviewer) => reviewer.start(7, sha)).pipe(usingHttp(http))).toBe(44);
+      const pipe5 = yield* Reviewer.use((reviewer) => reviewer.start(7, sha)).pipe(usingHttp(http));
+      expect(pipe5).toBe(44);
       expect(pages).toBe(1);
       expect(creates).toBe(1);
     })
@@ -388,8 +393,10 @@ it.layer(HttpTestLayer, { timeout: "30 seconds" })("reviewer HTTP operations", (
       });
       yield* Reviewer.use((reviewer) =>
         Effect.gen(function* () {
-          expect(yield* reviewer.upsert(7, "First")).toBe(12);
-          expect(yield* reviewer.upsert(7, "Second")).toBe(12);
+          const upsert6 = yield* reviewer.upsert(7, "First");
+          expect(upsert6).toBe(12);
+          const upsert7 = yield* reviewer.upsert(7, "Second");
+          expect(upsert7).toBe(12);
         })
       ).pipe(usingHttp(http));
       expect(creates).toBe(0);
@@ -555,7 +562,8 @@ describe("lossless required check update", () => {
           },
         ],
       });
-      expect(yield* requireReviewerInRuleset(updated, 42)).toEqual(updated);
+      const requireReviewerInRuleset8 = yield* requireReviewerInRuleset(updated, 42);
+      expect(requireReviewerInRuleset8).toEqual(updated);
       const released = yield* releaseReviewerInRuleset(updated);
       expect(released).toEqual({
         ...original,
@@ -570,8 +578,10 @@ describe("lossless required check update", () => {
           },
         ],
       });
-      expect(yield* releaseReviewerInRuleset(released)).toEqual(released);
-      expect(yield* requireReviewerInRuleset(released, 42)).toEqual(updated);
+      const releaseReviewerInRuleset9 = yield* releaseReviewerInRuleset(released);
+      expect(releaseReviewerInRuleset9).toEqual(released);
+      const requireReviewerInRuleset10 = yield* requireReviewerInRuleset(released, 42);
+      expect(requireReviewerInRuleset10).toEqual(updated);
     })
   );
 
@@ -686,14 +696,17 @@ describe("installation token client", () => {
       expect(api.exchanges()).toBe(2);
       expect(api.revoked).toEqual(["token opaque-1"]);
       const bearer = readBearer.pipe(Effect.provideContext(context));
-      expect(yield* bearer).toBe("token opaque-2");
+      const bearer11 = yield* bearer;
+      expect(bearer11).toBe("token opaque-2");
       // A single test owns this clock; assert the absolute refresh boundary.
       api.clock.now = Duration.toMillis(Duration.minutes(54));
       yield* TestClock.setTime(api.clock.now);
-      expect(yield* bearer).toBe("token opaque-2");
+      const bearer12 = yield* bearer;
+      expect(bearer12).toBe("token opaque-2");
       api.clock.now = Duration.toMillis(Duration.minutes(55));
       yield* TestClock.setTime(api.clock.now);
-      expect(yield* Effect.all([bearer, bearer], { concurrency: 2 })).toEqual(["token opaque-3", "token opaque-3"]);
+      const all13 = yield* Effect.all([bearer, bearer], { concurrency: 2 });
+      expect(all13).toEqual(["token opaque-3", "token opaque-3"]);
       expect(api.exchanges()).toBe(3);
       expect(api.revoked).toEqual(["token opaque-1", "token opaque-2"]);
       const mints = A.filter(api.calls, (call) => Str.endsWith("/access_tokens")(call.url.pathname));
@@ -710,16 +723,15 @@ describe("installation token client", () => {
       );
       expect(claims.iss).toBe("Iv.test-client");
       expect(claims.exp - claims.iat).toBe(600);
-      expect(
-        yield* Effect.promise(() =>
-          crypto.subtle.verify(
-            "RSASSA-PKCS1-v1_5",
-            key.publicKey,
-            Buffer.from(jwt[2] ?? "", "base64url"),
-            new TextEncoder().encode(`${jwt[0]}.${jwt[1]}`)
-          )
+      const promise14 = yield* Effect.promise(() =>
+        crypto.subtle.verify(
+          "RSASSA-PKCS1-v1_5",
+          key.publicKey,
+          Buffer.from(jwt[2] ?? "", "base64url"),
+          new TextEncoder().encode(`${jwt[0]}.${jwt[1]}`)
         )
-      ).toBe(true);
+      );
+      expect(promise14).toBe(true);
     })
   );
 

@@ -65,8 +65,10 @@ const REVIEW_QUESTIONS_PROMPT = "Walk me through my waiting review questions.";
  * @since 0.0.0
  */
 export const sendDailyNotice = Effect.fn("ReviewNotice.send")(function* (timeZone: DateTime.TimeZone) {
-  const today = docketDayInZone(yield* DateTime.now, timeZone);
-  const questions = A.filter(yield* (yield* ReviewItemStore).list, ReviewItem.guards.question);
+  const now1 = yield* DateTime.now;
+  const today = docketDayInZone(now1, timeZone);
+  const list2 = yield* (yield* ReviewItemStore).list;
+  const questions = A.filter(list2, ReviewItem.guards.question);
   const digest = yield* (yield* QuestionQueue).digest(DigestSelection.make({ today, items: questions }));
   return yield* (yield* DailyNotice).sendIfDue({ digest, today });
 });

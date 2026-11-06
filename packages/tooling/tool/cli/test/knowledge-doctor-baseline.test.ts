@@ -1,4 +1,4 @@
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError } from "@beep/git/Git";
 import {
   checkKnowledgeDoctorReport,
   classifyKnowledgeBaselineGroup,
@@ -20,6 +20,7 @@ import {
   KnowledgeDoctorIdentity,
   KnowledgeDoctorLeasesOptions,
   KnowledgeDoctorLive,
+  KnowledgeDoctorMintOptions,
   KnowledgeDoctorPromotion,
   KnowledgeDoctorPromotions,
   KnowledgeIdentityInput,
@@ -50,6 +51,7 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, vi } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -62,6 +64,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
+import type { GitStubs } from "@beep/git/Git";
 import type { KnowledgeDoctorReport, KnowledgeDoctorTree } from "@beep/repo-cli/commands/Knowledge";
 
 const platformLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
@@ -165,13 +168,15 @@ describe("knowledge doctor sealed baseline", () => {
         assert.strictEqual(baseline.mintedAt, MINTED);
         const again = yield* mintFirstSeal(baseTree());
         const text = yield* encodeKnowledgeBaselineText(baseline);
-        assert.strictEqual(text, yield* encodeKnowledgeBaselineText(again.baseline));
+        const encodedKnowledgeBaselineText = yield* encodeKnowledgeBaselineText(again.baseline);
+        assert.strictEqual(text, encodedKnowledgeBaselineText);
         assert.isTrue(Str.endsWith("\n")(text));
         yield* verifyKnowledgeBaselineText(text, again.baseline);
         const broken = yield* Effect.flip(verifyKnowledgeBaselineText(`${text} `, again.baseline));
         assert.strictEqual(broken._tag, "KnowledgeSealBroken");
         const reordered = KnowledgeDoctorBaseline.make({ ...baseline, entries: A.reverse(baseline.entries) });
-        assert.strictEqual(yield* encodeKnowledgeBaselineText(reordered), text);
+        const encodedKnowledgeBaselineText1 = yield* encodeKnowledgeBaselineText(reordered);
+        assert.strictEqual(encodedKnowledgeBaselineText1, text);
       })
     );
 
@@ -351,15 +356,15 @@ describe("knowledge doctor sealed baseline", () => {
         // Counterfactual: the inherited finding is introduced again once its key leaves the baseline.
         const pruned = KnowledgeDoctorBaseline.make({ ...first.baseline, entries: [] });
         const prunedFiles = seal({ baseline: O.some(pruned), promotions: O.some(promotions("broken-tracked-path")) });
-        const counterfactual = yield* ratchetOf(
-          yield* checkOf(report, { head: prunedFiles, base: seal({ ...promotedBase, baseline: O.some(pruned) }) })
-        );
+        const checkOf2 = yield* checkOf(report, {
+          head: prunedFiles,
+          base: seal({ ...promotedBase, baseline: O.some(pruned) }),
+        });
+        const counterfactual = yield* ratchetOf(checkOf2);
         assert.strictEqual(A.length(counterfactual.introduced), 2);
         assert.strictEqual(A.length(counterfactual.inherited), 0);
-        assert.deepStrictEqual(
-          (yield* ratchetOf(yield* checkOf(report, { head: prunedFiles, base: promotedBase }))).resolved,
-          []
-        );
+        const checkOf3 = yield* checkOf(report, { head: prunedFiles, base: promotedBase });
+        assert.deepStrictEqual((yield* ratchetOf(checkOf3)).resolved, []);
       })
     );
 
@@ -373,23 +378,22 @@ describe("knowledge doctor sealed baseline", () => {
           makeKnowledgeDoctorMemoryTree({ files: { "docs/new.md": "See `docs/gone.md`." } })
         );
         const files = seal({ baseline: O.some(first.baseline), promotions: O.some(promotions("broken-tracked-path")) });
-        const withoutLineage = yield* ratchetOf(yield* checkOf(moved, { head: files, base: files }));
+        const checkOf4 = yield* checkOf(moved, { head: files, base: files });
+        const withoutLineage = yield* ratchetOf(checkOf4);
         assert.strictEqual(A.length(withoutLineage.introduced), 1);
-        const lineage = yield* ratchetOf(
-          yield* checkOf(moved, { head: files, base: files, renames: [["docs/old.md", "docs/new.md"]] })
-        );
+        const checkOf5 = yield* checkOf(moved, { head: files, base: files, renames: [["docs/old.md", "docs/new.md"]] });
+        const lineage = yield* ratchetOf(checkOf5);
         assert.strictEqual(A.length(lineage.inherited), 1);
         const sidecar = KnowledgeDoctorIdentity.make({
           mappings: [KnowledgeIdentityMapping.make({ from: "docs/old.md", to: "docs/new.md" })],
         });
-        const viaSidecar = yield* ratchetOf(
-          yield* checkOf(moved, {
-            head: seal({ ...files, identity: O.some(sidecar) }),
-            base: files,
-            mintedAtPaths: HashSet.make("docs/old.md"),
-            headPaths: HashSet.make("docs/new.md"),
-          })
-        );
+        const checkOf6 = yield* checkOf(moved, {
+          head: seal({ ...files, identity: O.some(sidecar) }),
+          base: files,
+          mintedAtPaths: HashSet.make("docs/old.md"),
+          headPaths: HashSet.make("docs/new.md"),
+        });
+        const viaSidecar = yield* ratchetOf(checkOf6);
         assert.strictEqual(A.length(viaSidecar.inherited), 1);
         const rejected = resolveKnowledgeDocumentIdentity(
           KnowledgeIdentityInput.make({
@@ -557,17 +561,17 @@ describe("knowledge doctor sealed baseline", () => {
         const violationsOf = (rows: ReadonlyArray<{ readonly violations: ReadonlyArray<string> }>) =>
           A.map(rows, (row) => row.violations);
 
-        assert.deepStrictEqual(violationsOf(yield* evaluate([yield* lease({ key: key("1") })])), [[]]);
-        assert.deepStrictEqual(violationsOf(yield* evaluate([yield* lease({ key: key("1"), owner: "@someone" })])), [
-          ["lease-owner-unresolved"],
-        ]);
+        const evaluate7 = yield* evaluate([yield* lease({ key: key("1") })]);
+        assert.deepStrictEqual(violationsOf(evaluate7), [[]]);
+        const evaluate8 = yield* evaluate([yield* lease({ key: key("1"), owner: "@someone" })]);
+        assert.deepStrictEqual(violationsOf(evaluate8), [["lease-owner-unresolved"]]);
         // A branch cannot grant itself ownership: only the merge-base CODEOWNERS text is consulted.
-        assert.deepStrictEqual(
-          violationsOf(
-            yield* evaluate([yield* lease({ key: key("1"), owner: "@self" })], [], O.some("* @kriegcloud\n"))
-          ),
-          [["lease-owner-unresolved"]]
+        const evaluate9 = yield* evaluate(
+          [yield* lease({ key: key("1"), owner: "@self" })],
+          [],
+          O.some("* @kriegcloud\n")
         );
+        assert.deepStrictEqual(violationsOf(evaluate9), [["lease-owner-unresolved"]]);
         const future = yield* evaluate([
           yield* lease({
             key: key("1"),
@@ -579,39 +583,30 @@ describe("knowledge doctor sealed baseline", () => {
         assert.strictEqual(isKnowledgeLeaseEffective(future[0]!), false);
         assert.deepStrictEqual(resolveKnowledgeCodeowners("* @a\ndocs/ @b @c\ndocs/x.md\n", "docs/y.md"), ["@b", "@c"]);
         assert.deepStrictEqual(resolveKnowledgeCodeowners("* @a\ndocs/ @b @c\ndocs/x.md\n", "docs/x.md"), []);
-        assert.deepStrictEqual(
-          violationsOf(
-            yield* evaluate([
-              yield* lease({ key: key("1"), issued: "2026-10-01T00:00:00Z", expires: "2026-11-01T00:00:00Z" }),
-            ])
-          ),
-          [["lease-lifetime-exceeded"]]
+        const evaluate10 = yield* evaluate([
+          yield* lease({ key: key("1"), issued: "2026-10-01T00:00:00Z", expires: "2026-11-01T00:00:00Z" }),
+        ]);
+        assert.deepStrictEqual(violationsOf(evaluate10), [["lease-lifetime-exceeded"]]);
+        const evaluate11 = yield* evaluate(
+          [yield* lease({ key: key("1"), issued: "2026-10-10T00:00:00Z", expires: "2026-11-05T00:00:00Z" })],
+          [yield* lease({ key: key("1"), issued: "2026-10-01T00:00:00Z" })]
         );
-        assert.deepStrictEqual(
-          violationsOf(
-            yield* evaluate(
-              [yield* lease({ key: key("1"), issued: "2026-10-10T00:00:00Z", expires: "2026-11-05T00:00:00Z" })],
-              [yield* lease({ key: key("1"), issued: "2026-10-01T00:00:00Z" })]
-            )
-          ),
-          [["lease-lifetime-exceeded"]]
-        );
+        assert.deepStrictEqual(violationsOf(evaluate11), [["lease-lifetime-exceeded"]]);
         const third = yield* evaluate([
           yield* lease({ key: key("1"), issued: "2026-10-01T00:00:00Z" }),
           yield* lease({ key: key("2"), issued: "2026-10-02T00:00:00Z" }),
           yield* lease({ key: key("3"), issued: "2026-10-03T00:00:00Z" }),
         ]);
         assert.deepStrictEqual(violationsOf(third), [[], [], ["lease-quota-exceeded"]]);
-        const repoWide = yield* evaluate(
-          yield* Effect.forEach(A.range(1, 21), (index) =>
-            lease({
-              key: `knowledge-doctor/v1:${Str.padStart(64, "0")(`${index}`)}`,
-              document: `docs/doc-${index}.md`,
-              issued: "2026-10-01T00:00:00Z",
-              expires: "2026-10-30T00:00:00Z",
-            })
-          )
+        const forEach12 = yield* Effect.forEach(A.range(1, 21), (index) =>
+          lease({
+            key: `knowledge-doctor/v1:${Str.padStart(64, "0")(`${index}`)}`,
+            document: `docs/doc-${index}.md`,
+            issued: "2026-10-01T00:00:00Z",
+            expires: "2026-10-30T00:00:00Z",
+          })
         );
+        const repoWide = yield* evaluate(forEach12);
         assert.strictEqual(A.length(A.filter(repoWide, (row) => A.isReadonlyArrayNonEmpty(row.violations))), 1);
         const statuses = yield* evaluate([
           yield* lease({ key: key("1"), expires: "2026-10-20T00:00:00Z" }),
@@ -623,7 +618,8 @@ describe("knowledge doctor sealed baseline", () => {
         );
         const missing = yield* Effect.flip(evaluate([yield* lease({ key: key("1") })], [], O.none()));
         assert.strictEqual(missing.reason, "missing-codeowners");
-        assert.deepStrictEqual(yield* evaluate([], [], O.none()), []);
+        const evaluate13 = yield* evaluate([], [], O.none());
+        assert.deepStrictEqual(evaluate13, []);
       })
     );
 
@@ -639,7 +635,8 @@ describe("knowledge doctor sealed baseline", () => {
           })
         );
         const files = seal({ baseline: O.some(first.baseline), promotions: O.some(promotions("broken-tracked-path")) });
-        const probe = yield* ratchetOf(yield* checkOf(report, { head: files, base: files }));
+        const checkOf14 = yield* checkOf(report, { head: files, base: files });
+        const probe = yield* ratchetOf(checkOf14);
         const introducedKey = O.getOrThrow(A.head(probe.introduced)).key;
         const active = yield* lease({ key: introducedKey });
         const leasedRatchet = yield* checkOf(report, {
@@ -665,9 +662,11 @@ describe("knowledge doctor sealed baseline", () => {
         assert.strictEqual(O.isSome(knowledgeDoctorGateFailure(futureCheck)), true);
         assert.include(renderKnowledgeDoctorCheckReport(futureCheck), "lease-issued-in-future");
         const elsewhere = yield* lease({ key: introducedKey, document: "docs/b.md" });
-        const misplaced = yield* ratchetOf(
-          yield* checkOf(report, { head: seal({ ...files, leases: O.some(leaseFile(elsewhere)) }), base: files })
-        );
+        const checkOf15 = yield* checkOf(report, {
+          head: seal({ ...files, leases: O.some(leaseFile(elsewhere)) }),
+          base: files,
+        });
+        const misplaced = yield* ratchetOf(checkOf15);
         assert.strictEqual(A.length(misplaced.introduced), 1);
         const expired = yield* checkOf(report, {
           head: seal({ ...files, leases: O.some(leaseFile(active)) }),
@@ -694,23 +693,18 @@ describe("knowledge doctor sealed baseline", () => {
           Effect.flip(readKnowledgeSealFiles(makeKnowledgeDoctorMemoryTree({ files }))).pipe(
             Effect.map((error) => (error._tag === "KnowledgeDoctorInputError" ? error.reason : error._tag))
           );
-        assert.strictEqual(yield* reasonOf({ [KNOWLEDGE_DOCTOR_BASELINE_PATH]: "{ nope" }), "undecodable-baseline");
-        assert.strictEqual(
-          yield* reasonOf({
-            [KNOWLEDGE_DOCTOR_PROMOTIONS_PATH]: '{ "schemaVersion": "knowledge-doctor-promotions/v1" }',
-          }),
-          "undecodable-promotions"
-        );
-        assert.strictEqual(
-          yield* reasonOf({
-            [KNOWLEDGE_DOCTOR_LEASES_PATH]: '{ "schemaVersion": "knowledge-doctor-leases/v1", "leases": [{}] }',
-          }),
-          "undecodable-leases"
-        );
-        assert.strictEqual(
-          yield* reasonOf({ "goals/knowledge-doctor.identity.jsonc": '{ "mappings": [] }' }),
-          "undecodable-identity"
-        );
+        const reasonOf16 = yield* reasonOf({ [KNOWLEDGE_DOCTOR_BASELINE_PATH]: "{ nope" });
+        assert.strictEqual(reasonOf16, "undecodable-baseline");
+        const reasonOf17 = yield* reasonOf({
+          [KNOWLEDGE_DOCTOR_PROMOTIONS_PATH]: '{ "schemaVersion": "knowledge-doctor-promotions/v1" }',
+        });
+        assert.strictEqual(reasonOf17, "undecodable-promotions");
+        const reasonOf18 = yield* reasonOf({
+          [KNOWLEDGE_DOCTOR_LEASES_PATH]: '{ "schemaVersion": "knowledge-doctor-leases/v1", "leases": [{}] }',
+        });
+        assert.strictEqual(reasonOf18, "undecodable-leases");
+        const reasonOf19 = yield* reasonOf({ "goals/knowledge-doctor.identity.jsonc": '{ "mappings": [] }' });
+        assert.strictEqual(reasonOf19, "undecodable-identity");
         const tree = makeKnowledgeDoctorMemoryTree({ files: { [KNOWLEDGE_DOCTOR_BASELINE_PATH]: "{}" } });
         const malformed = yield* Effect.flip(
           readKnowledgeSealFiles({ ...tree, readBytes: () => Effect.succeed(new Uint8Array([0xff, 0xfe, 0x00])) })
@@ -784,7 +778,8 @@ describe("knowledge doctor sealed baseline", () => {
         assert.strictEqual(missing._tag, "KnowledgeDoctorInputError");
         assert.include(missing.message, "baseline");
         const baseline = yield* doctor.mint("HEAD");
-        yield* fs.writeFileString(KNOWLEDGE_DOCTOR_BASELINE_PATH, yield* encodeKnowledgeBaselineText(baseline));
+        const encodedKnowledgeBaselineText20 = yield* encodeKnowledgeBaselineText(baseline);
+        yield* fs.writeFileString(KNOWLEDGE_DOCTOR_BASELINE_PATH, encodedKnowledgeBaselineText20);
         yield* fs.writeFileString(
           "goals/knowledge-doctor.identity.jsonc",
           '{"schemaVersion":"knowledge-doctor-identity/v1","mappings":[]}'
@@ -887,10 +882,11 @@ describe("knowledge doctor sealed baseline", () => {
             Effect.fail(PlatformError.systemError({ _tag: "NotFound", module: "ChildProcess", method: "spawn" }))
           );
         yield* Effect.gen(function* () {
+          const previousErrors = yield* TestConsole.errorLines;
           yield* warnKnowledgeLeases("/synthetic-checkout");
           yield* warnKnowledgeLeases("/synthetic-checkout");
           yield* warnKnowledgeLeases("/synthetic-checkout");
-          const errors = yield* TestConsole.errorLines;
+          const errors = yield* Effect.map(TestConsole.errorLines, A.drop(A.length(previousErrors)));
           assert.strictEqual(A.length(errors), 2);
           assert.include(errors[0] ?? "", "exit 1");
           assert.include(errors[1] ?? "", "did not start");
@@ -904,4 +900,105 @@ describe("knowledge doctor sealed baseline", () => {
       })
     );
   });
+});
+
+// Each kit read of the live doctor, failed without an exit code (git never ran) and with one, and what it becomes.
+const knowledgeKitDefaults: Partial<GitStubs> = {
+  revParse: () => Effect.succeed(MINTED),
+  isShallow: () => Effect.succeed(false),
+  mergeBase: () => Effect.succeed(MINTED),
+  changedFiles: () => Effect.succeed([]),
+  lsTree: () => Effect.succeed([]),
+  status: () => Effect.succeed([]),
+  isAncestor: () => Effect.succeed(false),
+};
+const knowledgeKitRuns = {
+  ciMode: (doctor: KnowledgeDoctor["Service"]) => doctor.ciMode("origin/main"),
+  mint: (doctor: KnowledgeDoctor["Service"]) =>
+    doctor
+      .mintFile(KnowledgeDoctorMintOptions.make({ at: "HEAD", baseRef: "origin/main", write: true }))
+      .pipe(Effect.as("minted")),
+};
+const knowledgeSpawnFailure = { detail: "ENOENT" };
+const knowledgeExitFailure = { exitCode: 128 };
+const knowledgeKitFailureCases = [
+  {
+    operation: "isShallow",
+    fields: knowledgeSpawnFailure,
+    run: "ciMode",
+    expected: "KnowledgeOperationalError:Failed to spawn git rev-parse --is-shallow-repository.",
+  },
+  { operation: "isShallow", fields: knowledgeExitFailure, run: "ciMode", expected: "ok:report" },
+  {
+    operation: "status",
+    fields: knowledgeSpawnFailure,
+    run: "mint",
+    expected: "KnowledgeOperationalError:Failed to spawn git status --porcelain.",
+  },
+  { operation: "status", fields: knowledgeExitFailure, run: "mint", expected: "KnowledgeMintContextRefusal:" },
+  { operation: "lsTree", fields: knowledgeSpawnFailure, run: "ciMode", expected: "KnowledgeOperationalError:" },
+  { operation: "lsTree", fields: knowledgeExitFailure, run: "ciMode", expected: "KnowledgeDoctorInputError:" },
+] as const;
+
+// These doubles are supplied while constructing the live doctor because its methods
+// capture their Git service at construction time.
+it.layer(platformLayer, { timeout: "30 seconds" })("knowledge doctor kit failure boundaries", (it) => {
+  for (const { operation, fields, run, expected } of knowledgeKitFailureCases) {
+    it.effect(`preserves the ${operation} failure semantics (${expected})`, () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.realPath(".");
+        const failure = GitCommandError.make({
+          kind: "failed",
+          args: [operation],
+          cwd: root,
+          stderr: "fixture",
+          ...fields,
+        });
+        const git = Git.makeTest({ ...knowledgeKitDefaults, [operation]: () => Effect.fail(failure) });
+        const doctor = yield* KnowledgeDoctorLive.pipe(
+          Layer.fresh,
+          Layer.build,
+          Effect.map(Context.get(KnowledgeDoctor)),
+          Effect.provideService(Git, git)
+        );
+        const outcome = yield* knowledgeKitRuns[run](doctor).pipe(
+          Effect.map((value) => `ok:${String(value)}`),
+          Effect.catch((error) => Effect.succeed(`${error._tag}:${error.message}`))
+        );
+        assert.include(outcome, expected);
+      })
+    );
+  }
+  it.effect("reads clean mint status and the baseline tree before refusing an uncontained mint", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const here = yield* fs.realPath(".");
+      const exists = yield* fs.exists(here);
+      assert.isTrue(exists);
+      const doctor = yield* KnowledgeDoctorLive.pipe(
+        Layer.fresh,
+        Layer.build,
+        Effect.map(Context.get(KnowledgeDoctor)),
+        Effect.provideService(
+          Git,
+          Git.makeTest({
+            revParse: () => Effect.succeed(MINTED),
+            isShallow: () => Effect.succeed(false),
+            mergeBase: () => Effect.succeed(MINTED),
+            changedFiles: () => Effect.succeed([]),
+            lsTree: () => Effect.succeed([]),
+            status: () => Effect.succeed([]),
+            isAncestor: () => Effect.succeed(false),
+          })
+        )
+      );
+      const mode = yield* doctor.ciMode("origin/main");
+      assert.strictEqual(mode, "report");
+      const error = yield* doctor
+        .mintFile(KnowledgeDoctorMintOptions.make({ at: "HEAD", baseRef: "origin/main", write: true }))
+        .pipe(Effect.flip);
+      assert.strictEqual(error._tag, "KnowledgeMintContextRefusal");
+    })
+  );
 });

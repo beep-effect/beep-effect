@@ -17,7 +17,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(S.toEquivalence(schema)(value, decoded));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -59,7 +60,8 @@ describe("lossless document laws", () => {
         const encoded = yield* S.encodeEffect(codec)(doc);
         const decoded = yield* S.decodeEffect(codec)(encoded);
         assertTrue(S.toEquivalence(TomlDocument)(doc, decoded));
-        assert.strictEqual(yield* S.encodeEffect(codec)(decoded), encoded);
+        const value2 = yield* S.encodeEffect(codec)(decoded);
+        assert.strictEqual(value2, encoded);
       }),
     runs
   );
@@ -79,13 +81,17 @@ describe("lossless document laws", () => {
         assert.strictEqual(decoded.stringify(), text);
         assert.strictEqual((yield* TomlDocument.parse(decoded.stringify())).stringify(), doc.stringify());
         if (sample.duplicate) {
-          assertFailure(yield* Effect.result(decoded.toValue()), TomlParseError.make({ diagnostics: doc.diagnostics }));
+          const result3 = yield* Effect.result(decoded.toValue());
+          assertFailure(result3, TomlParseError.make({ diagnostics: doc.diagnostics }));
         } else {
-          assert.deepStrictEqual(yield* decoded.toValue(), yield* Toml.parse(text));
-          assert.deepStrictEqual(
-            yield* Toml.parse(yield* Toml.stringify(yield* decoded.toValue())),
-            yield* doc.toValue()
-          );
+          const toValue4 = yield* decoded.toValue();
+          const parsed6 = yield* Toml.parse(text);
+          assert.deepStrictEqual(toValue4, parsed6);
+          const toValue9 = yield* decoded.toValue();
+          const stringify7 = yield* Toml.stringify(toValue9);
+          const parsed5 = yield* Toml.parse(stringify7);
+          const toValue8 = yield* doc.toValue();
+          assert.deepStrictEqual(parsed5, toValue8);
         }
       }),
     runs

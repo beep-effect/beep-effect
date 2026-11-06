@@ -68,7 +68,9 @@ const fixture = Effect.fn("ContinuityTest.fixture")(function* (
   );
   let claude = A.empty<ClaudeContinuityInput>();
   if (app !== undefined) {
-    yield* fs.writeFileString(path.join(root, "app.json"), yield* encode(app));
+    const argument = path.join(root, "app.json");
+    const encoded1 = yield* encode(app);
+    yield* fs.writeFileString(argument, encoded1);
     yield* writeJsonLines("claude.jsonl", transcript);
     claude = A.append(
       claude,
@@ -88,7 +90,8 @@ const fixture = Effect.fn("ContinuityTest.fixture")(function* (
     claude,
   });
   const manifest = path.join(root, "input.json");
-  yield* fs.writeFileString(manifest, yield* encodeContinuityInputJson(input));
+  const encodedContinuityInputJson = yield* encodeContinuityInputJson(input);
+  yield* fs.writeFileString(manifest, encodedContinuityInputJson);
   const read = yield* PermissionContinuity;
   return yield* read.read(manifest);
 });
@@ -140,7 +143,8 @@ it.layer(PermissionContinuityLive.pipe(Layer.provideMerge(commandEnvironment)), 
       const root = yield* fs.makeTempDirectoryScoped({ directory, prefix: "h4-cli-" });
       const manifest = path.join(root, "input.json");
       const input = ContinuityInput.make({ route: "fresh", expected, rollouts: [], configs: [], claude: [] });
-      yield* fs.writeFileString(manifest, yield* encodeContinuityInputJson(input));
+      const encodedContinuityInputJson1 = yield* encodeContinuityInputJson(input);
+      yield* fs.writeFileString(manifest, encodedContinuityInputJson1);
       const current = yield* Console.Console;
       let output = A.empty<unknown>();
       yield* Command.runWith(sessionCommand, { version: "0.0.0" })(["continuity", "--input", manifest]).pipe(
@@ -225,7 +229,8 @@ it.layer(PermissionContinuityLive.pipe(Layer.provideMerge(commandEnvironment)), 
         ]
       );
       expect(A.map(rows, (row) => row.verdict)).toEqual(["unsatisfied", "unknown", "unknown"]);
-      expect(yield* encode(rows)).not.toContain("sensitive-canary");
+      const encoded = yield* encode(rows);
+      expect(encoded).not.toContain("sensitive-canary");
     })
   );
   it.effect("compares app mode with last CLI user mode, never an assistant's mode", () =>
@@ -285,7 +290,8 @@ it.layer(PermissionContinuityLive.pipe(Layer.provideMerge(commandEnvironment)), 
   );
   it.effect("returns no invented verified row for an empty manifest", () =>
     Effect.gen(function* () {
-      expect(yield* fixture([])).toEqual([]);
+      const fixture2 = yield* fixture([]);
+      expect(fixture2).toEqual([]);
     })
   );
 

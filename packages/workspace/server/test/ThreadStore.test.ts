@@ -282,7 +282,8 @@ describe("ThreadStore in-memory", () => {
           .pipe(Effect.exit);
 
         assertTrue(Exit.isFailure(exit) && Exit.hasDies(exit));
-        expect(yield* store.listThreads(workspaceId)).toHaveLength(0);
+        const listThreads1 = yield* store.listThreads(workspaceId);
+        expect(listThreads1).toHaveLength(0);
       })
     );
   });
@@ -418,10 +419,14 @@ describe("ThreadStore in-memory", () => {
       state: Arbitrary.schema(InMemoryState),
     },
     Effect.fnUntraced(function* ({ thread, turn, message, state }) {
-      expect(yield* schemaRoundTrips(ThreadEntityInput, thread)).toBe(true);
-      expect(yield* schemaRoundTrips(TurnEntityInput, turn)).toBe(true);
-      expect(yield* schemaRoundTrips(MessageEntityInput, message)).toBe(true);
-      expect(yield* schemaRoundTrips(InMemoryState, state)).toBe(true);
+      const schemaRoundTrips2 = yield* schemaRoundTrips(ThreadEntityInput, thread);
+      expect(schemaRoundTrips2).toBe(true);
+      const schemaRoundTrips3 = yield* schemaRoundTrips(TurnEntityInput, turn);
+      expect(schemaRoundTrips3).toBe(true);
+      const schemaRoundTrips4 = yield* schemaRoundTrips(MessageEntityInput, message);
+      expect(schemaRoundTrips4).toBe(true);
+      const schemaRoundTrips5 = yield* schemaRoundTrips(InMemoryState, state);
+      expect(schemaRoundTrips5).toBe(true);
     }),
     { arbitrary: fcRuns(25) }
   );

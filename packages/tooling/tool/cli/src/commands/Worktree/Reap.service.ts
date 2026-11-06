@@ -481,7 +481,8 @@ const assessCandidate = Effect.fn("WorktreeReap.assessCandidate")(function* (
       authorizedHead: O.none(),
     };
   }
-  const liveness = livenessSkipReason(yield* ctx.prober({ targetPath: entry.path, idleHours: evidence.idleHours }));
+  const prober1 = yield* ctx.prober({ targetPath: entry.path, idleHours: evidence.idleHours });
+  const liveness = livenessSkipReason(prober1);
   if (O.isSome(liveness)) {
     return {
       candidate: WorktreeReapCandidate.make({ ...enriched, skipReason: liveness }),
@@ -518,7 +519,8 @@ const retirementOutcome = Effect.fnUntraced(function* (
   assessed: WorktreeReapCandidate,
   failure: { readonly message: string }
 ): Effect.fn.Return<CandidateAssessment, never, never> {
-  const present = O.getOrElse(yield* ctx.fs.exists(entry.path).pipe(Effect.option), () => true);
+  const pipe2 = yield* ctx.fs.exists(entry.path).pipe(Effect.option);
+  const present = O.getOrElse(pipe2, () => true);
   if (present) {
     return {
       candidate: WorktreeReapCandidate.make({ ...assessed, skipReason: O.some("retirement-failed") }),
@@ -717,7 +719,8 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
         { concurrency: 1 }
       )
     : assessed;
-  const scannedAt = DateTime.formatIso(yield* DateTime.now);
+  const now3 = yield* DateTime.now;
+  const scannedAt = DateTime.formatIso(now3);
   return WorktreeReapReport.make({
     scannedAt,
     mainCheckout,

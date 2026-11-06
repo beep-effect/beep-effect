@@ -109,7 +109,8 @@ export class ProfileStore extends Context.Service<ProfileStore, ProfileStoreShap
           return O.none<PracticeProfile>();
         }
         const text = yield* fs.readFileString(file);
-        return O.some(yield* decodeProfileJson(text));
+        const decodedProfileJson = yield* decodeProfileJson(text);
+        return O.some(decodedProfileJson);
       }).pipe(
         Effect.mapError((cause) =>
           ProfileStoreFailure.make({ cause, message: `The saved practice profile at "${file}" could not be read.` })

@@ -167,7 +167,8 @@ describe("PackageManagerPin.FromString", () => {
       for (const input of ["pnpm@11.17.0", "npm@10.9.2+sha512.abcdef0123", "yarn@4.0.0-rc.1+sha512.0badf00d"]) {
         const pin = yield* decode(input);
         assert.instanceOf(pin, PackageManagerPin);
-        assert.strictEqual(yield* encode(pin), input);
+        const encoded = yield* encode(pin);
+        assert.strictEqual(encoded, input);
       }
     })
   );
@@ -185,7 +186,8 @@ describe("PackageManagerPin.FromString", () => {
       const parsed = PackageManagerPin.parseResult("bun@1.3.0");
       assertSuccess(parsed, Result.getOrThrow(parsed));
       if (Result.isSuccess(parsed)) {
-        assert.strictEqual(yield* encode(parsed.success), "bun@1.3.0");
+        const encoded1 = yield* encode(parsed.success);
+        assert.strictEqual(encoded1, "bun@1.3.0");
       }
     })
   );
@@ -230,7 +232,8 @@ describe("PackageManagerPin.FromString properties", () => {
     Effect.gen(function* () {
       const printed = yield* encode(pin);
       const reparsed = yield* decode(printed);
-      assert.strictEqual(yield* encode(reparsed), printed);
+      const encoded2 = yield* encode(reparsed);
+      assert.strictEqual(encoded2, printed);
     })
   );
 });

@@ -5,9 +5,12 @@ import * as Effect from "effect/Effect";
 
 it.effect("wizard dropped reference defaults to absence and retains the provided config identity", () =>
   Effect.gen(function* () {
-    assert.strictEqual(yield* WizardDropped, undefined);
+    const WizardDropped1 = yield* WizardDropped;
+    assert.strictEqual(WizardDropped1, undefined);
     const config = CliConfig.make({});
-    assert.strictEqual(yield* WizardDropped.pipe(Effect.provideService(WizardDropped, config)), config);
-    assert.strictEqual(yield* WizardDropped, undefined);
+    const pipe2 = yield* WizardDropped.pipe(Effect.provideService(WizardDropped, config));
+    assert.strictEqual(pipe2, config);
+    const WizardDropped3 = yield* WizardDropped;
+    assert.strictEqual(WizardDropped3, undefined);
   })
 );

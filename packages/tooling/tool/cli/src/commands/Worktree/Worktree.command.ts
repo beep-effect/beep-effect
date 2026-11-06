@@ -1333,7 +1333,8 @@ export const worktreeCommand = Command.make("worktree", {}, () =>
       "prepare",
       {},
       Effect.fn("Worktree.prepare")(function* () {
-        yield* installRegenerateMergeDriver(yield* findRepoRoot());
+        const foundRepoRoot = yield* findRepoRoot();
+        yield* installRegenerateMergeDriver(foundRepoRoot);
         yield* Console.log("Installed merge.regenerate in clone-local Git config.");
       })
     ).pipe(Command.withDescription("Install the local fail-closed projection merge driver")),

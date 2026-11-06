@@ -35,7 +35,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
-import { constant, flow } from "effect/Function";
+import { constant, flow, identity } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
@@ -46,6 +46,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -73,14 +74,19 @@ const intendedFiles = A.map(intendedTree, (file) =>
 
 const sha256 = Effect.fnUntraced(function* (bytes: Uint8Array) {
   const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, bytes));
+  const digest1 = yield* crypto.digest(Digest.sha256, bytes);
+  return Hex.encode(digest1);
 });
 
 // A file is fingerprinted by its bytes, a directory by its tree hash.
 const fingerprint = Effect.fnUntraced(function* (target: string, kind: SkillPublicationKind) {
   const fs = yield* FileSystem.FileSystem;
-  if (kind === "file") return yield* sha256(yield* fs.readFile(target));
-  return O.getOrThrow(yield* skillTreeDigest(target)).hash;
+  if (kind === "file") {
+    const readFile1 = yield* fs.readFile(target);
+    return yield* sha256(readFile1);
+  }
+  const skillTreeDigest2 = yield* skillTreeDigest(target);
+  return O.getOrThrow(skillTreeDigest2).hash;
 });
 
 const writeNativeTree = Effect.fnUntraced(function* (directory: string, marker: string) {
@@ -98,24 +104,31 @@ const writeNativeTree = Effect.fnUntraced(function* (directory: string, marker: 
 const fixture = Effect.fnUntraced(function* (kind: SkillPublicationKind, present: boolean) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: `skills-publication-${kind}-` }));
+  const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({ prefix: `skills-publication-${kind}-` });
+  const root = yield* fs.realPath(madeTempDirectoryScoped);
   yield* fs.makeDirectory(path.join(root, ".git"));
   const target = kind === "file" ? path.join(root, "skills-lock.json") : path.join(root, ".claude", "skills", "crash");
   yield* fs.makeDirectory(path.dirname(target), { recursive: true });
-  if (present && kind === "file") yield* fs.writeFileString(target, nativeFile, { mode: 0o640 });
-  if (present && kind === "directory") yield* writeNativeTree(target, "Native");
+  if (present && kind === "file") {
+    yield* fs.writeFileString(target, nativeFile, { mode: 0o640 });
+  }
+  if (present && kind === "directory") {
+    yield* writeNativeTree(target, "Native");
+  }
   return { journals: path.join(root, ".beep", "skills-backups", "journals"), root, target };
 });
 
 const listing = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
-  return A.sort(yield* fs.readDirectory(directory), Order.String);
+  const readDirectory3 = yield* fs.readDirectory(directory);
+  return A.sort(readDirectory3, Order.String);
 });
 
 const journalsIn = Effect.fnUntraced(function* (journals: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const entries = A.filter(yield* fs.readDirectory(journals), Str.endsWith(".json"));
+  const readDirectory4 = yield* fs.readDirectory(journals);
+  const entries = A.filter(readDirectory4, Str.endsWith(".json"));
   return yield* Effect.forEach(A.sort(entries, Order.String), (entry) =>
     fs.readFileString(path.join(journals, entry)).pipe(Effect.flatMap(decodeJournal))
   );
@@ -149,7 +162,8 @@ const publish = (publisher: SkillPublisher["Service"], kind: SkillPublicationKin
 // The fingerprint of the intended content, published into a fresh tree.
 const intendedFingerprint = Effect.fnUntraced(function* (kind: SkillPublicationKind) {
   const { root, target } = yield* fixture(kind, false);
-  yield* publish(yield* publisherWith(), kind, root, target);
+  const publisherWith5 = yield* publisherWith();
+  yield* publish(publisherWith5, kind, root, target);
   return yield* fingerprint(target, kind);
 });
 
@@ -170,7 +184,8 @@ const crash = Effect.fn("SkillsRecoveryTest.crash")(function* (
     stderr: "inherit",
     extendEnv: true,
   });
-  assertSome(yield* child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead), `HALTED ${halt}`);
+  const pipe6 = yield* child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead);
+  assertSome(pipe6, `HALTED ${halt}`);
   yield* child.kill({ killSignal: "SIGKILL" });
   yield* child.exitCode.pipe(Effect.result);
 });
@@ -204,10 +219,13 @@ const replaceTarget = Effect.fnUntraced(function* (kind: SkillPublicationKind, t
 });
 
 const remoteSkill = "---\nname: grill-me\ndescription: Ask focused planning questions.\n---\n\n# Grill Me\n";
-const tree = JSON.stringify({
-  tree: [{ path: "skills/productivity/grill-me/SKILL.md", type: "blob", sha: "skill-sha" }],
-  truncated: false,
-});
+const tree = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    tree: [{ path: "skills/productivity/grill-me/SKILL.md", type: "blob", sha: "skill-sha" }],
+    truncated: false,
+  }),
+  identity
+);
 const skillsClient = HttpClient.make((request, url) =>
   Effect.try({
     try: () => new Request(url.toString(), { method: request.method }),
@@ -249,18 +267,24 @@ layer(
           const publisher = yield* publisherWith();
           const reports = yield* publisher.recover(root, "pending");
           expect(reports).toEqual(A.filter([recovered(journal, outcome)], () => !finished));
-          expect(yield* fingerprint(target, kind)).toBe(live);
+          const fingerprint7 = yield* fingerprint(target, kind);
+          expect(fingerprint7).toBe(live);
           // No stage, partial stage or partial journal survives; the backup is kept.
           const parent = yield* listing(path.dirname(target));
           expect(parent).toEqual(expectedSiblings[kind](path.basename(target)));
-          expect(A.filter(yield* listing(journals), (entry) => !Str.endsWith(".json")(entry))).toEqual([]);
+          const listing8 = yield* listing(journals);
+          expect(A.filter(listing8, (entry) => !Str.endsWith(".json")(entry))).toEqual([]);
           const settled = yield* firstTracked(journals);
           expect(settled.state._tag).toBe(finished ? "completed" : "recovered");
-          expect(yield* fs.exists(O.getOrThrow(settled.backup))).toBe(point !== "intent");
+          const exists9 = yield* fs.exists(O.getOrThrow(settled.backup));
+          expect(exists9).toBe(point !== "intent");
           // Idempotent: a second run is a no-op with identical bytes and artifacts.
-          expect(yield* publisher.recover(root, "pending")).toEqual([]);
-          expect(yield* fingerprint(target, kind)).toBe(live);
-          expect(yield* listing(path.dirname(target))).toEqual(parent);
+          const recover10 = yield* publisher.recover(root, "pending");
+          expect(recover10).toEqual([]);
+          const fingerprint11 = yield* fingerprint(target, kind);
+          expect(fingerprint11).toBe(live);
+          const listing12 = yield* listing(path.dirname(target));
+          expect(listing12).toEqual(parent);
         })
       );
     }
@@ -277,13 +301,16 @@ layer(
           expect(A.map(reports, (report) => report.result)).toEqual([
             ModelsRecoveryResult.cases.recovered.make({ outcome: point === "staged" ? "preimage" : "intended" }),
           ]);
-          if (point === "staged") expect(yield* fs.exists(target)).toBe(false);
-          else expect(yield* fingerprint(target, kind)).toBe(intended);
+          if (point === "staged") {
+            const exists2 = yield* fs.exists(target);
+            expect(exists2).toBe(false);
+          } else {
+            const fingerprint3 = yield* fingerprint(target, kind);
+            expect(fingerprint3).toBe(intended);
+          }
+          const listing13 = yield* listing(path.dirname(target));
           expect(
-            A.filter(
-              yield* listing(path.dirname(target)),
-              (entry) => Str.includes(".stage-")(entry) || Str.includes(".tmp-")(entry)
-            )
+            A.filter(listing13, (entry) => Str.includes(".stage-")(entry) || Str.includes(".tmp-")(entry))
           ).toEqual([]);
         })
       );
@@ -300,19 +327,28 @@ layer(
         const [report] = yield* publisher.recover(root, "pending");
         expect(report?.result).toMatchObject({ _tag: "refused", reason: "competing-writer" });
         if (kind === "directory") expect(report?.result).toMatchObject({ detail: expect.stringContaining("SKILL.md") });
-        expect(yield* fingerprint(target, kind)).toBe(competitor);
+        const fingerprint14 = yield* fingerprint(target, kind);
+        expect(fingerprint14).toBe(competitor);
         const publication = yield* firstTracked(journals);
         expect(publication.state).toMatchObject({ _tag: "refused", from: "staged", reason: "competing-writer" });
         // Every artifact is kept, beside the canonical target: the stage and the backup.
-        expect(yield* fs.realPath(publication.staging)).toBe(publication.staging);
-        expect(yield* fs.exists(O.getOrThrow(publication.backup))).toBe(true);
-        if (kind === "file") expect(yield* fs.readFileString(O.getOrThrow(publication.backup))).toBe(nativeFile);
+        const realPath15 = yield* fs.realPath(publication.staging);
+        expect(realPath15).toBe(publication.staging);
+        const exists16 = yield* fs.exists(O.getOrThrow(publication.backup));
+        expect(exists16).toBe(true);
+        if (kind === "file") {
+          const readFileString4 = yield* fs.readFileString(O.getOrThrow(publication.backup));
+          expect(readFileString4).toBe(nativeFile);
+        }
         // Pending recovery leaves a refusal alone; an explicit retry refuses again.
-        expect(yield* publisher.recover(root, "pending")).toEqual([]);
+        const recover17 = yield* publisher.recover(root, "pending");
+        expect(recover17).toEqual([]);
         const [retried] = yield* publisher.recover(root, "retry");
         expect(retried?.result).toMatchObject({ _tag: "refused", reason: "competing-writer" });
-        expect(yield* fingerprint(target, kind)).toBe(competitor);
-        expect(yield* fs.exists(publication.staging)).toBe(true);
+        const fingerprint18 = yield* fingerprint(target, kind);
+        expect(fingerprint18).toBe(competitor);
+        const exists19 = yield* fs.exists(publication.staging);
+        expect(exists19).toBe(true);
       })
     );
 
@@ -326,24 +362,29 @@ layer(
         const interfering = ModelsAtomicExchange.of({
           qualify: base.qualify,
           exchange: Effect.fn("SkillsRecoveryTest.exchange")(function* (left, right) {
-            if (right === target && competitor === "")
+            if (right === target && competitor === "") {
               yield* replaceTarget(kind, target).pipe(
                 Effect.andThen(Effect.suspend(() => fingerprint(target, kind))),
                 Effect.tap((hash) => Effect.sync(() => (competitor = hash))),
                 Effect.orDie,
                 Effect.provideContext(services)
               );
+            }
             return yield* base.exchange(left, right);
           }),
         });
-        const error = yield* Effect.flip(publish(yield* publisherWith(interfering), kind, root, target));
+        const publisherWith20 = yield* publisherWith(interfering);
+        const error = yield* Effect.flip(publish(publisherWith20, kind, root, target));
         expect(error.reason).toBe("competing-writer");
         expect(error.message).toContain("Journal: skills-");
-        expect(yield* fingerprint(target, kind)).toBe(competitor);
+        const fingerprint21 = yield* fingerprint(target, kind);
+        expect(fingerprint21).toBe(competitor);
         const publication = yield* firstTracked(journals);
         expect(publication.state).toMatchObject({ _tag: "refused", reason: "competing-writer" });
-        expect(yield* fingerprint(publication.staging, kind)).toBe(publication.staged.hash);
-        expect(yield* fs.exists(O.getOrThrow(publication.backup))).toBe(true);
+        const fingerprint22 = yield* fingerprint(publication.staging, kind);
+        expect(fingerprint22).toBe(publication.staged.hash);
+        const exists23 = yield* fs.exists(O.getOrThrow(publication.backup));
+        expect(exists23).toBe(true);
       })
     );
 
@@ -356,9 +397,12 @@ layer(
         const [journal] = yield* journalsIn(journals);
         expect(journal === undefined ? "" : trackedOf(journal).state._tag).toBe("recovering");
         const publisher = yield* publisherWith();
-        expect(yield* publisher.recover(root, "pending")).toEqual([recovered(journal?.id ?? "", "intended")]);
-        expect(yield* fingerprint(target, kind)).toBe(intended);
-        expect(yield* publisher.recover(root, "pending")).toEqual([]);
+        const recover24 = yield* publisher.recover(root, "pending");
+        expect(recover24).toEqual([recovered(journal?.id ?? "", "intended")]);
+        const fingerprint25 = yield* fingerprint(target, kind);
+        expect(fingerprint25).toBe(intended);
+        const recover26 = yield* publisher.recover(root, "pending");
+        expect(recover26).toEqual([]);
       })
     );
 
@@ -373,11 +417,14 @@ layer(
           ...base,
           exchange: () => Effect.fail(ModelsExchangeFault.make({ reason: "einval", message: "Invalid argument" })),
         });
-        const error = yield* Effect.flip(publish(yield* publisherWith(refusing), kind, root, target));
+        const publisherWith27 = yield* publisherWith(refusing);
+        const error = yield* Effect.flip(publish(publisherWith27, kind, root, target));
         expect(error.reason).toBe("exchange-unsupported");
         expect(error.message).toContain("(einval: Invalid argument)");
-        expect(yield* fs.exists(path.join(root, ".beep"))).toBe(false);
-        expect(yield* fingerprint(target, kind)).toBe(before);
+        const exists28 = yield* fs.exists(path.join(root, ".beep"));
+        expect(exists28).toBe(false);
+        const fingerprint29 = yield* fingerprint(target, kind);
+        expect(fingerprint29).toBe(before);
       })
     );
   }
@@ -395,7 +442,8 @@ layer(
       });
       const publisher = yield* makeSkillPublisher().pipe(Effect.provideService(FileSystem.FileSystem, failing));
       const error = yield* Effect.flip(publisher.publishDirectory(root, target, intendedFiles));
-      expect(yield* fingerprint(target, "directory")).toBe(before);
+      const fingerprint30 = yield* fingerprint(target, "directory");
+      expect(fingerprint30).toBe(before);
       const publication = yield* firstTracked(journals);
       expect(publication.state).toMatchObject({
         _tag: "abandoned",
@@ -405,11 +453,16 @@ layer(
       expect(error.message).toContain(`Journal: ${yield* firstJournalId(journals)}`);
       // The stage never landed: its partial and stage names are gone. Skill backups
       // are always kept, so the backup of the untouched tree stays.
-      expect(yield* fs.exists(O.getOrThrow(publication.partial))).toBe(false);
-      expect(yield* fs.exists(publication.staging)).toBe(false);
-      expect(yield* fs.exists(O.getOrThrow(publication.backup))).toBe(true);
-      expect(yield* publisher.recover(root, "pending")).toEqual([]);
-      expect(yield* publisher.recover(root, "retry")).toEqual([]);
+      const exists31 = yield* fs.exists(O.getOrThrow(publication.partial));
+      expect(exists31).toBe(false);
+      const exists32 = yield* fs.exists(publication.staging);
+      expect(exists32).toBe(false);
+      const exists33 = yield* fs.exists(O.getOrThrow(publication.backup));
+      expect(exists33).toBe(true);
+      const recover34 = yield* publisher.recover(root, "pending");
+      expect(recover34).toEqual([]);
+      const recover35 = yield* publisher.recover(root, "retry");
+      expect(recover35).toEqual([]);
     })
   );
 
@@ -430,11 +483,14 @@ layer(
       const publisher = yield* makeSkillPublisher().pipe(Effect.provideService(FileSystem.FileSystem, drifting));
       const error = yield* Effect.flip(publisher.publishFile(root, target, intendedFile));
       expect(error.reason).toBe("drift");
-      expect(yield* fs.readFileString(target)).toBe(competitorFile);
+      const readFileString36 = yield* fs.readFileString(target);
+      expect(readFileString36).toBe(competitorFile);
       const publication = yield* firstTracked(journals);
       expect(publication.state).toMatchObject({ _tag: "abandoned", from: "backed-up" });
-      expect(yield* fs.exists(publication.staging)).toBe(false);
-      expect(yield* fs.readFileString(O.getOrThrow(publication.backup))).toBe(nativeFile);
+      const exists37 = yield* fs.exists(publication.staging);
+      expect(exists37).toBe(false);
+      const readFileString38 = yield* fs.readFileString(O.getOrThrow(publication.backup));
+      expect(readFileString38).toBe(nativeFile);
     })
   );
 
@@ -445,7 +501,8 @@ layer(
       const { journals, root, target } = yield* fixture("directory", false);
       const publisher = yield* publisherWith();
       yield* publish(publisher, "directory", root, target);
-      const journal = O.getOrThrow(A.head(yield* journalsIn(journals)));
+      const journalsIn39 = yield* journalsIn(journals);
+      const journal = O.getOrThrow(A.head(journalsIn39));
       const outside = yield* fs.makeTempDirectoryScoped({ prefix: "skills-outside-" });
       const escape = path.join(root, "escape");
       yield* fs.symlink(outside, escape);
@@ -466,12 +523,15 @@ layer(
           state: ModelsPublicationState.cases.staged.make({}),
         }),
       });
-      yield* fs.writeFileString(path.join(journals, `${journal.id}.json`), yield* encodeJournal(pending));
+      const argument1 = path.join(journals, `${journal.id}.json`);
+      const encodedJournal5 = yield* encodeJournal(pending);
+      yield* fs.writeFileString(argument1, encodedJournal5);
       const reports = yield* publisher.recover(root, "pending");
       expect(A.map(reports, (report) => report.result)).toEqual([
         expect.objectContaining({ _tag: "refused", reason: "foreign-artifact" }),
       ]);
-      expect(yield* fs.readFileString(path.join(partial, "unrelated.txt"))).toBe("keep external bytes");
+      const readFileString40 = yield* fs.readFileString(path.join(partial, "unrelated.txt"));
+      expect(readFileString40).toBe("keep external bytes");
     })
   );
 
@@ -482,7 +542,8 @@ layer(
       const { journals, root, target } = yield* fixture("file", true);
       const publisher = yield* publisherWith();
       yield* publisher.publishFile(root, target, intendedFile);
-      const journal = O.getOrThrow(A.head(yield* journalsIn(journals)));
+      const journalsIn41 = yield* journalsIn(journals);
+      const journal = O.getOrThrow(A.head(journalsIn41));
       const pending = SkillPublicationJournal.make({
         id: journal.id,
         publication: SkillTrackedPublication.make({
@@ -490,8 +551,11 @@ layer(
           state: ModelsPublicationState.cases.staged.make({}),
         }),
       });
-      yield* fs.writeFileString(path.join(journals, `${journal.id}.json`), yield* encodeJournal(pending));
-      expect(A.map(yield* publisher.recover(root, "pending"), (report) => report.result)).toEqual([
+      const argument2 = path.join(journals, `${journal.id}.json`);
+      const encodedJournal6 = yield* encodeJournal(pending);
+      yield* fs.writeFileString(argument2, encodedJournal6);
+      const recover42 = yield* publisher.recover(root, "pending");
+      expect(A.map(recover42, (report) => report.result)).toEqual([
         ModelsRecoveryResult.cases.skipped.make({ reason: "owner-alive" }),
       ]);
     })
@@ -508,16 +572,20 @@ layer(
       yield* fs.writeFileString(`${target}.tmp-legacy`, "an old stage\n");
       const publisher = yield* publisherWith();
       for (const scope of ["pending", "retry"] as const) {
-        expect(yield* publisher.recover(root, scope)).toEqual([
+        const recover43 = yield* publisher.recover(root, scope);
+        expect(recover43).toEqual([
           SkillRecoveryReport.make({
             journal: "skills-legacy",
             result: ModelsRecoveryResult.cases.skipped.make({ reason: "legacy" }),
           }),
         ]);
       }
-      expect(yield* fs.readFileString(target)).toBe(nativeFile);
-      expect(yield* fs.readFileString(`${target}.tmp-legacy`)).toBe("an old stage\n");
-      expect(yield* fs.readFileString(path.join(journals, "skills-legacy.json"))).toBe(legacy);
+      const readFileString44 = yield* fs.readFileString(target);
+      expect(readFileString44).toBe(nativeFile);
+      const readFileString45 = yield* fs.readFileString(`${target}.tmp-legacy`);
+      expect(readFileString45).toBe("an old stage\n");
+      const readFileString46 = yield* fs.readFileString(path.join(journals, "skills-legacy.json"));
+      expect(readFileString46).toBe(legacy);
     })
   );
 
@@ -571,17 +639,21 @@ layer(
       );
       yield* fs.symlink(canonical, path.join(root, ".codex", "config.toml"));
       yield* runSkillsUpdate({ mode: "write", skill: O.some("grill-me") });
-      const first = O.getOrThrow(yield* skillTreeDigest(root));
+      const skillTreeDigest47 = yield* skillTreeDigest(root);
+      const first = O.getOrThrow(skillTreeDigest47);
       yield* runSkillsUpdate({ mode: "write", skill: O.some("grill-me") });
-      const second = O.getOrThrow(yield* skillTreeDigest(root));
+      const skillTreeDigest48 = yield* skillTreeDigest(root);
+      const second = O.getOrThrow(skillTreeDigest48);
       expect(skillTreeDifferences(second.entries, first.entries)).toEqual([]);
       expect(second.hash).toBe(first.hash);
-      expect(yield* fs.readLink(path.join(root, ".codex", "config.toml"))).toBe(canonical);
+      const readLink49 = yield* fs.readLink(path.join(root, ".codex", "config.toml"));
+      expect(readLink49).toBe(canonical);
       const config = yield* fs.readFileString(canonical);
       expect(config).toContain('future_key = "keep"');
       expect(config).toContain('name = "operator-skill"\nenabled = false\nowner = "operator"');
       expect(config).toContain('[mcp_servers.native]\nurl = "keep"');
-      expect(yield* fs.readFileString(path.join(root, ".claude", "skills", "grill-me", "SKILL.md"))).toBe(remoteSkill);
+      const readFileString50 = yield* fs.readFileString(path.join(root, ".claude", "skills", "grill-me", "SKILL.md"));
+      expect(readFileString50).toBe(remoteSkill);
       // Every publication of the first run completed.
       const journals = yield* journalsIn(path.join(root, ".beep", "skills-backups", "journals"));
       expect(A.map(journals, (journal) => trackedOf(journal).state._tag)).toEqual(A.map(journals, () => "completed"));
@@ -597,11 +669,15 @@ layer(
       const journals = path.join(root, ".beep", "skills-backups", "journals");
       const [crashed] = yield* journalsIn(journals);
       yield* runSkillsUpdate({ mode: "write", skill: O.some("grill-me") });
-      expect(yield* TestConsole.logLines).toContain(`skills:update: recovery recovered ${crashed?.id} (intended)`);
+      const logLines51 = yield* TestConsole.logLines;
+      expect(logLines51).toContain(`skills:update: recovery recovered ${crashed?.id} (intended)`);
       const fs = yield* FileSystem.FileSystem;
-      expect(yield* fs.readFileString(path.join(target, "SKILL.md"))).toBe(remoteSkill);
-      expect(A.filter(yield* listing(path.dirname(target)), Str.startsWith("."))).toEqual([]);
-      const states = A.map(yield* journalsIn(journals), (journal) => trackedOf(journal).state._tag);
+      const readFileString52 = yield* fs.readFileString(path.join(target, "SKILL.md"));
+      expect(readFileString52).toBe(remoteSkill);
+      const listing53 = yield* listing(path.dirname(target));
+      expect(A.filter(listing53, Str.startsWith("."))).toEqual([]);
+      const journalsIn54 = yield* journalsIn(journals);
+      const states = A.map(journalsIn54, (journal) => trackedOf(journal).state._tag);
       expect(A.contains(states, "recovered")).toBe(true);
     }).pipe(Effect.provideService(HttpClient.HttpClient, skillsClient))
   );
@@ -620,7 +696,8 @@ layer(
       expect(lines).toEqual(
         expect.arrayContaining([expect.stringMatching(/^- refused skills-.* \(competing-writer\)/)])
       );
-      expect(yield* TestConsole.errorLines).toEqual(
+      const errorLines55 = yield* TestConsole.errorLines;
+      expect(errorLines55).toEqual(
         expect.arrayContaining([expect.stringContaining("skills:recover: 1 skill publication(s) refused recovery")])
       );
       // Without interruptions the command reports nothing and succeeds.
@@ -634,7 +711,8 @@ layer(
 // The test process's own publication owner, read from procfs as the writer does.
 const liveOwnerStamp = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const bootId = Str.trim(yield* fs.readFileString("/proc/sys/kernel/random/boot_id"));
+  const readFileString56 = yield* fs.readFileString("/proc/sys/kernel/random/boot_id");
+  const bootId = Str.trim(readFileString56);
   const stat = yield* fs.readFileString("/proc/self/stat");
   const fields = Str.split(Str.trim(Str.slice(O.getOrElse(Str.lastIndexOf(")")(stat), constant(-1)) + 1)(stat)), " ");
   return yield* encodeOwner(
@@ -664,13 +742,16 @@ layer(
   it.effect("a recovery lock held by a live process skips the journal and keeps the lock", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const { journals, lock, root } = yield* crashedWithLock(yield* liveOwnerStamp);
+      const liveOwnerStamp57 = yield* liveOwnerStamp;
+      const { journals, lock, root } = yield* crashedWithLock(liveOwnerStamp57);
       const publisher = yield* publisherWith();
-      expect(A.map(yield* publisher.recover(root, "pending"), (report) => report.result)).toEqual([
+      const recover58 = yield* publisher.recover(root, "pending");
+      expect(A.map(recover58, (report) => report.result)).toEqual([
         ModelsRecoveryResult.cases.skipped.make({ reason: "lock-held" }),
       ]);
       expect((yield* firstTracked(journals)).state._tag).toBe("staged");
-      expect(yield* fs.realPath(lock)).toBe(lock);
+      const realPath59 = yield* fs.realPath(lock);
+      expect(realPath59).toBe(lock);
     })
   );
 
@@ -679,7 +760,8 @@ layer(
       const fs = yield* FileSystem.FileSystem;
       const { journals, lock, root } = yield* crashedWithLock("written by another version");
       const publisher = yield* publisherWith();
-      expect(A.map(yield* publisher.recover(root, "pending"), (report) => report.result)).toEqual([
+      const recover60 = yield* publisher.recover(root, "pending");
+      expect(A.map(recover60, (report) => report.result)).toEqual([
         ModelsRecoveryResult.cases.skipped.make({ reason: "lock-held" }),
       ]);
       expect((yield* firstTracked(journals)).state._tag).toBe("staged");
@@ -687,10 +769,12 @@ layer(
       const stamped = O.getOrThrow((yield* fs.stat(lock)).mtime).getTime();
       const anHourEarlier = (stamped - 60 * 60 * 1000) / 1000;
       yield* fs.utimes(lock, anHourEarlier, anHourEarlier);
-      expect(A.map(yield* publisher.recover(root, "pending"), (report) => report.result)).toEqual([
+      const recover61 = yield* publisher.recover(root, "pending");
+      expect(A.map(recover61, (report) => report.result)).toEqual([
         ModelsRecoveryResult.cases.recovered.make({ outcome: "preimage" }),
       ]);
-      expect(yield* fs.exists(lock)).toBe(false);
+      const exists62 = yield* fs.exists(lock);
+      expect(exists62).toBe(false);
     })
   );
 
@@ -710,7 +794,8 @@ layer(
       expect(error.reason).toBe("lock-unavailable");
       expect(error.message).toContain("Cannot create the recovery lock (NotFound)");
       expect((yield* firstTracked(journals)).state._tag).toBe("staged");
-      expect(A.filter(yield* listing(journals), (entry) => !Str.endsWith(".json")(entry))).toEqual([]);
+      const listing63 = yield* listing(journals);
+      expect(A.filter(listing63, (entry) => !Str.endsWith(".json")(entry))).toEqual([]);
     })
   );
 
@@ -723,7 +808,8 @@ layer(
         // encoding rather than the decoded instances.
         const encoded = yield* encodeJournal(SkillPublicationJournal.make({ id: "skills-property", publication }));
         const decoded = yield* decodeJournal(encoded);
-        expect(yield* encodeJournal(decoded)).toBe(encoded);
+        const encodedJournal = yield* encodeJournal(decoded);
+        expect(encodedJournal).toBe(encoded);
         expect(decoded.publication._tag).toBe("tracked");
         // A tree never differs from itself, so recovery names no entry for it.
         expect(skillTreeDifferences(entries, entries)).toEqual([]);
@@ -736,7 +822,8 @@ layer(
 const createRepository = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fs.realPath(yield* temporaryWorkingDirectory);
+  const temporaryWorkingDirectory64 = yield* temporaryWorkingDirectory;
+  const root = yield* fs.realPath(temporaryWorkingDirectory64);
   yield* fs.makeDirectory(path.join(root, ".git"));
   return {
     journals: path.join(root, ".beep", "skills-backups", "journals"),
@@ -755,7 +842,9 @@ const failingCreate = Effect.fnUntraced(function* (
   return FileSystem.FileSystem.of({
     ...fs,
     link: Effect.fn("SkillsRecoveryTest.createLink")(function* (from, to) {
-      if (to !== target) return yield* fs.link(from, to);
+      if (to !== target) {
+        return yield* fs.link(from, to);
+      }
       if (failure === "competitor") {
         yield* fs.writeFileString(target, competitorFile);
         return yield* fs.link(from, to);
@@ -780,20 +869,25 @@ layer(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const { journals, root, target } = yield* createRepository;
-      const publisher = yield* makeSkillPublisher().pipe(
-        Effect.provideService(FileSystem.FileSystem, yield* failingCreate(target, "competitor"))
-      );
+      const argument3 = makeSkillPublisher();
+      const failingCreate7 = yield* failingCreate(target, "competitor");
+      const publisher = yield* argument3.pipe(Effect.provideService(FileSystem.FileSystem, failingCreate7));
       const error = yield* Effect.flip(publisher.publishFile(root, target, intendedFile));
       expect(error.reason).toBe("competing-writer");
-      expect(yield* fs.readFileString(target)).toBe(competitorFile);
+      const readFileString65 = yield* fs.readFileString(target);
+      expect(readFileString65).toBe(competitorFile);
       const publication = yield* firstTracked(journals);
       expect(publication.state).toMatchObject({ _tag: "abandoned", from: "staged" });
-      expect(yield* fs.exists(publication.staging)).toBe(false);
-      expect(yield* fs.realPath(target)).toBe(target);
+      const exists66 = yield* fs.exists(publication.staging);
+      expect(exists66).toBe(false);
+      const realPath67 = yield* fs.realPath(target);
+      expect(realPath67).toBe(target);
       yield* runSkillsCommand(["recover"]);
       yield* runSkillsCommand(["recover"]);
-      expect(yield* TestConsole.logLines).toEqual(expect.arrayContaining(["skills:recover: 0 journal(s) reconciled"]));
-      expect(yield* fs.readFileString(target)).toBe(competitorFile);
+      const logLines68 = yield* TestConsole.logLines;
+      expect(logLines68).toEqual(expect.arrayContaining(["skills:recover: 0 journal(s) reconciled"]));
+      const readFileString69 = yield* fs.readFileString(target);
+      expect(readFileString69).toBe(competitorFile);
     }).pipe(Effect.provideService(HttpClient.HttpClient, skillsClient))
   );
 
@@ -802,20 +896,24 @@ layer(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const { journals, root, target } = yield* createRepository;
-        const publisher = yield* makeSkillPublisher().pipe(
-          Effect.provideService(FileSystem.FileSystem, yield* failingCreate(target, code))
-        );
+        const argument4 = makeSkillPublisher();
+        const failingCreate8 = yield* failingCreate(target, code);
+        const publisher = yield* argument4.pipe(Effect.provideService(FileSystem.FileSystem, failingCreate8));
         const error = yield* Effect.flip(publisher.publishFile(root, target, intendedFile));
         expect(error.reason).toBeUndefined();
         expect(error.message).toContain(code);
         expect(error.cause).toBeDefined();
-        expect(yield* fs.exists(target)).toBe(false);
+        const exists70 = yield* fs.exists(target);
+        expect(exists70).toBe(false);
         const publication = yield* firstTracked(journals);
         expect(publication.state).toMatchObject({ _tag: "abandoned", from: "staged" });
-        expect(yield* fs.exists(publication.staging)).toBe(false);
-        expect(yield* fs.realPath(journals)).toBe(journals);
+        const exists71 = yield* fs.exists(publication.staging);
+        expect(exists71).toBe(false);
+        const realPath72 = yield* fs.realPath(journals);
+        expect(realPath72).toBe(journals);
         yield* runSkillsCommand(["recover"]);
-        expect(yield* (yield* publisherWith()).recover(root, "retry")).toEqual([]);
+        const recover73 = yield* (yield* publisherWith()).recover(root, "retry");
+        expect(recover73).toEqual([]);
       }).pipe(Effect.provideService(HttpClient.HttpClient, skillsClient))
     );
   }
@@ -828,16 +926,19 @@ layer(
       yield* fs.writeFileString(target, competitorFile);
       const id = yield* firstJournalId(journals);
       yield* runSkillsCommand(["recover"]);
-      expect(yield* TestConsole.logLines).toEqual(
-        expect.arrayContaining([expect.stringMatching(new RegExp(`^- abandoned ${id} `))])
-      );
+      const logLines74 = yield* TestConsole.logLines;
+      expect(logLines74).toEqual(expect.arrayContaining([expect.stringMatching(new RegExp(`^- abandoned ${id} `))]));
       const publication = yield* firstTracked(journals);
       expect(publication.state).toMatchObject({ _tag: "abandoned", from: "staged" });
-      expect(yield* fs.exists(publication.staging)).toBe(false);
-      expect(yield* fs.readFileString(target)).toBe(competitorFile);
-      expect(yield* fs.realPath(target)).toBe(target);
+      const exists75 = yield* fs.exists(publication.staging);
+      expect(exists75).toBe(false);
+      const readFileString76 = yield* fs.readFileString(target);
+      expect(readFileString76).toBe(competitorFile);
+      const realPath77 = yield* fs.realPath(target);
+      expect(realPath77).toBe(target);
       // A second recover is a no-op.
-      expect(yield* (yield* publisherWith()).recover(root, "retry")).toEqual([]);
+      const recover78 = yield* (yield* publisherWith()).recover(root, "retry");
+      expect(recover78).toEqual([]);
     }).pipe(Effect.provideService(HttpClient.HttpClient, skillsClient))
   );
 });
@@ -863,7 +964,8 @@ layer(
       ).toContain("not a directory");
       const link = path.join(directory.root, "linked-tree");
       yield* fs.symlink(directory.target, link);
-      assertNone(yield* skillTreeDigest(link));
+      const skillTreeDigest79 = yield* skillTreeDigest(link);
+      assertNone(skillTreeDigest79);
       expect(
         (yield* publisher.publishDirectory(directory.root, link, intendedFiles).pipe(Effect.flip)).message
       ).toContain("symbolic link");
@@ -882,9 +984,10 @@ layer(
         expect(
           (yield* isolated.publishDirectory(directory.root, directory.target, intendedFiles).pipe(Effect.flip)).message
         ).toContain("Refusing a skill");
-        assertNone(
-          yield* skillTreeDigest(directory.target).pipe(Effect.provideService(FileSystem.FileSystem, wrapped))
+        const pipe80 = yield* skillTreeDigest(directory.target).pipe(
+          Effect.provideService(FileSystem.FileSystem, wrapped)
         );
+        assertNone(pipe80);
       }
     })
   );
@@ -938,10 +1041,12 @@ layer(
       expect(error.message).toContain("fixture exchange failed");
       expect(error.target).toBe(target);
       expect(error.journal).toBeDefined();
-      expect(yield* fs.readFileString(target)).toBe(nativeFile);
+      const readFileString81 = yield* fs.readFileString(target);
+      expect(readFileString81).toBe(nativeFile);
       const publication = yield* firstTracked(journals);
       expect(publication.state._tag).toBe("staged");
-      expect(yield* fs.readFileString(publication.staging)).toBe(intendedFile);
+      const readFileString82 = yield* fs.readFileString(publication.staging);
+      expect(readFileString82).toBe(intendedFile);
       const reports = yield* (yield* publisherWith()).recover(root, "pending");
       expect(reports[0]?.result).toMatchObject({ _tag: "skipped", reason: "owner-alive" });
     })
@@ -1010,7 +1115,8 @@ layer(
       });
       const error = yield* publisher.publishFile(existing.root, existing.target, intendedFile).pipe(Effect.flip);
       expect(error.message).toContain("Skill target changed after replacement");
-      expect(yield* fs.readFileString(existing.target)).toBe(competitorFile);
+      const readFileString83 = yield* fs.readFileString(existing.target);
+      expect(readFileString83).toBe(competitorFile);
     })
   );
 
@@ -1024,25 +1130,27 @@ layer(
       ]) {
         const { journals, root, target } = yield* fixture("file", true);
         yield* crash("publish-file", root, target, "staged");
-        const journal = O.getOrThrow(A.head(yield* journalsIn(journals)));
+        const journalsIn84 = yield* journalsIn(journals);
+        const journal = O.getOrThrow(A.head(journalsIn84));
         const tracked = trackedOf(journal);
-        yield* fs.writeFileString(target, yield* fs.readFileString(tracked.staging));
+        const readFileString85 = yield* fs.readFileString(tracked.staging);
+        yield* fs.writeFileString(target, readFileString85);
         yield* fs.writeFileString(tracked.staging, competitorFile);
-        yield* fs.writeFileString(
-          path.join(journals, `${journal.id}.json`),
-          yield* encodeJournal(
-            SkillPublicationJournal.make({
-              ...journal,
-              publication: SkillTrackedPublication.make({ ...tracked, filesystem: identity }),
-            })
-          )
+        const argument5 = path.join(journals, `${journal.id}.json`);
+        const encodedJournal9 = yield* encodeJournal(
+          SkillPublicationJournal.make({
+            ...journal,
+            publication: SkillTrackedPublication.make({ ...tracked, filesystem: identity }),
+          })
         );
+        yield* fs.writeFileString(argument5, encodedJournal9);
         const reports = yield* (yield* publisherWith()).recover(root, "pending");
         expect(reports[0]?.result).toMatchObject({
           _tag: "refused",
           reason,
         });
-        expect(yield* fs.readFileString(tracked.staging)).toBe(competitorFile);
+        const readFileString86 = yield* fs.readFileString(tracked.staging);
+        expect(readFileString86).toBe(competitorFile);
       }
     })
   );
@@ -1088,7 +1196,8 @@ layer(
             ? { _tag: "skipped", reason: "owner-alive" }
             : { _tag: "recovered", outcome: "preimage" }
         );
-        expect(yield* fs.readFileString(target)).toBe(nativeFile);
+        const readFileString87 = yield* fs.readFileString(target);
+        expect(readFileString87).toBe(nativeFile);
       })
     );
   }
@@ -1139,7 +1248,10 @@ layer(
           expect(reports[0]?.result).toMatchObject(
             race === "stamp-vanished" ? { _tag: "recovered" } : { _tag: "skipped", reason: "lock-held" }
           );
-          if (race === "stamp-replaced") expect(yield* fs.readFileString(lock)).toBe("replacement stamp");
+          if (race === "stamp-replaced") {
+            const readFileString10 = yield* fs.readFileString(lock);
+            expect(readFileString10).toBe("replacement stamp");
+          }
         }
       })
     );
@@ -1165,7 +1277,8 @@ layer(
         const path = yield* Path.Path;
         const { journals, root, target } = yield* fixture("file", true);
         yield* crash("publish-file", root, target, "staged");
-        const journal = O.getOrThrow(A.head(yield* journalsIn(journals)));
+        const journalsIn88 = yield* journalsIn(journals);
+        const journal = O.getOrThrow(A.head(journalsIn88));
         const tracked = trackedOf(journal);
         const journalPath = path.join(journals, `${journal.id}.json`);
         yield* Match.value(mutation).pipe(
@@ -1258,8 +1371,12 @@ layer(
         yield* publish(publisher, kind, root, target);
         const before = yield* listing(journals);
         yield* publish(publisher, kind, root, target);
-        expect(yield* listing(journals)).toEqual(before);
-        expect(yield* fingerprint(target, kind)).toBe(yield* intendedFingerprint(kind));
+        const listing89 = yield* listing(journals);
+        expect(listing89).toEqual(before);
+        const fingerprint90 = yield* fingerprint(target, kind);
+        const expectation = expect(fingerprint90);
+        const intendedFingerprint11 = yield* intendedFingerprint(kind);
+        expectation.toBe(intendedFingerprint11);
       }
     })
   );
@@ -1277,7 +1394,8 @@ layer(
       });
       const error = yield* publisher.publishFile(root, target, intendedFile).pipe(Effect.flip);
       expect(error.message).toContain("recovery state retained");
-      expect(yield* fs.readFileString(target)).toBe(intendedFile);
+      const readFileString91 = yield* fs.readFileString(target);
+      expect(readFileString91).toBe(intendedFile);
       expect((yield* firstTracked(journals)).state._tag).toBe("recovered");
     })
   );
@@ -1296,7 +1414,8 @@ layer(
         const path = yield* Path.Path;
         const { root, target, journals } = yield* fixture("file", true);
         yield* crash("publish-file", root, target, "staged");
-        const journal = O.getOrThrow(A.head(yield* journalsIn(journals)));
+        const journalsIn92 = yield* journalsIn(journals);
+        const journal = O.getOrThrow(A.head(journalsIn92));
         const tracked = trackedOf(journal);
         const foreign = path.join(root, "foreign-staging");
         yield* fs.writeFileString(foreign, competitorFile);
@@ -1304,18 +1423,19 @@ layer(
           ...tracked,
           ...(mutation === "owner-absent" ? { owner: O.none() } : { staging: foreign }),
         });
-        yield* fs.writeFileString(
-          path.join(journals, `${journal.id}.json`),
-          yield* encodeJournal(SkillPublicationJournal.make({ ...journal, publication }))
-        );
+        const argument6 = path.join(journals, `${journal.id}.json`);
+        const encodedJournal12 = yield* encodeJournal(SkillPublicationJournal.make({ ...journal, publication }));
+        yield* fs.writeFileString(argument6, encodedJournal12);
         const reports = yield* (yield* publisherWith()).recover(root, "pending");
         expect(reports[0]?.result).toMatchObject(
           mutation === "owner-absent"
             ? { _tag: "recovered", outcome: "preimage" }
             : { _tag: "refused", reason: "foreign-artifact" }
         );
-        expect(yield* fs.readFileString(target)).toBe(nativeFile);
-        expect(yield* fs.readFileString(foreign)).toBe(competitorFile);
+        const readFileString93 = yield* fs.readFileString(target);
+        expect(readFileString93).toBe(nativeFile);
+        const readFileString94 = yield* fs.readFileString(foreign);
+        expect(readFileString94).toBe(competitorFile);
       })
     );
   }

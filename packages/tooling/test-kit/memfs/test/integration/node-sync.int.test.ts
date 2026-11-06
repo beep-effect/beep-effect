@@ -218,7 +218,8 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("NodeSyncFileSystem agrees 
         assert.isTrue(Cause.hasDies(exit.cause));
         assert.isFalse(Cause.hasFails(exit.cause));
         assert.deepStrictEqual((yield* fs.readDirectory(d)).sort(), before);
-        assert.strictEqual(yield* fs.readFileString(join(d, "f.txt"), "utf8"), "hello");
+        const readFileString1 = yield* fs.readFileString(join(d, "f.txt"), "utf8");
+        assert.strictEqual(readFileString1, "hello");
       })
     );
   }

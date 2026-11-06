@@ -28,10 +28,14 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("Yeet PR session registry", (
       yield* registry.append(makeRecord({ pr: 43, sessionId: "same-session" }));
       const file = path.join(root, "pr-sessions", prSessionRegistryFileName(repository));
       yield* fs.writeFileString(file, "not-json\n", { flag: "a" });
-      expect(decodePrSessionRegistry(yield* fs.readFileString(file)).corruptLineCount).toBe(1);
-      expect(yield* registry.lookup(repository, 42)).toHaveLength(1);
-      expect(yield* registry.lookup(repository, 43)).toHaveLength(1);
-      expect(yield* registry.list(repository)).toHaveLength(2);
+      const readFileString1 = yield* fs.readFileString(file);
+      expect(decodePrSessionRegistry(readFileString1).corruptLineCount).toBe(1);
+      const lookup2 = yield* registry.lookup(repository, 42);
+      expect(lookup2).toHaveLength(1);
+      const lookup3 = yield* registry.lookup(repository, 43);
+      expect(lookup3).toHaveLength(1);
+      const list4 = yield* registry.list(repository);
+      expect(list4).toHaveLength(2);
       expect((yield* fs.stat(file)).mode & 0o777).toBe(0o600);
       expect((yield* fs.stat(path.dirname(file))).mode & 0o777).toBe(0o700);
     })
@@ -63,11 +67,13 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("Yeet PR session registry", (
           ConfigProvider.fromEnv({ env: { BEEP_YEET_STATE_ROOT: root, HOME: root } })
         )
       );
-      expect(yield* registry.list(repository)).toStrictEqual([]);
+      const list5 = yield* registry.list(repository);
+      expect(list5).toStrictEqual([]);
       const directory = path.join(root, "pr-sessions");
       yield* fs.makeDirectory(directory, { recursive: true });
       yield* fs.writeFileString(path.join(directory, prSessionRegistryFileName(repository)), "");
-      expect(yield* registry.list(repository)).toStrictEqual([]);
+      const list6 = yield* registry.list(repository);
+      expect(list6).toStrictEqual([]);
     })
   );
 
@@ -84,18 +90,18 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("Yeet PR session registry", (
         )
       );
       yield* xdgRegistry.append(makeRecord());
-      expect(
-        yield* fs.exists(path.join(xdg, "beep", "yeet", "pr-sessions", prSessionRegistryFileName(repository)))
-      ).toBe(true);
+      const exists7 = yield* fs.exists(
+        path.join(xdg, "beep", "yeet", "pr-sessions", prSessionRegistryFileName(repository))
+      );
+      expect(exists7).toBe(true);
       const homeRegistry = yield* makePrSessionRegistryLive().pipe(
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: { HOME: root } }))
       );
       yield* homeRegistry.append(makeRecord({ sessionId: "home-fallback" }));
-      expect(
-        yield* fs.exists(
-          path.join(root, ".local", "state", "beep", "yeet", "pr-sessions", prSessionRegistryFileName(repository))
-        )
-      ).toBe(true);
+      const exists8 = yield* fs.exists(
+        path.join(root, ".local", "state", "beep", "yeet", "pr-sessions", prSessionRegistryFileName(repository))
+      );
+      expect(exists8).toBe(true);
     })
   );
 

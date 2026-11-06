@@ -103,11 +103,12 @@ const readNewChains = Effect.fnUntraced(function* (before: ReadonlyArray<string>
 const readLedgerSnapshot = Effect.fnUntraced(function* () {
   const ledger = yield* ExecutionLedger;
   const runKeys = yield* readRunKeys();
+  const forEach1 = yield* Effect.forEach(runKeys, (runKey) => ledger.readDecisions(ExecutionRunKey.make(runKey)));
+  const argument = A.flatten(forEach1);
+  const forEach2 = yield* Effect.forEach(runKeys, (runKey) => ledger.readOutcomes(ExecutionRunKey.make(runKey)));
   return {
-    decisions: A.flatten(
-      yield* Effect.forEach(runKeys, (runKey) => ledger.readDecisions(ExecutionRunKey.make(runKey)))
-    ),
-    outcomes: A.flatten(yield* Effect.forEach(runKeys, (runKey) => ledger.readOutcomes(ExecutionRunKey.make(runKey)))),
+    decisions: argument,
+    outcomes: A.flatten(forEach2),
   };
 });
 
@@ -298,7 +299,8 @@ SELECT ?destination WHERE {
 
         expect(A.map(sessionChain, (record) => record.verdict)).toEqual(["allowed", "allowed", "allowed"]);
         expect(verifyExecutionDecisionChain(sessionChain, sessionRunKey).result).toBe("chain-intact");
-        expect(yield* ledger.readOutcomes(sessionRunKey)).toHaveLength(3);
+        const readOutcomes2 = yield* ledger.readOutcomes(sessionRunKey);
+        expect(readOutcomes2).toHaveLength(3);
 
         expect(A.map(egressChain, (record) => record.verdict)).toEqual(["allowed", "denied", "denied"]);
         expect(O.getOrThrow(A.head(egressChain)).destinationDigest).toBe(
@@ -322,7 +324,8 @@ SELECT ?destination WHERE {
         expect(
           A.every(deniedRecords, (record) => A.every(egressOutcomes, (outcome) => outcome.decisionHash !== record.hash))
         ).toBe(true);
-        expect(yield* ledger.readUnsettledAllowed(egressRunKey)).toEqual([]);
+        const readUnsettledAllowed3 = yield* ledger.readUnsettledAllowed(egressRunKey);
+        expect(readUnsettledAllowed3).toEqual([]);
 
         // The two independent runs are correlated by ordering in time, not by
         // inventing an MCP session inside the promise-returning Fetch boundary.
@@ -511,7 +514,8 @@ SELECT ?value WHERE {
             const after = yield* snapshot;
 
             expect(call.isError).toBe(false);
-            expect(yield* fileSystem.exists(path.join(root, provPath))).toBe(true);
+            const exists4 = yield* fileSystem.exists(path.join(root, provPath));
+            expect(exists4).toBe(true);
             return { after, before };
           }).pipe(Effect.provide(context));
         }).pipe(Effect.scoped);
@@ -600,7 +604,8 @@ SELECT ?value WHERE {
         );
         expect(verifyOutcomeBinding(tierOutcome, tierDecision)).toBe(true);
         expect(verifyOutcomeBinding(egressOutcome, egressDecision)).toBe(true);
-        expect(yield* ledger.readUnsettledAllowed(egressDecision.runKey)).toEqual([]);
+        const readUnsettledAllowed5 = yield* ledger.readUnsettledAllowed(egressDecision.runKey);
+        expect(readUnsettledAllowed5).toEqual([]);
       }),
       pgliteIntegrationTimeoutMillis
     );

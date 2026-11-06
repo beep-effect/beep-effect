@@ -91,7 +91,8 @@ const makeScratchRepo = Effect.gen(function* () {
   yield* runCommand("git", ["commit", "--quiet", "-m", "fixture"], repoRoot);
   yield* runCommand("git", ["remote", "add", "origin", originRoot], repoRoot);
   yield* runCommand("git", ["push", "--quiet", "--set-upstream", "origin", "main"], repoRoot);
-  const mainHead = Str.trim(yield* runCommand("git", ["rev-parse", "HEAD"], repoRoot));
+  const resultCommand = yield* runCommand("git", ["rev-parse", "HEAD"], repoRoot);
+  const mainHead = Str.trim(resultCommand);
   return { mainHead, repoRoot, tempRoot, worktreesRoot };
 });
 
@@ -164,9 +165,12 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
       yield* runCommand("git", ["commit", "--quiet", "-m", "advance past merged head"], reused);
 
       const nowMillis = FIXTURE_NOW_MILLIS;
-      const youngHead = Str.trim(
-        yield* runCommand("git", ["rev-parse", "--path-format=absolute", "--git-path", "HEAD"], young)
+      const resultCommand1 = yield* runCommand(
+        "git",
+        ["rev-parse", "--path-format=absolute", "--git-path", "HEAD"],
+        young
       );
+      const youngHead = Str.trim(resultCommand1);
       yield* runCommand("touch", ["-d", `@${nowMillis / 1_000}`, youngHead], repoRoot);
 
       let duCalls = 0;
@@ -312,7 +316,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
       candidate.skipReason.pipe(assertNone);
       expect(report.retiredCount).toBe(1);
       expect(report.reclaimedBytes).toBeGreaterThan(0);
-      expect(yield* fs.exists(merged)).toBe(false);
+      const exists2 = yield* fs.exists(merged);
+      expect(exists2).toBe(false);
       const branch = yield* runRepoCommandCapture(
         "git",
         ["show-ref", "--verify", "--quiet", "refs/heads/feat/apply-merged"],
@@ -346,7 +351,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
       candidate.bytes.pipe(assertNone);
       expect(report.reclaimedBytes).toBe(0);
       expect(A.some(report.warnings, Str.includes("size-probe-failed"))).toBe(true);
-      expect(yield* fs.exists(merged)).toBe(false);
+      const exists3 = yield* fs.exists(merged);
+      expect(exists3).toBe(false);
     })
   );
 
@@ -380,7 +386,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
       expect(O.getOrThrow(candidate.prNumber)).toBe(305);
       candidate.bytes.pipe(O.isSome, assertTrue);
       expect(A.some(report.warnings, Str.includes("eligibility changed before retirement"))).toBe(true);
-      expect(yield* fs.exists(merged)).toBe(true);
+      const exists4 = yield* fs.exists(merged);
+      expect(exists4).toBe(true);
     })
   );
 
@@ -412,7 +419,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
       expect(candidate.retired).toBe(true);
       candidate.skipReason.pipe(assertNone);
       expect(A.some(report.warnings, Str.includes("retirement-cleanup-failed"))).toBe(true);
-      expect(yield* fs.exists(merged)).toBe(false);
+      const exists5 = yield* fs.exists(merged);
+      expect(exists5).toBe(false);
     })
   );
 
@@ -443,7 +451,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
       expect(candidate.retired).toBe(false);
       expect(O.getOrThrow(candidate.skipReason)).toBe("retirement-failed");
       expect(A.some(report.warnings, Str.includes("retirement-failed"))).toBe(true);
-      expect(yield* fs.exists(merged)).toBe(true);
+      const exists6 = yield* fs.exists(merged);
+      expect(exists6).toBe(true);
     })
   );
 
@@ -496,7 +505,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
         )
         .pipe(Effect.flip);
 
-      expect(yield* fs.exists(target)).toBe(true);
+      const exists7 = yield* fs.exists(target);
+      expect(exists7).toBe(true);
       const branch = yield* runRepoCommandCapture(
         "git",
         ["show-ref", "--verify", "--quiet", "refs/heads/feat/unauthorized"],

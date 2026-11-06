@@ -21,7 +21,8 @@ describe("MarkdownVisitor coverage", () => {
         assert.strictEqual(last.diagnostic.code, "NestingDepthExceeded");
       }
       assert.strictEqual(events.length, MAX_NESTING_DEPTH + 2);
-      assert.deepStrictEqual(yield* Stream.runCollect(stream), events);
+      const resultCollect = yield* Stream.runCollect(stream);
+      assert.deepStrictEqual(resultCollect, events);
     })
   );
 });

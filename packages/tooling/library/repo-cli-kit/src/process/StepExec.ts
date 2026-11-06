@@ -37,6 +37,7 @@ import * as Effect from "effect/Effect";
 import { constant, dual, pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
@@ -867,6 +868,8 @@ const CAPTURE_DRAIN_GRACE: Duration.Input = "2 seconds";
 const CAPTURE_REAP_GRACE: Duration.Input = "3 seconds";
 /** Grace after forced termination before cleanup detaches from a child whose exit signal was lost. */
 const CAPTURE_FORCE_KILL_REAP_GRACE: Duration.Input = "1 second";
+/** Maximum captured output retained in a timeout diagnostic, independent of the normal capture bound. */
+const CAPTURE_TIMEOUT_TAIL_CHARS = 2_000;
 
 /**
  * Turns a finished capture into its step result, or into a timeout when the deadline had already
@@ -885,6 +888,7 @@ const settleCapturedStep = (options: {
   readonly elapsed: Duration.Duration;
   readonly exitCode: number;
   readonly timeout: Duration.Input | undefined;
+  readonly timeoutTail?: string;
   readonly trim: boolean | undefined;
 }): Effect.Effect<CapturedStep, CaptureCommandTimedOutError> =>
   !P.isUndefined(options.timeout) &&
@@ -892,7 +896,7 @@ const settleCapturedStep = (options: {
     ? Effect.fail(
         CaptureCommandTimedOutError.make({
           commandLine: options.commandLine,
-          message: `${options.commandLine}: captured command exited ${options.exitCode} only after the ${Duration.toMillis(options.timeout)}ms deadline; tail: ${Str.slice(-2_000)(options.captured.text)}`,
+          message: `${options.commandLine}: captured command exited ${options.exitCode} only after the ${Duration.toMillis(options.timeout)}ms deadline; tail: ${Str.slice(-CAPTURE_TIMEOUT_TAIL_CHARS)(O.getOrElse(O.fromUndefinedOr(options.timeoutTail), () => options.captured.text))}`,
         })
       )
     : Effect.succeed(
@@ -1101,6 +1105,12 @@ export interface RunCaptured {
 /**
  * Runs a subprocess and captures its bounded output and exit status.
  *
+ * **Details**
+ *
+ * A timed-out command retains the last 2,000 captured characters in its error message, including
+ * output received after the normal capture bound filled. This diagnostic does not extend the
+ * deadline or change process cleanup; a command that reaches its deadline still fails.
+ *
  * **Example** (Capture a command result)
  *
  * ```ts
@@ -1142,10 +1152,18 @@ export const runCaptured: RunCaptured = Effect.fn("StepExec.runCaptured")(functi
       yield* registerAdmissionWorkload(admission, handle);
       const deadline = capturePipeDeadline(handle, commandLine);
       const forceKillAfter = options.forceKillAfter ?? "1 second";
+      const timeoutTail = yield* Ref.make("");
+      const output = captureTextStream(handle, source).pipe(Stream.interruptWhen(deadline));
       const capture = Effect.all(
         [
           foldDecodedText(
-            captureTextStream(handle, source).pipe(Stream.interruptWhen(deadline)),
+            P.isUndefined(timeout)
+              ? output
+              : output.pipe(
+                  Stream.tap((chunk) =>
+                    Ref.update(timeoutTail, (tail) => Str.slice(-CAPTURE_TIMEOUT_TAIL_CHARS)(`${tail}${chunk}`))
+                  )
+                ),
             options.bound,
             options.tee ?? false
           ),
@@ -1157,11 +1175,7 @@ export const runCaptured: RunCaptured = Effect.fn("StepExec.runCaptured")(functi
         ? capture
         : Effect.raceFirst(
             capture,
-            abortWhen.pipe(
-              Effect.catch((error) =>
-                interruptTimedOutCapture(handle, forceKillAfter).pipe(Effect.andThen(Effect.fail(error)))
-              )
-            )
+            abortWhen.pipe(Effect.tapError(() => interruptTimedOutCapture(handle, forceKillAfter)))
           );
       const [elapsed, [captured, exitCode]] = yield* Effect.timed(
         P.isUndefined(timeout)
@@ -1171,11 +1185,12 @@ export const runCaptured: RunCaptured = Effect.fn("StepExec.runCaptured")(functi
                 duration: timeout,
                 orElse: () =>
                   interruptTimedOutCapture(handle, forceKillAfter).pipe(
-                    Effect.andThen(
+                    Effect.andThen(Ref.get(timeoutTail)),
+                    Effect.flatMap((tail) =>
                       Effect.fail(
                         CaptureCommandTimedOutError.make({
                           commandLine,
-                          message: `${commandLine}: captured command did not exit within ${Duration.toMillis(timeout)}ms`,
+                          message: `${commandLine}: captured command did not exit within ${Duration.toMillis(timeout)}ms${Str.isNonEmpty(tail) ? `; tail: ${tail}` : ""}`,
                         })
                       )
                     )
@@ -1183,7 +1198,16 @@ export const runCaptured: RunCaptured = Effect.fn("StepExec.runCaptured")(functi
               })
             )
       );
-      return yield* settleCapturedStep({ captured, commandLine, elapsed, exitCode, timeout, trim: options.trim });
+      const tail = yield* Ref.get(timeoutTail);
+      return yield* settleCapturedStep({
+        captured,
+        commandLine,
+        elapsed,
+        exitCode,
+        timeout,
+        timeoutTail: tail,
+        trim: options.trim,
+      });
     })
   );
 

@@ -114,14 +114,10 @@ describe("@beep/docket-intake review hub questions", () => {
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const directory = yield* fs.makeTempDirectoryScoped({ prefix: "review-hub-" });
-        const publisher = Context.get(
-          yield* Layer.build(makeDocketQuestionPublisherLayer(directory).pipe(Layer.provide(CryptoLayer))),
-          DocketQuestionPublisher
-        );
-        const store = Context.get(
-          yield* Layer.build(makeReviewFilesLayer(ReviewFilesConfig.make({ dataDirectory: directory }))),
-          ReviewItemStore
-        );
+        const build1 = yield* Layer.build(makeDocketQuestionPublisherLayer(directory).pipe(Layer.provide(CryptoLayer)));
+        const publisher = Context.get(build1, DocketQuestionPublisher);
+        const build2 = yield* Layer.build(makeReviewFilesLayer(ReviewFilesConfig.make({ dataDirectory: directory })));
+        const store = Context.get(build2, ReviewItemStore);
 
         yield* publisher.publish(DocketIntakeState.make({ ledger: { "m-named": identified } }));
         const [item] = yield* store.list;
@@ -169,10 +165,8 @@ describe("@beep/docket-intake review hub questions", () => {
         const publisher = yield* Layer.build(
           makeDocketQuestionPublisherLayer(directory).pipe(Layer.provide(CryptoLayer))
         );
-        const store = Context.get(
-          yield* Layer.build(makeReviewFilesLayer(ReviewFilesConfig.make({ dataDirectory: directory }))),
-          ReviewItemStore
-        );
+        const build3 = yield* Layer.build(makeReviewFilesLayer(ReviewFilesConfig.make({ dataDirectory: directory })));
+        const store = Context.get(build3, ReviewItemStore);
 
         const first = yield* pollCycle(fixtureConfig).pipe(Effect.provideContext(publisher));
         const once = yield* fs.readFileString(`${directory}/items.jsonl`);
@@ -184,7 +178,8 @@ describe("@beep/docket-intake review hub questions", () => {
           ["question", "docket-intake:agents-disagree"],
         ]);
         expect(lineCount(once)).toBe(1);
-        expect(yield* fs.readFileString(`${directory}/items.jsonl`)).toBe(once);
+        const readFileString4 = yield* fs.readFileString(`${directory}/items.jsonl`);
+        expect(readFileString4).toBe(once);
       })
     );
   });

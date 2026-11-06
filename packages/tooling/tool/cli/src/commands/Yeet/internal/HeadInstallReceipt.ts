@@ -16,6 +16,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { LiteralKit } from "@beep/schema";
@@ -26,17 +28,15 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual, pipe } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
-import { runGitFoldedStdout, runGitOutput } from "./GitExec.ts";
-import type { RunFoldedStdoutOptions } from "@beep/repo-cli-kit/process/StepExec";
+import { resolveYeetRev, yeetGitKitError } from "./GitExec.ts";
+import type { LsTreeEntry } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -162,25 +162,10 @@ const isManifestPath = (path: string): boolean => path === "package.json" || Str
 const isInstallInputPath = (path: string): boolean =>
   path === LOCKFILE_PATH || isRootInstallConfigPath(path) || isManifestPath(path) || Str.startsWith("patches/")(path);
 
-// `git ls-tree -r` prints `<mode> <type> <blob>\t<path>`; the folded output
-// keeps `<path>\0<blob>` for install inputs only, already in path order.
-const installInputLine = (line: string): Result.Result<string, string> => {
-  const [meta, path] = Str.split("\t")(line);
-  return pipe(
-    O.all({ meta: O.fromUndefinedOr(meta), inputPath: O.filter(O.fromUndefinedOr(path), isInstallInputPath) }),
-    O.flatMap(({ meta, inputPath }) => O.map(A.get(Str.split(" ")(meta), 2), (blob) => `${inputPath}\0${blob}`)),
-    Result.fromOption(() => line)
-  );
-};
-
-const foldInstallInputs: RunFoldedStdoutOptions["fold"] = (stdout) =>
-  stdout.pipe(
-    Stream.decodeText,
-    Stream.splitLines,
-    Stream.filterMap(installInputLine),
-    Stream.map((entry) => `${entry}\n`),
-    Stream.mkString
-  );
+// `Git.lsTree` reads `ls-tree -r -z --full-tree`, so paths are raw where the unquoted listing quoted
+// special characters; each install input is `<path>\0<object id>`, already in path order (W7a Y46).
+const installInputEntry = (entry: LsTreeEntry): O.Option<string> =>
+  isInstallInputPath(entry.path) ? O.some(`${entry.path}\0${entry.oid}`) : O.none();
 
 /**
  * Read the install inputs one commit carries and the host that would install it.
@@ -194,16 +179,14 @@ const foldInstallInputs: RunFoldedStdoutOptions["fold"] = (stdout) =>
 export const collectHeadInstallInputs = Effect.fn("Yeet.collectHeadInstallInputs")(function* (
   repoRoot: string,
   commitSha: string
-): Effect.fn.Return<
-  HeadInstallInputs,
-  YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Digest.Digest
-> {
-  const treeSha = yield* runGitOutput(repoRoot, ["rev-parse", `${commitSha}^{tree}`]);
-  const entries = pipe(
-    yield* runGitFoldedStdout(repoRoot, ["ls-tree", "-r", "--full-tree", commitSha], foldInstallInputs),
-    Str.split("\n"),
-    A.filter(Str.isNonEmpty)
+): Effect.fn.Return<HeadInstallInputs, YeetCommandError, Digest.Digest | Git> {
+  const git = yield* Git;
+  const treeSha = yield* resolveYeetRev(repoRoot, `${commitSha}^{tree}`);
+  const entries = yield* git.lsTree(repoRoot, commitSha, { fullTree: true }).pipe(
+    Effect.mapBoth({
+      onFailure: yeetGitKitError(GitCommand.lsTree(commitSha, [], true)),
+      onSuccess: flow(A.map(installInputEntry), A.getSomes),
+    })
   );
   const lockfileDigest = pipe(
     A.findFirst(entries, Str.startsWith(`${LOCKFILE_PATH}\0`)),
@@ -346,6 +329,7 @@ export const recordHeadInstallReceipt = Effect.fn("Yeet.recordHeadInstallReceipt
   | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const inputs = yield* collectHeadInstallInputs(context.repoRoot, commitSha);
   const installedAt = yield* DateTime.now;
@@ -380,7 +364,8 @@ export const recordHeadInstallReceipt = Effect.fn("Yeet.recordHeadInstallReceipt
  */
 export const clearHeadInstallReceipt = Effect.fn("Yeet.clearHeadInstallReceipt")(function* (context: RepoRunContext) {
   const fs = yield* FileSystem.FileSystem;
-  yield* fs.remove(yield* receiptPathForContext(context), { force: true }).pipe(Effect.ignore);
+  const receiptPathForContext1 = yield* receiptPathForContext(context);
+  yield* fs.remove(receiptPathForContext1, { force: true }).pipe(Effect.ignore);
 });
 
 /**
@@ -397,7 +382,8 @@ export const loadHeadInstallReceipt = Effect.fn("Yeet.loadHeadInstallReceipt")(f
   commitSha: string
 ): Effect.fn.Return<O.Option<HeadInstallReceipt>, YeetCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
-  const text = yield* fs.readFileString(yield* receiptPathForContext(context)).pipe(Effect.option);
+  const receiptPathForContext2 = yield* receiptPathForContext(context);
+  const text = yield* fs.readFileString(receiptPathForContext2).pipe(Effect.option);
   return pipe(
     text,
     O.flatMap(HeadInstallReceiptJson.decodeOption),

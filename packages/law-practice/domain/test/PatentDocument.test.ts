@@ -88,12 +88,11 @@ describe("PatentDocument", () => {
     ({ section }) =>
       Effect.gen(function* () {
         const equivalent = S.toEquivalence(PatentApplicationSection);
-        expect(
-          equivalent(
-            yield* decodeUnknownPatentApplicationSection(yield* encodePatentApplicationSection(section)),
-            section
-          )
-        ).toBe(true);
+        const encodedPatentApplicationSection = yield* encodePatentApplicationSection(section);
+        const decodedUnknownPatentApplicationSection = yield* decodeUnknownPatentApplicationSection(
+          encodedPatentApplicationSection
+        );
+        expect(equivalent(decodedUnknownPatentApplicationSection, section)).toBe(true);
       }),
     { arbitrary: fcRuns(20) }
   );

@@ -41,7 +41,8 @@ describe("TsconfigLoaderSync adapter coverage", () => {
       Effect.gen(function* () {
         const spy = vi.spyOn(TsconfigLoader, "load").mockImplementation(() =>
           Effect.gen(function* () {
-            invoke(yield* Path.Path);
+            const Path1 = yield* Path.Path;
+            invoke(Path1);
             return TsconfigJson.make({});
           })
         );

@@ -123,7 +123,7 @@ const SafeDocumentArbitrary = Arbitrary.schema(SafeDocument);
 
 const markdownHtmlDoc = (): Document => Md.make([Md.h1("Hello"), Md.p("World")]);
 const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
-const decodeDocumentJsonResult = S.decodeUnknownResult(S.fromJsonString(Document));
+const decodeDocumentJsonResult = S.decodeResult(S.fromJsonString(Document));
 
 const isJsonArray = (value: S.Json): value is S.JsonArray => A.isArray(value);
 
@@ -465,15 +465,23 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       const pre = Md.pre("code");
       const doc = Md.make([Md.p([text]), pre]);
 
-      expect(yield* decodeInline(text)).toEqual(text);
+      const decodedInline1 = yield* decodeInline(text);
+      expect(decodedInline1).toEqual(text);
       // Pre.language is a codec field (OptionFromNullOr: Option<string> <-> string
       // | null), so Pre's encoded form differs from a constructed instance. Decode
       // through the encoded form rather than feeding a decoded instance back in.
-      expect(yield* decodeBlock(yield* encodeBlock(pre))).toEqual(pre);
-      expect(yield* decodeDocument(yield* encodeDocument(doc))).toEqual(doc);
+      const encodedBlock = yield* encodeBlock(pre);
+      const decodedBlock2 = yield* decodeBlock(encodedBlock);
+      expect(decodedBlock2).toEqual(pre);
+      const encodedDocument9 = yield* encodeDocument(doc);
+      const decodedDocument3 = yield* decodeDocument(encodedDocument9);
+      expect(decodedDocument3).toEqual(doc);
       const tsPre = Pre.make({ value: "x", language: O.some("ts") });
-      expect(yield* decodePre(yield* encodePre(tsPre))).toEqual(tsPre);
-      expect(yield* decodeCodeFenceLanguage("ts")).toBe("ts");
+      const encodedPre = yield* encodePre(tsPre);
+      const decodedPre = yield* decodePre(encodedPre);
+      expect(decodedPre).toEqual(tsPre);
+      const decodedCodeFenceLanguage = yield* decodeCodeFenceLanguage("ts");
+      expect(decodedCodeFenceLanguage).toBe("ts");
       const invalidLanguage = yield* Effect.exit(decodeCodeFenceLanguage("ts bad"));
       assertExitFailure(
         Exit.match(invalidLanguage, {
@@ -484,10 +492,10 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       );
       // Pre.language now folds non-conforming legacy info strings to None at decode,
       // so a free-form "ts bad" token drops out instead of being preserved.
-      expect(yield* decodePre({ _tag: "pre", language: "ts bad", value: "x" })).toEqual(
-        Pre.make({ value: "x", language: O.none() })
-      );
-      expect(yield* decodeText(Text.make({ value: "Hello" }))).toEqual(text);
+      const decodedPre4 = yield* decodePre({ _tag: "pre", language: "ts bad", value: "x" });
+      expect(decodedPre4).toEqual(Pre.make({ value: "x", language: O.none() }));
+      const decodedText = yield* decodeText(Text.make({ value: "Hello" }));
+      expect(decodedText).toEqual(text);
     })
   );
 
@@ -1235,10 +1243,14 @@ Demo video`);
         name: "effect",
         render: () => Effect.succeed("effect output"),
       };
-      expect(yield* renderEffectWith(effectAdapter, doc)).toBe("effect output");
-      expect(yield* Md.renderEffectWith(effectAdapter, doc)).toBe("effect output");
-      expect(yield* renderEffectWithUnsafe(effectAdapter, doc)).toBe("effect output");
-      expect(yield* Md.renderEffectWithUnsafe(effectAdapter, doc)).toBe("effect output");
+      const renderEffectWith5 = yield* renderEffectWith(effectAdapter, doc);
+      expect(renderEffectWith5).toBe("effect output");
+      const renderEffectWith6 = yield* Md.renderEffectWith(effectAdapter, doc);
+      expect(renderEffectWith6).toBe("effect output");
+      const renderEffectWithUnsafe7 = yield* renderEffectWithUnsafe(effectAdapter, doc);
+      expect(renderEffectWithUnsafe7).toBe("effect output");
+      const renderEffectWithUnsafe8 = yield* Md.renderEffectWithUnsafe(effectAdapter, doc);
+      expect(renderEffectWithUnsafe8).toBe("effect output");
     })
   );
 

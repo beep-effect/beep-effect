@@ -1,4 +1,4 @@
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError, MergeTreeResult } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   createYeetMergePreview,
@@ -28,6 +28,7 @@ import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import type { GitStubs } from "@beep/git/Git";
 
 const TREE_SHA = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
 const BASE_SHA = "1111111111111111111111111111111111111111";
@@ -232,13 +233,66 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("yeet merged tier guards", (i
 const scratchGit = Effect.fn("YeetMergedPreviewTest.scratchGit")(function* (cwd: string, args: ReadonlyArray<string>) {
   const handle = yield* ChildProcess.make("git", [...args], { cwd, stdin: "ignore", stdout: "pipe", stderr: "ignore" });
   const output = yield* handle.stdout.pipe(Stream.decodeText(), Stream.mkString);
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode1 = yield* handle.exitCode;
+  expect(exitCode1).toBe(0);
   return Str.trim(output);
 });
 
 // The preview worktree is added through `Git.worktreeAdd` (W2b); these drive the whole
 // materialization against a real repository, so the add, the leftover removal before it and the
 // conflict refusal all run for real.
+// `Git.mergeTree` answers the preview (W7a Y49, SPEC D-18): a conflict keeps the capture's
+// `CONFLICT`/`warning:` message filter, and a failed run is the unavailable verdict.
+const previewGit = (mergeTree: GitStubs["mergeTree"]) =>
+  Git.makeTest({ revParse: (_cwd, ref) => Effect.succeed(ref === "HEAD" ? HEAD_SHA : BASE_SHA), mergeTree });
+const mergeTreeFailure = (exitCode: number | undefined, stderr: string) =>
+  GitCommandError.make({
+    kind: "failed",
+    args: ["merge-tree", "--write-tree"],
+    cwd: "/repo",
+    stderr,
+    ...(exitCode === undefined ? {} : { exitCode }),
+  });
+
+it.layer(PlatformLayer, { timeout: "30 seconds" })("yeet merge preview over Git.mergeTree", (it) => {
+  it.effect("names the conflicted paths and keeps only the conflict messages", () =>
+    Effect.gen(function* () {
+      const conflicted = MergeTreeResult.cases.conflicted.make({
+        tree: TREE_SHA,
+        paths: ["goals/INDEX.md", "goals/INDEX.md"],
+        messages: ["Auto-merging goals/INDEX.md", "CONFLICT (content): Merge conflict in goals/INDEX.md"],
+      });
+      const error = yield* createYeetMergePreview(context).pipe(
+        Effect.provideService(
+          Git,
+          previewGit(() => Effect.succeed(conflicted))
+        ),
+        Effect.flip
+      );
+      expect(error.message).toContain("goals/INDEX.md");
+      expect(error.message).toContain("CONFLICT (content): Merge conflict in goals/INDEX.md");
+      expect(error.message).not.toContain("Auto-merging");
+    })
+  );
+
+  it.effect.each([
+    [2, "fatal: merge-tree refused\n", "fatal: merge-tree refused"],
+    [2, "", "git merge-tree exited 2"],
+    [undefined, "", "git could not be executed"],
+  ] as const)("reads a failed merge-tree run (exit %s) as an unavailable preview", ([exitCode, stderr, detail]) =>
+    Effect.gen(function* () {
+      const error = yield* createYeetMergePreview(context).pipe(
+        Effect.provideService(
+          Git,
+          previewGit(() => Effect.fail(mergeTreeFailure(exitCode, stderr)))
+        ),
+        Effect.flip
+      );
+      expect(error.message).toBe(`yeet verify --merged could not compute the merge preview: ${detail}`);
+    })
+  );
+});
+
 it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)), {
   timeout: "30 seconds",
 })("yeet merge preview materialization", (it) => {
@@ -290,15 +344,20 @@ it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCr
       expect(preview.baseSha).toBe(first.baseSha);
       expect(preview.headSha).toBe(first.headSha);
       expect(preview.worktreePath).toBe(first.worktreePath);
-      expect(yield* fs.exists(path.join(preview.worktreePath, "leftover-only.txt"))).toBe(false);
-      expect(yield* fs.exists(path.join(preview.worktreePath, "feature.md"))).toBe(true);
-      expect(yield* fs.exists(path.join(preview.worktreePath, "main.md"))).toBe(true);
-      expect(yield* scratchGit(preview.worktreePath, ["rev-parse", "HEAD"])).toBe(preview.commitSha);
-      expect(yield* scratchGit(preview.worktreePath, ["rev-parse", "HEAD^{tree}"])).toBe(preview.treeSha);
-      expect(yield* scratchGit(preview.worktreePath, ["show", "--no-patch", "--format=%P", "HEAD"])).toBe(
-        `${preview.baseSha} ${preview.headSha}`
-      );
-      expect(yield* scratchGit(preview.worktreePath, ["rev-parse", "--abbrev-ref", "HEAD"])).toBe("HEAD");
+      const exists2 = yield* fs.exists(path.join(preview.worktreePath, "leftover-only.txt"));
+      expect(exists2).toBe(false);
+      const exists3 = yield* fs.exists(path.join(preview.worktreePath, "feature.md"));
+      expect(exists3).toBe(true);
+      const exists4 = yield* fs.exists(path.join(preview.worktreePath, "main.md"));
+      expect(exists4).toBe(true);
+      const scratchGit5 = yield* scratchGit(preview.worktreePath, ["rev-parse", "HEAD"]);
+      expect(scratchGit5).toBe(preview.commitSha);
+      const scratchGit6 = yield* scratchGit(preview.worktreePath, ["rev-parse", "HEAD^{tree}"]);
+      expect(scratchGit6).toBe(preview.treeSha);
+      const scratchGit7 = yield* scratchGit(preview.worktreePath, ["show", "--no-patch", "--format=%P", "HEAD"]);
+      expect(scratchGit7).toBe(`${preview.baseSha} ${preview.headSha}`);
+      const scratchGit8 = yield* scratchGit(preview.worktreePath, ["rev-parse", "--abbrev-ref", "HEAD"]);
+      expect(scratchGit8).toBe("HEAD");
     })
   );
 

@@ -5,11 +5,16 @@ import { createEffectActor, send, waitFor } from "@xstate/effect";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { identity } from "effect/Function";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import { vi } from "vitest";
 import { createMachine } from "xstate";
 import { inspectIntakeActor, statelyInspectEnabled } from "@/intake/Intake.inspection";
 import type { Inspector } from "@statelyai/sdk";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const { createInspector, calls, relay } = vi.hoisted(() => {
   const recorded: Array<{ readonly method: string; readonly id?: string }> = [];
@@ -21,7 +26,9 @@ const { createInspector, calls, relay } = vi.hoisted(() => {
       (
         options: unknown
       ): Pick<Inspector, "actor" | "destroy" | "event" | "inspectorUrl" | "ready" | "snapshot" | "stop"> => {
-        recorded.push({ method: `create:${JSON.stringify(options)}` });
+        recorded.push({
+          method: `create:${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(options), identity)}`,
+        });
         const ready = relay.accept ? Promise.resolve() : Promise.reject(new Error("relay refused"));
         // The rejection is observed by the code under test; mark it handled so the runtime does not report it.
         ready.catch(() => undefined);
@@ -61,7 +68,8 @@ describe("intake actor inspection", { concurrent: false }, () => {
     Effect.fnUntraced(function* () {
       const actor = yield* createEffectActor(toggle);
       expect(statelyInspectEnabled()).toBe(false);
-      assertNone(yield* inspectIntakeActor(actor));
+      const inspectIntakeActor1 = yield* inspectIntakeActor(actor);
+      assertNone(inspectIntakeActor1);
       expect(createInspector).not.toHaveBeenCalled();
     })
   );
@@ -74,7 +82,8 @@ describe("intake actor inspection", { concurrent: false }, () => {
       // The inspector gets a scope of its own, so closing it proves the connection is released.
       const inspection = yield* Scope.make();
       const actor = yield* createEffectActor(toggle);
-      assertSome(yield* inspectIntakeActor(actor).pipe(Scope.provide(inspection)), "http://inspector.test/session");
+      const pipe2 = yield* inspectIntakeActor(actor).pipe(Scope.provide(inspection));
+      assertSome(pipe2, "http://inspector.test/session");
       yield* send(actor, { type: "FLIP" });
       yield* waitFor(actor, (snapshot) => snapshot.matches("on"));
       const methods = A.map(calls, (call) => call.method);
@@ -94,7 +103,8 @@ describe("intake actor inspection", { concurrent: false }, () => {
       vi.stubEnv("VITE_STATELY_INSPECT", "1");
       relay.accept = false;
       const actor = yield* createEffectActor(toggle);
-      assertNone(yield* inspectIntakeActor(actor));
+      const inspectIntakeActor3 = yield* inspectIntakeActor(actor);
+      assertNone(inspectIntakeActor3);
       expect(createInspector).toHaveBeenCalledTimes(1);
       // The actor was registered while the registration was pending ...
       expect(A.map(calls, (call) => call.method)).toContain("actor");
@@ -112,7 +122,8 @@ describe("intake actor inspection", { concurrent: false }, () => {
       vi.stubEnv("VITE_STATELY_INSPECT", "1");
       vi.stubEnv("VITE_STATELY_INSPECT_URL", "ws://127.0.0.1:4000/");
       const actor = yield* createEffectActor(toggle);
-      assertSome(yield* inspectIntakeActor(actor), "http://inspector.test/session");
+      const inspectIntakeActor4 = yield* inspectIntakeActor(actor);
+      assertSome(inspectIntakeActor4, "http://inspector.test/session");
       expect(calls[0]?.method).toContain("ws://127.0.0.1:4000/");
     })
   );
@@ -123,7 +134,8 @@ describe("intake actor inspection", { concurrent: false }, () => {
       vi.stubEnv("VITE_STATELY_INSPECT", "1");
       vi.stubEnv("VITE_STATELY_INSPECT_URL", "not a url");
       const actor = yield* createEffectActor(toggle);
-      assertNone(yield* inspectIntakeActor(actor));
+      const inspectIntakeActor5 = yield* inspectIntakeActor(actor);
+      assertNone(inspectIntakeActor5);
       expect(createInspector).not.toHaveBeenCalled();
     })
   );

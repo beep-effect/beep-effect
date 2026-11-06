@@ -23,14 +23,17 @@ import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type * as HttpClientError from "effect/http/HttpClientError";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
@@ -115,23 +118,26 @@ const languageFixture = Layer.effectContext(
       capturedRequest = request;
       return Effect.succeed(
         new Response(
-          JSON.stringify({
-            created_at: 1,
-            error: null,
-            id: "resp_fixture",
-            incomplete_details: null,
-            instructions: null,
-            metadata: null,
-            model: "gpt-4.1-mini",
-            object: "response",
-            output: [],
-            parallel_tool_calls: false,
-            status: "completed",
-            temperature: null,
-            tool_choice: "auto",
-            tools: [],
-            top_p: null,
-          }),
+          Result.getOrThrowWith(
+            S.encodeUnknownResult(UnknownJson)({
+              created_at: 1,
+              error: null,
+              id: "resp_fixture",
+              incomplete_details: null,
+              instructions: null,
+              metadata: null,
+              model: "gpt-4.1-mini",
+              object: "response",
+              output: [],
+              parallel_tool_calls: false,
+              status: "completed",
+              temperature: null,
+              tool_choice: "auto",
+              tools: [],
+              top_p: null,
+            }),
+            identity
+          ),
           { headers: { "content-type": "application/json" }, status: 200 }
         )
       );

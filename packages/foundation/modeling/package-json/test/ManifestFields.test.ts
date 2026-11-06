@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // The generic npm / Node / TypeScript / bundler / Yarn / Bun fields the kit
 // models since 3-A2 (the field set repo-utils `schemas/PackageJson.ts` modeled
 // and the kit lacked). Each field is pinned on every tier:
@@ -39,6 +40,8 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const Json = S.fromJsonString(S.Unknown);
 
 const base = { name: "@scope/pkg", version: "1.0.0" };
 
@@ -158,7 +161,10 @@ describe("ManifestFields schemas", () => {
   it.effect("decode nested overrides and reject a non-string leaf", () =>
     Effect.gen(function* () {
       const nested = { foo: { bar: { ".": "1.0.0", baz: "2.0.0" } } };
-      deepStrictEqual(yield* S.encodeEffect(OverridesField)(yield* S.decodeEffect(OverridesField)(nested)), nested);
+      const argument = S.encodeEffect(OverridesField);
+      const value7 = yield* S.decodeEffect(OverridesField)(nested);
+      const value1 = yield* argument(value7);
+      deepStrictEqual(value1, nested);
       const error = yield* Effect.flip(S.decodeUnknownEffect(OverridesField)({ foo: { bar: 1 } }));
       strictEqual(error._tag, "SchemaError");
     })
@@ -168,7 +174,8 @@ describe("ManifestFields schemas", () => {
     Effect.gen(function* () {
       const wire = { packages: ["packages/*"], nohoist: ["**/react-native"], catalog: { effect: "4.0.4" } };
       const decoded = yield* S.decodeEffect(WorkspacesField)(wire);
-      deepStrictEqual(yield* S.encodeEffect(WorkspacesField)(decoded), wire);
+      const value2 = yield* S.encodeEffect(WorkspacesField)(decoded);
+      deepStrictEqual(value2, wire);
       const error = yield* Effect.flip(S.decodeEffect(WorkspacesField)({ packages: "packages/*" }));
       strictEqual(error._tag, "SchemaError");
     })
@@ -207,16 +214,19 @@ describe("added fields on the manifest tiers", () => {
         const strict = yield* S.decodeEffect(Package.schema)(wire);
         deepStrictEqual(typedMember(strict, field), valid);
         assertUndefined(strict.rest?.[field]);
-        deepStrictEqual(yield* S.encodeUnknownEffect(Package.schema)(strict), { ...DEFAULT_MAPS, ...wire });
+        const value3 = yield* S.encodeUnknownEffect(Package.schema)(strict);
+        deepStrictEqual(value3, { ...DEFAULT_MAPS, ...wire });
 
         const codec = Package.wireFor(ExtendedPackage);
         const extended = yield* S.decodeEffect(codec)({ ...wire, tool: "kept" });
         deepStrictEqual(typedMember(extended, field), valid);
-        deepStrictEqual(yield* S.encodeUnknownEffect(codec)(extended), { ...DEFAULT_MAPS, ...wire, tool: "kept" });
+        const value4 = yield* S.encodeUnknownEffect(codec)(extended);
+        deepStrictEqual(value4, { ...DEFAULT_MAPS, ...wire, tool: "kept" });
 
         const presence = yield* S.decodeEffect(PackageManifest.schema)({ [field]: valid });
         deepStrictEqual(typedMember(presence, field), valid);
-        deepStrictEqual(yield* S.encodeUnknownEffect(PackageManifest.schema)(presence), {
+        const value5 = yield* S.encodeUnknownEffect(PackageManifest.schema)(presence);
+        deepStrictEqual(value5, {
           ...DEFAULT_MAPS,
           [field]: valid,
         });
@@ -293,13 +303,12 @@ describe("ManifestFields property", () => {
     ([overrides]) =>
       Effect.gen(function* () {
         const manifest = yield* S.decodeEffect(PackageManifest.schema)({ overrides });
-        assertTrue(sameOverrides(yield* S.encodeEffect(OverridesField)(manifest.overrides ?? {}), overrides));
+        const value6 = yield* S.encodeEffect(OverridesField)(manifest.overrides ?? {});
+        assertTrue(sameOverrides(value6, overrides));
       }),
     { arbitrary: fcRuns(25) }
   );
 });
-
-const Json = S.fromJsonString(S.Unknown);
 
 // Typing a field moves it out of `rest`, which changes the RAW schema-encode
 // key order (`{ ...rest, ...known }`). That order is not a contract: the
@@ -307,23 +316,26 @@ const Json = S.fromJsonString(S.Unknown);
 // whatever the typing. Pin it byte-for-byte against the decode-free
 // `PackageJsonFormat` text path, which never types a field.
 describe("ManifestFields formatted output", () => {
-  const shuffled = JSON.stringify({
-    trustedDependencies: ["esbuild"],
-    catalog: { effect: "4.0.0" },
-    workspaces: ["packages/*"],
-    readme: "README.md",
-    overrides: { foo: { ".": "1.0.0" } },
-    types: "./dist/index.d.ts",
-    name: "@scope/pkg",
-    patchedDependencies: { "foo@1.0.0": "patches/foo.patch" },
-    libc: ["glibc"],
-    os: ["linux"],
-    version: "1.0.0",
-    files: ["dist"],
-    sideEffects: false,
-    typesVersions: { "*": { "*": ["dist/*"] } },
-    "x-tool": true,
-  });
+  const shuffled = Result.getOrThrowWith(
+    S.encodeUnknownResult(Json)({
+      trustedDependencies: ["esbuild"],
+      catalog: { effect: "4.0.0" },
+      workspaces: ["packages/*"],
+      readme: "README.md",
+      overrides: { foo: { ".": "1.0.0" } },
+      types: "./dist/index.d.ts",
+      name: "@scope/pkg",
+      patchedDependencies: { "foo@1.0.0": "patches/foo.patch" },
+      libc: ["glibc"],
+      os: ["linux"],
+      version: "1.0.0",
+      files: ["dist"],
+      sideEffects: false,
+      typesVersions: { "*": { "*": ["dist/*"] } },
+      "x-tool": true,
+    }),
+    identity
+  );
   const canonical = A.join(
     [
       "{",
@@ -374,20 +386,23 @@ describe("ManifestFields formatted output", () => {
 
   it.effect("the decode-free text path yields the canonical text", () =>
     Effect.gen(function* () {
-      strictEqual(yield* Effect.fromResult(PackageJsonFormat.formatToString(shuffled)), canonical);
+      const fromResult7 = yield* Effect.fromResult(PackageJsonFormat.formatToString(shuffled));
+      strictEqual(fromResult7, canonical);
     })
   );
 
   it.effect("Package.toJsonString matches the decode-free text path byte-for-byte", () =>
     Effect.gen(function* () {
-      const pkg = yield* Package.decode(yield* S.decodeEffect(Json)(shuffled));
+      const value8 = yield* S.decodeEffect(Json)(shuffled);
+      const pkg = yield* Package.decode(value8);
       strictEqual(pkg.toJsonString(), canonical);
     })
   );
 
   it.effect("PackageManifest.toJsonString matches the decode-free text path byte-for-byte", () =>
     Effect.gen(function* () {
-      const manifest = yield* PackageManifest.decode(yield* S.decodeEffect(Json)(shuffled));
+      const value9 = yield* S.decodeEffect(Json)(shuffled);
+      const manifest = yield* PackageManifest.decode(value9);
       strictEqual(manifest.toJsonString(), canonical);
     })
   );
@@ -420,7 +435,8 @@ describe("ManifestFields formatted output: nested workspaces key order", () => {
 
   it.effect("the decode-free text path keeps the Bun root byte-for-byte", () =>
     Effect.gen(function* () {
-      strictEqual(yield* Effect.fromResult(PackageJsonFormat.formatToString(bunRoot)), bunRoot);
+      const fromResult10 = yield* Effect.fromResult(PackageJsonFormat.formatToString(bunRoot));
+      strictEqual(fromResult10, bunRoot);
     })
   );
 

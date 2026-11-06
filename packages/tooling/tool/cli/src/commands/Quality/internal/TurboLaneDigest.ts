@@ -325,7 +325,8 @@ const digestRows = Effect.fnUntraced(function* (
     A.map(sorted, (row) => `${row.taskId}=${row.hash}`),
     "\n"
   );
-  const digest = Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text)));
+  const digest1 = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text));
+  const digest = Hex.encode(digest1);
   return TurboLaneDigest.make({ digest, summaryIds, tasks: sorted });
 });
 
@@ -383,7 +384,8 @@ export const turboLaneDigestFromSummary: {
     if (A.isReadonlyArrayEmpty(selected)) {
       return O.none<TurboLaneDigest>();
     }
-    return O.some(yield* digestRows([summary.id], selectedRows(selected)));
+    const digestRows2 = yield* digestRows([summary.id], selectedRows(selected));
+    return O.some(digestRows2);
   })
 );
 
@@ -470,12 +472,11 @@ export const readTurboLaneDigest = Effect.fn("QualityTasks.readTurboLaneDigest")
   if (A.isReadonlyArrayEmpty(selected)) {
     return O.none<TurboLaneDigest>();
   }
-  return O.some(
-    yield* digestRows(
-      A.map(fresh, (summary) => summary.id),
-      newestRowsByTask(selectedRows(selected))
-    )
+  const digestRows3 = yield* digestRows(
+    A.map(fresh, (summary) => summary.id),
+    newestRowsByTask(selectedRows(selected))
   );
+  return O.some(digestRows3);
 });
 
 /**
@@ -523,12 +524,11 @@ export const TURBO_LANE_LEDGER_ENV = "BEEP_TURBO_LANE_LEDGER";
  */
 export const foldTurboLaneDigests = Effect.fnUntraced(function* (digests: ReadonlyArray<TurboLaneDigest>) {
   if (A.isReadonlyArrayEmpty(digests)) return O.none<TurboLaneDigest>();
-  return O.some(
-    yield* digestRows(
-      A.flatMap(digests, (digest) => digest.summaryIds),
-      newestRowsByTask(A.flatMap(digests, (digest) => digest.tasks))
-    )
+  const digestRows4 = yield* digestRows(
+    A.flatMap(digests, (digest) => digest.summaryIds),
+    newestRowsByTask(A.flatMap(digests, (digest) => digest.tasks))
   );
+  return O.some(digestRows4);
 });
 
 /**

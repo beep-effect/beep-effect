@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { sanitizeSensitiveText } from "@beep/observability";
 import { readContainedFileBytesNoFollow, writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
@@ -15,7 +17,7 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
@@ -26,16 +28,17 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { extract as extractTar } from "tar";
 import {
+  adaptGitKitError,
   gitArchiveEnv,
   guardCloneLocalGitAttributes,
   readGitRenames,
   readGitTree,
   resolveGitCommit,
   resolveGitMergeBase,
-  runGitLines,
   writeGitArchive,
 } from "../../internal/repo-run/GitExec.ts";
 import { EXPLORATION_ATLAS_PATH } from "../Explore/Atlas.ts";
@@ -77,7 +80,6 @@ import {
   KnowledgeSemanticDeltaReport,
   KnowledgeTrackedEntry,
 } from "./Knowledge.schemas.ts";
-import type { Git } from "@beep/git/Git";
 import type { CapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -95,6 +97,8 @@ import type {
   KnowledgeFindingSeverity,
   KnowledgeRewriteRule,
 } from "./Knowledge.schemas.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.service");
 const KnowledgeRewriteRulesJson = S.fromJsonString(KnowledgeRewriteRules);
@@ -1059,6 +1063,9 @@ const gitRefSpanNames = (fullRef: string): ReadonlyArray<string> => {
  */
 export const gitRefSpanNamesForTesting = gitRefSpanNames;
 
+// The ref namespaces a span may cite: local branches, remote-tracking branches and tags.
+const KNOWLEDGE_REF_PATTERNS = ["refs/heads", "refs/remotes", "refs/tags"];
+
 /**
  * Collects local branch, remote-tracking branch, and tag names with one Git process per comparison.
  *
@@ -1083,12 +1090,11 @@ export const gitRefSpanNamesForTesting = gitRefSpanNames;
  * @since 0.0.0
  */
 export const readKnowledgeGitRefNames = Effect.fn("Knowledge.readGitRefNames")(function* (repoRoot: string) {
-  const fullRefs = yield* runGitLines(
-    repoRoot,
-    ["for-each-ref", "--format=%(refname)", "refs/heads", "refs/remotes", "refs/tags"],
-    gitAdapter
-  );
-  return HashSet.fromIterable(A.flatMap(fullRefs, gitRefSpanNames));
+  const git = yield* Git;
+  const refs = yield* git
+    .forEachRef(repoRoot, { patterns: KNOWLEDGE_REF_PATTERNS })
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.forEachRef(KNOWLEDGE_REF_PATTERNS), gitAdapter)));
+  return HashSet.fromIterable(A.flatMap(refs, (entry) => gitRefSpanNames(entry.ref)));
 });
 
 /**
@@ -1153,9 +1159,9 @@ import * as Result from "effect/Result"
 import * as Stdio from "effect/Stdio"
 import * as Stream from "effect/Stream"
 import * as Command from "effect/cli/Command"
-import { rootCommand } from ${JSON.stringify(rootCommandModule)}
+import { rootCommand } from ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(rootCommandModule), identity)}
 
-const input = await Bun.file(${JSON.stringify(inputPath)}).text()
+const input = await Bun.file(${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(inputPath), identity)}).text()
 // This file is scratch-owned. Its writer prepends one structural field to every row, making an empty
 // file zero commands and a prefix-only row the root command without trusting archive data.
 const commands = input === "" ? [] : input.split("\\n").map((line) => {
@@ -1213,7 +1219,7 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Stdio from "effect/Stdio"
 import * as Stream from "effect/Stream"
-import { buildPortfolioIndexContent } from ${JSON.stringify(portfolioIndexModule)}
+import { buildPortfolioIndexContent } from ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(portfolioIndexModule), identity)}
 const program = Effect.flatMap(buildPortfolioIndexContent("."), (content) =>
   Stdio.Stdio.pipe(Effect.flatMap((stdio) => Stream.make(content).pipe(Stream.run(stdio.stdout()))))
 )

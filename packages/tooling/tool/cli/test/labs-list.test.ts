@@ -85,7 +85,8 @@ describe("beep labs list", { concurrent: false }, () => {
 
           yield* runLabs(["list"]);
 
-          const lines = A.map(yield* TestConsole.logLines, String);
+          const logLines1 = yield* TestConsole.logLines;
+          const lines = A.map(logLines1, String);
           expect(lines).toContain("@beep/alpha-lab | active | created 2026-08-01 | Alpha probe");
           expect(lines).toContain(
             "@beep/beta-lab | expired | created 2026-07-04 | Expired probe kept for data-drop rehearsal | postgres: lab_beta_lab"
@@ -131,13 +132,15 @@ describe("beep labs list", { concurrent: false }, () => {
           const exit = yield* Effect.exit(runLabs(["list"]));
           expectReportedExit(exit);
 
-          const lines = A.map(yield* TestConsole.logLines, String);
+          const logLines2 = yield* TestConsole.logLines;
+          const lines = A.map(logLines2, String);
           expect(lines).toContain("@beep/alpha-lab | active | created 2026-08-01 | Alpha probe");
           const hasRow = (needleA: string, needleB: string) =>
             A.some(lines, (line) => Str.includes(needleA)(line) && Str.includes(needleB)(line));
           expect(hasRow("@beep/delta-lab", "manifest: missing")).toBe(true);
           expect(hasRow("@beep/gamma-lab", "manifest: invalid")).toBe(true);
-          const errors = A.map(yield* TestConsole.errorLines, String);
+          const errorLines3 = yield* TestConsole.errorLines;
+          const errors = A.map(errorLines3, String);
           expect(A.some(errors, Str.includes("2 lab manifest issue(s)"))).toBe(true);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -148,7 +151,8 @@ describe("beep labs list", { concurrent: false }, () => {
         Effect.gen(function* () {
           yield* runLabs(["list"]);
 
-          const lines = A.map(yield* TestConsole.logLines, String);
+          const logLines4 = yield* TestConsole.logLines;
+          const lines = A.map(logLines4, String);
           expect(lines).toContain("No labs under apps/labs/.");
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))

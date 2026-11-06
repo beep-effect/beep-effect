@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // The smol-toml differential oracle: property tests cross-checking the engine
 // against the reference implementation (smol-toml 1.7.0, exact-pinned), plus
 // a corpus-wide differential over every toml-test valid file. This is the
@@ -48,6 +49,8 @@ import * as Str from "effect/String";
 import { parse as oracleParse, stringify as oracleStringify } from "smol-toml";
 import { readValid, readValidExpected, validCases } from "./corpus.ts";
 import { assertMatchesTagged } from "./e2e/taggedJson.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 // ── The canonicalizer ──────────────────────────────────────────────────────
 
@@ -440,6 +443,6 @@ describe("corpus differential", () => {
 
 /** Where the oracle diverges, the corpus expectation decides: assert ours against it. */
 function assertOursAgainstCorpus(ours: unknown, relPath: string): void {
-  const expected: unknown = JSON.parse(readValidExpected(relPath));
+  const expected: unknown = Result.getOrThrowWith(S.decodeResult(UnknownJson)(readValidExpected(relPath)), identity);
   assertMatchesTagged(ours, expected, "$");
 }

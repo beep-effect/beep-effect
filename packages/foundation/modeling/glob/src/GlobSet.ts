@@ -20,6 +20,7 @@
 import { $GlobId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -30,6 +31,8 @@ import { GlobPattern, GlobPatternError } from "./GlobPattern.ts";
 import { isGuardExceeded } from "./internal/limits.ts";
 import { braceExpand, Minimatch } from "./internal/minimatch.ts";
 import type { GuardExceeded } from "./internal/limits.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $GlobId.create("GlobSet");
 
@@ -66,7 +69,8 @@ const allCompileUnderDefaults = (patterns: ReadonlyArray<string>): true | string
   O.getOrElse(
     firstGuardTrip(
       patterns,
-      (pattern, guard) => `pattern ${JSON.stringify(Str.slice(0, 64)(pattern))}: ${guard.message}`
+      (pattern, guard) =>
+        `pattern ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(Str.slice(0, 64)(pattern)), identity)}: ${guard.message}`
     ),
     (): true | string => true
   );

@@ -897,7 +897,8 @@ export const invokerSessionRoot = Effect.fnUntraced(function* (): Effect.fn.Retu
   FileSystem.FileSystem
 > {
   const table = yield* ProcessTable;
-  const session = A.takeWhile(yield* processLineage(table.self), (status) => !isChainBoundary(status));
+  const processLineage1 = yield* processLineage(table.self);
+  const session = A.takeWhile(processLineage1, (status) => !isChainBoundary(status));
   return O.getOrElse(
     O.map(
       A.findFirst(session, (status) => isSessionCommand(status.command)),

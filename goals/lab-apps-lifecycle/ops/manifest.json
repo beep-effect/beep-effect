@@ -42,7 +42,6 @@
     "goals/lab-apps-lifecycle/research/SOURCES.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
     "research/01-create-package-anatomy.md",
     "research/02-registration-blast-radius.md",
     "research/03-apps-anatomy-variants.md",
@@ -52,7 +51,8 @@
     "research/10-p0-census-ratification.md",
     "research/11-registration-geometry-design.md",
     "research/12-p0-gate-scoping-ratified.md",
-    "goals/speed-loop/research/r3-package-deletions.md"
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {
@@ -117,5 +117,6 @@
     "Verification requires unnamed credentials, cost, destructive side effects outside the target lab, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "mergedPullRequest": 756
+  "mergedPullRequest": 756,
+  "researchReferences": ["goals/speed-loop/research/r3-package-deletions.md"]
 }

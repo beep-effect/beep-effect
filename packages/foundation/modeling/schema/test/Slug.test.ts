@@ -20,10 +20,14 @@ describe("Slug", () => {
   it.effect(
     "accepts lowercase kebab-case slugs",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownSlugEffect("a")).toBe("a");
-      expect(yield* decodeUnknownSlugEffect("my-post")).toBe("my-post");
-      expect(yield* decodeUnknownSlugEffect("post-2")).toBe("post-2");
-      expect(yield* decodeUnknownSlugEffect("abc-123-def")).toBe("abc-123-def");
+      const decodedUnknownSlugEffect = yield* decodeUnknownSlugEffect("a");
+      expect(decodedUnknownSlugEffect).toBe("a");
+      const decodedUnknownSlugEffect1 = yield* decodeUnknownSlugEffect("my-post");
+      expect(decodedUnknownSlugEffect1).toBe("my-post");
+      const decodedUnknownSlugEffect2 = yield* decodeUnknownSlugEffect("post-2");
+      expect(decodedUnknownSlugEffect2).toBe("post-2");
+      const decodedUnknownSlugEffect3 = yield* decodeUnknownSlugEffect("abc-123-def");
+      expect(decodedUnknownSlugEffect3).toBe("abc-123-def");
     })
   );
 

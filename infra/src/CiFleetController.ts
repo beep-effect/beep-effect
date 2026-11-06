@@ -16,7 +16,8 @@ import * as aws from "@pulumi/aws";
 import * as ghaRunners from "@pulumi/gharunners";
 import * as pulumi from "@pulumi/pulumi";
 import * as Effect from "effect/Effect";
-import { flow } from "effect/Function";
+import { flow, identity } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { resolveInfraArtifactPath } from "./internal/InfraArtifactPath.ts";
 import type { InfraPathEnv } from "./internal/InfraArtifactPath.ts";
@@ -483,25 +484,28 @@ const runnerPostInstall = escapeHclTemplateSequences(
 // be constrained through them. That is acceptable because the caller is the
 // root-only bootstrap helper and every option other than the endpoint is
 // harmless.
-const runnerImdsDisablePolicyDocument = JSON.stringify({
-  Version: "2012-10-17",
-  Statement: [
-    {
-      Sid: "DisableOwnMetadataEndpointWhileEnabled",
-      Effect: "Allow",
-      Action: "ec2:ModifyInstanceMetadataOptions",
-      Resource: "arn:aws:ec2:*:*:instance/*",
-      Condition: {
-        ArnEquals: {
-          "ec2:SourceInstanceARN": "arn:aws:ec2:*:*:instance/${ec2:InstanceID}",
-        },
-        StringEquals: {
-          "ec2:MetadataHttpEndpoint": "enabled",
+const runnerImdsDisablePolicyDocument = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Sid: "DisableOwnMetadataEndpointWhileEnabled",
+        Effect: "Allow",
+        Action: "ec2:ModifyInstanceMetadataOptions",
+        Resource: "arn:aws:ec2:*:*:instance/*",
+        Condition: {
+          ArnEquals: {
+            "ec2:SourceInstanceARN": "arn:aws:ec2:*:*:instance/${ec2:InstanceID}",
+          },
+          StringEquals: {
+            "ec2:MetadataHttpEndpoint": "enabled",
+          },
         },
       },
-    },
-  ],
-});
+    ],
+  }),
+  identity
+);
 
 const awsArnPattern = /^arn:aws[a-z-]*:[a-z0-9-]+:[a-z0-9-]*:[0-9]*:.+$/u;
 const ssmParameterArnPattern = /^arn:aws[a-z-]*:ssm:[a-z0-9-]+:[0-9]*:parameter\/.+$/u;

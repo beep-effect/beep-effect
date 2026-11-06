@@ -28,10 +28,12 @@ it.effect.prop(
   [identifier, identifier],
   ([run, job]) =>
     Effect.gen(function* () {
-      const parsed = backendIdsFrom(yield* tokenFor(run, job));
+      const tokenFor1 = yield* tokenFor(run, job);
+      const parsed = backendIdsFrom(tokenFor1);
       assertSuccess(parsed, BackendIds.make({ workflowRunBackendId: run, workflowJobRunBackendId: job }));
       const ids = Result.getOrThrow(parsed);
-      assertSuccess(backendIdsFrom(yield* tokenFor(ids.workflowRunBackendId, ids.workflowJobRunBackendId)), ids);
+      const tokenFor2 = yield* tokenFor(ids.workflowRunBackendId, ids.workflowJobRunBackendId);
+      assertSuccess(backendIdsFrom(tokenFor2), ids);
     }),
   runs
 );
@@ -90,8 +92,10 @@ it.effect.prop(
       assert.deepStrictEqual(parsed, { variable, service });
       const reformatted = formatDiagnostic(parsed);
       assert.strictEqual(reformatted, text);
-      assert.strictEqual(formatDiagnostic(yield* parseDiagnostic(reformatted)), reformatted);
-      assert.deepStrictEqual(yield* parseDiagnostic(reformatted), parsed);
+      const parsedDiagnostic = yield* parseDiagnostic(reformatted);
+      assert.strictEqual(formatDiagnostic(parsedDiagnostic), reformatted);
+      const parsedDiagnostic3 = yield* parseDiagnostic(reformatted);
+      assert.deepStrictEqual(parsedDiagnostic3, parsed);
     }),
   runs
 );

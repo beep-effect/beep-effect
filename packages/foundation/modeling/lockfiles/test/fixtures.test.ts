@@ -23,7 +23,8 @@ describe("historical lockfile documents", () => {
         assert.deepStrictEqual(unsuffixedCaptures, []);
         for (const { logicalPath, sha256 } of captures) {
           assert.isTrue(R.has(corpus, logicalPath), logicalPath);
-          assert.strictEqual(yield* JsoncFingerprint.hashText(fixture(logicalPath)), sha256, logicalPath);
+          const hashText1 = yield* JsoncFingerprint.hashText(fixture(logicalPath));
+          assert.strictEqual(hashText1, sha256, logicalPath);
         }
       })
     );

@@ -44,6 +44,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import { NodeTestLayer, temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import { completionIoFixture } from "./support/CompletionIo.ts";
 
 const decodeGoalManifest = S.decodeEffect(GoalManifest);
 const decodeGoalManifestJson = S.decodeEffect(S.fromJsonString(GoalManifest));
@@ -65,6 +66,7 @@ const Scenario = S.Struct({
   preMergePendingRerun: S.optionalKey(S.Boolean),
   missingHistory: S.optionalKey(S.Boolean),
   missingTimeline: S.optionalKey(S.Boolean),
+  undatedTimeline: S.optionalKey(S.Boolean),
   windowShort: S.optionalKey(S.Boolean),
   mergeParents: S.optionalKey(S.Int),
   red: S.optionalKey(S.Boolean),
@@ -92,14 +94,12 @@ const check = (id: number, completed: string, conclusion: string) => ({
   completed_at: completed,
 });
 const fixtureIo = (acceptedText: string, scenario: typeof Scenario.Type = {}) =>
-  GoalCompletionIo.of({
-    git: Effect.fn("GoalCompletionIo.git")((_root: string, args: ReadonlyArray<string>) =>
-      Effect.succeed(A.head(args).pipe(O.contains("show")) ? acceptedText : "git@github.com:example/repo.git\n")
-    ),
-    github: Effect.fn("GoalCompletionIo.github")((_root: string, args: ReadonlyArray<string>) => {
+  completionIoFixture({
+    manifest: Effect.succeed(acceptedText),
+    origin: Effect.succeed("git@github.com:example/repo.git\n"),
+    respond: Effect.fn("GoalCompletionIo.response")((endpoint: string) => {
       if (scenario.failure === true)
         return Effect.fail(YeetCommandError.make({ message: "Synthetic network error or rate limit" }));
-      const endpoint = O.getOrElse(A.get(args, 1), () => "");
       return Match.value(endpoint).pipe(
         Match.when(Str.includes("pulls/7"), () =>
           Effect.succeed(
@@ -145,6 +145,7 @@ const fixtureIo = (acceptedText: string, scenario: typeof Scenario.Type = {}) =>
                       event: "ready_for_review",
                       created_at: scenario.windowShort === true ? "2026-10-06T00:59:53Z" : "2026-10-06T00:00:00Z",
                     },
+                    ...(scenario.undatedTimeline === true ? [{ event: "ready_for_review" }] : []),
                   ],
                 ])
               )
@@ -318,6 +319,9 @@ const recoveryVerdictFixture = (variant: string, fixture: RecoveryFixture, crite
 const recoveryRemoteFixture = (variant: string) => ({
   available: true,
   checked: true,
+  ...(variant === "unread-checks"
+    ? { readFailure: { _tag: "YeetCommandError", message: "Complete check capture unavailable" } }
+    : {}),
   detail: "PR OPEN",
   number: variant === "wrong-pr" ? 8 : 7,
   headSha: variant === "wrong-head" ? "older-head" : "accepted-head",
@@ -467,7 +471,10 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
       });
       const text = yield* encodeGoalManifestJson(declared);
       const decoded = yield* decodeGoalManifestJson(text);
-      expect(yield* goalCompletionDeclarationDigest(decoded)).toBe(yield* goalCompletionDeclarationDigest(declared));
+      const goalCompletionDeclarationDigest1 = yield* goalCompletionDeclarationDigest(decoded);
+      const expectation = expect(goalCompletionDeclarationDigest1);
+      const goalCompletionDeclarationDigest3 = yield* goalCompletionDeclarationDigest(declared);
+      expectation.toBe(goalCompletionDeclarationDigest3);
     }),
     { arbitrary: { runs: 32 } }
   );
@@ -546,6 +553,36 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
         );
       })
     )
+  );
+  it.effect("an absent or refused local manifest uses the typed hosted fallback", () =>
+    Effect.gen(function* () {
+      const value = yield* manifest();
+      const text = yield* encodeGoalManifestJson(value);
+      for (const local of [Effect.succeedNone, Effect.fail(YeetCommandError.make({ message: "refused" }))]) {
+        let hostedReads = 0;
+        const receipt = yield* observeGoalCompletion(process.cwd(), "demo", value, final).pipe(
+          Effect.provideService(GoalCompletionIo, {
+            ...fixtureIo(text),
+            manifestAtHead: () => local,
+            hostedManifest: () =>
+              Effect.sync(() => {
+                hostedReads += 1;
+                return O.some(text);
+              }),
+          })
+        );
+        expect(hostedReads).toBe(1);
+        const digest = yield* goalCompletionDeclarationDigest(value);
+        assertSome(receipt.acceptedDeclarationDigest, digest);
+      }
+    })
+  );
+  it.effect("an undated timeline event does not discard the dated review-window evidence", () =>
+    Effect.gen(function* () {
+      const receipt = yield* observe({ undatedTimeline: true });
+      expect(receipt.subClaims).toEqual((yield* observe()).subClaims);
+      expect(A.some(receipt.subClaims, (claim) => claim.outcome === "verified")).toBe(true);
+    })
   );
   it.effect("a rerun pending at merge cannot reuse an older green result", () =>
     Effect.gen(function* () {
@@ -645,9 +682,10 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
         ...value,
         initiative: GoalInitiative.make({ ...value.initiative, packetId: "different-packet" }),
       });
-      expect(yield* goalCompletionDeclarationDigest(value)).not.toEqual(
-        yield* goalCompletionDeclarationDigest(changed)
-      );
+      const goalCompletionDeclarationDigest2 = yield* goalCompletionDeclarationDigest(value);
+      const argument = expect(goalCompletionDeclarationDigest2).not;
+      const goalCompletionDeclarationDigest4 = yield* goalCompletionDeclarationDigest(changed);
+      argument.toEqual(goalCompletionDeclarationDigest4);
     })
   );
   it.effect("ignores stale PR/digest receipts and a partial tail, then reads a complete matching row", () =>
@@ -660,21 +698,19 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
         GoalCompletionReceipt.make({ ...receipt, declarationDigest: "old-digest", finalPullRequest: 8 })
       );
       yield* writeProjectFile(".beep/goals/completion-receipts.ndjson", `${stale}\n${correct}`);
-      const io = fixtureIo(yield* encodeGoalManifestJson(value));
-      assertNone(
-        yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
-          Effect.provideService(GoalCompletionIo, io)
-        )
+      const encodedGoalManifestJson = yield* encodeGoalManifestJson(value);
+      const io = fixtureIo(encodedGoalManifestJson);
+      const pipe3 = yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
+        Effect.provideService(GoalCompletionIo, io)
       );
+      assertNone(pipe3);
       const fs = yield* FileSystem.FileSystem;
       yield* fs.writeFileString(".beep/goals/completion-receipts.ndjson", `${stale}\n${correct}\n`);
+      const pipe4 = yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
+        Effect.provideService(GoalCompletionIo, io)
+      );
       assertSome(
-        O.map(
-          yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
-            Effect.provideService(GoalCompletionIo, io)
-          ),
-          (row) => row.outcome
-        ),
+        O.map(pipe4, (row) => row.outcome),
         "verified"
       );
     })
@@ -687,14 +723,13 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
       const staleVerified = GoalCompletionReceipt.make({ ...receipt, outcome: "verified" });
       const text = yield* encodeGoalCompletionReceiptJson(staleVerified);
       yield* writeProjectFile(".beep/goals/completion-receipts.ndjson", `${text}\n`);
-      const io = fixtureIo(yield* encodeGoalManifestJson(value));
+      const encodedGoalManifestJson5 = yield* encodeGoalManifestJson(value);
+      const io = fixtureIo(encodedGoalManifestJson5);
+      const pipe6 = yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
+        Effect.provideService(GoalCompletionIo, io)
+      );
       assertSome(
-        O.map(
-          yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
-            Effect.provideService(GoalCompletionIo, io)
-          ),
-          (row) => row.outcome
-        ),
+        O.map(pipe6, (row) => row.outcome),
         "unknown"
       );
     })
@@ -718,14 +753,13 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
         })
       );
       yield* writeProjectFile(".beep/goals/completion-receipts.ndjson", `${correct}\n${unknown}\n`);
-      const io = fixtureIo(yield* encodeGoalManifestJson(value));
+      const encodedGoalManifestJson7 = yield* encodeGoalManifestJson(value);
+      const io = fixtureIo(encodedGoalManifestJson7);
+      const pipe8 = yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
+        Effect.provideService(GoalCompletionIo, io)
+      );
       assertSome(
-        O.map(
-          yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
-            Effect.provideService(GoalCompletionIo, io)
-          ),
-          (row) => row.outcome
-        ),
+        O.map(pipe8, (row) => row.outcome),
         "verified"
       );
     })
@@ -734,7 +768,8 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
     Effect.gen(function* () {
       yield* temporaryWorkingDirectory;
       const value = yield* manifest();
-      const io = fixtureIo(yield* encodeGoalManifestJson(value));
+      const encodedGoalManifestJson9 = yield* encodeGoalManifestJson(value);
+      const io = fixtureIo(encodedGoalManifestJson9);
       yield* Effect.forEach(
         [true, false],
         Effect.fn("GoalsCompletionTest.replaceStaleReceipt")(function* (red) {
@@ -750,12 +785,10 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
           const staleText = yield* encodeGoalCompletionReceiptJson(stale);
           const latestText = yield* encodeGoalCompletionReceiptJson(latest);
           yield* writeProjectFile(".beep/goals/completion-receipts.ndjson", `${staleText}\n${latestText}\n`);
-          assertSome(
-            yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
-              Effect.provideService(GoalCompletionIo, io)
-            ),
-            latest
+          const pipe10 = yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
+            Effect.provideService(GoalCompletionIo, io)
           );
+          assertSome(pipe10, latest);
         })
       );
     })
@@ -767,7 +800,8 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
       const stale = yield* observe({ red: true });
       expect(stale.outcome).toBe("unsatisfied");
       const staleText = yield* encodeGoalCompletionReceiptJson(stale);
-      const io = fixtureIo(yield* encodeGoalManifestJson(value));
+      const encodedGoalManifestJson11 = yield* encodeGoalManifestJson(value);
+      const io = fixtureIo(encodedGoalManifestJson11);
       yield* Effect.forEach(
         [{ missingHistory: true }, { preMergePendingRerun: true }],
         Effect.fn("GoalsCompletionTest.retainRequiredRed")(function* (scenario) {
@@ -780,12 +814,10 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
           degraded.merge.pipe(O.isSome, assertTrue);
           const degradedText = yield* encodeGoalCompletionReceiptJson(degraded);
           yield* writeProjectFile(".beep/goals/completion-receipts.ndjson", `${staleText}\n${degradedText}\n`);
-          assertSome(
-            yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
-              Effect.provideService(GoalCompletionIo, io)
-            ),
-            stale
+          const pipe12 = yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
+            Effect.provideService(GoalCompletionIo, io)
           );
+          assertSome(pipe12, stale);
         })
       );
     })
@@ -821,13 +853,12 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
       const staleText = yield* encodeGoalCompletionReceiptJson(stale);
       const partialText = yield* encodeGoalCompletionReceiptJson(partial);
       yield* writeProjectFile(".beep/goals/completion-receipts.ndjson", `${staleText}\n${partialText}\n`);
-      const io = fixtureIo(yield* encodeGoalManifestJson(value));
-      assertSome(
-        yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
-          Effect.provideService(GoalCompletionIo, io)
-        ),
-        stale
+      const encodedGoalManifestJson13 = yield* encodeGoalManifestJson(value);
+      const io = fixtureIo(encodedGoalManifestJson13);
+      const pipe14 = yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
+        Effect.provideService(GoalCompletionIo, io)
       );
+      assertSome(pipe14, stale);
     })
   );
   it.effect("a receipt another clone wrote to the shared store is read without a legacy file", () =>
@@ -835,19 +866,22 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
       const root = yield* temporaryWorkingDirectory;
       const value = yield* manifest();
       const { directory, store } = yield* sharedStore(root);
-      yield* store.append(yield* completeReceipt());
+      const completeReceipt15 = yield* completeReceipt();
+      yield* store.append(completeReceipt15);
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      expect(yield* fs.exists(path.join(directory, "github.com__example__repo.jsonl"))).toBe(true);
-      expect(yield* fs.exists(".beep/goals/completion-receipts.ndjson")).toBe(false);
+      const exists16 = yield* fs.exists(path.join(directory, "github.com__example__repo.jsonl"));
+      expect(exists16).toBe(true);
+      const exists17 = yield* fs.exists(".beep/goals/completion-receipts.ndjson");
+      expect(exists17).toBe(false);
+      const argument1 = storedGoalCompletion(process.cwd(), "demo", value, final);
+      const encodedGoalManifestJson6 = yield* encodeGoalManifestJson(value);
+      const pipe18 = yield* argument1.pipe(
+        Effect.provideService(GoalCompletionIo, fixtureIo(encodedGoalManifestJson6)),
+        Effect.provideService(GoalCompletionReceiptStore, store)
+      );
       assertSome(
-        O.map(
-          yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
-            Effect.provideService(GoalCompletionIo, fixtureIo(yield* encodeGoalManifestJson(value))),
-            Effect.provideService(GoalCompletionReceiptStore, store)
-          ),
-          (row) => row.outcome
-        ),
+        O.map(pipe18, (row) => row.outcome),
         "verified"
       );
     })
@@ -856,7 +890,8 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
     Effect.gen(function* () {
       const root = yield* temporaryWorkingDirectory;
       const value = yield* manifest();
-      const io = fixtureIo(yield* encodeGoalManifestJson(value));
+      const encodedGoalManifestJson19 = yield* encodeGoalManifestJson(value);
+      const io = fixtureIo(encodedGoalManifestJson19);
       const verified = yield* completeReceipt();
       const path = yield* Path.Path;
       const readOutcome = (store: typeof GoalCompletionReceiptStore.Service) =>
@@ -870,7 +905,8 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
         ".beep/goals/completion-receipts.ndjson",
         `${yield* encodeGoalCompletionReceiptJson(verified)}\n`
       );
-      assertSome(yield* readOutcome(legacyOnly.store), "verified");
+      const readOutcome20 = yield* readOutcome(legacyOnly.store);
+      assertSome(readOutcome20, "verified");
       const newerUnknown = GoalCompletionReceipt.make({
         ...(yield* observe()),
         verifiedAt: DateTime.add(verified.verifiedAt, { seconds: 1 }),
@@ -882,7 +918,8 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
         ".beep/goals/completion-receipts.ndjson",
         `${yield* encodeGoalCompletionReceiptJson(newerUnknown)}\n`
       );
-      assertSome(yield* readOutcome(sharedVerified.store), "verified");
+      const readOutcome21 = yield* readOutcome(sharedVerified.store);
+      assertSome(readOutcome21, "verified");
     })
   );
   it.effect("a newer definite unknown refresh never displaces a verified receipt", () =>
@@ -911,14 +948,14 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
       const { store } = yield* sharedStore(root);
       yield* store.append(verified);
       yield* store.append(degraded);
+      const argument2 = storedGoalCompletion(process.cwd(), "demo", value, final);
+      const encodedGoalManifestJson8 = yield* encodeGoalManifestJson(value);
+      const pipe22 = yield* argument2.pipe(
+        Effect.provideService(GoalCompletionIo, fixtureIo(encodedGoalManifestJson8)),
+        Effect.provideService(GoalCompletionReceiptStore, store)
+      );
       assertSome(
-        O.map(
-          yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
-            Effect.provideService(GoalCompletionIo, fixtureIo(yield* encodeGoalManifestJson(value))),
-            Effect.provideService(GoalCompletionReceiptStore, store)
-          ),
-          (row) => row.outcome
-        ),
+        O.map(pipe22, (row) => row.outcome),
         "verified"
       );
     })
@@ -946,23 +983,25 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
         Effect.provideService(GoalCompletionReceiptStore, store)
       );
       const fs = yield* FileSystem.FileSystem;
-      expect(yield* fs.exists(".beep/goals/completion-receipts.ndjson")).toBe(false);
-      expect(yield* fs.exists(sharedFile)).toBe(false);
+      const exists23 = yield* fs.exists(".beep/goals/completion-receipts.ndjson");
+      expect(exists23).toBe(false);
+      const exists24 = yield* fs.exists(sharedFile);
+      expect(exists24).toBe(false);
       yield* Command.runWith(goalsCommand, { version: "0.0.0" })(["completion", "refresh", "--slug", "demo"]).pipe(
         Effect.provideService(GoalCompletionIo, io),
         Effect.provideService(GoalCompletionReceiptStore, store)
       );
       // The repository resolves from origin, so the shared store is the only writer target.
-      expect(yield* fs.exists(".beep/goals/completion-receipts.ndjson")).toBe(false);
-      expect(yield* fs.exists(sharedFile)).toBe(true);
+      const exists25 = yield* fs.exists(".beep/goals/completion-receipts.ndjson");
+      expect(exists25).toBe(false);
+      const exists26 = yield* fs.exists(sharedFile);
+      expect(exists26).toBe(true);
+      const pipe27 = yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
+        Effect.provideService(GoalCompletionIo, io),
+        Effect.provideService(GoalCompletionReceiptStore, store)
+      );
       assertSome(
-        O.map(
-          yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
-            Effect.provideService(GoalCompletionIo, io),
-            Effect.provideService(GoalCompletionReceiptStore, store)
-          ),
-          (row) => row.outcome
-        ),
+        O.map(pipe27, (row) => row.outcome),
         "unknown"
       );
     })
@@ -1036,6 +1075,7 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
     "missing-check-facts",
     "not-ready",
     "contradictory-ready",
+    "unread-checks",
     "path-escape",
     "status-symlink",
     "wrong-branch",
@@ -1078,16 +1118,23 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
           const outside = yield* fs.makeTempDirectoryScoped();
           yield* fs.writeFileString(path.join(outside, "status.json"), statusText);
           yield* fs.symlink(path.join(outside, "status.json"), path.join(runRoot, "status.json"));
-        } else if (variant === "directory-status") yield* fs.makeDirectory(path.join(runRoot, "status.json"));
-        else if (variant !== "missing-status") yield* fs.writeFileString(path.join(runRoot, "status.json"), statusText);
-        if (variant === "directory-job") yield* fs.makeDirectory(path.join(jobsRoot, `${jobId}.json`));
-        else if (variant !== "missing-job")
+        } else if (variant === "directory-status") {
+          yield* fs.makeDirectory(path.join(runRoot, "status.json"));
+        } else if (variant !== "missing-status") {
+          yield* fs.writeFileString(path.join(runRoot, "status.json"), statusText);
+        }
+        if (variant === "directory-job") {
+          yield* fs.makeDirectory(path.join(jobsRoot, `${jobId}.json`));
+        } else if (variant !== "missing-job") {
           yield* fs.writeFileString(path.join(jobsRoot, `${jobId}.json`), recoveryJobFixture(variant, fixture));
+        }
         const job = recoveryJobOption(variant, jobId);
-        const receipt = yield* observeGoalCompletion(root, "demo", value, final, job).pipe(
+        const argument3 = observeGoalCompletion(root, "demo", value, final, job);
+        const encodedGoalManifestJson10 = yield* encodeGoalManifestJson(value);
+        const receipt = yield* argument3.pipe(
           Effect.provideService(
             GoalCompletionIo,
-            fixtureIo(yield* encodeGoalManifestJson(value), { red: variant === "hosted-red" })
+            fixtureIo(encodedGoalManifestJson10, { red: variant === "hosted-red" })
           )
         );
         const evidence = A.findFirst(
@@ -1110,6 +1157,7 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
           "finalized-after-merge": "Readiness recovery refused: job finalized after PR merge",
           "missing-finalization": "Readiness recovery refused: job service finalization receipt is absent",
           "wrong-head": "Readiness recovery refused: status head mismatch",
+          "unread-checks": "Readiness recovery refused: derived hard readiness criteria are not satisfied",
         };
         const diagnostic = R.get(diagnostics, variant);
         if (O.isSome(diagnostic))
@@ -1118,7 +1166,8 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
             diagnostic.value
           );
         if (variant === "hosted-red") expect(receipt.outcome).not.toBe("verified");
-        expect(yield* fs.readFileString(ref)).toBe(verdictText);
+        const readFileString28 = yield* fs.readFileString(ref);
+        expect(readFileString28).toBe(verdictText);
       })
     );
   }

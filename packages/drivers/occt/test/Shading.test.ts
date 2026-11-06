@@ -32,13 +32,17 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as replicad from "replicad";
 import type { EdgeSet } from "@beep/occt";
 import type { StretchPiece } from "@beep/occt/internal/shading";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 type Segment = readonly [number, number, number, number];
 
@@ -351,22 +355,24 @@ describe("@beep/occt shading", () => {
                 })
               )
               .pipe(Effect.map(A.map((v: EdgeSet) => [v.visible, v.hidden, v.shading])))
-          ).pipe(Effect.flatMap((views) => sha256Of(JSON.stringify(views))));
-        expect(yield* run((litThreshold) => ShadingPlan.make({ minPitch: 1, maxPitch: 3, litThreshold }))).toBe(
-          LEGACY_SHA256
+          ).pipe(
+            Effect.flatMap((views) =>
+              sha256Of(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(views), identity))
+            )
+          );
+        const result = yield* run((litThreshold) => ShadingPlan.make({ minPitch: 1, maxPitch: 3, litThreshold }));
+        expect(result).toBe(LEGACY_SHA256);
+        const result1 = yield* run((litThreshold) =>
+          ShadingPlan.make({
+            minPitch: 1,
+            maxPitch: 3,
+            litThreshold,
+            style: "uniform",
+            axis: "longest-edge",
+            minFaceSpan: 0,
+          })
         );
-        expect(
-          yield* run((litThreshold) =>
-            ShadingPlan.make({
-              minPitch: 1,
-              maxPitch: 3,
-              litThreshold,
-              style: "uniform",
-              axis: "longest-edge",
-              minFaceSpan: 0,
-            })
-          )
-        ).toBe(LEGACY_SHA256);
+        expect(result1).toBe(LEGACY_SHA256);
       }),
       // Eight full projections of the legacy fixture (four lit thresholds under two plans). About 1.7 s on a
       // workstation before and after the outline-separation change, but 33.7 s on a hosted unit shard, past
@@ -1189,7 +1195,8 @@ describe("@beep/occt shading", () => {
         expect(A.isReadonlyArrayNonEmpty(alone) && A.every(alone, (x) => x >= 7)).toBe(true);
         // behind the slab the wall's band hugs the slab's edge: its first line one pitch left of x = 8
         // (the slab's own strokes sit past x = 20)
-        const slabbed = A.filter(yield* strokeXs(ModelSpec.make({ parts: [wall, slab] })), (x) => x <= 20);
+        const strokeXs2 = yield* strokeXs(ModelSpec.make({ parts: [wall, slab] }));
+        const slabbed = A.filter(strokeXs2, (x) => x <= 20);
         expect(A.isReadonlyArrayNonEmpty(slabbed) && A.every(slabbed, (x) => x < 8)).toBe(true);
         expect(Math.max(...slabbed)).toBeCloseTo(7, 1);
         // the post splits the wall: the right stretch keeps its band, the left one gets a band next to the post

@@ -49,26 +49,35 @@ describe("CryptoWalletAddress", () => {
   it.effect(
     "accepts canonical EVM addresses",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownCryptoWalletAddressEffect(evmLowercase)).toBe(evmLowercase);
-      expect(yield* decodeUnknownCryptoWalletAddressEffect(evmChecksummed)).toBe(evmChecksummed);
+      const decodedUnknownCryptoWalletAddressEffect = yield* decodeUnknownCryptoWalletAddressEffect(evmLowercase);
+      expect(decodedUnknownCryptoWalletAddressEffect).toBe(evmLowercase);
+      const decodedUnknownCryptoWalletAddressEffect1 = yield* decodeUnknownCryptoWalletAddressEffect(evmChecksummed);
+      expect(decodedUnknownCryptoWalletAddressEffect1).toBe(evmChecksummed);
     })
   );
 
   it.effect(
     "accepts canonical Bitcoin addresses",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownCryptoWalletAddressEffect(bitcoinP2pkh)).toBe(bitcoinP2pkh);
-      expect(yield* decodeUnknownCryptoWalletAddressEffect(bitcoinP2sh)).toBe(bitcoinP2sh);
-      expect(yield* decodeUnknownCryptoWalletAddressEffect(bitcoinWitness)).toBe(bitcoinWitness);
-      expect(yield* decodeUnknownCryptoWalletAddressEffect(bitcoinP2wsh)).toBe(bitcoinP2wsh);
-      expect(yield* decodeUnknownCryptoWalletAddressEffect(bitcoinTaproot)).toBe(bitcoinTaproot);
+      const decodedUnknownCryptoWalletAddressEffect2 = yield* decodeUnknownCryptoWalletAddressEffect(bitcoinP2pkh);
+      expect(decodedUnknownCryptoWalletAddressEffect2).toBe(bitcoinP2pkh);
+      const decodedUnknownCryptoWalletAddressEffect3 = yield* decodeUnknownCryptoWalletAddressEffect(bitcoinP2sh);
+      expect(decodedUnknownCryptoWalletAddressEffect3).toBe(bitcoinP2sh);
+      const decodedUnknownCryptoWalletAddressEffect4 = yield* decodeUnknownCryptoWalletAddressEffect(bitcoinWitness);
+      expect(decodedUnknownCryptoWalletAddressEffect4).toBe(bitcoinWitness);
+      const decodedUnknownCryptoWalletAddressEffect5 = yield* decodeUnknownCryptoWalletAddressEffect(bitcoinP2wsh);
+      expect(decodedUnknownCryptoWalletAddressEffect5).toBe(bitcoinP2wsh);
+      const decodedUnknownCryptoWalletAddressEffect6 = yield* decodeUnknownCryptoWalletAddressEffect(bitcoinTaproot);
+      expect(decodedUnknownCryptoWalletAddressEffect6).toBe(bitcoinTaproot);
     })
   );
 
   it.effect(
     "accepts canonical Solana addresses",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownCryptoWalletAddressEffect(solanaCryptoWalletAddress)).toBe(solanaCryptoWalletAddress);
+      const decodedUnknownCryptoWalletAddressEffect7 =
+        yield* decodeUnknownCryptoWalletAddressEffect(solanaCryptoWalletAddress);
+      expect(decodedUnknownCryptoWalletAddressEffect7).toBe(solanaCryptoWalletAddress);
     })
   );
 

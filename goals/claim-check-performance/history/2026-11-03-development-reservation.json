@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "claim-performance-development-reservation/v1",
+  "selectedWholeFamilies": 4,
+  "selectedClaims": 71,
+  "selectedCpcSection": "G",
+  "sourceOnlySelection": true,
+  "excludedFromEveryFutureFinalCohort": true,
+  "remainingProspectiveFamilies": 20,
+  "remainingNonCanceledClaims": 468,
+  "remainingSixCpcQuotasPass": true,
+  "remainingAlternativeMultipleDependentCases": 0,
+  "remainingPoolIsFrozenFinalCohort": false,
+  "annotationSessions": "Two separate fresh GPT-6.1-Sol medium sessions; initial judgments mutually blind and implementation/output blind",
+  "attorneyAgreementClaimed": false,
+  "manifestSha256": "8e8329a21f47ff35727660a98929c6bee4b87a42655eca43266c6442b8a088a6",
+  "admissionSha256": "f3efbbbb1cd2063c9fa0d2557a1dae92dce5281d51fb3545a9ba4156e52e8917",
+  "goalComplete": false
+}

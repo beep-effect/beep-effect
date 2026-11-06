@@ -852,8 +852,9 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       sessionPaths,
       A.filter(paths, (file) => !A.contains(sessionPaths, file))
     );
+    const got = yield* Ref.get(excluded);
     return {
-      excludedNestedRootPaths: pipe(yield* Ref.get(excluded), A.dedupe, A.sort(Order.String)),
+      excludedNestedRootPaths: pipe(got, A.dedupe, A.sort(Order.String)),
       paths: pipe(prioritized, A.take(budget.maxFiles), A.sort(Order.String)),
       truncationReason: indexedSnapshotTruncation(
         A.length(paths),
@@ -876,8 +877,10 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     depth: number,
     includeFile: (basename: string) => boolean
   ): Effect.fn.Return<void, AiMetricsConfigSnapshotError, FileSystem.FileSystem | Path.Path> {
-    if (A.contains(yield* Ref.get(pathsRef), currentPath)) return;
-    if (A.length(yield* Ref.get(pathsRef)) >= budget.maxFiles) {
+    const got1 = yield* Ref.get(pathsRef);
+    if (A.contains(got1, currentPath)) return;
+    const got2 = yield* Ref.get(pathsRef);
+    if (A.length(got2) >= budget.maxFiles) {
       return yield* markTruncated(AiMetricsConfigSnapshotTruncationReason.Enum["max-files"]);
     }
 
@@ -907,12 +910,10 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       return yield* markTruncated(AiMetricsConfigSnapshotTruncationReason.Enum["max-depth"]);
     }
 
-    const entries = pipe(
-      yield* fs
-        .readDirectory(currentPath)
-        .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot read fallback snapshot directory.", cause))),
-      A.sort(Order.String)
-    );
+    const pipe3 = yield* fs
+      .readDirectory(currentPath)
+      .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot read fallback snapshot directory.", cause)));
+    const entries = pipe(pipe3, A.sort(Order.String));
     yield* Effect.forEach(entries, (entry) => walkEntry(currentPath, entry, depth, includeFile), { discard: true });
   });
 
@@ -986,8 +987,9 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
   );
 
   const walked = yield* Ref.get(pathsRef);
+  const got4 = yield* Ref.get(excludedRef);
   return {
-    excludedNestedRootPaths: pipe(yield* Ref.get(excludedRef), A.dedupe, A.sort(Order.String)),
+    excludedNestedRootPaths: pipe(got4, A.dedupe, A.sort(Order.String)),
     paths: pipe(walked, A.dedupe, A.sort(Order.String)),
     truncationReason: yield* Ref.get(truncationRef),
   };
@@ -1065,21 +1067,19 @@ const readSnapshotFiles = Effect.fn("AiMetrics.readConfigSnapshotFiles")(functio
 const hashSnapshotFiles = Effect.fn("AiMetrics.hashConfigSnapshotFiles")(function* (
   files: ReadonlyArray<ConfigSnapshotReadFile>
 ) {
-  return pipe(
-    yield* Effect.forEach(
-      files,
-      Effect.fnUntraced(function* (file: ConfigSnapshotReadFile) {
-        return AiMetricsConfigSnapshotFile.make({
-          contentHash: yield* hashPublicTextSha256(file.content),
-          relativePath: file.relativePath,
-          scope: scopeFor(file.relativePath),
-          sizeBytes: file.sizeBytes,
-        });
-      }),
-      { concurrency: 16 }
-    ),
-    A.sort(byRelativePathAscending)
+  const forEach5 = yield* Effect.forEach(
+    files,
+    Effect.fnUntraced(function* (file: ConfigSnapshotReadFile) {
+      return AiMetricsConfigSnapshotFile.make({
+        contentHash: yield* hashPublicTextSha256(file.content),
+        relativePath: file.relativePath,
+        scope: scopeFor(file.relativePath),
+        sizeBytes: file.sizeBytes,
+      });
+    }),
+    { concurrency: 16 }
   );
+  return pipe(forEach5, A.sort(byRelativePathAscending));
 });
 
 const snapshotHashInput: (files: ReadonlyArray<AiMetricsConfigSnapshotFile>) => string = flow(

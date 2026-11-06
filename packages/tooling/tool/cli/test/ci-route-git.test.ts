@@ -63,12 +63,17 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("route git over a real
       const { work, c0, c1, p1 } = yield* fixture();
       const git = yield* makeRouteGit(work);
 
-      expect(yield* git.repoRoot).toBe(work);
+      const repoRoot1 = yield* git.repoRoot;
+      expect(repoRoot1).toBe(work);
       // p1 is only reachable through refs/pull/1/head; c1 is already local.
-      expect(yield* git.ensureHeads([p1, c1])).toEqual([]);
-      expect(yield* git.mergeBase(p1)).toBe(c0);
-      expect(yield* git.isAncestor(c0, c1)).toBe(true);
-      expect(yield* git.isAncestor(c1, c0)).toBe(false);
+      const ensureHeads2 = yield* git.ensureHeads([p1, c1]);
+      expect(ensureHeads2).toEqual([]);
+      const mergeBase3 = yield* git.mergeBase(p1);
+      expect(mergeBase3).toBe(c0);
+      const isAncestor4 = yield* git.isAncestor(c0, c1);
+      expect(isAncestor4).toBe(true);
+      const isAncestor5 = yield* git.isAncestor(c1, c0);
+      expect(isAncestor5).toBe(false);
 
       const unknownAncestor = yield* Effect.flip(git.isAncestor(ABSENT, c1));
       expect(unknownAncestor.reason).toBe("git");
@@ -82,7 +87,8 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("route git over a real
     Effect.gen(function* () {
       const { work } = yield* fixture();
       const git = yield* makeRouteGit(work);
-      expect(yield* git.ensureHeads([ABSENT])).toEqual([ABSENT]);
+      const ensureHeads6 = yield* git.ensureHeads([ABSENT]);
+      expect(ensureHeads6).toEqual([ABSENT]);
     })
   );
 
@@ -137,6 +143,36 @@ it.layer(NodeCommandTestLayer, { timeout: "30 seconds" })("route git over the ki
     Effect.gen(function* () {
       const failure = yield* isAncestorFailure(UnknownRefError.make({ ref: "a1", cwd: "/repo" }));
       assertInclude(failure.message, "exited with an unknown object (a1).");
+    })
+  );
+});
+
+// `mergeBase` keeps the capture's two wordings over the kit (W7b, SPEC D-19): a spawn failure, or git's exit code.
+const mergeBaseFailure = (error: GitCommandError | NotARepositoryError | UnknownRefError) =>
+  Effect.gen(function* () {
+    const git = yield* makeRouteGit("/repo");
+    return yield* Effect.flip(git.mergeBase("b2"));
+  }).pipe(Effect.provideService(Git, Git.makeTest({ mergeBase: () => Effect.fail(error) })));
+
+it.layer(NodeCommandTestLayer, { timeout: "30 seconds" })("route merge base over the kit's typed failures", (it) => {
+  it.effect("names a spawn failure with the kit's argv", () =>
+    Effect.gen(function* () {
+      const failure = yield* mergeBaseFailure(
+        GitCommandError.make({ kind: "refused", args: ["merge-base"], cwd: "/repo", stderr: "", detail: "option-like" })
+      );
+      expect(failure.reason).toBe("git");
+      assertInclude(failure.message, "Failed to spawn git merge-base origin/main b2.");
+    })
+  );
+
+  it.effect("names git's exit code, 128 for an unknown object", () =>
+    Effect.gen(function* () {
+      const failed = yield* mergeBaseFailure(
+        GitCommandError.make({ kind: "failed", args: ["merge-base"], cwd: "/repo", exitCode: 1, stderr: "" })
+      );
+      assertInclude(failed.message, "git merge-base origin/main b2 exited 1.");
+      const unknown = yield* mergeBaseFailure(UnknownRefError.make({ ref: "b2", cwd: "/repo" }));
+      assertInclude(unknown.message, "git merge-base origin/main b2 exited 128.");
     })
   );
 });

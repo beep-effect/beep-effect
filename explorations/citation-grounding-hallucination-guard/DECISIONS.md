@@ -373,10 +373,10 @@ imports.
 **Question:** Should resolution bookkeeping and CourtListener wire statuses be
 one vocabulary, and does `NO_CITATION` create a durable entity?
 
-**Answer:** Keep two vocabularies. Extend and reuse the existing
-`packages/law-practice/domain/src/values/ResolutionResult/ResolutionResult.model.ts`
-and `CitationWarning/CitationWarning.models.ts` for durable law-practice
-bookkeeping. Define a separate driver codec for transient 200/300/400/404/429
+**Answer:** Keep two vocabularies. Use canonical resolution data from
+`packages/law-practice/domain/src/values/Citation/Citation.resolution.ts` for
+durable law-practice bookkeeping, with warnings kept in separate run diagnostics.
+The former ResolutionResult and CitationWarning models were retired by the citation engine. Define a separate driver codec for transient 200/300/400/404/429
 wire statuses and an explicit adapter at the boundary. Do not change
 `ClaimLifecycle`. Fixture-shaped answer: **`NO_CITATION` produces no citation
 entity**; persist the extraction attempt and its negative result instead.
@@ -402,8 +402,10 @@ only. Do not case-fold and do not fuzzy-match. Replace the emitted quote with
 the exact raw source slice and require `source.slice(start, end) === quote`.
 Retain source identity plus digest/version. Ambiguous occurrences fail unless
 context disambiguates deterministically. Canonical offsets are half-open UTF-16
-code units; every boundary adapter converts explicitly. Reuse the clean/original
-mapping carried by `packages/law-practice/domain/src/values/Span/Span.model.ts`.
+code units; every boundary adapter converts explicitly. Use `NormalizedTextWithRawOffsets` from
+`packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.normalization.ts`
+for locator mapping, then verify the mapped range through the canonical
+`@beep/langextract/VerifiedSpan` adapter. The former law-practice Span model is retired.
 
 **Rationale:** Locator normalization may find a candidate, but only equality
 against immutable source identity proves what the user can quote. Explicit

@@ -1,5 +1,7 @@
 import * as NodeURL from "node:url";
 import { resolvePathWithinCanonicalRoot, resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
@@ -23,12 +25,14 @@ import * as P from "effect/Predicate";
 import * as Regex from "effect/RegExp";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
+import { adaptGitKitError, sortedUniquePaths } from "../../../internal/repo-run/GitExec.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
 import type { ManifestField } from "@beep/repo-cli-kit/ManifestRead";
 import type { WorkspaceDiscoveryError } from "@beep/repo-workspaces/WorkspaceDiscovery";
 import type { WorkspacePackage } from "@beep/repo-workspaces/WorkspacePackage";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
 
 export { fencedLineState, jsdocCommentsFromSource } from "@beep/repo-utils/JSDoc/JSDocSections";
 
@@ -340,7 +344,8 @@ const readWorkspacePackage = Effect.fn("QualityArtifactSupport.readWorkspacePack
   path: Path.Path
 ): Effect.fn.Return<WorkspacePackageInfo, QualityArtifactGeneratorError, FileSystem.FileSystem> {
   const filePath = path.join(absolutePath, "package.json");
-  return yield* readWorkspacePackageText(yield* readText(filePath), filePath, absolutePath, relativePath);
+  const readText1 = yield* readText(filePath);
+  return yield* readWorkspacePackageText(readText1, filePath, absolutePath, relativePath);
 });
 
 /**
@@ -441,7 +446,13 @@ const containedMember = Effect.fn("QualityArtifactSupport.containedMember")(func
   const packageJson = yield* decodePackageJson(member.manifestRecord).pipe(
     QualityArtifactGeneratorError.mapError(`Failed to decode package manifest ${filePath}.`, { filePath })
   );
-  return O.some(yield* workspacePackageInfoOf(packageJson, filePath, absolutePath, member.relativePath));
+  const workspacePackageInfoOf2 = yield* workspacePackageInfoOf(
+    packageJson,
+    filePath,
+    absolutePath,
+    member.relativePath
+  );
+  return O.some(workspacePackageInfoOf2);
 });
 
 /**
@@ -558,6 +569,58 @@ export const topoSortPackageNames = Effect.fn("QualityArtifactSupport.topoSortPa
 });
 
 /**
+ * Lists the paths a fresh checkout holds: tracked files plus untracked files git does not ignore.
+ *
+ * **Details**
+ *
+ * The `git ls-files --cached --others --exclude-standard` set, read as two kit calls: `Git.lsFiles`
+ * (the index, an unmerged path once) and `Git.untrackedFiles` (`--exclude-standard` only ever filters
+ * the untracked half). The two reads are not atomic, which a scanner tolerates. Paths are raw,
+ * root-relative, sorted and unique.
+ *
+ * **Example** (List the visible paths below `packages`)
+ *
+ * ```ts
+ * import { listGitVisiblePaths } from "@beep/repo-cli/test/Quality"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const listing = listGitVisiblePaths("/repo", ["packages"], {
+ *   onSpawnFailure: (commandLine) => () => `spawn ${commandLine}`,
+ *   onNonZeroExit: ({ commandLine, exitCode }) => `${commandLine} exited ${exitCode}`,
+ *   onTruncated: O.none(),
+ * })
+ * console.log(Effect.isEffect(listing)) // true
+ * ```
+ *
+ * @param repoRoot - The repository root the listing runs in.
+ * @param pathspec - Pathspecs that scope both halves; empty lists the whole tree.
+ * @param adapter - The calling command group's git error adapter.
+ * @returns The tracked and visible untracked paths, sorted and unique.
+ * @category filesystem
+ * @since 0.0.0
+ */
+export const listGitVisiblePaths = Effect.fn("QualityArtifactSupport.listGitVisiblePaths")(function* <E>(
+  repoRoot: string,
+  pathspec: ReadonlyArray<string>,
+  adapter: GitCommandErrorAdapter<E>
+): Effect.fn.Return<ReadonlyArray<string>, E, Git> {
+  const git = yield* Git;
+  const tracked = yield* git
+    .lsFiles(repoRoot, { pathspec })
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.lsFiles(pathspec), adapter)));
+  const untracked = yield* git
+    .untrackedFiles(repoRoot, { pathspec })
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.untrackedFiles(false, pathspec), adapter)));
+  return sortedUniquePaths(
+    A.appendAll(
+      A.map(tracked, (entry) => entry.path),
+      untracked
+    )
+  );
+});
+
+/**
  * Recursively list TypeScript source files below a directory.
  *
  * @category filesystem
@@ -631,7 +694,8 @@ export const listSourceFiles = Effect.fn("QualityArtifactSupport.listSourceFiles
           continue;
         }
         MutableHashSet.add(visited, absolutePath);
-        files = A.appendAll(files, yield* visit(absolutePath));
+        const visit3 = yield* visit(absolutePath);
+        files = A.appendAll(files, visit3);
         continue;
       }
 
@@ -654,7 +718,8 @@ export const listSourceFiles = Effect.fn("QualityArtifactSupport.listSourceFiles
     return files;
   });
 
-  return A.sort(yield* visit(canonicalRoot.value), Order.String);
+  const visit4 = yield* visit(canonicalRoot.value);
+  return A.sort(visit4, Order.String);
 });
 
 /**
@@ -882,7 +947,8 @@ const collectFilesImpl = Effect.fn("QualityScriptCommands.collectFiles")(functio
     );
   });
 
-  return pipe(yield* visit(searchRoot), A.sort(Order.String));
+  const visit5 = yield* visit(searchRoot);
+  return pipe(visit5, A.sort(Order.String));
 });
 
 /**

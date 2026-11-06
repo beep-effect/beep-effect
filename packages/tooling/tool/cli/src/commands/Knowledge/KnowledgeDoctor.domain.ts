@@ -287,6 +287,7 @@ const derivePackets = (oracle: KnowledgeTreeOracle) =>
   Effect.flatMap(readKnowledgeGoalPacketRecords(oracle), (records) => Effect.forEach(records, recordFacts));
 
 const REFLECTIONS_DIR = "history/reflections";
+const DECISIONS_DIR = "decisions";
 
 const ancestorDirectories = (paths: HashSet.HashSet<string>): HashSet.HashSet<string> =>
   HashSet.fromIterable(
@@ -299,6 +300,28 @@ const ancestorDirectories = (paths: HashSet.HashSet<string>): HashSet.HashSet<st
       )
     )
   );
+
+type PacketFiles = MutableHashMap.MutableHashMap<string, ReadonlyArray<string>>;
+
+// One pass over the tree buckets every packet's entries under one subdirectory (`ops/`,
+// `research/`), so a lookup per packet never rescans the whole tracked tree.
+const packetFilesByPrefix = (oracle: KnowledgeTreeOracle, prefix: string): PacketFiles => {
+  const files: PacketFiles = MutableHashMap.empty();
+  for (const entry of oracle.trackedEntries) {
+    for (const slug of O.toArray(packetSlug(entry.path))) {
+      const packetPath = `${GOALS_DIR}/${slug}`;
+      const relative = Str.slice(Str.length(packetPath) + 1)(entry.path);
+      if (Str.startsWith(prefix)(relative)) {
+        const existing = O.getOrElse(MutableHashMap.get(files, packetPath), A.empty<string>);
+        MutableHashMap.set(files, packetPath, A.append(existing, relative));
+      }
+    }
+  }
+  return files;
+};
+
+const sortedPacketFiles = (files: PacketFiles, packetPath: string): ReadonlyArray<string> =>
+  A.sort(O.getOrElse(MutableHashMap.get(files, packetPath), A.empty<string>), Order.String);
 
 const isEscapingSpelling = (exploration: string): boolean =>
   Str.startsWith("/")(exploration) || Str.startsWith("\\\\")(exploration);
@@ -340,38 +363,25 @@ export const makeKnowledgeGoalPacketReader = (
 ): GoalPacketReader<KnowledgeOperationalError, never> => {
   const paths = trackedPaths(oracle);
   const directories = ancestorDirectories(paths);
-  // One pass over the tree buckets every packet's `ops/` entries, so a lookup per
-  // packet never rescans the whole tracked tree.
-  const opsFilesByPacket = MutableHashMap.empty<string, ReadonlyArray<string>>();
-  for (const entry of oracle.trackedEntries) {
-    for (const slug of O.toArray(packetSlug(entry.path))) {
-      const packetPath = `${GOALS_DIR}/${slug}`;
-      const relative = Str.slice(Str.length(packetPath) + 1)(entry.path);
-      if (Str.startsWith("ops/")(relative)) {
-        const existing = O.getOrElse(MutableHashMap.get(opsFilesByPacket, packetPath), A.empty<string>);
-        MutableHashMap.set(opsFilesByPacket, packetPath, A.append(existing, relative));
-      }
-    }
-  }
-  return {
-    reflectionFiles: (packetPath) => {
-      const prefix = `${packetPath}/${REFLECTIONS_DIR}/`;
-      return Effect.succeed(
-        A.getSomes(
-          A.map(oracle.trackedEntries, (entry) =>
-            pipe(
-              O.liftPredicate(entry.path, Str.startsWith(prefix)),
-              O.map(Str.slice(Str.length(prefix))),
-              O.filter((name) => !pipe(name, Str.includes("/")))
-            )
-          )
+  const opsFilesByPacket = packetFilesByPrefix(oracle, "ops/");
+  const researchFilesByPacket = packetFilesByPrefix(oracle, "research/");
+  const directFiles = (prefix: string): ReadonlyArray<string> =>
+    A.getSomes(
+      A.map(oracle.trackedEntries, (entry) =>
+        pipe(
+          O.liftPredicate(entry.path, Str.startsWith(prefix)),
+          O.map(Str.slice(Str.length(prefix))),
+          O.filter((name) => !pipe(name, Str.includes("/")))
         )
-      );
-    },
-    opsFiles: (packetPath) =>
-      Effect.succeed(
-        A.sort(O.getOrElse(MutableHashMap.get(opsFilesByPacket, packetPath), A.empty<string>), Order.String)
-      ),
+      )
+    );
+  return {
+    decisionFiles: (packetPath) => Effect.succeed(directFiles(`${packetPath}/${DECISIONS_DIR}/`)),
+    readDecision: (packetPath, file) => readText(oracle, `${packetPath}/${DECISIONS_DIR}/${file}`),
+    readDocument: (packetPath, document) => readTextIfTracked(oracle, paths, `${packetPath}/${document}`),
+    reflectionFiles: (packetPath) => Effect.succeed(directFiles(`${packetPath}/${REFLECTIONS_DIR}/`)),
+    opsFiles: (packetPath) => Effect.succeed(sortedPacketFiles(opsFilesByPacket, packetPath)),
+    researchFiles: (packetPath) => Effect.succeed(sortedPacketFiles(researchFilesByPacket, packetPath)),
     readReflection: (packetPath, file) => readText(oracle, `${packetPath}/${REFLECTIONS_DIR}/${file}`),
     explorationPath: (exploration) =>
       Effect.succeed(
@@ -588,7 +598,8 @@ const derivePackages = Effect.fn("KnowledgeDoctorDomain.packages")(function* (
     oracle.trackedEntries,
     (entry) => isRegularBlob(entry.mode) && isPackageManifestEntry(entry.path) && isWorkspaceManifest(globs, entry.path)
   );
-  return A.getSomes(yield* Effect.forEach(manifests, (entry) => readWorkspacePackage(oracle, entry.path)));
+  const forEach1 = yield* Effect.forEach(manifests, (entry) => readWorkspacePackage(oracle, entry.path));
+  return A.getSomes(forEach1);
 });
 
 const derivePathAliases = (oracle: KnowledgeTreeOracle, paths: HashSet.HashSet<string>) =>
@@ -1083,7 +1094,8 @@ const exportHolds = Effect.fn("KnowledgeDoctorDomain.exportHolds")(function* (
     );
   }
   if (witness.file === KNOWLEDGE_TSCONFIG_PATH) {
-    return A.some(yield* domain.pathAliases, (alias) => alias.key === witness.exportName);
+    const pathAliases2 = yield* domain.pathAliases;
+    return A.some(pathAliases2, (alias) => alias.key === witness.exportName);
   }
   return A.contains((yield* domain.fileExports(witness.file)).names, witness.exportName);
 });

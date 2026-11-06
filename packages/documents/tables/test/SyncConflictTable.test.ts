@@ -173,24 +173,20 @@ describe("SyncConflict table", () => {
       const syncConflict = yield* decodeUnknownSyncConflict(mappedDriftRow);
       const insert = yield* Effect.fromResult(toSyncConflictInsert(syncConflict));
 
-      expectConverterFailure(
-        yield* converterFailure(toSyncConflictInsert(withUnencodablePublicId(syncConflict))),
-        "SyncConflictConverterError"
+      const converterFailure1 = yield* converterFailure(toSyncConflictInsert(withUnencodablePublicId(syncConflict)));
+      expectConverterFailure(converterFailure1, "SyncConflictConverterError");
+      const converterFailure2 = yield* converterFailure(
+        fromSyncConflictRow({
+          ...insert,
+          id: 40,
+          localRelPath: insert.localRelPath ?? null,
+          publicId: 42,
+          remoteEventId: insert.remoteEventId ?? null,
+          remoteId: insert.remoteId ?? null,
+          syncItemId: insert.syncItemId ?? null,
+        } as unknown as SyncConflictRow)
       );
-      expectConverterFailure(
-        yield* converterFailure(
-          fromSyncConflictRow({
-            ...insert,
-            id: 40,
-            localRelPath: insert.localRelPath ?? null,
-            publicId: 42,
-            remoteEventId: insert.remoteEventId ?? null,
-            remoteId: insert.remoteId ?? null,
-            syncItemId: insert.syncItemId ?? null,
-          } as unknown as SyncConflictRow)
-        ),
-        "SyncConflictConverterError"
-      );
+      expectConverterFailure(converterFailure2, "SyncConflictConverterError");
     })
   );
 });

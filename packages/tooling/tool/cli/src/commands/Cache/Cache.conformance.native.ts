@@ -150,7 +150,7 @@ const fetchClient = Effect.fn("CacheConformance.fetchClient")(function* (
     Effect.timeout(Duration.minutes(5)),
     CacheCommandError.mapError(`Cannot read ${url}.`)
   );
-  const integrity = `sha512-${Base64.encode(yield* crypto.digest(Digest.sha512, tarball))}`;
+  const integrity = `sha512-${yield* crypto.digest(Digest.sha512, tarball).pipe(Effect.map(Base64.encode))}`;
   if (integrity !== pin.platformIntegrity)
     return yield* CacheCommandError.new(`Tarball ${url} does not match the pinned registry integrity.`);
   yield* fs.makeDirectory(directory, { recursive: true });
@@ -395,7 +395,7 @@ const runNative = Effect.fn("CacheConformance.runNative")(function* (
   const output = path.join(work, "dist/result.txt");
   const restoredOutput = yield* fs.exists(path.join(work, "dist"));
   const outputSha256 = (yield* fs.exists(output))
-    ? O.some(yield* readCacheExperimentBytes(work, "dist/result.txt", 4096).pipe(Effect.flatMap(hashBytes)))
+    ? yield* Effect.asSome(readCacheExperimentBytes(work, "dist/result.txt", 4096).pipe(Effect.flatMap(hashBytes)))
     : O.none<Sha256Hex>();
   return CacheConformanceNativeOutcome.make({
     scenario: plan.name,
@@ -675,13 +675,13 @@ export const runCacheConformanceNative = Effect.fn("CacheConformance.runNativeMa
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const crypto = yield* SecureRandom.SecureRandom;
-    const startedAt = DateTime.formatIso(yield* DateTime.now);
+    const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
     const executable = yield* verifyExecutable(client.executable, client.pin);
     const random = (bytes: number) => crypto.randomBytes(bytes).pipe(Effect.map(Hex.encode));
     const epoch = yield* random(4);
     const rotated = yield* random(4);
-    const key = Redacted.make(yield* random(32));
-    const rotatedKey = Redacted.make(yield* random(32));
+    const key = yield* random(32).pipe(Effect.map(Redacted.make));
+    const rotatedKey = yield* random(32).pipe(Effect.map(Redacted.make));
     const channel = client.pin.channel;
     const team = `${target.namespace.teamId}_${channel}_${epoch}`;
     const foreignTeam = `${target.namespace.foreignTeamId}_${channel}_${epoch}`;

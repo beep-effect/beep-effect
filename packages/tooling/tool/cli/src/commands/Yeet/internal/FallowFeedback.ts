@@ -534,7 +534,8 @@ export const runYeetFallowFeedback = Effect.fn("YeetFallowFeedback.runYeetFallow
   const defects = selfHealableDefects(entries, startedAtMillis);
   const surviving = survivingEnvelopes(entries, startedAtMillis);
   if (!A.isReadonlyArrayEmpty(defects)) {
-    const unpurged = A.getSomes(yield* Effect.forEach(defects, purgeEnvelopeFile, { concurrency: 1 }));
+    const forEach1 = yield* Effect.forEach(defects, purgeEnvelopeFile, { concurrency: 1 });
+    const unpurged = A.getSomes(forEach1);
     // Emit the same index an absent `.beep/fallow` produces so a downstream
     // consumer never reads a half-truth built from a partially stale directory.
     yield* writeQualityIssueIndex(options.emit, issueIndexFromEnvelopes(A.empty<FallowEnvelope>(), true));
