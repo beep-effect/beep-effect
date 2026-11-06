@@ -71,14 +71,15 @@ the structural schema. A suspended document schema preserves the nominal decoded
 type while carrying the same key metadata and encoded representation. The fields
 now annotate that wrapper; chat draft reconciliation behavior is unchanged.
 Focused checks and package audit/docgen across the five consumer packages pass after this correction.
-A later hosted check reproduced an ordered-list consumer failure in the separate
-law-practice server test compilation. A suspended start-schema boundary simplifies
-the emitted declaration but was insufficient for that broader program. Importing
-the models and renderer from their owning public leaves resolves the full package
-check; no patent normalization behavior or root barrel export is changed. Source-only
-checking is not equivalent to the test program's check. The accepted zero/positive
-start values and default remain the same. Failed attempts and hosted heads remain
-evidence, not inherited/environment reds.
+A later hosted check reproduced an ordered-list type failure in the separate
+law-practice server test compilation. Source-only checking was insufficient.
+Declaration simplification and import probes did not pass every program. The
+accepted fix shares an internal unique-symbol brand between the ordered-list
+class and its recursive namespace type, avoiding a recursive Pick through its
+own class base. Source and test checks pass with the original consumer imports;
+no patent normalization behavior or root barrel export is changed. The ordered-list
+schema, accepted zero/positive starts, encoded fields and default remain unchanged.
+Failed probes and hosted heads remain evidence, not inherited/environment reds.
 
 ## Rejected and qualified inferences
 

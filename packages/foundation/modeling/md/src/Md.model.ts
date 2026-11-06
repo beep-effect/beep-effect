@@ -2110,6 +2110,11 @@ export const OrderedListStart = S.Union([S.Literal(0), PosInt]).pipe(
  */
 export type OrderedListStart = typeof OrderedListStart.Type;
 
+// Share the nominal identity without recursing through the class base type.
+interface OlBrand {
+  readonly brand: unique symbol;
+}
+
 const olStartDefault = PosInt.make(1);
 /**
  * Ordered list block.
@@ -2126,20 +2131,17 @@ const olStartDefault = PosInt.make(1);
  * @category models
  * @since 0.0.0
  */
-export class Ol extends S.Opaque<Ol, { readonly brand: unique symbol }>()(
+export class Ol extends S.Opaque<Ol, OlBrand>()(
   S.TaggedStruct("ol", {
     children: ListChildren.annotateKey({
       description: "List items rendered as an ordered list.",
     }),
-    // Keep the defaulted union behind a stable schema boundary in declaration emit.
-    start: S.suspend(() => OrderedListStart)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed(olStartDefault)),
-        S.withDecodingDefaultTypeKey(Effect.succeed(olStartDefault))
-      )
-      .annotateKey({
-        description: "First ordinal used by the ordered list. Defaults to one.",
-      }),
+    start: OrderedListStart.pipe(
+      S.withConstructorDefault(Effect.succeed(olStartDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(olStartDefault))
+    ).annotateKey({
+      description: "First ordinal used by the ordered list. Defaults to one.",
+    }),
   }).pipe(
     $I.annoteSchema("Ol", {
       po: "table",
@@ -2172,7 +2174,7 @@ export declare namespace Ol {
   /**
    * @since 0.0.0
    */
-  export interface Type extends Pick<Ol, "brand"> {
+  export interface Type extends OlBrand {
     readonly _tag: "ol";
     readonly children: ListChildren.Type;
     readonly start: OrderedListStart;
