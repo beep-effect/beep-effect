@@ -1707,6 +1707,7 @@
     {"name":"Goals.buildPortfolioIndexContent","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.buildPortfolioIndexReport","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.checkPortfolioIndex","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Goals.collectExplorationArchiveFindings","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.collectManifestProjectionRows","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.collectPortfolioIndex","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.completionEvidenceAdvisory","owner":"@beep/repo-cli","family":"tooling","conforms":true},

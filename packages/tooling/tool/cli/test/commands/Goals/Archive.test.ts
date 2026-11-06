@@ -2,7 +2,11 @@ import { ExplorationManifest } from "@beep/repo-cli/commands/Explore";
 import { runGoalsArchive } from "@beep/repo-cli/commands/Goals/Archive";
 import { ArchiveRecord, tombstoneKeeps } from "@beep/repo-cli/commands/Goals/Archive.schemas";
 import { ArchivePlanner, ArchivePlannerLive, archivePlanId } from "@beep/repo-cli/commands/Goals/Archive.service";
-import { GoalExplorationPathState, goalPacketFindings } from "@beep/repo-cli/commands/Goals/Doctor";
+import {
+  explorationArchiveFindings,
+  GoalExplorationPathState,
+  goalPacketFindings,
+} from "@beep/repo-cli/commands/Goals/Doctor";
 import { decodeGoalManifest } from "@beep/repo-cli/commands/Goals/Goals.schemas";
 import { GoalPacketRecord } from "@beep/repo-cli/commands/Goals/Inventory";
 import { GoalManifestFormatter } from "@beep/repo-cli/commands/Goals/Manifest.service";
@@ -289,6 +293,24 @@ describe("goals archive", () => {
       assert.strictEqual(A.length(retained) + A.length(archived) + A.length(active), 0);
     })
   );
+
+  it("doctor flags a terminal exploration with neither archive nor retentionReason as advisory", () => {
+    const flagged = explorationArchiveFindings("gone", explorationManifest("gone", "killed"));
+    assert.deepStrictEqual(
+      A.map(flagged, (finding) => [finding.slug, finding.kind, finding.severity] as const),
+      [["explorations/gone", "archive-decision-missing", "advisory"]]
+    );
+    const quiet = [
+      explorationManifest("open", "active"),
+      explorationManifest("kept", "graduated", { retentionReason: "Live fixtures." }),
+      explorationManifest("archived", "graduated", { archive: { ...ARCHIVE_BLOCK, path: "explorations/archived" } }),
+      "{ not json",
+    ];
+    assert.deepStrictEqual(
+      A.flatMap(quiet, (text) => explorationArchiveFindings("x", text)),
+      []
+    );
+  });
 
   it.layer(TestLayer, { timeout: "60 seconds" })((it) => {
     it.effect("plans terminal packets in index order with keep/remove partitions and inbound links", () =>
