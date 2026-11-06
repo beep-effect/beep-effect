@@ -1,84 +1,71 @@
 # GOAL: deliver eyecite capability parity as an Effect-native citation engine
 
-Use current `beep-effect` checkout and repo-relative paths.
+Ship an attributed, schema-first, Effect-native engine with exhaustive observable
+parity to Free Law Project eyecite 2.7.6, verified source evidence, lawful schema
+transforms, and only proven TypeScript-port extensions. Use this checkout.
 
-Outcome: ship an attributed, schema-first, Effect-native engine with observable
-capability parity to pinned Free Law Project eyecite 2.7.6, exact verified
-source evidence, lawful schema transforms, and only proven TypeScript-port
-extensions.
+Read `AGENTS.md`, architecture/skills, prerequisites, and packet in
+`goals/README.md` order. Repo law prevails.
 
-Read `AGENTS.md` (`CLAUDE.md`), applicable architecture/skills, both prerequisite
-contracts, and this packet in `goals/README.md` order. Repository law prevails.
-
-Oracle: official eyecite commit
-`04d82c032ad5fd0f9ab72a61c87110c46ee8f52e`. Optional live maintainer clone:
+Oracle: `04d82c032ad5fd0f9ab72a61c87110c46ee8f52e`; optional live clone:
 `EYECITE_ORACLE_ROOT`. Committed fixtures/accounting are the portable gate.
-`eyecite-ts` and `eyecite-js` are differential/extension references only.
+`eyecite-ts`/`eyecite-js` are differential/extension references only.
 
 Blocked by:
 
 - `goals/citation-verified-span-substrate`
 - `goals/court-reporter-vocabulary`
 
-P0 accounting may proceed. Before P1, both prerequisite contracts must be
-available and `history/evidence/prerequisite-compatibility.md` must record their
-exact symbols, public imports, versions, compatibility, and approved
-adaptations. Until then, separation/removal decisions are binding but target
-field/import/version details are provisional.
+P0 may proceed. Before P1, both contracts must be available and
+`history/evidence/prerequisite-compatibility.md` must record exact symbols,
+public imports, versions, compatibility, and approved adaptations. Until then,
+separation/removal binds; target fields/imports/versions are provisional.
 
 Requirements:
 
-1. Port behavior and exhaustive coverage, not donor classes or file layout.
-2. Reconcile a static source inventory with runtime oracle cases. The portable
-   checker must reject every missing, duplicate, nonterminal, unlicensed, or
-   unexplained row.
-3. Give every TypeScript-port export/test behavior one evidenced disposition:
-   adopted, subsumed, rejected, or follow-up. Donor installs require explicit
-   authorization and frozen lockfiles.
-4. Freely replace provisional citation schemas. Separate semantic citations,
+1. Port behavior and exhaustive coverage, not donor layout/classes.
+2. Reconcile static inventory and runtime oracle cases. Portable checks reject
+   every missing, duplicate, nonterminal, unlicensed, or unexplained row.
+3. Evidence every TypeScript export/test disposition: adopted, subsumed,
+   rejected, or follow-up. Donor installs need explicit authorization and frozen lockfiles.
+4. Replace provisional schemas as needed. Separate semantic citations,
    verified mentions, document-local mention/authority IDs, resolution data,
-   document relationships, and run diagnostics. Reserve shared
-   `LawPractice.CitationId` for a persisted entity.
+   document relationships, and run diagnostics. Reserve
+   `LawPractice.CitationId` for persisted entities.
 5. Publish semantic schemas from law-practice domain; the raw-text request,
    closed errors, ports, and `CitationEngine` `Context.Service` from
    `@beep/law-practice-use-cases/server`; test fixtures from `/test`; and the
-   live Layer from `@beep/law-practice-server/layer`. Publish no client surface
-   unless a safe consumer is proved.
-6. Every service method has `R = never`. Named modes are schema data; callable
-   cleaners/tokenizers are injected server services, never function-valued
-   request fields.
-7. The `Citation` schema is its own structured codec; do not add a redundant
-   wire model. `BluebookFromFullCitation` must accept
+   live Layer from `@beep/law-practice-server/layer`. Client surfaces need a proved safe consumer.
+6. Every service method has `R = never`. Modes are schema data; callable
+   cleaners/tokenizers are injected server services, never request fields.
+7. `Citation` is its own structured codec; no redundant wire model.
+   `BluebookFromFullCitation` must accept
    `FullCitation.Type` in the exact `S.decodeEffect(...)(citation)` call and
    declare separate information and directional-totality laws.
 8. Ambiguous, unresolved, and unknown citations are data. Boundary failures
    use a closed tagged error union. Enforce schema-owned resource limits,
    interruptibility-aware regex safety, clock-controlled timing, and
    privacy-safe spans.
-9. Case/Id./supra/35 U.S.C./37 C.F.R. are the first internal slice, not the
-   completion boundary. Classify 35 U.S.C. under canonical `FullLawCitation`;
-   audit 37 C.F.R. before calling any residual behavior an extension.
+9. Case/Id./supra/35 U.S.C./37 C.F.R. are the first slice, not completion.
+   Classify 35 U.S.C. as `FullLawCitation`; audit 37 C.F.R. before calling
+   residual behavior an extension.
 10. Deliver packet, implementation, corpus, proof, reflection, and lifecycle
-    update in one PR. Use phase-local green commits and do not freeze a public
-    completion claim until all accounting and quality gates pass.
+    update in one PR. Use phase-local green commits; claim completion only after
+    all accounting and quality gates pass.
 
 Approved 2026-10-29: native HTML resource exhaustion fails without partial
 output per `ops/html-safety-exception.json`. Other parity duties remain.
 
-Approved 2026-11-02: publish ready work in one ongoing draft PR without waiting
-for full verification or local compute. Record passed/pending checks, use
-hosted CI, and continue the full goal there. Publication timing only.
+Approved 2026-11-02; draft status later superseded: push ready work using
+hosted CI without waiting on verification/local compute. Record
+passed/pending checks. Keep PR #2511 ready for review while continuing the full
+goal. Draft status is no acceptance gate; review readiness neither claims
+completion nor authorizes merging. All acceptance requirements remain.
 
-Superseded by the operator's later instruction: keep PR #2511 ready for review
-and push ready changes while continuing this goal. Draft status is not an
-acceptance gate. Readiness for review does not claim completion or authorize
-merging; all accounting, parity, safety and closeout requirements still apply.
-
-Approved 2026-11-05: after PR #2511 merged, continue the unchanged goal in a
-follow-up PR, starting with the committed scanner and word-boundary changes.
-This is an explicit exception to the one-PR delivery and reviewability stop
-condition. Preserve the prior PR and evidence links; all acceptance requirements
-remain binding. See `decisions/2026-11-05-follow-up-publication.md`.
+Approved 2026-11-05: after #2511 merged, continue unchanged in a follow-up PR,
+starting with scanner/word-boundary work. Exception: one-PR delivery/reviewability
+only. Keep prior PR/evidence links and all acceptance duties. See
+`decisions/2026-11-05-follow-up-publication.md`.
 
 Stop without weakening scope on incompatible prerequisites, unprovable
 exhaustive parity, unrecorded safety/fidelity divergence, or loss of one-PR

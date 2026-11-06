@@ -171,7 +171,8 @@
     "bun run beep yeet verify",
     "bun run beep lint reflection-artifacts",
     "bun run goals/citation-extraction-engine/ops/check-cleaner-pipeline.ts",
-    "python3 goals/citation-extraction-engine/ops/verify-cleaner-unicode.py"
+    "python3 goals/citation-extraction-engine/ops/verify-cleaner-unicode.py",
+    "python3 goals/citation-extraction-engine/ops/verify-case-name-process.py --self-test"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
@@ -424,6 +425,14 @@
     {
       "path": "ops/probe-regex-boundaries.py",
       "purpose": "Observe word-boundary grammar/profiles/capture modes in both pinned engines, preserving empty-input and parser-only differences."
+    },
+    {
+      "path": "ops/probe-case-name-process.py",
+      "purpose": "Execute original stop-word cleaning and case-name processing on real built-in citation/document objects, retaining ordered regex calls and pre/post failure mutations."
+    },
+    {
+      "path": "ops/verify-case-name-process.py",
+      "purpose": "Seal all source case-name processing bytes and dependencies, reject eight evidence corruptions, and optionally require exact pinned-oracle replay; no target-parity verdict."
     }
   ]
 }
