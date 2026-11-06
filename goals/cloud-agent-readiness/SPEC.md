@@ -306,4 +306,16 @@ decisions (D8–D40), L0–L4 and their boundaries are unchanged. D41 (advisory
 | Id | Decision | Consequence |
 | --- | --- | --- |
 | D42 | The operator explicitly expanded the cloud scope to set up Claude, Codex and Cursor cloud environments, spending existing expiring included credits only: no purchases, paid overage, new paid endpoints or plan changes. Current names replace retired ones: the bootstrap is `scripts/cloud/bootstrap.sh` (the retired `scripts/cloud-session-setup.sh` is not recreated), and the cloud runbook is `docs/runbooks/cloud-environments.md` (no separate `cloud-sessions.md` is created; acceptance row 5's runbook requirement reads against it). Per-vendor qualification needs its own receipt: an environment saved or a snapshot built is bootstrap evidence, not agent qualification, and no account count is claimed beyond collected receipts. | P3 is complete on #2486 (`43d0a511`). Renaming waives no obligation: D1–D7 and every original acceptance criterion still bind, read against the current names. The P1 acceptance rows were met by the retired script and stay as its evidence; their obligations carry over to `scripts/cloud/bootstrap.sh`, and the D2 denial path for the current bootstrap is an open, unqualified gap (Verification Matrix). The Verification Matrix uses the current names. Evidence, blockers and next work: [`history/2026-11-01-fleet-cloud-setup.md`](./history/2026-11-01-fleet-cloud-setup.md). Reverse by restoring the prior matrix rows and phase status; no tracked script or runbook is added or removed. |
-| D43 | Local audit clarification (2026-11-05): D30's Linux development/parity baseline is this packet's named workflow; optional additions outside it require a specific workflow. Vendor-VM bootstrap preparation is a separate, curated scope. | Resolves the criteria/amendment wording without adding a tool, installation, authentication, host-admission or cloud-use permission. Existing exclusions and proof requirements remain. Reverse this documentation clarification by reverting its commit; no operational state changed. |
+
+## Decision log
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug cloud-agent-readiness`; add a `kind: decision` file there, never edit this block._
+
+### Clarify Linux baseline and vendor bootstrap scope, 2026-11-06
+
+The existing Linux development/parity baseline is this packet named workflow. Optional additions outside it require a specific workflow. Vendor-VM bootstrap preparation is a separate curated scope. This clarification adds no tool, installation, authentication, host-admission or cloud-use permission; existing exclusions and proof requirements remain. It replaces only the local audit clarification formerly labelled D43, preserving earlier decisions.
+
+Reverse: Revert the documentation clarification; no operational state changed.
+
+<!-- beep:decisions:end -->
