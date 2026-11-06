@@ -65,6 +65,30 @@ const tags = (issues: ReadonlyArray<MarkdownConformanceIssue>): ReadonlyArray<Ma
   A.map(issues, ({ _tag }) => _tag);
 
 describe("Markdown semantic conformance", () => {
+  it("exposes the named heading domain helpers without changing its wire values", () => {
+    expect(HeadingLevel.Enum).toEqual({ number1: 1, number2: 2, number3: 3, number4: 4, number5: 5, number6: 6 });
+    expect(HeadingLevel.is.number2(2)).toBe(true);
+    expect(HeadingLevel.is.number2(3)).toBe(false);
+    expect(
+      HeadingLevel.match(2, {
+        number1: () => "h1",
+        number2: () => "h2",
+        number3: () => "h3",
+        number4: () => "h4",
+        number5: () => "h5",
+        number6: () => "h6",
+      })
+    ).toBe("h2");
+
+    A.forEach([1, 2, 3, 4, 5, 6], (level) => {
+      const decoded = S.decodeUnknownResult(HeadingLevel)(level);
+      assertSuccess(decoded, level);
+    });
+    A.forEach([0, 7, 2.5, "2", null], (value) => {
+      expect(Result.isFailure(S.decodeUnknownResult(HeadingLevel)(value))).toBe(true);
+    });
+  });
+
   it("exposes six flat heading payload cases with exhaustive helpers", () => {
     const heading = HeadingValue.cases[2].make({ children: [Text.make({ value: "Overview" })] });
 

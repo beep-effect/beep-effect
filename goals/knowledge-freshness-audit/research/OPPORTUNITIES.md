@@ -149,3 +149,23 @@ missing evidence.
 - Ownership: the audit owns these completed-packet qualifications. The retired
   Glob example is routed separately to the active DECISIONS owner in PR #2780;
   no competing source edit or unverified repair claim is included here.
+
+## P4 named-domain omission and focused-test navigation, 2026-11-06
+
+- Work: check T11 C2 against current Markdown models rather than repeating
+  an already landed opaque-brand repair.
+- Evidence: HeadingLevel remained the sole S.Literals occurrence in Md.model.ts,
+  a named domain for which current guidance prescribes LiteralKit. A new
+  keyed-helper test failed before the one-expression repair; the previous
+  24 tests passed. All 25 passed after repair.
+- Impact: missing keyed domain helpers established by the focused test. No
+  rendering failure or production impact established.
+- Test friction: the first root-level invocation found no tests because this
+  package config resolves test globs from its working directory. Corrected to
+  the package directory. An edit then used a repo-relative path from that
+  directory and failed before writing; source remained unchanged, and its
+  repeated red run was retained. The corrected path produced the passing run.
+- Prevention: use an explicit package working directory for focused tests and
+  make edit paths relative to that same directory. Total delay is unknown.
+- Ownership: this lane owns only the named-domain expression, its regression
+  test and audit record. Other owners, PM and ADHD remain separate.
