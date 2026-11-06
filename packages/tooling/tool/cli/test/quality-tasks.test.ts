@@ -10059,6 +10059,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const scriptsByDirectory = {
               plain: { test: "vitest" },
               unsplit: { "test:integration": "vitest run test/integration" },
+              serial: { "test:integration:serial": "vitest run test/integration" },
               split: {
                 "test:integration": "bun run test:integration:parallel",
                 "test:integration:parallel": "vitest run test/integration",
@@ -10076,10 +10077,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               ["--affected", "--summarize"],
               ["--filter=@beep/unsplit"],
               ["--filter=@beep/split"],
+              ["--filter=@beep/serial"],
+              ["--filter", "@beep/unsplit"],
+              ["--filter=!@beep/unsplit"],
+              ["--since=HEAD^"],
               ["--filter=@beep/unsplit", "--", "--testNamePattern=fixture"],
             ]) {
               const selected = yield* unsplitIntegrationTaskArgsForTesting(root, args);
-              expect(selected).toEqual(["--filter=!@beep/split", ...args]);
+              expect(selected).toEqual(["--filter=!@beep/serial", "--filter=!@beep/split", ...args]);
             }
             const noIntegration = yield* encodeJson({ name: "@beep/unsplit", private: true, scripts: {} });
             yield* fs.writeFileString(path.join(root, "packages/unsplit/package.json"), noIntegration);
