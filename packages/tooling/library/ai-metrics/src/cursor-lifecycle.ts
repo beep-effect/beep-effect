@@ -3,7 +3,6 @@
  * @since 0.0.0
  */
 
-import { createConnection } from "node:net";
 import { Sha256Hex } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as Str from "effect/String";
@@ -15,8 +14,9 @@ import {
   CursorLifecycleSourceContract,
   failure,
 } from "./internal/cursor-lifecycle-schemas.ts";
+import { exchangeLifecycle } from "./internal/lifecycle-exchange.ts";
 
-const { decodeCallback, encodeCallback, decodeAcknowledgement } = CursorLifecycleCodecs;
+const { decodeCallback, encodeCallback } = CursorLifecycleCodecs;
 
 export { CursorLifecycleError, CursorLifecyclePolicy, CursorLifecycleRuntime };
 
@@ -75,21 +75,5 @@ export const forwardCursorLifecycleHook = Effect.fn("AiMetrics.cursorLifecycle.f
     return yield* failure("callback");
   const native = yield* decodeCallback(body).pipe(Effect.mapError(() => failure("callback")));
   const projected = yield* encodeCallback(native).pipe(Effect.mapError(() => failure("callback")));
-  const reply = yield* Effect.callback<string, CursorLifecycleError>((resume) => {
-    const socket = createConnection({ path: socketPath, allowHalfOpen: true });
-    let output = "";
-    let size = 0;
-    socket.once("connect", () => socket.end(projected));
-    socket.on("data", (chunk: Uint8Array) => {
-      size += chunk.byteLength;
-      if (size > 1024) {
-        socket.destroy();
-        resume(Effect.fail(failure("transport")));
-      } else output += new TextDecoder().decode(chunk);
-    });
-    socket.once("error", () => resume(Effect.fail(failure("transport"))));
-    socket.once("end", () => resume(Effect.succeed(output)));
-    return Effect.sync(() => socket.destroy());
-  }).pipe(Effect.timeoutOrElse({ duration: "5 seconds", orElse: () => Effect.fail(failure("transport")) }));
-  return yield* decodeAcknowledgement(reply).pipe(Effect.mapError(() => failure("transport")));
+  return yield* exchangeLifecycle(socketPath, projected, 5000);
 });

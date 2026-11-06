@@ -40,6 +40,8 @@ export * from "./archive.ts";
  * @since 0.0.0
  */
 export * from "./circuit-breaker.ts";
+export * from "./claude-cowork-lifecycle.ts";
+export * from "./claude-cowork-plugin.ts";
 /**
  * Docker Compose rendering for the local Phoenix observability backend that
  * receives exported spans. Examples live on the owning declarations in
