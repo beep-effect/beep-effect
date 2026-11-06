@@ -28,10 +28,12 @@ import { TranscriptSweepInput } from "@beep/repo-ai-metrics/transcript-sweep";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
-import { NodeServices } from "@effect/platform-node";
+import * as NodeChildProcessSpawner from "@effect/platform-node/NodeChildProcessSpawner";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import * as NodeHttpServer from "@effect/platform-node/NodeHttpServer";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as Clock from "effect/Clock";
@@ -220,6 +222,38 @@ const futureClock = Effect.gen(function* () {
 });
 
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("gates quota ingestion behind admission and exposes only its separate historical view", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const snapshot = {
+        snapshotId: id("1"),
+        sourceEvidenceId: id("e"),
+        declaredHarness: "muse",
+        sourceKind: "registered-proxy-account-status",
+        observedAt: 0,
+        report: { _tag: "Unknown", reason: "not-observed" },
+      };
+      const denied = yield* f.worker.recordAvailability(snapshot, 0).pipe(Effect.flip);
+      expect(denied.reason).toBe("paused");
+      const missing = yield* f.worker.availabilityOutcome(id("1"), 0);
+      assertNone(missing);
+      yield* f.worker.resume;
+      const first = yield* f.worker.recordAvailability(snapshot, 0);
+      yield* f.worker.pause;
+      const view = yield* f.worker.availabilityOutcome(id("1"), 0);
+      expect(O.getOrThrow(view)).toMatchObject({
+        currentAvailability: "unknown",
+        invocationBinding: "unknown",
+        receipt: first,
+      });
+      const noLaunch = yield* f.worker.launchOutcome(id("1"), 0);
+      assertNone(noLaunch);
+      expect((yield* f.worker.stats).pages).toBe(0);
+    })
+  )
+);
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("starts paused, refuses both HTTP encodings and drains a durable send before maintenance", () =>
     Effect.gen(function* () {
       const f = yield* fixture(true);
@@ -382,61 +416,73 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   )
 );
 
-it.layer(Layer.fresh(Layer.merge(sqlLayer, NodeServices.layer)), { timeout: "30 seconds", excludeTestServices: true })(
-  (it) =>
-    it.effect("gates real filesystem discovery and its durable reader behind worker admission", () =>
-      Effect.gen(function* () {
-        const f = yield* fixture();
-        const fs = yield* FileSystem.FileSystem;
-        const dir = yield* fs.makeTempDirectoryScoped();
-        yield* fs.writeFileString(
-          `${dir}/rollout-synthetic.jsonl`,
-          '{"type":"response_item","payload":{"type":"message"}}\n'
-        );
-        const discovery = yield* makeTranscriptDiscovery(
-          TranscriptDiscoveryInput.make({
-            roots: [{ path: dir, source: "codex", retired: false }],
-            hashSalt: f.config.nativeHttp.hashSalt,
-            maxDepth: 2,
-            maxEntries: 1,
-            maxFiles: 32,
-            maxCycleEntries: 128,
-          })
-        );
-        const policy = TranscriptDiscoveryReadPolicy.make({ maxBytes: 512, maxLineBytes: 256, maxFrames: 1 });
-        const pipe25 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
-        expect(pipe25).toMatchObject({ reason: "paused" });
-        expect((yield* f.worker.stats).pages).toBe(0);
-        yield* f.worker.resume;
-        const result = yield* f.worker.discover(discovery, policy);
-        expect(result.discovery.roots[0]).toMatchObject({ cycle: 1, state: "scanning" });
-        expect(result.discovery.activeHelpers).toBe(1);
-        expect((yield* f.worker.stats).pages).toBe(0);
-        yield* f.worker.pause;
-        const pipe26 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
-        expect(pipe26).toMatchObject({ reason: "paused" });
-        yield* f.worker.resume;
-        const restarted = yield* f.worker.discover(discovery, policy);
-        expect(restarted.discovery.roots[0]).toMatchObject({ cycle: 2, state: "scanning" });
-        const accepted = yield* f.worker.discover(discovery, policy);
-        expect(accepted.sweep.outcomes[0]?._tag).toBe("Accepted");
-        expect((yield* f.worker.stats).pages).toBe(1);
-        const other = yield* makeTranscriptDiscovery(
-          TranscriptDiscoveryInput.make({
-            roots: [{ path: dir, source: "codex", retired: false }],
-            hashSalt: f.config.nativeHttp.hashSalt,
-            maxDepth: 2,
-            maxEntries: 1,
-            maxFiles: 1,
-            maxCycleEntries: 128,
-          })
-        );
-        const pipe27 = yield* f.worker.discover(other, policy).pipe(Effect.flip);
-        expect(pipe27).toMatchObject({ reason: "configuration" });
-        yield* f.worker.pause;
-        expect((yield* f.worker.stats).pages).toBe(1);
-      })
+// Real filesystem discovery and Git root metadata are the subject, so a memory filesystem
+// changes the observed source. The spawner is limited by the existing discovery implementation.
+it.layer(
+  Layer.fresh(
+    Layer.merge(
+      sqlLayer,
+      NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(Layer.merge(NodeFileSystem.layer, NodePath.layer)))
     )
+  ),
+  {
+    timeout: "30 seconds",
+    excludeTestServices: true,
+  }
+)((it) =>
+  it.effect("gates real filesystem discovery and its durable reader behind worker admission", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const fs = yield* FileSystem.FileSystem;
+      const dir = yield* fs.makeTempDirectoryScoped();
+      yield* fs.writeFileString(
+        `${dir}/rollout-synthetic.jsonl`,
+        '{"type":"response_item","payload":{"type":"message"}}\n'
+      );
+      const discovery = yield* makeTranscriptDiscovery(
+        TranscriptDiscoveryInput.make({
+          roots: [{ path: dir, source: "codex", retired: false }],
+          hashSalt: f.config.nativeHttp.hashSalt,
+          maxDepth: 2,
+          maxEntries: 1,
+          maxFiles: 32,
+          maxCycleEntries: 128,
+        })
+      );
+      const policy = TranscriptDiscoveryReadPolicy.make({ maxBytes: 512, maxLineBytes: 256, maxFrames: 1 });
+      const pipe25 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
+      expect(pipe25).toMatchObject({ reason: "paused" });
+      expect((yield* f.worker.stats).pages).toBe(0);
+      yield* f.worker.resume;
+      const result = yield* f.worker.discover(discovery, policy);
+      expect(result.discovery.roots[0]).toMatchObject({ cycle: 1, state: "scanning" });
+      expect(result.discovery.activeHelpers).toBe(1);
+      expect((yield* f.worker.stats).pages).toBe(0);
+      yield* f.worker.pause;
+      const pipe26 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
+      expect(pipe26).toMatchObject({ reason: "paused" });
+      yield* f.worker.resume;
+      const restarted = yield* f.worker.discover(discovery, policy);
+      expect(restarted.discovery.roots[0]).toMatchObject({ cycle: 2, state: "scanning" });
+      const accepted = yield* f.worker.discover(discovery, policy);
+      expect(accepted.sweep.outcomes[0]?._tag).toBe("Accepted");
+      expect((yield* f.worker.stats).pages).toBe(1);
+      const other = yield* makeTranscriptDiscovery(
+        TranscriptDiscoveryInput.make({
+          roots: [{ path: dir, source: "codex", retired: false }],
+          hashSalt: f.config.nativeHttp.hashSalt,
+          maxDepth: 2,
+          maxEntries: 1,
+          maxFiles: 1,
+          maxCycleEntries: 128,
+        })
+      );
+      const pipe27 = yield* f.worker.discover(other, policy).pipe(Effect.flip);
+      expect(pipe27).toMatchObject({ reason: "configuration" });
+      yield* f.worker.pause;
+      expect((yield* f.worker.stats).pages).toBe(1);
+    })
+  )
 );
 
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
