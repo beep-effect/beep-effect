@@ -1399,11 +1399,8 @@ describe("inert owner native adapter", () => {
         const result = yield* readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external").pipe(
           Effect.result
         );
-        if (app === 7 || app === null) result.pipe(Result.isSuccess, assertTrue);
-        else {
-          result.pipe(Result.isFailure, assertTrue);
-          if (Result.isFailure(result)) expect(result.failure.reason).toBe(app === "malformed" ? "evidence" : "gate");
-        }
+        deepStrictEqual(Result.isSuccess(result), app === 7 || app === null);
+        if (Result.isFailure(result)) expect(result.failure.reason).toBe(app === "malformed" ? "evidence" : "gate");
       }).pipe(offline, github.provide);
     });
   }
@@ -1459,8 +1456,7 @@ describe("inert owner native adapter", () => {
         const result = yield* readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external").pipe(
           Effect.result
         );
-        if (failedPage) result.pipe(Result.isFailure, assertTrue);
-        else result.pipe(Result.isSuccess, assertTrue);
+        deepStrictEqual(Result.isSuccess(result), !failedPage);
         expect(A.some(github.calls, (call) => call.query.get("page") === "2")).toBe(true);
         if (!failedPage) {
           expect(A.filter(github.calls, (call) => Str.endsWith("/statuses")(call.path))).toHaveLength(2);
@@ -1701,12 +1697,9 @@ describe("authority receipt root", () => {
         const result = yield* readOwnerCheckpointEvidenceReceipts(root, binding, manifest, policy, digest).pipe(
           Effect.result
         );
-        if (fault === "none") result.pipe(Result.isSuccess, assertTrue);
-        else {
-          result.pipe(Result.isFailure, assertTrue);
-          if (Result.isFailure(result))
-            expect(result.failure.reason).toBe(fault === "base-moved" ? "binding" : "evidence");
-        }
+        deepStrictEqual(Result.isSuccess(result), fault === "none");
+        if (Result.isFailure(result))
+          expect(result.failure.reason).toBe(fault === "base-moved" ? "binding" : "evidence");
       }).pipe(provideTestLayer(NodeFileSystem.layer), offline)
     );
   }
