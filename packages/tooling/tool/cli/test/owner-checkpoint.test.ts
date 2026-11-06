@@ -1048,10 +1048,9 @@ describe("dispatch actual base and causal release fence", () => {
     const resume = Promise.withResolvers<void>();
     const github = mergeGithub(
       () => ({ body: livePull() }),
-      async () => {
+      () => {
         started.resolve();
-        await resume.promise;
-        return { body: { object: { type: "commit", sha: merge } } };
+        return resume.promise.then(() => ({ body: { object: { type: "commit", sha: merge } } }));
       }
     );
     return Effect.gen(function* () {
