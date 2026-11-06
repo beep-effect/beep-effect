@@ -54,6 +54,12 @@
         ]
       },
       {
+        "name": "@beep/alchemy-postgres",
+        "patterns": [
+          "packages/drivers/alchemy-postgres/src/**"
+        ]
+      },
+      {
         "name": "@beep/anthropic",
         "patterns": [
           "packages/drivers/anthropic/src/**"
@@ -1359,6 +1365,15 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/alchemy-postgres",
+        "allow": [
+          "@beep/alchemy-postgres"
+        ],
+        "allowTypeOnly": [
+          "@beep/alchemy-postgres"
         ]
       },
       {

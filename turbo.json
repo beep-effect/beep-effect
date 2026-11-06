@@ -242,6 +242,7 @@
         "packages/documents/use-cases/package.json",
         "packages/drivers/acp/package.json",
         "packages/drivers/ai-provider-cli/package.json",
+        "packages/drivers/alchemy-postgres/package.json",
         "packages/drivers/anthropic/package.json",
         "packages/drivers/box-provisioning/package.json",
         "packages/drivers/box/package.json",
@@ -1287,6 +1288,9 @@
         "$TURBO_ROOT$/packages/tooling/library/ai-sync/src/Skills.schemas.ts",
         "$TURBO_ROOT$/packages/tooling/library/ai-sync/src/SkillsLock.schemas.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/RepoWorkspaces.ts",
+        "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/artifacts/ArtifactIo.ts",
+        "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/artifacts/GeneratedFileDrift.ts",
+        "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/artifacts/index.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/cli/CommandErrorFields.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/cli/ExitCodeError.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/cli/Json.ts",
@@ -1321,6 +1325,8 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/EffectFn.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/EntityKitFreeze.model.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/EntityKitFreeze.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/FrozenGrantSet.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/Laws.errors.ts",
@@ -5789,6 +5795,26 @@
       ]
     },
     "//#lint:retired-effect-paths": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["@beep/repo-cli#lint:policy-fingerprint:laws"],
+      "inputs": [
+        "**/*",
+        "!.git/**",
+        "!**/.git/**",
+        "!.repos/**",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**",
+        "!.claude/worktrees/**",
+        "!**/src-tauri/target/**"
+      ]
+    },
+    "//#lint:entity-kit-freeze": {
       "cache": true,
       "outputs": [],
       "dependsOn": ["@beep/repo-cli#lint:policy-fingerprint:laws"],

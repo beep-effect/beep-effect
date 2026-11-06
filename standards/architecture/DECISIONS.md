@@ -2475,3 +2475,77 @@ Rejected:
   keeps the composition root in tooling under a standing exception.
 - Bare `@beep/<group>` names. They collide with product vocabulary such as
   knowledge, harness, files, and media.
+
+## 2026-11-06: Slices Adopt `@alchemy.run/domain`; The Entity Kit Is Frozen
+
+- **Status:** Active
+- **Amends:** "CQRS, Events, Workflows, Cluster, And Read Models" and the
+  domain/use-case/server role vocabularies in `standards/ARCHITECTURE.md`
+
+Decision:
+
+Event-sourced slices declare their write model with `@alchemy.run/domain`
+(pinned 2.0.0-beta.85, bumped only as a named goal task): `Event`, `Command`,
+`Rejection`, `Aggregate`, `View`, `Policy`, `Saga`, `Projection`, `Stream`,
+`ExternalSystem`, `RequestContext`, `Api` and `Model`. Slice `domain` packages
+import it directly, the way they import `effect/Schema`; there is no
+`@beep/shared-domain` facade.
+
+Placement follows purity. `domain` holds the declarations that are pure:
+events, commands, rejections, aggregates (decide/evolve), views, streams,
+external-system contracts, request contexts and middleware declarations.
+`use-cases` holds the assembled `Model` and each `Api`, plus policy, saga and
+projection declarations; alchemy's command dispatch is the use-case execution
+boundary. `server` instantiates: the Platform Layer, the workflow engine, the
+`toLayer` implementations of policies, sagas, projections and external systems,
+the Session middleware's server half, and HTTP/MCP/CLI hosting. Declarative
+constructors describe; Layers host.
+
+Event streams are the system of record. Existing tables survive as read models
+rebuilt by Projections; a slice cuts over as a single writer (genesis import of
+its rows as version-1 events, then the Model is the only writer and the
+effect-drizzle write path is deleted in the same PR). Every stored event
+carries a schema version (a static on the event class, default 1); upcasters
+run at read and stored events are never rewritten. Provenance (principal,
+source kind, timestamp) is a `RequestContext` the Session middleware provides;
+the Platform driver persists it beside the event, never as payload fields
+unless the actor is business-meaningful. Stream ids are the existing branded
+public ids; unique-value reservations are org-qualified.
+
+The persistence Platform is a driver: `@beep/alchemy-postgres`
+(`packages/drivers/alchemy-postgres`) implements the alchemy `Platform` contract
+on Postgres and provides the workflow engine through `effect/cluster`.
+`Domain.InMemory` hosts tests and Stories. A conformance suite runs the same
+scenarios on both.
+
+The hand-rolled entity kit in `packages/shared/domain/src/entity/`
+(`EntityKit`, `BaseEntity`, `AuditEntity`, `OrgEntity`, `ProductEntity`,
+`primitives`, and the `entity` barrel) is frozen: forbidden in new work and
+enforced by `bun run beep laws entity-kit-freeze --check` against the committed
+baseline `standards/entity-kit-freeze.baseline.jsonc`, which only shrinks. Each
+slice migration removes its own importers; the kit is deleted with its last
+consumer. `Principal`, `SourceKind`, `PublicEntityId`, `EntityId` and
+`EntityRef` survive as explicit value schemas and are not frozen.
+
+Rationale:
+
+Operator ruling 2026-11-03 (D0) and the grilled decisions D1–D17 in
+`explorations/alchemy-domain-adoption/DECISIONS.md`, graduated into
+`goals/alchemy-vault-sync-slice`. The kit bakes SQL column metadata,
+inheritance and audit stamping into every model and is a weaker DDD substrate
+than alchemy's block set. The P0 spikes
+(`goals/alchemy-vault-sync-slice/research/01-p0-spikes.md`) showed field
+annotations and `LiteralKit` survive alchemy constructors, that the kernel hands
+a driver the encoded request context with every command, and that the kernel
+envelope has no version or provenance slot, which fixes where each lives.
+
+Rejected:
+
+- Cloudflare Durable Objects as product storage. Product data stays on Postgres.
+- A `@beep/shared-domain` facade over alchemy. It would become the next kit.
+- Keeping CRUD rows authoritative with alchemy as a decision layer, or a
+  dual-write shadow period. Both keep two sources of truth.
+- Deleting the kit in the first migration. 117 files across nine slices import
+  it; a strangler keeps each slice's PR bounded.
+- Tracking alchemy betas continuously. 84 betas in 203 days with breaking
+  changes; each bump is a named task with a migration note.

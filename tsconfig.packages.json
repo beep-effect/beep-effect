@@ -112,6 +112,9 @@
       "path": "packages/drivers/ai-provider-cli"
     },
     {
+      "path": "packages/drivers/alchemy-postgres"
+    },
+    {
       "path": "packages/drivers/anthropic"
     },
     {

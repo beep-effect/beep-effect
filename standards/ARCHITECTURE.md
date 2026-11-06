@@ -1041,6 +1041,7 @@ Package-level composers use PascalCase:
 
 ```txt
 Api.ts
+Model.ts
 Rpc.ts
 Tools.ts
 Events.ts
@@ -1068,6 +1069,14 @@ TestLayer.ts
 | `.contracts.ts` | Driver-neutral DTOs shared by domain and use-cases.              |
 | `.events.ts`    | Domain events and event groups.                                  |
 | `.machine.ts`   | Pure lifecycle state machine.                                    |
+| `.command.ts`   | `Domain.Command` with the events and rejections it declares.     |
+| `.aggregate.ts` | `Domain.Aggregate`: state, `decide`, `evolve`, `reply`, `read`.  |
+| `.view.ts`      | `Domain.View`: a pure fold with `validate` as its boundary.      |
+| `.stream.ts`    | `Domain.Stream`: a per-key log clients read.                     |
+| `.external.ts`  | `Domain.ExternalSystem` contract (operations and schemas only).  |
+| `.context.ts`   | `Domain.RequestContext` a middleware provides.                   |
+| `.middleware.ts`| Middleware declaration (`RpcMiddleware.Service`) and its error.  |
+| `.rejection.ts` | A `Domain.Rejection` shared by several commands.                 |
 
 Domain role files never define handlers, clients, transports, runtimes,
 persistence, or driver access.
@@ -1089,6 +1098,9 @@ persistence, or driver access.
 | `.workflows.ts` | Durable workflow declarations or application workflow contracts.                    |
 | `.processes.ts` | Process managers/sagas coordinating multiple commands, events, ports, or workflows. |
 | `.schedulers.ts` | Scheduler contracts or schedule declarations coordinating time-based work.          |
+| `.policy.ts`    | `Domain.Policy` reaction declaration (what it listens to; no handler).              |
+| `.saga.ts`      | `Domain.Saga` declaration (key, input, rejections; no handler).                      |
+| `.projection.ts`| `Domain.Projection` declaration (sources, key, events; no handler).                 |
 
 Use-cases publish explicit boundary subpaths:
 
@@ -1150,7 +1162,9 @@ migration, but they are not the canonical boundary contract.
 | `.event-handlers.ts`    | Side-effectful domain event reactions.                                                        |
 | `.cluster-handlers.ts`  | Cluster entity runtime handlers.                                                              |
 | `.workflow-handlers.ts` | Workflow runtime handlers.                                                                    |
-| `.projections.ts`       | Projection/read-model writers.                                                                |
+| `.projections.ts`       | Projection/read-model writers, including `Domain.Projection` `toLayer` handlers.              |
+| `.policy-handlers.ts`   | `Domain.Policy` `toLayer` handlers.                                                           |
+| `.saga-handlers.ts`     | `Domain.Saga` `toLayer` handlers.                                                             |
 | `.layer.ts`             | Concept-level server Layer composition.                                                       |
 
 ### Client Role Vocabulary
@@ -1285,6 +1299,8 @@ Drivers own technical engines and dev-safe wrappers:
 
 - Drizzle, Postgres, SQLite, EventLog, message storage, workflow engines,
   sharding, queues, locks, browser APIs, retries, and low-level config
+- event-store platforms, such as the `@alchemy.run/domain` `Platform` on
+  Postgres (`@beep/alchemy-postgres`)
 - technical errors, boundary-local layer constructors, and test layers
 - service facades that hide unsafe third-party shape
 
@@ -1709,6 +1725,57 @@ State machine placement:
 | Process manager / saga           | `use-cases/<Concept>.processes.ts`     |
 | Cluster runtime mailbox behavior | `server/<Concept>.cluster-handlers.ts` |
 | Client interaction state         | `client/<Concept>.machine.ts`          |
+
+### Event-Sourced Slices On `@alchemy.run/domain`
+
+A slice whose write model is event-sourced declares it with
+`@alchemy.run/domain` (decision 2026-11-06 in
+`standards/architecture/DECISIONS.md`): `Event`, `Command`, `Rejection`,
+`Aggregate`, `View`, `Policy`, `Saga`, `Projection`, `Stream`,
+`ExternalSystem`, `RequestContext`, `Api` and `Model`. Slice packages import it
+directly; there is no shared-kernel facade over it. The first such slice is
+`documents` vault-sync (`goals/alchemy-vault-sync-slice`).
+
+Placement follows purity. Declarative constructors describe; Layers host.
+
+| Block | Package | Role file | Hosted by |
+|-------|---------|-----------|-----------|
+| `Domain.Event`, `Domain.Rejection` | `domain` | beside their command in `.command.ts`, or `.events.ts` / `.rejection.ts` | the Platform |
+| `Domain.Command` | `domain` | `<Concept>/<VerbNoun>.command.ts` | the use-case dispatch boundary |
+| `Domain.Aggregate` (state, `decide`, `evolve`, `reply`, `read`) | `domain` | `<Concept>/<Concept>.aggregate.ts` | the Platform |
+| `Domain.View`, `Domain.Stream` | `domain` | `<Concept>/<Name>.view.ts`, `.stream.ts` | the Platform |
+| `Domain.RequestContext`, middleware declaration | `domain` | `<Name>.context.ts`, `<Name>.middleware.ts` | `server/<Name>.ts` provides the server half |
+| `Domain.ExternalSystem` contract | `domain` | `<Concept>/<Name>.external.ts` | `server` adapter named after the port |
+| `Domain.Policy`, `Domain.Saga`, `Domain.Projection` declarations | `use-cases` | `.policy.ts`, `.saga.ts`, `.projection.ts` | `server` `.policy-handlers.ts`, `.saga-handlers.ts`, `.projections.ts` (`toLayer`) |
+| `Domain.Model`, `Domain.Api` | `use-cases` | `Model.ts`, `Api.ts` composers | `server` Layer: Platform + workflow engine + handlers |
+| Platform driver | `drivers` | `@beep/alchemy-postgres` | app runtime |
+
+Rules that follow from the decision:
+
+- Event streams are the system of record. Legacy tables survive as read models
+  rebuilt by Projections; the cutover is single-writer (genesis import as
+  version-1 events, then the Model writes alone and the drizzle write path is
+  deleted in the same PR). No dual writes.
+- Every stored event carries a schema version: a static on the event class
+  (default 1), stamped by the driver at write and upcast at read. Stored events
+  are never rewritten.
+- Provenance (principal, source kind, timestamp) is a `RequestContext` the
+  Session middleware provides. The driver persists it beside the event; payload
+  fields carry an actor only when the actor is business-meaningful.
+- Stream ids are the existing branded public ids. Unique-value reservations and
+  tenant-local keys are org-qualified; membership is enforced by the Session
+  middleware, never inferred from the key.
+- Views are security boundaries: one view per audience, `validate` on every
+  read. An `Api` exposed over MCP serves Views only until the view-security
+  tests (revoked membership after subscription, cross-tenant key guessing,
+  stream history, one policy across CLI/MCP/HTTP) pass.
+- Kernel spans (`Domain.send`, `Domain.decide`, `Domain.view`, ...) nest under
+  the registered boundary spans of the dispatch adapter and the driver;
+  `attributes` on events and commands is the only way payload data reaches a
+  span, and it is audited for PII before deploy.
+- The entity kit in `packages/shared/domain/src/entity/` is frozen
+  (`bun run beep laws entity-kit-freeze --check`); a slice migration removes its
+  own importers.
 
 ## Layer Composition Without God Layers
 

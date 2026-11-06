@@ -1774,6 +1774,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:effect-imports-markdown",
         "lint:markdown-fences",
         "lint:retired-effect-paths",
+        "lint:entity-kit-freeze",
         "lint:retired-iri-authorities",
         "lint:schema-tag-idioms",
         "lint:holds",
@@ -1816,6 +1817,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       );
       expect(qualityLaneArgs(lanes, "lint:retired-effect-paths")).toEqual(
         expectedTurboArgs("lint:retired-effect-paths", ["--summarize"])
+      );
+      expect(qualityLaneArgs(lanes, "lint:entity-kit-freeze")).toEqual(
+        expectedTurboArgs("lint:entity-kit-freeze", ["--summarize"])
       );
       expect(qualityLaneArgs(lanes, "lint:retired-iri-authorities")).toEqual(
         expectedTurboArgs("lint:retired-iri-authorities", ["--summarize"])
@@ -5100,6 +5104,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:effect-imports-markdown",
         "lint:markdown-fences",
         "lint:retired-effect-paths",
+        "lint:entity-kit-freeze",
         "lint:retired-iri-authorities",
         "lint:schema-tag-idioms",
         "lint:holds",
@@ -5157,7 +5162,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "quality:test-tsgo",
       ]);
       expect(taskNames(O.getOrThrow(A.get(full, 1)))).toEqual([
-        ...pipe(A.get(local, 1), O.getOrThrow, taskNames, A.take(16)),
+        ...pipe(A.get(local, 1), O.getOrThrow, taskNames, A.take(17)),
         "knowledge:semantic-delta",
         "knowledge:refs-check",
         "lint:jsdoc-module-tags",
@@ -5263,6 +5268,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "lint:opaque-roundtrips",
           "lint:markdown-fences",
           "lint:retired-effect-paths",
+          "lint:entity-kit-freeze",
           "lint:retired-iri-authorities",
           "lint:schema-tag-idioms",
           "lint:holds",

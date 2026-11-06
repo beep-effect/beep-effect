@@ -22,6 +22,8 @@ import * as S from "effect/Schema";
 import { AllowlistCheckOptions, reportAllowlistCheckSummary, runAllowlistCheck } from "./AllowlistCheck.ts";
 import { EffectFnRulesOptions, runEffectFnRules } from "./EffectFn.ts";
 import { EffectImportCorpusMode, EffectImportRulesOptions, runEffectImportRules } from "./EffectImports.ts";
+import { EntityKitFreezeOptions } from "./EntityKitFreeze.model.ts";
+import { formatEntityKitFreezeFinding, runEntityKitFreeze } from "./EntityKitFreeze.ts";
 import { FrozenGrantSetRulesOptions, runFrozenGrantSetRules } from "./FrozenGrantSet.ts";
 import { MarkdownFencesOptions } from "./MarkdownFences.model.ts";
 import { formatMarkdownFenceFailure, MarkdownFenceTypechecker, runMarkdownFences } from "./MarkdownFences.ts";
@@ -587,6 +589,65 @@ const lawsRetiredEffectPathsCommand = Command.make(
 ).pipe(Command.withDescription("Check git-tracked text files for retired Effect module paths"));
 
 /**
+ * CLI command for the entity kit freeze law.
+ *
+ * **Example** (Reference the entity-kit-freeze subcommand)
+ *
+ * ```ts
+ * console.log("lawsEntityKitFreezeCommand")
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+const lawsEntityKitFreezeCommand = Command.make(
+  "entity-kit-freeze",
+  {
+    check: Flag.Boolean("check").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Fail when a file outside the baseline imports the frozen entity kit, or a baseline file no longer does"
+      )
+    ),
+    write: Flag.Boolean("write").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Prune the baseline to the files that still import the kit (seed it when missing)")
+    ),
+    json: Flag.Boolean("json").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Emit the complete law summary as schema-shaped JSON")
+    ),
+  },
+  Effect.fn(function* ({ check, json, write }) {
+    const summary = yield* runEntityKitFreeze(
+      EntityKitFreezeOptions.make({ cwd: process.cwd(), strictCheck: check, write })
+    );
+    const mode = write ? "write" : check ? "check" : "report";
+    const counters = [
+      `mode=${mode}`,
+      `scanned_files=${summary.scannedFiles}`,
+      `skipped_binary_files=${summary.skippedBinaryFiles}`,
+      `out_of_scope_files=${summary.outOfScopeFiles}`,
+      `importer_files=${summary.importerFiles}`,
+      `baseline_files=${summary.baselineFiles}`,
+      `pruned_files=${summary.prunedFiles}`,
+      `findings=${summary.findings.length}`,
+    ];
+
+    yield* json
+      ? printCommandJson(summary)
+      : printLines([
+          ...A.map(counters, (counter) => `[effect-governance-entity-kit-freeze] ${counter}`),
+          ...A.flatMap(summary.findings, formatEntityKitFreezeFinding),
+        ]);
+
+    if (summary.strictFailure) {
+      return yield* failWithReportedExit("effect-governance-entity-kit-freeze: check failed.");
+    }
+  })
+).pipe(Command.withDescription("Check that no new file imports the frozen shared-domain entity kit"));
+
+/**
  * CLI command for the Markdown TypeScript fence typecheck law.
  *
  * **Example** (Reference the markdown-fences subcommand)
@@ -859,6 +920,8 @@ export const lawsCommand = Command.make("laws", {}, () =>
     "- bun run beep laws effect-imports --write",
     "- bun run beep laws native-runtime --check",
     "- bun run beep laws effect-fn --check",
+    "- bun run beep laws entity-kit-freeze --check",
+    "- bun run beep laws entity-kit-freeze --write",
     "- bun run beep laws frozen-grant-set --check",
     "- bun run beep laws markdown-fences --check",
     "- bun run beep laws retired-effect-paths --check",
@@ -874,6 +937,7 @@ export const lawsCommand = Command.make("laws", {}, () =>
     lawsEffectImportsCommand,
     lawsNativeRuntimeCommand,
     lawsEffectFnCommand,
+    lawsEntityKitFreezeCommand,
     lawsFrozenGrantSetCommand,
     lawsMarkdownFencesCommand,
     lawsRetiredEffectPathsCommand,

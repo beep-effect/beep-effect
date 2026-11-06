@@ -7,7 +7,11 @@ in code review, docs, architecture notes, and future enforcement work.
 ## Aggregate
 
 A consistency boundary with an aggregate root. Use `aggregates/` when lifecycle,
-invariants, or transitions span multiple child entities or values.
+invariants, or transitions span multiple child entities or values. In an
+event-sourced slice an aggregate is a `Domain.Aggregate` declaration: an id
+schema, a state schema, the commands it accepts, `decide` (state + command to
+events or a rejection) and `evolve` (state + event to state). One instance is
+one writer; there are no transactions across instances.
 
 ## Artifact Family
 
@@ -80,6 +84,13 @@ exports must be re-exported from a client-safe subpath such as
 `@beep/<slice>-use-cases/public`. Product ports, server-only service/facade
 contracts, workflows, process managers, schedulers, and live Layer values are
 not client-safe.
+
+## Command (event-sourced)
+
+A `Domain.Command` declaration in `domain`: the target aggregate's id schema,
+its input fields, the events it may record, the rejections it may answer with,
+its middleware list and an optional reply. Alchemy's command dispatch is the
+use-case execution boundary.
 
 ## Concept
 
@@ -176,11 +187,27 @@ The non-slice family for domain-agnostic reusable substrate. Canonical kinds
 are `primitive`, `modeling`, `capability`, and `ui-system`. Foundation packages
 do not depend on product slices or the shared kernel.
 
+## Entity Kit (frozen)
+
+The hand-rolled entity substrate in `packages/shared/domain/src/entity/`
+(`EntityKit`, `BaseEntity`, `AuditEntity`, `OrgEntity`, `ProductEntity`,
+`primitives`). Frozen since 2026-11-06: forbidden in new work, enforced by the
+`entity-kit-freeze` law and its shrinking baseline, deleted with its last
+consumer. `Principal`, `SourceKind`, `PublicEntityId`, `EntityId` and
+`EntityRef` are value schemas, not part of the frozen kit.
+
 ## Entity
 
 An identity-bearing concept. Use `entities/` for identity-bearing concepts that
 are not aggregate roots, or simple concepts whose consistency boundary is only
 themselves.
+
+## Event (event-sourced)
+
+A `Domain.Event` declaration: a past-tense business fact with the data a reader
+needs. Events are the system of record for an event-sourced slice; each stored
+event carries a schema version (a static on its class, default 1), upcasters
+run at read, and stored events are never rewritten.
 
 ## Enforcement Lane
 
@@ -255,6 +282,13 @@ It is not a doctrine-11 feature-flag experiment inside a product runtime, and it
 is not the law-relaxed, throwaway Scratchpad Lane. Product slices and public
 package surfaces must not import a lab app; promotion moves earned work into its
 lawful durable home. Doctrine: [15-lab-apps.md](./15-lab-apps.md).
+
+## Model (event-sourced)
+
+A `Domain.Model` declaration in `use-cases`: the aggregates, views, policies,
+projections, streams and sagas hosted together. `Model.layer(handlers)` hosts
+them on whatever Platform is provided. A `Domain.Api` selects what one audience
+may call from a model and derives HTTP, CLI and MCP surfaces from it.
 
 ## Modeling Package
 
@@ -335,6 +369,15 @@ A canonical export name for a boundary-sensitive package role. Required means
 use this subpath name when the role exists; it does not require placeholder
 exports from packages that do not need that role.
 
+## Platform (event-sourced)
+
+The alchemy `Platform` contract: `model(hosted)` returns a `ModelHost` whose
+factories give each aggregate, view, policy, projection and stream its store.
+The driver owns single-writer-per-id, command dedupe, atomic persistence of
+events, state, receipt and deliveries, ordered at-least-once delivery, and
+replay. `@beep/alchemy-postgres` is the repo's Postgres Platform; `Domain.InMemory`
+hosts tests and Stories.
+
 ## Policy Pack
 
 A declarative policy/configuration bundle. In `tooling`, policy packs publish
@@ -368,9 +411,11 @@ driver access do not.
 
 ## Projection
 
-A server-side writer that consumes events or write-model changes and updates a
-read model. Projection code belongs in `server`; read-model table declarations
-belong in `tables`.
+A writer that consumes events and updates a read model outside the model. In an
+event-sourced slice it is a `Domain.Projection` declaration in `use-cases` with
+its `toLayer` implementation in `server`; legacy drizzle tables are rebuilt by
+projections after a single-writer cutover. Read-model table declarations belong
+in `tables`.
 
 ## Read Model
 
@@ -442,6 +487,15 @@ miscellaneous leftovers from product slices.
 
 **Terminology caveat:** strict DDD uses "shared kernel" for code shared across team boundaries with explicit cross-team coordination. In this monorepo the term is used for *deliberate cross-slice product language within a single team's codebase* — closer to a "published language for an internal context." The connotations of high coordination cost still apply (every promotion record is a small coordination act), but the cross-team framing does not. The term is kept because it does the work of distinguishing "deliberate cross-slice" from "junk drawer."
 
+## Session Middleware (event-sourced)
+
+The `RpcMiddleware.Service` a command, view or stream declares to authenticate
+its caller. Its server half resolves the session and provides the
+`RequestContext` (principal, source kind) that `decide` and `validate` read and
+that the Platform driver persists as provenance. Views are security boundaries:
+`validate` judges every read, and one view per audience replaces caller
+filtering.
+
 ## Site Route
 
 A reserved first path segment of the [Public Origin](#public-origin), such as
@@ -457,6 +511,13 @@ Route is not a subdomain and not a slice or package name.
 A bounded product/domain package family such as `iam`. A slice owns its domain,
 use-cases, config contracts when present, server adapters, client adapters,
 tables, and UI. Drivers stay repo-level instead of being slice package kinds.
+
+## Saga (event-sourced)
+
+A `Domain.Saga` declaration in `use-cases`: an Effect workflow keyed by the
+aggregate it is about, with one command per `Activity` step, compensations and
+durable waits. Its `toLayer` implementation lives in `server` and runs on the
+workflow engine the Platform driver provides (`effect/cluster` on Postgres).
 
 ## Scratchpad Lane
 
@@ -495,6 +556,13 @@ contract.
 A concept with no identity. Value objects own validation and pure behavior.
 Promote value objects to `values/` only when they are reused; otherwise keep
 them local to the concept that uses them.
+
+## View (event-sourced)
+
+A `Domain.View` declaration in `domain`: a pure fold of events from one or more
+aggregates or views into state keyed by what it is about, with `validate` as its
+security boundary. MCP tools derived from an `Api` expose Views only until the
+view-security tests pass.
 
 ## Workflow
 

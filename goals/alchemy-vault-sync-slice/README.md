@@ -33,11 +33,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P1 Implement — in progress (first PR: lockstep pin + driver scaffold + P0 spikes + doctrine + entity-kit freeze, per D16). P0 Research complete 2026-11-06.
 
 ## Latest Evidence
 
-Not started.
+- 2026-11-06: P0 spikes recorded in [`research/01-p0-spikes.md`](./research/01-p0-spikes.md) with executable tests under `packages/drivers/alchemy-postgres/test/spikes/`; seven decision files under `decisions/`; `@alchemy.run/domain` 2.0.0-beta.85 pinned (plus `foldkit`); `@beep/alchemy-postgres` scaffolded; `standards/ARCHITECTURE.md`, `standards/architecture/DECISIONS.md`, `standards/architecture/GLOSSARY.md` amended; `beep laws entity-kit-freeze` lint lane added.
 
 ## Notes
 
