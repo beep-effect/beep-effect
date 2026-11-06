@@ -41,33 +41,29 @@ enumerated; a fired gate reopens this packet at `decompose`.
 
 ## First Vertical Slice
 
-`fleet-root-registry` lands when, on this workstation:
+Amended 2026-11-06 (see `DECISIONS.md` amendments and
+`goals/fleet-root-registry/decisions/`). `fleet-root-registry` lands when:
 
-- `BEEP_FLEET_ROOT` (or its config-file equivalent) is set to
-  a new `beep` directory under the configured projects directory, with that
-  projects directory listed as the discovery root; discovery selects only
-  matching `beep-effect*` child checkout roots and excludes unrelated project
-  directories; the sibling `beep-effect*` checkout directories are the legacy
-  checkouts;
-- creation of `seats/` and `lanes/` under `BEEP_FLEET_ROOT`, plus a fresh
-  clone at
-  `seats/main` is discovered by `beep worktree fleet` alongside the 223
-  legacy checkouts;
-- the joined view prints, for this very lane
-  (`beep-effect8-worktrees/agent-fleet-layout`), its mirror facts plus
-  authored role `legacy-lane`, slug `agent-fleet-layout`, and the PR number;
+- the per-repository roots list (`<projects>` legacy, `<projects>/beep/seats`,
+  `<projects>/beep/lanes`) is read by `beep worktree fleet`, Economics
+  `--fleet` and residue-reap discovery, from `BEEP_FLEET_ROOTS` or
+  `~/.local/state/beep/fleet/<repo-key>/roots.json`;
+- an Effect Vitest fixture fleet with legacy clones, `-worktrees` and
+  `.claude/worktrees` lanes, `beep/seats/main` and `beep/lanes/x` is fully
+  discovered with the roots configured, and `fleet --json` is byte-identical
+  with roots unset (fixture and this workstation);
+- `fleet --join` prints each checkout's mirror facts beside the registry's
+  `seatRole`, `owningSeat`, `drainStatus` and the session ledger's `lane`,
+  `pr`, `state`, with legacy clones and unregistered lanes auto-adopted;
+  `fleet describe <checkout>` expands one row; `fleet register` overrides a
+  role and survives a rescan;
 - the 35-directory `beep-effect0-worktrees` count matches `git worktree
   list` or the discrepancy has a named cause in the goal's reflection.
 
-Example directory creation:
-
-```sh
-mkdir -p "$HOME/YeeBois/projects/beep/seats" "$HOME/YeeBois/projects/beep/lanes"
-```
-
-Verification: `bun run beep worktree fleet --json` before and after, diffed;
-the registry file decodes against its schema; package-verify on
-`@beep/repo-cli` (or whichever package owns `commands/Worktree`).
+The real `seats/main` clone is created by `lane-bootstrap`'s first lane, not
+here. Verification: `bun run beep worktree fleet --json` before and after,
+diffed; roots and registry files decode against their schemas;
+package-verify on `@beep/repo-cli`.
 
 ## Open Risks Inherited From The Brief
 

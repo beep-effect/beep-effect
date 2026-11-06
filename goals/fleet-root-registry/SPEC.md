@@ -184,6 +184,30 @@ rendered by `beep goals decisions add`.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug fleet-root-registry`; add a `kind: decision` file there, never edit this block._
 
+### The scan auto-adopts legacy clones and unregistered lanes, 2026-11-06
+
+The joined view's scan writes a legacy row for every origin-matched clone under the legacy root that has no row, and an adopted row for every lane without one. Adoption is idempotent, never deletes, and an explicit register wins and survives a rescan. Rejected: explicit register only (37 clones today, view empty until someone types them, new sprawl never recorded); seeding in legacy-drain (the view has nothing to join until then).
+
+Lane `@chore/deps-update-11-6-26 (grill session)`
+
+Reverse: Remove the adoption write from the scan and require fleet register for every row.
+
+### Commands live under beep worktree fleet, 2026-11-06
+
+fleet --join, fleet describe <checkout>, fleet register <checkout> --role ... [--owning-seat] [--retention-exempt]. Plain fleet output stays unchanged per the fleet-mirror SPEC. Schema and store modules live in commands/Worktree/internal/FleetRoots.* and FleetRegistry.*. Rejected: a new beep fleet group (splits fleet code across two groups); registry under beep session (mixes checkout facts into a session tool).
+
+Lane `@chore/deps-update-11-6-26 (grill session)`
+
+Reverse: Lift --join, describe and register into a new beep fleet group and re-export the Worktree internals.
+
+### Roots and registry live in the state dir under the session-ledger repo key, 2026-11-06
+
+~/.local/state/beep/fleet/<repo-key>/roots.json and registry.json, where <repo-key> is the session ledger's key (github.com__beep-effect__beep-effect). beep-effect-private gets its own fleet by construction. BEEP_FLEET_ROOTS (path-list) overrides the file for tests and timer units. Rejected: XDG config dir (a second tree nothing else uses); an in-repo fleet.json (ties the public repo to one workstation's layout).
+
+Lane `@chore/deps-update-11-6-26 (grill session)`
+
+Reverse: Move both files to ~/.config/beep/fleet/<repo-key>/ and update the FleetRoots and FleetRegistry stores' path resolution.
+
 ### Fleet root is a per-repository ordered list of discovery roots, 2026-11-06
 
 Live code reads one directory level under the fleet root and origin-matches (Fleet.service.ts discoverClones); Economics fleetCandidates prefix-matches beep-effect*. The 2026-10-05 criterion (projects/beep/seats/main discovered with the projects dir as root) was unreachable. The setting becomes an ordered list: <projects> (legacy, prefix-matched), <projects>/beep/seats, <projects>/beep/lanes. Discovery stays one level deep, origin-matched, no recursion, no symlinks. Unset defaults to today's derived root so fleet --json is byte-identical. Rejected: single root with two-level recursion (discovery learns a layout shape and the legacy dir still needs a second rule); single root at seats/ only (desktop-app and Codex lanes invisible until adopted).
@@ -192,6 +216,30 @@ Lane `@chore/deps-update-11-6-26 (grill session)`
 
 Reverse: Collapse the list to a single root by keeping only its first entry and re-adding recursion into seats/ and lanes/ in discoverClones.
 
+### Fixture fleet gates acceptance; the real seats/main is deferred to lane-bootstrap, 2026-11-06
+
+An Effect Vitest fixture fleet (temp projects dir with beep-effectN clones, <clone>-worktrees and .claude/worktrees lanes, beep/seats/main and beep/lanes/x, all origin-matched) proves discovery with the roots configured and byte-identity with roots unset. The workstation smoke is the byte-identical fleet --json diff only. The real seats/main clone is created by lane-bootstrap's first lane. Rejected: cloning a multi-GB idle seat now; a --depth 1 smoke seat (a trap if anyone starts work in it).
+
+Lane `@chore/deps-update-11-6-26 (grill session)`
+
+Reverse: Add a workstation acceptance step that clones seats/main during P2 verification.
+
+### Flat lanes/ stands; the worktree add switch belongs to lane-bootstrap, 2026-11-06
+
+AGENTS.md Quality Operator, Worktree.service.ts:1540 and Worktree.command.ts:462 still derive the managed root from <clone>-worktrees, while the exploration decided flat <fleet>/lanes/<slug> with the owning seat as a registry fact. This packet carries owningSeat in the registry schema and lanes/ in the roots list; the worktree add rewrite and the AGENTS.md worktree bullet edit are assigned to lane-bootstrap. Rejected: keeping sibling -worktrees roots (reverses a grilled decision for less churn); pulling the managed-root rewrite into this packet (grows the first PR).
+
+Lane `@chore/deps-update-11-6-26 (grill session)`
+
+Reverse: Reverse the exploration's lane-home decision: drop lanes/ from the roots list, make owningSeat a path fact again and leave Worktree.service.ts:1540 as is.
+
+### Borrow LCM's summary, pointer and expand split for the fleet views, 2026-11-06
+
+LCM (Ehrlich and Blackman, arXiv 2605.04050) keeps an immutable store, a compact active context holding summaries with stable IDs, and expands detail only in sub-agents. The fleet analogue: fleet --join prints one compact row per checkout keyed by path; fleet describe <checkout> expands mirror, registry and the latest ledger rows on demand. No new daemon or store. Rejected for this packet: a summary DAG over the session ledger (context tooling, captured in explorations/INBOX.md); borrowing nothing.
+
+Lane `@chore/deps-update-11-6-26 (grill session)`
+
+Reverse: Drop fleet describe and print the full joined record per row.
+
 ### Run fleet-root-registry before lane-bootstrap, shrunk to one PR, 2026-11-06
 
 Operator ruling 2026-11-06. fleet-root-registry stays first in the map but its scope shrinks to: per-repository discovery-roots list, thin registry overlay, joined and describe views, undercount explanation. lane-bootstrap starts the moment this merges. Rejected: lane-bootstrap first (it would invent fleet-root and registry stubs this packet then replaces); merging both into one packet (breaks the one-PR appetite and delays drain).
@@ -199,6 +247,30 @@ Operator ruling 2026-11-06. fleet-root-registry stays first in the map but its s
 Lane `@chore/deps-update-11-6-26 (grill session)`
 
 Reverse: Swap the order by moving the roots list and registry stubs into lane-bootstrap's SPEC and marking this packet dependent on it.
+
+### Registry is a thin overlay beside the session ledger, 2026-11-06
+
+The session ledger (~/.local/state/beep/sessions/<repo-key>.jsonl, 4971 rows on 2026-11-06) already records clone, lane, branch, pr, state and summary per checkout; orchestrator/ and merge-reservations/ sit beside it. A fourth checkout-keyed store duplicating lane and PR was rejected. The registry is ~/.local/state/beep/fleet/<repo-key>/registry.json authoring only seatRole, owningSeat, drainStatus, retentionExempt; the joined view reads lane, pr and state from the ledger's latest row. Rejected: extending the ledger row (append-only session history is the wrong home for slowly changing checkout facts); the SPEC's independent store (two sources of truth for PR and lane, which the exploration already rejected).
+
+Lane `@chore/deps-update-11-6-26 (grill session)`
+
+Reverse: Fold the four authored fields into the session-ledger row schema and delete registry.json, or restore the 2026-10-05 independent store with its own lane/packet/PR fields.
+
+### Undercount investigation stays in scope with a named hypothesis, 2026-11-06
+
+Fleet.service.ts cloneStubs attributes lanes only through a clone's successful git worktree list; a failed or refused listing contributes the clone alone. Leading hypothesis for 35 directories, 1 attributed under beep-effect0-worktrees. P1 confirms or refutes it and the reflection names the cause.
+
+Lane `@chore/deps-update-11-6-26 (grill session)`
+
+Reverse: Move the undercount criterion to legacy-drain if the cause turns out to live in the reaper rather than the mirror.
+
+### Seat roles are workload-named, 2026-11-06
+
+The operator's intent is to scope kinds of work to specific clones. One LiteralKit carries it: main (operator WebStorm), ops (timers), review, research, impl, legacy, adopted. beep session open and the orchestrator route by role; no second field. Replaces the exploration's a/b/c chat seats. Rejected: a/b/c plus a workload tag (one more thing to drift); no scoping until the registry has run.
+
+Lane `@chore/deps-update-11-6-26 (grill session)`
+
+Reverse: Rename review/research/impl back to a/b/c in the LiteralKit and add a separate optional workload field.
 
 <!-- beep:decisions:end -->
 

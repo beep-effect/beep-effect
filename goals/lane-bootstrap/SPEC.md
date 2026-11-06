@@ -34,6 +34,16 @@ Higher sources outrank lower sources when they conflict.
 ## Constraints
 
 - Depends on `goals/fleet-root-registry` for the fleet root and registry schema.
+- Owns the lane-home switch (operator 2026-11-06,
+  `goals/fleet-root-registry/decisions/2026-11-06-lane-home-conflict-owner.md`):
+  rewrite the managed-root derivation (`Worktree.service.ts` managed root,
+  `Worktree.command.ts` worktrees root) to target `<fleet>/lanes/<slug>` from
+  the roots list, and edit the AGENTS.md Quality Operator worktree bullet that
+  still names the sibling `-worktrees` root. The owning seat is written to the
+  registry's `owningSeat`, never derived from the path.
+- The registry row written at lane creation carries only `seatRole`
+  (`adopted` or the creating seat's role), `owningSeat`, `drainStatus`; lane
+  slug, packet and PR go to the session ledger via `beep session note`.
 - No dependency on `goals/ops-seat-timers`: the graft seed source is `seats/ops` when present, else the owning seat; a missing seed degrades to a warning, never a failed bootstrap.
 - The shared turbo cache is already the default for CLI-driven runs and direnv shells; bootstrap covers the invocation paths that bypass both.
 - Install verification is a check, not a feature: assert link count > 1 on a sampled file; fail loud if the backend fell back to copy.
