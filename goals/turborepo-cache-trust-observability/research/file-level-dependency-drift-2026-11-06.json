@@ -1,0 +1,299 @@
+{
+  "schemaVersion": "cache-dependency-file-detail-pair/v1",
+  "at": "2026-11-06T17:27:03.854265+00:00",
+  "comparablePairPassed": false,
+  "observations": [
+    {
+      "runId": 42259397428,
+      "sourceRevision": "e68e1d1e06319a9e7781eeb9dd8da5f8e5ab05de",
+      "dependencySha256": "6b1551d31fbed63700a4d0730ec2f6d4c786b11403a4b94641689de8d961f3d5",
+      "receiptSha256": "60496da462a0323a81e2e0499ea04a734d4030f45cbc08993e305726c9a05faf",
+      "diagnosticSeconds": 44.928,
+      "aggregateReportBytes": 3481145,
+      "runUrl": "https://github.com/beep-effect/beep-effect/actions/runs/42259397428",
+      "jobId": 128035058039,
+      "fileDetailsSummary": {
+        "group": "node-gyp",
+        "files": 340,
+        "kindCounts": {
+          "other": 272,
+          "python-source": 58,
+          "python-bytecode": 10
+        },
+        "encodedRowBytesBounded": 51211,
+        "entryLimit": 512,
+        "encodedBytesLimit": 131072
+      },
+      "artifacts": [
+        {
+          "id": 13523703832,
+          "name": "cache-producer-inspection-42259397428-1",
+          "archiveBytes": 2744611,
+          "archiveSha256": "a0cd47d22e4df4e91ff618ade8a812fb78b143fe39985b8b8b70c52728634cfb",
+          "reportBytes": 2744475,
+          "reportSha256": "26e7888066c0c60b853e0946ba9d14060b94bd7f8a4d7729ae8d3d1abb77dab4",
+          "expiresAt": "2026-11-07T17:17:26Z"
+        },
+        {
+          "id": 13524636796,
+          "name": "cache-producer-dependencies-42259397428-1",
+          "archiveBytes": 736818,
+          "archiveSha256": "ec2a2d30f119fadfacde964c50aa93489a8fc520113413aaed9e0e74c431139c",
+          "reportBytes": 736670,
+          "reportSha256": "c866b4066e951ad2d03cec3955876310d5aefdbcd4aff759d3f8bd562ef6b17f",
+          "expiresAt": "2026-11-07T17:17:27Z"
+        }
+      ]
+    },
+    {
+      "runId": 42260607808,
+      "sourceRevision": "e68e1d1e06319a9e7781eeb9dd8da5f8e5ab05de",
+      "dependencySha256": "5582c0df8380ffc362fa9e701583abcdeeba8b512cad703324a5833568f3bf9b",
+      "receiptSha256": "bd75fb0165c738d3f91c4afe7381695a1997d609acc979fa0450e31d7266b70d",
+      "diagnosticSeconds": 57.017,
+      "aggregateReportBytes": 3481145,
+      "runUrl": "https://github.com/beep-effect/beep-effect/actions/runs/42260607808",
+      "jobId": 128039246794,
+      "fileDetailsSummary": {
+        "group": "node-gyp",
+        "files": 340,
+        "kindCounts": {
+          "other": 272,
+          "python-source": 58,
+          "python-bytecode": 10
+        },
+        "encodedRowBytesBounded": 51211,
+        "entryLimit": 512,
+        "encodedBytesLimit": 131072
+      },
+      "artifacts": [
+        {
+          "id": 13524962032,
+          "name": "cache-producer-inspection-42260607808-1",
+          "archiveBytes": 2744611,
+          "archiveSha256": "c51d8558979305b33561a488e25b331ad230825574d0abf6c79e99d149a96e8b",
+          "reportBytes": 2744475,
+          "reportSha256": "61f1a6cc08b2d053fa4fa20b14420ab9ff85b6a7253783b70cef204247277c50",
+          "expiresAt": "2026-11-07T17:23:03Z"
+        },
+        {
+          "id": 13525141756,
+          "name": "cache-producer-dependencies-42260607808-1",
+          "archiveBytes": 736818,
+          "archiveSha256": "a0aea076f912298bc6dbe6063c921139f4be52a297e10e5441b2eb267c69795b",
+          "reportBytes": 736670,
+          "reportSha256": "0a22c119ff76e5b144ada83eb78f1100013ea8e00d8d2990a28480f41d1fbb89",
+          "expiresAt": "2026-11-07T17:23:04Z"
+        }
+      ]
+    }
+  ],
+  "sourceDifferencePaths": ["/toolchain/installedDependencies/sha256"],
+  "all13ControlsAndResourceBoundsEqual": true,
+  "rawCanonicalDigestEqual": false,
+  "changedGroups": [
+    {
+      "package": "node-gyp",
+      "first": [
+        "node-gyp",
+        390,
+        340,
+        3381871,
+        "e01d684b0845f575d92c5cffb5f5f448cd6fa38351aa2421115f150858c66ffc",
+        "68e8117c339192b9c05da40637d7fd230eaba920da958112a95b1e82dbff347f",
+        "127c56601e8efb9ca8c99d7356049f68345fc5caeb7c2f4ff211e89404528839",
+        "8c11d729faaf167013d60264f802e907e75bb018b423515242fe1f7a5a91017e"
+      ],
+      "second": [
+        "node-gyp",
+        390,
+        340,
+        3381871,
+        "61cfd1252fc69eacad72f70207d5b1362b13a5fc000ef64efa4369acf8f473b1",
+        "68e8117c339192b9c05da40637d7fd230eaba920da958112a95b1e82dbff347f",
+        "127c56601e8efb9ca8c99d7356049f68345fc5caeb7c2f4ff211e89404528839",
+        "8c11d729faaf167013d60264f802e907e75bb018b423515242fe1f7a5a91017e"
+      ],
+      "changedColumns": ["contentSha256"]
+    }
+  ],
+  "changedFiles": [
+    {
+      "nameSha256": "24895d9213007d6c13f3b546d1cf4e95706a96f420b4037c63d08d4f18a4241d",
+      "first": [
+        "24895d9213007d6c13f3b546d1cf4e95706a96f420b4037c63d08d4f18a4241d",
+        "python-bytecode",
+        14249,
+        "5d577bf185106a02882b374275345f8976f52e24717d55191e838cfdf7d51a4a"
+      ],
+      "second": [
+        "24895d9213007d6c13f3b546d1cf4e95706a96f420b4037c63d08d4f18a4241d",
+        "python-bytecode",
+        14249,
+        "741714c2963cddc7ca45438c43ddba1ec1befa91972d948a2e506de44718e463"
+      ],
+      "changedColumns": ["contentSha256"]
+    },
+    {
+      "nameSha256": "34562bd373a77d7e8da1a3bc1b48951b57a381a30a254f11c040728183712b6a",
+      "first": [
+        "34562bd373a77d7e8da1a3bc1b48951b57a381a30a254f11c040728183712b6a",
+        "python-bytecode",
+        16922,
+        "92e2d4ea56b89a2d65b9f21def2334441a22f15415816bd17ea864fd562358a7"
+      ],
+      "second": [
+        "34562bd373a77d7e8da1a3bc1b48951b57a381a30a254f11c040728183712b6a",
+        "python-bytecode",
+        16922,
+        "38fbc04834cdd0ccfad989dd8a0001b451f8494ef75f0deed1e64dfaeacd63ba"
+      ],
+      "changedColumns": ["contentSha256"]
+    },
+    {
+      "nameSha256": "380fb6f093ec450c80e4ec23d2bfd9cc9b5bda54c9ff724edd41b05e3c15d3e2",
+      "first": [
+        "380fb6f093ec450c80e4ec23d2bfd9cc9b5bda54c9ff724edd41b05e3c15d3e2",
+        "python-bytecode",
+        69048,
+        "ea1fb9673f10527c262768e3937c35c2caaec1fb798ca472b21e63c0b73667f7"
+      ],
+      "second": [
+        "380fb6f093ec450c80e4ec23d2bfd9cc9b5bda54c9ff724edd41b05e3c15d3e2",
+        "python-bytecode",
+        69048,
+        "78a17e22235e3bb947b09d3da1c1f84ddc514bd23d498e700c07872854381a40"
+      ],
+      "changedColumns": ["contentSha256"]
+    },
+    {
+      "nameSha256": "3e041a6892b692c6667e38b4f1384a913ce1969262db1f67a825557b5ae28d90",
+      "first": [
+        "3e041a6892b692c6667e38b4f1384a913ce1969262db1f67a825557b5ae28d90",
+        "python-bytecode",
+        14322,
+        "8e6ebb542f5ce9bb26aa2ebfae4dc4a474c3558711676f9e9b14b91060deb32a"
+      ],
+      "second": [
+        "3e041a6892b692c6667e38b4f1384a913ce1969262db1f67a825557b5ae28d90",
+        "python-bytecode",
+        14322,
+        "bcc6069679840839576b2340758a62c6402e48c9a21e4b1f38f4574df0a0db94"
+      ],
+      "changedColumns": ["contentSha256"]
+    },
+    {
+      "nameSha256": "4792cc583419a2c5a9d6533bd81cdc0625f21ff51156db76a1a2d6533429b6ee",
+      "first": [
+        "4792cc583419a2c5a9d6533bd81cdc0625f21ff51156db76a1a2d6533429b6ee",
+        "python-bytecode",
+        198,
+        "ffa09adaa4fe2fce809ce022a2cbfb061f3ddfa8f667234531b2ca0e394c8845"
+      ],
+      "second": [
+        "4792cc583419a2c5a9d6533bd81cdc0625f21ff51156db76a1a2d6533429b6ee",
+        "python-bytecode",
+        198,
+        "3ea1b5d344cfe5fd7358ab7238d5692f0a9d3a7f96f0a5fb541c6a2f0ae2191d"
+      ],
+      "changedColumns": ["contentSha256"]
+    },
+    {
+      "nameSha256": "79f6a18daacd73547dcb9cccf40ad2bace7f889b53b1cbb11e0a806fb8d8994e",
+      "first": [
+        "79f6a18daacd73547dcb9cccf40ad2bace7f889b53b1cbb11e0a806fb8d8994e",
+        "python-bytecode",
+        56239,
+        "94287ba87f70edc62ea7262b6a6b0b499e4b35664a58e5ead2e86ba18a571f50"
+      ],
+      "second": [
+        "79f6a18daacd73547dcb9cccf40ad2bace7f889b53b1cbb11e0a806fb8d8994e",
+        "python-bytecode",
+        56239,
+        "43ec614c9173d01411dd6eadeabb106046d2ce0fdbe9a3eb62c66118a84bcf37"
+      ],
+      "changedColumns": ["contentSha256"]
+    },
+    {
+      "nameSha256": "87e4555e8d0e1706674d2b562e20bd9d59f6af1c78638d59b151c23bc6f640a5",
+      "first": [
+        "87e4555e8d0e1706674d2b562e20bd9d59f6af1c78638d59b151c23bc6f640a5",
+        "python-bytecode",
+        1778,
+        "940418bbbca30f3f19c726fbf84ef73bfb93796a2ef2de9799add1642512f80f"
+      ],
+      "second": [
+        "87e4555e8d0e1706674d2b562e20bd9d59f6af1c78638d59b151c23bc6f640a5",
+        "python-bytecode",
+        1778,
+        "62422b47804ee533dc0b602bc10e3507ed62482645e7b844c2d8363b02b59eba"
+      ],
+      "changedColumns": ["contentSha256"]
+    },
+    {
+      "nameSha256": "e02ed007857384d0033852c2b6483935fbd31b0abb619786e75ca3a54c43050c",
+      "first": [
+        "e02ed007857384d0033852c2b6483935fbd31b0abb619786e75ca3a54c43050c",
+        "python-bytecode",
+        2804,
+        "6d74f7cf690b6824a29c5c0943a300b162b9aa3a47b086080e1d53b5f445cc39"
+      ],
+      "second": [
+        "e02ed007857384d0033852c2b6483935fbd31b0abb619786e75ca3a54c43050c",
+        "python-bytecode",
+        2804,
+        "88f9d9ff44d39e4c21343a8d664663ff4cdabce8a7f51840ae066a3e5375ec7c"
+      ],
+      "changedColumns": ["contentSha256"]
+    },
+    {
+      "nameSha256": "f7d5c64664a99dc8eaa88801e3fbc139e2e2d0f76535277c7198672012e492fe",
+      "first": [
+        "f7d5c64664a99dc8eaa88801e3fbc139e2e2d0f76535277c7198672012e492fe",
+        "python-bytecode",
+        51793,
+        "f1ad59117fbd616d835aa72b80e7ef9bc258fd51459794d0db8b1709a8b3c366"
+      ],
+      "second": [
+        "f7d5c64664a99dc8eaa88801e3fbc139e2e2d0f76535277c7198672012e492fe",
+        "python-bytecode",
+        51793,
+        "2cd77bcf3b44543e019b57d83f43ee3ded20e5fb6c7eeaa0d2c013e39e6ecdd9"
+      ],
+      "changedColumns": ["contentSha256"]
+    },
+    {
+      "nameSha256": "f85d6bccf58991d02508ce723ad7f093f57263146427b76d80773796ea8a43c2",
+      "first": [
+        "f85d6bccf58991d02508ce723ad7f093f57263146427b76d80773796ea8a43c2",
+        "python-bytecode",
+        529,
+        "54df1686c0babf4a82fd4636ea2985d0732017bb6733ed67c6206ae7202d446f"
+      ],
+      "second": [
+        "f85d6bccf58991d02508ce723ad7f093f57263146427b76d80773796ea8a43c2",
+        "python-bytecode",
+        529,
+        "fc39531d0ead84e18f21d44becf5257921dfd9239d687b6c359c0170fdd4274c"
+      ],
+      "changedColumns": ["contentSha256"]
+    }
+  ],
+  "changedFileKindCounts": {
+    "python-bytecode": 10
+  },
+  "driftConfinedToFilesClassifiedPythonBytecode": true,
+  "bytecodeGenerationMechanismProven": false,
+  "digestsNormalizedOrFilesExcluded": false,
+  "scope": "Actual same-source dependency repeatability diagnosis only. A failed raw comparison remains failed. No producer approval, task qualification, signing, production/window or whole-goal acceptance.",
+  "authority": "Two real same-source observations and a failed raw canonical comparison. Candidate prevention is not yet observed or accepted.",
+  "privateComparisonSha256": "b3303ab154d31a917e73dbffac4c1d1ce3201b2bae59dcf39486f622c9f65a6d",
+  "candidate": {
+    "scope": "Source-only inspection job, before and during dependency installation",
+    "setting": "PYTHONDONTWRITEBYTECODE=1",
+    "status": "prepared-not-observed",
+    "canonicalDigestStillIncludesAllOriginalBytes": true,
+    "productionOrSignedExecutionChanged": false,
+    "requiredEvidence": "Hosted import-cache and workflow-scope regressions; primary acceptance; two fresh serial actual observations using accepted candidate source. Preserve a failed comparison if repeatability is still absent."
+  }
+}

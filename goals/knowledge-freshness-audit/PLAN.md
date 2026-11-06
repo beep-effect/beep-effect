@@ -158,4 +158,28 @@ Lane `codex/knowledge-audit-p4-final-tree`
 
 Reverse: Revert this checkpoint and phase-progress record; retain the private immutable inventory and historical receipts.
 
+### Qualify superseded future routing without rewriting completed work, 2026-11-06
+
+Review 17 matching September future-use notes at immutable source
+e68e1d1e06319a9e7781eeb9dd8da5f8e5ab05de. Keep the dated prior model and
+effort as history and every completed execution body unchanged. Point new work
+to the current root Volume pools policy rather than another duplicated live
+model pin. Current-reference review separately rejects 44 contextual candidates
+and routes one retired Glob example to its existing DECISIONS owner in PR #2780.
+This is partial P4 evidence, not whole-body extraction, complete claim
+verification or lifecycle closeout. PM and ADHD remain separately held; no
+spending or cloud work.
+
+Lane `codex/knowledge-audit-p4-routing`
+
+Reverse: Revert only the current-use qualifications and this checkpoint; retain the private before/after receipts and original dated models.
+
+### Qualify dated memory assessments without rewriting their history, 2026-11-06
+
+Review T8 K1/K2/K4 at immutable source 34d6cd130971c7d8434a188fcb5532a4a6c709c2. Reject an automatic contradiction for the explicitly dated July 8 Graphiti condition; preserve it as history. Add current reading context to the landscape assessment and decision log, linking later coverage, dated retirement/archive decisions and the governing root Agent Memory policy. Original assessment and decision bytes remain unchanged. No vendor/scientific/deployment qualification, service configuration, memory revival, ontology operation or paid/cloud work. P4 remains in progress, with PM/ADHD and existing source-owner/delivery-proof holds separate.
+
+Lane `codex/knowledge-audit-p4-memory-context`
+
+Reverse: Remove the two dated reading notes and this checkpoint; preserve original assessments, decisions and private review evidence.
+
 <!-- beep:decisions:end -->

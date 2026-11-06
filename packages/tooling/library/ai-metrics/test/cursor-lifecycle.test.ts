@@ -98,7 +98,7 @@ const fixture = Effect.fn("CursorLifecycleTest.fixture")(function* (maxPages = 3
   const sourceRoot = yield* fs.makeTempDirectoryScoped({ prefix: "cursor-source-fixture-" });
   const sources = [`${sourceRoot}/dispatcher.js`, `${sourceRoot}/envelope.js`];
   yield* Effect.forEach(sources, (path) =>
-    fs.writeFileString(path, "// synthetic public source fixture; no native code\n")
+    fs.writeFileString(path, "// synthetic public source fixture; no native code\n", { mode: 0o600 })
   );
   const sourcePins = yield* Effect.forEach(
     sources,
@@ -317,6 +317,22 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
         expect(result.result._tag).toBe("Failure");
         expect(result.reply._tag).toBe("Failure");
       }
+      expect((yield* f.journal.stats).pages).toBe(0);
+    })
+  )
+);
+
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) =>
+  it.effect("refuses group-writable source fixtures without weakening the kernel observer", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const fs = yield* FileSystem.FileSystem;
+      const pin = yield* Effect.fromOption(A.head(f.policy.sourcePins));
+      expect((yield* fs.stat(pin.path)).mode & 0o777).toBe(0o600);
+      yield* fs.chmod(pin.path, 0o660);
+      const result = yield* f.deliver(start);
+      expect(result.result._tag).toBe("Failure");
+      expect(result.reply._tag).toBe("Failure");
       expect((yield* f.journal.stats).pages).toBe(0);
     })
   )

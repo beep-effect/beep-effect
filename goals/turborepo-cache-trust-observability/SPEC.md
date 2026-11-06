@@ -1409,6 +1409,18 @@ purge shared artifacts, lower proof floors or enable unsigned fallback.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-cache-trust-observability`; add a `kind: decision` file there, never edit this block._
 
+### Align only producer setup with the inspected Python bytecode policy, 2026-11-06
+
+Two real source-only observations at df3ccd1b77aba565a72abd63c910ef3edde23929 agree across all raw dependency and source hashes under the inspection import-bytecode guard. Producer execution uses the same setup action without that policy, so the guarded inspection pair cannot prove equivalent producer installation.
+
+Set PYTHONDONTWRITEBYTECODE=1 only on Setup pinned toolchain without trial capabilities. Preserve the existing job environment, remote-cache/app-secret disablement, selection/approval gates, permissions, timeouts and independently scoped issuer/trial/publication steps. Keep the flag absent at global and producer-job scope. Extend the existing hosted CI security assertion to require the exact setup environment and make it the only producer step carrying the flag.
+
+This prepares matching install policy; it does not prove actual producer equality or authorize execution. Obtain hosted source/scope proof, primary acceptance, fresh current source inspection and independent source/tool/profile approval before the protected trial. No secret, selection variable, signing setting, storage grant, deployment or whole-goal acceptance changes. No manual local verify, publish, tests, check, docgen or package-quality suite; hosted CI is authoritative.
+
+Lane `codex/cache-producer-install-parity-20261106`
+
+Reverse: Remove the producer setup step environment and its scope assertions. Retain historical guarded observations and require fresh independent source/profile approval.
+
 ### Bound file-level evidence for the observed node-gyp mismatch, 2026-11-06
 
 Both source-only runs passed under the original process and artifact limits,
@@ -1443,5 +1455,17 @@ Accepted-source inspection42142818104 failed before diagnostics. Three new decla
 Lane `codex/cache-source-budget`
 
 Reverse: Revert the focused preflight while preserving failed evidence and complete-input binding; keep producer approval closed until a bounded replacement handles the actual declared fixtures.
+
+### Suppress Python import bytecode in the source-only inspection cohort, 2026-11-06
+
+The two actual observations at accepted source e68e1d1e06 each pass internal consistency, but their raw canonical digests differ. All ten differing file content hashes are classified Python bytecode in node-gyp; source files, names, sizes and package metadata match. Retain the failed pair and all actual report hashes in research/file-level-dependency-drift-2026-11-06.json. The exact generation mechanism is not yet proven.
+
+Set PYTHONDONTWRITEBYTECODE=1 only for the credential-free source-inspection job, before its existing dependency install. Leave ordinary verification, candidate builds and signed execution unchanged. This is a controlled prevention experiment: every original archive byte remains hashed, with no bytecode filter, normalization or post-install cleanup.
+
+Add hosted controls for identical import output and preserved source bytes with the guard, ordinary import cache creation and raw digest invalidation without it, and workflow scope isolation. Keep the existing resource caps. After primary acceptance and hosted proof, require two fresh serial real observations before claiming repeatability. No producer approval, production trust, signing activation, task qualification or observation-window completion follows from this preparation.
+
+Lane `codex/cache-import-bytecode-20261106`
+
+Reverse: Remove the source-only job environment guard and its regression assertions; retain immutable observations, failed comparisons and the canonical digest policy.
 
 <!-- beep:decisions:end -->

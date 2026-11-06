@@ -138,6 +138,29 @@ class DependencyDiagnostics(unittest.TestCase):
             with self.assertRaisesRegex(PROBE.Refusal, "file-detail-byte-bound"):
                 PROBE.snapshot(PROBE.time.monotonic() + 10)
 
+    def test_import_cache_guard_preserves_source_and_raw_dependency_digest(self):
+        package = self.root / "node_modules/node-gyp"
+        package.mkdir()
+        source = package / "sample.py"
+        source.write_bytes(b"VALUE = 42\n")
+        source_digest = PROBE.hashlib.sha256(source.read_bytes()).hexdigest()
+        before = PROBE.snapshot(PROBE.time.monotonic() + 10)["sha256"]
+        command = [sys.executable, "-S", "-c", "import sample; print(sample.VALUE)"]
+        guarded = subprocess.run(command, cwd=package,
+                                 env={"PATH": "/usr/bin", "PYTHONDONTWRITEBYTECODE": "1"},
+                                 capture_output=True, timeout=10)
+        self.assertEqual(guarded.returncode, 0, guarded.stderr)
+        self.assertEqual(guarded.stdout, b"42\n")
+        self.assertFalse((package / "__pycache__").exists())
+        self.assertEqual(PROBE.snapshot(PROBE.time.monotonic() + 10)["sha256"], before)
+        ordinary = subprocess.run(command, cwd=package, env={"PATH": "/usr/bin"},
+                                  capture_output=True, timeout=10)
+        self.assertEqual(ordinary.returncode, 0, ordinary.stderr)
+        self.assertEqual(ordinary.stdout, guarded.stdout)
+        self.assertTrue(any((package / "__pycache__").glob("*.pyc")))
+        self.assertEqual(PROBE.hashlib.sha256(source.read_bytes()).hexdigest(), source_digest)
+        self.assertNotEqual(PROBE.snapshot(PROBE.time.monotonic() + 10)["sha256"], before)
+
     def test_timestamp_changes_do_not_change_normalized_digest(self):
         before = self.observe()
         os.utime(self.payload, (1, 1))
