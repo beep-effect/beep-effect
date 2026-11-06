@@ -37,6 +37,12 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
+const encodeClaim = S.encodeEffect(S.fromJsonString(KbClaim));
+const encodeAssertion = S.encodeEffect(S.fromJsonString(Assertion));
+const encodeRegistryNode = S.encodeEffect(S.fromJsonString(KbRegistryNode));
+const decodeGraph = S.decodeEffect(S.fromJsonString(KbGraph));
+const decodeClaim = S.decodeUnknownEffect(S.toType(KbClaim));
+
 const digest = Str.repeat(64)("a");
 const absent = { _tag: "Absent", reason: "not-assessed" };
 const signals = {
@@ -110,8 +116,8 @@ const withLedger = Effect.fnUntraced(function* (options: { readonly public?: boo
   const root = `${dir}/ledger`;
   yield* fs.makeDirectory(root);
   const f = yield* fixture(options);
-  yield* fs.writeFileString(`${root}/claims.jsonl`, `${yield* S.encodeEffect(S.fromJsonString(KbClaim))(f.claim)}\n`);
-  const lines = yield* Effect.forEach(f.assertions, (a) => S.encodeEffect(S.fromJsonString(Assertion))(a));
+  yield* fs.writeFileString(`${root}/claims.jsonl`, `${yield* encodeClaim(f.claim)}\n`);
+  const lines = yield* Effect.forEach(f.assertions, (assertion) => encodeAssertion(assertion));
   yield* fs.writeFileString(`${root}/assertions.jsonl`, `${A.join(lines, "\n")}\n`);
   return { ...f, root, out: `${dir}/out` };
 });
@@ -161,7 +167,7 @@ describe("knowledge ledger admission and disclosure", () => {
           },
         },
       };
-      const decoded = yield* S.decodeUnknownEffect(S.toType(KbClaim))(promoted);
+      const decoded = yield* decodeClaim(promoted);
       const claims = [before.claim, decoded];
       const assertions = A.appendAll(before.assertions, after.assertions);
       expect(validateKb(claims, assertions).outwardEligible).toEqual([after.claim.id]);
@@ -223,7 +229,7 @@ describe("knowledge ledger admission and disclosure", () => {
       const noBasis = A.map(f.assertions, (a) => Assertion.make({ ...a, derivation: { basis: "none", ref: "" } }));
       expect(validateKb([f.claim], noBasis).outwardEligible).toEqual([]);
       const proposed = { ...f.claim, review: { _tag: "Proposed" } };
-      const decoded = yield* S.decodeUnknownEffect(S.toType(KbClaim))(proposed);
+      const decoded = yield* decodeClaim(proposed);
       expect(validateKb([decoded], f.assertions).outwardEligible).toEqual([]);
     })
   );
@@ -338,10 +344,8 @@ const writeGraphRows = Effect.fnUntraced(function* (
   assertions: ReadonlyArray<Assertion>
 ) {
   const fs = yield* FileSystem.FileSystem;
-  const claimLines = yield* Effect.forEach(claims, (claim) => S.encodeEffect(S.fromJsonString(KbClaim))(claim));
-  const assertionLines = yield* Effect.forEach(assertions, (assertion) =>
-    S.encodeEffect(S.fromJsonString(Assertion))(assertion)
-  );
+  const claimLines = yield* Effect.forEach(claims, (claim) => encodeClaim(claim));
+  const assertionLines = yield* Effect.forEach(assertions, (assertion) => encodeAssertion(assertion));
   yield* fs.writeFileString(`${root}/claims.jsonl`, A.join(claimLines, "\n"));
   yield* fs.writeFileString(`${root}/assertions.jsonl`, A.join(assertionLines, "\n"));
 });
@@ -359,11 +363,11 @@ layer(graphLive)("knowledge JSON graph", (it) => {
           url: "https://example.com",
           description: "Synthetic organization",
         });
-        const encoded = yield* S.encodeEffect(S.fromJsonString(KbRegistryNode))(entry);
+        const encoded = yield* encodeRegistryNode(entry);
         yield* fs.writeFileString(`${f.root}/registry.jsonl`, encoded);
         const graph = yield* exporter.write(f.root, "outward", `${f.out}.json`, false);
         const bytes = yield* fs.readFileString(`${f.out}.json`);
-        const decoded = yield* S.decodeEffect(S.fromJsonString(KbGraph))(bytes);
+        const decoded = yield* decodeGraph(bytes);
         expect(decoded).toEqual(graph);
         expect(A.sort(R.keys(graph), Str.Order)).toEqual(["builtAt", "claims", "links", "nodes", "stats", "view"]);
         expect(graph.stats).toEqual({ nodes: 2, links: 1, claims: 1 });
@@ -419,7 +423,7 @@ layer(graphLive)("knowledge JSON graph", (it) => {
         const exporter = yield* KbGraphExport;
         const f = yield* withLedger({});
         const after = yield* fixture({ id: "claim/2", public: true });
-        const next = yield* S.decodeEffect(S.toType(KbClaim))({
+        const next = yield* decodeClaim({
           ...after.claim,
           supersedes: O.some(f.claim.id),
         });
@@ -440,7 +444,7 @@ layer(graphLive)("knowledge JSON graph", (it) => {
           ...f.assertions[1]!,
           sourceRef: { ...f.assertions[1]!.sourceRef, locator: "captures/web/guide.md" },
         });
-        const lines = yield* Effect.forEach([f.internal, local], (a) => S.encodeEffect(S.fromJsonString(Assertion))(a));
+        const lines = yield* Effect.forEach([f.internal, local], (assertion) => encodeAssertion(assertion));
         yield* fs.writeFileString(`${f.root}/assertions.jsonl`, `${A.join(lines, "\n")}\n`);
         const outward = yield* exporter.write(f.root, "outward", `${f.out}-outward.json`, false);
         expect(outward.claims["claim/1"]?.assertions[0]).toMatchObject({
@@ -574,7 +578,7 @@ layer(graphLive)("knowledge JSON graph", (it) => {
         expect(present).toBe(false);
         const clean = yield* fixture({ public: true });
         yield* writeGraphRows(f.root, [clean.claim], clean.assertions);
-        const encoded = yield* S.encodeEffect(S.fromJsonString(KbRegistryNode))(
+        const encoded = yield* encodeRegistryNode(
           KbRegistryNode.make({ id: "entity/1", type: "Concept", label: "CANARY-INTERNAL-registry" })
         );
         yield* fs.writeFileString(`${f.root}/registry.jsonl`, encoded);
