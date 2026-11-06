@@ -7,6 +7,7 @@ import type { StackServices } from "alchemy/Stack";
 import * as State from "alchemy/State";
 import * as A from "effect/Array";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -14,6 +15,7 @@ import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
@@ -243,10 +245,16 @@ test.provider(
       const origin = yield* deployFixture(stack);
       const fs = yield* FileSystem.FileSystem;
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const path = yield* Path.Path;
+      const inheritedPath = yield* Config.String("PATH").pipe(Config.withDefault(""));
       const directory = yield* fs.makeTempDirectoryScoped();
+      // The fixture runs its build through Bun, the runtime executing this
+      // suite, so a cache miss never depends on another package manager being
+      // installed. It has no dependencies, so Bun writes no lockfile and the
+      // Turbo task hash stays stable across runs.
       const packageJson = yield* encodeJson({
         name: "cache-protocol-fixture",
-        packageManager: "pnpm@11.3.0",
+        packageManager: `bun@${process.versions.bun}`,
         private: true,
         scripts: { build: "node build.cjs" },
       });
@@ -254,13 +262,6 @@ test.provider(
         tasks: { build: { inputs: ["build.cjs"], outputs: ["out.txt"] } },
       });
       yield* fs.writeFileString(`${directory}/package.json`, packageJson);
-      // pnpm 11 rewrites a non-canonical lockfile before `pnpm run`, and the
-      // lockfile is a Turbo global hash input, so the fixture is written in
-      // pnpm's canonical form to keep the task hash stable across runs.
-      yield* fs.writeFileString(
-        `${directory}/pnpm-lock.yaml`,
-        "lockfileVersion: '9.0'\n\nsettings:\n  autoInstallPeers: true\n  excludeLinksFromLockfile: false\n\nimporters:\n\n  .: {}\n",
-      );
       yield* fs.writeFileString(`${directory}/turbo.json`, turboJson);
       yield* fs.writeFileString(
         `${directory}/build.cjs`,
@@ -277,6 +278,7 @@ test.provider(
             {
               cwd: directory,
               env: {
+                PATH: `${path.dirname(process.execPath)}${path.sep === "\\" ? ";" : ":"}${inheritedPath}`,
                 TURBO_API: origin,
                 TURBO_CACHE: "local:rw,remote:rw",
                 TURBO_TEAM: "alpha",

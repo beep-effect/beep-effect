@@ -30,6 +30,9 @@ type Storage = Pick<ReadWriteBucketClient, "get" | "head" | "put">;
 
 const segment = S.String.check(S.isPattern(/^[a-zA-Z0-9_-]+$/u));
 
+/** The team slug and artifact hash segment the handler accepts. */
+export const TeamSlug = segment;
+
 const hashes = S.Struct({ hashes: S.Array(segment) });
 
 const validSegment = S.is(segment);

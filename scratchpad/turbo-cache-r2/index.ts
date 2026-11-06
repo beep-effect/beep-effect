@@ -7,11 +7,12 @@ import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as S from "effect/Schema";
 
 import type { TurboCacheOptions } from "./config.js";
 import { foundationId, tokenId, workerId } from "./config.js";
 import { bindReadWriteBucket } from "./bucket.js";
-import { artifactHandler } from "./protocol.js";
+import { artifactHandler, TeamSlug } from "./protocol.js";
 
 export type { TurboCacheOptions } from "./config.js";
 
@@ -37,10 +38,13 @@ export const turboCache = (options: TurboCacheOptions) => {
   }).pipe(retainInStage, Namespace.set(foundationId(options)));
 
   const implementation = Effect.gen(function* makeCache() {
+    // Reject team names the handler's slug check would refuse before any
+    // token is provisioned for them.
+    const teams = yield* S.decodeEffect(S.Array(TeamSlug))(options.teams).pipe(Effect.orDie);
     const resource = yield* bucket;
     const bind = yield* bindReadWriteBucket;
     const storage = yield* bind(resource);
-    const credentials = yield* Effect.forEach(options.teams, team => Effect.gen(function* resolveCredential() {
+    const credentials = yield* Effect.forEach(teams, team => Effect.gen(function* resolveCredential() {
     const secret = yield* Random(tokenId(options, team)).pipe(retainInStage, Namespace.set(foundationId(options)));
     const token = yield* secret.text;
     return { team, token };

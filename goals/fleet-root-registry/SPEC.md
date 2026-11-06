@@ -60,8 +60,10 @@ a row gets `legacy`; every lane without a row gets `adopted`. Adoption is
 idempotent, never deletes a row, and an explicit `register` wins.
 
 Seat roles are workload-named (operator ruling 2026-11-06): `review`,
-`research` and `impl` replace the exploration's `a`, `b`, `c` so `beep session
-open` and the orchestrator can route work by seat without a second field.
+`research` and `impl` replace the exploration's `a`, `b`, `c` so a later
+consumer can route work by seat without a second field. This packet only
+records the role and exposes it through `fleet --join` and `describe`; no
+command reads `seatRole` to route work yet (see Non-Goals).
 
 ## Views
 
@@ -88,6 +90,12 @@ open` and the orchestrator can route work by seat without a second field.
 - A bare shared object store.
 - A summary DAG over the session ledger (captured in `explorations/INBOX.md`).
 - Changing plain `beep worktree fleet` output.
+- Routing work by `seatRole`. `beep session open` keeps listing ledger rows and
+  the orchestrator keeps its current routing; neither reads the joined view in
+  this packet. `lane-bootstrap` writes the creating seat's role into new rows,
+  and the seat-routing consumer (session open grouping live rows by seat, the
+  orchestrator choosing a seat for a workload) is captured in
+  `explorations/INBOX.md` for its own packet.
 
 ## Source Hierarchy
 
@@ -134,8 +142,11 @@ Higher sources outrank lower sources when they conflict.
       clones, `<clone>-worktrees` lanes, Claude Code nested worktree lanes, and
       `beep/seats/main` plus `beep/lanes/x`, all origin-matched): with the
       three roots configured, `fleet --json` lists every checkout; with roots
-      unset, output is byte-identical to the pre-change build on the fixture
-      and on this workstation.
+      unset and a fixed clock (`TestClock`) over the same fixture inputs,
+      output is byte-identical to the pre-change build. On this workstation
+      the before/after `fleet --json` outputs match once the volatile
+      `scannedAt` field is dropped; the JSON output contract itself is
+      unchanged.
 - [ ] `fleet --join` on the fixture prints each checkout's mirror facts beside
       `seatRole`, `owningSeat`, `drainStatus` and the ledger's `lane`, `pr`,
       `state`; legacy clones and unregistered lanes show auto-adopted roles.
@@ -158,7 +169,8 @@ Higher sources outrank lower sources when they conflict.
 | --- | --- | --- |
 | Packet launcher size | `test "$(wc -m < goals/fleet-root-registry/GOAL.md)" -le 4000` | Passes |
 | Manifest JSON | `jq . goals/fleet-root-registry/ops/manifest.json` | Passes |
-| Byte-identical mirror | `bun run beep worktree fleet --json` before and after, roots unset, diffed | Empty diff |
+| Byte-identical mirror (fixture) | Effect Vitest fixture fleet, roots unset, fixed `TestClock`, pre-change vs post-change snapshot | Byte-identical |
+| Mirror parity (workstation) | `bun run beep worktree fleet --json \| jq -S 'del(.scannedAt)'` before and after, roots unset, back to back on a quiet fleet, diffed | Empty diff, or each remaining line attributed to a live change (process, dirty tree) |
 | Package handoff | `bun run beep quality package-verify @beep/repo-cli` | Passes |
 | Whitespace | `git diff --check -- goals/fleet-root-registry` | Passes |
 
