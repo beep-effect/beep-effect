@@ -12,14 +12,14 @@ binary; the Effect-patched tsrs is the build/check gate.
 | `typescript` | `^7.0.2` | Native TypeScript 7 package; no classic `lib/typescript.js` API. |
 | `@typescript/native` | `npm:typescript@^7.0.2` | The same TypeScript 7 package under the retained alias, used by patching and unstable API consumers. Alias consolidation is a separate follow-up. |
 | `@typescript/typescript6` | `6.0.2` (exact) | Microsoft’s classic JS API bridge for the schema-opaque codemod/fixup, scratchpad JSDoc census; declared at root and in scratchpad. |
-| `@effect/tsgo` (pins its seven `@effect/tsgo-<platform>` packages exactly) | `0.64.1` | The Effect language service build of TypeScript 7. Editors and the tsgo-only quality lanes use this reviewed pin. Since 0.59.0 the platform packages also ship the Effect build of one `tsrs` version each, so the `tsrs` pin moves with this one. |
-| `tsrs` + seven `@tsrs/<platform>` optional packages | `0.20.1-ts7.1.0-beta` | The Rust port of the TypeScript 7 compiler ([oxc-project/tsrs](https://github.com/oxc-project/tsrs)); the version tag names the TypeScript it ports (`7.1.0-beta`). `effect-tsgo patch --tsrs` replaces the installed `@tsrs/<platform>` binary with the Effect build of that exact tsrs version, which `@effect/tsgo` 0.64.1 ships for linux-x64, linux-arm64 and darwin-arm64 (Effect-TS/tsgo #901, the 1:1 Rust port of the language service). Runs generated library `beep:build`, `beep:check` and `beep:check:tests` gates, the root `check:configs`, and infra's `-b` check. Framework apps retain their own build commands. |
+| `@effect/tsgo` (pins its seven `@effect/tsgo-<platform>` packages exactly) | `0.67.4` | The Effect language service build of TypeScript 7. Editors and the tsgo-only quality lanes use this reviewed pin. Since 0.59.0 the platform packages also ship the Effect build of one `tsrs` version each, so the `tsrs` pin moves with this one. |
+| `tsrs` + seven `@tsrs/<platform>` optional packages | `0.22.0-ts7.1.0-beta` | The Rust port of the TypeScript 7 compiler ([oxc-project/tsrs](https://github.com/oxc-project/tsrs)); the version tag names the TypeScript it ports (`7.1.0-beta`). `effect-tsgo patch --tsrs` replaces the installed `@tsrs/<platform>` binary with the Effect build of that exact tsrs version, which `@effect/tsgo` 0.67.4 ships for linux-x64, linux-arm64 and darwin-arm64 (Effect-TS/tsgo #901, the 1:1 Rust port of the language service). Runs generated library `beep:build`, `beep:check` and `beep:check:tests` gates, the root `check:configs`, and infra's `-b` check. Framework apps retain their own build commands. |
 
 The root `prepare` script (`effect-tsgo unpatch --tsrs && node scripts/prune-tsgo-backups.mjs && effect-tsgo patch --tsrs`)
 copies the Effect binaries over the native package's Go binary and over the
 `@tsrs/<platform>` binary, keeping the stock ones beside them as `tsc.original`
 and `tsrs.original`. After install, both of these print
-`Version 7.0.2+effect-tsgo.0.64.1`:
+`Version 7.0.2+effect-tsgo.0.67.4`:
 
 ```text
 node_modules/.bin/tsc      -> @typescript/native/bin/tsc  (patched Go binary)
@@ -35,7 +35,7 @@ the current one (`tools/tsgo-shim/tsgo.js`).
 
 The typecheck and build gates run on the Effect-patched `tsrs` (adopted in
 `goals/tsrs-gates`, which succeeded the tsc-rs gates of 2026-10-14), which
-prints `Version 7.1.0-beta+effect-tsgo.0.64.1 (tsrs 0.20.1-ts7.1.0-beta, …)`:
+prints `Version 7.1.0-beta+effect-tsgo.0.67.4 (tsrs 0.22.0-ts7.1.0-beta, …)`:
 
 ```text
 node_modules/.bin/tsrs     -> tsrs/bin/tsrs  (tsrs's JS launcher; execs the patched @tsrs/<platform>/tsrs)
@@ -106,9 +106,69 @@ After updating:
    through Check": update the root severity map and copied profiles, keep
    the declared-off ledger explicit, and use the full check graph as the census.
 
+## Type-aware Oxlint on tsrs
+
+The installed `@effect/tsgo` 0.67.4 ships the Effect build of tsrs
+`0.22.0-ts7.1.0-beta`, including its type-aware lint backend. There are two
+separate integrations:
+
+- `effect-tsgo patch --tsrs` patches the installed compiler binary. This is
+  what this repository's `prepare` runs; it does not enable the Oxlint plugin.
+- `effect-tsgo --tsrs-lint oxlint <args>` runs the installed Oxlint with the
+  Effect native binding and Effect-patched Rust lint backend, without patching
+  Oxlint on disk. Effect lint rules also require `plugins: ["effecttsgo"]`,
+  type-aware mode, and explicit `effecttsgo/<rule>` severities or a preset.
+  `effect-tsgo patch --oxlint` is the separate on-disk Oxlint integration.
+
+For the existing standard TypeScript deprecated-API rule, the patched tsrs
+launcher can be selected directly for an isolated comparison:
+
+```sh
+OXLINT_TSGOLINT_PATH="$PWD/node_modules/.bin/tsrs-lint" \
+  node_modules/.bin/oxlint --config .oxlintrc.deprecated-apis.jsonc \
+  --disable-nested-config --threads=4 packages/tooling/library/repo-utils
+```
+
+Use `tsrs-lint`, not `tsrs`: Oxlint appends `headless`, and the launcher adds
+`--lint`. To run an Effect-enabled Oxlint profile, use the proxy above so the
+Oxlint binding recognizes the Effect plugin as well as selecting the backend.
+See [the Effect Oxlint setup](https://github.com/Effect-TS/tsgo/blob/main/docs/README.md)
+and [the pinned tsrs lint documentation](https://github.com/oxc-project/tsrs/blob/ed745c993a1310daa5e6866b101d2e48818b351d/tools/tsgolint/README.md).
+
+### Qualification status
+
+A 2026-11-05 local probe of `@beep/repo-utils` checked 111 files with
+`typescript/no-deprecated`. After one warm-up per backend, five alternating
+runs with four workers and `TSRS_FAST=0` had median wall times of 2.35 seconds
+(stock tsgolint 7.0.2005) and 0.90 seconds (Effect-patched tsrs 0.22.0), with
+median maximum RSS of 3.41 GiB and 1.88 GiB respectively. Both returned zero
+findings and exit 0. Separate deprecated-API and Effect `global-console`
+positive controls produced matching diagnostic records and failing exits.
+These are bounded local measurements, not full-repository or hosted CI proof.
+
+The default deprecated-API worker still uses tsgolint. It requires the debug
+assignment summary and unmatched-file inventory to prove every TypeScript
+input has a tsconfig owner. The Rust backend does not emit that evidence,
+including through `effect-tsgo --tsrs-lint oxlint`, so the worker correctly
+fails with `assignment summary missing; cannot prove TypeScript coverage`.
+Adoption must preserve that check through equivalent backend evidence or a
+qualified replacement; a zero diagnostic count is insufficient.
+
+Keep Effect compiler diagnostics enabled: they already gate through Check,
+including the repository's explicit severity map. Enabling Oxlint presets
+must not silently replace that map or duplicate the same rules in both gates.
+
+`TSRS_FAST=1 oxlint --type-aware --type-check` is a separate qualification.
+The documented whole-program behavior requires fast mode, only checks the
+tsconfigs reached by lint inputs, and omits typechecking files outside every
+tsconfig. It does not establish equivalence with Beep's separate source,
+test, script, configuration and build tasks. Fast mode can also change
+compiler diagnostics and cache compatibility. Neither fast mode nor combined
+lint/typechecking is enabled by this upgrade.
+
 ## Binary paths (Linux x64)
 
-Verified at 0.64.1. Substitute the platform triple on other machines.
+Verified at 0.67.4. Substitute the platform triple on other machines.
 
 - `node_modules/@effect/tsgo-linux-x64/lib/tsc` is the latest TypeScript (7.0.2)
   Effect artifact. Since 0.52 it is shipped once in `lib`, not duplicated under
@@ -139,8 +199,8 @@ the copied profiles match the root map exactly (effect-drizzle's former
 `missedPipeableOpportunity` exception was retired 2026-10-31), and that the
 documented plugin options are explicit.
 
-The root map in `tsconfig.base.json` holds all 145 active rules of the installed
-`@effect/tsgo` (140 errors, five declared off: `apiStabilityLeak`,
+The root map in `tsconfig.base.json` holds all 146 active rules of the installed
+`@effect/tsgo` (141 errors, five declared off: `apiStabilityLeak`,
 `experimentalApiUsage`, `unstableApiUsage`, `preferBarrelImport`,
 `preferNamespaceImport`). `preferBarrelImport` stays off because Effect barrel
 imports violate the module-path law. `preferNamespaceImport` stays off because
