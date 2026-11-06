@@ -69,9 +69,9 @@ identifiers, 99 docket-family anchors). Closeout reflection:
 - `goals/agentic-professional-runtime` — this corpus feeds its NEXT roadmap
   lane (corpus ingestion → epistemic claims); the runtime packet owns
   epistemic ingestion, not this one.
-- `goals/ip-law-knowledge-graph` — consumes the organized corpus; its
-  ontology grounding research now includes the corpus-adjacent sources (see
-  its `research/ontology-grounding-corpus.md`).
+- [`practice-kg-mcp`](../practice-kg-mcp/README.md) — current owner of the
+  queryable practice graph. The former IP-law graph packet was retired;
+  its historical references are not current launch targets.
 - `goals/agentic-cad-patent-tooling` — the Precision Planting CAD package
   directory is its active workspace; this packet catalogs a copy and leaves
   the original in place.

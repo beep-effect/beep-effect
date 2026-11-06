@@ -69,6 +69,27 @@ second-pass extraction and fidelity gates in this packet. Match by source digest
 and derivation/occurrence records before proposing any adoption. Never infer
 semantic message equality from identical filenames, file sizes or an engine pass.
 
+### SSD continuation and infrastructure failures
+
+After 25 original worker stores were terminal, the operator's cleanup lane
+moved future output/indexing to the worker's SSD. Accepted input inodes and
+completed output remain on their original disk. The continuation validates the
+prior source root, its filesystem identity and unchanged extraction policy,
+then passes those original inputs directly into the existing native sandbox.
+Imported terminal records must match the retained prior receipts; new output
+uses a separate SSD scratch. Resolve the current private job identities rather
+than restarting the older unit.
+
+An initial nested mount-view attempt passed input identity checks but the inner
+native sandbox could not create its namespace. Its eight infrastructure launch
+failures, and the interrupted original partial attempt, are retained separately.
+They are not recovered mail or a new acceptance result. The waiting publisher
+was stopped before upload. The corrected continuation passed a real native
+sandbox/version probe and a sandboxed input hash probe without weakening kernel
+permissions. Startup now stops on a sandbox preflight failure before sweeping
+inputs. Publication includes the retained attempts as well as old and new
+output, and independent recovery samples cover each selected archive source.
+
 ## Recovery archive and current jobs
 
 The operator's external recovery archive is a dedicated compressed, encrypted
