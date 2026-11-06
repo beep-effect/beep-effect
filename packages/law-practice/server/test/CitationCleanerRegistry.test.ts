@@ -3,15 +3,41 @@ import {
   CitationCleanerProduced,
 } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import { CitationPythonUnicodeStorage } from "@beep/law-practice-server/internal/Citation/PythonHash";
+import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
+import * as TestClock from "effect/testing/TestClock";
 import { makeCitationCleanerRegistryHarness as setup } from "./CitationCleanerRegistry.fixtures.ts";
 
 describe("live cleaner registry", () => {
+  it.effect("rejects out-of-range host hashes and bounds stalled callbacks", () =>
+    Effect.gen(function* () {
+      const h = yield* setup();
+      const key = yield* h.values.retainHost("host-key");
+      const value = yield* h.values.retainHost("host-value");
+      h.hooks({ hash: () => Effect.succeed(BigInt(2) ** BigInt(100)) });
+      const malformed = yield* h.registry.set(key, value).pipe(Effect.flip);
+      expect(malformed).toMatchObject({ reason: "callback-failed" });
+      const entered = yield* Deferred.make<void>();
+      h.hooks({ hash: () => Deferred.succeed(entered, undefined).pipe(Effect.andThen(Effect.never)) });
+      const pending = yield* h.registry.set(key, value).pipe(Effect.forkChild);
+      yield* Deferred.await(entered);
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      yield* TestClock.adjust(limits.cleanDeadline);
+      const timedOut = yield* Fiber.join(pending).pipe(Effect.flip);
+      expect(timedOut).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "cleanDeadline" });
+      h.hooks({ hash: () => Effect.succeed(BigInt(17)) });
+      yield* h.registry.set(key, value);
+      const entries = yield* h.registry.read;
+      expect(entries).toHaveLength(6);
+    })
+  );
   it.effect("dispatches native hashed names through real builtins without host hooks", () =>
     Effect.gen(function* () {
       const h = yield* setup();

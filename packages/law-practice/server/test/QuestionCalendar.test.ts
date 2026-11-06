@@ -160,6 +160,60 @@ const keyedEvent = (categories: ReadonlyArray<string>): readonly [string, Stored
 ];
 
 describe("@beep/law-practice-server QuestionCalendar", () => {
+  it.layer(
+    calendarWith([
+      [
+        "incomplete",
+        {
+          event: graphEvent("incomplete", "2026-10-02", "", ["Docket - unverified"]),
+          key: O.none(),
+        },
+      ],
+    ])
+  )("malformed calendar boundaries", (it) => {
+    it.effect("rejects invalid identifiers and unrestorable prior state without writes", () =>
+      Effect.gen(function* () {
+        const calendar = yield* QuestionCalendar;
+        const store = yield* FakeEvents;
+        const before = yield* Ref.get(store);
+        const proposal = write(day(11, 2), "Response due");
+        const badKey = yield* calendar.upsert({ key: "", write: proposal.write }).pipe(Effect.flip);
+        expect(badKey.reason).toBe("calendar-unavailable");
+        const badId = write(day(11, 2), "Response due", O.some("/invalid/event"));
+        const invalid = yield* calendar.upsert({ key: questionWriteKey(badId), write: badId.write }).pipe(Effect.flip);
+        expect(invalid.reason).toBe("event-not-found");
+        const incomplete = write(day(11, 2), "Response due", O.some("incomplete"));
+        const prior = yield* calendar
+          .upsert({ key: questionWriteKey(incomplete), write: incomplete.write })
+          .pipe(Effect.flip);
+        expect(prior.reason).toBe("event-not-found");
+        const after = yield* Ref.get(store);
+        expect(after).toEqual(before);
+      })
+    );
+  });
+  it.layer(
+    makeQuestionCalendarLayer(config).pipe(
+      Layer.provide(
+        makeM365Stub({
+          findEventsByIdempotencyKey: () => Effect.succeed(M365EventCollection.make({ value: [] })),
+          createEvent: () => Effect.succeed(GraphEvent.make({ id: "" })),
+        })
+      )
+    )
+  )("incomplete Graph create response", (it) => {
+    it.effect("refuses a created event with no identifier", () =>
+      Effect.gen(function* () {
+        const calendar = yield* QuestionCalendar;
+        const proposal = write(day(11, 2), "Response due");
+        const error = yield* calendar
+          .upsert({ key: questionWriteKey(proposal), write: proposal.write })
+          .pipe(Effect.flip);
+        expect(error.reason).toBe("calendar-unavailable");
+      })
+    );
+  });
+
   it.layer(calendarWith([provisionalEvent(["M: 90001", "Docket - unverified"])]), { timeout: "10 seconds" })(
     "a named provisional event",
     (it) => {

@@ -1,13 +1,20 @@
 import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { it } from "@beep/test-runner";
 import {
+  assertCitationFullLawMetadataInput,
   assertCitationLawMetadataBudget,
+  assertCitationLawMetadataConfiguration,
   assertCitationLawMetadataLifetime,
   replayCitationLawMetadata,
 } from "./CitationLawMetadata.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source law metadata composition", (it) => {
+  it.effect(
+    "validates full-law input after edition preflight without partial publication",
+    assertCitationFullLawMetadataInput
+  );
+  it.effect("rejects malformed installation and oversized enclosing budgets", assertCitationLawMetadataConfiguration);
   it.effect("refuses partial patches, retains budgets and owns configuration", assertCitationLawMetadataBudget, {
     timeout: 120000,
   });

@@ -104,4 +104,25 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("exact publication r
       expect("cause" in result).toBe(false);
     })
   );
+  it.effect("redacts malformed digest output separately for citation and enclosing resource hashes", () =>
+    Effect.gen(function* () {
+      const data = yield* inputs;
+      const row = A.getUnsafe(data.cases, 0).input;
+      const crypto = yield* Digest.Digest;
+      for (const failAt of [1, 2]) {
+        let calls = 0;
+        const digest = makeTestCitationDigest((algorithm, bytes) => {
+          calls++;
+          return calls === failAt ? Effect.succeed(new Uint8Array(1)) : crypto.digest(algorithm, bytes);
+        });
+        const failure = yield* makeCitationPublicationResourceHash(row).pipe(
+          Effect.provideService(Digest.Digest, digest),
+          Effect.flip
+        );
+        expect(calls).toBe(failAt);
+        expect(failure).toMatchObject({ _tag: "CitationPublicationResourceHashFailure", reason: "digest-failed" });
+        expect("cause" in failure).toBe(false);
+      }
+    })
+  );
 });

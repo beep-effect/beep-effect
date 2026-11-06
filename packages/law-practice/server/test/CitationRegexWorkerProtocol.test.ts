@@ -1,5 +1,6 @@
 import { readCitationByteFrames } from "@beep/law-practice-server/internal/Citation/ByteFrames";
 import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
+import { callCitationRegexRpc } from "@beep/law-practice-server/internal/Citation/RegexWorkerClient";
 import {
   CitationRegexMatchMode,
   CitationRegexWorkerJob,
@@ -9,6 +10,10 @@ import {
   preflightCitationRegexJob,
   readCitationRegexFrames,
 } from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
+import {
+  CitationRegexWorkerStarted,
+  encodeCitationRegexControl,
+} from "@beep/law-practice-server/internal/Citation/RegexWorkerRpc";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -17,6 +22,8 @@ import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+import * as PlatformError from "effect/PlatformError";
+import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
@@ -338,5 +345,68 @@ it.effect("maps stream failures without leaking their original payload", () =>
       () => "channel"
     ).pipe(Effect.flip);
     expect(citationResult27).toBe("channel");
+  })
+);
+
+it.effect("rejects malformed preparation inputs and closes platform stream failures", () =>
+  Effect.gen(function* () {
+    const invalidPolicy = yield* makeCitationRegexJobPreparation(null).pipe(Effect.flip);
+    expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
+    const limits = (yield* defaultCitationEnginePolicy).limits;
+    const preparation = yield* makeCitationRegexJobPreparation(limits);
+    const invalidSource = yield* preparation
+      .prepare({ width: 1, bytes: utf8.encode("a") }, null, 0, 1, () =>
+        Effect.die("Malformed source must fail before allocation")
+      )
+      .pipe(Effect.flip);
+    expect(invalidSource).toMatchObject({ reason: "invalid-frame" });
+    const broken = yield* readCitationRegexFrames(
+      Stream.fail(
+        PlatformError.systemError({ module: "Stdio", method: "stdin", _tag: "Unknown", cause: "private-source" })
+      ),
+      100,
+      1,
+      nothing
+    ).pipe(Effect.flip);
+    expect(broken).toMatchObject({ reason: "channel-failed" });
+    expect("cause" in broken).toBe(false);
+  })
+);
+
+it.effect("rejects out-of-order RPC controls and does not retry failed writes", () =>
+  Effect.gen(function* () {
+    const limits = (yield* defaultCitationEnginePolicy).limits;
+    const preparation = yield* makeCitationRegexJobPreparation(limits);
+    const native = { width: 1, bytes: utf8.encode("a") };
+    const { job, frame } = yield* preparation.prepare(native, native, 0, 1, nothing);
+    const wrongOrder = yield* encodeCitationRegexControl(
+      CitationRegexWorkerStarted.make({}),
+      limits.processMessageBytes
+    );
+    const invalid = yield* callCitationRegexRpc(
+      { stdin: Sink.drain, stdout: Stream.make(wrongOrder) },
+      job,
+      frame,
+      limits.processMessageBytes
+    ).pipe(Effect.flip);
+    expect(invalid).toMatchObject({ reason: "invalid-frame" });
+    let sends = 0;
+    const failed = yield* callCitationRegexRpc(
+      {
+        stdout: Stream.never,
+        stdin: Sink.forEach(() =>
+          Effect.gen(function* () {
+            sends++;
+            return yield* PlatformError.badArgument({ module: "test", method: "stdin", description: "private-source" });
+          })
+        ),
+      },
+      job,
+      frame,
+      limits.processMessageBytes
+    ).pipe(Effect.flip);
+    expect(failed).toMatchObject({ reason: "channel-failed" });
+    expect("cause" in failed).toBe(false);
+    expect(sends).toBe(1);
   })
 );

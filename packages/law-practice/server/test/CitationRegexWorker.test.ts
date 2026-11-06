@@ -7,6 +7,7 @@ import {
 import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { CitationRegexPatternProfile } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { makeCitationRegexWorker } from "@beep/law-practice-server/internal/Citation/RegexWorker";
+import { makeCitationRegexEvaluation } from "@beep/law-practice-server/internal/Citation/RegexWorkerEvaluation";
 import { citationRegexWorkerProgram } from "@beep/law-practice-server/internal/Citation/RegexWorkerProgram";
 import {
   CitationRegexMatchMode,
@@ -34,6 +35,7 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as PlatformError from "effect/PlatformError";
 import * as Predicate from "effect/Predicate";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
@@ -213,6 +215,81 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
         expect(A.map(replies, (reply) => reply._tag)).toEqual(["Ready", "Started", tag]);
         expect(A.last(replies)).toMatchObject({ value: expected });
       }
+    })
+  );
+  it.effect("rejects missing requests and sanitizes each broken reply stage", () =>
+    Effect.gen(function* () {
+      const stdio = yield* Stdio.Stdio;
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const startup = yield* decodeStartup({ limits, descriptor, engine: "python-re" });
+      const argument = yield* encodeCitationRegexStartup(startup);
+      const frame = yield* encodeCitationRegexJob(
+        CitationRegexWorkerJob.make({
+          patternWidth: 1,
+          patternBytes: pattern.bytes,
+          sourceWidth: 1,
+          sourceBytes: native("b ab").bytes,
+          flags: 0,
+          mode: "finditer",
+          maxMatches: 2,
+        }),
+        limits.processMessageBytes
+      );
+      const missingStartup = yield* citationRegexWorkerProgram.pipe(
+        Effect.provideService(Stdio.Stdio, { ...stdio, args: Effect.succeed([]) }),
+        Effect.flip
+      );
+      expect(missingStartup).toMatchObject({ reason: "invalid-runtime" });
+      const missingRequest = yield* citationRegexWorkerProgram.pipe(
+        Effect.provideService(Stdio.Stdio, {
+          ...stdio,
+          args: Effect.succeed([argument]),
+          stdin: Stream.empty,
+          stdout: () => Sink.drain,
+        }),
+        Effect.flip
+      );
+      expect(missingRequest).toMatchObject({ reason: "invalid-frame" });
+      for (const brokenStage of [1, 2, 3]) {
+        let stage = 0;
+        const error = yield* citationRegexWorkerProgram.pipe(
+          Effect.provideService(Stdio.Stdio, {
+            ...stdio,
+            args: Effect.succeed([argument]),
+            stdin: Stream.make(frame),
+            stdout: () => {
+              stage++;
+              return stage === brokenStage
+                ? Sink.fail(PlatformError.systemError({ module: "Stdio", method: "stdout", _tag: "Unknown" }))
+                : Sink.drain;
+            },
+          }),
+          Effect.flip
+        );
+        expect(error).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "channel-failed" });
+        expect(stage).toBe(brokenStage);
+      }
+    })
+  );
+  it.effect("rejects malformed native source storage before evaluation", () =>
+    Effect.gen(function* () {
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const startup = yield* decodeStartup({ limits, descriptor, engine: "python-re" });
+      const evaluator = yield* makeCitationRegexEvaluation(startup);
+      const error = yield* evaluator
+        .evaluate(
+          CitationRegexWorkerJob.make({
+            patternWidth: 1,
+            patternBytes: pattern.bytes,
+            sourceWidth: 2,
+            sourceBytes: new Uint8Array([98]),
+            flags: 0,
+            mode: "finditer",
+            maxMatches: 2,
+          })
+        )
+        .pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-frame" });
     })
   );
   it.effect("executes real matching and returns native captures only after confirmed retirement", () =>

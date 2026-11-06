@@ -100,7 +100,7 @@ export const measureCitationPythonText = Effect.fn("Citation.measurePythonText")
   let points = 0;
   for (let index = 0; index < Str.length(text); ) {
     if (points % 4096 === 0) yield* Effect.yieldNow;
-    const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
+    const point = O.getOrThrow(Str.codePointAt(text, index));
     largest = Num.max(largest, point);
     index += pointUnits(point);
     points++;
@@ -228,7 +228,7 @@ export const makeCitationPythonHash = Effect.fn("Citation.makePythonHash")(funct
           let left = 0;
           return yield* hash(points * width, () => {
             if (left === 0) {
-              pending = O.getOrElse(Str.codePointAt(text, index), () => 0);
+              pending = O.getOrThrow(Str.codePointAt(text, index));
               index += pending > 65535 ? 2 : 1;
               left = width;
             }

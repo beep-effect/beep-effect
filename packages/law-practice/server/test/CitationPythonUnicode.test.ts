@@ -112,6 +112,16 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("lossless Python Uni
       ]) {
         const citationResult6 = yield* Effect.flip(unicode.fromStorage(bad));
         expect(citationResult6.reason).toBe("invalid-input");
+        let reserved = false;
+        const refused = yield* unicode
+          .fromStorageReserved(bad, () =>
+            Effect.sync(() => {
+              reserved = true;
+            })
+          )
+          .pipe(Effect.flip);
+        expect(refused.reason).toBe("invalid-input");
+        expect(reserved).toBe(false);
       }
       const policy = { ...limits, producedTextUtf16: 1 };
       const tight = yield* makeCitationPythonUnicode(policy);
@@ -120,6 +130,19 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("lossless Python Uni
       expect(citationResult7.reason).toBe("limit-exceeded");
       const tooWide = yield* Effect.flip(tight.fromStorage({ width: 4, bytes: new Uint8Array([0, 0xf6, 1, 0]) }));
       expect(tooWide.reason).toBe("limit-exceeded");
+      const reservedTooWide = yield* tight
+        .fromStorageReserved({ width: 4, bytes: new Uint8Array([0, 0xf6, 1, 0]) }, () =>
+          Effect.die("Oversized native storage must fail before reservation")
+        )
+        .pipe(Effect.flip);
+      expect(reservedTooWide.reason).toBe("limit-exceeded");
+      const invalidText = yield* unicode.fromText(null).pipe(Effect.flip);
+      expect(invalidText.reason).toBe("invalid-input");
+      const invalidReservedText = yield* unicode
+        .fromTextReserved(null, () => Effect.die("Invalid text must fail before reservation"))
+        .pipe(Effect.flip);
+      expect(invalidReservedText.reason).toBe("invalid-input");
+
       const citationResult8 = yield* unicode.fromText("");
       expect(citationResult8.storage).toEqual({ width: 1, bytes: new Uint8Array() });
     })

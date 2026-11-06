@@ -70,6 +70,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
     );
     it.effect("checks expanded output before allocation and retains its captured policy", () =>
       Effect.gen(function* () {
+        const invalidPolicy = yield* makeCitationPythonLower(null).pipe(Effect.flip);
+        expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
         const limits = { ...(yield* defaultCitationEnginePolicy).limits, producedTextUtf16: 1 };
         const { lower } = yield* makeCitationPythonLower(limits);
         limits.producedTextUtf16 = 10;

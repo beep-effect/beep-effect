@@ -109,7 +109,7 @@ const encodeText = Effect.fnUntraced(function* (text: string, width: 1 | 2 | 4, 
   let cursor = 0;
   for (let index = 0; index < Str.length(text); ) {
     if (cursor % (width * 4096) === 0) yield* Effect.yieldNow;
-    let point = O.getOrElse(Str.codePointAt(text, index), () => 0);
+    let point = O.getOrThrow(Str.codePointAt(text, index));
     index += pointUnits(point);
     for (let part = 0; part < width; part++) {
       bytes[cursor++] = point & 255;

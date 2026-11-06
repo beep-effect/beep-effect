@@ -166,6 +166,19 @@ export const assertCitationCaseNameScanLifetime = Effect.fn("CaseNameScanTest.li
 export const assertCitationCaseNameScanDefaultPolicy = Effect.fn("CaseNameScanTest.defaultPolicy")(function* () {
   const corpus = yield* load();
   const setup = yield* setupCitationMetadataRuntime("bun");
+  for (const configuration of [
+    null,
+    {
+      ...corpus.configuration,
+      patterns: { ...corpus.configuration.patterns, year: { width: 1, bytes: new Uint8Array([88]) } },
+    },
+  ]) {
+    const rejected = yield* makeCitationCaseNameScan(setup.limits, setup.runtime, configuration).pipe(
+      Effect.provideContext(setup.provided),
+      Effect.flip
+    );
+    expect(rejected).toMatchObject({ reason: "invalid-configuration" });
+  }
   const scanner = yield* makeCitationCaseNameScan(setup.limits, setup.runtime, corpus.configuration).pipe(
     Effect.provideContext(setup.provided)
   );

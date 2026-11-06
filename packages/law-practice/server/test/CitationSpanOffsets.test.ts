@@ -175,6 +175,18 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source diff
       const geometry = yield* makeCitationHtmlTagGeometry(limits, raw).pipe(
         Effect.provideService(CitationTextBudget, budget)
       );
+      const invalidPolicy = yield* makeCitationHtmlTagGeometry(null, raw).pipe(
+        Effect.provideService(CitationTextBudget, budget),
+        Effect.flip
+      );
+      expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
+      const invalidInput = yield* makeCitationHtmlTagGeometry(limits, null).pipe(
+        Effect.provideService(CitationTextBudget, budget),
+        Effect.flip
+      );
+      expect(invalidInput).toMatchObject({ reason: "invalid-input" });
+      const invalidTags = yield* geometry.convert(null).pipe(Effect.flip);
+      expect(invalidTags).toMatchObject({ reason: "invalid-input" });
       const query = yield* Effect.fromOption(A.findFirst(document.queries, (row) => row.tags.length === 1));
       const tags = yield* geometry.find(query.position);
       A.getUnsafe(tags, 0).text.bytes.fill(0);

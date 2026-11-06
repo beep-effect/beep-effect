@@ -33,13 +33,16 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { CitationCallbackObservation, prepareCallbackObservation } from "./CitationCallbackSession.fixtures.ts";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 
 const Corpus = S.fromJsonString(
@@ -291,6 +294,43 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("default registered 
           );
           const citationResult11 = yield* projector.project(state);
           expect(citationResult11.document.groups).toHaveLength(1);
+          if (row.name === "page-1") {
+            const crypto = yield* Digest.Digest;
+            const scopeFailure = yield* makeCitationRegisteredSessionDescriptors(state).pipe(
+              Effect.provideService(CitationFrozenEditions, frozen),
+              Effect.provideService(
+                Digest.Digest,
+                makeTestCitationDigest(() => Effect.die("private-scope-cause"))
+              ),
+              Effect.flip
+            );
+            expect(scopeFailure).toMatchObject({ _tag: "CitationCallbackFailure", reason: "identity-failed" });
+            expect("cause" in scopeFailure).toBe(false);
+            const keyDigest = makeTestCitationDigest((algorithm, bytes) =>
+              Str.startsWith('["eyecite-resource-current-hash/v1"')(new TextDecoder().decode(bytes))
+                ? Effect.die("private-resource-key-cause")
+                : crypto.digest(algorithm, bytes)
+            );
+            const keyDescriptors = yield* makeCitationRegisteredSessionDescriptors(state).pipe(
+              Effect.provideService(CitationFrozenEditions, frozen),
+              Effect.provideService(Digest.Digest, keyDigest)
+            );
+            const keyFailure = yield* keyDescriptors.describe(A.getUnsafe(state.groups, 0).resource).pipe(Effect.flip);
+            expect(keyFailure).toMatchObject({ _tag: "CitationCallbackFailure", reason: "identity-failed" });
+            expect("cause" in keyFailure).toBe(false);
+            const nodeDigest = makeTestCitationDigest((algorithm, bytes) =>
+              Str.startsWith('["citation-session-node/v1"')(new TextDecoder().decode(bytes))
+                ? Effect.die("private-session-node-cause")
+                : crypto.digest(algorithm, bytes)
+            );
+            const failingProjector = yield* makeCitationSessionDocumentProjector().pipe(
+              Effect.provideService(CitationSessionResourceDescriptors, descriptors),
+              Effect.provideService(Digest.Digest, nodeDigest)
+            );
+            const nodeFailure = yield* failingProjector.project(state).pipe(Effect.flip);
+            expect(nodeFailure).toMatchObject({ _tag: "CitationCallbackFailure", reason: "identity-failed" });
+            expect("cause" in nodeFailure).toBe(false);
+          }
         }),
         { concurrency: 1, discard: true }
       );

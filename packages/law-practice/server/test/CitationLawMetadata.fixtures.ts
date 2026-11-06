@@ -5,9 +5,14 @@ import {
   makeCitationOperationAdmission,
 } from "@beep/law-practice-server/internal/Citation/Admission";
 import {
+  CitationFrozenEditions,
+  makeCitationFrozenEditions,
+} from "@beep/law-practice-server/internal/Citation/FrozenEditions";
+import {
   CitationLawMetadataConfiguration,
   CitationLawMetadataInput,
   CitationLawMetadataPatch,
+  makeCitationFullLawMetadata,
   makeCitationLawMetadata,
 } from "@beep/law-practice-server/internal/Citation/LawMetadata";
 import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
@@ -15,16 +20,19 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
+import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import {
   assertCitationWorkerCapturedDeadline,
   assertCitationWorkerClosedLifetime,
   assertCitationWorkerCompositionReleased,
+  setupCitationMetadataRuntime,
   setupCitationRegexRuntime,
 } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
@@ -181,4 +189,57 @@ export const assertCitationLawMetadataLifetime = Effect.fn("LawMetadataTest.life
   );
   const none = yield* timed.observed.snapshot;
   expect(none).toEqual({ spawned: 0, confirmed: 0 });
+});
+
+/** Installation rejects malformed policy/configuration and mismatched fixed patterns before spawning. */
+export const assertCitationLawMetadataConfiguration = Effect.fn("LawMetadataTest.configuration")(function* () {
+  const corpus = yield* loadCitationLawMetadataFixtures();
+  const setup = yield* setupCitationMetadataRuntime("bun");
+  const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
+  for (const [policy, runtime, configuration] of [
+    [{}, setup.runtime, corpus.configuration],
+    [setup.limits, setup.runtime, {}],
+    [setup.limits, {}, corpus.configuration],
+    [setup.limits, setup.runtime, { ...corpus.configuration, lawPattern: changedPattern }],
+  ]) {
+    const failed = yield* makeCitationLawMetadata(policy, runtime, configuration).pipe(
+      Effect.provideContext(setup.provided),
+      Effect.flip
+    );
+    expect(failed).toMatchObject({ reason: "invalid-configuration" });
+  }
+  const oversized = yield* makeCitationTextBudget({
+    ...setup.limits,
+    producedTextUtf16: setup.limits.producedTextUtf16 + 1,
+  });
+  const failed = yield* makeCitationLawMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
+    Effect.provideContext(Context.add(setup.provided, CitationTextBudget, oversized)),
+    Effect.flip
+  );
+  expect(failed).toMatchObject({ reason: "invalid-configuration" });
+  const observed = yield* setup.observed.snapshot;
+  expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+});
+
+/** Full-law input decoding follows selection preflight and cannot publish a partial result. */
+export const assertCitationFullLawMetadataInput = Effect.fn("LawMetadataTest.fullInput")(function* () {
+  const corpus = yield* loadCitationLawMetadataFixtures();
+  const setup = yield* setupCitationMetadataRuntime("bun");
+  const { bundle } = yield* loadCitationFrozenEditionFixtures();
+  const editions = yield* makeCitationFrozenEditions(bundle);
+  const metadata = yield* makeCitationFullLawMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
+    Effect.provideContext(Context.add(setup.provided, CitationFrozenEditions, editions)),
+    DateTime.withCurrentZoneOffset(0)
+  );
+  const request = A.getUnsafe(corpus.cases, 11).request;
+  const invalid = yield* metadata
+    .apply({ ...request, exact: [], variation: [], prior: null, words: "malformed" })
+    .pipe(Effect.flip);
+  expect(invalid).toMatchObject({ _tag: "CitationLawMetadataFailure", reason: "invalid-input" });
+  const before = yield* setup.observed.snapshot;
+  expect(before).toEqual({ spawned: 0, confirmed: 0 });
+  const valid = yield* metadata.apply({ ...request, exact: [], variation: [], prior: null });
+  const patch = yield* Effect.fromOption(valid.patch);
+  expect(patch).toEqual(A.getUnsafe(corpus.cases, 11).patch);
+  expect(valid.editionGuess).toBeNull();
 });
