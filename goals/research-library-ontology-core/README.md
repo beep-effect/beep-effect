@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,10 +31,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 Close. The work landed in #2771 (merge `92b42155b3`). The real library was migrated to catalog v2 and its ontology
-rendered after that merge. A docs-only re-final PR carries `proposedCloseout`, because #2771 merged before its
-readiness monitor recorded merge-ready. After it merges: `goals completion refresh`, then the `goals set-status`
-adoption PR.
+Closed: `completed-retained`. `goals completion refresh` verified final PR #2787 (merge `34d6cd1309`); the work
+landed in #2771. Open follow-ups recorded by the foundational audit: split `LibrarySourceKind`, provenance for
+`expectedOccurrences`, and a SHACL coherence rule for capture status. A `toShacl` projection in `@beep/ontology`
+is the reflection's promotion candidate.
 
 ## Latest Evidence
 
