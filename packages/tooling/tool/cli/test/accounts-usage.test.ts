@@ -7,6 +7,7 @@ import {
   AccountsBoardLayout,
   AccountsError,
   AccountsStatusReport,
+  AccountsStatusReportJson,
   AccountsUsage,
   AccountUsage,
   AccountUsageOutcome,
@@ -1119,17 +1120,26 @@ describe("accounts status command", () => {
               })
             )
           );
+        const cache = path.join(root, ".local/state/beep/palantiri/account-headroom.json");
         const text = yield* run(["status"]);
+        const cacheExists = yield* fs.exists(cache);
+        expect(cacheExists).toBe(true);
+        yield* fs.remove(cache);
         expect(text).toContain("SuperGrok Heavy");
         expect(text).toContain("· Cursor");
         const json = yield* run(["status", "--json"]);
         expect(json).toContain('"schemaVersion":"accounts-status/v2"');
         expect(json).toContain('"section":"supergrok"');
         expect(json).toContain('"provider":"cursor"');
+        const staged = yield* fs.readFileString(cache).pipe(Effect.flatMap(AccountsStatusReportJson.decode));
+        expect(staged.schemaVersion).toBe("accounts-status/v2");
+        yield* fs.remove(cache);
         // Without a terminal the live screen prints the board once and ends.
         const live = yield* run(["--every", "30"]);
         expect(live).toContain(" Accounts  updated ");
         expect(live).toContain("· Cursor");
+        const liveCacheExists = yield* fs.exists(cache);
+        expect(liveCacheExists).toBe(true);
       })
     );
   });
@@ -1152,8 +1162,17 @@ const runScreen = Effect.fnUntraced(function* (
   keys: ReadonlyArray<ScreenKey>
 ) {
   const terminal = yield* TestTerminal.make({ columns: 90, rows: 40 });
-  const build3 = yield* Layer.build(terminal.layer);
+  const build3 = yield* Layer.build(Layer.mergeAll(terminal.layer, MemoryFileSystem.layer, Path.layer));
   const screenTerminal = Context.get(build3, Terminal.Terminal);
+  const fs = Context.get(build3, FileSystem.FileSystem);
+  const staged = yield* Ref.make(0);
+  const observedFs = FileSystem.make({
+    ...fs,
+    rename: Effect.fnUntraced(function* (from, to) {
+      yield* fs.rename(from, to);
+      yield* Ref.update(staged, (count) => count + 1);
+    }),
+  });
   const poller = AccountsUsage.of({
     accounts: Effect.succeed([]),
     poll: Effect.fn("AccountsUsage.poll")(function* (ref: AccountRef) {
@@ -1165,6 +1184,12 @@ const runScreen = Effect.fnUntraced(function* (
   const screen = yield* watchAccounts(Duration.seconds(30)).pipe(
     Effect.provideService(Terminal.Terminal, screenTerminal),
     Effect.provideService(AccountsUsage, poller),
+    Effect.provideService(FileSystem.FileSystem, observedFs),
+    Effect.provideService(Path.Path, Context.get(build3, Path.Path)),
+    Effect.provideService(
+      ConfigProvider.ConfigProvider,
+      ConfigProvider.fromEnv({ env: { BEEP_PALANTIRI_STATE_ROOT: "/fixture/palantiri" } })
+    ),
     Effect.forkChild
   );
   // Let a second of screen time pass before each key: the first poll lands,
@@ -1176,32 +1201,45 @@ const runScreen = Effect.fnUntraced(function* (
     { discard: true }
   );
   yield* Fiber.join(screen);
-  return yield* terminal.output;
+  return {
+    output: yield* terminal.output,
+    staged: yield* Ref.get(staged),
+    snapshot: yield* fs
+      .readFileString("/fixture/palantiri/account-headroom.json")
+      .pipe(Effect.option, Effect.map(O.flatMap(AccountsStatusReportJson.decodeOption))),
+  };
 });
 
 describe("live accounts screen", () => {
   it.effect("draws the board, polls again on r, and restores the screen on q", () =>
     Effect.gen(function* () {
-      const output = yield* runScreen(Effect.succeed([ok("me@example.com", [weekly(10, inHours(5))])]), [
-        "x",
-        "r",
-        "q",
-      ]);
+      const { output, staged, snapshot } = yield* runScreen(
+        Effect.succeed([ok("me@example.com", [weekly(10, inHours(5))])]),
+        ["x", "r", "q"]
+      );
       expect(Str.startsWith("\u001b[?1049h")(output)).toBe(true);
       expect(Str.endsWith("\u001b[?25h\u001b[?1049l")(output)).toBe(true);
       expect(output).toContain("polling");
       expect(output).toContain("me@example.com");
       expect(output).toContain("r refresh");
+      expect(staged).toBe(2); // Initial poll plus r; x/redraw does not publish.
+      assertSome(
+        O.map(snapshot, (report) => report.schemaVersion),
+        "accounts-status/v2"
+      );
     })
   );
 
   it.effect("keeps waiting when a poll fails, and quits on Ctrl+C or a closed input", () =>
     Effect.gen(function* () {
-      const output = yield* runScreen(Effect.fail(AccountsError.make({ reason: "io", message: "disk gone" })), [
-        { name: "c", ctrl: true },
-      ]);
+      const { output, staged, snapshot } = yield* runScreen(
+        Effect.fail(AccountsError.make({ reason: "io", message: "disk gone" })),
+        [{ name: "c", ctrl: true }]
+      );
       expect(output).toContain("polling every account");
       expect(output).toContain("poll failed: disk gone (showing the last reading)");
+      expect(staged).toBe(0);
+      assertNone(snapshot);
       expect(Str.endsWith("\u001b[?1049l")(output)).toBe(true);
     })
   );

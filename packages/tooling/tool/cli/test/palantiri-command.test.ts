@@ -21,22 +21,28 @@ import {
   AccountsUsage,
   AccountUsage,
   AccountUsageOutcome,
+  groupAccounts,
   loadAccountsReport,
+  rankAccounts,
+  SignedInLogin,
   UsageWindow,
 } from "@beep/repo-cli/test/Accounts";
 import {
   layerPalantiriRuntime,
+  makeAccountHeadroomSourceCached,
   makeAccountHeadroomSourceLive,
   palantiriCommand,
   printParcel,
+  stageAccountHeadroomReport,
 } from "@beep/repo-cli/test/Palantiri";
 import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertExitFailure, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -46,6 +52,7 @@ import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as Metric from "effect/Metric";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
@@ -250,6 +257,138 @@ describe("beep palantiri parcel account-headroom", () => {
           ])
         ).toEqual([["cursor", 1, "ok"]]);
         expect(pipe(json, Str.includes("@"))).toBe(false);
+      })
+    );
+
+    it.effect("reads cached fresh/stale reports without polling and preserves provider attribution", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "palantiri-cached-test-" });
+        const file = `${root}/account-headroom.json`;
+        const polls = yield* Ref.make(0);
+        const usage = stubAccountsUsage(polls);
+        const report = yield* loadAccountsReport(O.none()).pipe(Effect.provideService(AccountsUsage, usage));
+        const source = yield* makeAccountHeadroomSourceCached.pipe(
+          Effect.provideService(AccountsUsage, {
+            ...usage,
+            poll: () => Effect.die("cached source must not start provider polling"),
+          })
+        );
+        const read = source.snapshot.pipe(withEnv({ BEEP_PALANTIRI_STATE_ROOT: root }));
+        // Missing and corrupt cache cannot trigger a refresh or create a file.
+        const missing = yield* Effect.exit(read);
+        const unavailable = Cause.fail(
+          SourceFailed.make({ parcel: "account-headroom", detail: "cached accounts report unavailable" })
+        );
+        assertTrue(missing._tag === "Failure");
+        assertExitFailure(missing, Cause.annotate(unavailable, Cause.annotations(missing.cause)));
+        const exists = yield* fs.exists(file);
+        expect(exists).toBe(false);
+        yield* fs.writeFileString(file, "invalid");
+        const corrupt = yield* Effect.exit(read);
+        assertTrue(corrupt._tag === "Failure");
+        assertExitFailure(corrupt, Cause.annotate(unavailable, Cause.annotations(corrupt.cause)));
+        yield* AccountsStatusReportJson.encode(report).pipe(Effect.flatMap((text) => fs.writeFileString(file, text)));
+        const fresh = yield* read;
+        const now = yield* DateTime.now;
+        expect(reduceAccountHeadroom(fresh, now, 20).freshness._tag).toBe("Fresh");
+        const aged = AccountsStatusReport.make({
+          ...report,
+          generatedAt: DateTime.subtract(report.generatedAt, { minutes: 6 }),
+        });
+        const agedText = yield* AccountsStatusReportJson.encode(aged);
+        yield* fs.writeFileString(file, agedText);
+        const stale = yield* read;
+        expect(stale.report.generatedAt).toEqual(aged.generatedAt);
+        const freshness = reduceAccountHeadroom(stale, now, 20).freshness;
+        expect(freshness._tag === "Unknown" ? freshness.reason : "fresh").toBe("stale");
+        const unchanged = yield* fs.readFileString(file);
+        expect(unchanged).toBe(agedText);
+        const freshText = yield* AccountsStatusReportJson.encode(report);
+        yield* fs.writeFileString(file, freshText);
+        const unknown = yield* makeAccountHeadroomSourceCached.pipe(
+          Effect.provideService(AccountsUsage, {
+            ...usage,
+            accounts: Effect.fail(AccountsError.make({ reason: "io", message: "fixture unavailable" })),
+          })
+        );
+        const unattributed = yield* unknown.snapshot.pipe(withEnv({ BEEP_PALANTIRI_STATE_ROOT: root }));
+        assertNone(unattributed.expectedProviders);
+        const gap = reduceAccountHeadroom(unattributed, now, 20).freshness;
+        expect(gap._tag === "Unknown" ? gap.reason : "fresh").toBe("attribution-incomplete");
+        const added = yield* makeAccountHeadroomSourceCached.pipe(
+          Effect.provideService(AccountsUsage, {
+            ...usage,
+            accounts: Effect.succeed([account("claude", "first"), account("codex", "second"), account("junie", "new")]),
+          })
+        );
+        const input = yield* added.snapshot.pipe(withEnv({ BEEP_PALANTIRI_STATE_ROOT: root }));
+        const missingProvider = reduceAccountHeadroom(input, now, 20).freshness;
+        expect(missingProvider._tag === "Unknown" ? missingProvider.reason : "fresh").toBe("attribution-incomplete");
+        const count = yield* Ref.get(polls);
+        expect(count).toBe(2);
+      })
+    );
+
+    it.effect("stages retained failures privately without mutating raw reports or hiding rejected logins", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "palantiri-stage-test-" });
+        const file = `${root}/account-headroom.json`;
+        const now = yield* DateTime.now;
+        const oldAt = DateTime.subtract(now, { minutes: 6 });
+        const ref = account("claude", "fixture");
+        const before = AccountsStatusReport.make({
+          generatedAt: oldAt,
+          groups: groupAccounts(rankAccounts([okUsage(ref, 25)], oldAt), []),
+        });
+        yield* AccountsStatusReportJson.encode(before).pipe(Effect.flatMap((text) => fs.writeFileString(file, text)));
+        const failed = AccountUsage.make({
+          account: ref,
+          outcome: AccountUsageOutcome.cases.Failed.make({ detail: "offline" }),
+        });
+        const raw = AccountsStatusReport.make({
+          generatedAt: now,
+          groups: groupAccounts(rankAccounts([failed], now), [SignedInLogin.make(ref)]),
+        });
+        const original = yield* AccountsStatusReportJson.encode(raw);
+        const stage = stageAccountHeadroomReport(raw).pipe(withEnv({ BEEP_PALANTIRI_STATE_ROOT: root }));
+        yield* stage;
+        yield* stage; // Repeated retention must keep the original asOf.
+        const kept = yield* fs.readFileString(file).pipe(Effect.flatMap(AccountsStatusReportJson.decode));
+        const outcomes = A.flatMap(kept.groups, (group) => A.map(group.rows, (row) => row.usage.outcome));
+        expect(A.map(outcomes, (outcome) => outcome._tag)).toEqual(["Ok"]);
+        expect(A.flatMap(kept.groups, (group) => A.map(group.rows, (row) => row.signedIn))).toEqual([true]);
+        A.forEach(outcomes, (outcome) => {
+          if (outcome._tag === "Ok") assertSome(outcome.asOf, oldAt);
+        });
+        const unchanged = yield* AccountsStatusReportJson.encode(raw);
+        expect(unchanged).toBe(original);
+        expect(((yield* fs.stat(file)).mode & 0o777).toString(8)).toBe("600");
+        expect(((yield* fs.stat(root)).mode & 0o777).toString(8)).toBe("700");
+        const rejected = AccountUsage.make({
+          account: ref,
+          outcome: AccountUsageOutcome.cases.NeedsLogin.make({ detail: "revoked" }),
+        });
+        yield* stageAccountHeadroomReport(
+          AccountsStatusReport.make({ generatedAt: now, groups: groupAccounts(rankAccounts([rejected], now), []) })
+        ).pipe(withEnv({ BEEP_PALANTIRI_STATE_ROOT: root }));
+        const revoked = yield* fs.readFileString(file).pipe(Effect.flatMap(AccountsStatusReportJson.decode));
+        expect(A.flatMap(revoked.groups, (group) => A.map(group.rows, (row) => row.usage.outcome._tag))).toEqual([
+          "NeedsLogin",
+        ]);
+        // A file in place of the state directory makes staging fail harmlessly.
+        // Warnings must not pollute the raw JSON document on stdout.
+        let warningToStderr = O.none<boolean>();
+        const logger = Logger.make(({ fiber }) => {
+          warningToStderr = O.some(fiber.getRef(Logger.LogToStderr));
+        });
+        const logContext = yield* Layer.build(Logger.layer([logger]));
+        yield* stageAccountHeadroomReport(raw).pipe(
+          withEnv({ BEEP_PALANTIRI_STATE_ROOT: file }),
+          Effect.provideContext(logContext)
+        );
+        assertSome(warningToStderr, true);
       })
     );
 

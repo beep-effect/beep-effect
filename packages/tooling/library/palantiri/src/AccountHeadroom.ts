@@ -246,8 +246,8 @@ const envelopeFreshness = (
  * Freshness has two levels. Each item carries its own (see
  * {@link accountHeadroomItems}). The envelope's describes the read itself:
  * `Fresh` when the poll or snapshot it served from is within 5 minutes,
- * `Unknown{stale}` when that report is older (a stale snapshot served because
- * the live poll failed), and `Unknown{attribution-incomplete}` when an
+ * `Unknown{stale}` when that report is older (a cached reading served without
+ * a refresh, or after a failed live poll), and `Unknown{attribution-incomplete}` when an
  * expected provider produced no item or the provider listing itself failed.
  * The summary leads with the split, such
  * as `11 of 13 accounts fresh; 1 stale (grok-bot), 1 unreachable (codex)`.
