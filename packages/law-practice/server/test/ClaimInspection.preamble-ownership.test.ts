@@ -111,3 +111,40 @@ it.layer(live, { timeout: "30 seconds" })("fixed-provider preamble ownership rou
     })
   );
 });
+
+it.layer(live, { timeout: "30 seconds" })("fixed-provider dependency introducers", (it) => {
+  it.effect("excludes complete dependency syntax while preserving a technical accordance noun", () =>
+    Effect.gen(function* () {
+      const report = yield* inspect([
+        "An accordance sensor, wherein the sensor is mounted.",
+        "The sensor in accordance with claim 1, wherein the sensor is mounted.",
+      ]);
+      assert.deepStrictEqual(
+        A.map(O.getOrThrow(A.head(treeAt(report, 0).elements)).terms, (t) => t.anchor.quote),
+        ["An accordance sensor"]
+      );
+      const child = treeAt(report, 1);
+      assert.deepStrictEqual(
+        A.map(O.getOrThrow(A.head(child.elements)).terms, (t) => t.anchor.quote),
+        ["The sensor"]
+      );
+      assert.strictEqual(
+        A.some(child.edges, (e) => e.kind === "antecedent" && e.referring.anchor.quote === "accordance"),
+        false
+      );
+    })
+  );
+  it.effect("retains an ordinary calibration-signal NP outside the exact citation introducer", () =>
+    Effect.gen(function* () {
+      const report = yield* inspect([
+        "A sensor, wherein the sensor is mounted.",
+        "The sensor in accordance with a calibration signal of claim 1, wherein the sensor is mounted.",
+      ]);
+      const root = O.getOrThrow(A.head(treeAt(report, 1).elements));
+      assert.strictEqual(
+        A.some(root.terms, (t) => t.anchor.quote === "a calibration signal"),
+        true
+      );
+    })
+  );
+});

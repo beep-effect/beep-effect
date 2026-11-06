@@ -552,3 +552,32 @@ describe("exclusive source ownership independent of grammatical header", () => {
     it.effect(raw.case, () => runOracle(raw));
   }
 });
+
+const dependencyIntroducer = Effect.fn("PreambleOwnershipTest.dependencyIntroducer")(function* () {
+  const { result, report } = yield* inspectRouteTexts([
+    "A cap, wherein the cap is mounted.",
+    "The cap in accordance with claim 1, wherein the cap is mounted.",
+  ]);
+  const source = O.getOrThrow(A.last(result.plans)).sourcePlan;
+  assert.deepStrictEqual(
+    A.map(O.getOrThrow(A.head(source.elements)).nominals, (n) => n.anchor.quote),
+    ["The cap"]
+  );
+  const citation = O.getOrThrow(A.findFirst(source.sourceExclusions, (e) => e.kind === "dependency-citation"));
+  assert.deepStrictEqual(
+    citation.extent,
+    TextAnchor.make({
+      startChar: 8,
+      endChar: 34,
+      quote: "in accordance with claim 1",
+    })
+  );
+  const row = O.getOrThrow(A.last(report.records));
+  assert.strictEqual(row.decomposition.status, "decomposed");
+  if (row.decomposition.status === "decomposed")
+    assert.strictEqual(
+      A.some(row.decomposition.tree.edges, (e) => e.kind === "antecedent" && e.referring.anchor.quote === "accordance"),
+      false
+    );
+});
+it.effect("owns the complete proved dependency introducer without a metadata donor", dependencyIntroducer);

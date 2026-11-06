@@ -53,6 +53,14 @@ const locativePP = HashSet.make(
   "beside",
   "near"
 );
+const citationIntroducers: ReadonlyArray<ReadonlyArray<string>> = [
+  ["as", "set", "forth", "in"],
+  ["as", "recited", "in"],
+  ["as", "claimed", "in"],
+  ["in", "accordance", "with"],
+  ["according", "to"],
+  ["of"],
+];
 const citationWords = HashSet.make("claim", "claims");
 const citationSeparators = HashSet.make(",", "and", "or");
 const articles = HashSet.make("a", "an", "the", "said", "each", "its", "their", "this", "these", "those");
@@ -1864,6 +1872,42 @@ class SourcePlanner {
       (token) => this.charge(token.anchor.quote.length + 1) && O.isSome(Str.match(/^[1-9][0-9]*$/u)(token.anchor.quote))
     );
   };
+  private citationPrefixToken = (index: number, expected: string): boolean => {
+    if (!this.charge(1)) return false;
+    const token = this.token(index);
+    if (O.isNone(token) || !this.charge(token.value.anchor.quote.length + 3)) return false;
+    return (
+      !HashSet.has(this.protected, index) &&
+      inside(this.preamble, token.value.anchor) &&
+      Str.toLowerCase(token.value.anchor.quote) === expected
+    );
+  };
+  private citationPrefixGap = (index: number): boolean => {
+    if (!this.charge(2)) return false;
+    const previous = this.token(index - 1);
+    const next = this.token(index);
+    if (O.isNone(previous) || O.isNone(next)) return false;
+    const from = previous.value.anchor.endChar;
+    const to = next.value.anchor.startChar;
+    return this.charge(to - from + 1) && Str.trim(Str.slice(from, to)(this.claim.claimText)) === "";
+  };
+  private citationPrefix = (start: number, words: ReadonlyArray<string>): boolean => {
+    for (let i = 0; i < words.length; i++) {
+      if (!this.charge(1)) return false;
+      if (!this.citationPrefixToken(start + i, O.getOrThrow(A.get(words, i)))) return false;
+      if (!this.citationPrefixGap(start + i + 1)) return false;
+    }
+    return true;
+  };
+  private citationStart = (index: number): number => {
+    for (const words of citationIntroducers) {
+      if (!this.charge(1)) return index;
+      const start = index - words.length;
+      if (start >= 0 && this.citationPrefix(start, words)) return start;
+      if (this.remaining < 0) return index;
+    }
+    return index;
+  };
   private citationExclusion = (index: number): boolean => {
     if (this.claim.claimType !== "dependent" || !this.citationStarts(index)) return this.remaining >= 0;
     const parsed = this.citationNumbers(index);
@@ -1877,10 +1921,11 @@ class SourcePlanner {
     );
     if (actual.length !== expected.length || !A.every(actual, (n, i) => O.contains(A.get(expected, i), n)))
       return this.unresolvedCitation(index, end);
+    const start = this.citationStart(index);
     if (!this.charge(references.length + 4)) return false;
     this.sourceExclusions.push(
       ClaimSourceExclusion.cases["dependency-citation"].make({
-        extent: this.span(index, end),
+        extent: this.span(start, end),
         claimReferences: expected,
       })
     );
