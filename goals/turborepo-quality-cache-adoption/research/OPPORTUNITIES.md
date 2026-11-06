@@ -871,6 +871,16 @@ still omitted an out-of-input change under --affected. Expand to the full
 two-by-two configuration matrix, including both flags false, before asserting
 the narrower model. Preserve both failed attempts; keep feature and computation
 acceptance pending. The experiment has no production task or network access.
+## 2026-11-04 UTC: Storybook deployment did not freeze dependency installation
+
+Reviewing actual deployment callers found `apps/storybook/vercel.json` used
+`cd ../.. && bun install`, while the other two reviewed web deployments require
+the committed lockfile. Add `--frozen-lockfile` without changing build/output
+settings. Owner: this goal; actual Vercel runtime/deployment evidence remains
+open under the current deployment quota. The source audit also identifies real
+pruning candidates, so retain their app-specific comparison gates instead of
+calling pruning inapplicable from its current absence. No cloud call or deploy
+was made by this repair.
 
 ### 2026-11-03 — Generator dependency changes need their generated configuration
 

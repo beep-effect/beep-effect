@@ -265,6 +265,7 @@
     {"name":"CacheFingerprint.captureVersion","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheFingerprint.computation","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheFingerprint.executable","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CacheFingerprint.fileCreationMask","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheFingerprint.gitExclusions","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheFingerprint.hashToolchain","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheFingerprint.projectActivation","owner":"@beep/repo-cli","family":"tooling","conforms":true},

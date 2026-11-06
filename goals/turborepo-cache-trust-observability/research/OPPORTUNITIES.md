@@ -7,6 +7,26 @@ command/error/file evidence, impact, prevention and owner/disposition.
 Redact secrets, use portable paths, omit machine/session IDs and keep raw logs
 in bounded artifacts.
 
+## 2026-11-03: hosted policy must cover the new mask tests
+
+PR #2691's current hosted policy log found one introduced Effect Vitest
+outcome-assertion finding in `cache-census.test.ts` and two deprecated
+parent-process `process.umask()` reads in `cache-runtime.test.ts`. Build,
+Check and the four new runtime/identity regressions had passed; those results
+did not prove the separate policy gate. Preserve the Boolean rejection
+assertion with `Effect.isFailure`. Compare actual parent-created directory
+permissions before and after the child observations, avoiding the deprecated
+getter's process-wide write race. The isolated child remains the only native
+mask observer. Owner: this PR; current hosted policy must run again.
+
+The same log includes the inherited ClaimElement finding owned by #2682.
+The current coverage log has the existing 94-row shared episode: 92 metric
+rows match the earlier episode exactly, and the two fingerprint metrics
+improved while remaining below their base floors. All 46 other reported
+source objects match accepted main; #2682 already owns the fingerprint
+repair too. Retain these failures and consume that accepted repair once;
+neither lower a baseline nor copy another owner's unlanded changes.
+
 Historical leads remain in the [exploration ledger](../../../explorations/turborepo-quality-cache/research/OPPORTUNITIES.md)
 and [opportunity disposition](../../../explorations/turborepo-quality-cache/research/opportunity-disposition.md).
 Refresh historical claims before treating them as current.
@@ -2256,6 +2276,38 @@ compiled-artifact proof.
 
 ## 2026-11-04 UTC: signed overlays omitted native key-length enforcement
 
+### Creation-mask drift was absent from runtime identity, 2026-11-03
+
+- Evidence: Cache.schemas.ts listed runtime binaries, kernel, libraries and
+  dependencies without a process creation mask; collectCacheToolchain therefore
+  could not distinguish identical tools under umask 022 and 077. The native
+  worktree mode counterexample under review in #2689 led to this source audit.
+- Repair: observe and validate the inherited mask through the existing bounded
+  subprocess, bind it to new fingerprints, and preserve historical receipt
+  decoding without inheriting qualification. Require actual hosted regressions.
+- Prevention: include filesystem creation context in runtime-profile review and
+  compare complete output metadata before qualifying permission-sensitive work.
+
+The shared version-capture mapper preserves an existing typed error, so an
+empty mask observation initially retained its tool-version message. Normalize
+this boundary to the mask-specific typed error and discard raw native output
+from its cause. The authored empty-output regression covers that distinction;
+no local regression execution is claimed.
+
+Hosted Check and Build at revision 662bb066 identified two introduced Effect
+diagnostics in the mask helper: schemaNumber and preferTypedSchemaDecoder.
+Use FiniteFromString and decodeEffect for the already numeric value, retaining
+the bounded mask schema. Add NaN and both infinities to the native-output
+rejection controls. Do not disable diagnostics, relabel this as inherited, or
+treat the older static review as functional proof. Current hosted jobs
+126267896866 and 126267896900 retain the failures; fresh proof is required.
+
+The corrected production module built successfully at 4bc2f73f, but hosted Check
+126272654422 then reached two test-context errors: the new process-observation
+test group omitted SecureRandom. Merge the existing NodeCrypto layer with
+NodeServices, matching the neighboring real-command tests. This is introduced
+test wiring, not an inherited failure or a production signing dependency.
+Preserve its failed log and require fresh current-head hosted results.
 While reviewing the pending feature matrix, source inspection of
 `projectCacheSignedRoot` found signatures enabled without the native
 `longerSignatureKey` safeguard. The already recorded 168-case native experiment

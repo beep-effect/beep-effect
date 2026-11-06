@@ -71,6 +71,7 @@
     "research/candidate-openssl-prerequisite-repair-2026-11-03.json",
     "research/closed-producer-upload-checkpoint.json",
     "research/complete-observation-publication-checkpoint.json",
+    "research/creation-mask-identity-review-2026-11-03.json",
     "research/current-completion-audit.json",
     "research/current-native-canary.json",
     "research/current-native-checkpoint.json",

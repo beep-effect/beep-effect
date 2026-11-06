@@ -367,6 +367,7 @@ export {
   CacheDashboardReport,
   CacheDashboardReportJson,
   CacheExecutablePin,
+  CacheFileCreationMask,
   CacheLambdaSummary,
   CacheLinkedFile,
   CacheLinkerResolution,

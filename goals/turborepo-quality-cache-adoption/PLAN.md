@@ -1006,6 +1006,18 @@ remain unchanged under their original bytes. The simulated platform cases test
 startup branching, not native operation on Darwin. No real task/profile, feature
 acceptance, production reuse or timing benefit is established.
 
+### Deployment and boundary caller review, 2026-11-04 UTC
+
+A tracked-source discovery inspected 13,142 regular text source/configuration
+files and found 60 prune/boundary co-mention candidates. Selected caller review
+identifies the Vercel, Alchemy and desktop build paths; complete semantic
+classification, dynamic commands and actual pruned builds remain open. The
+Storybook Vercel installer now requires the committed lockfile, matching the
+existing frozen-install contract of the two other reviewed web apps. No
+deployment or native probe ran, and feature counts stay 11 accepted/25 pending.
+Use `research/deployment-boundary-source-review-2026-11-04.json`; all real
+computation qualification, cohort and observation requirements remain unchanged.
+
 ### Individual selector controls, 2026-11-04
 
 The existing composition driver now supports an optional factorial mode. The
