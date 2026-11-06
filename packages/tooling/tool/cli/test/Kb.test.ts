@@ -10,6 +10,7 @@ import {
   KbLedger,
   KbProposition,
   KbRegistryNode,
+  kbCommand,
   kbLogicalKey,
   makeKbGraphExport,
   makeKbLedger,
@@ -17,11 +18,15 @@ import {
   validateKb,
 } from "@beep/repo-cli/commands/Kb";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Command from "effect/cli/Command";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -30,6 +35,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
 
 const digest = Str.repeat(64)("a");
 const absent = { _tag: "Absent", reason: "not-assessed" };
@@ -577,6 +583,44 @@ layer(graphLive)("knowledge JSON graph", (it) => {
         const present2 = yield* fs.exists(`${f.out}.json`);
         expect(present2).toBe(false);
       })
+    )
+  );
+});
+
+const runKb = Command.runWith(kbCommand, { version: "0.0.0" });
+layer(NodeServices.layer)("knowledge ledger CLI", (it) => {
+  it.effect("validates, builds and exports a valid ledger through the command handlers", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const f = yield* withLedger({ public: true });
+        yield* runKb([]);
+        yield* runKb(["validate", "--root", f.root]);
+        yield* runKb(["build", "--root", f.root, "--view", "outward", "--out", `${f.out}/view`]);
+        yield* runKb(["graph", "--root", f.root, "--view", "planning", "--out", `${f.out}/graph.json`]);
+        const logged = yield* TestConsole.logLines;
+        const lines = A.map(logged, (line) => `${line}`);
+        expect(A.some(lines, Str.startsWith("kb validate --root <dir>"))).toBe(true);
+        expect(A.filter(lines, Str.includes('"valid": true'))).toHaveLength(2);
+        expect(A.some(lines, Str.startsWith("Graph written: 2 nodes, 1 links, 1 claims"))).toBe(true);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    )
+  );
+  it.effect("reports and fails on a missing or invalid ledger", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const f = yield* withLedger();
+        const missing = yield* Effect.exit(runKb(["validate", "--root", `${f.root}/missing`]));
+        expect(Exit.isFailure(missing)).toBe(true);
+        yield* fs.writeFileString(`${f.root}/assertions.jsonl`, "");
+        const invalid = yield* Effect.exit(runKb(["validate", "--root", f.root]));
+        expect(Exit.isFailure(invalid)).toBe(true);
+        const build = yield* Effect.exit(runKb(["build", "--root", f.root, "--view", "planning", "--out", f.out]));
+        expect(Exit.isFailure(build)).toBe(true);
+        const logged = yield* TestConsole.logLines;
+        const lines = A.map(logged, (line) => `${line}`);
+        expect(A.filter(lines, Str.includes('"valid": false'))).toHaveLength(2);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     )
   );
 });
