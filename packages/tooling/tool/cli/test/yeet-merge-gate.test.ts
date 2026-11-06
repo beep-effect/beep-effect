@@ -4,6 +4,7 @@ import { reviewerCheckExternalId } from "@beep/repo-cli/commands/Reviewer";
 import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
 import {
   decideMergeGate,
+  MERGE_GATE_OWNER_HOLD_LABEL,
   MERGE_GATE_S11_DEFAULT_ATTRIBUTION,
   MERGE_GATE_UNBLOCKS_MAIN_LABEL,
   MergeGateBaseEvidence,
@@ -197,6 +198,17 @@ describe("yeet merge-gate decision", () => {
     expect(
       holdReason(decideMergeGate(MergeGateInput.make({ read: read({ mergeableState: "dirty" }), options: options() })))
     ).toBe("conflicting");
+  });
+
+  it("holds an owner-held PR as owner-hold, with every check green", () => {
+    const decision = decideMergeGate(
+      MergeGateInput.make({
+        read: read({ labels: ["ready-for-heavy", MERGE_GATE_OWNER_HOLD_LABEL] }),
+        options: options(),
+      })
+    );
+    expect(holdReason(decision)).toBe("owner-hold");
+    expect(renderMergeGateDecision(decision)).toContain("labelled owner-merge-hold");
   });
 
   it("holds on squash-commitlint when the predicted squash message fails the repo's commitlint (ep47)", () => {
@@ -537,6 +549,7 @@ describe("yeet merge-gate --relaxed decision (S11)", () => {
   it.each([
     ["a moved head", "head-moved", read(), { wantSha: "0000000000" }],
     ["a draft", "draft", read({ draft: true }), {}],
+    ["an owner hold", "owner-hold", read({ labels: [MERGE_GATE_OWNER_HOLD_LABEL] }), {}],
     ["a base conflict", "conflicting", read({ mergeableState: "dirty" }), {}],
     ["an unreadable ruleset", "required-contexts-unknown", read({ requiredContexts: O.none() }), {}],
     ["a ruleset with no required checks", "required-contexts-unknown", read({ requiredContexts: O.some([]) }), {}],

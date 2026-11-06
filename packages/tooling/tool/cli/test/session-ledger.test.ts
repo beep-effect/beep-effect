@@ -661,6 +661,281 @@ describe("beep session", () => {
         })
       )
     );
+
+    it.effect("converts an in-process unit in one step and refuses a conversion it cannot make", () =>
+      withScratchCheckout(({ clone, lane }) =>
+        Effect.gen(function* () {
+          yield* captureOutput(
+            withCwd(
+              lane,
+              runSession([
+                "register",
+                "add",
+                "--kind",
+                "in-process-agent",
+                "--address",
+                "agent-a1",
+                "--name",
+                "coverage fixer",
+                "--owns",
+                "PR #7",
+                "--waiting",
+                "final sha",
+                "--orphan-plan",
+                "relaunch from its brief",
+              ])
+            )
+          );
+          const converted = yield* captureOutput(
+            withCwd(
+              lane,
+              runSession([
+                "register",
+                "convert",
+                "--kind",
+                "in-process-agent",
+                "--address",
+                "agent-a1",
+                "--to-kind",
+                "scheduled-task",
+                "--to-address",
+                "task_42",
+                "--brief",
+                "briefs/agent-a1.md",
+              ])
+            )
+          );
+          expect(converted).toContain(
+            "[session] converted in-process-agent agent-a1 -> scheduled-task task_42 (active)"
+          );
+          const json = yield* captureOutput(withCwd(clone, runSession(["register", "list", "--json"])));
+          const report = yield* RegisterReportJson.decode(json);
+          expect(A.map(report.rows, (unit) => `${unit.kind} ${unit.address}`)).toStrictEqual([
+            "scheduled-task task_42",
+          ]);
+          const [moved] = report.rows;
+          expect(moved?.owns).toStrictEqual(["PR #7"]);
+          expect(O.getOrNull(moved?.waitingOnOrchestrator ?? O.none())).toBe("final sha");
+          expect(moved?.orphanPlan).toBe("relaunch from its brief");
+          expect(O.getOrNull(moved?.note ?? O.none())).toBe(
+            "converted from in-process-agent agent-a1; brief briefs/agent-a1.md"
+          );
+
+          const refusals: ReadonlyArray<readonly [ReadonlyArray<string>, string]> = [
+            [
+              [
+                "--kind",
+                "in-process-agent",
+                "--address",
+                "agent-a1",
+                "--to-kind",
+                "background-job",
+                "--to-address",
+                "j",
+              ],
+              "is already retired",
+            ],
+            [
+              ["--kind", "in-process-agent", "--address", "nobody", "--to-kind", "background-job", "--to-address", "j"],
+              "is not registered",
+            ],
+            [
+              [
+                "--kind",
+                "scheduled-task",
+                "--address",
+                "task_42",
+                "--to-kind",
+                "in-process-agent",
+                "--to-address",
+                "a",
+              ],
+              "cannot become an in-process-agent",
+            ],
+            [
+              [
+                "--kind",
+                "scheduled-task",
+                "--address",
+                "task_42",
+                "--to-kind",
+                "scheduled-task",
+                "--to-address",
+                "task_42",
+              ],
+              "is already that unit",
+            ],
+            [
+              ["--kind", "robot", "--address", "x", "--to-kind", "background-job", "--to-address", "j"],
+              "--kind and --to-kind must be one of",
+            ],
+            [
+              ["--kind", "scheduled-task", "--address", " ", "--to-kind", "background-job", "--to-address", "j"],
+              "--address and --to-address must say",
+            ],
+          ];
+          for (const [args, message] of refusals) {
+            const error = yield* withCwd(lane, runSession(["register", "convert", ...args])).pipe(Effect.flip);
+            expect(error.message).toContain(message);
+          }
+          yield* captureOutput(
+            withCwd(
+              lane,
+              runSession(["register", "add", "--kind", "background-job", "--address", "j9", "--orphan-plan", "rerun"])
+            )
+          );
+          const taken = yield* withCwd(
+            lane,
+            runSession([
+              "register",
+              "convert",
+              "--kind",
+              "scheduled-task",
+              "--address",
+              "task_42",
+              "--to-kind",
+              "background-job",
+              "--to-address",
+              "j9",
+            ])
+          ).pipe(Effect.flip);
+          expect(taken.message).toContain("cannot take a target that already has a live row");
+        })
+      )
+    );
+
+    it.effect("records rulings, supersedes one, and renders HANDOFF.md from the files", () =>
+      withScratchCheckout(({ clone, lane, stateRoot }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const usage = yield* captureOutput(runSession(["ruling"]));
+          expect(usage).toContain("Ruling commands:");
+          const none = yield* captureOutput(withCwd(clone, runSession(["ruling", "list"])));
+          expect(none).toContain("[session] no rulings recorded for beep-effect/beep-effect");
+          yield* captureOutput(
+            withCwd(
+              lane,
+              runSession([
+                "ruling",
+                "add",
+                "--id",
+                "review-window",
+                "--date",
+                "2026-10-06",
+                "--verbatim",
+                "I do not merge until 20 minutes after the later of 'marked ready' and your last push",
+                "--source",
+                "memory feedback-review-window-before-merge",
+              ])
+            )
+          );
+          const superseding = yield* captureOutput(
+            withCwd(
+              lane,
+              runSession([
+                "ruling",
+                "add",
+                "--id",
+                "fix-at-root",
+                "--date",
+                "2026-10-24",
+                "--verbatim",
+                "fixed at their root cause | not deferred",
+                "--source",
+                "AGENTS.md Autonomy",
+                "--note",
+                "supersedes the round-2 stop",
+                "--supersedes",
+                "review-window",
+              ])
+            )
+          );
+          expect(superseding).toContain("[session] recorded ruling fix-at-root (2026-10-24); review-window superseded");
+          const inForce = yield* captureOutput(withCwd(clone, runSession(["ruling", "list"])));
+          expect(inForce).toContain("[session] 1 ruling(s):");
+          const all = yield* captureOutput(withCwd(clone, runSession(["ruling", "list", "--all"])));
+          expect(all).toContain("review-window [superseded by fix-at-root]");
+          const markdown = yield* captureOutput(withCwd(clone, runSession(["ruling", "list", "--markdown"])));
+          expect(markdown).toContain(
+            '| 2026-10-24 | "fixed at their root cause \\| not deferred" (supersedes the round-2 stop) | AGENTS.md Autonomy |'
+          );
+          const json = yield* captureOutput(withCwd(clone, runSession(["ruling", "list", "--json"])));
+          expect(json).toContain('"schemaVersion":"orchestrator-rulings-report/v1"');
+          for (const [args, message] of [
+            [
+              ["--id", "Not Kebab", "--date", "2026-10-24", "--verbatim", "x", "--source", "y"],
+              "--id must be kebab-case",
+            ],
+            [["--id", "x", "--date", "Oct 24", "--verbatim", "x", "--source", "y"], "--date must be YYYY-MM-DD"],
+            [["--id", "x", "--date", "2026-10-24", "--verbatim", " ", "--source", "y"], "--verbatim must not be empty"],
+            [
+              ["--id", "x", "--date", "2026-10-24", "--verbatim", "x", "--source", "y", "--supersedes", "nope"],
+              'names "nope", which is not recorded',
+            ],
+          ] as const) {
+            const error = yield* withCwd(lane, runSession(["ruling", "add", ...args])).pipe(Effect.flip);
+            expect(error.message).toContain(message);
+          }
+
+          // The orchestrator claims the role, registers a unit and keeps a journal and a prose section.
+          yield* captureOutput(
+            withCwd(lane, runSession(["note", "--role", "orchestrator", "--next", "gate the queue"]))
+          );
+          yield* captureOutput(
+            withCwd(
+              lane,
+              runSession([
+                "register",
+                "add",
+                "--kind",
+                "systemd-unit",
+                "--address",
+                "gate.service",
+                "--orphan-plan",
+                "restart",
+              ])
+            )
+          );
+          const handoffFile = path.join(stateRoot, "orchestrator-cache", "HANDOFF.md");
+          yield* fs.makeDirectory(path.dirname(handoffFile), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(path.dirname(handoffFile), "STATE.md"),
+            "- 2026-11-06T10:00Z first\n- 2026-11-06T11:00Z MERGED #7\n\n"
+          );
+          yield* fs.writeFileString(
+            handoffFile,
+            "# Orchestrator hand-off — old\n\nHolder: someone else\nGate clone: ~/clone\n\n## Next actions (ordered)\n\n1. merge #7\n\n## Notes\n\nkeep me\n"
+          );
+          const snapshot = path.join(stateRoot, "gate.txt");
+          yield* fs.writeFileString(snapshot, "# gate-table now\n#7\tready\n");
+          const printed = yield* captureOutput(
+            withCwd(clone, runSession(["handoff", "--file", handoffFile, "--gate-snapshot", snapshot]))
+          );
+          expect(printed).toContain("Holder: lane (feat/lane) session thread-1 since ");
+          expect(printed).toContain("Gate clone: ~/clone");
+          expect(printed).not.toContain("Holder: someone else");
+          expect(printed).toContain("## Next actions (ordered)\n\n1. merge #7");
+          expect(printed).toContain("## Notes\n\nkeep me\n\n## Journal pointer");
+          expect(printed).toContain("| systemd-unit | gate.service |");
+          expect(printed).toContain("#7\tready");
+          expect(printed).toContain("> - 2026-11-06T11:00Z MERGED #7");
+          expect(printed).toContain("fixed at their root cause");
+          expect(printed).not.toContain("I do not merge until 20 minutes");
+
+          const written = yield* captureOutput(
+            withCwd(clone, runSession(["handoff", "--file", handoffFile, "--write"]))
+          );
+          expect(written).toContain(`[session] wrote ${handoffFile} (previous kept as `);
+          const files = yield* fs.readDirectory(path.dirname(handoffFile));
+          expect(A.some(files, (file) => Str.startsWith("HANDOFF.")(file) && Str.endsWith(".bak.md")(file))).toBe(true);
+          const rewritten = yield* fs.readFileString(handoffFile);
+          expect(rewritten).toContain("## Next actions (ordered)\n\n1. merge #7");
+          // No snapshot this time: the previous file's rendered snapshot section is kept as written.
+          expect(rewritten).toContain("## Gate snapshot");
+        })
+      )
+    );
   });
 });
 
