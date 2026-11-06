@@ -17,8 +17,10 @@ import {
   ClaimFrameArgument,
   ClaimListDeclaration,
   ClaimPlannedElement,
+  ClaimSourceDeclaration,
   ClaimSourceElementPlan,
   ClaimSourceFrame,
+  ClaimSourceProof,
 } from "./ClaimClauseRole.model.ts";
 import type { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import type { ClaimElementGrouping, ClaimNominalSpan, ClaimPredicateSpan } from "./ClaimClauseRole.model.ts";
@@ -62,12 +64,15 @@ class SourcePlanner {
   private remaining: number;
   private readonly elements: Array<ClaimPlannedElement> = [];
   private readonly frames: Array<ClaimSourceFrame> = [];
-  private readonly declarations: Array<ClaimListDeclaration> = [];
+  private declarations: Array<ClaimListDeclaration> = [];
+  private declarationPlans: Array<ClaimSourceDeclaration> = [];
   private attached: ReadonlyArray<ClaimAttachedNominal> = [];
   private nominalEventOwners = HashMap.empty<number, TextAnchor>();
   private frameByElement = HashMap.empty<number, number>();
+  private declarationFrames = HashMap.empty<number, number>();
   private protected = HashSet.empty<number>();
   private tokenIndex = HashMap.empty<number, number>();
+  private tokenEnds = HashSet.empty<number>();
   private spans = HashMap.empty<string, TextAnchor>();
   constructor(
     claim: PatentClaim,
@@ -95,6 +100,8 @@ class SourcePlanner {
   private token = (index: number): O.Option<ClaimLexicalToken> => A.get(this.tokens, index);
   private word = (index: number): string =>
     O.match(this.token(index), { onNone: () => "", onSome: (t) => Str.toLowerCase(t.anchor.quote) });
+  private phrase = (index: number, words: ReadonlyArray<string>): boolean =>
+    this.charge(words.length) && A.every(words, (word, offset) => this.word(index + offset) === word);
   private span = (start: number, end: number): TextAnchor => {
     if (start < 0 || end <= start || end > this.tokens.length || !this.charge(2)) {
       this.remaining = -1;
@@ -129,7 +136,7 @@ class SourcePlanner {
   private reserve = (span: TextAnchor): boolean =>
     this.charge(this.roles.nominals.length + this.roles.predicates.length + span.quote.length + 1);
   private protectedSource = (): boolean => {
-    if (!this.charge(this.claim.claimText.length + this.tokens.length * 2)) return false;
+    if (!this.charge(this.claim.claimText.length + this.tokens.length * 3)) return false;
     const quotes = A.fromIterable(
       Str.matchAll(/"(?:\\.|[^"\\])*"|“[^”]*”|‘(?:[^’]|’(?=[\p{L}\p{N}]))*’/gu)(this.claim.claimText)
     );
@@ -137,6 +144,7 @@ class SourcePlanner {
     for (let i = 0; i < this.tokens.length; i++) {
       const t = O.getOrThrow(this.token(i));
       this.tokenIndex = HashMap.set(this.tokenIndex, t.anchor.startChar, i);
+      this.tokenEnds = HashSet.add(this.tokenEnds, t.anchor.endChar);
       if (
         A.some(
           quotes,
@@ -215,7 +223,10 @@ class SourcePlanner {
       const before = O.flatMap(index, (i) => this.token(i - 1));
       const predicate = A.findLast(predicates, (p) => p.anchor.endChar <= n.anchor.startChar);
       const previous = A.get(nominals, ordinal - 1);
-      const prep = O.exists(before, (t) => t.pos === "ADP");
+      const prep = O.exists(
+        before,
+        (t) => t.pos === "ADP" || (Str.toLowerCase(t.anchor.quote) === "to" && O.isSome(previous))
+      );
       const modifier = this.modifierArgument(previous, predicate, before);
       const isSubject = O.exists(subject, (a) => a.startChar === n.anchor.startChar);
       const role = this.argumentRole(isSubject, modifier, prep, O.isSome(predicate));
@@ -241,7 +252,7 @@ class SourcePlanner {
       (token) =>
         token.anchor.startChar < from ||
         token.anchor.endChar > to ||
-        A.some(this.roles.predicates, (p) => p.kind === "adjunct" && p.anchor.startChar === token.anchor.startChar)
+        A.some(this.roles.predicates, (p) => p.kind === "adjunct" && inside(p.anchor, token.anchor))
     );
   };
   private operators = (predicates: ReadonlyArray<ClaimPredicateSpan>): ReadonlyArray<TextAnchor> => {
@@ -310,6 +321,10 @@ class SourcePlanner {
     O.flatMap(HashMap.get(this.tokenIndex, span.startChar), (i) =>
       HashSet.has(HashSet.make("where", "wherein"), this.word(i)) ? O.map(this.token(i), (t) => t.anchor) : O.none()
     );
+  private elementContent = (
+    nominals: ReadonlyArray<ClaimNominalSpan>,
+    predicates: ReadonlyArray<ClaimPredicateSpan>
+  ): boolean => nominals.length > 0 || predicates.length > 0;
   private add = (
     span: TextAnchor,
     header: TextAnchor,
@@ -319,45 +334,110 @@ class SourcePlanner {
   ): O.Option<number> => {
     if (!this.reserve(span)) return O.none();
     const nominals = this.owned(header);
-    const predicates = this.predicates(span);
+    const predicates = this.predicates(container ? header : span);
     const property = this.adjectiveProperty(predicates, nominals);
     const kind = this.elementKind(grouping, container, property, predicates);
-    if (nominals.length === 0 && predicates.length === 0) return O.none();
+    if (!this.elementContent(nominals, predicates)) return O.none();
     if (!this.charge(nominals.length + predicates.length + 2)) return O.none();
     const operators = this.operators(predicates);
-    const args = this.argumentPlan(span, nominals, operators);
+    const args = this.argumentPlan(container ? header : span, nominals, operators);
     if (this.remaining < 0) return O.none();
     if (!this.charge(this.attached.length + nominals.length + 1)) return O.none();
     const ordinal = this.elements.length + 1;
-    this.elements.push(
-      ClaimPlannedElement.make({
-        ordinal,
-        parent,
-        extent: span,
-        lexicalHeader: header,
-        kind,
-        grouping: this.elementGrouping(grouping, property, container),
-        nominals,
-      })
+    const element = ClaimPlannedElement.make({
+      ordinal,
+      parent,
+      extent: span,
+      lexicalHeader: header,
+      kind,
+      grouping: this.elementGrouping(grouping, property, container),
+      nominals,
+    });
+    this.elements.push(element);
+    return this.appendElementFrame(element, operators, args) ? O.some(ordinal) : O.none();
+  };
+  private isCompositionChild = (element: ClaimPlannedElement, parent: O.Option<number>): boolean =>
+    O.isSome(parent) &&
+    (HashSet.has(HashSet.make("composition-child", "enumeration-child"), element.grouping) ||
+      O.exists(element.parent, (value) => HashMap.has(this.declarationFrames, value)));
+  private actionIntroducer = (element: ClaimPlannedElement): O.Option<TextAnchor> => {
+    if (HashSet.has(HashSet.make("composition-child", "enumeration-child"), element.grouping)) return O.none();
+    return O.flatMap(
+      A.findFirst(
+        this.roles.proofs,
+        (proof) => proof.kind === "action" && proof.operator.startChar === element.extent.startChar
+      ),
+      (proof) => (proof.kind === "action" ? O.some(proof.governor) : O.none())
     );
+  };
+  private inheritedArguments = (
+    nominals: ReadonlyArray<ClaimNominalSpan>,
+    parentFrame: O.Option<number>,
+    arguments_: ReadonlyArray<ClaimFrameArgument>,
+    compositionChild: boolean
+  ): ReadonlyArray<ClaimFrameArgument> => {
+    const inherited = O.flatMap(parentFrame, (value) =>
+      O.flatMap(A.get(this.frames, value - 1), (f) => A.head(f.predicates))
+    );
+
+    const inheritedNominals = A.filter(
+      nominals,
+      (n) =>
+        !A.some(
+          arguments_,
+          (arg) =>
+            arg.nominal.startChar === n.anchor.startChar &&
+            (arg.role === "object" || arg.role === "prepositional-complement")
+        )
+    );
+    const childArguments =
+      compositionChild && O.isSome(inherited)
+        ? A.map(inheritedNominals, (n) =>
+            ClaimFrameArgument.make({
+              nominal: n.anchor,
+              role: "object",
+              predicate: inherited,
+              ownerNominal: O.none(),
+            })
+          )
+        : [];
+    return compositionChild
+      ? A.appendAll(
+          A.filter(arguments_, (arg) => arg.role !== "unknown"),
+          childArguments
+        )
+      : arguments_;
+  };
+  private appendElementFrame = (
+    element: ClaimPlannedElement,
+    operators: ReadonlyArray<TextAnchor>,
+    args: Pick<ClaimSourceFrame, "subject" | "arguments">
+  ): boolean => {
+    const { ordinal, parent, grouping, nominals, extent: span, lexicalHeader: header } = element;
     const frame = this.frames.length + 1;
     const introduced = this.sourceIntroducer(span);
+    const parentFrame = O.flatMap(parent, (value) =>
+      O.orElse(HashMap.get(this.declarationFrames, value), () =>
+        value === 1 ? O.none() : HashMap.get(this.frameByElement, value)
+      )
+    );
+    const compositionChild = this.isCompositionChild(element, parentFrame);
+    if (!this.charge(nominals.length * (args.arguments.length + 1) + this.roles.proofs.length + 2)) return false;
+    const arguments_ = this.inheritedArguments(nominals, parentFrame, args.arguments, compositionChild);
     this.frames.push(
       ClaimSourceFrame.make({
         ordinal: frame,
         extent: span,
         lexicalHeader: header,
-        parent: O.flatMap(
-          O.filter(parent, (value) => value !== 1),
-          (value) => HashMap.get(this.frameByElement, value)
-        ),
-        attachment: this.frameAttachment(grouping),
-        introducer: introduced,
+        parent: parentFrame,
+        attachment: compositionChild ? "composition-child" : this.frameAttachment(grouping),
+        introducer: O.orElse(introduced, () => this.actionIntroducer(element)),
         predicates: operators,
         nominals: A.map(nominals, (n) => n.anchor),
         coordination: O.none(),
         sharedSubject: O.none(),
         ...args,
+        arguments: arguments_,
       })
     );
     this.frameByElement = HashMap.set(this.frameByElement, ordinal, frame);
@@ -365,7 +445,7 @@ class SourcePlanner {
       this.attached,
       A.map(nominals, (n) => ClaimAttachedNominal.make({ core: n.anchor, head: n.head, outer: n.anchor, nominal: n }))
     );
-    return O.some(ordinal);
+    return true;
   };
   private label = (index: number): O.Option<readonly [string, number]> => {
     const label = this.word(index + 1);
@@ -448,8 +528,88 @@ class SourcePlanner {
     return O.some(markers);
   };
   private listOwner = (start: number, end: number, colon: number, parent: number): O.Option<number> => {
-    if (colon === start && parent === 1 && HashSet.has(compositions, this.claim.transition)) return O.some(parent);
-    return this.add(this.span(start, end), this.span(start, colon), O.some(parent), "explicit-list-header", true);
+    if (colon === start && parent === 1 && HashSet.has(compositions, this.claim.transition)) {
+      return this.rootDeclaration(start - 1, end, colon + 1, parent) ? O.some(parent) : O.none();
+    }
+    const owner = this.add(
+      this.span(start, end),
+      this.span(start, colon),
+      O.some(parent),
+      "explicit-list-header",
+      true
+    );
+    if (O.isSome(owner)) this.declarationIntroducer(owner.value, colon, colon + 1);
+    return owner;
+  };
+  private rootDeclaration = (operator: number, end: number, introEnd: number, owner: number): boolean => {
+    if (!this.charge(8)) return false;
+    const header = this.span(operator, this.word(introEnd - 1) === ":" ? introEnd - 1 : introEnd);
+    const predicate = O.getOrThrow(this.token(operator)).anchor;
+    const ordinal = this.frames.length + 1;
+    this.frames.push(
+      ClaimSourceFrame.make({
+        ordinal,
+        extent: this.span(operator, this.trimEnd(operator, end)),
+        lexicalHeader: header,
+        parent: O.none(),
+        attachment: "main",
+        introducer: O.some(this.span(operator, introEnd)),
+        predicates: [predicate],
+        nominals: [],
+        subject: O.none(),
+        sharedSubject: O.none(),
+        coordination: O.none(),
+        arguments: [],
+      })
+    );
+    this.declarationFrames = HashMap.set(this.declarationFrames, owner, ordinal);
+    return this.remaining >= 0;
+  };
+  private declarationIntroducer = (owner: number, operator: number, introEnd: number): void => {
+    const frame = HashMap.get(this.frameByElement, owner);
+    if (O.isNone(frame)) return;
+    const original = O.getOrThrow(A.get(this.frames, frame.value - 1));
+    if (!this.charge(this.tokens.length + 2)) return;
+    const predicates = this.predicates(original.lexicalHeader);
+    const first = A.last(predicates);
+    const from = O.flatMap(first, (p) => HashMap.get(this.tokenIndex, p.anchor.startChar));
+    this.frames[frame.value - 1] = ClaimSourceFrame.make({
+      ...original,
+      introducer: O.some(
+        this.span(
+          O.getOrElse(from, () => operator),
+          introEnd
+        )
+      ),
+    });
+    this.declarationFrames = HashMap.set(this.declarationFrames, owner, frame.value);
+  };
+  private canonicalDeclaration = (
+    kind: ClaimSourceDeclaration["kind"],
+    owner: number,
+    intro: TextAnchor,
+    children: ReadonlyArray<number>,
+    labels: ReadonlyArray<TextAnchor> = []
+  ): boolean => {
+    if (!this.charge(children.length * 3 + 3)) return false;
+    const frame = O.orElse(HashMap.get(this.declarationFrames, owner), () => HashMap.get(this.frameByElement, owner));
+    if (O.isNone(frame)) return false;
+    const items = A.map(children, (child) => ({ child, extent: O.getOrThrow(A.get(this.elements, child - 1)).extent }));
+    const fields = { owner, frame: frame.value, anchor: intro };
+    if (kind === "labelled")
+      this.declarationPlans.push(
+        ClaimSourceDeclaration.cases.labelled.make({
+          ...fields,
+          items: A.map(items, (item, index) => ({ ...item, label: O.getOrThrow(A.get(labels, index)) })),
+        })
+      );
+    else
+      this.declarationPlans.push(
+        kind === "action"
+          ? ClaimSourceDeclaration.cases.action.make({ ...fields, items })
+          : ClaimSourceDeclaration.cases.composition.make({ ...fields, items })
+      );
+    return true;
   };
   private listItems = (
     markers: ReadonlyArray<readonly [number, number]>,
@@ -472,23 +632,19 @@ class SourcePlanner {
     }
     return O.some(items);
   };
-  private recordDeclaration = (
-    start: number,
-    colon: number,
-    owner: number,
-    items: ReadonlyArray<ClaimListDeclaration["items"][number]>
-  ): boolean => {
-    const endChar = O.getOrThrow(this.token(colon)).anchor.endChar;
-    const startChar = colon === start ? this.preamble.startChar : O.getOrThrow(this.token(start)).anchor.startChar;
-    if (!this.charge(endChar - startChar + items.length + 1)) return false;
-    this.declarations.push(
-      ClaimListDeclaration.make({
+  private recordDeclaration = (owner: number, items: ReadonlyArray<ClaimListDeclaration["items"][number]>): boolean => {
+    if (!this.charge(items.length + 1)) return false;
+    const frame = O.orElse(HashMap.get(this.declarationFrames, owner), () => HashMap.get(this.frameByElement, owner));
+    const intro = O.flatMap(frame, (id) => O.flatMap(A.get(this.frames, id - 1), (f) => f.introducer));
+    return O.exists(intro, (value) =>
+      this.canonicalDeclaration(
+        "labelled",
         owner,
-        anchor: TextAnchor.make({ startChar, endChar, quote: Str.slice(startChar, endChar)(this.claim.claimText) }),
-        items,
-      })
+        value,
+        A.map(items, (item) => item.child),
+        A.map(items, (item) => item.label)
+      )
     );
-    return true;
   };
   private labelled = (start: number, end: number, colon: number, parent: number, depth: number): boolean => {
     const first = this.label(colon + 1);
@@ -500,7 +656,7 @@ class SourcePlanner {
     const owner = this.listOwner(start, end, colon, parent);
     if (O.isNone(owner)) return false;
     const items = this.listItems(markers.value, end, owner.value, depth);
-    return O.exists(items, (values) => this.recordDeclaration(start, colon, owner.value, values));
+    return O.exists(items, (values) => this.recordDeclaration(owner.value, values));
   };
   private independent = (start: number, end: number): boolean => {
     if (!this.charge(this.roles.nominals.length + this.roles.predicates.length + 1)) return false;
@@ -580,7 +736,13 @@ class SourcePlanner {
     const accept = (index: number): boolean => {
       if (index < from || !HashSet.has(separators, this.word(index))) return true;
       const next = this.trimStart(index + 1, end);
-      if (!HashSet.has(articles, this.word(next))) return true;
+      if (!this.charge(this.roles.nominals.length + 1)) return false;
+      if (
+        !O.exists(this.token(next), (token) =>
+          A.some(this.roles.nominals, (n) => n.anchor.startChar === token.anchor.startChar)
+        )
+      )
+        return true;
       if (this.independent(next, end)) {
         sibling = true;
         return false;
@@ -606,6 +768,89 @@ class SourcePlanner {
     for (const [start, end] of children)
       if (!this.parse(start, this.trimEnd(start, end), parent, grouping, depth + 1)) return false;
     return true;
+  };
+  private declarationChildren = (start: number, end: number): O.Option<ReadonlyArray<readonly [number, number]>> => {
+    const semicolons = this.semicolonRanges(start, end);
+    return O.flatMap(semicolons, (ranges) => (ranges.length > 0 ? O.some(ranges) : this.compositionItems(start, end)));
+  };
+  private actionItem = (start: number, end: number): boolean => {
+    const span = this.span(start, this.trimEnd(start, end));
+    if (!this.reserve(span)) return false;
+    const first = A.head(this.predicates(span));
+    return (
+      O.exists(first, (p) => p.kind === "gerund" && p.anchor.startChar === span.startChar) &&
+      this.owned(span).length > 0 &&
+      this.functionsOwned(start, end, this.owned(span))
+    );
+  };
+  private declaredChildren = (
+    ranges: ReadonlyArray<readonly [number, number]>,
+    owner: number,
+    depth: number
+  ): O.Option<ReadonlyArray<number>> => {
+    const children: Array<number> = [];
+    for (const [from, to] of ranges) {
+      if (!this.charge(1)) return O.none();
+      children.push(this.elements.length + 1);
+      if (!this.parse(from, this.trimEnd(from, to), owner, "composition-child", depth + 1)) return O.none();
+    }
+    return O.some(children);
+  };
+  private declarationOwner = (
+    start: number,
+    end: number,
+    colon: number,
+    parent: number,
+    actions: boolean
+  ): O.Option<number> => {
+    if (actions) return this.rootDeclaration(start - 1, end, colon + 1, parent) ? O.some(parent) : O.none();
+    return this.add(this.span(start, end), this.span(start, colon), O.some(parent), "composition-header", true);
+  };
+  private completeDeclarationItems = (ranges: ReadonlyArray<readonly [number, number]>, actions: boolean): boolean =>
+    A.every(ranges, ([from, to]) =>
+      actions ? this.actionItem(from, to) : O.contains(this.governingItem(from, to), true)
+    );
+  private explicitActionHeader = (start: number, colon: number, parent: number): boolean =>
+    this.phrase(start, ["the", "steps", "of"]) && colon === start + 3 && parent === 1;
+  private unlabelledOperator = (operator: O.Option<number>, colon: number): boolean =>
+    O.exists(operator, (index) => index + 1 === colon);
+  private unlabelledRanges = (
+    colon: number,
+    end: number,
+    explicitActions: boolean
+  ): O.Option<ReadonlyArray<readonly [number, number]>> => {
+    const children = this.declarationChildren(colon + 1, end);
+    if (O.isNone(children)) return O.none();
+    const ranges: ReadonlyArray<readonly [number, number]> =
+      children.value.length === 0 ? [[colon + 1, end]] : children.value;
+    if (!this.charge(ranges.length)) return O.none();
+    if (!this.completeDeclarationItems(ranges, explicitActions)) return O.none();
+    return O.some(ranges);
+  };
+  private unlabelledDeclaration = (
+    start: number,
+    end: number,
+    colon: number,
+    parent: number,
+    depth: number
+  ): boolean => {
+    const explicitActions = this.explicitActionHeader(start, colon, parent);
+    const operator = this.compositionOperator(start, colon);
+    if (!explicitActions && !this.unlabelledOperator(operator, colon)) return false;
+    const ranges = this.unlabelledRanges(colon, end, explicitActions);
+    if (O.isNone(ranges)) return false;
+    const owner = this.declarationOwner(start, end, colon, parent, explicitActions);
+    if (O.isNone(owner)) return false;
+    if (!explicitActions) this.declarationIntroducer(owner.value, O.getOrThrow(operator), colon + 1);
+    const childOrdinals = this.declaredChildren(ranges.value, owner.value, depth);
+    if (O.isNone(childOrdinals)) return false;
+    const intro = explicitActions ? this.span(start - 1, colon + 1) : this.span(O.getOrThrow(operator), colon + 1);
+    return this.canonicalDeclaration(
+      explicitActions ? "action" : "composition",
+      owner.value,
+      intro,
+      childOrdinals.value
+    );
   };
   private composition = (start: number, end: number, parent: number, depth: number): O.Option<boolean> => {
     const operator = this.compositionOperator(start, end);
@@ -757,8 +1002,11 @@ class SourcePlanner {
     HashSet.has(HashSet.make("gerund", "infinitive"), predicate.kind) &&
     HashSet.has(HashSet.make("for", "by", "to"), this.word(index - 1));
   private coordinatePosition = (predicate: ClaimPredicateSpan, index: number, enclosing: ClaimSourceFrame): boolean =>
-    predicate.kind === "finite" &&
-    O.isSome(enclosing.subject) &&
+    ((predicate.kind === "finite" && O.isSome(enclosing.subject)) ||
+      A.some(
+        this.roles.proofs,
+        (proof) => proof.kind === "coordinated-action" && proof.operator.startChar === predicate.anchor.startChar
+      )) &&
     HashSet.has(HashSet.make("and", "or"), this.word(index - 1));
   private predicateAttachment = (
     predicate: ClaimPredicateSpan,
@@ -923,7 +1171,7 @@ class SourcePlanner {
         introducer: O.map(this.token(index.value - 1), (t) => t.anchor),
         predicates: [predicate.anchor],
         nominals: A.map(owned, (n) => n.anchor),
-        coordination: O.map(shared, () => enclosing.ordinal),
+        coordination: attachment.value === "coordinate" ? O.some(enclosing.ordinal) : O.none(),
         sharedSubject: shared,
         ...args,
         subject: O.orElse(shared, () => args.subject),
@@ -933,10 +1181,56 @@ class SourcePlanner {
   };
   private predicateAttachments = (start: number, end: number, main: number): boolean => {
     const extent = this.span(start, end);
-    if (!this.reserve(extent)) return false;
+    if (!this.reserve(extent) || !this.charge(this.roles.proofs.length * (this.roles.predicates.length + 1)))
+      return false;
     const predicates = this.predicates(extent);
     const enclosing = O.getOrThrow(A.get(this.frames, main - 1));
     return A.every(predicates, (predicate) => this.appendPredicate(predicate, enclosing, predicates, end));
+  };
+  private appendReduced = (
+    proof: Extract<ClaimSourceProof, { readonly kind: "reduced-adjective" | "reduced-participle" }>,
+    main: number
+  ): boolean => {
+    if (!this.charge(proof.complement.endChar - proof.operator.startChar + 7)) return false;
+    const extent = TextAnchor.make({
+      startChar: proof.operator.startChar,
+      endChar: proof.complement.endChar,
+      quote: Str.slice(proof.operator.startChar, proof.complement.endChar)(this.claim.claimText),
+    });
+    this.frames.push(
+      ClaimSourceFrame.make({
+        ordinal: this.frames.length + 1,
+        parent: O.some(main),
+        attachment: "relative",
+        extent,
+        lexicalHeader: extent,
+        introducer: O.none(),
+        predicates: [proof.operator],
+        nominals: [proof.complement],
+        subject: O.some(proof.nominal),
+        coordination: O.none(),
+        sharedSubject: O.none(),
+        arguments: [
+          ClaimFrameArgument.make({
+            nominal: proof.complement,
+            role: "prepositional-complement",
+            predicate: O.some(proof.operator),
+            ownerNominal: O.none(),
+          }),
+        ],
+      })
+    );
+    if (!this.setOuter(proof.nominal, extent)) return false;
+    return true;
+  };
+  private reducedAttachments = (span: TextAnchor, main: number): boolean => {
+    if (!this.charge(this.roles.proofs.length)) return false;
+    for (const proof of this.roles.proofs) {
+      if ((proof.kind !== "reduced-adjective" && proof.kind !== "reduced-participle") || !inside(span, proof.operator))
+        continue;
+      if (!this.appendReduced(proof, main)) return false;
+    }
+    return true;
   };
   private finalizeFrames = (): boolean => {
     if (!this.charge(this.frames.length ** 2 + this.frames.length * 2)) return false;
@@ -1034,10 +1328,179 @@ class SourcePlanner {
       A.get(this.elements, item.child - 1),
       (child) => O.contains(child.parent, owner) && item.label.endChar <= child.extent.startChar
     );
+  private deriveLabelledDeclarations = (): boolean => {
+    if (!this.charge(this.declarationPlans.length)) return false;
+    const declarations: Array<ClaimListDeclaration> = [];
+    for (const declaration of this.declarationPlans) {
+      if (declaration.kind !== "labelled") continue;
+      if (!this.charge(declaration.items.length * 2 + 1)) return false;
+      declarations.push(
+        ClaimListDeclaration.make({
+          owner: declaration.owner,
+          anchor: declaration.anchor,
+          items: A.map(declaration.items, (item) => ({ child: item.child, label: item.label })),
+        })
+      );
+    }
+    this.declarations = declarations;
+    return true;
+  };
+  private validDeclarationFrame = (declaration: ClaimSourceDeclaration): boolean => {
+    const mapped = O.orElse(HashMap.get(this.declarationFrames, declaration.owner), () =>
+      HashMap.get(this.frameByElement, declaration.owner)
+    );
+    return (
+      O.contains(mapped, declaration.frame) &&
+      O.exists(A.get(this.frames, declaration.frame - 1), (frame) =>
+        O.exists(
+          frame.introducer,
+          (intro) => intro.startChar === declaration.anchor.startChar && intro.endChar === declaration.anchor.endChar
+        )
+      )
+    );
+  };
+  private validDeclaredExtent = (owner: number, child: number, extent: TextAnchor): boolean =>
+    O.exists(
+      A.get(this.elements, child - 1),
+      (element) =>
+        O.contains(element.parent, owner) &&
+        element.extent.startChar === extent.startChar &&
+        element.extent.endChar === extent.endChar
+    );
+  private completeDeclaration = (declaration: ClaimSourceDeclaration): boolean =>
+    this.validDeclarationFrame(declaration) &&
+    declaration.items.length > 0 &&
+    A.every(declaration.items, (item) => this.validDeclaredExtent(declaration.owner, item.child, item.extent));
+  private validateDeclarationPlans = (): boolean => {
+    if (!this.charge(this.declarationPlans.length * 4)) return false;
+    for (const declaration of this.declarationPlans) {
+      if (!this.charge(declaration.items.length * 4 + declaration.anchor.quote.length + 1)) return false;
+      if (!this.completeDeclaration(declaration)) return false;
+    }
+    return true;
+  };
   private validateDeclarations = (): boolean => {
     for (const declaration of this.declarations) {
       if (!this.charge(declaration.items.length * 2 + 1)) return false;
       if (!A.every(declaration.items, (item) => this.validListItem(declaration.owner, item))) return false;
+    }
+    return true;
+  };
+  private reducedProofAnchors = (
+    proof: Extract<ClaimSourceProof, { readonly kind: "reduced-adjective" | "reduced-participle" }>
+  ): ReadonlyArray<TextAnchor> => [
+    proof.operator,
+    proof.nominal,
+    proof.complement,
+    proof.introducer,
+    ...O.toArray(proof.governingPredicate),
+  ];
+  private proofAnchors = (proof: ClaimSourceProof): ReadonlyArray<TextAnchor> =>
+    ClaimSourceProof.match(proof, {
+      "finite-pp": (proof) => [
+        proof.operator,
+        proof.lexicalPredicate,
+        proof.subject,
+        proof.complement,
+        proof.introducer,
+        ...proof.labels,
+        ...proof.adjuncts,
+      ],
+      "reduced-adjective": this.reducedProofAnchors,
+      "reduced-participle": this.reducedProofAnchors,
+      "scalar-auxiliary": (proof) => [
+        proof.operator,
+        proof.auxiliary,
+        proof.scalar,
+        proof.participle,
+        proof.complement,
+        proof.introducer,
+        ...proof.adjuncts,
+      ],
+      action: (proof) => [proof.operator, proof.governor, proof.object],
+      "coordinated-action": (proof) => [
+        proof.operator,
+        proof.governor,
+        proof.firstAction,
+        proof.coordinator,
+        proof.object,
+      ],
+      "nominal-coordination": (proof) => [proof.core, proof.head, ...proof.branches],
+      quantity: (proof) => [proof.core, proof.head],
+      "nominal-modifier": (proof) => [proof.core, proof.operator, proof.head],
+    });
+  private alignedProofAnchor = (span: TextAnchor): boolean => {
+    if (!this.charge(span.quote.length + this.frames.length * 2 + 3)) return false;
+    return (
+      span.endChar > span.startChar &&
+      HashMap.has(this.tokenIndex, span.startChar) &&
+      HashSet.has(this.tokenEnds, span.endChar) &&
+      Str.slice(span.startChar, span.endChar)(this.claim.claimText) === span.quote &&
+      A.some(
+        this.frames,
+        (frame) => inside(frame.extent, span) || O.exists(frame.introducer, (intro) => inside(intro, span))
+      )
+    );
+  };
+  private provedNominal = (core: TextAnchor): boolean =>
+    A.some(
+      this.attached,
+      (nominal) => nominal.core.startChar === core.startChar && nominal.core.endChar === core.endChar
+    );
+  private provedArgument = (operator: TextAnchor, nominal: TextAnchor): boolean =>
+    A.some(this.frames, (frame) =>
+      A.some(
+        frame.arguments,
+        (argument) =>
+          argument.nominal.startChar === nominal.startChar &&
+          argument.nominal.endChar === nominal.endChar &&
+          O.exists(argument.predicate, (predicate) => inside(predicate, operator))
+      )
+    );
+  private proofMembership = (proof: ClaimSourceProof): boolean => {
+    if (!this.charge(this.frames.length)) return false;
+    if (
+      !this.charge(
+        this.attached.length * 2 +
+          A.reduce(this.frames, this.frames.length, (sum, frame) => sum + frame.arguments.length * 3)
+      )
+    )
+      return false;
+    return ClaimSourceProof.match(proof, {
+      "finite-pp": (proof) =>
+        this.provedNominal(proof.subject) &&
+        this.provedNominal(proof.complement) &&
+        this.provedArgument(proof.operator, proof.subject) &&
+        this.provedArgument(proof.operator, proof.complement),
+      "reduced-adjective": this.reducedProofMembership,
+      "reduced-participle": this.reducedProofMembership,
+      "scalar-auxiliary": (proof) => this.provedArgument(proof.operator, proof.complement),
+      action: (proof) => this.provedArgument(proof.operator, proof.object),
+      "coordinated-action": (proof) => this.provedArgument(proof.operator, proof.object),
+      quantity: this.nominalProofMembership,
+      "nominal-coordination": this.nominalProofMembership,
+      "nominal-modifier": this.nominalProofMembership,
+    });
+  };
+  private reducedProofMembership = (
+    proof: Extract<ClaimSourceProof, { readonly kind: "reduced-adjective" | "reduced-participle" }>
+  ): boolean => this.provedNominal(proof.nominal) && this.provedArgument(proof.operator, proof.complement);
+  private nominalProofMembership = (
+    proof: Extract<ClaimSourceProof, { readonly kind: "quantity" | "nominal-coordination" | "nominal-modifier" }>
+  ): boolean => this.provedNominal(proof.core) && inside(proof.core, proof.head);
+  private proofVariableSize = (proof: ClaimSourceProof): number => {
+    if (proof.kind === "finite-pp") return proof.labels.length + proof.adjuncts.length;
+    if (proof.kind === "scalar-auxiliary") return proof.adjuncts.length;
+    return proof.kind === "nominal-coordination" ? proof.branches.length : 0;
+  };
+  private validateProofs = (): boolean => {
+    if (!this.charge(this.roles.proofs.length + this.frames.length)) return false;
+    const argumentCount = A.reduce(this.frames, this.frames.length, (sum, frame) => sum + frame.arguments.length);
+    for (const proof of this.roles.proofs) {
+      const variable = this.proofVariableSize(proof);
+      if (!this.charge(variable + argumentCount + 10)) return false;
+      const anchors = this.proofAnchors(proof);
+      if (!A.every(anchors, this.alignedProofAnchor) || !this.proofMembership(proof)) return false;
     }
     return true;
   };
@@ -1049,7 +1512,12 @@ class SourcePlanner {
     )
       return false;
     return (
-      this.validateNominals() && this.validateElements() && this.validateFrameParents() && this.validateDeclarations()
+      this.validateNominals() &&
+      this.validateElements() &&
+      this.validateFrameParents() &&
+      this.validateDeclarations() &&
+      this.validateDeclarationPlans() &&
+      this.validateProofs()
     );
   };
   private appendRange = (ranges: Array<readonly [number, number]>, start: number, end: number): boolean => {
@@ -1111,7 +1579,7 @@ class SourcePlanner {
     if (token.pos !== "VERB" || HashSet.has(this.protected, index) || HashSet.has(compositions, this.word(index)))
       return true;
     return (
-      A.some(this.roles.predicates, (p) => p.anchor.startChar === token.anchor.startChar) ||
+      A.some(this.roles.predicates, (p) => inside(p.anchor, token.anchor)) ||
       A.some(nominals, (n) => inside(n.anchor, token.anchor))
     );
   };
@@ -1126,25 +1594,75 @@ class SourcePlanner {
     !HashSet.has(this.protected, index) &&
     this.word(index) === "of" &&
     !HashSet.has(HashSet.make("the", "said"), this.word(index + 1));
+  private partitiveTokenAdmitted = (index: number): boolean => {
+    if (!this.charge(this.roles.proofs.length + 1)) return false;
+    return (
+      !this.barePartitive(index) ||
+      A.some(
+        this.roles.proofs,
+        (proof) => proof.kind === "quantity" && inside(proof.core, O.getOrThrow(this.token(index)).anchor)
+      )
+    );
+  };
   private partitiveAdmitted = (start: number, end: number, span: TextAnchor): boolean => {
     if (this.predicates(span).length > 0 || !HashSet.has(HashSet.make("a", "an"), this.word(start))) return true;
     for (let i = start; i < end; i++) {
       if (!this.charge(1)) return false;
-      if (this.barePartitive(i)) return false;
+      if (!this.partitiveTokenAdmitted(i)) return false;
     }
     return true;
   };
+  private PPFollowedByObject = (span: TextAnchor, nominal: ClaimNominalSpan): boolean => {
+    if (!this.charge(this.roles.predicates.length + 2)) return false;
+    const start = HashMap.get(this.tokenIndex, nominal.anchor.startChar);
+    const pp = O.exists(
+      O.flatMap(start, (i) => this.token(i - 1)),
+      (token) => token.pos === "ADP"
+    );
+    const governor = A.some(
+      this.roles.predicates,
+      (p) => p.kind === "finite" && p.anchor.startChar >= span.startChar && p.anchor.endChar <= nominal.anchor.startChar
+    );
+    return pp && governor;
+  };
+  private nominalGap = (span: TextAnchor, left: ClaimNominalSpan, right: ClaimNominalSpan): boolean => {
+    if (!this.charge(right.anchor.startChar - left.anchor.endChar + 1)) return false;
+    const blank = Str.trim(Str.slice(left.anchor.endChar, right.anchor.startChar)(this.claim.claimText)) === "";
+    return !blank || this.PPFollowedByObject(span, left);
+  };
+  private unambiguousAuxiliaryPP = (span: TextAnchor, nominals: ReadonlyArray<ClaimNominalSpan>): boolean => {
+    if (!this.charge(this.roles.predicates.length + nominals.length * 2 + this.tokens.length)) return false;
+    const predicates = this.predicates(span);
+    if (predicates.length !== 1 || !O.exists(A.head(predicates), (p) => p.kind === "auxiliary-head")) return true;
+    // A bare auxiliary cannot choose between successive PP attachments.
+    const pp = A.filter(nominals, (nominal) =>
+      O.exists(HashMap.get(this.tokenIndex, nominal.anchor.startChar), (index) =>
+        O.exists(this.token(index - 1), (token) => token.pos === "ADP")
+      )
+    );
+    return pp.length <= 1;
+  };
+  private nominalSequence = (span: TextAnchor, nominals: ReadonlyArray<ClaimNominalSpan>): boolean => {
+    for (let index = 1; index < nominals.length; index++)
+      if (!this.nominalGap(span, O.getOrThrow(A.get(nominals, index - 1)), O.getOrThrow(A.get(nominals, index))))
+        return false;
+    return this.unambiguousAuxiliaryPP(span, nominals);
+  };
+  private leafNominalsAdmitted = (span: TextAnchor, nominals: ReadonlyArray<ClaimNominalSpan>): boolean =>
+    nominals.length > 0 && this.subjectProved(span, nominals) && this.nominalSequence(span, nominals);
+  private leafAttachments = (start: number, end: number, frame: number, span: TextAnchor): boolean =>
+    this.attachments(start, end, frame) &&
+    this.predicateAttachments(start, end, frame) &&
+    this.reducedAttachments(span, frame);
   private leaf = (start: number, end: number, parent: number, grouping: ClaimElementGrouping): boolean => {
     const span = this.span(start, end);
     if (!this.reserve(span)) return false;
     const nominals = this.owned(span);
-    if (nominals.length === 0 || !this.subjectProved(span, nominals)) return false;
+    if (!this.leafNominalsAdmitted(span, nominals)) return false;
     if (!this.functionsOwned(start, end, nominals) || !this.partitiveAdmitted(start, end, span)) return false;
     const before = this.frames.length;
     const owner = this.add(span, span, O.some(parent), grouping, false);
-    return (
-      O.isSome(owner) && this.attachments(start, end, before + 1) && this.predicateAttachments(start, end, before + 1)
-    );
+    return O.isSome(owner) && this.leafAttachments(start, end, before + 1, span);
   };
   private parseAfterLabels = (
     start: number,
@@ -1161,6 +1679,10 @@ class SourcePlanner {
       onSome: (composed) => composed || this.leaf(start, end, parent, grouping),
     });
   };
+  private colonProduction = (start: number, end: number, colon: number, parent: number, depth: number): boolean =>
+    O.isSome(this.label(colon + 1))
+      ? this.labelled(start, end, colon, parent, depth)
+      : this.unlabelledDeclaration(start, end, colon, parent, depth);
   private parse = (
     rawStart: number,
     rawEnd: number,
@@ -1173,7 +1695,7 @@ class SourcePlanner {
     const end = this.trimEnd(start, rawEnd);
     if (start >= end) return false;
     const colon = this.topColon(start, end);
-    if (O.isSome(colon)) return this.labelled(start, end, colon.value, parent, depth);
+    if (O.isSome(colon)) return this.colonProduction(start, end, colon.value, parent, depth);
     const semicolons = this.semicolonRanges(start, end);
     if (O.isNone(semicolons)) return false;
     if (semicolons.value.length > 0) return this.parseChildren(semicolons.value, parent, "nominal-leaf", depth);
@@ -1202,21 +1724,42 @@ class SourcePlanner {
     if (O.isSome(predicate)) return this.governingPredicate(first.value, predicate.value);
     return nominals.length === 1 && first.value.anchor.endChar === span.endChar ? O.some(true) : O.none();
   };
+  private nonDeclaration = (children: ReadonlyArray<readonly [number, number]>): O.Option<boolean> => {
+    if (this.remaining < 0) return O.none();
+    if (A.some(children, ([, to]) => this.word(to) === ";")) return O.some(false);
+    const first = O.getOrThrow(A.head(children));
+    return O.map(this.governingItem(first[0], first[1]), () => false);
+  };
+  private governingDeclaration = (
+    start: number,
+    end: number,
+    root: number,
+    children: ReadonlyArray<readonly [number, number]>,
+    action: boolean
+  ): O.Option<boolean> => {
+    const operator = start - (this.word(start - 1) === ":" ? 2 : 1);
+    const introEnd = this.word(start - 1) === ":" ? start : operator + 1;
+    if (!this.rootDeclaration(operator, this.trimEnd(start, end), introEnd, root)) return O.none();
+    const ordinals = this.declaredChildren(children, root, 1);
+    if (O.isNone(ordinals)) return O.none();
+    return this.canonicalDeclaration(
+      action ? "action" : "composition",
+      root,
+      this.span(operator, introEnd),
+      ordinals.value
+    )
+      ? O.some(true)
+      : O.none();
+  };
   private governingComposition = (start: number, end: number, root: number): O.Option<boolean> => {
     if (!HashSet.has(compositions, this.claim.transition)) return O.some(false);
-    const children = this.compositionItems(start, end);
+    const children = this.declarationChildren(start, end);
     if (O.isNone(children) || !this.charge(children.value.length)) return O.none();
-    // Semicolon framing is already owned by parse; it is not an NP-and-list proof.
-    if (A.some(children.value, (item) => this.word(item[1]) === ";")) return O.some(false);
-    const first = A.head(children.value);
-    if (O.isNone(first)) return O.some(false);
-    return O.flatMap(this.governingItem(first.value[0], first.value[1]), (nominal) =>
-      nominal
-        ? this.parseChildren(children.value, root, "composition-child", 1)
-          ? O.some(true)
-          : O.none()
-        : O.some(false)
-    );
+    if (children.value.length < 2) return O.some(false);
+    const nominal = A.every(children.value, ([from, to]) => O.contains(this.governingItem(from, to), true));
+    const action = !nominal && A.every(children.value, ([from, to]) => this.actionItem(from, to));
+    if (!nominal && !action) return this.nonDeclaration(children.value);
+    return this.governingDeclaration(start, end, root, children.value, action);
   };
   private projectBody = (root: number): boolean => {
     if (!this.charge(this.tokens.length)) return false;
@@ -1238,7 +1781,14 @@ class SourcePlanner {
     });
   };
   private finish = (): O.Option<ClaimSourceElementPlan> => {
+    if (!this.charge(this.declarationPlans.length ** 2)) return O.none();
+    this.declarationPlans = A.sort(
+      this.declarationPlans,
+      (left: ClaimSourceDeclaration, right: ClaimSourceDeclaration) =>
+        left.anchor.startChar < right.anchor.startChar ? -1 : left.anchor.startChar > right.anchor.startChar ? 1 : 0
+    );
     if (
+      !this.deriveLabelledDeclarations() ||
       !this.nominalAttachments() ||
       !this.finalizeFrames() ||
       !this.validatePlan() ||
@@ -1253,6 +1803,8 @@ class SourcePlanner {
         nominals: this.attached,
         elements: this.elements,
         declarations: this.declarations,
+        declarationPlans: this.declarationPlans,
+        proofs: this.roles.proofs,
         roles: ClaimClauseRolePlan.make({
           ...this.roles,
           nominals: A.flatMap(this.elements, (element) => element.nominals),

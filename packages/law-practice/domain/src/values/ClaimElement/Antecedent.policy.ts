@@ -49,7 +49,7 @@ import {
   pluralityReferenceContent,
 } from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
-import type { ClaimBoundRolePlan, ClaimNominalPolicyRole } from "./ClaimClauseRole.model.ts";
+import type { ClaimBoundRolePlan, ClaimNominalPolicyRole, ClaimSourceProof } from "./ClaimClauseRole.model.ts";
 import type { ClaimInputCollection } from "./ClaimElement.input.model.ts";
 import type { ClaimTerm } from "./ClaimElement.model.ts";
 import type { ClaimElementTree } from "./ClaimElement.tree.model.ts";
@@ -185,6 +185,12 @@ const isIdiom = ({ term }: LocatedTerm): boolean =>
 
 type RoleFor = (claimNumber: number, term: ClaimTerm) => ClaimNominalPolicyRole;
 type AliasEligible = (claimNumber: number, term: ClaimTerm) => boolean;
+type PossibleBasis = (
+  candidate: LocatedTerm,
+  referring: LocatedTerm,
+  remaining: MutableRef.MutableRef<number>
+) => O.Option<boolean>;
+const noPossibleBasis: PossibleBasis = () => O.some(false);
 const noAliasEvidence: AliasEligible = () => false;
 const legacyRole: RoleFor = () => "legacy";
 const unknownBareRole: RoleFor = (_, term) => (ClaimTermDeterminer.is.bare(term.determiner) ? "unknown" : "legacy");
@@ -460,25 +466,41 @@ const compatibleUnknownHead = (head: string, candidate: string): boolean =>
   isSourcePrefixAbbreviatedHead(head)(candidate) ||
   isCountedHead(head)(candidate) ||
   isSingleModifiedOf(head)(candidate);
+const hasAdverseRoleVerdict = (verdict: Verdict): boolean =>
+  O.exists(verdict, (finding) => finding.kind === "ambiguous-antecedent" || finding.kind === "pattern-not-covered");
+const candidateBasisRule = (
+  candidate: LocatedTerm,
+  referring: LocatedTerm,
+  remaining: MutableRef.MutableRef<number>,
+  possibleBasis: PossibleBasis
+): O.Option<AntecedentRuleId> => {
+  if (unknownCandidateHead(referring, candidate)) return O.some(rule.sourceRoleUnresolved);
+  const possible = possibleBasis(candidate, referring, remaining);
+  if (O.isNone(possible)) return O.some(rule.chainWorkLimit);
+  return possible.value ? O.some(rule.sourceRoleUnresolved) : O.none();
+};
 const roleAwareVerdict = (
   terms: ReadonlyArray<LocatedTerm>,
   referring: LocatedTerm,
   verdict: Verdict,
-  remaining: MutableRef.MutableRef<number>
+  remaining: MutableRef.MutableRef<number>,
+  possibleBasis: PossibleBasis
 ): Verdict => {
-  if (O.exists(verdict, (finding) => finding.kind === "ambiguous-antecedent" || finding.kind === "pattern-not-covered"))
-    return verdict;
+  if (hasAdverseRoleVerdict(verdict)) return verdict;
   if (!spendChainWork(remaining, (terms.length + 1) * 6)) return O.some(uncovered(referring, rule.chainWorkLimit));
-  return A.some(terms, (candidate) => unknownCandidateHead(referring, candidate))
-    ? O.some(uncovered(referring, rule.sourceRoleUnresolved))
-    : verdict;
+  for (const candidate of terms) {
+    const adverse = candidateBasisRule(candidate, referring, remaining, possibleBasis);
+    if (O.isSome(adverse)) return O.some(uncovered(referring, adverse.value));
+  }
+  return verdict;
 };
 
 const readableVerdict =
   (
     introductionsByHead: R.ReadonlyRecord<string, ReadonlyArray<LocatedTerm>>,
     remaining: MutableRef.MutableRef<number>,
-    enhanced: boolean
+    enhanced: boolean,
+    possibleBasis: PossibleBasis
   ) =>
   (
     terms: ReadonlyArray<LocatedTerm>,
@@ -496,7 +518,7 @@ const readableVerdict =
     const verdict = A.every(chain.claims, (claimNumber) => HashSet.has(decomposed, claimNumber))
       ? fullVerdict(introductionsByHead, remaining)(introductions, referring, chain)
       : partialVerdict(introductions, referring, chain);
-    return enhanced ? roleAwareVerdict(terms, referring, verdict, remaining) : verdict;
+    return enhanced ? roleAwareVerdict(terms, referring, verdict, remaining, possibleBasis) : verdict;
   };
 
 // These coverage outcomes do not inspect chain term candidates. Keeping them
@@ -606,7 +628,8 @@ const policyInContext = (
   trees: ReadonlyArray<ClaimElementTree>,
   claims: ReadonlyArray<PatentClaim>,
   roleFor: RoleFor = legacyRole,
-  aliasEligible: AliasEligible = noAliasEvidence
+  aliasEligible: AliasEligible = noAliasEvidence,
+  possibleBasis: PossibleBasis = noPossibleBasis
 ): ReadonlyArray<AntecedentFinding> => {
   const claimIndex = HashMap.fromIterable(
     A.map(claims, (claim): readonly [number, PatentClaim] => [claim.claimNumber, claim])
@@ -653,7 +676,7 @@ const policyInContext = (
             return A.map(referringTerms, (referring) => rank(referring, [], uncovered(referring, rule.chainWorkLimit)));
           const prepared = A.replicate(O.none<ReadonlyArray<LocatedTerm>>(), chains.length);
           const lookup = cachedChainTerms(termsByClaim, termWork, prepared);
-          const read = readableVerdict(introductionsByHead, termWork, roleFor !== legacyRole);
+          const read = readableVerdict(introductionsByHead, termWork, roleFor !== legacyRole, possibleBasis);
           const evaluate = boundedChainVerdict(
             lookup,
             (terms, referring, chain) => read(terms, decomposed, referring, chain),
@@ -819,7 +842,8 @@ const inspectionReport = (
   input: ClaimInputCollection,
   decompositions: ReadonlyArray<ClaimInputDecomposition>,
   roleFor: RoleFor = legacyRole,
-  aliasEligible: AliasEligible = noAliasEvidence
+  aliasEligible: AliasEligible = noAliasEvidence,
+  possibleBasis: PossibleBasis = noPossibleBasis
 ): ClaimInputInspectionReport => {
   const unavailable = unavailableAncestors(decompositions);
   const eligible = A.filter(
@@ -835,7 +859,8 @@ const inspectionReport = (
       A.map(usable, ({ tree }) => tree),
       A.map(usable, ({ qualification }) => qualification.claim),
       roleFor,
-      aliasEligible
+      aliasEligible,
+      possibleBasis
     ),
     indexComplete
   );
@@ -887,13 +912,33 @@ const lexicalCoverage = (
     }),
   });
 
+const alternativeProof = (
+  proof: ClaimSourceProof
+): proof is Extract<ClaimSourceProof, { readonly kind: "nominal-coordination" }> =>
+  proof.kind === "nominal-coordination" && proof.mode === "alternative";
+const reserveRoleProofs = (sourcePlan: ClaimBoundRolePlan["sourcePlan"], available: number): O.Option<number> => {
+  let remaining = available;
+  remaining -= sourcePlan.proofs.length * 4;
+  if (remaining < 0) return O.none();
+  for (const proof of sourcePlan.proofs) {
+    if (!alternativeProof(proof)) continue;
+    remaining -= proof.branches.length * 8 + proof.core.quote.length * 4;
+    if (remaining < 0) return O.none();
+    remaining -= A.reduce(proof.branches, 0, (sum, branch) => sum + branch.quote.length * 4);
+    if (remaining < 0) return O.none();
+  }
+  return O.some(remaining);
+};
 const roleInputBudget = (plans: ReadonlyArray<ClaimBoundRolePlan>): O.Option<number> => {
   let remaining = 262_144;
-  for (const { plan } of plans) {
+  for (const { plan, sourcePlan } of plans) {
     // Reserve scans, entry/key allocation and persistent map storage before
     // preparing them. Merely reading quote lengths is charged by this pass.
     remaining -= plan.nominals.length * 64 + 1;
     if (remaining < 0) return O.none();
+    const reserved = reserveRoleProofs(sourcePlan, remaining);
+    if (O.isNone(reserved)) return O.none();
+    remaining = reserved.value;
     remaining -= A.reduce(plan.nominals, 0, (sum, nominal) => sum + nominal.anchor.quote.length * 4);
     if (remaining < 0) return O.none();
   }
@@ -931,16 +976,39 @@ const enhancedContextReady = (
   }
   return O.some(contextReady);
 };
+const alternativeBranchIndex = (
+  claimNumber: number,
+  sourcePlan: ClaimBoundRolePlan["sourcePlan"],
+  initial: HashMap.HashMap<string, ReadonlyArray<string>>
+): HashMap.HashMap<string, ReadonlyArray<string>> => {
+  let branches = initial;
+  for (const proof of sourcePlan.proofs) {
+    if (!alternativeProof(proof)) continue;
+    branches = HashMap.set(
+      branches,
+      `${claimNumber}:${proof.core.startChar}:${proof.core.endChar}:${proof.core.quote}`,
+      A.map(proof.branches, (branch) => Str.toLowerCase(branch.quote))
+    );
+  }
+  return branches;
+};
 const sourceRoleIndex = (
   plans: ReadonlyArray<ClaimBoundRolePlan>,
   decompositions: ReadonlyArray<ClaimInputDecomposition>
-): O.Option<readonly [HashMap.HashMap<string, ClaimNominalPolicyRole>, HashSet.HashSet<number>]> => {
+): O.Option<
+  readonly [
+    HashMap.HashMap<string, ClaimNominalPolicyRole>,
+    HashSet.HashSet<number>,
+    HashMap.HashMap<string, ReadonlyArray<string>>,
+  ]
+> => {
   const budget = roleInputBudget(plans);
   if (O.isNone(budget)) return O.none();
   const contextReady = enhancedContextReady(plans, decompositions, budget.value);
   if (O.isNone(contextReady)) return O.none();
   let roles = HashMap.empty<string, ClaimNominalPolicyRole>();
-  for (const { claimNumber, plan } of plans) {
+  let branches = HashMap.empty<string, ReadonlyArray<string>>();
+  for (const { claimNumber, plan, sourcePlan } of plans) {
     for (const nominal of plan.nominals) {
       roles = HashMap.set(
         roles,
@@ -948,8 +1016,35 @@ const sourceRoleIndex = (
         nominal.role
       );
     }
+    branches = alternativeBranchIndex(claimNumber, sourcePlan, branches);
   }
-  return O.some([roles, contextReady.value]);
+  return O.some([roles, contextReady.value, branches]);
+};
+const alternativeBasis = (branches: HashMap.HashMap<string, ReadonlyArray<string>>): PossibleBasis => {
+  if (HashMap.isEmpty(branches)) return noPossibleBasis;
+  return (candidate, referring, remaining) => {
+    if (
+      candidate.claimNumber === referring.claimNumber &&
+      candidate.term.anchor.startChar >= referring.term.anchor.startChar
+    )
+      return O.some(false);
+    if (!spendChainWork(remaining, candidate.term.anchor.quote.length + 32)) return O.none();
+    const possible = HashMap.get(
+      branches,
+      `${candidate.claimNumber}:${candidate.term.anchor.startChar}:${candidate.term.anchor.endChar}:${candidate.term.anchor.quote}`
+    );
+    if (O.isNone(possible)) return O.some(false);
+    if (!spendChainWork(remaining, possible.value.length)) return O.none();
+    if (
+      !spendChainWork(
+        remaining,
+        possible.value.length * (referring.term.head.length * 8 + 32) +
+          A.reduce(possible.value, 0, (sum, head) => sum + head.length * 8)
+      )
+    )
+      return O.none();
+    return O.some(A.some(possible.value, (branch) => compatibleUnknownHead(sourceReferenceHead(referring), branch)));
+  };
 };
 /**
  * Inspect prepared source roles through the same coverage/report policy.
@@ -974,11 +1069,16 @@ export const inspectPreparedClaimRoles = Effect.fn("ClaimElement.inspectPrepared
       () => unknownBareRole(claimNumber, term)
     );
   return lexicalCoverage(
-    inspectionReport(prepared.input, result.decompositions, roleFor, (claimNumber, term) =>
-      HashMap.has(
-        indexed.value[0],
-        `${claimNumber}:${term.anchor.startChar}:${term.anchor.endChar}:${term.anchor.quote}`
-      )
+    inspectionReport(
+      prepared.input,
+      result.decompositions,
+      roleFor,
+      (claimNumber, term) =>
+        HashMap.has(
+          indexed.value[0],
+          `${claimNumber}:${term.anchor.startChar}:${term.anchor.endChar}:${term.anchor.quote}`
+        ),
+      alternativeBasis(indexed.value[2])
     ),
     indexed.value[1]
   );

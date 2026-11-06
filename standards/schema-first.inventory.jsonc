@@ -2494,6 +2494,16 @@
       "line": 45,
       "owner": "@beep/law-practice-server",
       "reason": "This is fixed source-led golden/regression evidence, not an owner or test of the imported codecs. Four decode operations read actual pinned bytes and validate the original authored anchors before a three-field additive overlay. Random schema samples cannot establish original/correction SHA identity or their exact old fields. Codec property laws belong to their owning packages; no synthetic property is added to pad this fixture proof. Owner: @beep/law-practice-server. Valid only for source SHA a2b5f71a0070d0750460ef64143a75b840f394af8ecb0c54afb7b501c26b5ce8; re-review on source or invariant change. Independent review: structural-projection-implementation-independent-review-001."
+    },
+    {
+      "file": "packages/law-practice/domain/test/ClaimElement.recurrence.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 125,
+      "owner": "@beep/law-practice-domain",
+      "reason": "Fixed reviewed source grammar regression controls decode 54 authored source plans and three route families to assert exact UTF-16 terms, head/outer extents, kinds, topology, frame argument provenance, functional partitions and route verdicts, plus atomic negative controls. Random codec round trips cannot establish those source grammar obligations. Public claim/tree model properties remain covered by the existing domain model tests; no arbitrary padding is introduced. This exception is limited to @beep/law-practice-domain fixed source-regression tests and must be re-reviewed when this file or its asserted invariants change."
     }
   ],
   "backlog": []

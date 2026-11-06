@@ -103,6 +103,85 @@ export class ClaimClauseSpan extends S.Opaque<ClaimClauseSpan, { readonly brand:
   )
 ) {}
 /**
+ * Source certificates distinguish grammatical roles without lexical guessing.
+ * @category models
+ * @since 0.0.0
+ */
+export const ClaimSourceProof = LiteralKit([
+  "finite-pp",
+  "reduced-adjective",
+  "reduced-participle",
+  "scalar-auxiliary",
+  "action",
+  "coordinated-action",
+  "nominal-coordination",
+  "quantity",
+  "nominal-modifier",
+])
+  .toTaggedUnion("kind")({
+    "finite-pp": {
+      operator: TextAnchor,
+      lexicalPredicate: TextAnchor,
+      subject: TextAnchor,
+      complement: TextAnchor,
+      introducer: TextAnchor,
+      labels: S.Array(TextAnchor),
+      adjuncts: S.Array(TextAnchor),
+    },
+    "reduced-adjective": {
+      operator: TextAnchor,
+      nominal: TextAnchor,
+      complement: TextAnchor,
+      introducer: TextAnchor,
+      governingPredicate: S.OptionFromNullOr(TextAnchor),
+    },
+    "reduced-participle": {
+      operator: TextAnchor,
+      nominal: TextAnchor,
+      complement: TextAnchor,
+      introducer: TextAnchor,
+      governingPredicate: S.OptionFromNullOr(TextAnchor),
+    },
+    "scalar-auxiliary": {
+      operator: TextAnchor,
+      auxiliary: TextAnchor,
+      scalar: TextAnchor,
+      participle: TextAnchor,
+      adjuncts: S.Array(TextAnchor),
+      complement: TextAnchor,
+      introducer: TextAnchor,
+    },
+    action: { operator: TextAnchor, governor: TextAnchor, object: TextAnchor },
+    "coordinated-action": {
+      operator: TextAnchor,
+      governor: TextAnchor,
+      firstAction: TextAnchor,
+      coordinator: TextAnchor,
+      object: TextAnchor,
+    },
+    "nominal-coordination": {
+      core: TextAnchor,
+      head: TextAnchor,
+      branches: S.Array(TextAnchor),
+      mode: S.Literals(["alternative", "shared-head"]),
+    },
+    quantity: { core: TextAnchor, head: TextAnchor, mode: S.Literals(["introduction", "reference", "cardinal"]) },
+    "nominal-modifier": { core: TextAnchor, operator: TextAnchor, head: TextAnchor },
+  })
+  .pipe(
+    $I.annoteSchema("ClaimSourceProof", {
+      description:
+        "Validated source-only evidence committed atomically with its element plan; no countability or identity from POS alone.",
+    })
+  );
+/**
+ * Source proof type.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ClaimSourceProof = typeof ClaimSourceProof.Type;
+
+/**
  * Atomic plan, accepted only after source/work/coherence validation.
  *
  * @category models
@@ -115,6 +194,7 @@ export class ClaimClauseRolePlan extends S.Opaque<ClaimClauseRolePlan, { readonl
     nominals: S.Array(ClaimNominalSpan),
     predicates: S.Array(ClaimPredicateSpan),
     clauses: S.Array(ClaimClauseSpan),
+    proofs: S.Array(ClaimSourceProof),
   }).pipe(
     $I.annoteSchema("ClaimClauseRolePlan", {
       description: "One deterministic qualified-source plan shared by current and ancestor extraction.",
@@ -237,6 +317,45 @@ export const ClaimElementGrouping = LiteralKit([
  */
 export type ClaimElementGrouping = typeof ClaimElementGrouping.Type;
 /**
+ * Canonical source declaration; unlabelled items never fabricate label anchors.
+ * @category models
+ * @since 0.0.0
+ */
+export const ClaimSourceDeclaration = LiteralKit(["labelled", "composition", "action"])
+  .toTaggedUnion("kind")({
+    labelled: {
+      owner: PosInt,
+      frame: PosInt,
+      anchor: TextAnchor,
+      items: S.Array(S.Struct({ child: PosInt, extent: TextAnchor, label: TextAnchor })),
+    },
+    composition: {
+      owner: PosInt,
+      frame: PosInt,
+      anchor: TextAnchor,
+      items: S.Array(S.Struct({ child: PosInt, extent: TextAnchor })),
+    },
+    action: {
+      owner: PosInt,
+      frame: PosInt,
+      anchor: TextAnchor,
+      items: S.Array(S.Struct({ child: PosInt, extent: TextAnchor })),
+    },
+  })
+  .pipe(
+    $I.annoteSchema("ClaimSourceDeclaration", {
+      description:
+        "An explicit qualified/header declaration binds real item extents to their structural and grammatical owners.",
+    })
+  );
+/**
+ * Source declaration type.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ClaimSourceDeclaration = typeof ClaimSourceDeclaration.Type;
+
+/**
  * Complete local element identity before source-ordered path assignment.
  *
  * @category models
@@ -286,6 +405,8 @@ export class ClaimSourceElementPlan extends S.Opaque<ClaimSourceElementPlan, { r
     nominals: S.Array(ClaimAttachedNominal),
     elements: S.Array(ClaimPlannedElement),
     declarations: S.Array(ClaimListDeclaration),
+    declarationPlans: S.Array(ClaimSourceDeclaration),
+    proofs: S.Array(ClaimSourceProof),
     roles: ClaimClauseRolePlan,
   }).pipe(
     $I.annoteSchema("ClaimSourceElementPlan", {
