@@ -13,7 +13,7 @@ alphaXiv MCP, and VidBee transcript extraction. Traverse links in every
 source and download contained sources, but only to 2-hop depth. Make the
 workflow ontologically based. Also: Box holds research never downloaded.
 
-### Local corpus: `~/YeeBois/research/Research Aggregation November 5th 2026/`
+### Local corpus: `<research-root>/Research Aggregation November 5th 2026/` (the operator research root under the home directory)
 
 332 files, 5.5 GB, 835 unique URLs across its Markdown.
 

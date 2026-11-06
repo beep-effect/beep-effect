@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `decompose`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -23,9 +23,20 @@ lacked (web, VidBee, alphaXiv, Box).
 
 ## Next Open Question
 
-Operator confirms [`BRIEF.md`](./BRIEF.md) matches the picture, then
-graduate: scaffold the first candidate in [`MAP.md`](./MAP.md)
-(`research-library-ontology-core`).
+None — graduated. Re-entry only when a gated candidate in
+[`MAP.md`](./MAP.md) fires (`epistemic-library-model-promotion`,
+`legal-ontology-pile-deep-read`); then reopen at decompose.
+
+## Graduated goals
+
+- [research-library-ontology-core](../../goals/research-library-ontology-core/README.md):
+  ontology-first models, `Context.Service` topology, generated T-Box and
+  SHACL, SPARQL views. First bet.
+- [research-library-routes](../../goals/research-library-routes/README.md):
+  `@beep/firecrawl` driver, Box route, VidBee and alphaXiv imports, hop
+  extraction and the hop-2 gate. Depends on the core.
+- [research-intake-2026-11](../../goals/research-intake-2026-11/README.md):
+  the third intake and its mining. Depends on both.
 
 ## Read This First
 
@@ -51,5 +62,6 @@ graduate: scaffold the first candidate in [`MAP.md`](./MAP.md)
 - 2026-11-06: packet opened from a grill-with-docs session. Corpus and Box
   censused; two grilling rounds settled packet shape, model ownership, the web
   route, the hop-2 gate, the T-Box source of truth and the 449-PDF Box pile.
-  Capture, research, align, shape and a first map landed in one session;
-  graduation waits on the operator's brief confirmation.
+  Capture, research, align, shape and map landed in one session; the
+  operator confirmed the brief and the packet graduated through
+  `beep explore graduate` into three goal packets.

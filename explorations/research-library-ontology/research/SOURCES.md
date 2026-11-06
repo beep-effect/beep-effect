@@ -14,11 +14,11 @@ The corpora this packet will intake; none is mined yet. Out of repo by design.
 
 | Source | Title | Location | Theme | Disposition |
 | --- | --- | --- | --- | --- |
-| `nov5-aggregation` | Research Aggregation November 5th 2026 (332 files, 835 URLs, 38 videos) | `~/YeeBois/research/Research Aggregation November 5th 2026/` | nightlies, videos, papers, link list, private DM archive | intake hop 0 |
+| `nov5-aggregation` | Research Aggregation November 5th 2026 (332 files, 835 URLs, 38 videos) | `<research-root>/Research Aggregation November 5th 2026/` (the operator research root under the home directory) | nightlies, videos, papers, link list, private DM archive | intake hop 0 |
 | `box-nightlies` | 34 `beep-effect-nightly-*.md`, 2026-09-13 to 2026-11-05 | Box root folder `0` | Grok nightly reports | intake hop 0 (authoritative nightly series) |
 | `box-ip-law-ontology` | `IP_LAW_ONTOLOGY_RESEARCH`, 449 PDFs | Box folder `386465627622` | legal ontologies, patent NLP | separate intake, T1 only |
 | `box-spike-paper` | `arxiv-2610.01553v1-public-sample.pdf` | Box folder `427399570949` | paper | intake hop 0 |
-| `library-intakes` | existing intakes `2026-10-06`, `2026-10-14` | `~/YeeBois/research/beep-effect/intakes/` | October corpus | migration replay fixture |
+| `library-intakes` | existing intakes `2026-10-06`, `2026-10-14` | `<research-root>/beep-effect/intakes/` | October corpus | migration replay fixture |
 
 ## 2. Upstream repositories & licenses
 

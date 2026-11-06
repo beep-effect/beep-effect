@@ -46,7 +46,7 @@ Source: [reflection](../research-corpus-synthesis/history/reflections/2026-10-06
 - **alphaXiv MCP** (`api.alphaxiv.org/mcp/v1`, configured in the Claude
   user config): paper full text plus reference lists; reference lists are
   the cheap, typed hop 2 for the 213 arXiv URLs.
-- **VidBee Desktop MCP** (`~/.local/libexec/vidbee-mcp/setup.sh --bridge`):
+- **VidBee Desktop MCP** (the `vidbee` stdio server in the Claude user MCP config):
   persistent media tasks and transcripts; already produced the 45 FAQ files.
 - **`/deep-research`** (Workflow harness): ~100 agents per run; three
   parallel runs trip the server rate limit and silently degrade verification
@@ -69,7 +69,7 @@ Source: [reflection](../research-corpus-synthesis/history/reflections/2026-10-06
 | Box acquisition | `@beep/box` (`Box.service.ts`, `Box.streaming.ts`) | reuse as a library adapter |
 | Web acquisition | none; `Library.web.ts` validates imported Firecrawl envelopes only | `drivers/firecrawl` NET-NEW |
 | YouTube captions | `Library.youtube.ts` (yt-dlp native route, caption-API fallback import) | reuse; VidBee import NET-NEW |
-| Mining tiers | `~/YeeBois/research/academia-2026-07/bin/{t1,t2,t3}-run.ts` (out of repo, packet-specific scripts) | precedent only; tiers become library commands |
+| Mining tiers | `<research-root>/academia-2026-07/bin/{t1,t2,t3}-run.ts` (out of repo, packet-specific scripts) | precedent only; tiers become library commands |
 | Repo CLI command topology | `standards/architecture/07-non-slice-families.md` §Repo CLI Command Topology; `goals/beep-cli-composition` (active; W0 done, library carve-out in flight) | doctrine; build in `commands/Research/Library`, let composition move it |
 
 ## Constraints discovered
