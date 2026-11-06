@@ -275,7 +275,9 @@ bun run beep yeet reply
 ```
 
 - Squash-merge this branch's PR, confirm `MERGED` through the API, then sweep
-  the clone. Operator-authorized only — never run it without being asked:
+  the clone under the current task and `AGENTS.md` authority. Standing own-PR
+  authority requires the full merge gate; local-only fences forbid publication
+  and merging:
 
 ```bash
 bun run beep yeet merge
@@ -331,19 +333,16 @@ bun run beep quality profile config workstation
 
 ## Gates: cheap-gates before the push, hosted CI after
 
-`yeet publish` gates the push on the cheap-gates tier (12 deterministic gates
-in one collected wave: config sync, tsgo rule parity, Effect imports,
-schema-first, goals checks, Fallow, publish-enabled changeset status, JSDoc ratchet) and
+`yeet publish` gates the push on the collected cheap-gates tier and
 the head-install preflight (a frozen-lockfile install of committed `HEAD` in a
-temporary worktree). Hosted CI is the authoritative proof. `bun run beep yeet
-verify` (full tier) dispatches the hosted lane bodies locally and is on-demand:
-run it to reproduce a hosted red, never to unblock a publish. Package-scoped
-`turbo run check`, `docgen:local --reuse-proof-manifest`, and the cheap tier
+temporary worktree). Lane sets and waves are source-defined; see the detailed
+reference below. Hosted CI is the authoritative proof. `bun run beep yeet verify` (full tier) dispatches the hosted lane bodies locally and is on-demand:
+run it to reproduce a hosted red, never to unblock a publish.
+Package-scoped `turbo run check`, `docgen:local --reuse-proof-manifest`, and the cheap tier
 alone are inner-loop tools, not proof. `yeet final-check` is the content-final
 gate: the affected replay of Lint Policy, Lint, Check, Docgen, Repo Sanity,
 Fallow, Coverage, and rewritten test expectations.
-Details, the gate table, what the full proof does not replay, and plan mode:
-[`references/gates-and-proof.md`](references/gates-and-proof.md).
+Details: [`references/gates-and-proof.md`](references/gates-and-proof.md).
 
 ## Cache baseline after a script-word or root-config change
 
