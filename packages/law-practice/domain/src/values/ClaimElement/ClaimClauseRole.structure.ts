@@ -1222,8 +1222,13 @@ class SourcePlanner {
     if (!this.charge(this.tokens.length)) return false;
     const indexes = this.located(this.body);
     if (indexes.length === 0) return false;
-    const start = O.getOrThrow(A.head(indexes));
+    let start = O.getOrThrow(A.head(indexes));
     const end = O.getOrThrow(A.last(indexes)) + 1;
+    // The qualified body starts after its governing transition. Exclude only
+    // its one leading separator; internal and repeated colons still need proof.
+    if (!this.charge(1)) return false;
+    if (this.word(start) === ":") start++;
+    if (start >= end) return false;
     const declaration =
       O.isSome(this.label(start)) && this.word(start - 1) === ":" && HashSet.has(compositions, this.claim.transition);
     if (declaration) return this.labelled(start - 1, end, start - 1, root, 1);

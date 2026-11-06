@@ -315,6 +315,58 @@ const sourceInputOf = (text: string) =>
       }),
     ],
   });
+const governingPlanOf = Effect.fn("SourceProjectionTest.governingPlanOf")(function* (text: string) {
+  const prepared = yield* prepareClaimInspection(sourceInputOf(text));
+  const result = yield* decomposePreparedClaimRoles(prepared, [evidenceFor(text)]);
+  assert.strictEqual(result.plans.length, 1);
+  return O.getOrThrow(A.head(result.plans)).sourcePlan;
+});
+describe("qualified governing separator ownership", () => {
+  it.effect("excludes one leading governing colon from root and nominal children", () =>
+    Effect.gen(function* () {
+      const plan = yield* governingPlanOf("A system comprising: a plate; a cover.");
+      assert.deepStrictEqual(
+        A.map(plan.elements, (element) => [element.extent.quote, element.kind, O.getOrNull(element.parent)]),
+        [
+          ["A system", "preamble-subject", null],
+          ["a plate", "limitation", 1],
+          ["a cover", "limitation", 1],
+        ]
+      );
+      assert.deepStrictEqual(
+        A.map(plan.nominals, (nominal) => [nominal.core.quote, nominal.head.quote, nominal.outer.quote]),
+        [
+          ["A system", "system", "A system"],
+          ["a plate", "plate", "a plate"],
+          ["a cover", "cover", "a cover"],
+        ]
+      );
+    })
+  );
+  it.effect("keeps an incidental quoted colon inside its complete nominal", () =>
+    Effect.gen(function* () {
+      const plan = yield* governingPlanOf('A system comprising a "comprising: plate" sensor.');
+      assert.deepStrictEqual(
+        A.map(plan.elements, (element) => element.extent.quote),
+        ["A system", 'a "comprising: plate" sensor']
+      );
+      assert.strictEqual(O.getOrThrow(A.last(plan.nominals)).core.quote, 'a "comprising: plate" sensor');
+    })
+  );
+  it.effect("declines a second unexplained colon without donating a candidate plan", () =>
+    Effect.gen(function* () {
+      const text = "A system comprising:: a plate.";
+      const input = sourceInputOf(text);
+      const prepared = yield* prepareClaimInspection(input);
+      const result = yield* decomposePreparedClaimRoles(prepared, [evidenceFor(text)]);
+      assert.strictEqual(result.plans.length, 0);
+      const legacy = yield* decomposeClaimInput(input);
+      assert.deepStrictEqual(result.decompositions, legacy);
+      const report = yield* inspectPreparedClaimRoles(prepared, [evidenceFor(text)]);
+      assert.strictEqual(O.getOrThrow(A.head(report.records)).status, "partial");
+    })
+  );
+});
 describe("source admission barriers and preserved uncertainty", () => {
   it.effect("uses the qualified governing interval rather than an incidental quoted transition", () =>
     Effect.gen(function* () {
