@@ -4,6 +4,7 @@
 
 import * as NodeURL from "node:url";
 import { CitationFrozenEditions } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
+import { makeCitationHelperConfigurations } from "@beep/law-practice-server/internal/Citation/HelperConfigurations";
 import { makeCitationParserCatalog } from "@beep/law-practice-server/internal/Citation/ParserCatalog";
 import { CitationTokenDispatchBindings } from "@beep/law-practice-server/internal/Citation/TokenDispatch";
 import {
@@ -31,7 +32,7 @@ import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/intern
 export const installCitationTokenizedExtractionFixture = Effect.fn("TokenizedExtractionTest.install")(function* (
   kind: CitationNativeRuntimeKind
 ) {
-  const { corpus, setup, configuration, geometry } = yield* installCitationExtractionLoopFixture(kind);
+  const { corpus, setup, geometry } = yield* installCitationExtractionLoopFixture(kind);
   const catalog = yield* makeCitationParserCatalog(
     setup.limits,
     NodeURL.fileURLToPath(new URL("../assets/citation/parser-catalog.data", import.meta.url))
@@ -45,19 +46,25 @@ export const installCitationTokenizedExtractionFixture = Effect.fn("TokenizedExt
   const translated = yield* Effect.forEach(corpus.bindings, (row) => Effect.fromOption(HashMap.get(byRef, row.ref)), {
     concurrency: 1,
   });
-  const nativeConfiguration = CitationTokenizedExtractionConfiguration.make({
-    tokenizer,
-    loop: {
-      ...configuration,
-      full: { ...configuration.full, editions },
-      reference: { ...configuration.reference, editions },
-    },
-  });
+  const helpers = yield* makeCitationHelperConfigurations(
+    setup.limits,
+    NodeURL.fileURLToPath(new URL("../assets/citation/helper-configurations.data", import.meta.url)),
+    editions
+  ).pipe(Effect.provideContext(provided), DateTime.withCurrentZoneOffset(0));
+  const nativeConfiguration = CitationTokenizedExtractionConfiguration.make({ tokenizer, loop: helpers.loop });
   const stage = yield* makeCitationTokenizedExtraction(setup.limits, setup.runtime, nativeConfiguration).pipe(
     Effect.provideContext(provided),
     DateTime.withCurrentZoneOffset(0)
   );
-  return { corpus, setup: { ...setup, provided }, configuration: nativeConfiguration, geometry, stage, translated };
+  return {
+    corpus,
+    setup: { ...setup, provided },
+    configuration: nativeConfiguration,
+    discovery: helpers.discovery,
+    geometry,
+    stage,
+    translated,
+  };
 });
 type Installed = Effect.Success<ReturnType<typeof installCitationTokenizedExtractionFixture>>;
 /** Compare native-text output to the original complete model and identity observations. */

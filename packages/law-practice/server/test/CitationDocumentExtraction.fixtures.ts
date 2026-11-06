@@ -22,7 +22,6 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
 import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
-import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixtures.ts";
 import { makeCitationHtmlTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import {
@@ -47,7 +46,8 @@ const documentRequest = Effect.fn("DocumentExtractionTest.request")(function* (
 export const installCitationDocumentExtractionFixture = Effect.fn("DocumentExtractionTest.install")(function* (
   kind: CitationNativeRuntimeKind
 ) {
-  const { corpus, setup, configuration, translated } = yield* installCitationTokenizedExtractionFixture(kind);
+  const { corpus, setup, configuration, translated, discovery } =
+    yield* installCitationTokenizedExtractionFixture(kind);
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-extract-document-" });
   const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
@@ -69,14 +69,13 @@ export const installCitationDocumentExtractionFixture = Effect.fn("DocumentExtra
     Effect.provideService(CitationCleanerProtocols, adapter.cleaner),
     Effect.provideService(CitationBuiltinCleaners, h.builtins)
   );
-  const discovery = yield* readCitationHtmlDiscoveryCorpus();
   const provided = setup.provided.pipe(
     Context.add(CitationCleanerValues, h.values),
     Context.add(CitationDocumentInputProtocols, adapter.document),
     Context.add(CitationCleanerRuntime, registry.runtime)
   );
   const documentConfiguration = CitationDocumentExtractionConfiguration.make({
-    document: { discovery: discovery.configuration, diffRuntime },
+    document: { discovery, diffRuntime },
     extraction: configuration,
   });
   const stage = yield* makeCitationDocumentExtraction(setup.limits, setup.runtime, documentConfiguration).pipe(

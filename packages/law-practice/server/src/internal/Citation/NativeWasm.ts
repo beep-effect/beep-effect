@@ -4,16 +4,13 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
-import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import * as A from "effect/Array";
-import * as Bytes from "effect/Bytes";
+import { Sha256HexFromBytes } from "@beep/schema";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
-import * as Stream from "effect/Stream";
+import { CitationAssetSeal, readCitationAssetBytes } from "./Asset.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/NativeWasm");
 const WorkerArguments = S.Tuple([S.String.check(S.isMaxLength(32768))]).pipe(
@@ -128,7 +125,7 @@ const InitializationExports = S.Struct({ memory: CitationNativeWasmMemory, _init
  * @internal @category models @since 0.0.0
  */
 export class CitationNativeWasmAsset extends S.Opaque<CitationNativeWasmAsset, { readonly brand: unique symbol }>()(
-  S.Struct({ byteLength: S.Natural, sha256: Sha256Hex }).pipe(
+  S.Struct(CitationAssetSeal.fields).pipe(
     $I.annoteSchema("CitationNativeWasmAsset", {
       description: "Pinned binary length and digest, never caller-selected kernel code.",
     })
@@ -143,13 +140,7 @@ export const loadCitationNativeWasmAsset = Effect.fn("Citation.loadNativeWasmAss
   expected: CitationNativeWasmAsset,
   failed: () => E
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const chunks = yield* fs
-    .stream(path, { bytesToRead: expected.byteLength + 1 })
-    .pipe(Stream.runCollect, Effect.mapError(failed));
-  if (A.reduce(chunks, 0, (count, bytes) => count + bytes.byteLength) !== expected.byteLength)
-    return yield* Effect.fail(failed());
-  return Bytes.concat(chunks);
+  return yield* readCitationAssetBytes(path, expected.byteLength, failed, failed);
 });
 /** Authenticate a copied asset and compile once. Each instantiate call creates
  * a fresh restricted environment; its caller decodes the pinned ABI and binds

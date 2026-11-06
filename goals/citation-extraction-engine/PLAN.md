@@ -1261,6 +1261,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the full-span/warning adaptation wave; retain primary occurrence projection and original raw warning pairs.
 
+### Install production helper configurations with captured calendar, 2026-11-06
+
+Thirteen sealed oracle sources now project into a production-only helper asset. Existing runtime schemas derive the static codec and Effect Clock/CurrentTimeZone captures one calendar cutoff for all five temporal helpers. Production tokenizer/document replay uses both catalog and helper assets. Existing bounded native asset loading is shared with schema-driven JSON authentication. Complete engine artifact/public Layer and all broader acceptance remain open. See history/evidence/2026-11-06-production-helpers.md. Base-pinned Secret Scanning requires separately reviewed exact provenance exception in PR #2786.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the helper projection and production wiring; retain original source fixtures and all parity obligations.
+
 ### Production parser catalog loading, 2026-11-06
 
 The complete default catalog and frozen publications now have a reproducible production-only asset and bounded Effect FileSystem loader. All 6805 extractor occurrences/descriptors, 2533 editions and 2430 reporter payloads match independent sealed fixture installation. The source hash profile remains explicitly captured seed 0. Connected Bun/Node replay now uses the production loader and frozen owner; ten tests across three files pass in 25.75 seconds. Changed/truncated/appended/missing assets refuse. Helper metadata, full engine artifact, public service/Layer and exhaustive qualification remain open. See history/evidence/2026-11-06-parser-catalog.md.
