@@ -2455,9 +2455,10 @@ unchanged. This attempt is a refusal and grants no producer approval.
 The diagnostic PR #2757 passed every unit shard, but hosted Coverage Regression
 job 127893464505 failed on two lint production files unchanged from accepted
 main. The existing consolidated repair #2758 adds failure-path and worker tests
-without lowering floors. Its earlier head has a successful hosted coverage
-receipt; current-head acceptance remains required. Reuse that single repair by
-merging main after acceptance rather than copying its tests into both Turbo
-lanes. The obsolete owned #2760 Check run was cancelled to release runners.
+without lowering floors. The repair is merged into main and present in this
+branch. Its earlier head has a successful hosted coverage receipt; current-head
+coverage proof remains required. Reuse the repair rather than copying its tests
+into both Turbo lanes. The obsolete owned #2760 Check run was cancelled to
+release runners.
 Expose known main coverage dependencies before admitting downstream coverage
 work, and preserve introduced, inherited and intentional cancellation causes.
