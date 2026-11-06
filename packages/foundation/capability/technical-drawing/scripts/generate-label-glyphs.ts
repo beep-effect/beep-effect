@@ -83,8 +83,8 @@ const serialize = (face: LabelFace): string => {
  *
  * Check mode delegates to `CodegenKit.checkModules`, which formats the rendered
  * content, prints the unified drift and fails with `CodegenDriftError` while
- * leaving the target untouched. Write mode replaces the target; `bun run
- * generate` then formats it.
+ * leaving the target untouched. Write mode replaces the target;
+ * `bun run generate` then formats it.
  *
  * @since 0.0.0
  */

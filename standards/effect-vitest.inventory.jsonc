@@ -1476,13 +1476,13 @@
       "reason": "Each malformed configuration is acquired inside Effect.exit so its typed failure and the absence of defects can be asserted; suite-hook acquisition would fail first. Owner: @beep/epistemic-config. Exit: retire when EV002 recognises a provision inside Effect.exit whose acquisition failure the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1136:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1148:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1136,
-      "endLine": 1136,
+      "line": 1148,
+      "endLine": 1148,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:9651c7b57d8e4cfbf0dde5d0ff0257dd9a3f56b488af9ec28f81f152d1b14c28",
       "class": "unresolved-layer-provide",
@@ -1498,13 +1498,13 @@
       "reason": "Owner: @beep/law-practice-server. The body builds the bundle into firstOut, closes the build, and then reopens firstOut's kg.pglite to dump its rows; PGlite locks its data directory, so one it.layer connection cannot be open while the build writes it. Exit: retire when the build exposes its store as a provided service the test can read in place, or when EV002 recognises a provision over a store the earlier body subject wrote and closed (#1855 wave 4 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1853:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1947:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1853,
-      "endLine": 1853,
+      "line": 1947,
+      "endLine": 1947,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:e246edbc3d044db8f8107010a23467e0fa1f9f09a387be7d954e692a678909b6",
       "class": "unresolved-layer-provide",
@@ -1520,13 +1520,13 @@
       "reason": "Owner: @beep/law-practice-server. The body runs two bundle builds into bundleOut, reads practice.duckdb through the same-file withDuckDb wrapper, and only then provides the MCP host over both stores in bundleOut; each earlier step closes its connection before the host reopens the files (PGlite and DuckDB lock them). it.layer would build the host before the bundle exists. Exit: retire when the builds move into a nested it.layer(Layer.unwrap(...)) without losing the base-run assertions, or when EV002 also counts same-file wrapper provisions as earlier lifecycles (#1855 wave 4 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2425:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2519:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 2425,
-      "endLine": 2425,
+      "line": 2519,
+      "endLine": 2519,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:4f8fedf4796dc2cab3e9bcadd1d5905235544ba020d962468eb6e4efc2f1e689",
       "class": "per-test-layer-provide",
@@ -1542,13 +1542,13 @@
       "reason": "A separate empty-input bundle is built within the case; its body-derived PGlite directory and fixture model open for the zero-claims failure and close independently of the populated bundle. Owner: @beep/law-practice-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2549:provideScopedLayer@12#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2643:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 2549,
-      "endLine": 2549,
+      "line": 2643,
+      "endLine": 2643,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:841798a4fc3b5088d955a7afd686ca3de17bb80ce4cb20aeff486bad9233a6b2",
       "class": "unresolved-layer-provide",
@@ -2877,6 +2877,27 @@
       "reason": "The inner scope closes the registry and mounts before acquireUseRelease restores the Worker global; forced defect and interruption controls prove termination before restoration. Owner: @beep/ontology-client. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
+      "id": "EV004:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:92:scoped@4#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/codegen-kit",
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "line": 92,
+      "endLine": 92,
+      "symbol": "scoped",
+      "occurrence": "v2:91929c91a8890a77bca1ec61503b2e817190feb0619c5ce239e1b78c0ca61aba",
+      "class": "inner-helper-scope-lifetime-review",
+      "evidence": "Effect.scoped",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV004:packages/tooling/library/qa-capture/test/integration/ClockCorrelator.integration.test.ts:31:scoped@2#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -3500,7 +3521,7 @@
       "symbol": "it.live",
       "occurrence": "v2:c027e67dd880a2a8fe4d854ffa24710fb29e526922688554f73771e44f9220b0",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set \u2014 // th",
+      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set — // th",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -3544,7 +3565,7 @@
       "symbol": "it.live",
       "occurrence": "v2:839f4c06674803449cc12ea63d0ef0fe4c6c3b982ae7010cc7e7aa1039f70146",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped \u2014 the zombie-node failure // mode the QA 2026-08-26 P0 found:",
+      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped — the zombie-node failure // mode the QA 2026-08-26 P0 found:",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -5489,6 +5510,27 @@
       "reason": "\"Re-derives both vendored faces from their source fonts\" reads the workstation fonts under /usr/share/fonts/liberation and skips itself when they are absent. #1875 wave 10 memory trial: 48 pass and that test skips, so the migration silently drops its coverage. Owner: @beep/technical-drawing. Exit: retire when the font re-derivation test reads its source fonts through an injected font source, or moves to its own native block (#1855 wave 8 register)."
     },
     {
+      "id": "EV010:packages/foundation/capability/technical-drawing/test/Generate.check.test.ts:3:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/technical-drawing",
+      "file": "packages/foundation/capability/technical-drawing/test/Generate.check.test.ts",
+      "line": 3,
+      "endLine": 3,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts:40:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -5885,13 +5927,13 @@
       "reason": "Per-test BunFileSystem layer reads and authenticates committed oracle artifact bytes through the real shared fixture loader. An independently seeded MemoryFileSystem would remove the repository-artifact proof. Owner: @beep/law-practice-server. Exit: retire when native artifact authentication is isolated and an already authenticated corpus is injected into this replay test. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-native-capture-binding.md."
     },
     {
-      "id": "EV010:packages/law-practice/server/test/CitationExtractorRecipes.test.ts:11:@effect/platform-bun/BunFileSystem@0#1",
+      "id": "EV010:packages/law-practice/server/test/CitationExtractorRecipes.test.ts:6:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationExtractorRecipes.test.ts",
-      "line": 11,
-      "endLine": 11,
+      "line": 6,
+      "endLine": 6,
       "symbol": "@effect/platform-bun/BunFileSystem",
       "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
       "class": "platform-filesystem-candidate",
@@ -6941,13 +6983,13 @@
       "reason": "The test writes and reopens DuckDB database files on disk, and DuckDB opens paths natively, not through FileSystem. Memory trial (#1855 wave 8): 1 of 9 fails (\"Failed to open DuckDB connection\", IO Error: Cannot open file). Owner: @beep/law-practice-server. Exit: retire when DuckDB accepts an in-memory database for the bundle, or EV010 recognises DuckDB-file suites as a native-engine subject (#1855 wave 8 register)."
     },
     {
-      "id": "EV010:packages/law-practice/server/test/PracticeKg.projections.test.ts:63:@effect/platform-node@0#1",
+      "id": "EV010:packages/law-practice/server/test/PracticeKg.projections.test.ts:72:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 63,
-      "endLine": 63,
+      "line": 72,
+      "endLine": 72,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -8876,13 +8918,13 @@
       "reason": "The test runs git ls-files at findRepoRoot() and the command resolves its root from the working directory. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the manifest list is read from a seeded volume and the root is injected."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/goals-manifest-projection.test.ts:17:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/goals-manifest-projection.test.ts:20:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/goals-manifest-projection.test.ts",
-      "line": 17,
-      "endLine": 17,
+      "line": 20,
+      "endLine": 20,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -10019,13 +10061,13 @@
       "reason": "The check-fidelity monitor appends inbox rows, and the inbox active projection runs flock, sh and jq through Bun.spawnSync in the real inbox directory. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process or behind an injected lock service."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:45:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:46:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
-      "line": 45,
-      "endLine": 45,
+      "line": 46,
+      "endLine": 46,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -10151,13 +10193,13 @@
       "reason": "Every append runs the inbox projection (flock, sh, jq) through Bun.spawnSync in the real inbox directory, and two cases assert that symlinked ack files are refused. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process and the link cases keep a native block."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-merge-gate.test.ts:36:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-merge-gate.test.ts:37:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-merge-gate.test.ts",
-      "line": 36,
-      "endLine": 36,
+      "line": 37,
+      "endLine": 37,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -10283,13 +10325,13 @@
       "reason": "appendYeetInboxRow writes the red rows, and the inbox active projection runs flock, sh and jq through Bun.spawnSync in the real inbox directory. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process or behind an injected lock service."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:45:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:46:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-ready-gate.test.ts",
-      "line": 45,
-      "endLine": 45,
+      "line": 46,
+      "endLine": 46,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -10415,13 +10457,13 @@
       "reason": "NodeChildProcessSpawner.layer and Bun.spawnSync run git over real temp repositories. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-status-triage.test.ts:38:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-status-triage.test.ts:39:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-status-triage.test.ts",
-      "line": 38,
-      "endLine": 38,
+      "line": 39,
+      "endLine": 39,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
